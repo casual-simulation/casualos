@@ -365,7 +365,7 @@ describe('FileRecordsController', () => {
                 success: false,
                 errorCode: 'not_logged_in',
                 errorMessage:
-                    'The user must be logged in in order to record files.',
+                    'You must be logged in in order to use this record key.',
             });
             expect(presignUrlMock).not.toHaveBeenCalled();
         });
@@ -683,11 +683,19 @@ describe('FileRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    permission: 'file.create',
-                    kind: 'inst',
-                    id: 'inst',
-                    marker: 'secret',
-                    role: null,
+                    recordName: recordName,
+                    resourceId: 'testSha256.txt',
+                    resourceKind: 'file',
+                    action: 'create',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+
+                    // type: 'missing_permission',
+                    // permission: 'file.create',
+                    // kind: 'inst',
+                    // id: 'inst',
+                    // marker: 'secret',
+                    // role: null,
                 },
             });
             expect(presignUrlMock).not.toHaveBeenCalled();
@@ -949,7 +957,7 @@ describe('FileRecordsController', () => {
                 success: false,
                 errorCode: 'not_logged_in',
                 errorMessage:
-                    'The user must be logged in in order to erase files.',
+                    'You must be logged in in order to use this record key.',
             });
 
             await expect(
@@ -1091,11 +1099,19 @@ describe('FileRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    permission: 'file.delete',
-                    kind: 'user',
-                    id: userId,
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName: recordName,
+                    resourceId: 'testFile.txt',
+                    resourceKind: 'file',
+                    action: 'delete',
+                    subjectType: 'user',
+                    subjectId: userId,
+
+                    // type: 'missing_permission',
+                    // permission: 'file.delete',
+                    // kind: 'user',
+                    // id: userId,
+                    // marker: PUBLIC_READ_MARKER,
+                    // role: null,
                 },
             });
 
@@ -1134,11 +1150,19 @@ describe('FileRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    permission: 'file.delete',
-                    kind: 'inst',
-                    id: 'inst',
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName: recordName,
+                    resourceId: 'testFile.txt',
+                    resourceKind: 'file',
+                    action: 'delete',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
+
+                    // type: 'missing_permission',
+                    // permission: 'file.delete',
+                    // kind: 'inst',
+                    // id: 'inst',
+                    // marker: PUBLIC_READ_MARKER,
+                    // role: null,
                 },
             });
 
@@ -1310,11 +1334,19 @@ describe('FileRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    permission: 'file.read',
-                    kind: 'user',
-                    id: userId,
-                    marker: 'secret',
-                    role: null,
+                    recordName: recordName,
+                    resourceId: 'testFile.txt',
+                    resourceKind: 'file',
+                    action: 'read',
+                    subjectType: 'user',
+                    subjectId: userId,
+
+                    // type: 'missing_permission',
+                    // permission: 'file.read',
+                    // kind: 'user',
+                    // id: userId,
+                    // marker: 'secret',
+                    // role: null,
                 },
             });
             expect(presignReadMock).not.toHaveBeenCalled();
@@ -1357,11 +1389,12 @@ describe('FileRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    permission: 'file.read',
-                    kind: 'inst',
-                    id: 'inst',
-                    marker: 'secret',
-                    role: null,
+                    recordName: recordName,
+                    resourceId: 'testFile.txt',
+                    resourceKind: 'file',
+                    action: 'read',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
                 },
             });
             expect(presignReadMock).not.toHaveBeenCalled();
@@ -1443,7 +1476,7 @@ describe('FileRecordsController', () => {
             });
         });
 
-        it('should return only the files that the user has access to', async () => {
+        it('should work if the user has the ability to list the account marker', async () => {
             await store.addFileRecord(
                 recordName,
                 'test1.txt',
@@ -1479,19 +1512,16 @@ describe('FileRecordsController', () => {
                 [userId]: new Set(['developer']),
             };
 
-            store.policies[recordName] = {
-                ['secret']: {
-                    document: {
-                        permissions: [
-                            {
-                                type: 'file.list',
-                                role: 'developer',
-                            },
-                        ],
-                    },
-                    markers: [ACCOUNT_MARKER],
-                },
-            };
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'file',
+                ACCOUNT_MARKER,
+                'list',
+                {},
+                null
+            );
 
             const result = await manager.listFiles(recordName, 'test1', userId);
 
@@ -1506,6 +1536,14 @@ describe('FileRecordsController', () => {
                         description: 'description',
                         uploaded: true,
                         markers: ['secret'],
+                    },
+                    {
+                        description: 'description',
+                        fileName: 'test2.txt',
+                        markers: ['publicRead'],
+                        sizeInBytes: 100,
+                        uploaded: true,
+                        url: 'http://localhost:9191/testRecord/test2.txt',
                     },
                     {
                         fileName: 'test3.txt',
@@ -1546,16 +1584,24 @@ describe('FileRecordsController', () => {
             });
         });
 
-        it('should return an empty list if the inst does not have permission', async () => {
+        it('should return a not_authorized error if the user does not have permission', async () => {
             const result = await manager.listFiles(recordName, null, userId, [
                 'inst',
             ]);
 
             expect(result).toEqual({
-                success: true,
-                recordName,
-                files: [],
-                totalCount: 40,
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'testRecord',
+                    action: 'list',
+                    resourceId: undefined,
+                    resourceKind: 'file',
+                    subjectId: '/inst',
+                    subjectType: 'inst',
+                },
             });
         });
 
@@ -1592,6 +1638,10 @@ describe('FileRecordsController', () => {
                 'description',
                 [PUBLIC_READ_MARKER]
             );
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
 
             const result = (await manager.updateFile(
                 key,
@@ -1755,11 +1805,12 @@ describe('FileRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    permission: 'file.update',
-                    kind: 'user',
-                    id: userId,
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName,
+                    resourceKind: 'file',
+                    resourceId: 'testFile.txt',
+                    action: 'update',
+                    subjectType: 'user',
+                    subjectId: userId,
                 },
             });
 
@@ -1820,7 +1871,7 @@ describe('FileRecordsController', () => {
                 success: false,
                 errorCode: 'not_logged_in',
                 errorMessage:
-                    'The user must be logged in in order to update files.',
+                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
             });
 
             await expect(
@@ -1877,11 +1928,12 @@ describe('FileRecordsController', () => {
                 errorMessage: 'You are not authorized to perform this action.',
                 reason: {
                     type: 'missing_permission',
-                    permission: 'file.update',
-                    kind: 'inst',
-                    id: 'inst',
-                    marker: PUBLIC_READ_MARKER,
-                    role: null,
+                    recordName,
+                    resourceKind: 'file',
+                    resourceId: 'testFile.txt',
+                    action: 'update',
+                    subjectType: 'inst',
+                    subjectId: '/inst',
                 },
             });
 

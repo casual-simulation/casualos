@@ -174,8 +174,6 @@ import {
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
-    Record,
-    RecordReference,
     convertToString,
     GET_TAG_MASKS_SYMBOL,
     PartialBotsState,
@@ -233,7 +231,9 @@ import {
     Photo,
     getEasing,
     enableCollaboration as calcEnableCollaboration,
+    showAccountInfo as calcShowAccountInfo,
     reportInst as calcReportInst,
+    getRecordsEndpoint as calcGetRecordsEndpoint,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -245,8 +245,8 @@ import {
     AIGenerateImageAction,
     aiGenerateImage,
     RecordFileActionOptions,
-    grantRecordMarkerPermission as calcGrantRecordMarkerPermission,
-    revokeRecordMarkerPermission as calcRevokeRecordMarkerPermission,
+    grantRecordPermission as calcGrantRecordPermission,
+    revokeRecordPermission as calcRevokeRecordPermission,
     grantInstAdminPermission as calcGrantInstAdminPermission,
     grantUserRole as calcGrantUserRole,
     revokeUserRole as calcRevokeUserRole,
@@ -277,6 +277,8 @@ import {
     getRecordData,
     eraseRecordData,
     recordFile as calcRecordFile,
+    ListDataOptions,
+    listDataRecordByMarker,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -375,8 +377,10 @@ import {
 } from '@casual-simulation/aux-records';
 import type {
     AIChatMessage,
+    GrantResourcePermissionResult,
     ListStudiosResult,
     ReportInstResult,
+    RevokePermissionResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -763,36 +767,6 @@ export interface BotFilterFunction {
     [DEBUG_STRING]?: string;
 }
 
-export interface RecordFilter {
-    recordFilter: true;
-    [DEBUG_STRING]?: string;
-}
-
-export interface AuthIdRecordFilter extends RecordFilter {
-    authID: string;
-}
-
-export interface SpaceFilter extends BotFilterFunction, RecordFilter {
-    space: string;
-    toJSON: () => RecordFilter;
-}
-
-export interface AddressRecordFilter extends RecordFilter {
-    address: string;
-}
-
-export interface IDRecordFilter extends BotFilterFunction, RecordFilter {
-    id: string;
-    toJSON: () => RecordFilter;
-}
-
-export type RecordFilters =
-    | AuthIdRecordFilter
-    | SpaceFilter
-    | AddressRecordFilter
-    | IDRecordFilter
-    | RecordReference;
-
 /**
  * Defines the options for {@link experiment.speakText}.
  *
@@ -888,31 +862,6 @@ export interface TagSpecificApiOptions {
      * The bot that is set as the config of the current bot.
      */
     config: RuntimeBot;
-}
-
-/**
- * Defines an interface that represents a set of records that were retrieved.
- */
-export interface GetRecordsResult {
-    /**
-     * The set of records that were retrieved.
-     */
-    records: Record[];
-
-    /**
-     * The total number of records that the query would have returned.
-     */
-    totalCount: number;
-
-    /**
-     * Whether there are more records available to retrieve for the query.
-     */
-    hasMoreRecords: boolean;
-
-    /**
-     * Gets the set page of records.
-     */
-    getMoreRecords(): Promise<GetRecordsResult>;
 }
 
 export const GET_RUNTIME = Symbol('get_runtime');
@@ -2319,6 +2268,9 @@ export interface SetRoomOptionsSuccess {
 
 /**
  * Defines an interface that represents a failed "set room options" request.
+ *
+ * @dochash types/os/portals
+ * @docname SetRoomOptionsFailure
  */
 export interface SetRoomOptionsFailure {
     success: false;
@@ -2708,6 +2660,9 @@ export interface RaycastResult {
 
 /**
  * Defines an interface that represents the intersection of a bot and ray.
+ *
+ * @dochash types/os/portals
+ * @docname BotIntersection
  */
 export interface BotIntersection {
     /**
@@ -3040,6 +2995,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 enableCollaboration,
+                showAccountInfo,
                 getAB1BootstrapURL,
                 enableAR,
                 disableAR,
@@ -3240,8 +3196,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
-                grantRecordMarkerPermission,
-                revokeRecordMarkerPermission,
+                grantPermission,
+                revokePermission,
                 grantInstAdminPermission,
                 grantUserRole,
                 revokeUserRole,
@@ -3253,6 +3209,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getData,
                 getManualApprovalData,
                 listData,
+                listDataByMarker,
                 eraseData,
                 eraseManualApprovalData,
 
@@ -3266,6 +3223,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 countEvents,
 
                 listUserStudios,
+
+                getRecordsEndpoint,
 
                 convertGeolocationToWhat3Words,
 
@@ -4107,7 +4066,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname byID
      */
     function byID(id: string): BotFilter {
-        let filter: IDRecordFilter = ((bot: Bot) => {
+        let filter: any = ((bot: Bot) => {
             return bot.id === id;
         }) as any;
 
@@ -4276,7 +4235,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname bySpace
      */
     function bySpace(space: string): BotFilter {
-        let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
+        let func = byTag(BOT_SPACE_TAG, space) as any;
         func.recordFilter = true;
         func.space = space;
         func.toJSON = () => {
@@ -5709,6 +5668,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return Promise.resolve();
+    }
+
+    /**
+     * Attempts to show the "Account Info" dialog.
+     * Does nothing if the user is not logged in.
+     *
+     * @example Show the "Account Info" dialog.
+     * await os.showAccountInfo();
+     *
+     * @dochash actions/os/system
+     * @docname os.showAccountInfo
+     */
+    function showAccountInfo(): Promise<void> {
+        const task = context.createTask();
+        const event = calcShowAccountInfo(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -8049,29 +8024,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Grants the given marker the given permission in the given record.
+     * Grants the given permission in the given record.
      *
      * See [Record Security](page:learn/records/security) for more information.
      *
      * @param recordName the name of the record.
-     * @param marker the marker that the permission should be added to.
      * @param permission the permission that should be added.
      * @param options the options for the operation.
      *
      * @dochash actions/os/records
      * @docgroup 01-records
-     * @docname os.grantRecordMarkerPermission
+     * @docname os.grantPermission
      */
-    function grantRecordMarkerPermission(
+    function grantPermission(
         recordName: string,
-        marker: string,
         permission: AvailablePermissions,
         options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResult> {
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
         const task = context.createTask();
-        const event = calcGrantRecordMarkerPermission(
+        const event = calcGrantRecordPermission(
             recordName,
-            marker,
             permission,
             options ?? {},
             task.taskId
@@ -8080,30 +8052,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Revokes the given permission from the given marker in the given record.
+     * Revokes the permission with the given ID from the the given record.
      *
      * See [Record Security](page:learn/records/security) for more information.
      *
      * @param recordName the name of the record.
-     * @param marker the name of the marker that the permission should be removed from.
-     * @param permission the permission that should be removed.
+     * @param permissionId the ID of the permission that should be removed.
      * @param options the options for the operation.
      *
      * @dochash actions/os/records
      * @docgroup 01-records
-     * @docname os.revokeRecordMarkerPermission
+     * @docname os.revokePermission
      */
-    function revokeRecordMarkerPermission(
+    function revokePermission(
         recordName: string,
-        marker: string,
-        permission: AvailablePermissions,
+        permissionId: string,
         options?: RecordActionOptions
-    ): Promise<RevokeMarkerPermissionResult> {
+    ): Promise<RevokePermissionResult> {
         const task = context.createTask();
-        const event = calcRevokeRecordMarkerPermission(
+        const event = calcRevokeRecordPermission(
             recordName,
-            marker,
-            permission,
+            permissionId,
             options ?? {},
             task.taskId
         );
@@ -8305,6 +8274,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     return;
      * }
      * const result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example Record data to the user's personal record
+     * const result = await os.recordData(authBot.id, 'myAddress', 'myData');
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example Record data with a custom marker
+     * const result = await os.recordData(authBot.id, 'myAddress', 'myData', {
+     *     marker: 'myMarker'
+     * });
      *
      * if (result.success) {
      *     os.toast("Success!");
@@ -8551,6 +8540,88 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = listDataRecord(
             recordName,
+            startingAddress,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a partial list of [data](glossary:data-record) with the given marker that is stored in the given record.
+     * Optionally accepts the address before the first item that should be included in the list.
+     * Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
+     *
+     * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
+     * Note that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options The options for the operation.
+     *
+     * @example Get a list of publicRead data items in a record
+     * const result = await os.listDataByMarker('myRecord', 'publicRead');
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example List all the items that have the publicRead marker in a record
+     * let lastAddress;
+     * let items = [];
+     * while(true) {
+     *     const result = await os.listDataByMarker('myRecord', 'publicRead', lastAddress);
+     *     if (result.success) {
+     *         console.log(result.items);
+     *         items.push(...result.items);
+     *         if (result.items.length > 0) {
+     *             lastAddress = result.items[result.items.length - 1].address;
+     *         } else {
+     *             // result.items is empty, so we can break out of the loop
+     *             break;
+     *         }
+     *     } else {
+     *         os.toast("Failed " + result.errorMessage);
+     *         break;
+     *     }
+     * }
+     *
+     * @example List publicRead items in descending order
+     * const result = await os.listDataByMarker('myRecord', 'publicRead', null, { sort: 'descending' });
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example List publicRead items stored at "myContainer" in descending order
+     * const result = await os.listDataByMarker('myRecord', 'publicRead:myContainer', null, { sort: 'descending' });
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listDataByMarker
+     */
+    function listDataByMarker(
+        recordKeyOrName: string,
+        marker: string,
+        startingAddress: string = null,
+        options: ListDataOptions = {}
+    ): Promise<ListDataResult> {
+        const recordName = isRecordKey(recordKeyOrName)
+            ? parseRecordKey(recordKeyOrName)[0]
+            : recordKeyOrName;
+        const task = context.createTask();
+        const event = listDataRecordByMarker(
+            recordName,
+            marker,
             startingAddress,
             options,
             task.taskId
@@ -9212,6 +9283,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListUserStudios(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
+     *
+     * @example Get the default records endpoint.
+     * const endpoint = await os.getRecordsEndpoint();
+     * os.toast("The default records endpoint is: " + endpoint);
+     *
+     * @dochash actions/os/records
+     * @docname os.getRecordsEndpoint
+     */
+    function getRecordsEndpoint(): Promise<string> {
+        const task = context.createTask();
+        const event = calcGetRecordsEndpoint(task.taskId);
         return addAsyncAction(task, event);
     }
 

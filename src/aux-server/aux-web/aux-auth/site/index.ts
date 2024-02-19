@@ -81,7 +81,6 @@ import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUse
 
 import 'virtual:svg-icons-register';
 import AuthRecordsEvents from './AuthRecordsEvents/AuthRecordsEvents';
-import AuthRecordsPolicies from './AuthRecordsPolicies/AuthRecordsPolicies';
 import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
 import AuthStudio from './AuthStudio/AuthStudio';
 import AuthRecordsInsts from './AuthRecordsInsts/AuthRecordsInsts';
@@ -200,11 +199,6 @@ const routes: RouteConfig[] = [
                 path: 'events',
                 name: 'records-events',
                 component: AuthRecordsEvents,
-            },
-            {
-                path: 'policies',
-                name: 'records-policies',
-                component: AuthRecordsPolicies,
             },
             {
                 path: 'roles',

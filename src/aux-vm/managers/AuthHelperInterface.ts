@@ -1,10 +1,13 @@
 import type {
     AuthData,
+    AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
     GetPlayerConfigResult,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
@@ -197,4 +200,14 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * @param comId The comId.
      */
     getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult>;
+
+    /**
+     * Attempts to grant the given permission.
+     * @param recordName The name of the record that the permission is for.
+     * @param permission The permission that should be granted.
+     */
+    grantPermission(
+        recordName: string,
+        permission: AvailablePermissions
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult>;
 }

@@ -537,21 +537,35 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
     }
 
-    registerBuiltinMethods(HTMLElement, BUILTIN_HTML_ELEMENT_FUNCTIONS);
+    // We use reference the class by a string name to avoid
+    // bugs introduced by build minification.
+    registerBuiltinMethods(
+        HTMLElement,
+        'HTMLElement',
+        BUILTIN_HTML_ELEMENT_FUNCTIONS
+    );
 
-    function registerBuiltinMethods($class: any, methods: string[]) {
+    function registerBuiltinMethods(
+        $class: any,
+        className: string,
+        methods: string[]
+    ) {
         for (let func of methods) {
-            registerHandledMethod($class, func);
+            registerHandledMethod($class, className, func);
         }
     }
 
-    function registerHandledMethod($class: any, methodName: string) {
+    function registerHandledMethod(
+        $class: any,
+        className: string,
+        methodName: string
+    ) {
         const proto = $class.prototype;
         proto[methodName] = function (...args: any[]) {
             return callMethodHandler(
                 this.ownerDocument,
                 this,
-                $class.name,
+                className,
                 methodName,
                 args
             );
@@ -573,6 +587,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
 
     registerBuiltinMethods(
         HTMLInputElement,
+        'HTMLInputElement',
         BUILTIN_HTML_INPUT_ELEMENT_FUNCTIONS
     );
 
@@ -584,6 +599,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
 
     registerBuiltinMethods(
         HTMLFormElement,
+        'HTMLFormElement',
         BUILTIN_HTML_FORM_ELEMENT_FUNCTIONS
     );
 
@@ -595,6 +611,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
 
     registerBuiltinMethods(
         HTMLMediaElement,
+        'HTMLMediaElement',
         BUILTIN_HTML_MEDIA_ELEMENT_FUNCTIONS
     );
 
@@ -606,6 +623,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
 
     registerBuiltinMethods(
         HTMLVideoElement,
+        'HTMLVideoElement',
         BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS
     );
 

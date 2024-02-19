@@ -1,9 +1,7 @@
 import {
-    AuxLibrary,
     createDefaultLibrary,
     createInterpretableFunction,
     DebuggerInterface,
-    GetRecordsResult,
     GET_RUNTIME,
     RecordFileApiSuccess,
     tagAsInterpretableFunction,
@@ -61,8 +59,6 @@ import {
     superShout,
     botRemoved,
     botAdded,
-    clearSpace,
-    loadBots,
     localFormAnimation,
     showInput,
     share,
@@ -140,6 +136,7 @@ import {
     getCurrentInstUpdate,
     openPhotoCamera,
     enableCollaboration,
+    getRecordsEndpoint,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -163,8 +160,8 @@ import {
     getRoomTrackOptions,
     setRoomTrackOptions,
     getRoomRemoteOptions,
-    grantRecordMarkerPermission,
-    revokeRecordMarkerPermission,
+    grantRecordPermission,
+    revokeRecordPermission,
     grantInstAdminPermission,
     grantUserRole,
     revokeUserRole,
@@ -172,11 +169,13 @@ import {
     revokeInstRole,
     getFile,
     listUserStudios,
+    listDataRecordByMarker,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
     remote,
     reportInst,
+    showAccountInfo,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import {
@@ -3384,6 +3383,15 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.showAccountInfo()', () => {
+            it('should emit a ShowAccountInfoAction', () => {
+                const promise: any = library.api.os.showAccountInfo();
+                const expected = showAccountInfo(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.getAB1BootstrapURL()', () => {
             it('should return the device bootstrap URL', () => {
                 device.ab1BootstrapUrl = 'bootstrap';
@@ -5856,24 +5864,27 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.grantRecordMarkerPermission()', () => {
-            it('should emit a GrantRecordMarkerPermissionAction', async () => {
-                const action: any = library.api.os.grantRecordMarkerPermission(
+        describe('os.grantPermission()', () => {
+            it('should emit a GrantRecordPermissionAction', async () => {
+                const action: any = library.api.os.grantPermission('record', {
+                    marker: 'marker',
+                    resourceKind: 'data',
+                    action: 'create',
+                    expireTimeMs: null,
+                    options: {},
+                    subjectType: 'role',
+                    subjectId: 'developer',
+                });
+                const expected = grantRecordPermission(
                     'record',
-                    'marker',
                     {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
-                    }
-                );
-                const expected = grantRecordMarkerPermission(
-                    'record',
-                    'marker',
-                    {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
+                        marker: 'marker',
+                        resourceKind: 'data',
+                        action: 'create',
+                        expireTimeMs: null,
+                        options: {},
+                        subjectType: 'role',
+                        subjectId: 'developer',
                     },
                     {},
                     context.tasks.size
@@ -5883,25 +5894,15 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.revokeRecordMarkerPermission()', () => {
-            it('should emit a RevokeRecordMarkerPermissionAction', async () => {
-                const action: any = library.api.os.revokeRecordMarkerPermission(
+        describe('os.revokePermission()', () => {
+            it('should emit a RevokeRecordPermissionAction', async () => {
+                const action: any = library.api.os.revokePermission(
                     'record',
-                    'marker',
-                    {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
-                    }
+                    'permissionId'
                 );
-                const expected = revokeRecordMarkerPermission(
+                const expected = revokeRecordPermission(
                     'record',
-                    'marker',
-                    {
-                        type: 'data.create',
-                        role: 'developer',
-                        addresses: true,
-                    },
+                    'permissionId',
                     {},
                     context.tasks.size
                 );
@@ -6533,6 +6534,96 @@ describe('AuxLibrary', () => {
                 );
                 const expected = listDataRecord(
                     'recordName',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listDataByMarker()', () => {
+            it('should emit a ListRecordDataByMarkerAction', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    'recordName',
+                    'myMarker'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    'recordName',
+                    'myMarker',
+                    undefined,
+                    {
+                        endpoint: 'myEndpoint',
+                        sort: 'ascending',
+                    }
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    { endpoint: 'myEndpoint', sort: 'ascending' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting address', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    'recordName',
+                    'myMarker',
+                    'address'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v1 record keys into a record name', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    formatV1RecordKey('recordName', 'test'),
+                    'myMarker',
+                    'address'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should parse v2 record keys into a record name', async () => {
+                const action: any = library.api.os.listDataByMarker(
+                    formatV2RecordKey('recordName', 'test', 'subjectfull'),
+                    'myMarker',
+                    'address'
+                );
+                const expected = listDataRecordByMarker(
+                    'recordName',
+                    'myMarker',
                     'address',
                     {},
                     context.tasks.size
@@ -7241,6 +7332,16 @@ describe('AuxLibrary', () => {
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getRecordsEndpoint()', () => {
+            it('should return a promise that resolves to the records endpoint', async () => {
+                const result: any = library.api.os.getRecordsEndpoint();
+                const action = result[ORIGINAL_OBJECT];
+                const expected = getRecordsEndpoint(context.tasks.size);
+                expect(action).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

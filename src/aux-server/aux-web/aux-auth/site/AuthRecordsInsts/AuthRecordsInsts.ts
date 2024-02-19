@@ -5,13 +5,12 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import type {
-    ListDataResult,
-    ListDataSuccess,
+    InstRecord,
     ListInstsSuccess,
-    ListedInstItem,
 } from '@casual-simulation/aux-records';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import { LoadingHelper } from '../LoadingHelper';
+import AuthPermissions from '../AuthPermissions/AuthPermissions';
 
 const PAGE_SIZE = 10;
 
@@ -21,6 +20,7 @@ declare const FRONTEND_ORIGIN: string;
     components: {
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
+        'auth-permissions': AuthPermissions,
     },
 })
 export default class AuthRecordsInsts extends Vue {
@@ -43,6 +43,10 @@ export default class AuthRecordsInsts extends Vue {
         startIndex: 0,
         endIndex: 0,
     };
+
+    permissionsMarker: string = null;
+    permissionsResourceKind: string = null;
+    permissionsResourceId: string = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -89,10 +93,10 @@ export default class AuthRecordsInsts extends Vue {
         this.updatePagination(this.items.mdPage + change, PAGE_SIZE);
     }
 
-    getInstUrl(inst: ListedInstItem): string {
+    getInstUrl(inst: InstRecord): string {
         const origin = FRONTEND_ORIGIN ?? window.location.origin;
         let url = new URL(origin);
-        url.searchParams.set('record', this.recordName);
+        url.searchParams.set('owner', this.recordName);
         url.searchParams.set('inst', inst.inst);
         url.searchParams.set('gridPortal', 'home');
         return url.href;
@@ -106,12 +110,21 @@ export default class AuthRecordsInsts extends Vue {
         return true;
     }
 
-    async deleteInst(item: ListedInstItem) {
+    async deleteInst(item: InstRecord) {
         const result = await authManager.deleteInst(this.recordName, item.inst);
         if (result.success === true) {
             this.items.mdData = this.items.mdData.filter(
                 (i) => i.inst !== item.inst
             );
         }
+    }
+
+    onMarkerClick(marker: string) {
+        this.permissionsMarker = marker;
+    }
+
+    onItemClick(item: ListInstsSuccess['insts'][0]) {
+        this.permissionsResourceKind = 'inst';
+        this.permissionsResourceId = item.inst;
     }
 }

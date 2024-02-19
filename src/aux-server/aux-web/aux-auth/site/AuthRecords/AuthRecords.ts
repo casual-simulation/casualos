@@ -7,7 +7,6 @@ import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthRecordsData from '../AuthRecordsData/AuthRecordsData';
 import AuthRecordsFiles from '../AuthRecordsFiles/AuthRecordsFiles';
 import AuthRecordsEvents from '../AuthRecordsEvents/AuthRecordsEvents';
-import AuthRecordsPolicies from '../AuthRecordsPolicies/AuthRecordsPolicies';
 import AuthRecordsRoles from '../AuthRecordsRoles/AuthRecordsRoles';
 import AuthRecordsInsts from '../AuthRecordsInsts/AuthRecordsInsts';
 
@@ -17,7 +16,6 @@ import AuthRecordsInsts from '../AuthRecordsInsts/AuthRecordsInsts';
         'records-data': AuthRecordsData,
         'records-files': AuthRecordsFiles,
         'records-events': AuthRecordsEvents,
-        'records-policies': AuthRecordsPolicies,
         'records-roles': AuthRecordsRoles,
         'records-insts': AuthRecordsInsts,
     },

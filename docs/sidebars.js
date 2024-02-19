@@ -20,9 +20,21 @@ export default {
         {
             type: 'category',
             label: 'Reference',
-            items: [
+            items: [{
+                type: 'category',
+                label: 'Tags',
+                items: [
                 'tags',
-                'listen-tags',
+                'tags/info',
+                'tags/behavior',
+                'tags/visualization',
+                'tags/dimension',
+                'tags/portal-bot',
+                'tags/history',
+                'tags/config-bot',
+                'tags/auth-bot',
+                'tags/listen',
+            ]},
                 {
                     type: 'category',
                     label: 'Actions',

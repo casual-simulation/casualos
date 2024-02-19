@@ -1,0 +1,846 @@
+---
+id: config-bot
+title: Config Bot Tags
+sidebar_label: Config Bot
+description: Tags related to the config bot in CasualOS.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  ActionLink,
+  TagLink,
+  NormalCode,
+  ConfigBotBadge,
+  HistoryBotBadge,
+  AutomaticBadge,
+  GridPortalBadge,
+  MiniGridPortalBadge,
+  MiniMapPortalBadge,
+  MenuPortalBadge,
+  MeetPortalBadge,
+  LeftWristPortalBadge,
+  RightWristPortalBadge,
+  SheetPortalBadge,
+  BotPortalBadge,
+  TagPortalBadge,
+  Example,
+  AnyCursorValues,
+  TypeLink,
+  ImuPortalBadge,
+  MapPortalBadge,
+  tagMap,
+} from '../components.jsx';
+
+import { GlossaryRef } from '../glossary/index';
+
+## Config bot Tags
+
+All tags on the config bot will be synced with the URL query parameters.
+This means that setting the `#abc` tag on the config bot to `hello` will update the URL to include `abc=hello`.
+It also means that putting `miniGridPortal=myDimension` into the query string will set the <TagLink tag='miniGridPortal'/> tag to `myDimension`.
+
+### `bios`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The BIOS option that was used to initialize CasualOS.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No BIOS option was used. This will cause a selection box to appear asking the user what their preference is. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='local inst'>
+    A new local inst will be created. Bots are stored in the browser on the device.
+  </PossibleValueCode>
+  <PossibleValueCode value='local'>
+    Shorthand for "local inst".
+  </PossibleValueCode>
+  <PossibleValueCode value='studio inst'>
+    A new private inst will be generated in "My Studio". Bots are stored in the cloud and shared with studio members.
+  </PossibleValueCode>
+  <PossibleValueCode value='studio'>
+    Shorthand for "studio inst".
+  </PossibleValueCode>
+  <PossibleValueCode value='free inst'>
+    A new public inst will be generated. Bots are stored in the cloud and shared publicly, expires in 24h.
+  </PossibleValueCode>
+  <PossibleValueCode value='free'>
+    Shorthand for "free inst".
+  </PossibleValueCode>
+  <PossibleValueCode value='enter join code'>
+    The BIOS selection box will be shown with the "enter join code" option selected.
+  </PossibleValueCode>
+  <PossibleValueCode value='sign in'>
+    The BIOS selection box will be shown with the "sign in" option selected.
+  </PossibleValueCode>
+  <PossibleValueCode value='sign up'>
+    The BIOS selection box will be shown with the "sign up" option selected.
+  </PossibleValueCode>
+  <PossibleValueCode value='sign out'>
+    The BIOS selection box will be shown with the "sign out" option selected.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `inst`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The instance that is loaded into CasualOS.
+
+### `staticInst`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The static instance that is loaded into CasualOS. Not present if the inst is not a static inst.
+
+### `joinCode`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The join code that ab1 should use to join an inst. If specified, then the BIOS selection box will be skipped.
+
+### `record`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The name of the record that the inst was loaded from. Null if the inst was loaded as temporary and public.
+
+### `owner`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The place that the inst should be loaded from.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='public'>
+    The inst will be loaded as temporary and public.
+  </PossibleValueCode>
+  <PossibleValueCode value='player'>
+    The inst will be loaded from the currently logged in user's default record.
+  </PossibleValueCode>
+  <PossibleValue value='Any Record Name'>
+    The inst will be loaded from the given record.
+  </PossibleValue>
+  <PossibleValue value='Any User ID'>
+    The inst will be loaded from the given user's player studio default record.
+  </PossibleValue>
+  <PossibleValue value='Any Studio ID'>
+    The inst will be loaded from the given studio's default record.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `theme`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The theme that CasualOS should use.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    CasualOS is displayed with a color theme matching the system default. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='light'>
+    CasualOS is displayed with a white-like-paper color theme.
+  </PossibleValue>
+  <PossibleValue value='dark'>
+    CasualOS is displayed with a dark theme.
+  </PossibleValue>
+</PossibleValuesTable>
+
+Only available on the config bot.
+
+### `gridPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the <GlossaryRef term="gridPortal">'grid' portal</GlossaryRef> in CasualOS.
+This is the portal that is loaded by default.
+Only available on the config bot.
+
+### `miniGridPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the "mini" portal in CasualOS.
+Only available on the config bot.
+
+### `sheetPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the "sheet" portal in CasualOS.
+Only available on the config bot.
+
+### `systemPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The search value that is loaded into the <GlossaryRef term="systemPortal">"system" portal</GlossaryRef> in CasualOS.
+Setting this to `true` will show every bot that has a <TagLink tag='system'/> tag in the system portal.
+Only available on the config bot.
+
+### `systemTagName`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The name of the tag that should be used when showing bots in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+For example, setting <TagLink tag='systemTagName'/> on the configBot to "test" will cause the systemPortal to only show bots that have a "test" tag instead of a "system" tag.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The "system" tag is used. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The given tag is used.
+  </PossibleValue>
+</PossibleValuesTable>
+
+Only available on the config bot.
+
+#### Examples
+
+1. Use the "myCustomSystem" tag for the systemPortal instead of the "system" tag.
+```typescript
+configBot.tags.systemPortalTagName = "myCustomSystem";
+```
+
+### `systemPortalBot`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The ID of the bot that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+Only available on the config bot.
+
+### `systemPortalTag`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The name of the tag that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+
+Defaults to `system`.
+
+Only available on the config bot.
+
+### `systemPortalTagSpace`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The space of the tag that is selected in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+If null, then the tag space is the same as the <TagLink tag='systemPortalBot'/> space.
+Only available on the config bot.
+
+### `systemPortalSearch`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The value that should be used to search across all the tags in all the bots in the inst.
+The results of the search will be displayed in the <GlossaryRef term="systemPortal">systemPortal</GlossaryRef>.
+Only available on the config bot.
+
+### `systemPortalDiff`
+
+The name of the tag should be used as a second system portal to compare with the tag specified by the <TagLink tag='systemPortalTag'/> (`system` by default).
+
+If both the <TagLink tag='systemPortal'/> and <TagLink tag='systemPortalDiff'/> tags are specified, then the system portal will be shown comparing
+bots whose system matches.
+
+For example, if `#systemPortal` is set to `true` and `#systemPortalDiff` is set to `history`, then a Bot that has `#system` set to `my.system` will be compared with another bot that has `#history` set to `my.system`.
+The result of this comparision will be shown in the system portal, indicating what was changed between the two bots.
+
+### `systemPortalDiffBot`
+
+The ID of the bot that is currently selected in the system portal diff.
+Only available on the config bot.
+
+### `systemPortalDiffTag`
+
+The name of the tag that is currently selected in the system portal diff.
+Only available on the config bot.
+
+### `systemPortalDiffTagSpace`
+
+The space of the tag that is selected in the system portal diff.
+If null, then the tag space is the same as the <TagLink tag='systemPortalDiffBot'/> space.
+Only available on the config bot.
+
+### `systemPortalPane`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The pane that the user is currently viewing in the system portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The system portal figures out which pane to show based on the other system portal tags. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='bots'>
+    The "bots" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='sheet'>
+    The "sheet" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='search'>
+    The "search" pane is shown.
+  </PossibleValue>
+  <PossibleValue value='diff'>
+    The "diff" pane is shown.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `idePortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The prefix that indicates which tags should be loaded into the "IDE" portal in CasualOS.
+Only available on the config bot.
+
+### `mapPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the <GlossaryRef term="mapPortal">"map" portal</GlossaryRef> in CasualOS.
+
+The map portal displays a 3D globe representing earth. Bots represented in the map portal use longitude for X and latitude for Y and are 10 meters by 10 meters large by default.
+
+Only available on the config bot.
+
+### `miniMapPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the "mini map" portal in CasualOS.
+
+The mini map portal displays a 3D globe representing earth. Bots represented in the mini map portal use longitude for X and latitude for Y and are 10 meters by 10 meters large by default.
+
+Only available on the config bot.
+
+### `menuPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded into the "menu" portal in CasualOS.
+Only available on the config bot.
+
+### `leftWristPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded onto the left controller near the wrist when in VR.
+Only available on the config bot.
+
+### `rightWristPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension that is loaded onto the right controller near the wrist when in VR.
+Only available on the config bot.
+
+### `meetPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The [Jitsi Meet](https://meet.jit.si/) room code of the meeting that should be joined.
+This will join the current tab to the meeting and provide audiovisual communication between everyone that is joined.
+
+This is similar to a Skype or Zoom call except that all data is encrypted and is deleted once you are done with it. Check out the Jitsi Meet privacy policy [here](https://jitsi.org/meet-jit-si-privacy/).
+
+Only available on the config bot.
+
+### `botPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The ID of the bot whose data should be shown in the bot portal.
+This will show the raw JSON data of the bot in a raw text portal.
+
+Only available on the config bot.
+
+```typescript title='Open the botPortal for the current bot'
+configBot.tags.botPortal = thisBot.id;
+```
+
+```typescript title='Open the botPortal along the top of the screen'
+configBot.tags.botPortal = thisBot.id;
+botPortalBot.tags.botPortalAnchorPoint = 'top';
+```
+
+### `tagPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The Bot ID and tag that should be edited in the tag portal.
+This will show just the code editor without the rest of the sheet and makes it possible to edit just a single tag at a time.
+
+When you are setting the tag portal, you should format it so the bot ID and tag name are separated by a single period (.).
+
+Only available on the config bot.
+
+#### Examples:
+
+1. Open the tag portal for the `abc` tag on the config bot.
+```typescript
+const tag = "abc";
+configBot.tags.tagPortal = getID(configBot) + "." + tag;
+```
+
+### `tagPortalSpace`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The space of the tag mask that should be edited in the tag portal.
+If not set, then the tag on the bot will be edited.
+If set, then the tag mask in the given space will be edited.
+
+Only available on the config bot.
+
+#### Examples:
+
+1. Open the tag portal for the `abc` tag mask in the `tempLocal` space on the config bot.
+```typescript
+const tag = "abc";
+configBot.tags.tagPortal = getID(configBot) + "." + tag;
+configBot.tags.tagPortalSpace = "tempLocal";
+```
+
+### `codeToolsPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The dimension of bots that should be shown in the multi-line editor toolbar. This is useful for displaying small buttons that are easy to access while writing code.
+
+Only available on the config bot.
+
+#### Examples:
+
+1. Open the codeToolsPortal to the `home` dimension.
+```typescript
+configBot.tags.codeToolsPortal = 'home';
+```
+
+### `imuPortal`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+Determines if the IMU portal should be constantly reading IMU (inertial measurement unit) data for the device.
+When set to `true`, CasualOS will start updating the `imuPortalBot` with the data from the IMU.
+
+Note that not all devices support the IMU portal. In particular, laptops and desktop computers will likely not support the IMU portal while mobile devices probably will.
+
+Only available on the config bot.
+
+### `dataPortal`
+
+The data portal is a special portal that can be used in a web request to get bot data directly from the inst.
+Similar to webhooks, you specify the inst and data portal in the query string of the URL.
+
+If given a bot ID, then the bot will be returned as JSON.
+
+If no bot matches the given value, then it will be treated as a tag and all the values for the given tag will be returned.
+
+If the tag ends with a common extension (like `.html` or `.txt` or `.json`), then the returned data will be [tagged](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) with the corresponding [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types).
+This will let web browsers and other common software know what type of data they are dealing with and handle it correctly. (i.e. display a webpage)
+Alternatively, you can specify the `dataPortalContentType` query parameter to override the default content type.
+
+If there is only one tag and it ends with an extension like specified above then the content directly from the tag will be returned.
+
+#### Examples:
+
+1. Request the JSON of the Bot with the given ID:
+```
+https://auxplayer.org?inst=my-aux&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
+```
+
+2. Request all the <TagLink tag='label'/> tags values.
+```
+https://auxplayer.org?inst=my-aux&dataPortal=label
+```
+
+3. Request a web page from the `test.html` tag.
+```
+https://auxplayer.org?inst=my-aux&dataPortal=test.html
+```
+
+### `mousePointerPosition`
+
+The 3D position of the player's mouse pointer.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+### `mousePointerRotation`
+
+The 3D rotation of the player's mouse pointer.
+
+See the documentation on [Rotations](#rotation-tags) for more info.
+
+### `mousePointerPortal`
+
+The portal that the player's mouse pointer is in.
+
+### `leftPointerPosition`
+
+The 3D position of the player's left controller.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+### `leftPointerRotation`
+
+The 3D rotation of the player's left controller.
+
+See the documentation on [Rotations](#rotation-tags) for more info.
+
+### `leftPointerPortal`
+
+The portal that the player's left controller is in.
+
+### `rightPointerPosition`
+
+The 3D position of the player's right controller.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+### `rightPointerRotation`
+
+The 3D rotation of the player's right controller.
+
+See the documentation on [Rotations](#rotation-tags) for more info.
+
+### `rightPointerPortal`
+
+The portal that the player's right controller is in.
+
+### `mousePointer_left`
+
+The state that the left mouse button is currently in.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The button is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The button was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The button is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `mousePointer_right`
+
+The state that the right mouse button is currently in.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The button is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The button was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The button is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `mousePointer_middle`
+
+The state that the middle mouse button is currently in.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The button is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The button was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The button is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `rightPointer_primary`
+
+The state that the primary button on the right controller is currently in.
+The primary input on most contollers is the trigger button.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The button is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The button was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The button is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `rightPointer_squeeze`
+
+The state that the squeeze button on the right controller is currently in.
+Some controllers have buttons on the side that count as "squeezing" the controller.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The button is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The button was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The button is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `leftPointer_primary`
+
+The state that the primary button on the left controller is currently in.
+The primary input on most contollers is the trigger button.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The button is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The button was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The button is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `leftPointer_squeeze`
+
+The state that the squeeze button on the left controller is currently in.
+Some controllers have buttons on the side that count as "squeezing" the controller.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The button is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The button was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The button is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `keyboard_[key]`
+
+The state that the given key on the keyboard is currently in.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The key is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The key was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The key is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `touch_[index]`
+
+The state that the given touch index is in.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The touch is not pressed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='down'>
+    The touch was just pressed.
+  </PossibleValueCode>
+  <PossibleValueCode value='held'>
+    The touch is being held down.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `forceSignedScripts`
+
+Whether to force all shared scripts to have been signed by a certificate in order to be executed.
+
+This option only takes effect if it is set in the query string of the URL.
+Additionally, changing the tag value has no effect.
+
+If the inst is loaded with `forceSignedScripts` set to `true`, then scripts will be required to be signed for the entire session.
+
+`tempLocal` and `local` spaces are exempt from this requirement.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    Scripts do not have to be signed in order to be executed. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    Scripts have to be signed in order to be executed.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `url`
+
+The URL that is currently specified in the tab.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any String'>
+    The URL that is loaded in the tab.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `permalink`
+
+The URL, but with the <TagLink tag='owner'/> query parameter replaced with the value of the <TagLink tag='record'/> tag on the config bot.
+This tag is useful for sharing an exact link to the current inst.
+
+### `pageTitle`
+
+The title that should be displayed on the web browser tab.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any String'>
+    The title that should be displayed.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `editingBot`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The ID of the bot that the user is currently editing.
+Only available on the config bot.
+
+### `editingTag`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The tag that the user is currently editing.
+Only available on the config bot.
+
+### `cursorStartIndex`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The selection start index of the player's cursor in the current <TagLink tag='editingTag'/>.
+
+Note that when <TagLink tag='cursorStartIndex'/> is larger than <TagLink tag='cursorEndIndex'/> it means 
+that the player has selected text from the right to the left.
+This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
+
+Only available on the config bot.
+
+### `cursorEndIndex`
+
+<Badges>
+  <ConfigBotBadge/>
+</Badges>
+
+The selection end index of the player's cursor in the current <TagLink tag='editingTag'/>.
+
+Note that when <TagLink tag='cursorEndIndex'/> is smaller than <TagLink tag='cursorStartIndex'/> it means 
+that the player has selected text from the right to the left.
+This is important because text will always be inserted at <TagLink tag='cursorEndIndex'/>.
+
+Only available on the config bot.

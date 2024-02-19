@@ -31,7 +31,10 @@ export const UNMAPPABLE = Symbol('UNMAPPABLE');
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots channel.
+ * Defines a union type for all the possible common events.
+ *
+ * @dochash types/os/event
+ * @docname BotAction
  */
 export type BotAction =
     | BotActions
@@ -114,7 +117,6 @@ export type AsyncActions =
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
     | RunScriptAction
-    | LoadBotsAction
     | ClearSpaceAction
     | SendWebhookAction
     | AnimateTagAction
@@ -169,7 +171,9 @@ export type AsyncActions =
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
     | OpenPhotoCameraAction
-    | EnableCollaborationAction;
+    | EnableCollaborationAction
+    | GetRecordsEndpointAction
+    | ShowAccountInfoAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -943,13 +947,13 @@ export interface SendWebhookAction extends AsyncAction {
     /**
      * The options for the webhook.
      */
-    options: WebhookOptions;
+    options: WebhookActionOptions;
 }
 
 /**
  * Defines a set of options for a webhook.
  */
-export interface WebhookOptions {
+export interface WebhookActionOptions {
     /**
      * The HTTP Method that the request should use.
      */
@@ -1393,6 +1397,12 @@ export interface ShowInputOptions {
     items?: ShowInputItem[];
 }
 
+/**
+ * Defines an interface that represents an item that can be displayed in a {@link os.showInput} list.
+ *
+ * @dochash types/os/input
+ * @docname ShowInputItem
+ */
 export interface ShowInputItem {
     label: string;
     value: any;
@@ -1631,36 +1641,10 @@ export interface EnableCollaborationAction extends AsyncAction {
 }
 
 /**
- * Defines an event that loads bots from the given space that match the given tags and values.
+ * An event that is used to show the account info dialog.
  */
-export interface LoadBotsAction extends AsyncAction {
-    type: 'load_bots';
-
-    /**
-     * The space that should be searched.
-     */
-    space: string;
-
-    /**
-     * The tags that the loaded bots should have.
-     */
-    tags: TagFilter[];
-}
-
-/**
- * Defines an interface for objects that specify a tag and value
- * that a bot should have to be loaded.
- */
-export interface TagFilter {
-    /**
-     * The tag that the bot should have.
-     */
-    tag: string;
-
-    /**
-     * The value that the bot should have.
-     */
-    value?: any;
+export interface ShowAccountInfoAction extends AsyncAction {
+    type: 'show_account_info';
 }
 
 /**
@@ -2215,6 +2199,12 @@ export interface SerializableMutationRecord {
     listenerDelta?: number;
 }
 
+/**
+ * Defines a reference to a HTML node. Internal to CasualOS.
+ *
+ * @dochash types/os/portals
+ * @docname NodeReference
+ */
 export interface NodeReference {
     __id: string;
 }
@@ -2549,6 +2539,40 @@ export interface RecordingOptions {
      * Defaults to false.
      */
     screen: boolean;
+
+    /**
+     * The MIME type that should be produced.
+     * If supported, then the recorded file(s) will be in this format.
+     * If not supported, then the recording will fail.
+     * If not provided, then a default will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_codecs for more information.
+     */
+    mimeType?: string;
+
+    /**
+     * The ideal number of bits per second that the recording should use.
+     * If omitted, then the videoBitsPerSecond and audioBitsPerSecond  settings will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#bitspersecond for more information.
+     */
+    bitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the video portion of the recording should use.
+     * If omitted, then a bitrate of 1mbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#videobitspersecond for more information.
+     */
+    videoBitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the audio portion of the recording should use.
+     * If omitted then a bitrake of 48kbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#audiobitspersecond for more information.
+     */
+    audioBitsPerSecond?: number;
 }
 
 /**
@@ -3304,13 +3328,31 @@ export interface FormAnimationData {
     duration: number;
 }
 
+/**
+ * The portals that contain a camera that can be raycasted from.
+ *
+ * @dochash types/os/portals
+ * @docname CameraPortal
+ */
 export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
 
+/**
+ * Defines an event that represents a 2D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point2D
+ */
 export interface Point2D {
     x: number;
     y: number;
 }
 
+/**
+ * Defines an interface that represents a 3D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point3D
+ */
 export interface Point3D {
     x: number;
     y: number;
@@ -3373,6 +3415,13 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
      * The metadata for the event.
      */
     metadata: any;
+}
+
+/**
+ * An action that is used to retrieve the default records endpoint.
+ */
+export interface GetRecordsEndpointAction extends AsyncAction {
+    type: 'get_records_endpoint';
 }
 
 /**z
@@ -3997,7 +4046,7 @@ export function download(
  * @param taskId The ID of the task.
  */
 export function webhook(
-    options: WebhookOptions,
+    options: WebhookActionOptions,
     taskId?: number | string
 ): SendWebhookAction {
     return {
@@ -4211,6 +4260,19 @@ export function enableCollaboration(
 }
 
 /**
+ * Creates a ShowAccountInfoAction.
+ * @param taskId The ID of the async task.
+ */
+export function showAccountInfo(
+    taskId?: number | string
+): ShowAccountInfoAction {
+    return {
+        type: 'show_account_info',
+        taskId,
+    };
+}
+
+/**
  * Creates a EnableARAction.
  */
 export function enableAR(options: EnableXROptions = {}): EnableARAction {
@@ -4338,25 +4400,6 @@ export function requestFullscreen(): RequestFullscreenAction {
 export function exitFullscreen(): ExitFullscreenAction {
     return {
         type: 'exit_fullscreen_mode',
-    };
-}
-
-/**
- * Requests that bots matching the given tags be loaded from the given space.
- * @param space The space that the bots should be loaded from.
- * @param tags The tags that should be on the loaded bots.
- * @param taskId The ID of the async task for this action.
- */
-export function loadBots(
-    space: string,
-    tags: TagFilter[],
-    taskId?: number | string
-): LoadBotsAction {
-    return {
-        type: 'load_bots',
-        space: space,
-        tags: tags,
-        taskId,
     };
 }
 
@@ -5223,6 +5266,19 @@ export function analyticsRecordEvent(
         type: 'analytics_record_event',
         name,
         metadata,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetRecordsEndpointAction.
+ * @param taskId The ID of the async task.
+ */
+export function getRecordsEndpoint(
+    taskId?: number | string
+): GetRecordsEndpointAction {
+    return {
+        type: 'get_records_endpoint',
         taskId,
     };
 }

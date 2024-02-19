@@ -1,0 +1,250 @@
+---
+id: dimension
+title: Dimension Tags
+sidebar_label: Dimension
+description: Tags for controlling the position, rotation, and visibility of bots in different dimensions.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  ActionLink,
+  TagLink,
+  NormalCode,
+  ConfigBotBadge,
+  HistoryBotBadge,
+  AutomaticBadge,
+  GridPortalBadge,
+  MiniGridPortalBadge,
+  MiniMapPortalBadge,
+  MenuPortalBadge,
+  MeetPortalBadge,
+  LeftWristPortalBadge,
+  RightWristPortalBadge,
+  SheetPortalBadge,
+  BotPortalBadge,
+  TagPortalBadge,
+  Example,
+  AnyCursorValues,
+  TypeLink,
+  ImuPortalBadge,
+  MapPortalBadge,
+  tagMap,
+} from '../components.jsx';
+
+import { GlossaryRef } from '../glossary/index';
+
+## Dimension Tags
+
+### `[dimension]`
+
+Add a bot to a dimension. 
+
+> **Example:**  Set `#room1` to `true` for the bot to appear in a dimension named `room1`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    Removes the bot from the dimension. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    Puts the bot into the dimension.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `[dimension]SortOrder`
+
+The order that the bot should be in a stack of bots.
+
+When bots are stacked, they are placed from the bottom to the top based on the sort order. So a bot with a sort order of 1 is going to be placed on top of a bot with a sort order of 2.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the sort order of a bot in a stack of bots. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Position`
+
+The vector position of a bot on the grid in the specified dimension.
+Must be a vector type. If not specified or the value is not a vector, then <TagLink tag='[dimension]X'/>, <TagLink tag='[dimension]Y'/>, and <TagLink tag='[dimension]Z'/> will be used.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='➡️0,0,0'>
+    The bot will be placed in the center of the grid. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Vector'>
+    Specifies the X, Y, and Z position of a bot in a dimension.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+```typescript title='Place this bot at (1, 2, 3) in the home dimension.'
+tags.homePosition = new Vector3(1, 2, 3);
+```
+
+```typescript title='Toast the position of this bot in the home dimension.'
+const homePosition = getBotPosition(thisBot, 'home');
+os.toast('home Position: ' + homePosition);
+```
+
+### `[dimension]X`
+
+The X (east-west) position of a bot on the grid in the specified dimension.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Y`
+
+The Y (north-south) position of a bot on the grid in the specified dimension.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Z`
+
+The Z (up-down) offset that the bot is offset above/below the grid.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z position of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Rotation`
+
+The rotation in that the bot should be oriented by in the specified dimension.
+Must be a rotation type. If not specified or the value is not a rotation, then <TagLink tag='[dimension]RotationX'/>, <TagLink tag='[dimension]RotationY'/>, and <TagLink tag='[dimension]RotationZ'/> will be used.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='🔁0,0,0,1'>
+    The bot will be placed flat on the grid. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Rotation'>
+    Specifies the rotation of a bot in a dimension.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples:
+
+```typescript title='Rotate this bot by 90 degrees around the X axis in the home dimension'
+tags.homeRotation = new Rotation({
+    axis: new Vector3(1, 0, 0),
+    angle: Math.PI / 2
+});
+```
+
+```typescript title='Toast the rotation of this bot in the home dimension'
+const homeRotation = getBotRotation(thisBot, 'home');
+os.toast('home Rotation: ' + homeRotation);
+```
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]RotationX`
+
+The X (pitch) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]RotationY`
+
+The Y (roll) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]RotationZ`
+
+The Z (yaw) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z rotation of a bot in a dimension. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]Start`
+
+The start value for bots that are in the multi-line editor (tag portal/sheet portal).
+
+For `cursor` bots, this value indicates the character index that selection starts at.
+
+For `codeButton` bots, this value indicates the line number that the button should appear above.
+
+For `codeHint` bots, this value can indicate the character index that the hint starts at. Alternatively, it can indicate the line and column numbers that the hint starts at.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the value at which the bot starts in the dimension. (Default is 0)
+  </PossibleValue>
+  <PossibleValue value='Any Vector'>
+    Specifies the line (x component) and column (y component) that the hint starts at. Only applicable to codeHint bots.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[dimension]End`
+
+The end value for bots that are in the multi-line editor (tag portal/sheet portal).
+
+For `cursor` bots, this value indicates the character index that the selection stops at.
+
+The `codeButton` bots, this value indicates the priority for the button. Priority determines the order that buttons on the same line are shown in. (Higher numbers means lower priority)
+
+For `codeHint` bots, this value can indicate the character index that the hint end at. Alternatively, it can indicate the line and column numbers that the hint end at.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the index at which the bot ends in the dimension. (Default is 0)
+  </PossibleValue>
+  <PossibleValue value='Any Vector'>
+    Specifies the line (x component) and column (y component) that the hint ends at. Only applicable to codeHint bots.
+  </PossibleValue>
+</PossibleValuesTable>

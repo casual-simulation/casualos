@@ -13,6 +13,7 @@ import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import {
     AuthData,
+    AvailablePermissions,
     RemoteCausalRepoProtocol,
     hasValue,
 } from '@casual-simulation/aux-common';
@@ -23,6 +24,8 @@ import {
     IsValidEmailAddressResult,
     parseRecordKey,
     PublicRecordKeyPolicy,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
 } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
@@ -57,6 +60,9 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _newTab: Window;
     private _tabCloseInterval: any;
     private _requirePrivoLogin: boolean;
+
+    private _authenticationPromise: Promise<AuthData>;
+    private _authenticating: boolean = false;
 
     get currentLoginStatus() {
         const status = this._loginStatus.value;
@@ -247,7 +253,18 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
-        return await this._authenticateCore(hint);
+
+        if (this._authenticating) {
+            return await this._authenticationPromise;
+        }
+
+        try {
+            this._authenticating = true;
+            this._authenticationPromise = this._authenticateCore(hint);
+            return await this._authenticationPromise;
+        } finally {
+            this._authenticating = false;
+        }
     }
 
     protected async _authenticateCore(hint?: LoginHint) {
@@ -596,6 +613,19 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             await this._init();
         }
         return await this._proxy.getComIdWebConfig(comId);
+    }
+
+    async grantPermission(
+        recordName: string,
+        permission: AvailablePermissions
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.grantPermission(recordName, permission);
     }
 
     private _createNewTab() {

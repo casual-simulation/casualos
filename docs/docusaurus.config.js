@@ -164,7 +164,7 @@ export default {
         {
             redirects: [
                 {
-                  to: '/listen-tags', // string
+                  to: '/tags/listen', // string
                   from: '/docs/listen-tags/tags', // string | string[]
                 },
                 {
@@ -180,8 +180,8 @@ export default {
                     from: '/docs/variables', // string | string[]
                 },
                 {
-                    to: '/listen-tags', // string
-                    from: '/docs/listen-tags', // string | string[]
+                    to: '/tags/listen', // string
+                    from: ['/docs/listen-tags', '/listen-tags'], // string | string[]
                 },
                 {
                     to: '/glossary', // string

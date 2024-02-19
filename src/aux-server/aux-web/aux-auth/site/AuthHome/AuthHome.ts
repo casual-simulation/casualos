@@ -14,7 +14,7 @@ import {
     isOpenAiKey,
     parseOpenAiKey,
 } from '@casual-simulation/aux-records/AuthUtils';
-import { PrivacyFeatures } from '@casual-simulation/aux-records';
+import { PrivacyFeatures } from '@casual-simulation/aux-common';
 import PrivacyItem from '../PrivacyItem/PrivacyItem';
 
 @Component({

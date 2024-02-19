@@ -8,6 +8,7 @@ import {
     MemoryConnectionClient,
     WebsocketHttpResponseMessage,
     WebsocketHttpRequestMessage,
+    getRecordsEndpoint,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -21,8 +22,6 @@ import {
     leaveRoom,
     setRoomOptions,
     getRoomOptions,
-    grantRecordMarkerPermission,
-    revokeRecordMarkerPermission,
     grantInstAdminPermission,
     grantUserRole,
     grantInstRole,
@@ -35,6 +34,9 @@ import {
     eraseRecordData,
     getRecordData,
     AuxRuntime,
+    listDataRecordByMarker,
+    grantRecordPermission,
+    revokeRecordPermission,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -126,6 +128,7 @@ describe('RecordsManager', () => {
                 .mockResolvedValue('http://localhost:2998'),
             getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
             getComIdWebConfig: jest.fn(),
+            grantPermission: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -171,6 +174,7 @@ describe('RecordsManager', () => {
             providePrivoSignUpInfo: jest.fn(),
             getPolicyUrls: jest.fn(),
             getComIdWebConfig: jest.fn(),
+            grantPermission: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -223,6 +227,10 @@ describe('RecordsManager', () => {
 
     function getLastGet() {
         return require('axios').__getLastGet();
+    }
+
+    function getLastDelete() {
+        return require('axios').__getLastDelete();
     }
 
     function getRequests() {
@@ -1476,6 +1484,288 @@ describe('RecordsManager', () => {
                                 abc: 'def',
                             },
                         },
+                    }),
+                ]);
+            });
+        });
+
+        describe('list_record_data_by_marker', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/v2/records/data/list', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should not include the Authorization header if the user is not logged in', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
+                    { validateStatus: expect.any(Function), headers: {} },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+                vm.id = 'myInst';
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress&instances=myInst',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        'myAddress',
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    }),
+                ]);
+            });
+
+            it('should not include the address if the event specifies a null address', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listDataRecordByMarker(
+                        'testRecord',
+                        'myMarker',
+                        null,
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                        marker: 'myMarker',
                     }),
                 ]);
             });
@@ -5030,14 +5320,14 @@ describe('RecordsManager', () => {
             });
         });
 
-        describe('grant_record_marker_permission', () => {
+        describe('grant_record_permission', () => {
             beforeEach(() => {
                 require('axios').__reset();
 
                 vm.id = 'instId';
             });
 
-            it('should make a POST request to /api/v2/records/policy/grantPermission', async () => {
+            it('should make a POST request to /api/v2/records/permissions', async () => {
                 setResponse({
                     data: {
                         success: true,
@@ -5048,13 +5338,16 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    grantRecordMarkerPermission(
+                    grantRecordPermission(
                         'recordName',
-                        'marker',
                         {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
+                            marker: 'marker',
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            expireTimeMs: null,
+                            options: {},
                         },
                         {},
                         1
@@ -5064,14 +5357,17 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v2/records/policy/grantPermission',
+                    'http://localhost:3002/api/v2/records/permissions',
                     {
                         recordName: 'recordName',
-                        marker: 'marker',
                         permission: {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
+                            marker: 'marker',
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            expireTimeMs: null,
+                            options: {},
                         },
                         instances: ['instId'],
                     },
@@ -5096,14 +5392,14 @@ describe('RecordsManager', () => {
             });
         });
 
-        describe('revoke_record_marker_permission', () => {
+        describe('revoke_record_permission', () => {
             beforeEach(() => {
                 require('axios').__reset();
 
                 vm.id = 'instId';
             });
 
-            it('should make a POST request to /api/v2/records/policy/revokePermission', async () => {
+            it('should make a POST request to /api/v2/records/permissions/revoke', async () => {
                 setResponse({
                     data: {
                         success: true,
@@ -5114,31 +5410,16 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    revokeRecordMarkerPermission(
-                        'recordName',
-                        'marker',
-                        {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
-                        },
-                        {},
-                        1
-                    ),
+                    revokeRecordPermission('recordName', 'permissionId', {}, 1),
                 ]);
 
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v2/records/policy/revokePermission',
+                    'http://localhost:3002/api/v2/records/permissions/revoke',
                     {
                         recordName: 'recordName',
-                        marker: 'marker',
-                        permission: {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
-                        },
+                        permissionId: 'permissionId',
                         instances: ['instId'],
                     },
                     {
@@ -6854,6 +7135,18 @@ describe('RecordsManager', () => {
                             } as ListedStudio,
                         ],
                     }),
+                ]);
+            });
+        });
+
+        describe('get_records_endpoint', () => {
+            it('should return the recordsOrigin', async () => {
+                records.handleEvents([getRecordsEndpoint(1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, 'http://localhost:3002'),
                 ]);
             });
         });

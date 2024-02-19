@@ -5,7 +5,6 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
-    PrivacyFeatures,
 } from './AuthStore';
 import {
     NotSupportedError,
@@ -37,7 +36,11 @@ import {
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
-import { parseConnectionToken } from '@casual-simulation/aux-common';
+import {
+    parseConnectionToken,
+    PrivacyFeatures,
+    PublicUserInfo,
+} from '@casual-simulation/aux-common';
 import {
     PrivoClientInterface,
     PrivoFeatureStatus,
@@ -849,7 +852,10 @@ export class AuthController {
                 user.privacyFeatures?.publishData !==
                     privacyFeatures.publishData ||
                 user.privacyFeatures?.allowPublicData !==
-                    privacyFeatures.allowPublicData
+                    privacyFeatures.allowPublicData ||
+                user.privacyFeatures?.allowAI !== privacyFeatures.allowAI ||
+                user.privacyFeatures?.allowPublicInsts !==
+                    privacyFeatures.allowPublicInsts
             ) {
                 console.log(
                     `[AuthController] [completeOpenIDLogin] Updating user privacy features.`
@@ -1900,6 +1906,61 @@ export class AuthController {
         }
     }
 
+    /**
+     * Gets the public information for a specific user.
+     * @param userId The ID of the user whose information is being requested.
+     */
+    async getPublicUserInfo(userId: string): Promise<GetPublicUserInfoResult> {
+        if (typeof userId !== 'string' || userId === '') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_user_id',
+                errorMessage:
+                    'The given userId is invalid. It must be a string.',
+            };
+        }
+
+        try {
+            const result = await this._store.findUser(userId);
+
+            if (!result) {
+                return {
+                    success: true,
+                    user: null,
+                };
+            }
+
+            let displayName: string = null;
+            const privoConfig = await this._config.getPrivoConfiguration();
+            if (privoConfig && result.privoServiceId) {
+                const userInfo = await this._privoClient.getUserInfo(
+                    result.privoServiceId
+                );
+                displayName = userInfo.displayName;
+            }
+
+            return {
+                success: true,
+                user: {
+                    userId: result.id,
+                    name: result.name,
+                    email: result.email,
+                    displayName,
+                },
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while getting user info',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private async _getSubscriptionInfo(user: AuthUser) {
         const hasActiveSubscription =
             this._forceAllowSubscriptionFeatures ||
@@ -2930,6 +2991,25 @@ export interface GetUserInfoFailure {
         | 'unacceptable_user_id'
         | ValidateSessionKeyFailure['errorCode']
         | ServerError;
+    errorMessage: string;
+}
+
+export type GetPublicUserInfoResult =
+    | GetPublicUserInfoSuccess
+    | GetPublicUserInfoFailure;
+
+export interface GetPublicUserInfoSuccess {
+    success: true;
+
+    /**
+     * The user info. Null if the user wasn't found.
+     */
+    user: PublicUserInfo | null;
+}
+
+export interface GetPublicUserInfoFailure {
+    success: false;
+    errorCode: 'unacceptable_user_id' | ServerError;
     errorMessage: string;
 }
 

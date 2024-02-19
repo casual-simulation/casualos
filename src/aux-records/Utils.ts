@@ -365,8 +365,14 @@ export type KnownErrorCodes =
     | 'invalid_policy'
     | 'not_completed'
     | 'invalid_display_name'
+    | 'permission_already_exists'
     | 'comId_not_found'
-    | 'comId_already_taken';
+    | 'comId_already_taken'
+    | 'permission_not_found'
+    | 'unacceptable_connection_token'
+    | 'invalid_token'
+    | 'unacceptable_connection_id'
+    | 'message_not_found';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -462,6 +468,10 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'comId_already_taken') {
             return 409;
+        } else if (response.errorCode === 'permission_not_found') {
+            return 404;
+        } else if (response.errorCode === 'message_not_found') {
+            return 404;
         } else {
             return 400;
         }
@@ -571,15 +581,55 @@ export function isActiveSubscription(status: string): boolean {
 }
 
 /**
- * Gets the list of markers that should be used, or the default list if none are provided.
+ * Gets the list of root markers that should be used, or the default list if none are provided.
  * @param markers
  */
-export function getMarkersOrDefault(markers: string[] | null): string[] {
+export function getRootMarkersOrDefault(markers: string[] | null): string[] {
     if (markers === null || markers === undefined || markers.length <= 0) {
         return [PUBLIC_READ_MARKER];
     }
 
-    return markers;
+    return markers.map(getRootMarker);
+}
+
+/**
+ * Gets the root marker from the given marker.
+ * Markers have two parts, the root and the path: "root:path".
+ * The root is the first part of the marker, and contains the security name of the marker. That is, the name of the marker that is used to retrieve permissions for the marker.
+ * The path is the second part of the marker, and contains the path that the marker is for. That is, extra information that can be used to organize marker data.
+ * @param marker The marker that should be parsed.
+ */
+export function getRootMarker(marker: string): string {
+    if (!marker) {
+        return marker;
+    }
+
+    const indexOfColon = marker.indexOf(':');
+    if (indexOfColon < 0) {
+        return marker;
+    }
+    return marker.substring(0, indexOfColon);
+}
+
+/**
+ * Gets the path marker from the given marker.
+ * Markers have two parts, the root and the path: "root:path".
+ * The root is the first part of the marker, and contains the security name of the marker. That is, the name of the marker that is used to retrieve permissions for the marker.
+ * The path is the second part of the marker, and contains the path that the marker is for. That is, extra information that can be used to organize marker data.
+ *
+ * Returns an empty string if the marker does not contain a path.
+ * @param marker The marker that should be parsed.
+ */
+export function getPathMarker(marker: string): string {
+    if (!marker) {
+        return '';
+    }
+
+    const indexOfColon = marker.indexOf(':');
+    if (indexOfColon < 0) {
+        return '';
+    }
+    return marker.substring(indexOfColon + 1);
 }
 
 /**

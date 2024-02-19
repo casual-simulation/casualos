@@ -7,6 +7,7 @@ import {
     ConnectionClient,
     RemoteCausalRepoProtocol,
     GenericHttpRequest,
+    GetRecordsEndpointAction,
 } from '@casual-simulation/aux-common';
 import {
     ListRecordDataAction,
@@ -19,8 +20,6 @@ import {
     SetRoomOptionsAction,
     GetRoomOptionsAction,
     RoomJoinOptions,
-    GrantRecordMarkerPermissionAction,
-    RevokeRecordMarkerPermissionAction,
     GrantInstAdminPermissionAction,
     GrantRoleAction,
     RevokeRoleAction,
@@ -35,6 +34,9 @@ import {
     FileRecordedResult,
     EraseRecordDataAction,
     EraseFileAction,
+    ListRecordDataByMarkerAction,
+    GrantRecordPermissionAction,
+    RevokeRecordPermissionAction,
 } from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -58,6 +60,8 @@ import {
     ReadFileFailure,
     ReportInstRequest,
     ReportInstResult,
+    GrantResourcePermissionResult,
+    RevokePermissionResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -179,6 +183,8 @@ export class RecordsManager {
                 this._getRecordData(event);
             } else if (event.type === 'list_record_data') {
                 this._listRecordData(event);
+            } else if (event.type === 'list_record_data_by_marker') {
+                this._listRecordData(event);
             } else if (event.type === 'erase_record_data') {
                 this._eraseRecordData(event);
             } else if (event.type === 'record_file') {
@@ -199,10 +205,10 @@ export class RecordsManager {
                 this._setRoomOptions(event);
             } else if (event.type === 'get_room_options') {
                 this._getRoomOptions(event);
-            } else if (event.type === 'grant_record_marker_permission') {
-                this._grantRecordMarkerPermission(event);
-            } else if (event.type === 'revoke_record_marker_permission') {
-                this._revokeRecordMarkerPermission(event);
+            } else if (event.type === 'grant_record_permission') {
+                this._grantRecordPermission(event);
+            } else if (event.type === 'revoke_record_permission') {
+                this._revokeRecordPermission(event);
             } else if (event.type === 'grant_inst_admin_permission') {
                 this._grantInstAdminPermission(event);
             } else if (event.type === 'grant_role') {
@@ -217,7 +223,17 @@ export class RecordsManager {
                 this._aiGenerateImage(event);
             } else if (event.type === 'list_user_studios') {
                 this._listUserStudios(event);
+            } else if (event.type === 'get_records_endpoint') {
+                this._getRecordsEndpoint(event);
             }
+        }
+    }
+
+    private _getRecordsEndpoint(event: GetRecordsEndpointAction) {
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, this._config.recordsOrigin)
+            );
         }
     }
 
@@ -368,7 +384,9 @@ export class RecordsManager {
         }
     }
 
-    private async _listRecordData(event: ListRecordDataAction) {
+    private async _listRecordData(
+        event: ListRecordDataAction | ListRecordDataByMarkerAction
+    ) {
         if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
             return;
         }
@@ -399,12 +417,23 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
+                let query: any = {
+                    recordName: event.recordName,
+                };
+
+                if (event.type === 'list_record_data_by_marker') {
+                    query.marker = event.marker;
+                }
+
+                query.address = event.startingAddress || null;
+                query.instances = instances;
+
                 const result: AxiosResponse<ListDataResult> = await axios.get(
-                    await this._publishUrl(auth, '/api/v2/records/data/list', {
-                        recordName: event.recordName,
-                        address: event.startingAddress || null,
-                        instances,
-                    }),
+                    await this._publishUrl(
+                        auth,
+                        '/api/v2/records/data/list',
+                        query
+                    ),
                     {
                         ...this._axiosOptions,
                         headers: info.headers,
@@ -1053,9 +1082,7 @@ export class RecordsManager {
         }
     }
 
-    private async _grantRecordMarkerPermission(
-        event: GrantRecordMarkerPermissionAction
-    ) {
+    private async _grantRecordPermission(event: GrantRecordPermissionAction) {
         try {
             const info = await this._resolveInfoForEvent(event);
 
@@ -1069,23 +1096,23 @@ export class RecordsManager {
             );
             let requestData: any = {
                 recordName: event.recordName,
-                marker: event.marker,
                 permission: event.permission,
                 instances: [this._helper.inst],
             };
 
-            const result: AxiosResponse<RevokeMarkerPermissionResult> =
-                await axios.post(
-                    await this._publishUrl(
-                        info.auth,
-                        '/api/v2/records/policy/grantPermission'
-                    ),
-                    requestData,
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
-                );
+            const result: AxiosResponse<
+                GrantMarkerPermissionResult | GrantResourcePermissionResult
+            > = await axios.post(
+                await this._publishUrl(
+                    info.auth,
+                    '/api/v2/records/permissions'
+                ),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
 
             if (result.data.success) {
                 console.log('[RecordsManager] Permission granted!');
@@ -1097,7 +1124,7 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error(
-                '[RecordsManager] Error granting policy permission:',
+                '[RecordsManager] Error granting record permission:',
                 e
             );
             if (hasValue(event.taskId)) {
@@ -1108,9 +1135,7 @@ export class RecordsManager {
         }
     }
 
-    private async _revokeRecordMarkerPermission(
-        event: RevokeRecordMarkerPermissionAction
-    ) {
+    private async _revokeRecordPermission(event: RevokeRecordPermissionAction) {
         try {
             const info = await this._resolveInfoForEvent(event);
 
@@ -1124,16 +1149,15 @@ export class RecordsManager {
             );
             let requestData: any = {
                 recordName: event.recordName,
-                marker: event.marker,
-                permission: event.permission,
+                permissionId: event.permissionId,
                 instances: [this._helper.inst],
             };
 
-            const result: AxiosResponse<RevokeMarkerPermissionResult> =
+            const result: AxiosResponse<RevokePermissionResult> =
                 await axios.post(
                     await this._publishUrl(
                         info.auth,
-                        '/api/v2/records/policy/revokePermission'
+                        '/api/v2/records/permissions/revoke'
                     ),
                     requestData,
                     {
@@ -1681,14 +1705,15 @@ export class RecordsManager {
             | RecordFileAction
             | GetRecordDataAction
             | ListRecordDataAction
+            | ListRecordDataByMarkerAction
             | GetFileAction
             | EraseFileAction
             | RecordDataAction
             | EraseRecordDataAction
             | RecordEventAction
             | GetEventCountAction
-            | GrantRecordMarkerPermissionAction
-            | RevokeRecordMarkerPermissionAction
+            | GrantRecordPermissionAction
+            | RevokeRecordPermissionAction
             | GrantInstAdminPermissionAction
             | GrantRoleAction
             | RevokeRoleAction

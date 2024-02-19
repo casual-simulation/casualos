@@ -1,4 +1,4 @@
-import { hasValue } from '@casual-simulation/aux-common';
+import { PrivacyFeatures, hasValue } from '@casual-simulation/aux-common';
 import {
     RegexRule,
     Record,
@@ -25,7 +25,6 @@ import {
     AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
-    PrivacyFeatures,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,

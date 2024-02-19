@@ -1,0 +1,1295 @@
+---
+id: portal-bot
+title: Portal Bot Tags
+sidebar_label: Portal Bot
+description: Tags for configuring portal bots.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  ActionLink,
+  TagLink,
+  NormalCode,
+  ConfigBotBadge,
+  HistoryBotBadge,
+  AutomaticBadge,
+  GridPortalBadge,
+  MiniGridPortalBadge,
+  MiniMapPortalBadge,
+  MenuPortalBadge,
+  MeetPortalBadge,
+  LeftWristPortalBadge,
+  RightWristPortalBadge,
+  SheetPortalBadge,
+  BotPortalBadge,
+  TagPortalBadge,
+  Example,
+  AnyCursorValues,
+  TypeLink,
+  ImuPortalBadge,
+  MapPortalBadge,
+  tagMap,
+} from '../components.jsx';
+
+import { GlossaryRef } from '../glossary/index';
+
+## Portal Bot Tags
+
+These tags are used to configure portals.
+They can be set on the corresponding portal bot.
+
+Some of them are automatically set by the corresponding portal but most of them (like the `cameraPositionOffset` tags) can be changed manually.
+
+### `portalColor`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The color of the background of the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#263238'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `portalCursor`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The cursor that should be used when the mouse is hovered over the portal.
+The portal cursor is overriden when a bot with a <TagLink tag='cursor'/> tag is hovered.
+
+Note that when using a custom cursor image, the image should be 32x32 pixels or smaller.
+This is because that is the largest cursor image size that some operating systems support.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <AnyCursorValues/>
+</PossibleValuesTable>
+
+### `portalCursorHotspot`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The X position of the pixel in the cursor image that is the "hotspot".
+That is, the pixel which represents the point or tip of the cursor.
+
+The top left of the image is (0, 0).
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='➡️0,0'>(default)</PossibleValueCode>
+  <PossibleValue value='Any Vector > ➡️0,0'>The position that the cursor hotspot should be at.</PossibleValue>
+</PossibleValuesTable>
+
+### `portalBackgroundAddress`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The URL of the image or video that should be displayed as the background of the portal.
+
+When specified, this tag overrides <TagLink tag='portalColor'/>.
+Additionally, this tag does nothing when in VR.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Specifies that the portal background should use the given image or video.
+  </PossibleValue>
+  <PossibleValueCode value='"casualos://camera-feed"'>
+    Display a feed of the main camera as the background.
+  </PossibleValueCode>
+  <PossibleValueCode value='"casualos://camera-feed/rear"'>
+    Display a feed of the rear (environment) facing camera as the background.
+  </PossibleValueCode>
+  <PossibleValueCode value='"casualos://camera-feed/front"'>
+    Display a feed of the front (user) facing camera as the background.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalHDRAddress`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The URL of the EXR file that should be set an environment map that can be used by physically based materials for lighting calculations.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any URL'>
+    Specifies the EXR file that should be set.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `defaultLighting`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Sets the default lighting in the gridPortalBot/miniGridPortal
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disables default lighting
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalLocked`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Determines if the portal can be loaded.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The portal can be loaded. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The portal cannot be loaded.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalPannable`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Whether the player will be able to pan the camera inside the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is pannable in this portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not pannable in this portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalPannableMin`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The minimum values that the camera can pan to in the portal.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Vector'>
+    Minimum X and Y values that the camera can pan to. (Default is Negative Infinity)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalPannableMax`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The maximum X and Y values that the camera can pan to in the portal.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Vector'>
+    Maximum X and Y values that the camera can pan to. (Default is Infinity)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalRotatable`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Whether the player will be able to rotate the camera inside the miniGridPortal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The miniGridPortal is rotatable. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The miniGridPortal is not rotatable.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalCameraRotation`
+<Badges>
+    <Example code='portalCameraRotation'/>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The up and down rotation that the camera starts at in the portal. Units are in radians.
+
+Because the bot and miniGridPortals use [polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system) to orbit around the focus point, we only need two numbers to specify where the camera should be pointing.
+Polar coordinates work by specifying two angles (X and Y - also known as "phi" and "theta") which position the camera around its focus point.
+Therefore, these rotation values actually cause the camera to turn around the focus point and not simply turn the camera itself.
+
+The X angle (phi) is used to rotate the camera up and down. Mathematically, a value of 0 means the camera is facing directly down and a value of `π / 2` means the camera is perfectly parallel with the ground.
+For usability reasons, CasualOS limits this value to between 0 and 58 degrees (`~1.01229` radians).
+
+The Y angle (theta) is used to rotate the camera left and right. Mathematically, a value of 0 means the camera is facing the front face of bots and a value of `π / 2` means the camera is facing the left face of the bots.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Vector'>
+    The X and Y rotation values that should be used for the initial camera rotation.
+    Units are in radians.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalZoomable`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Whether the player will be able to zoom the camera inside the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is zoomable in this portal. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not zoomable in this portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalZoomableMin`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+The minimum value that the camera can zoom to in the portal. Does not affect VR/AR sessions.
+For the mapPortal and miniMapPortal, the value is measured in meters.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Minimum value that the camera zoom to. (Default is 0.4 for the grid portals and -Infinity for the map portals)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalZoomableMax`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+The maximum value that the camera can zoom to in the portal. Does not affect VR/AR sessions.
+For the mapPortal and miniMapPortal, the value is measured in meters.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Maximum value that the camera can zoom to. (Default is 80 for the grid portals and EARTH_RADIUS * 4 for the map portals)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalCameraZoom`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The zoom value that the camera starts at in the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    The initial zoom value. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalGridScale`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The size of bots in the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    The size of bots in the portal. (Default is 0.025 for wrist portals and 0.2 for all other portals)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalSurfaceScale`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The scale of surfaces.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    The scale of surface for the dimension. (Default is 2)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `portalCameraControls`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The mode that specifies how the camera controls work in the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='"player"'>
+    Specifies that the player should be able to control the camera.
+    Individual options like <TagLink tag='portalZoomable'/> override this option.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Specifies that the player should not be able to control the camera in the portal.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalShowFocusPoint`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Whether the focus point of the portal camera should be shown as a small sphere.
+
+The focus point is the position that the camera orbits (rotates) around and is always facing.
+
+When a bot is between the focus point and the camera, then focus events will trigger.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    Don't show an indicator for the focus point. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    Show an indicator for the focus point.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalCameraType`
+<Badges>
+    <GridPortalBadge/>
+</Badges>
+
+The type of camera that should be used for the portal.
+The "type" of a camera determines how objects are visualized and how they appear. Conceptually, camera types are similar to camera lenses.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='orthographic'>
+    The camera uses an orthographic projection.
+    This camera type preserves parallel lines so lines that are parallel to each other will remain parallel in the 2D image.
+    As a consequence, objects that are the same size always appear the same size no matter how far away they are from the camera. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='perspective'>
+    The camera uses a perspective projection.
+    This camera type makes objects appear larger or smaller based on how far away they are from the camera.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `portalDisableCanvasTransparency`
+<Badges>
+    <GridPortalBadge/>
+</Badges>
+
+Whether to disable transparency on the [canvas element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas) that the 3D content is displayed on.
+
+Set this tag to `true` on the grid portal to fix rendering issues with 3D models that use alpha cutoff.
+Note that when this value is `true`, [iframe forms](#iframe-form) will cease to function properly.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The canvas element is transparent to support <a href='#iframe-form'>iframe forms</a>. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The canvas element is not transparent 3D models that use alpha cutoff.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `miniPortalHeight`
+<Badges>
+    <MiniGridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+Sets the initial height of the viewport for the miniGridPortal/miniMapPortal.
+
+This should be the percentage of the "available screen height" that the miniGridPortal/miniMapPortal should take.
+The "available screen height" is a portion of the full screen calculated such that when there is some space left between the left and right edges of the screen
+there will be some space at the bottom of the portal. However, when the <TagLink tag='miniPortalWidth'/> tag is set to 1, there will be no space between the bottom
+of the screen and the bottom of the portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    The percentage of the screen height that the portal should take. (Default is 0.2)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `miniPortalWidth`
+<Badges>
+    <MiniGridPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+Sets the width of the viewport for the miniGridPortal/miniMapPortal.
+This should be a percentage between 0 and 1 that specifies how much of the screen width should be taken.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    The percentage of the screen width that the portal should take. (Default is 0.8)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `miniPortalResizable`
+<Badges>
+    <MiniGridPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+Whether the player will be able to resize the viewport for the miniGridPortal/miniMapPortal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The portal is resizable. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The portal is not resizable.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `mapPortalBasemap`
+<Badges>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+Sets the style of the bottom layer of the map in the mapPortal/miniMapPortal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='dark-gray'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValue value="Any Basemap">
+      See <a target='_blank' href='https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap'>this</a> for a full list.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `wristPortalHeight`
+<Badges>
+    <LeftWristPortalBadge/>
+    <RightWristPortalBadge/>
+</Badges>
+
+The number of grid spaces that the wrist portal should have in the Y direction.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 1'>
+    The number of of grid spaces that the portal should have in the Y direction. (Default is 6)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `wristPortalWidth`
+<Badges>
+    <LeftWristPortalBadge/>
+    <RightWristPortalBadge/>
+</Badges>
+
+The number of grid spaces that the wrist portal should have in the X direction.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 1'>
+    The number of of grid spaces that the portal should have in the X direction. (Default is 6)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `meetPortalVisible`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should be visible.
+This is useful for hiding the meet portal while still in a meeting.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal will be visible. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal will be hidden.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalAnchorPoint`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+The position on the screen that the meet portal should be anchored to.
+Overrides any conflicting properties set by <TagLink tag='meetPortalStyle'/>.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='fullscreen'>
+    The meet portal will occupy the entire screen. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The meet portal will occupy the top of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topRight'>
+    The meet portal will occupy the top-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topLeft'>
+    The meet portal will occupy the top-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottom'>
+    The meet portal will occupy the bottom of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomRight'>
+    The meet portal will occupy the bottom-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomLeft'>
+    The meet portal will occupy the bottom-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The meet portal will occupy the left side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The meet portal will occupy the right side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='[top, right, bottom, left]'>
+    The meet portal will use the given values for the CSS [top](https://developer.mozilla.org/en-US/docs/Web/CSS/top),
+    [right](https://developer.mozilla.org/en-US/docs/Web/CSS/right), [left](https://developer.mozilla.org/en-US/docs/Web/CSS/left),
+    and [bottom](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom) properties of the container.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalStyle`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the meet portal container.
+This is useful for positioning the meet portal in ways that are not possible using <TagLink tag='meetPortalAnchorPoint'/>.
+Overridden by conflicting properties set by <TagLink tag='meetPortalAnchorPoint'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the meet portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Put the meet portal in the center of the screen.
+```
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
+```
+
+### `meetPortalPrejoinEnabled`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should have the prejoin screen enabled.
+The prejoin screen is where the user can setup their display name, microphone, camera, and other settings, before actually joining the meet.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The prejoin screen is enabled. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The prejoin screen is disabled.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalStartWithVideoMuted`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should start with video muted. Video in this context is equivalent to the user's camera.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal starts with video muted. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal starts with video unmuted.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalStartWithAudioMuted`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should start with audio muted. Audio in this context is equivalent to the user's microphone.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal starts with audio muted.
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal starts with audio unmuted. (Default)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalRequireDisplayName`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should require the user define a display name.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The meet portal requires a user display name. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The meet portal does not require a user display name. 
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalDisablePrivateMessages`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+Whether the meet portal should hide the option to send private chat messages to other participants.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The meet portal allows sending private messages to other participants. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The meet portal hides the option to start a new private message chat with another participant.
+    Replies to private messages are still allowed.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `meetPortalLanguage`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+The language that should be used for the meet portal interface by default.
+Only works if this tag is set before the meet portal is loaded.
+
+#### Possible Values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The user-configured value will be used for the meetPortal interface. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any ISO 639-1 Code'>
+    The interface will use the given <a href='https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'>ISO 639-1</a> language code.
+    Note that not all langauge codes are supported. The full list of supported translations can be found <a href='https://github.com/jitsi/jitsi-meet/tree/master/lang'>here</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `meetPortalJWT`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+The JSON Web Token (JWT) that should be used to join the meeting.
+Used to give the current user moderator permissions.
+
+#### Possible Values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The user will be a normal user in the meet portal. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The user will use the JWT for authentication in the meet portal.
+    Depending on the settings used to create the JWT, this may make the user a moderator.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `botPortalAnchorPoint`
+<Badges>
+    <BotPortalBadge/>
+</Badges>
+
+The position on the screen that the bot portal should be anchored to.
+Overrides any conflicting properties set by <TagLink tag='botPortalStyle'/>
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='fullscreen'>
+    The bot portal will occupy the entire screen. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The bot portal will occupy the top of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topRight'>
+    The bot portal will occupy the top-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topLeft'>
+    The bot portal will occupy the top-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottom'>
+    The bot portal will occupy the bottom of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomRight'>
+    The bot portal will occupy the bottom-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomLeft'>
+    The bot portal will occupy the bottom-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The bot portal will occupy the left side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The bot portal will occupy the right side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='[top, right, bottom, left]'>
+    The bot portal will use the given values for the CSS [top](https://developer.mozilla.org/en-US/docs/Web/CSS/top),
+    [right](https://developer.mozilla.org/en-US/docs/Web/CSS/right), [left](https://developer.mozilla.org/en-US/docs/Web/CSS/left),
+    and [bottom](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom) properties of the container.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `botPortalStyle`
+<Badges>
+    <BotPortalBadge/>
+</Badges>
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the bot portal container.
+This is useful for positioning the tag portal in ways that are not possible using <TagLink tag='botPortalAnchorPoint'/>.
+Overridden by conflicting properties set by <TagLink tag='botPortalAnchorPoint'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the bot portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Put the bot portal in the center of the screen.
+```
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
+```
+
+### `tagPortalAnchorPoint`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
+
+The position on the screen that the tag portal should be anchored to.
+Overrides any conflicting properties set by <TagLink tag='tagPortalStyle'/>.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='fullscreen'>
+    The tag portal will occupy the entire screen. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='top'>
+    The tag portal will occupy the top of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topRight'>
+    The tag portal will occupy the top-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='topLeft'>
+    The tag portal will occupy the top-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottom'>
+    The tag portal will occupy the bottom of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomRight'>
+    The tag portal will occupy the bottom-right corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='bottomLeft'>
+    The tag portal will occupy the bottom-left corner of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+    The tag portal will occupy the left side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    The tag portal will occupy the right side of the screen.
+  </PossibleValueCode>
+  <PossibleValueCode value='[top, right, bottom, left]'>
+    The tag portal will use the given values for the CSS [top](https://developer.mozilla.org/en-US/docs/Web/CSS/top),
+    [right](https://developer.mozilla.org/en-US/docs/Web/CSS/right), [left](https://developer.mozilla.org/en-US/docs/Web/CSS/left),
+    and [bottom](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom) properties of the container.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `tagPortalStyle`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the tag portal container.
+This is useful for positioning the tag portal in ways that are not possible using <TagLink tag='tagPortalAnchorPoint'/>.
+Overridden by conflicting properties set by <TagLink tag='tagPortalAnchorPoint'/>.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the tag portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Put the tag portal in the center of the screen.
+```
+🧬{
+    "top": "10%",
+    "bottom": "10%",
+    "left": "10%",
+    "right": "10%",
+}
+```
+
+### `tagPortalShowButton`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
+
+Whether the tag portal should show a button that allows a custom action.
+When set to true, the button will be displayed in the lower right hand corner of the tag portal.
+
+Clicking the button will trigger a <TagLink tag='@onClick'/> on the tag portal config bot.
+
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    No button is shown. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The button is shown.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `tagPortalButtonIcon`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
+
+The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the tag portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Empty String'>
+    No icon. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any Material Icon'>
+    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `tagPortalButtonHint`
+<Badges>
+    <TagPortalBadge/>
+</Badges>
+
+The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the tag portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Empty String'>
+    No hint. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any String'>
+    The text that should be displayed as a hint when the user hovers their mouse over the button.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `menuPortalStyle`
+
+<Badges>
+    <Example code='menuPortalStyle'/>
+    <MenuPortalBadge/>
+</Badges>
+
+The custom [CSS styles](https://developer.mozilla.org/en-US/docs/Web/CSS) that should be applied to the menu portal container.
+This is useful for positioning the menu portal in ways that are not possible normally.
+
+When setting this tag via the sheet, it is useful to utilize DNA tags to ensure that the resulting value is considered an object.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No special styling. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Object'>
+    The properties of the object will be applied as special styling to the menu portal container.
+  </PossibleValue>
+</PossibleValuesTable>
+
+#### Examples
+
+1. Make the menu portal `80%` of the screen width.
+```
+🧬{
+    "width": "80%",
+}
+```
+
+### `sheetPortalShowButton`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
+
+Whether the sheet portal should show a button that allows a custom action.
+When set to true, the button will be displayed in the lower right hand corner of the sheet portal.
+
+Clicking the button will trigger a <TagLink tag='@onClick'/> on the sheet portal config bot.
+If there is no `@onClick`, then the sheet portal will be closed.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The button is shown. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+      No button is shown.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `sheetPortalButtonIcon`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
+
+The [Material Icon](https://material.io/resources/icons/?style=baseline) that should be shown on the sheet portal button.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='web_asset'>
+    The Web Asset icon. (Default)
+  </PossibleValue>
+  <PossibleValue value='Any Material Icon'>
+    See <a href='https://material.io/resources/icons/?style=baseline'>https://material.io/resources/icons/?style=baseline</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `sheetPortalButtonHint`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
+
+The [tooltip](https://en.wikipedia.org/wiki/Tooltip) that should be shown on the sheet portal button.
+
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='Grid Portal'>
+    "Grid Portal" (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The text that should be displayed as a hint when the user hovers their mouse over the button.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `sheetPortalAllowedTags`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
+
+The list of tags that should be allowed in the sheet portal.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    All tags are allowed. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Array'>
+    Only the specified tags can be shown in the sheet portal.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `sheetPortalAddedTags`
+<Badges>
+    <SheetPortalBadge/>
+</Badges>
+
+The list of tags that should be shown in the sheet even if they do not have a value.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    No additional tags are shown. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Array'>
+    The specified tags are shown in the sheet portal.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `pixelWidth`
+
+<Badges>
+    <AutomaticBadge/>
+    <GridPortalBadge/>
+</Badges>
+
+The width of the grid portal in pixels. Because the miniGridPortal is contained by the grid portal, this value also applies to the miniGridPortal.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger width than height does not necessarily mean that it is in landscape mode.
+
+Finally, <TagLink tag='pixelHeight'/> and <TagLink tag='pixelWidth'/> use CSS pixels which are dependent on the <TagLink tag='defaultPixelRatio'/> specified by the web browser.
+You can find the physical pixel width of the device by calculating `pixelWidth * defaultPixelRatio`.
+
+
+### `pixelHeight`
+
+<Badges>
+    <AutomaticBadge/>
+    <GridPortalBadge/>
+</Badges>
+
+The height of the grid portal in pixels. Because the miniGridPortal is contained by the grid portal, this value also applies to the miniGridPortal.
+
+Note that a device with a larger pixel value is not necessarily physically larger than a device with a smaller pixel value.
+Additionally, a device with a larger height than width does not necessarily mean that it is in portrait mode.
+
+Finally, <TagLink tag='pixelHeight'/> and <TagLink tag='pixelWidth'/> use CSS pixels which are dependent on the <TagLink tag='defaultPixelRatio'/> specified by the web browser.
+You can find the physical pixel width of the device by calculating `pixelHeight * defaultPixelRatio`.
+
+### `pixelRatio`
+
+<Badges>
+    <ConfigBotBadge/>
+</Badges>
+
+The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that should be used to determine how many physical pixels should be used to draw each pixel in the 3D portals. 
+Higher values will make the 3D portals appear smoother but will also cause CausalOS to run slower.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    Use the default pixel ratio. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number > 0'>
+    The pixel ratio that should be used.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `defaultPixelRatio`
+
+<Badges>
+    <AutomaticBadge/>
+    <ConfigBotBadge/>
+</Badges>
+
+The [pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio) that is used when the <TagLink tag='pixelRatio'/> tag is not set.
+This value is determined by the web browser and cannot be changed. High resolution/Retina displays tend to have a pixel ratio of 2 or higher 
+while devices with lower resolution displays tend to have a pixel ratio of 1.
+
+### `pointerPixel`
+
+<Badges>
+    <AutomaticBadge/>
+    <GridPortalBadge/>
+</Badges>
+
+The X and Y position (location along width) of the pointer (usually mouse, but can also be the position of the first finger to touch the screen) in the grid portal in pixels.
+
+Larger X values are closer to the right of the screen and lower values are closer to the left part of the screen.
+
+Larger Y values are closer to the bottom of the screen and lower values are closer to the top part of the screen.
+
+### `cameraPosition`
+
+<Badges>
+    <AutomaticBadge/>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The 3D position of the player's camera in the grid portal.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+### `cameraPositionOffset`
+
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The offset that should be applied to the 3D position of the player's camera in the grid portal.
+
+Useful for moving the player around in VR.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+### `cameraRotation`
+
+<Badges>
+    <AutomaticBadge/>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The 3D rotation of the player's camera in the grid portal.
+
+Units are in radians.
+
+See the documentation on [Rotations](#rotation-tags) for more info.
+
+### `cameraRotationOffset`
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The offset that should be applied to the 3D rotation of the player's camera in the grid portal.
+
+Units are in radians.
+
+See the documentation on [Rotations](#rotation-tags) for more info.
+
+### `cameraZoom`
+
+<Badges>
+    <AutomaticBadge/>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The zoom value that the camera is at. This is an arbitrary value that specifies how far the camera is zoomed in or out.
+
+Larger values indicate that the camera is zoomed in more (objects appear bigger) and smaller values indicate that the camera is zoomed out (objects appear smaller).
+
+### `cameraZoomOffset`
+
+<Badges>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The offset that should be applied to the camera zoom. You can use this to change the zoom of the camera.
+
+Larger values indicate that the camera is zoomed in more (objects appear bigger) and smaller values indicate that the camera is zoomed out (objects appear smaller).
+
+### `cameraFocus`
+
+<Badges>
+    <AutomaticBadge/>
+    <GridPortalBadge/>
+    <MiniGridPortalBadge/>
+</Badges>
+
+The 3D position of the focus point for the player's camera in the grid portal.
+
+See the documentation on [Vectors](#vector-tags) for more info.
+
+### `imuSupported`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+Whether IMU data is supported on this device.
+
+### `deviceRotation`
+
+<Badges>
+    <AutomaticBadge/>
+    <ImuPortalBadge/>
+</Badges>
+
+The 3D rotation of the device as determined by the IMU.
+
+See the documentation on [Rotations](#rotation-tags) for more info.

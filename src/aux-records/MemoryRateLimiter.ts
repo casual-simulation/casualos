@@ -38,6 +38,11 @@ export class MemoryRateLimiter implements RateLimiter {
         this._states.delete(key);
     }
 
+    getHits(key: string): number {
+        const state = this._getState(key);
+        return state.count;
+    }
+
     private _getState(key: string): MemoryState {
         let state = this._states.get(key);
         if (!state) {

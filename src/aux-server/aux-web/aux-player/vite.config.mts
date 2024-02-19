@@ -15,6 +15,7 @@ import {
 import writeFilesPlugin from '../../plugins/write-files-plugin';
 import md from '../../plugins/markdown-plugin';
 import { visualizer } from 'rollup-plugin-visualizer';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
@@ -133,6 +134,7 @@ export default defineConfig(({ command, mode }) => ({
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
             : []),
+        process.env.VITE_BASIC_SSL === 'true' ? basicSsl() : [],
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
     define: {

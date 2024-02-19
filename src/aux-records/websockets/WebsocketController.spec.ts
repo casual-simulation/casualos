@@ -28,7 +28,10 @@ import {
     remoteError,
     remoteResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
-import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import {
+    RequestMissingPermissionResponseSuccessMessage,
+    WebsocketEventTypes,
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import {
     createTestControllers,
     createTestSubConfiguration,
@@ -41,6 +44,7 @@ import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
 import {
     ACCOUNT_MARKER,
     ConnectionInfo,
+    DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
@@ -1009,11 +1013,12 @@ describe('WebsocketController', () => {
                                             'You are not authorized to perform this action.',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            id: otherUserId,
-                                            marker: 'private',
-                                            permission: 'inst.create',
-                                            role: null,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            action: 'create',
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
                                         },
                                         recordName,
                                         inst,
@@ -1027,25 +1032,26 @@ describe('WebsocketController', () => {
                             });
 
                             it('should return a not_authorized error if the user is trying to create an inst in a record they do not have read access to', async () => {
-                                services.store.policies[recordName] = {
-                                    [PRIVATE_MARKER]: {
-                                        document: {
-                                            permissions: [
-                                                {
-                                                    type: 'inst.create',
-                                                    role: 'developer',
-                                                    insts: true,
-                                                },
-                                                {
-                                                    type: 'policy.assign',
-                                                    role: 'developer',
-                                                    policies: true,
-                                                },
-                                            ],
-                                        },
-                                        markers: [ACCOUNT_MARKER],
-                                    },
-                                };
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'inst',
+                                    PRIVATE_MARKER,
+                                    'create',
+                                    {},
+                                    null
+                                );
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'marker',
+                                    ACCOUNT_MARKER,
+                                    'assign',
+                                    {},
+                                    null
+                                );
 
                                 services.store.roles[recordName] = {
                                     [otherUserId]: new Set(['developer']),
@@ -1076,11 +1082,12 @@ describe('WebsocketController', () => {
                                             'You are not authorized to perform this action.',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            id: otherUserId,
-                                            marker: 'private',
-                                            permission: 'inst.read',
-                                            role: null,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            action: 'read',
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
                                         },
                                         recordName,
                                         inst,
@@ -1122,30 +1129,36 @@ describe('WebsocketController', () => {
                             });
 
                             it('should create the inst if the user has been granted permission', async () => {
-                                services.store.policies[recordName] = {
-                                    [PRIVATE_MARKER]: {
-                                        document: {
-                                            permissions: [
-                                                {
-                                                    type: 'inst.create',
-                                                    role: 'developer',
-                                                    insts: true,
-                                                },
-                                                {
-                                                    type: 'inst.read',
-                                                    role: 'developer',
-                                                    insts: true,
-                                                },
-                                                {
-                                                    type: 'policy.assign',
-                                                    role: 'developer',
-                                                    policies: true,
-                                                },
-                                            ],
-                                        },
-                                        markers: [ACCOUNT_MARKER],
-                                    },
-                                };
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'inst',
+                                    PRIVATE_MARKER,
+                                    'create',
+                                    {},
+                                    null
+                                );
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'inst',
+                                    PRIVATE_MARKER,
+                                    'read',
+                                    {},
+                                    null
+                                );
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'marker',
+                                    ACCOUNT_MARKER,
+                                    'assign',
+                                    {},
+                                    null
+                                );
 
                                 services.store.roles[recordName] = {
                                     [otherUserId]: new Set(['developer']),
@@ -1366,11 +1379,12 @@ describe('WebsocketController', () => {
                                             'You are not authorized to perform this action.',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            id: otherUserId,
-                                            marker: 'private',
-                                            permission: 'inst.read',
-                                            role: null,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            action: 'read',
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
                                         },
                                         recordName,
                                         inst,
@@ -1390,20 +1404,16 @@ describe('WebsocketController', () => {
                                     markers: [PRIVATE_MARKER],
                                 });
 
-                                services.store.policies[recordName] = {
-                                    [PRIVATE_MARKER]: {
-                                        document: {
-                                            permissions: [
-                                                {
-                                                    type: 'inst.read',
-                                                    role: 'developer',
-                                                    insts: true,
-                                                },
-                                            ],
-                                        },
-                                        markers: [ACCOUNT_MARKER],
-                                    },
-                                };
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'inst',
+                                    PRIVATE_MARKER,
+                                    'read',
+                                    {},
+                                    null
+                                );
 
                                 services.store.roles[recordName] = {
                                     [otherUserId]: new Set(['developer']),
@@ -1462,20 +1472,16 @@ describe('WebsocketController', () => {
                             });
 
                             it('should succeed if the user has been granted permission', async () => {
-                                services.store.policies[recordName] = {
-                                    [PRIVATE_MARKER]: {
-                                        document: {
-                                            permissions: [
-                                                {
-                                                    type: 'inst.read',
-                                                    role: 'developer',
-                                                    insts: true,
-                                                },
-                                            ],
-                                        },
-                                        markers: [ACCOUNT_MARKER],
-                                    },
-                                };
+                                await services.policyStore.assignPermissionToSubjectAndMarker(
+                                    recordName,
+                                    'role',
+                                    'developer',
+                                    'inst',
+                                    PRIVATE_MARKER,
+                                    'read',
+                                    {},
+                                    null
+                                );
 
                                 services.store.roles[recordName] = {
                                     [otherUserId]: new Set(['developer']),
@@ -2064,11 +2070,12 @@ describe('WebsocketController', () => {
                                         branch: 'test',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.read',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            action: 'read',
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
                                         },
                                     },
                                 ],
@@ -2082,20 +2089,16 @@ describe('WebsocketController', () => {
                                 markers: [PRIVATE_MARKER],
                             });
 
-                            services.store.policies[recordName] = {
-                                [PRIVATE_MARKER]: {
-                                    document: {
-                                        permissions: [
-                                            {
-                                                type: 'inst.read',
-                                                role: 'developer',
-                                                insts: true,
-                                            },
-                                        ],
-                                    },
-                                    markers: [ACCOUNT_MARKER],
-                                },
-                            };
+                            await services.store.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
 
                             services.store.roles[recordName] = {
                                 [otherUserId]: new Set(['developer']),
@@ -2165,20 +2168,16 @@ describe('WebsocketController', () => {
                         });
 
                         it('should succeed if the user has been granted access', async () => {
-                            services.store.policies[recordName] = {
-                                [PRIVATE_MARKER]: {
-                                    document: {
-                                        permissions: [
-                                            {
-                                                type: 'inst.read',
-                                                role: 'developer',
-                                                insts: true,
-                                            },
-                                        ],
-                                    },
-                                    markers: [ACCOUNT_MARKER],
-                                },
-                            };
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
 
                             services.store.roles[recordName] = {
                                 [otherUserId]: new Set(['developer']),
@@ -3688,11 +3687,12 @@ describe('WebsocketController', () => {
                                         branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.create',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
+                                            action: 'create',
                                         },
                                     },
                                 ],
@@ -3751,11 +3751,12 @@ describe('WebsocketController', () => {
                                         branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.read',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
+                                            action: 'read',
                                         },
                                     },
                                 ],
@@ -3776,20 +3777,16 @@ describe('WebsocketController', () => {
                         });
 
                         it('should send a not_authorized error if the user is not authorized to update inst data', async () => {
-                            services.policyStore.policies[recordName] = {
-                                [PRIVATE_MARKER]: {
-                                    document: {
-                                        permissions: [
-                                            {
-                                                type: 'inst.read',
-                                                role: 'developer',
-                                                insts: true,
-                                            },
-                                        ],
-                                    },
-                                    markers: [ACCOUNT_MARKER],
-                                },
-                            };
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
 
                             services.policyStore.roles[recordName] = {
                                 [otherUserId]: new Set(['developer']),
@@ -3820,11 +3817,12 @@ describe('WebsocketController', () => {
                                         branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.updateData',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
+                                            action: 'updateData',
                                         },
                                     },
                                 ],
@@ -3892,11 +3890,12 @@ describe('WebsocketController', () => {
                                         branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.read',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
+                                            action: 'read',
                                         },
                                     },
                                 ],
@@ -3910,20 +3909,16 @@ describe('WebsocketController', () => {
                         });
 
                         it('should send a not_authorized error if the user is not authorized to update inst data', async () => {
-                            services.policyStore.policies[recordName] = {
-                                [PRIVATE_MARKER]: {
-                                    document: {
-                                        permissions: [
-                                            {
-                                                type: 'inst.read',
-                                                role: 'developer',
-                                                insts: true,
-                                            },
-                                        ],
-                                    },
-                                    markers: [ACCOUNT_MARKER],
-                                },
-                            };
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
 
                             services.policyStore.roles[recordName] = {
                                 [otherUserId]: new Set(['developer']),
@@ -3954,11 +3949,12 @@ describe('WebsocketController', () => {
                                         branch: 'testBranch',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.updateData',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
+                                            action: 'updateData',
                                         },
                                     },
                                 ],
@@ -3980,25 +3976,26 @@ describe('WebsocketController', () => {
                                     'updateData'
                                 )
                             ).toBe(false);
-                            services.policyStore.policies[recordName] = {
-                                [PRIVATE_MARKER]: {
-                                    document: {
-                                        permissions: [
-                                            {
-                                                type: 'inst.read',
-                                                role: 'developer',
-                                                insts: true,
-                                            },
-                                            {
-                                                type: 'inst.updateData',
-                                                role: 'developer',
-                                                insts: true,
-                                            },
-                                        ],
-                                    },
-                                    markers: [ACCOUNT_MARKER],
-                                },
-                            };
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'updateData',
+                                {},
+                                null
+                            );
 
                             services.policyStore.roles[recordName] = {
                                 [otherUserId]: new Set(['developer']),
@@ -4101,35 +4098,46 @@ describe('WebsocketController', () => {
                             connectionToken: otherUserToken,
                         });
 
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.create',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'policy.assign',
-                                            role: 'developer',
-                                            policies: true,
-                                        },
-                                        {
-                                            type: 'inst.updateData',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'create',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'marker',
+                            ACCOUNT_MARKER,
+                            'assign',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'updateData',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -4220,35 +4228,46 @@ describe('WebsocketController', () => {
                             connectionToken: otherUserToken,
                         });
 
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.create',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'policy.assign',
-                                            role: 'developer',
-                                            policies: true,
-                                        },
-                                        {
-                                            type: 'inst.updateData',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'create',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'marker',
+                            ACCOUNT_MARKER,
+                            'assign',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'updateData',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -4332,35 +4351,46 @@ describe('WebsocketController', () => {
                             connectionToken: otherUserToken,
                         });
 
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.create',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'policy.assign',
-                                            role: 'developer',
-                                            policies: true,
-                                        },
-                                        {
-                                            type: 'inst.updateData',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'create',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'updateData',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'marker',
+                            ACCOUNT_MARKER,
+                            'assign',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -5198,20 +5228,16 @@ describe('WebsocketController', () => {
                             connectionToken,
                         });
 
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
                         };
@@ -5739,12 +5765,13 @@ describe('WebsocketController', () => {
                                     errorMessage:
                                         'You are not authorized to perform this action.',
                                     reason: {
-                                        id: otherUserId,
-                                        kind: 'user',
-                                        marker: PRIVATE_MARKER,
-                                        permission: 'inst.read',
-                                        role: null,
                                         type: 'missing_permission',
+                                        recordName,
+                                        resourceKind: 'inst',
+                                        resourceId: inst,
+                                        subjectType: 'user',
+                                        subjectId: otherUserId,
+                                        action: 'read',
                                     },
                                 },
                             ],
@@ -5755,20 +5782,16 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return a not_authorized error if the user does not have the inst.sendAction permission', async () => {
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -5808,12 +5831,13 @@ describe('WebsocketController', () => {
                                     errorMessage:
                                         'You are not authorized to perform this action.',
                                     reason: {
-                                        id: otherUserId,
-                                        kind: 'user',
-                                        marker: PRIVATE_MARKER,
-                                        permission: 'inst.sendAction',
-                                        role: null,
                                         type: 'missing_permission',
+                                        recordName,
+                                        resourceKind: 'inst',
+                                        resourceId: inst,
+                                        subjectType: 'user',
+                                        subjectId: otherUserId,
+                                        action: 'sendAction',
                                     },
                                 },
                             ],
@@ -5824,25 +5848,26 @@ describe('WebsocketController', () => {
                     });
 
                     it('should send the action if the user has inst.read and inst.sendAction permissions', async () => {
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'inst.sendAction',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'sendAction',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -5923,25 +5948,26 @@ describe('WebsocketController', () => {
                             subscriptionStatus: 'active',
                         });
 
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                        {
-                                            type: 'inst.sendAction',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'sendAction',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -6641,11 +6667,12 @@ describe('WebsocketController', () => {
                                             'You are not authorized to perform this action.',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.read',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
+                                            action: 'read',
                                         },
                                     },
                                 ],
@@ -6654,20 +6681,16 @@ describe('WebsocketController', () => {
                     });
 
                     it('should work if the user is allowed to read the inst', async () => {
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -7062,11 +7085,12 @@ describe('WebsocketController', () => {
                                             'You are not authorized to perform this action.',
                                         reason: {
                                             type: 'missing_permission',
-                                            kind: 'user',
-                                            permission: 'inst.read',
-                                            role: null,
-                                            id: otherUserId,
-                                            marker: PRIVATE_MARKER,
+                                            recordName,
+                                            resourceKind: 'inst',
+                                            resourceId: inst,
+                                            subjectType: 'user',
+                                            subjectId: otherUserId,
+                                            action: 'read',
                                         },
                                     },
                                 ],
@@ -7075,20 +7099,16 @@ describe('WebsocketController', () => {
                     });
 
                     it('should work if the user has the inst.read permission', async () => {
-                        services.policyStore.policies[recordName] = {
-                            [PRIVATE_MARKER]: {
-                                document: {
-                                    permissions: [
-                                        {
-                                            type: 'inst.read',
-                                            role: 'developer',
-                                            insts: true,
-                                        },
-                                    ],
-                                },
-                                markers: [ACCOUNT_MARKER],
-                            },
-                        };
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
 
                         services.policyStore.roles[recordName] = {
                             [otherUserId]: new Set(['developer']),
@@ -7160,6 +7180,293 @@ describe('WebsocketController', () => {
                         serverTransmitTime: 1000,
                     },
                 ]);
+            });
+        });
+
+        describe('permission/request/missing', () => {
+            beforeEach(async () => {
+                await services.records.createRecord({
+                    userId,
+                    recordName,
+                    ownerId: userId,
+                });
+
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken,
+                });
+
+                await store.saveUser({
+                    id: device1Info.userId,
+                    name: 'test user',
+                    email: 'device1@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+            });
+
+            it('should relay the request to all users that are watching the default branch on the inst', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.watchBranch(serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                });
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                        connection: connectionInfo(device1Info),
+                        user: {
+                            userId: device1Info.userId,
+                            name: 'test user',
+                            displayName: null,
+                            email: 'device1@example.com',
+                        },
+                    },
+                ]);
+
+                const connection = await connectionStore.getBranchConnection(
+                    device1Info.serverConnectionId,
+                    'missing_permission',
+                    recordName,
+                    `${'inst'}/${inst}`,
+                    `${'user'}/${device1Info.userId}`
+                );
+                expect(connection).toEqual({
+                    mode: 'missing_permission',
+                    ...device1Info,
+                    recordName,
+                    inst: `${'inst'}/${inst}`,
+                    branch: `${'user'}/${device1Info.userId}`,
+                    temporary: true,
+                });
+            });
+
+            it('should return a unsucessful result if the request is for the wrong user', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.watchBranch(serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                });
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: 'wrongUserId',
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'Permissions can only be requested for the current user.',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: 'wrongUserId',
+                    },
+                ]);
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([]);
+            });
+
+            it('should return a unsucessful result if the request is for the wrong resource kind', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.watchBranch(serverConnectionId, {
+                    type: 'repo/watch_branch',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                });
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'data',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'Permissions can only be requested to access insts.',
+                        recordName,
+                        resourceKind: 'data',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                    },
+                ]);
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([]);
+            });
+
+            it('should return a unsucessful result if there are no users that can grant access to the inst', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'There are no currently no users available that can grant access to the inst.',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                    },
+                ]);
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(3)
+                ).toEqual([]);
+            });
+        });
+
+        describe('permission/request/missing/response', () => {
+            beforeEach(async () => {
+                await services.records.createRecord({
+                    userId,
+                    recordName,
+                    ownerId: userId,
+                });
+
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken,
+                });
+            });
+
+            it('should relay the request back to the connection that originally requested it', async () => {
+                await connectionStore.saveConnection(device1Info);
+
+                await connectionStore.saveBranchConnection({
+                    ...device1Info,
+                    mode: 'missing_permission',
+                    recordName,
+                    inst: `${'inst'}/${inst}`,
+                    branch: `${'user'}/${device1Info.userId}`,
+                    temporary: false,
+                });
+
+                await server.respondToPermissionRequest(serverConnectionId, {
+                    type: 'permission/request/missing/response',
+                    success: true,
+                    recordName: recordName,
+                    resourceKind: 'inst',
+                    resourceId: inst,
+                    subjectType: 'user',
+                    subjectId: device1Info.userId,
+                } as RequestMissingPermissionResponseSuccessMessage);
+
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'permission/request/missing/response',
+                        success: true,
+                        recordName: recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                        connection: connectionInfo(user1Info),
+                    },
+                ]);
+
+                const connection = await connectionStore.getBranchConnection(
+                    device1Info.serverConnectionId,
+                    'missing_permission',
+                    recordName,
+                    `${'inst'}/${inst}`,
+                    `${'user'}/${device1Info.userId}`
+                );
+                expect(connection).toBeUndefined();
             });
         });
 
@@ -7276,11 +7583,12 @@ describe('WebsocketController', () => {
                             'You are not authorized to perform this action.',
                         reason: {
                             type: 'missing_permission',
-                            kind: 'user',
-                            id: 'wrongUserId',
-                            permission: 'inst.read',
-                            role: null,
-                            marker: PRIVATE_MARKER,
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            subjectType: 'user',
+                            subjectId: 'wrongUserId',
+                            action: 'read',
                         },
                     });
                 });
@@ -7368,20 +7676,16 @@ describe('WebsocketController', () => {
                         markers: [PRIVATE_MARKER],
                     });
 
-                    services.policyStore.policies[recordName] = {
-                        [PRIVATE_MARKER]: {
-                            document: {
-                                permissions: [
-                                    {
-                                        type: 'inst.read',
-                                        role: 'developer',
-                                        insts: true,
-                                    },
-                                ],
-                            },
-                            markers: [ACCOUNT_MARKER],
-                        },
-                    };
+                    await services.policyStore.assignPermissionToSubjectAndMarker(
+                        recordName,
+                        'role',
+                        'developer',
+                        'inst',
+                        PRIVATE_MARKER,
+                        'read',
+                        {},
+                        null
+                    );
 
                     services.policyStore.roles[recordName] = {
                         ['guestUserId']: new Set(['developer']),
@@ -7509,11 +7813,11 @@ describe('WebsocketController', () => {
                 expect(result).toEqual({
                     success: false,
                     errorCode: 'record_not_found',
-                    errorMessage: 'The record was not found.',
+                    errorMessage: 'Record not found.',
                 });
             });
 
-            it('should return the lists that the user has access to', async () => {
+            it('should be able to list if the user is an admin', async () => {
                 await services.records.createRecord({
                     userId,
                     recordName,
@@ -7548,18 +7852,22 @@ describe('WebsocketController', () => {
                     success: true,
                     insts: [
                         {
+                            recordName,
                             inst,
                             markers: [PRIVATE_MARKER],
                         },
                         {
+                            recordName,
                             inst: 'otherInst',
                             markers: [PRIVATE_MARKER],
                         },
                         {
+                            recordName,
                             inst: 'otherInst2',
                             markers: [PRIVATE_MARKER],
                         },
                         {
+                            recordName,
                             inst: 'otherInst3',
                             markers: [PRIVATE_MARKER],
                         },
@@ -7568,7 +7876,7 @@ describe('WebsocketController', () => {
                 });
             });
 
-            it('should omit insts that the user does not have access to', async () => {
+            it('should return not_authorized if the user is not an admin', async () => {
                 const otherUserId: string = 'otherUserId';
                 await services.authStore.saveUser({
                     id: otherUserId,
@@ -7582,21 +7890,6 @@ describe('WebsocketController', () => {
                     services,
                     'other@example.com'
                 );
-
-                services.policyStore.policies[recordName] = {
-                    test: {
-                        document: {
-                            permissions: [
-                                {
-                                    type: 'inst.list',
-                                    insts: true,
-                                    role: 'developer',
-                                },
-                            ],
-                        },
-                        markers: [ACCOUNT_MARKER],
-                    },
-                };
 
                 services.policyStore.roles[recordName] = {
                     [user.userId]: new Set(['developer']),
@@ -7637,22 +7930,18 @@ describe('WebsocketController', () => {
                 );
 
                 expect(result).toEqual({
-                    success: true,
-                    insts: [
-                        {
-                            inst,
-                            markers: ['test'],
-                        },
-                        {
-                            inst: 'otherInst2',
-                            markers: ['test'],
-                        },
-                        {
-                            inst: 'otherInst3',
-                            markers: ['test'],
-                        },
-                    ],
-                    totalCount: 4,
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: user.userId,
+                    },
                 });
             });
 
@@ -7824,11 +8113,12 @@ describe('WebsocketController', () => {
                     errorMessage:
                         'You are not authorized to perform this action.',
                     reason: {
-                        id: 'otherUserId',
-                        kind: 'user',
-                        marker: PRIVATE_MARKER,
-                        permission: 'inst.delete',
-                        role: null,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        action: 'delete',
+                        subjectType: 'user',
+                        subjectId: user.userId,
+                        recordName,
                         type: 'missing_permission',
                     },
                 });
@@ -7857,20 +8147,16 @@ describe('WebsocketController', () => {
                     'other@example.com'
                 );
 
-                services.policyStore.policies[recordName] = {
-                    [PRIVATE_MARKER]: {
-                        document: {
-                            permissions: [
-                                {
-                                    type: 'inst.delete',
-                                    insts: true,
-                                    role: 'developer',
-                                },
-                            ],
-                        },
-                        markers: [ACCOUNT_MARKER],
-                    },
-                };
+                await services.policyStore.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'role',
+                    'developer',
+                    'inst',
+                    PRIVATE_MARKER,
+                    'delete',
+                    {},
+                    null
+                );
 
                 services.policyStore.roles[recordName] = {
                     [otherUserId]: new Set(['developer']),

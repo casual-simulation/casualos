@@ -1,11 +1,12 @@
 import type {
     AIChatMessage,
+    PublicRecordKeyPolicy,
     RecordFileFailure,
 } from '@casual-simulation/aux-records';
 import {
     APPROVED_SYMBOL,
     AsyncAction,
-    Record,
+    AvailablePermissions,
 } from '@casual-simulation/aux-common';
 
 export type RecordsActions = RecordsAsyncActions;
@@ -14,6 +15,7 @@ export type RecordsAsyncActions =
     | RecordDataAction
     | GetRecordDataAction
     | ListRecordDataAction
+    | ListRecordDataByMarkerAction
     | EraseRecordDataAction
     | RecordFileAction
     | GetFileAction
@@ -25,8 +27,8 @@ export type RecordsAsyncActions =
     | AIGenerateSkyboxAction
     | ListUserStudiosAction
     | GetPublicRecordKeyAction
-    | GrantRecordMarkerPermissionAction
-    | RevokeRecordMarkerPermissionAction
+    | GrantRecordPermissionAction
+    | RevokeRecordPermissionAction
     | GrantInstAdminPermissionAction
     | GrantRoleAction
     | RevokeRoleAction
@@ -150,7 +152,7 @@ export interface AIGenerateSkyboxOptions extends RecordActionOptions {
  * Options that are specific to Blockade Labs implementations for {@link ai.generateSkybox-string}.
  *
  * @dochash types/ai
- * @docname AIGenerateSkyboxOptions
+ * @docname AIGenerateSkyboxBlockadeLabsOptions
  */
 export interface AIGenerateSkyboxBlockadeLabsOptions {
     /**
@@ -284,7 +286,7 @@ export interface RecordsAction extends AsyncAction {
  * - `true` indicates that any user can edit the record.
  * - An array of strings indicates the list of users that are allowed to edit the record.
  *
- * @dochash types/records
+ * @dochash types/records/extra
  * @docname RecordUserPolicyType
  */
 export type RecordUserPolicyType = true | string[];
@@ -292,7 +294,7 @@ export type RecordUserPolicyType = true | string[];
 /**
  * The options for data record actions.
  *
- * @dochash types/records
+ * @dochash types/records/data
  * @docName DataRecordOptions
  */
 export interface DataRecordOptions extends RecordActionOptions {
@@ -388,6 +390,36 @@ export interface ListRecordDataAction extends DataRecordAction {
      * The address that the list should start with.
      */
     startingAddress?: string;
+
+    /**
+     * The options for the action.
+     */
+    options: ListDataOptions;
+}
+
+export interface ListRecordDataByMarkerAction
+    extends Omit<ListRecordDataAction, 'type'> {
+    type: 'list_record_data_by_marker';
+
+    /**
+     * The marker that should be used to filter the list.
+     */
+    marker: string;
+}
+
+/**
+ * Defines an interface that represents the options for a list data action.
+ *
+ * @dochash types/records/data
+ * @docName ListDataOptions
+ */
+export interface ListDataOptions extends RecordActionOptions {
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
 }
 
 /**
@@ -528,27 +560,12 @@ export interface GetEventCountAction extends RecordsAction {
     eventName: string;
 }
 
-export interface GetRecordsActionResult {
-    records: Record[];
-    hasMoreRecords: boolean;
-    totalCount: number;
-    cursor?: string;
-}
-
 /**
  * Defines an action that retrieves the list of studios that the user has access to.
  */
 export interface ListUserStudiosAction extends RecordsAction {
     type: 'list_user_studios';
 }
-
-/**
- * Defines a type that represents the different kinds of policies that a record key can have.
- *
- * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
- * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
- */
-export type PublicRecordKeyPolicy = null | 'subjectfull' | 'subjectless';
 
 /**
  * Defines an interface that represents an action that requests a key to a public record.
@@ -570,8 +587,8 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
 /**
  * Defines an interface that represents an action that grants a permission to a record marker.
  */
-export interface GrantRecordMarkerPermissionAction extends RecordsAction {
-    type: 'grant_record_marker_permission';
+export interface GrantRecordPermissionAction extends RecordsAction {
+    type: 'grant_record_permission';
 
     /**
      * The name of the record.
@@ -579,21 +596,16 @@ export interface GrantRecordMarkerPermissionAction extends RecordsAction {
     recordName: string;
 
     /**
-     * The marker that should be granted permission.
-     */
-    marker: string;
-
-    /**
      * The permission that should be granted.
      */
-    permission: object;
+    permission: AvailablePermissions;
 }
 
 /**
  * Defines an interface that represents an action that revokes a permission from a record marker.
  */
-export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
-    type: 'revoke_record_marker_permission';
+export interface RevokeRecordPermissionAction extends RecordsAction {
+    type: 'revoke_record_permission';
 
     /**
      * The name of the record.
@@ -601,14 +613,9 @@ export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
     recordName: string;
 
     /**
-     * The marker that should be revoked permission.
+     * The ID of the permission that should be revoked.
      */
-    marker: string;
-
-    /**
-     * The permission that should be revoked.
-     */
-    permission: object;
+    permissionId: string;
 }
 
 /**
@@ -874,7 +881,10 @@ export interface SetRoomTrackOptions {
 /**
  * Defines an interface that represents the options that a audio/video track has.
  *
- * @dochash types/os/portals
+ * @dochash types/os/rooms
+ * @doctitle Rooms Types
+ * @docsidebar Rooms
+ * @docdescription Types that are used for rooms actions.
  * @docname RoomTrackOptions
  */
 export interface RoomTrackOptions {
@@ -919,7 +929,20 @@ export interface RoomTrackOptions {
     aspectRatio?: number;
 }
 
+/**
+ * The possible kinds for a room track.
+ *
+ * @dochash types/records/rooms
+ * @docname TrackKind
+ */
 export type TrackKind = 'video' | 'audio';
+
+/**
+ * The possible sources for a room track.
+ *
+ * @dochash types/records/rooms
+ * @docname TrackSource
+ */
 export type TrackSource =
     | 'camera'
     | 'microphone'
@@ -929,7 +952,7 @@ export type TrackSource =
 /**
  * Defines the possible qualities that a track can stream at.
  *
- * @dochash types/os/portals
+ * @dochash types/os/rooms
  * @docname TrackVideoQuality
  */
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
@@ -1065,24 +1088,21 @@ export function getPublicRecordKey(
 }
 
 /**
- * Creates a GrantRecordMarkerPermissionAction.
+ * Creates a GrantRecordPermissionAction.
  * @param recordName The name of the record.
- * @param marker The marker.
  * @param permission The permission that should be granted.
  * @param options The options for the action.
  * @param taskId The ID of the task.
  */
-export function grantRecordMarkerPermission(
+export function grantRecordPermission(
     recordName: string,
-    marker: string,
-    permission: object,
+    permission: AvailablePermissions,
     options: RecordActionOptions,
     taskId: number | string
-): GrantRecordMarkerPermissionAction {
+): GrantRecordPermissionAction {
     return {
-        type: 'grant_record_marker_permission',
+        type: 'grant_record_permission',
         recordName,
-        marker,
         permission,
         options,
         taskId,
@@ -1090,25 +1110,23 @@ export function grantRecordMarkerPermission(
 }
 
 /**
- * Creates a RevokeRecordMarkerPermissionAction.
+ * Creates a RevokeRecordPermissionAction.
  * @param recordName The name of the record.
  * @param marker The marker.
- * @param permission The permission that should be granted.
+ * @param permissionId The ID of the permission that should be revoked.
  * @param options The options for the action.
  * @param taskId The ID of the task.
  */
-export function revokeRecordMarkerPermission(
+export function revokeRecordPermission(
     recordName: string,
-    marker: string,
-    permission: object,
+    permissionId: string,
     options: RecordActionOptions,
     taskId: number | string
-): RevokeRecordMarkerPermissionAction {
+): RevokeRecordPermissionAction {
     return {
-        type: 'revoke_record_marker_permission',
+        type: 'revoke_record_permission',
         recordName,
-        marker,
-        permission,
+        permissionId,
         options,
         taskId,
     };
@@ -1302,12 +1320,38 @@ export function getRecordData(
 export function listDataRecord(
     recordName: string,
     startingAddress: string,
-    options: RecordActionOptions,
+    options: ListDataOptions,
     taskId?: number | string
 ): ListRecordDataAction {
     return {
         type: 'list_record_data',
         recordName,
+        startingAddress,
+        requiresApproval: false,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ListRecordDataAction.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listDataRecordByMarker(
+    recordName: string,
+    marker: string,
+    startingAddress: string,
+    options: ListDataOptions,
+    taskId?: number | string
+): ListRecordDataByMarkerAction {
+    return {
+        type: 'list_record_data_by_marker',
+        recordName,
+        marker,
         startingAddress,
         requiresApproval: false,
         options,

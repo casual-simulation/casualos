@@ -1160,9 +1160,15 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
+      '@vitejs/plugin-basic-ssl':
+        specifier: 1.1.0
+        version: 1.1.0(vite@5.0.6)
       '@vitejs/plugin-vue2':
         specifier: 2.3.1
         version: 2.3.1(vite@5.0.6)(vue@2.7.15)
+      fast-glob:
+        specifier: ^3.2.5
+        version: 3.3.2
       prompts:
         specifier: 2.4.2
         version: 2.4.2
@@ -1604,6 +1610,30 @@ importers:
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
+
+  xpexchange:
+    devDependencies:
+      prettier:
+        specifier: ^2.1.1
+        version: 2.8.8
+      pretty-quick:
+        specifier: ^3.0.2
+        version: 3.1.3(prettier@2.8.8)
+
+  xpexchange/xp-api:
+    dependencies:
+      '@casual-simulation/aux-common':
+        specifier: ^3.2.12
+        version: link:../../src/aux-common
+      '@casual-simulation/aux-records':
+        specifier: ^3.2.13
+        version: link:../../src/aux-records
+      '@casual-simulation/aux-server':
+        specifier: ^3.2.13
+        version: link:../../src/aux-server
+      '@casual-simulation/rate-limit-redis':
+        specifier: 3.2.7
+        version: link:../../src/rate-limit-redis
 
 packages:
 
@@ -7952,6 +7982,15 @@ packages:
     resolution: {integrity: sha512-aMrhyZ/pO1L0EGxI3EaQhijKDi2LZd++FtrHQItP5+lVSRD3EpwaXlDoBvCBCO9+U1E6gOxo400OC79yRHzR/A==}
     dev: false
 
+  /@vitejs/plugin-basic-ssl@1.1.0(vite@5.0.6):
+    resolution: {integrity: sha512-wO4Dk/rm8u7RNhOf95ZzcEmC9rYOncYgvq4z3duaJrCgjN8BxAnDVyndanfcJZ0O6XZzHz6Q0hTimxTg8Y9g/A==}
+    engines: {node: '>=14.6.0'}
+    peerDependencies:
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0
+    dependencies:
+      vite: 5.0.6(@types/node@18.19.3)(sass@1.56.1)
+    dev: true
+
   /@vitejs/plugin-vue2@2.3.1(vite@5.0.6)(vue@2.7.15):
     resolution: {integrity: sha512-/ksaaz2SRLN11JQhLdEUhDzOn909WEk99q9t9w+N12GjQCljzv7GyvAbD/p20aBUjHkvpGOoQ+FCOkG+mjDF4A==}
     engines: {node: ^14.18.0 || >= 16.0.0}
@@ -13113,7 +13152,7 @@ packages:
     dependencies:
       assert-plus: 1.0.0
       jsprim: 1.4.2
-      sshpk: 1.18.0
+      sshpk: 1.16.1
     dev: false
 
   /http2-wrapper@2.2.1:
@@ -13358,7 +13397,7 @@ packages:
       mute-stream: 0.0.8
       ora: 5.4.1
       run-async: 2.4.1
-      rxjs: 7.8.1
+      rxjs: 7.5.7
       string-width: 4.2.3
       strip-ansi: 6.0.1
       through: 2.3.8
@@ -19229,7 +19268,6 @@ packages:
     resolution: {integrity: sha512-z9MzKh/UcOqB3i20H6rtrlaE/CgjLOvheWK/9ILrbhROGTweAi1BaFsTT9FbwZi5Trr1qNRs+MXkhmR06awzQA==}
     dependencies:
       tslib: 2.6.2
-    dev: false
 
   /rxjs@7.8.1:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
@@ -19855,22 +19893,6 @@ packages:
 
   /sshpk@1.16.1:
     resolution: {integrity: sha512-HXXqVUq7+pcKeLqqZj6mHFUMvXtOJt1uoUx09pFW6011inTMxqI8BA8PM95myrIyyKwdnzjdFjLiE6KBPVtJIg==}
-    engines: {node: '>=0.10.0'}
-    hasBin: true
-    dependencies:
-      asn1: 0.2.6
-      assert-plus: 1.0.0
-      bcrypt-pbkdf: 1.0.2
-      dashdash: 1.14.1
-      ecc-jsbn: 0.1.2
-      getpass: 0.1.7
-      jsbn: 0.1.1
-      safer-buffer: 2.1.2
-      tweetnacl: 0.14.5
-    dev: false
-
-  /sshpk@1.18.0:
-    resolution: {integrity: sha512-2p2KJZTSqQ/I3+HX42EpYOa2l3f8Erv8MWKsy2I9uf4wA7yFIkXRffYdsx86y6z4vHtV8u7g+pPlr8/4ouAxsQ==}
     engines: {node: '>=0.10.0'}
     hasBin: true
     dependencies:

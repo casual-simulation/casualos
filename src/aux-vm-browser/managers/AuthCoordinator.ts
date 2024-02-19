@@ -5,6 +5,8 @@ import {
     Subject,
     Subscription,
     SubscriptionLike,
+    filter,
+    firstValueFrom,
     startWith,
     switchMap,
 } from 'rxjs';
@@ -17,12 +19,21 @@ import {
 import { AuthHelper } from './AuthHelper';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import {
-    DenialReason,
-    MissingPermissionDenialReason,
+    ActionKinds,
+    AuthorizeActionMissingPermission,
+    PartitionAuthExternalPermissionResult,
+    PartitionAuthPermissionResult,
     PartitionAuthRequest,
+    PublicUserInfo,
+    asyncResult,
+    hasValue,
     reportInst,
 } from '@casual-simulation/aux-common';
 import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
+import {
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
+} from '@casual-simulation/aux-records';
 
 /**
  * Defines a class that is able to coordinate authentication across multiple simulations.
@@ -33,6 +44,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private _simulationManager: SimulationManager<TSim>;
     private _onMissingPermission: Subject<MissingPermissionEvent> =
         new Subject();
+    private _onRequestAccess: Subject<RequestAccessEvent> = new Subject();
     private _onNotAuthorized: Subject<NotAuthorizedEvent> = new Subject();
     private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
     private _onAuthHelper: BehaviorSubject<AuthHelper> = new BehaviorSubject(
@@ -50,6 +62,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
 
     get onShowAccountInfo(): Observable<ShowAccountInfoEvent> {
         return this._onShowAccountInfo;
+    }
+
+    get onRequestAccess(): Observable<RequestAccessEvent> {
+        return this._onRequestAccess;
     }
 
     get authEndpoints(): Map<string, AuthHelperInterface> {
@@ -91,6 +107,26 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                     sim.onAuthMessage.subscribe(async (msg) => {
                         if (msg.type === 'request') {
                             this._handleAuthRequest(sim, msg);
+                        } else if (msg.type === 'external_permission_request') {
+                            this._onRequestAccess.next({
+                                simulationId: sim.id,
+                                origin: msg.origin,
+                                reason: msg.reason,
+                                user: msg.user,
+                            });
+                        }
+                    })
+                );
+
+                sub.add(
+                    sim.localEvents.subscribe((event) => {
+                        if (event.type === 'show_account_info') {
+                            this.showAccountInfo(sim.id);
+                            if (hasValue(event.taskId)) {
+                                sim.helper.transaction(
+                                    asyncResult(event.taskId, null)
+                                );
+                            }
                         }
                     })
                 );
@@ -170,6 +206,189 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                     },
                 });
             }
+        }
+    }
+
+    async requestAccessToMissingPermission(
+        simId: string,
+        origin: string,
+        reason: AuthorizeActionMissingPermission
+    ): Promise<PartitionAuthPermissionResult> {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            const promise = firstValueFrom(
+                sim.onAuthMessage.pipe(
+                    filter(
+                        (m) =>
+                            m.origin === origin &&
+                            m.type === 'external_permission_result'
+                    )
+                )
+            );
+
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Requesting permission`,
+                reason
+            );
+            sim.sendAuthMessage({
+                type: 'permission_request',
+                origin: origin,
+                reason,
+            });
+
+            const response = await Promise.race([
+                promise,
+                new Promise<PartitionAuthExternalPermissionResult>(
+                    (resolve) => {
+                        setTimeout(() => {
+                            resolve({
+                                type: 'external_permission_result',
+                                origin,
+                                success: false,
+                                recordName: reason.recordName,
+                                resourceKind: reason.resourceKind,
+                                resourceId: reason.resourceKind,
+                                subjectType: reason.subjectType,
+                                subjectId: reason.subjectId,
+                                errorCode: 'not_authorized',
+                                errorMessage: 'The request expired.',
+                            });
+                        }, 45 * 1000);
+                    }
+                ),
+            ]);
+
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Got permission result`,
+                response
+            );
+
+            if (response.type === 'external_permission_result') {
+                console.log(
+                    `[AuthCoordinator] [${sim.id}] Got permission result`,
+                    response
+                );
+                return {
+                    ...response,
+                    type: 'permission_result',
+                };
+            }
+        }
+        return {
+            type: 'permission_result',
+            origin,
+            success: false,
+            recordName: reason.recordName,
+            resourceKind: reason.resourceKind,
+            resourceId: reason.resourceKind,
+            subjectType: reason.subjectType,
+            subjectId: reason.subjectId,
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        };
+    }
+
+    async grantAccessToMissingPermission(
+        simId: string,
+        origin: string,
+        reason: AuthorizeActionMissingPermission,
+        expireTimeMs: number = null,
+        actions: ActionKinds[] = null
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            const recordName = reason.recordName;
+            const resourceKind = reason.resourceKind;
+            const resourceId = reason.resourceId;
+            const subjectType = reason.subjectType;
+            const subjectId = reason.subjectId;
+
+            if (!actions) {
+                const result = await sim.auth.primary.grantPermission(
+                    recordName,
+                    {
+                        resourceKind,
+                        resourceId,
+                        subjectType,
+                        subjectId,
+                        action: null,
+                        options: {},
+                        expireTimeMs,
+                    }
+                );
+
+                if (result.success === true) {
+                    sim.sendAuthMessage({
+                        type: 'permission_result',
+                        success: true,
+                        origin,
+                        recordName,
+                        resourceKind,
+                        resourceId,
+                        subjectType,
+                        subjectId,
+                    });
+                }
+
+                return result;
+            } else {
+                for (let action of actions) {
+                    const result = await sim.auth.primary.grantPermission(
+                        recordName,
+                        {
+                            resourceKind,
+                            resourceId,
+                            subjectType,
+                            subjectId,
+                            action: action as any,
+                            options: {},
+                            expireTimeMs,
+                        }
+                    );
+
+                    if (result.success === false) {
+                        return result;
+                    }
+                }
+
+                sim.sendAuthMessage({
+                    type: 'permission_result',
+                    success: true,
+                    origin,
+                    recordName,
+                    resourceKind,
+                    resourceId,
+                    subjectType,
+                    subjectId,
+                });
+
+                return {
+                    success: true,
+                };
+            }
+        }
+
+        console.error(
+            '[AuthCoordinator] Could not find simulation to grant access to.',
+            simId,
+            origin,
+            reason
+        );
+        return {
+            success: false,
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        };
+    }
+
+    async respondToPermissionRequest(
+        simId: string,
+        origin: string,
+        result: PartitionAuthPermissionResult
+    ) {
+        const sim = this._simulationManager.simulations.get(simId);
+        if (sim) {
+            sim.sendAuthMessage(result);
         }
     }
 
@@ -338,10 +557,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private async _handleMissingPermission<TSim extends BrowserSimulation>(
         sim: TSim,
         request: PartitionAuthRequest,
-        reason: MissingPermissionDenialReason
+        reason: AuthorizeActionMissingPermission
     ) {
         console.log(
-            `[AuthCoordinator] [${sim.id}] Missing permission ${reason.permission}.`
+            `[AuthCoordinator] [${sim.id}] Missing permission ${reason.resourceKind}.${reason.action}.`
         );
         this._onMissingPermission.next({
             simulationId: sim.id,
@@ -380,7 +599,7 @@ export interface MissingPermissionEvent {
     simulationId: string;
     errorCode: string;
     errorMessage: string;
-    reason: MissingPermissionDenialReason;
+    reason: AuthorizeActionMissingPermission;
     origin: string;
 }
 
@@ -394,4 +613,15 @@ export interface NotAuthorizedEvent {
     errorCode: string;
     errorMessage: string;
     origin: string;
+}
+
+export interface RequestAccessEvent {
+    simulationId: string;
+    origin: string;
+    reason: AuthorizeActionMissingPermission;
+
+    /**
+     * The info about the user that is requesting the permission.
+     */
+    user: PublicUserInfo | null;
 }

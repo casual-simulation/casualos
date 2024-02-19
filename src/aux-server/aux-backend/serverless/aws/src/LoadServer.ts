@@ -102,6 +102,10 @@ export function constructServerBuilder() {
         builder.useRedisRateLimit();
     }
 
+    if (config.websocketRateLimit && config.redis) {
+        builder.useRedisWebsocketRateLimit();
+    }
+
     if (config.redis && config.redis.websocketConnectionNamespace) {
         builder.useRedisWebsocketConnectionStore();
     }
@@ -130,6 +134,8 @@ export function constructServerBuilder() {
     if (config.notifications) {
         builder.useNotifications();
     }
+
+    builder.useAutomaticPlugins();
 
     return builder;
 }

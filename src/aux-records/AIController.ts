@@ -16,6 +16,7 @@ import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import { PolicyStore } from './PolicyStore';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
@@ -23,6 +24,7 @@ export interface AIConfiguration {
     images: AIGenerateImageConfiguration | null;
     metrics: MetricsStore;
     config: ConfigurationStore;
+    policies: PolicyStore;
 }
 
 export interface AIChatConfiguration {
@@ -52,10 +54,10 @@ export interface AIChatOptions {
 
 export interface AIGenerateSkyboxConfiguration {
     interface: AIGenerateSkyboxInterface;
-    options: AIGenerateSkyboxOptions;
+    options: AIGenerateSkyboxConfigurationOptions;
 }
 
-export interface AIGenerateSkyboxOptions {
+export interface AIGenerateSkyboxConfigurationOptions {
     /**
      * The list of subscription tiers that are allowed to be used for generate skybox.
      *
@@ -69,10 +71,10 @@ export interface AIGenerateImageConfiguration {
     interfaces: {
         [provider: string]: AIImageInterface;
     };
-    options: AIGenerateImageOptions;
+    options: AIGenerateImageConfigurationOptions;
 }
 
-export interface AIGenerateImageOptions {
+export interface AIGenerateImageConfigurationOptions {
     /**
      * The model that should be used when none is specified in a request.
      */
@@ -145,9 +147,10 @@ export class AIController {
     private _imageProviders: AIImageProviders;
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
-    private _imageOptions: AIGenerateImageOptions;
+    private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
+    private _policies: PolicyStore;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -189,6 +192,7 @@ export class AIController {
         }
         this._metrics = configuration.metrics;
         this._config = configuration.config;
+        this._policies = configuration.policies;
     }
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
@@ -295,6 +299,19 @@ export class AIController {
                     );
                 } else {
                     maxTokens = allowedFeatures.ai.chat.maxTokensPerRequest;
+                }
+            }
+
+            if (this._policies) {
+                const privacyFeatures =
+                    await this._policies.getUserPrivacyFeatures(request.userId);
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
                 }
             }
 

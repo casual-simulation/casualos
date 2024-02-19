@@ -134,6 +134,13 @@ import {
     moderationSchema,
 } from '@casual-simulation/aux-records/ModerationConfiguration';
 
+// @ts-ignore
+import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+
+const automaticPlugins: ServerPlugin[] = [
+    ...xpApiPlugins.map((p: any) => p.default),
+];
+
 export interface BuildReturn {
     server: RecordsServer;
     authController: AuthController;
@@ -145,6 +152,7 @@ export interface BuildReturn {
     filesStore: FileRecordsStore;
     subscriptionController: SubscriptionController;
     rateLimitController: RateLimitController;
+    websocketRateLimitController: RateLimitController;
     policyController: PolicyController;
     websocketController: WebsocketController;
     dynamodbClient: DocumentClient;
@@ -152,6 +160,24 @@ export interface BuildReturn {
     mongoDatabase: Db;
     websocketMessenger: WebsocketMessenger;
     redisClient: RedisClientType;
+}
+
+export interface ServerPlugin {
+    /**
+     * The name of the plugin.
+     * Useful for debugging.
+     */
+    name: string;
+
+    /**
+     * Configures the given RecordsServer.
+     * @param server The server that should be configured.
+     * @param buildResults The results of the build.
+     */
+    configureServer(
+        server: RecordsServer,
+        buildResults: BuildReturn
+    ): Subscription | null | void;
 }
 
 export class ServerBuilder implements SubscriptionLike {
@@ -212,6 +238,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _redis: RedisClientType | null = null;
     private _s3: S3;
     private _rateLimitController: RateLimitController;
+    private _websocketRateLimitController: RateLimitController;
 
     private _allowedAccountOrigins: Set<string> = new Set([
         'http://localhost:3000',
@@ -233,6 +260,8 @@ export class ServerBuilder implements SubscriptionLike {
     }[] = [];
     private _generateSkyboxInterface: BlockadeLabsGenerateSkyboxInterface;
     private _imagesInterfaces: AIGenerateImageConfiguration['interfaces'];
+
+    private _plugins: ServerPlugin[] = [];
 
     private _subscription: Subscription;
 
@@ -260,6 +289,27 @@ export class ServerBuilder implements SubscriptionLike {
 
     get closed(): boolean {
         return this._subscription.closed;
+    }
+
+    /**
+     * Configures the server to use the given plugin.
+     * @param plugin The plugin that should be used.
+     */
+    usePlugin(plugin: ServerPlugin): this {
+        console.log(`[ServerBuilder] Using plugin: ${plugin.name}`);
+        this._plugins.push(plugin);
+        return this;
+    }
+
+    /**
+     * Configures the server to use all of the automatically imported plugins.
+     */
+    useAutomaticPlugins(): this {
+        console.log(`[ServerBuilder] Using automatic plugins.`);
+        for (let plugin of automaticPlugins) {
+            this.usePlugin(plugin);
+        }
+        return this;
     }
 
     useRedisCache(
@@ -321,7 +371,11 @@ export class ServerBuilder implements SubscriptionLike {
                     db.collection<any>('recordsEvents');
                 const configuration = db.collection<any>('configuration');
 
-                const policies = db.collection<any>('policies');
+                const resourcePermissions = db.collection<any>(
+                    'resourcePermissions'
+                );
+                const markerPermissions =
+                    db.collection<any>('markerPermissions');
                 const roles = db.collection<any>('roles');
 
                 this._configStore = new MongoDBConfigurationStore(
@@ -347,9 +401,10 @@ export class ServerBuilder implements SubscriptionLike {
                 this._authStore = authStore;
                 this._recordsStore = authStore;
                 this._policyStore = new MongoDBPolicyStore(
-                    policies,
                     roles,
-                    users
+                    users,
+                    resourcePermissions,
+                    markerPermissions
                 );
                 this._dataStore = new MongoDBDataRecordsStore(
                     recordsDataCollection
@@ -698,7 +753,7 @@ export class ServerBuilder implements SubscriptionLike {
         const client = this._ensureRedis(options);
         const store = new RedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
-                return this._redis.sendCommand([command, ...args]);
+                return client.sendCommand([command, ...args]);
             },
         });
         this._initActions.push({
@@ -712,6 +767,44 @@ export class ServerBuilder implements SubscriptionLike {
         this._rateLimitController = new RateLimitController(store, {
             maxHits: options.rateLimit.maxHits,
             windowMs: options.rateLimit.windowMs,
+        });
+
+        return this;
+    }
+
+    useRedisWebsocketRateLimit(
+        options: Pick<
+            BuilderOptions,
+            'redis' | 'rateLimit' | 'websocketRateLimit'
+        > = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Redis WebSocket Rate Limiter.');
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+        const rateLimit = options.websocketRateLimit ?? options.rateLimit;
+        if (!options.rateLimit) {
+            throw new Error('Websocket rate limit options must be provided.');
+        }
+        const client = this._ensureRedis(options);
+        const store = new RedisRateLimitStore({
+            sendCommand: (command: string, ...args: string[]) => {
+                return client.sendCommand([command, ...args]);
+            },
+        });
+        this._initActions.push({
+            priority: 11,
+            action: async () => {
+                await store.setup();
+            },
+        });
+        store.prefix =
+            options.redis.websocketRateLimitPrefix ??
+            options.redis.rateLimitPrefix;
+
+        this._websocketRateLimitController = new RateLimitController(store, {
+            maxHits: rateLimit.maxHits,
+            windowMs: rateLimit.windowMs,
         });
 
         return this;
@@ -906,6 +999,7 @@ export class ServerBuilder implements SubscriptionLike {
             images: null,
             config: this._configStore,
             metrics: this._metricsStore,
+            policies: this._policyStore,
         };
 
         if (this._chatInterface && options.ai.chat) {
@@ -1110,10 +1204,11 @@ export class ServerBuilder implements SubscriptionLike {
             this._policyController,
             this._aiController,
             this._websocketController,
-            this._moderationController
+            this._moderationController,
+            this._websocketRateLimitController
         );
 
-        return {
+        const buildReturn: BuildReturn = {
             server,
             authController: this._authController,
             recordsController: this._recordsController,
@@ -1124,6 +1219,7 @@ export class ServerBuilder implements SubscriptionLike {
             filesStore: this._filesStore,
             subscriptionController: this._subscriptionController,
             rateLimitController: this._rateLimitController,
+            websocketRateLimitController: this._websocketRateLimitController,
             policyController: this._policyController,
             websocketController: this._websocketController,
 
@@ -1133,6 +1229,15 @@ export class ServerBuilder implements SubscriptionLike {
             websocketMessenger: this._websocketMessenger,
             redisClient: this._redis,
         };
+
+        for (let plugin of this._plugins) {
+            let pluginReturn = plugin.configureServer(server, buildReturn);
+            if (pluginReturn) {
+                this._subscription.add(pluginReturn);
+            }
+        }
+
+        return buildReturn;
     }
 
     /**
@@ -1451,6 +1556,14 @@ const redisSchema = z.object({
         .string()
         .describe(
             'The namespace that rate limit counters are stored under. If omitted, then redis rate limiting is not possible.'
+        )
+        .nonempty()
+        .optional(),
+
+    websocketRateLimitPrefix: z
+        .string()
+        .describe(
+            'The namespace that websocket rate limit counters are stored under. If omitted, then the rateLimitPrefix is used.'
         )
         .nonempty()
         .optional(),
@@ -1822,6 +1935,11 @@ export const optionsSchema = z.object({
     rateLimit: rateLimitSchema
         .describe(
             'Rate limit options. If omitted, then rate limiting will be disabled.'
+        )
+        .optional(),
+    websocketRateLimit: rateLimitSchema
+        .describe(
+            'Rate limit options for websockets. If omitted, then the rateLimit options will be used for websockets.'
         )
         .optional(),
     openai: openAiSchema
