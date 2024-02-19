@@ -234,6 +234,8 @@ import {
     showAccountInfo as calcShowAccountInfo,
     reportInst as calcReportInst,
     getRecordsEndpoint as calcGetRecordsEndpoint,
+    ldrawCountAddressBuildSteps as calcLdrawCountAddressBuildSteps,
+    ldrawCountTextBuildSteps as calcLdrawCountTextBuildSteps,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3235,6 +3237,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 startFormAnimation,
                 stopFormAnimation,
                 listFormAnimations,
+                ldrawCountAddressBuildSteps,
+                ldrawCountTextBuildSteps,
                 attachDebugger,
                 detachDebugger,
 
@@ -9610,6 +9614,55 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListFormAnimations(address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Counts the number of build steps that exist in the given lego [LDraw](https://ldraw.org/) file.
+     * Returns a promise that resolves with the number of build steps.
+     *
+     * @param address The address of the file.
+     *
+     * @example Count the number of build steps in an example LDraw file
+     * const steps = await os.ldrawCountAddressBuildSteps('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/ldraw/officialLibrary/models/car.ldr_Packed.mpd');
+     * os.toast("There are " + steps + " build steps in the file.");
+     *
+     * @example Animate the build steps of a bot
+     * const steps = await os.ldrawCountAddressBuildSteps('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/ldraw/officialLibrary/models/car.ldr_Packed.mpd');
+     * for (let i = 0; i < steps; i++) {
+     *    masks.formBuildStep = i;
+     * }
+     *
+     * @dochash actions/os/ldraw
+     * @docname os.ldrawCountTextBuildSteps
+     */
+    function ldrawCountAddressBuildSteps(address: string): Promise<number> {
+        const task = context.createTask();
+        const event = calcLdrawCountAddressBuildSteps(address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Counts the number of build steps that exist in the given lego [LDraw](https://ldraw.org/) file.
+     * Returns a promise that resolves with the number of build steps.
+     *
+     * @param text The text content of the file.
+     *
+     * @example Count the number of build steps in an uploaded LDraw file
+     * const files = await os.showUploadFiles();
+     * const file = files[0];
+     * const steps = await os.ldrawCountTextBuildSteps(file.data);
+     * os.toast("There are " + steps + " build steps in the file.");
+     *
+     * @dochash actions/os/ldraw
+     * @doctitle LDraw Actions
+     * @docsidebar LDraw
+     * @docdescription Actions for working with LDraw models and files.
+     * @docname os.ldrawCountTextBuildSteps
+     */
+    function ldrawCountTextBuildSteps(text: string): Promise<number> {
+        const task = context.createTask();
+        const event = calcLdrawCountTextBuildSteps(text, task.taskId);
         return addAsyncAction(task, event);
     }
 
