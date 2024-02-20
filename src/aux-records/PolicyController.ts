@@ -641,11 +641,11 @@ export class PolicyController {
 
         if (result.success) {
             console.log(
-                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, userId: ${context.userId}] Request authorized.`
+                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, ${request.subjectType}: ${request.subjectId}, userId: ${context.userId}] Request authorized.`
             );
         } else {
             console.log(
-                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, userId: ${context.userId}] Request denied:`,
+                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, ${request.subjectType}: ${request.subjectId}, userId: ${context.userId}] Request denied:`,
                 result
             );
         }
