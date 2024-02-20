@@ -4560,8 +4560,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/bytes
      * @docname bytes.toBase64String
      */
-    function toBase64String(bytes: Uint8Array): string {
-        return fromByteArray(bytes);
+    function toBase64String(bytes: Uint8Array | ArrayBuffer): string {
+        const byteArray =
+            bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+        return fromByteArray(byteArray);
     }
 
     /**
@@ -4625,7 +4627,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname bytes.toBase64Url
      */
     function toBase64Url(
-        bytes: Uint8Array | string,
+        bytes: Uint8Array | ArrayBuffer | string,
         mimeType?: string
     ): string {
         let base64: string =
