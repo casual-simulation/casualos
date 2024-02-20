@@ -19,6 +19,7 @@ describe('MenuPortal', () => {
                     connectionId: 'user',
                 },
                 id,
+                null,
                 {
                     configBotId: 'user',
                     config: {

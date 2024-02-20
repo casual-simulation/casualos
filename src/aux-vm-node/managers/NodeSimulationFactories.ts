@@ -15,9 +15,11 @@ import {
     DEFAULT_BRANCH_NAME,
     YjsClientPartitionConfig,
 } from '@casual-simulation/aux-common';
+import { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
 
 export function nodeSimulationForBranch(
     id: string,
+    origin: SimulationOrigin,
     indicator: ConnectionIndicator,
     client: InstRecordsClient,
     branch: string,
@@ -65,6 +67,7 @@ export function nodeSimulationForBranch(
         },
         new AuxVMNode(
             id,
+            origin,
             configBotId,
             new RemoteAuxChannel(
                 {
@@ -80,7 +83,8 @@ export function nodeSimulationForBranch(
 
 export function nodeSimulationForLocalRepo(
     indicator: ConnectionIndicator,
-    id: string
+    id: string,
+    origin: SimulationOrigin = null
 ) {
     const partitions: AuxPartitionConfig = {
         shared: {
@@ -97,6 +101,7 @@ export function nodeSimulationForLocalRepo(
         },
         new AuxVMNode(
             id,
+            origin,
             configBotId,
             new RemoteAuxChannel(
                 {
@@ -113,6 +118,7 @@ export function nodeSimulationForLocalRepo(
 export function nodeSimulationWithConfig(
     indicator: ConnectionIndicator,
     id: string,
+    origin: SimulationOrigin,
     config: AuxConfig
 ) {
     const configBotId = getConnectionId(indicator);
@@ -123,6 +129,6 @@ export function nodeSimulationWithConfig(
             inst: null,
             isStatic: false,
         },
-        new AuxVMNode(id, configBotId, new RemoteAuxChannel(config, {}))
+        new AuxVMNode(id, origin, configBotId, new RemoteAuxChannel(config, {}))
     );
 }
