@@ -16,6 +16,10 @@
 -   Improved `os.showUploadFiles()` to return `.mpd` and `.ldr` files as text.
     -   This makes it easier for users to work with LDraw files.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where public and local insts could not publish records.
+
 ## V3.2.14
 
 #### Date: 2/19/2024
