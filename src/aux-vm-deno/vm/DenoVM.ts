@@ -13,6 +13,7 @@ import {
     ChannelActionResult,
     AuxSubChannel,
     AuxSubVM,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -62,6 +63,7 @@ export class DenoVM implements AuxVM {
     private _worker: DenoWorker;
     private _proxy: Remote<AuxChannel>;
     private _id: string;
+    private _origin: SimulationOrigin;
 
     closed: boolean;
 
@@ -76,11 +78,16 @@ export class DenoVM implements AuxVM {
         return this._config.configBotId;
     }
 
+    get origin() {
+        return this._origin;
+    }
+
     /**
      * Creates a new Simulation VM.
      */
-    constructor(id: string, config: AuxConfig) {
+    constructor(id: string, origin: SimulationOrigin, config: AuxConfig) {
         this._id = id;
+        this._origin = origin;
         this._config = config;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -304,10 +311,11 @@ export class DenoVM implements AuxVM {
 
     protected _createSubVM(
         id: string,
+        origin: SimulationOrigin,
         configBotId: string,
         channel: Remote<AuxChannel>
     ): AuxVM {
-        return new RemoteAuxVM(id, configBotId, channel);
+        return new RemoteAuxVM(id, origin, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
@@ -317,7 +325,7 @@ export class DenoVM implements AuxVM {
 
         const subVM = {
             id,
-            vm: this._createSubVM(id, configBotId, channel),
+            vm: this._createSubVM(id, this.origin, configBotId, channel),
             channel,
         };
 

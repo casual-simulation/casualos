@@ -14,6 +14,7 @@ import {
     AuxChannel,
     AuxChannelErrorType,
     ChannelActionResult,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
@@ -46,17 +47,28 @@ export class ConnectableAuxVM implements AuxVM {
     private _proxy: Remote<AuxChannel>;
     private _port: MessagePort;
     private _sub: Subscription;
+    private _origin: SimulationOrigin;
 
     get id() {
         return this._id;
+    }
+
+    get origin() {
+        return this._origin;
     }
 
     get configBotId() {
         return this._configBotId;
     }
 
-    constructor(id: string, configBotId: string, port: MessagePort) {
+    constructor(
+        id: string,
+        origin: SimulationOrigin,
+        configBotId: string,
+        port: MessagePort
+    ) {
         this._id = id;
+        this._origin = origin;
         this._configBotId = configBotId;
         this._proxy = wrap(port);
         this._localEvents = new Subject<RuntimeActions[]>();
@@ -204,10 +216,11 @@ export class ConnectableAuxVM implements AuxVM {
 
     protected _createSubVM(
         id: string,
+        origin: SimulationOrigin,
         configBotId: string,
         channel: Remote<AuxChannel>
     ): AuxVM {
-        return new RemoteAuxVM(id, configBotId, channel);
+        return new RemoteAuxVM(id, origin, configBotId, channel);
     }
 
     sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
@@ -221,7 +234,7 @@ export class ConnectableAuxVM implements AuxVM {
 
         const subVM = {
             id,
-            vm: this._createSubVM(id, configBotId, channel),
+            vm: this._createSubVM(id, this.origin, configBotId, channel),
             channel,
         };
 

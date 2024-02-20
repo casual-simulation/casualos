@@ -33,6 +33,7 @@ import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
 import { ChannelActionResult } from '../vm';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
+import { SimulationOrigin } from './Simulation';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -49,10 +50,11 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     private _batchPromise: Promise<void>;
 
     /**
-     * The ID of the simulation that the VM is running.
+     * The ID of the inst that the VM is running.
+     * Null if the VM does not have an origin.
      */
-    get inst() {
-        return this._vm.id;
+    get origin(): SimulationOrigin {
+        return this._vm.origin;
     }
 
     /**

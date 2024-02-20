@@ -543,7 +543,13 @@ The subtype that the form should use. Useful for specifying how a mesh should be
     No subtype (default)
   </PossibleValueCode>
   <PossibleValueCode value='gltf'>
-    A <a href="https://en.wikipedia.org/wiki/GlTF">GLTF mesh</a> loaded from a URL.
+    A <a href="https://en.wikipedia.org/wiki/GlTF" target="_blank">GLTF mesh</a> loaded from a URL.
+  </PossibleValueCode>
+  <PossibleValueCode value='ldraw'>
+    A <a href="https://ldraw.org/" target="_blank">LDraw mesh</a> loaded from a URL.
+  </PossibleValueCode>
+  <PossibleValueCode value='ldrawText'>
+    A <a href="https://ldraw.org/" target="_blank">LDraw mesh</a> loaded from the text in the <TagLink tag="formAddress"/> tag.
   </PossibleValueCode>
   <PossibleValueCode value='html'>
     The HTML code that should be loaded into an iframe when <TagLink tag="form"/> is set to iframe. (Default when <TagLink tag="form"/> is set to iframe)
@@ -816,6 +822,24 @@ Whether depth writing is enabled for this bot in the grid portals.
   <PossibleValueCode value='false'>
     Disable depth writing.
   </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formBuildStep`
+
+The build step that should be displayed for the bot's [LDraw](https://ldraw.org/) file.
+Only works for bots that have a <TagLink tag='form'/> of `mesh` and a <TagLink tag='formSubtype'/> of `ldraw` or `ldrawText`.
+
+Use <ActionLink action='os.ldrawCountAddressBuildSteps()'/> or <ActionLink action='os.ldrawCountTextBuildSteps()'/> to get the number of build steps that an LDraw file has.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='Infinity'>
+    Display the result of all the build steps. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Numbers >= 0'>
+    Display only the result of the given build step.
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `gltfVersion`

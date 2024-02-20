@@ -13,6 +13,7 @@ import {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -69,6 +70,7 @@ export class AuxVMImpl implements AuxVM {
     private _proxy: Remote<AuxChannel>;
     private _id: string;
     private _relaxOrigin: boolean;
+    private _origin: SimulationOrigin;
 
     closed: boolean;
 
@@ -86,11 +88,18 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Creates a new Simulation VM.
      * @param id The ID of the simulation.
+     * @param origin The origin of the simulation.
      * @param config The config that should be used.
      * @param relaxOrigin Whether to relax the origin of the VM.
      */
-    constructor(id: string, config: AuxConfig, relaxOrigin: boolean = false) {
+    constructor(
+        id: string,
+        origin: SimulationOrigin,
+        config: AuxConfig,
+        relaxOrigin: boolean = false
+    ) {
         this._id = id;
+        this._origin = origin;
         this._config = config;
         this._relaxOrigin = relaxOrigin;
         this._localEvents = new Subject<RuntimeActions[]>();
@@ -103,6 +112,10 @@ export class AuxVMImpl implements AuxVM {
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
         this._onAuthMessage = new Subject();
+    }
+
+    get origin(): SimulationOrigin {
+        return this._origin;
     }
 
     get subVMAdded(): Observable<AuxSubVM> {
@@ -306,10 +319,11 @@ export class AuxVMImpl implements AuxVM {
 
     protected _createSubVM(
         id: string,
+        origin: SimulationOrigin,
         configBotId: string,
         channel: Remote<AuxChannel>
     ): AuxVM {
-        return new RemoteAuxVM(id, configBotId, channel);
+        return new RemoteAuxVM(id, origin, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
@@ -319,7 +333,7 @@ export class AuxVMImpl implements AuxVM {
 
         const subVM = {
             id: id,
-            vm: this._createSubVM(id, configBotId, channel),
+            vm: this._createSubVM(id, this.origin, configBotId, channel),
             channel,
         };
 

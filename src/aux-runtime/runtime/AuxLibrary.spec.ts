@@ -137,6 +137,8 @@ import {
     openPhotoCamera,
     enableCollaboration,
     getRecordsEndpoint,
+    ldrawCountAddressBuildSteps,
+    ldrawCountTextBuildSteps,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -7676,6 +7678,32 @@ describe('AuxLibrary', () => {
                 ]);
                 expect(result).toEqual([]);
                 expect(context.actions).toEqual([]);
+            });
+        });
+
+        describe('os.ldrawCountAddressBuildSteps()', () => {
+            it('should emit a LDrawCountBuildStepsAction', () => {
+                const promise: any =
+                    library.api.os.ldrawCountAddressBuildSteps('address');
+                const expected = ldrawCountAddressBuildSteps(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.ldrawCountTextBuildSteps()', () => {
+            it('should emit a LDrawCountBuildStepsAction', () => {
+                const promise: any =
+                    library.api.os.ldrawCountTextBuildSteps('text');
+                const expected = ldrawCountTextBuildSteps(
+                    'text',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

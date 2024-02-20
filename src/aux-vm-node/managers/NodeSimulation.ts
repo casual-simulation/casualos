@@ -1,4 +1,8 @@
-import { BaseSimulation, AuxChannel } from '@casual-simulation/aux-vm';
+import {
+    BaseSimulation,
+    AuxChannel,
+    SimulationOrigin,
+} from '@casual-simulation/aux-vm';
 import { AuxVM } from '@casual-simulation/aux-vm/vm/AuxVM';
 import { AuxVMNode } from '../vm/AuxVMNode';
 import { ConnectionIndicator } from '@casual-simulation/aux-common';
@@ -9,13 +13,20 @@ export class NodeSimulation extends BaseSimulation {
         return vm.channel;
     }
 
-    constructor(id: string, configBotId: string, channel: AuxVM | AuxChannel) {
+    constructor(
+        id: string,
+        origin: SimulationOrigin,
+        configBotId: string,
+        channel: AuxVM | AuxChannel
+    ) {
         super(
-            'id' in channel ? channel : new AuxVMNode(id, configBotId, channel)
+            'id' in channel
+                ? channel
+                : new AuxVMNode(id, origin, configBotId, channel)
         );
     }
 
     protected _createSubSimulation(vm: AuxVM) {
-        return new NodeSimulation(vm.id, vm.configBotId, vm);
+        return new NodeSimulation(vm.id, vm.origin, vm.configBotId, vm);
     }
 }

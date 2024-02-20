@@ -23,6 +23,7 @@ import {
     Plane,
     SphereGeometry,
     MeshBasicMaterial,
+    Group,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -78,6 +79,7 @@ import {
     getBotsStateFromStoredAux,
     isStoredVersion2,
     ImportAUXAction,
+    LDrawCountBuildStepsAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -108,6 +110,7 @@ import { Physics } from '../../shared/scene/Physics';
 import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
 import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
 import { EARTH_RADIUS } from './MapPortalGrid3D';
+import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -864,6 +867,8 @@ export class PlayerGame extends Game {
                     this._stopFormAnimation(sim, e);
                 } else if (e.type === 'list_form_animations') {
                     this._listFormAnimations(sim, e);
+                } else if (e.type === 'ldraw_count_build_steps') {
+                    this._countLDrawBuildSteps(sim, e);
                 }
             })
         );
@@ -1040,6 +1045,30 @@ export class PlayerGame extends Game {
             }
 
             sim.helper.transaction(asyncResult(e.taskId, []));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _countLDrawBuildSteps(
+        sim: Simulation,
+        e: LDrawCountBuildStepsAction
+    ) {
+        try {
+            const loader = new LDrawLoader();
+            const ldraw: Group = e.address
+                ? await loader.loadAsync(e.address)
+                : await new Promise<Group>((resolve, reject) => {
+                      try {
+                          (loader.parse as any)(e.text, (group: Group) =>
+                              resolve(group)
+                          );
+                      } catch (err) {
+                          reject(err);
+                      }
+                  });
+            const steps = ldraw.userData.numBuildingSteps;
+            sim.helper.transaction(asyncResult(e.taskId, steps));
         } catch (err) {
             sim.helper.transaction(asyncError(e.taskId, err.toString()));
         }

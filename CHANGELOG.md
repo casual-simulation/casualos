@@ -1,5 +1,25 @@
 # CasualOS Changelog
 
+## V3.2.15
+
+#### Date: 2/20/2024
+
+### :rocket: Features
+
+-   Added the `ldraw` and `ldrawText` subforms.
+    -   When paired with `#form = "mesh"`, they both allow rendering a [LDraw](https://ldraw.org/) file as the bot's form.
+    -   `ldraw` - Renders the LDraw URL stored in `#formAddress`
+    -   `ldrawText` - Renders the LDraw text stored in `#formAddress`
+-   Added the `os.ldrawCountAddressBuildSteps(address)` and `os.ldrawCountTextBuildSteps(text)` functions.
+    -   `os.ldrawCountAddressBuildSteps(address)` counts and returns the number of build steps that are in the LDraw file at the given URL. Returns a promise that resolves with the number of build steps that the file has.
+    -   `os.ldrawCountTextBuildSteps(text)` counts and returns the number of build steps that are in the given LDraw text. Returns a promise that resolves with the number of build steps that the file has.
+-   Improved `os.showUploadFiles()` to return `.mpd` and `.ldr` files as text.
+    -   This makes it easier for users to work with LDraw files.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where public and local insts could not publish records.
+
 ## V3.2.14
 
 #### Date: 2/19/2024

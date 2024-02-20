@@ -5,6 +5,7 @@ import {
     AuxSubVM,
     AuxChannel,
     AuxSubChannel,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import {
@@ -44,6 +45,7 @@ export class AuxVMNode implements AuxVM {
     private _onAuthMessage: Subject<PartitionAuthMessage>;
     private _id: string;
     private _configBotId: string;
+    private _origin: SimulationOrigin;
 
     get id(): string {
         return this._id;
@@ -51,6 +53,10 @@ export class AuxVMNode implements AuxVM {
 
     get configBotId(): string {
         return this._configBotId;
+    }
+
+    get origin() {
+        return this._origin;
     }
 
     get localEvents(): Observable<RuntimeActions[]> {
@@ -93,8 +99,14 @@ export class AuxVMNode implements AuxVM {
         return this._channel;
     }
 
-    constructor(id: string, configBotId: string, channel: AuxChannel) {
+    constructor(
+        id: string,
+        origin: SimulationOrigin,
+        configBotId: string,
+        channel: AuxChannel
+    ) {
         this._id = id;
+        this._origin = origin;
         this._configBotId = configBotId;
         this._channel = channel;
         this._localEvents = new Subject<RuntimeActions[]>();
@@ -172,10 +184,11 @@ export class AuxVMNode implements AuxVM {
 
     protected _createSubVM(
         id: string,
+        origin: SimulationOrigin,
         configBotId: string,
         channel: AuxChannel
     ): AuxVM {
-        return new AuxVMNode(id, configBotId, channel);
+        return new AuxVMNode(id, origin, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
@@ -184,7 +197,7 @@ export class AuxVMNode implements AuxVM {
 
         const subVM = {
             id,
-            vm: this._createSubVM(id, configBotId, channel),
+            vm: this._createSubVM(id, this.origin, configBotId, channel),
             channel,
         };
 

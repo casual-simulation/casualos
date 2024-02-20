@@ -927,6 +927,8 @@ export type MenuBotResolvedHoverStyle = 'hover' | 'none';
  */
 export type BotSubShape =
     | 'gltf'
+    | 'ldraw'
+    | 'ldrawText'
     | 'src'
     | 'html'
     | 'pointLight'
@@ -2679,6 +2681,7 @@ export const KNOWN_TAGS: string[] = [
     'formLightPenumbra',
     'formLightDecay',
     'formLightGroundColor',
+    'formBuildStep',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',

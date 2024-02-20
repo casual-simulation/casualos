@@ -16,6 +16,7 @@ import {
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
+import { SimulationOrigin } from '../managers/Simulation';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -25,6 +26,11 @@ export interface AuxVM extends Initable {
      * The ID of the simulation that the VM is running.
      */
     get id(): string;
+
+    /**
+     * Gets the origin of the simulation.
+     */
+    get origin(): SimulationOrigin;
 
     /**
      * The ID of the config bot that the VM will create.

@@ -209,6 +209,7 @@ export class AppManager {
                 config,
                 new AuxVMImpl(
                     id,
+                    origin,
                     {
                         configBotId: configBotId,
                         config,
