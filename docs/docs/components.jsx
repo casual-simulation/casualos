@@ -168,6 +168,8 @@ export const tagMap = {
     formRenderOrder: 'tags/visualization',
     formDepthTest: 'tags/visualization',
     formDepthWrite: 'tags/visualization',
+    formBuildStep: 'tags/visualization',
+    formLDrawPartsAddress: 'tags/visualization',
     gltfVersion: 'tags/visualization',
     progressBar: 'tags/visualization',
     progressBarColor: 'tags/visualization',
