@@ -11,6 +11,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where percent-based sizing of custom apps was broken due to a change made in v3.2.14.
+-   Fixed an issue where bots stored in local insts might not receive the `@onInstJoined` shout.
 
 ## V3.2.15
 
