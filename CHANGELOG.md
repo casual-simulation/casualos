@@ -12,6 +12,7 @@
 
 -   Fixed an issue where percent-based sizing of custom apps was broken due to a change made in v3.2.14.
 -   Fixed an issue where bots stored in local insts might not receive the `@onInstJoined` shout.
+-   Fixed an issue where POV mode would start with the camera facing down when IMU support is disabled.
 
 ## V3.2.15
 
