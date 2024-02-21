@@ -53,6 +53,7 @@
     -   If no endpoint is specified, then a default is used.
     -   `os.getRecordsEndpoint()` returns a promise that resolves to the endpoint that is used by default.
 -   Added the `os.showAccountInfo()` function to show the "Account Information" dialog for users who are logged in.
+-   Implemented `ArrayBuffer` support for `bytes.toBase64String()` and `bytes.toBase64Url()` functions.
 
 ### :bug: Bug Fixes
 
