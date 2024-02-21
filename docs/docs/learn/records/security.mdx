@@ -177,7 +177,11 @@ Roles are a way of grouping multiple identities together and granting the same p
 
 Users are the people who use the system. They are the ones who log in and interact with the system. Permissions can grant access to a specific user by using their ID. You can find the ID of the current user by getting the ID of the `authBot`.
 
-Insts are user scripts that run inside CasualOS. They can perform actions on behalf of the user, and can be granted permissions to access resources. Permissions can grant access to a specific inst by using their ID.
+Insts are user scripts that run inside CasualOS. They can perform actions on behalf of the user, and can be granted permissions to access resources.
+As such, insts cannot grant permissions by themselves, but must always be accompanied by a user.
+This means that resources can only be accessed by an inst if the user also has been granted permissions.
+
+Permissions can grant access to a specific inst by using their ID.
 Inst IDs are formatted like this: `{recordName}/{inst}`, where `{recordName}` is the name of the record that the inst resides in, and `{inst}` is the name of the inst.
 For public/free insts and static/local insts, the `{recordName}` portion is omitted and the ID is just `{inst}` or `/{inst}`.
 
@@ -189,6 +193,13 @@ By default, CasualOS grants some permissions by default to make usage easier and
 - Any user or inst that is granted the `admin` role has full access to all resources in the record.
 - Studio members have read/write access to all resources in the record, but they cannot change permissions or roles.
 - Private Insts are granted full access to the records that they live inside. This is to allow insts to read and write data without needing to be granted permissions.
+
+CasualOS also provides some default markers:
+
+- `publicRead` - This marker can be used to grant read access to any user or inst. It is useful for making resources able to be accessed by anyone, but only updated by authorized users.
+- `publicWrite` - This marker can be used to grant read/write access to any user or inst. It is useful for making resources able to be accessed and updated by anyone.
+- `private` - This marker is used for all list actions that do not list resources by a marker. Only admin users have access to these resources by default.
+- `account` - This marker is used for all role and permission resources. Only admin users have access to these resources by default.
 
 ## Key Points
 
