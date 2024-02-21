@@ -121,6 +121,7 @@ export class BotShapeDecorator
     private _subShape: BotSubShape = null;
     private _gltfVersion: number = null;
     private _address: string = null;
+    private _ldrawPartsAddress: string = null;
     private _animation: any = null;
     private _scaleMode: BotScaleMode = null;
     private _canHaveStroke = false;
@@ -216,6 +217,12 @@ export class BotShapeDecorator
             'auxFormAnimationAddress',
             null
         );
+        const ldrawPartsAddress = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormLDrawPartsAddress',
+            null
+        );
         if (
             this._needsUpdate(
                 shape,
@@ -224,7 +231,8 @@ export class BotShapeDecorator
                 address,
                 aspectRatio,
                 animationAddress,
-                version
+                version,
+                ldrawPartsAddress
             )
         ) {
             this._rebuildShape(
@@ -234,7 +242,8 @@ export class BotShapeDecorator
                 address,
                 aspectRatio,
                 animationAddress,
-                version
+                version,
+                ldrawPartsAddress
             );
         }
 
@@ -293,7 +302,8 @@ export class BotShapeDecorator
         address: string,
         aspectRatio: number,
         animationAddress: string,
-        version: number
+        version: number,
+        ldrawPartsAddress: string
     ) {
         return (
             this._shape !== shape ||
@@ -303,7 +313,8 @@ export class BotShapeDecorator
             (shape === 'mesh' &&
                 (this._address !== address ||
                     this._animationAddress !== animationAddress ||
-                    this._gltfVersion !== version))
+                    this._gltfVersion !== version ||
+                    this._ldrawPartsAddress !== ldrawPartsAddress))
         );
     }
 
@@ -900,7 +911,8 @@ export class BotShapeDecorator
         address: string,
         addressAspectRatio: number,
         animationAddress: string,
-        version: number
+        version: number,
+        ldrawPartsAddress: string
     ) {
         this._shape = shape;
         this._subShape = subShape;
@@ -909,6 +921,7 @@ export class BotShapeDecorator
         this._addressAspectRatio = addressAspectRatio;
         this._animationAddress = animationAddress;
         this._gltfVersion = version;
+        this._ldrawPartsAddress = ldrawPartsAddress;
         if (
             this.mesh ||
             this.scene ||
@@ -1202,6 +1215,7 @@ export class BotShapeDecorator
             if (!ldrawLoader) {
                 ldrawLoader = new LDrawLoader();
             }
+            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
             const ldraw = await ldrawLoader.loadAsync(url);
             if (!this.container || cancellationToken.isCanceled) {
                 // The decorator was disposed of by the Bot.
@@ -1228,6 +1242,7 @@ export class BotShapeDecorator
             if (!ldrawLoader) {
                 ldrawLoader = new LDrawLoader();
             }
+            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
             const ldraw = await new Promise<Group>((resolve, reject) => {
                 try {
                     (ldrawLoader.parse as any)(text, (group: Group) =>
