@@ -8036,6 +8036,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param permission the permission that should be added.
      * @param options the options for the operation.
      *
+     * @example Grant a permission in "recordName" to the "myRole" role to access all resources with the "secret" marker.
+     * const result = await os.grantPermission('recordName', {
+     *     marker: 'secret',
+     *
+     *     // any kind of resource
+     *     resourceKind: null,
+     *
+     *     // all actions
+     *     action: null,
+     *
+     *     subjectType: 'role',
+     *     subjectId: 'myRole',
+     *
+     *     options: {},
+     *
+     *     // Never expire
+     *     expireTimeMs: null
+     * });
+     *
+     * @example Grant a permission to access the data record at "myAddress".
+     * const result = await os.grantPermission('recordName', {
+     *     resourceKind: 'data',
+     *     resourceId: 'myAddress',
+     *
+     *     // all actions
+     *     action: null,
+     *
+     *     subjectType: 'role',
+     *     subjectId: 'myRole',
+     *
+     *     options: {},
+     *
+     *     // Never expire
+     *     expireTimeMs: null
+     * });
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantPermission
@@ -8093,6 +8129,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName the name of the record.
      * @param options the options for the operation.
      *
+     * @example Grant the current inst admin permissions in the "myRecord" record.
+     * const result = await os.grantInstAdminPermission('myRecord');
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantInstAdminPermission
@@ -8120,6 +8159,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param userId the ID of the user that should be granted the role.
      * @param expireTimeMs the time that the role grant expires. If `null`, then the role will not expire.
      * @param options the options for the operation.
+     *
+     * @example Grant the "myRole" role to the user with the ID "myUserId" in the "myRecord" record.
+     * const result = await os.grantUserRole('myRecord', 'myRole', 'myUserId');
+     *
+     * @example Grant a role to a user for 24 hours.
+     * const result = await os.grantUserRole('myRecord', 'myRole', 'myUserId', DateTime.now().plus({ hours: 24 }).toMillis());
      *
      * @dochash actions/os/records
      * @docgroup 01-records
@@ -8154,6 +8199,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param userId the ID of the user.
      * @param options the options for the operation.
      *
+     * @example Revoke the "myRole" role from the user with the ID "myUserId" in the "myRecord" record.
+     * const result = await os.revokeUserRole('myRecord', 'myRole', 'myUserId');
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.revokeUserRole
@@ -8185,6 +8233,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param inst the inst that should be granted the role.
      * @param expireTimeMs the time that the role grant expires. If null, then the role will not expire.
      * @param options the options for the operation.
+     *
+     * @example Grant the "myRole" role to a public inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.grantInstRole('myRecord', 'myRole', '/myInst');
+     *
+     * @example Grant the "myRole" role to a studio inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.grantInstRole('myRecord', 'myRole', 'myRecord/myInst');
+     *
+     * @example Grant a role to an inst for 24 hours.
+     * const result = await os.grantInstRole('myRecord', 'myRole', 'myInst/myInst', DateTime.now().plus({ hours: 24 }).toMillis());
      *
      * @dochash actions/os/records
      * @docgroup 01-records
@@ -8218,6 +8275,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param role the role that should be revoked from the inst.
      * @param inst the inst that the role should be revoked from.
      * @param options the options for the operation.
+     *
+     * @example Revoke the "myRole" role from a public inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.revokeInstRole('myRecord', 'myRole', '/myInst');
+     *
+     * @example Revoke the "myRole" role from a studio inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.revokeInstRole('myRecord', 'myRole', 'myRecord/myInst');
      *
      * @dochash actions/os/records
      * @docgroup 01-records
