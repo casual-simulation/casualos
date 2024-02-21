@@ -4561,14 +4561,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname bytes.toBase64String
      */
     function toBase64String(bytes: Uint8Array | ArrayBuffer): string {
-        if (bytes instanceof ArrayBuffer || bytes instanceof Uint8Array) {
-            const byteArray =
-                bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-            return fromByteArray(byteArray);
-        } else {
-            throw new Error(
-                'Invalid input. Expected Uint8Array or ArrayBuffer.'
-            );
+        try {
+            if (bytes instanceof ArrayBuffer || bytes instanceof Uint8Array) {
+                const byteArray =
+                    bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+                return fromByteArray(byteArray);
+            } else {
+                throw new Error(
+                    'Invalid input. Expected Uint8Array or ArrayBuffer.'
+                );
+            }
+        } catch (error) {
+            // Handle the error here
+            console.error(error);
         }
     }
 
@@ -4636,18 +4641,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bytes: Uint8Array | ArrayBuffer | string,
         mimeType?: string
     ): string {
-        if (
-            bytes instanceof ArrayBuffer ||
-            bytes instanceof Uint8Array ||
-            typeof bytes === 'string'
-        ) {
-            let base64: string =
-                typeof bytes === 'string' ? bytes : toBase64String(bytes);
-            return `data:${mimeType || 'image/png'};base64,${base64}`;
-        } else {
-            throw new Error(
-                'Invalid input. Expected Uint8Array or ArrayBuffer.'
-            );
+        try {
+            if (
+                bytes instanceof ArrayBuffer ||
+                bytes instanceof Uint8Array ||
+                typeof bytes === 'string'
+            ) {
+                let base64: string =
+                    typeof bytes === 'string' ? bytes : toBase64String(bytes);
+                return `data:${mimeType || 'image/png'};base64,${base64}`;
+            } else {
+                throw new Error(
+                    'Invalid input. Expected Uint8Array or ArrayBuffer.'
+                );
+            }
+        } catch (error) {
+            // Handle the error here
+            console.error(error);
         }
     }
 
