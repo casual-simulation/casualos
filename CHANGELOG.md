@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the `formLDrawPartsAddress` to set the address that LDraw parts should be loaded from.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where percent-based sizing of custom apps was broken due to a change made in v3.2.14.
