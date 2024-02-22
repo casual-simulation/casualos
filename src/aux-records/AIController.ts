@@ -302,6 +302,13 @@ export class AIController {
                     errorCode: 'not_supported',
                     errorMessage: 'The given model is not supported.',
                 };
+            } else {
+                console.log(
+                    '[AIController] Using chat provider:',
+                    provider,
+                    'for model:',
+                    model
+                );
             }
 
             const metrics = await this._metrics.getSubscriptionAiChatMetrics({
