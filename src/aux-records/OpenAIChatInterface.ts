@@ -34,7 +34,32 @@ export class OpenAIChatInterface implements AIChatInterface {
                     model: request.model,
                     messages: request.messages.map((m) => ({
                         role: m.role,
-                        content: m.content,
+                        content:
+                            typeof m.content === 'string'
+                                ? m.content
+                                : m.content.map((c) =>
+                                      'text' in c
+                                          ? {
+                                                type: 'text',
+                                                text: c.text,
+                                            }
+                                          : 'url' in c
+                                          ? {
+                                                type: 'image_url',
+                                                image_url: {
+                                                    url: c.url,
+                                                },
+                                            }
+                                          : {
+                                                type: 'image_url',
+                                                image_url: {
+                                                    url: `data:${
+                                                        c.mimeType ||
+                                                        'image/png'
+                                                    };base64,${c.base64}`,
+                                                },
+                                            }
+                                  ),
                         name: m.author,
                         function_call: m.functionCall,
                     })),
