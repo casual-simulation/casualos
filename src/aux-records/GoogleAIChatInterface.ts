@@ -6,7 +6,7 @@ import {
     AIChatMessage,
 } from './AIChatInterface';
 
-export interface GeminiAIChatOptions {
+export interface GoogleAIChatOptions {
     /**
      * The API key to use.
      */
@@ -14,13 +14,13 @@ export interface GeminiAIChatOptions {
 }
 
 /**
- * Defines a class that implements {@link AIChatInterface} using the Gemini API.
+ * Defines a class that implements {@link AIChatInterface} using the Google Gemini API.
  */
-export class GeminiAIChatInterface implements AIChatInterface {
-    private _options: GeminiAIChatOptions;
+export class GoogleAIChatInterface implements AIChatInterface {
+    private _options: GoogleAIChatOptions;
     private _genAI: GoogleGenerativeAI;
 
-    constructor(options: GeminiAIChatOptions) {
+    constructor(options: GoogleAIChatOptions) {
         this._options = options;
         this._genAI = new GoogleGenerativeAI(options.apiKey);
     }
