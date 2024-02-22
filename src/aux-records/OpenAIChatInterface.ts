@@ -69,7 +69,6 @@ export class OpenAIChatInterface implements AIChatInterface {
                     frequency_penalty: request.frequencyPenalty,
                     stop: request.stopWords,
                     user: request.userId,
-                    max_tokens: request.maxTokens,
                 },
                 {
                     headers: {
