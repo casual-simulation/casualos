@@ -28,7 +28,7 @@ export interface AIConfiguration {
 }
 
 export interface AIChatConfiguration {
-    interface: AIChatInterface;
+    interfaces: AIChatProviders;
     options: AIChatOptions;
 }
 
@@ -39,9 +39,14 @@ export interface AIChatOptions {
     defaultModel: string;
 
     /**
+     * The provider for the default model.
+     */
+    defaultModelProvider: string;
+
+    /**
      * The list of allowed models that are allowed to be used for chat.
      */
-    allowedChatModels: string[];
+    allowedChatModels: AllowedAIChatModel[];
 
     /**
      * The list of subscription tiers that are allowed to be used for chat.
@@ -50,6 +55,18 @@ export interface AIChatOptions {
      * - An array of strings indicates that only users with the given subscription tiers are allowed.
      */
     allowedChatSubscriptionTiers: true | string[];
+}
+
+export interface AllowedAIChatModel {
+    /**
+     * The provider for the model.
+     */
+    provider: string;
+
+    /**
+     * The name of the model.
+     */
+    model: string;
 }
 
 export interface AIGenerateSkyboxConfiguration {
@@ -130,16 +147,23 @@ export interface AIImageProviders {
     [provider: string]: AIImageInterface;
 }
 
+export interface AIChatProviders {
+    [provider: string]: AIChatInterface;
+}
+
 /**
  * Defines a class that is able to handle AI requests.
  */
 export class AIController {
-    private _chat: AIChatInterface | null;
+    private _chatProviders: AIChatProviders | null;
     private _chatOptions: AIChatOptions;
 
     private _generateSkybox: AIGenerateSkyboxInterface | null;
 
-    private _allowedChatModels: Set<string>;
+    /**
+     * A map of model names to their providers
+     */
+    private _allowedChatModels: Map<string, string>;
     private _allowedChatSubscriptionTiers: true | Set<string>;
 
     private _allowedGenerateSkyboxSubscriptionTiers: true | Set<string>;
@@ -156,9 +180,15 @@ export class AIController {
         if (configuration.chat) {
             const chat = configuration.chat;
             const options = chat.options;
-            this._chat = chat.interface;
+            this._chatProviders = chat.interfaces;
             this._chatOptions = options;
-            this._allowedChatModels = new Set(options.allowedChatModels);
+            this._allowedChatModels = new Map(
+                options.allowedChatModels.map((m) =>
+                    typeof m === 'string'
+                        ? [m, options.defaultModel]
+                        : [m.model, m.provider]
+                )
+            );
             this._allowedChatSubscriptionTiers =
                 typeof options.allowedChatSubscriptionTiers === 'boolean'
                     ? options.allowedChatSubscriptionTiers
@@ -197,7 +227,7 @@ export class AIController {
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
         try {
-            if (!this._chat) {
+            if (!this._chatProviders) {
                 return {
                     success: false,
                     errorCode: 'not_supported',
@@ -253,6 +283,24 @@ export class AIController {
                     success: false,
                     errorCode: 'invalid_model',
                     errorMessage: `The given model is not allowed for chats.`,
+                };
+            }
+
+            const model = request.model ?? this._chatOptions.defaultModel;
+            const provider =
+                this._allowedChatModels.get(request.model) ??
+                this._chatOptions.defaultModelProvider;
+            const chat = this._chatProviders[provider];
+
+            if (!chat) {
+                console.error(
+                    '[AIController] No chat provider found for model:',
+                    model
+                );
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given model is not supported.',
                 };
             }
 
@@ -315,9 +363,9 @@ export class AIController {
                 }
             }
 
-            const result = await this._chat.chat({
+            const result = await chat.chat({
                 messages: request.messages,
-                model: request.model ?? this._chatOptions.defaultModel,
+                model: model,
                 temperature: request.temperature,
                 topP: request.topP,
                 frequencyPenalty: request.frequencyPenalty,
