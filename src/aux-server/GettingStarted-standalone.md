@@ -188,7 +188,8 @@ Use the following environment variables to configure infrastructure-related opti
 #### Policies Customization
 
 -   `TERMS_OF_SERVICE`: The Markdown of the terms of service that the sites should use.
--   `PRIVACY_POLICY`: The Markkdown of the privacy policy that the sites should use.
+-   `PRIVACY_POLICY`: The Markdown of the privacy policy that the sites should use.
+-   `CHILDREN_PRIVACY_POLICY`: The Markdown of the children's privacy policy that the sites should use.
 -   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
 
 ## Security Note
