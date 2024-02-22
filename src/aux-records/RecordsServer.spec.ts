@@ -497,10 +497,22 @@ describe('RecordsServer', () => {
         };
         aiController = new AIController({
             chat: {
-                interface: chatInterface,
+                interfaces: {
+                    provider1: chatInterface,
+                },
                 options: {
                     defaultModel: 'default-model',
-                    allowedChatModels: ['model-1', 'model-2'],
+                    defaultModelProvider: 'provider1',
+                    allowedChatModels: [
+                        {
+                            model: 'model-1',
+                            provider: 'provider1',
+                        },
+                        {
+                            model: 'model-2',
+                            provider: 'provider1',
+                        },
+                    ],
                     allowedChatSubscriptionTiers: ['beta'],
                 },
             },
