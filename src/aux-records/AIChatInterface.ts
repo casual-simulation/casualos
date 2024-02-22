@@ -101,8 +101,9 @@ export interface AIChatMessage {
 
     /**
      * The contents of the message.
+     * This can be a string, an array of objects which represent the contents of the message.
      */
-    content: string;
+    content: string | AIChatContent[];
 
     /**
      * The name of the author of the message.
@@ -123,6 +124,62 @@ export interface AIChatMessage {
 }
 
 /**
+ * Defines an interface that represents the contents of an AI chat message.
+ *
+ * @dochash types/ai
+ * @docname AIChatContent
+ */
+export type AIChatContent = AITextContent | AIDataContent | AIUrlContent;
+
+/**
+ * Defines an interface that represents text that is passed to an AI chat model.
+ *
+ * @dochash types/ai
+ * @docname AITextContent
+ */
+export interface AITextContent {
+    /**
+     * The text of the content.
+     */
+    text: string;
+}
+
+/**
+ * Defines an interface that represents data that is passed to an AI chat model.
+ * This data can be used to represent images, videos, or other types of binary data that the model supports.
+ * Some models do not support this type of content.
+ *
+ * @dochash types/ai
+ * @docname AIDataContent
+ */
+export interface AIDataContent {
+    /**
+     * The base 64 encoded data of the content.
+     */
+    base64: string;
+
+    /**
+     * The MIME type of the content.
+     */
+    mimeType: string;
+}
+
+/**
+ * Defines an interface that represents a URL that is passed to an AI chat model.
+ * This data can be used to represent images, videos, or other types of data that the model supports fetching.
+ * Some models do not support this type of content.
+ *
+ * @dochash types/ai
+ * @docname AIUrlContent
+ */
+export interface AIUrlContent {
+    /**
+     * The URL that the content is available at.
+     */
+    url: string;
+}
+
+/**
  * Defines a schema that represents an AI chat message.
  */
 export const AI_CHAT_MESSAGE_SCHEMA = z.object({
@@ -132,7 +189,23 @@ export const AI_CHAT_MESSAGE_SCHEMA = z.object({
         z.literal('assistant'),
         z.literal('function'),
     ]),
-    content: z.string().nonempty(),
+    content: z.union([
+        z.string().nonempty(),
+        z.array(
+            z.union([
+                z.object({
+                    text: z.string().nonempty(),
+                }),
+                z.object({
+                    base64: z.string().nonempty(),
+                    mimeType: z.string().nonempty(),
+                }),
+                z.object({
+                    url: z.string().url().nonempty(),
+                }),
+            ])
+        ),
+    ]),
     author: z.string().nonempty().optional(),
 });
 type ZodAIChatMessage = z.infer<typeof AI_CHAT_MESSAGE_SCHEMA>;
