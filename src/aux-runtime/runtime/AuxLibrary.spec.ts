@@ -17085,7 +17085,7 @@ describe('AuxLibrary', () => {
                 'data:image/png;base64,AQIDBAU='
             );
         });
-        it('should convert the given value to bytes when given an ArrayBuffer', () => {
+        it('should convert the given value to base64Url string when given an ArrayBuffer', () => {
             const arrayBuffer = new ArrayBuffer(5);
             const view = new Uint8Array(arrayBuffer);
             view[0] = 1;
