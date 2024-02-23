@@ -17032,12 +17032,11 @@ describe('AuxLibrary', () => {
             ).toBe('AQIDBAU=');
         });
 
-        it('should convert the given value to bytes when given an ArrayBuffer', () => {
-            const base64String = 'AQIDBAU=';
-            const arrayBuffer =
-                library.api.bytes.fromBase64String(base64String);
-            const expectedArrayBuffer = new Uint8Array([1, 2, 3, 4, 5]).buffer;
-            expect(arrayBuffer).toEqual(expectedArrayBuffer);
+        it('should convert the given ArrayBuffer to a base64 string', () => {
+            const arrayBuffer = new Uint8Array([1, 2, 3, 4, 5]).buffer;
+            const expectedBase64String = 'AQIDBAU=';
+            const base64String = library.api.bytes.toBase64String(arrayBuffer);
+            expect(base64String).toBe(expectedBase64String);
         });
 
         it('should throw error when not given Uint8Array or ArrayBuffer', () => {
@@ -17099,9 +17098,12 @@ describe('AuxLibrary', () => {
             );
         });
         it('should throw an error when not given Uint8Array or ArrayBuffer', () => {
+            const invalidInput: any = 'invalid value';
             expect(() => {
                 library.api.bytes.toBase64Url(invalidInput);
-            }).toThrowError('Invalid input type');
+            }).toThrowError(
+                'Invalid input. Expected Uint8Array or ArrayBuffer.'
+            );
         });
 
         it('should use the given MIME Type', () => {
