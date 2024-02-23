@@ -17098,7 +17098,7 @@ describe('AuxLibrary', () => {
             );
         });
         it('should throw an error when not given Uint8Array or ArrayBuffer', () => {
-            const invalidInput: any = 'invalid value';
+            const invalidInput: any = new Blob();
             expect(() => {
                 library.api.bytes.toBase64Url(invalidInput);
             }).toThrowError(
