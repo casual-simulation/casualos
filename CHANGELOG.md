@@ -8,12 +8,16 @@
 
 -   Added the `formLDrawPartsAddress` to set the address that LDraw parts should be loaded from.
 -   Updated the policies.
+-   Added the ability to configure CasualOS to support Google AI for `ai.chat()`.
+-   Added the ability to include image data in `ai.chat()` requests.
+    -   `ai.chat()` messages now support accepting an array of content which can either represent text or image data.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where percent-based sizing of custom apps was broken due to a change made in v3.2.14.
 -   Fixed an issue where bots stored in local insts might not receive the `@onInstJoined` shout.
 -   Fixed an issue where POV mode would start with the camera facing down when IMU support is disabled.
+-   Fixed an issue where `ai.chat()` would not actually honor any options.
 
 ## V3.2.15
 
