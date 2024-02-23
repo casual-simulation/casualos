@@ -4711,6 +4711,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * });
      * console.log(`${response.role}: ${response.content}`);
      *
+     * @example Ask the AI to describe an uploaded image.
+     * const files = await os.showUploadFiles();
+     * const firstFile = files[0];
+     * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+     * const response = await ai.chat({
+     *    role: 'user',
+     *    content: [
+     *        {
+     *            base64: base64,
+     *            mimeType: firstFile.mimeType,
+     *        },
+     *        {
+     *            text: 'please describe the image'
+     *        }
+     *    ]
+     * }, {
+     *    preferredModel: 'gemini-pro-vision'
+     * });
+     *
+     * os.toast(response.content);
+     *
+     *
      * @dochash actions/ai
      * @docname ai.chat
      * @docid ai.chat-message
@@ -4767,6 +4789,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * }
      *
      * os.toast("Goodbye!");
+     *
+     * @example Ask the AI to describe an uploaded image.
+     * const files = await os.showUploadFiles();
+     * const firstFile = files[0];
+     * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+     * const response = await ai.chat([{
+     *    role: 'user',
+     *    content: [
+     *        {
+     *            base64: base64,
+     *            mimeType: firstFile.mimeType,
+     *        },
+     *        {
+     *            text: 'please describe the image'
+     *        }
+     *    ]
+     * }], {
+     *    preferredModel: 'gemini-pro-vision'
+     * });
+     *
+     * os.toast(response.content);
      *
      * @dochash actions/ai
      * @docname ai.chat
