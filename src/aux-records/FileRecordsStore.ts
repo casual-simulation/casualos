@@ -35,6 +35,7 @@ export interface FileRecordsLookup {
      * @param subjectId The ID of the subject that was logged in when the record was published.
      * @param sizeInBytes The size of the file in bytes.
      * @param description The description of the file.
+     * @param bucket The bucket that the file is stored in.
      * @param markers The resource markers for the file.
      */
     addFileRecord(
@@ -44,6 +45,7 @@ export interface FileRecordsLookup {
         subjectId: string,
         sizeInBytes: number,
         description: string,
+        bucket: string | null,
         markers: string[]
     ): Promise<AddFileResult>;
 
@@ -232,6 +234,12 @@ export interface FileRecord {
      * Null if the file was created without markers.
      */
     markers: string[] | null;
+
+    /**
+     * The bucket that the file is stored in.
+     * If null, then the file is stored in the default bucket.
+     */
+    bucket: string | null;
 }
 
 export type GetFileRecordResult = GetFileRecordSuccess | GetFileRecordFailure;
