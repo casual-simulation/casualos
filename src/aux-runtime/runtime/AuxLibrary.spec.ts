@@ -17059,6 +17059,22 @@ describe('AuxLibrary', () => {
                 )
             ).toBe('AQIDBAU=');
         });
+
+        it('should convert the given ArrayBuffer to a base64 string', () => {
+            const arrayBuffer = new Uint8Array([1, 2, 3, 4, 5]).buffer;
+            const expectedBase64String = 'AQIDBAU=';
+            const base64String = library.api.bytes.toBase64String(arrayBuffer);
+            expect(base64String).toBe(expectedBase64String);
+        });
+
+        it('should throw error when not given Uint8Array or ArrayBuffer', () => {
+            const invalidValue: any = 'invalid value';
+            expect(() => {
+                library.api.bytes.toBase64String(invalidValue);
+            }).toThrowError(
+                'Invalid input. Expected Uint8Array or ArrayBuffer.'
+            );
+        });
     });
 
     describe('bytes.fromBase64String()', () => {
@@ -17095,6 +17111,26 @@ describe('AuxLibrary', () => {
         it('should support base64 strings', () => {
             expect(library.api.bytes.toBase64Url('AQIDBAU=')).toBe(
                 'data:image/png;base64,AQIDBAU='
+            );
+        });
+        it('should convert the given value to base64Url string when given an ArrayBuffer', () => {
+            const arrayBuffer = new ArrayBuffer(5);
+            const view = new Uint8Array(arrayBuffer);
+            view[0] = 1;
+            view[1] = 2;
+            view[2] = 3;
+            view[3] = 4;
+            view[4] = 5;
+            expect(library.api.bytes.toBase64Url(arrayBuffer)).toBe(
+                'data:image/png;base64,AQIDBAU='
+            );
+        });
+        it('should throw an error when not given Uint8Array or ArrayBuffer', () => {
+            const invalidInput: any = new Blob();
+            expect(() => {
+                library.api.bytes.toBase64Url(invalidInput);
+            }).toThrowError(
+                'Invalid input. Expected Uint8Array or ArrayBuffer.'
             );
         });
 
