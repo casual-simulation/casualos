@@ -415,10 +415,20 @@ export class YjsPartitionImpl implements YjsPartition {
             authorized: true,
         });
 
-        this._onStatusUpdated.next({
-            type: 'sync',
-            synced: true,
-        });
+        if (this._indexeddb) {
+            // wait to send the initial sync event until the persistence is ready
+            this._indexeddb.waitForInit().then(() => {
+                this._onStatusUpdated.next({
+                    type: 'sync',
+                    synced: true,
+                });
+            });
+        } else {
+            this._onStatusUpdated.next({
+                type: 'sync',
+                synced: true,
+            });
+        }
     }
 
     private _applyEvents(

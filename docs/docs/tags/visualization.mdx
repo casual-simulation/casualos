@@ -842,6 +842,19 @@ Use <ActionLink action='os.ldrawCountAddressBuildSteps()'/> or <ActionLink actio
   </PossibleValue>
 </PossibleValuesTable>
 
+### `formLDrawPartsAddress`
+
+The address that additional parts should be loaded from for the bot's [LDraw](https://ldraw.org/) file.
+Only works for bots that have a <TagLink tag='form'/> of `mesh` and a <TagLink tag='formSubtype'/> of `ldraw` or `ldrawText`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any URL'>
+    Load LDraw parts from the given URL path.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `gltfVersion`
 
 The GLTF specification version that should be used to load a GLTF model.

@@ -135,11 +135,13 @@ export function getPolicies(includeExtensionlessFiles: boolean) {
 
     const TERMS_OF_SERVICE = process.env.TERMS_OF_SERVICE;
     const PRIVACY_POLICY = process.env.PRIVACY_POLICY;
+    const CHILDREN_PRIVACY_POLICY = process.env.CHILDREN_PRIVACY_POLICY;
     const ACCEPTABLE_USE_POLICY = process.env.ACCEPTABLE_USE_POLICY;
 
     loadPolicy('terms-of-service.md', TERMS_OF_SERVICE);
     loadPolicy('privacy-policy.md', PRIVACY_POLICY);
     loadPolicy('acceptable-use-policy.md', ACCEPTABLE_USE_POLICY);
+    loadPolicy('children-privacy-policy.md', CHILDREN_PRIVACY_POLICY);
 
     return {
         virtualModules,

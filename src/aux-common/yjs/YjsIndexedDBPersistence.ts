@@ -141,6 +141,7 @@ export class YjsIndexedDBPersistence {
     private _whenSynced: Promise<void>;
     private _encryptionKey: string;
     private _id: string;
+    private _initPromise: Promise<void>;
     db: IDBDatabase;
 
     get whenSynced() {
@@ -218,7 +219,7 @@ export class YjsIndexedDBPersistence {
             )
         );
 
-        this._initDb();
+        this._initPromise = this._initDb();
 
         this._storeTimeout = 1000;
         this._storeTimeoutId = null;
@@ -241,10 +242,14 @@ export class YjsIndexedDBPersistence {
         doc.on('destroy', this.destroy);
     }
 
+    async waitForInit() {
+        await this._initPromise;
+    }
+
     private async _initDb() {
         const db = await this._db;
         this.db = db;
-        this._fetchUpdates();
+        await this._fetchUpdates();
     }
 
     private async _fetchUpdates() {
@@ -259,7 +264,7 @@ export class YjsIndexedDBPersistence {
             if (this._destroyed) return this;
             this._onSyncChanged.next(true);
         };
-        fetchUpdates(
+        await fetchUpdates(
             this,
             beforeApplyUpdatesCallback,
             afterApplyUpdatesCallback

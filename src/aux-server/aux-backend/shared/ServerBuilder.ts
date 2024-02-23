@@ -36,6 +36,7 @@ import {
     MultiNotificationMessenger,
     ModerationController,
     ModerationStore,
+    GoogleAIChatInterface,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -226,7 +227,8 @@ export class ServerBuilder implements SubscriptionLike {
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
 
-    private _chatInterface: AIChatInterface = null;
+    private _openAIChatInterface: AIChatInterface = null;
+    private _googleAIChatInterface: AIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
@@ -939,7 +941,7 @@ export class ServerBuilder implements SubscriptionLike {
     useAI(
         options: Pick<
             BuilderOptions,
-            'openai' | 'ai' | 'blockadeLabs' | 'stabilityai'
+            'openai' | 'ai' | 'blockadeLabs' | 'stabilityai' | 'googleai'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using AI.');
@@ -947,10 +949,17 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('AI options must be provided.');
         }
 
-        if (options.openai && options.ai.chat?.provider === 'openai') {
+        if (options.openai) {
             console.log('[ServerBuilder] Using OpenAI Chat.');
-            this._chatInterface = new OpenAIChatInterface({
+            this._openAIChatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
+            });
+        }
+
+        if (options.googleai) {
+            console.log('[ServerBuilder] Using Google AI Chat.');
+            this._googleAIChatInterface = new GoogleAIChatInterface({
+                apiKey: options.googleai.apiKey,
             });
         }
 
@@ -1002,12 +1011,26 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyStore,
         };
 
-        if (this._chatInterface && options.ai.chat) {
+        if (this._openAIChatInterface && options.ai.chat) {
             this._aiConfiguration.chat = {
-                interface: this._chatInterface,
+                interfaces: {
+                    openai: this._openAIChatInterface,
+                    google: this._googleAIChatInterface,
+                },
                 options: {
                     defaultModel: options.ai.chat.defaultModel,
-                    allowedChatModels: options.ai.chat.allowedModels,
+                    defaultModelProvider: options.ai.chat.provider,
+                    allowedChatModels: options.ai.chat.allowedModels.map((m) =>
+                        typeof m === 'string'
+                            ? {
+                                  provider: options.ai.chat.provider,
+                                  model: m,
+                              }
+                            : {
+                                  provider: m.provider,
+                                  model: m.model,
+                              }
+                    ),
                     allowedChatSubscriptionTiers:
                         options.ai.chat.allowedSubscriptionTiers,
                 },
@@ -1743,6 +1766,13 @@ const openAiSchema = z.object({
         .nonempty(),
 });
 
+const googleAiSchema = z.object({
+    apiKey: z
+        .string()
+        .describe('The Google AI API Key that should be used.')
+        .nonempty(),
+});
+
 const blockadeLabsSchema = z.object({
     apiKey: z
         .string()
@@ -1761,9 +1791,9 @@ const aiSchema = z.object({
     chat: z
         .object({
             provider: z
-                .literal('openai')
+                .enum(['openai', 'google'])
                 .describe(
-                    'The provider that should be used for Chat AI requests.'
+                    'The provider that should be used by default for Chat AI request models that dont have an associated provider.'
                 ),
             defaultModel: z
                 .string()
@@ -1772,7 +1802,15 @@ const aiSchema = z.object({
                 )
                 .nonempty(),
             allowedModels: z
-                .array(z.string().nonempty())
+                .array(
+                    z.union([
+                        z.string().nonempty(),
+                        z.object({
+                            provider: z.enum(['openai', 'google']).optional(),
+                            model: z.string().nonempty(),
+                        }),
+                    ])
+                )
                 .describe(
                     'The list of models that are allowed to be used for Chat AI requets.'
                 ),
@@ -1955,6 +1993,11 @@ export const optionsSchema = z.object({
     stabilityai: stabilityAiSchema
         .describe(
             'Stability AI options. If omitted, then it will not be possible to use Stable Diffusion.'
+        )
+        .optional(),
+    googleai: googleAiSchema
+        .describe(
+            'Google AI options. If omitted, then it will not be possible to use Google AI (i.e. Gemini)'
         )
         .optional(),
     ai: aiSchema
