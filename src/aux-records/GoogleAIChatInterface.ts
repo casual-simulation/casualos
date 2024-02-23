@@ -32,7 +32,38 @@ export class GoogleAIChatInterface implements AIChatInterface {
 
         const messages = request.messages.map((m) => mapMessage(m));
 
-        const historyMessages = messages.slice(0, request.messages.length - 1);
+        const historyMessages = messages.slice(0, messages.length - 1);
+        const lastMessage = messages[messages.length - 1];
+        if (historyMessages.length > 0) {
+            if (
+                lastMessage.role !== 'user' ||
+                historyMessages[historyMessages.length - 1].role !== 'model'
+            ) {
+                return {
+                    choices: [
+                        {
+                            role: 'system',
+                            content:
+                                'When using Google Gemini, the last message must be from the user and the second to last message (if provided) must be from the model.',
+                        },
+                    ],
+                    totalTokens: 0,
+                };
+            }
+        }
+
+        if (lastMessage.role !== 'user') {
+            return {
+                choices: [
+                    {
+                        role: 'system',
+                        content:
+                            'When using Google Gemini, the last message must be from the user.',
+                    },
+                ],
+                totalTokens: 0,
+            };
+        }
 
         const chat = model.startChat({
             history: historyMessages,
@@ -44,9 +75,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
             },
         });
 
-        const result = await chat.sendMessage(
-            messages[request.messages.length - 1].parts
-        );
+        const result = await chat.sendMessage(lastMessage.parts);
 
         const response = result.response;
 
