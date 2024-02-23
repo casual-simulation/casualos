@@ -32,6 +32,7 @@ export * from './BlockadeLabsGenerateSkyboxInterface';
 export * from './AIImageInterface';
 export * from './OpenAIImageInterface';
 export * from './StabilityAIImageInterface';
+export * from './GoogleAIChatInterface';
 
 export * from './ConfigurationStore';
 export * from './SubscriptionConfiguration';

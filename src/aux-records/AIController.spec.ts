@@ -32,6 +32,12 @@ describe('AIController', () => {
             [AIChatInterfaceRequest]
         >;
     };
+    let chatInterface2: {
+        chat: jest.Mock<
+            Promise<AIChatInterfaceResponse>,
+            [AIChatInterfaceRequest]
+        >;
+    };
     let generateSkyboxInterface: {
         generateSkybox: jest.Mock<
             Promise<AIGenerateSkyboxInterfaceResponse>,
@@ -55,6 +61,9 @@ describe('AIController', () => {
         chatInterface = {
             chat: jest.fn(),
         };
+        chatInterface2 = {
+            chat: jest.fn(),
+        };
         generateSkyboxInterface = {
             generateSkybox: jest.fn(),
             getSkybox: jest.fn(),
@@ -67,10 +76,27 @@ describe('AIController', () => {
         });
         controller = new AIController({
             chat: {
-                interface: chatInterface,
+                interfaces: {
+                    provider1: chatInterface,
+                    provider2: chatInterface2,
+                },
                 options: {
                     defaultModel: 'default-model',
-                    allowedChatModels: ['test-model1', 'test-model2'],
+                    defaultModelProvider: 'provider1',
+                    allowedChatModels: [
+                        {
+                            provider: 'provider1',
+                            model: 'test-model1',
+                        },
+                        {
+                            provider: 'provider1',
+                            model: 'test-model2',
+                        },
+                        {
+                            provider: 'provider2',
+                            model: 'test-model3',
+                        },
+                    ],
                     allowedChatSubscriptionTiers: ['test-tier'],
                 },
             },
@@ -145,6 +171,56 @@ describe('AIController', () => {
             });
             expect(chatInterface.chat).toBeCalledWith({
                 model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+        });
+
+        it('should support using another provider based on the chosen model', async () => {
+            chatInterface2.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            stopReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 1,
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model3',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                        stopReason: 'stop',
+                    },
+                ],
+            });
+            expect(chatInterface2.chat).toBeCalledWith({
+                model: 'test-model3',
                 messages: [
                     {
                         role: 'user',
@@ -315,10 +391,22 @@ describe('AIController', () => {
 
             controller = new AIController({
                 chat: {
-                    interface: chatInterface,
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
                     options: {
                         defaultModel: 'default-model',
-                        allowedChatModels: ['test-model1', 'test-model2'],
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
                         allowedChatSubscriptionTiers: true,
                     },
                 },
@@ -757,10 +845,22 @@ describe('AIController', () => {
         it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
             controller = new AIController({
                 chat: {
-                    interface: chatInterface,
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
                     options: {
                         defaultModel: 'default-model',
-                        allowedChatModels: ['test-model1', 'test-model2'],
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
                         allowedChatSubscriptionTiers: ['test-tier'],
                     },
                 },

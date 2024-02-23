@@ -6402,7 +6402,78 @@ describe('RecordsManager', () => {
                                 content: 'Hello!',
                             },
                         ],
-                        options: {},
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support custom models', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChat(
+                        [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        {
+                            preferredModel: 'custom-model',
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/chat',
+                    {
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        model: 'custom-model',
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6477,7 +6548,6 @@ describe('RecordsManager', () => {
                                 content: 'Hello!',
                             },
                         ],
-                        options: {},
                         instances: ['/myInst'],
                     },
                     {
@@ -6553,7 +6623,6 @@ describe('RecordsManager', () => {
                                 content: 'Hello!',
                             },
                         ],
-                        options: {},
                         instances: ['record/myInst'],
                     },
                     {
@@ -6626,7 +6695,6 @@ describe('RecordsManager', () => {
                                 content: 'Hello!',
                             },
                         ],
-                        options: {},
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6697,7 +6765,6 @@ describe('RecordsManager', () => {
                                 content: 'Hello!',
                             },
                         ],
-                        options: {},
                     },
                     {
                         validateStatus: expect.any(Function),

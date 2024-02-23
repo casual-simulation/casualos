@@ -77,7 +77,7 @@ export interface AIChatOptions extends RecordActionOptions {
      * - `gpt-4`
      * - `gpt-3.5-turbo`
      */
-    preferredModel?: 'gpt-4' | 'gpt-3.5-turbo';
+    preferredModel?: string;
 
     /**
      * The temperature that should be used.

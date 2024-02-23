@@ -34,7 +34,32 @@ export class OpenAIChatInterface implements AIChatInterface {
                     model: request.model,
                     messages: request.messages.map((m) => ({
                         role: m.role,
-                        content: m.content,
+                        content:
+                            typeof m.content === 'string'
+                                ? m.content
+                                : m.content.map((c) =>
+                                      'text' in c
+                                          ? {
+                                                type: 'text',
+                                                text: c.text,
+                                            }
+                                          : 'url' in c
+                                          ? {
+                                                type: 'image_url',
+                                                image_url: {
+                                                    url: c.url,
+                                                },
+                                            }
+                                          : {
+                                                type: 'image_url',
+                                                image_url: {
+                                                    url: `data:${
+                                                        c.mimeType ||
+                                                        'image/png'
+                                                    };base64,${c.base64}`,
+                                                },
+                                            }
+                                  ),
                         name: m.author,
                         function_call: m.functionCall,
                     })),
@@ -71,6 +96,22 @@ export class OpenAIChatInterface implements AIChatInterface {
                 totalTokens: result.data.usage.total_tokens,
             };
         } catch (err) {
+            if (axios.isAxiosError(err)) {
+                if (err.response.status === 400) {
+                    console.error(
+                        `[OpenAIChatInterface] [${request.userId}] [chat]: Bad request: ${err.response.data.error.message}`
+                    );
+                    return {
+                        choices: [
+                            {
+                                role: 'system',
+                                content: `Error: ${err.response.data.error.message}`,
+                            },
+                        ],
+                        totalTokens: 0,
+                    };
+                }
+            }
             handleAxiosErrors(err);
         }
     }

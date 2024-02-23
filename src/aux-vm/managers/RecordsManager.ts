@@ -1462,10 +1462,11 @@ export class RecordsManager {
                 return;
             }
 
-            const { endpoint, ...rest } = event.options;
+            const { endpoint, preferredModel, ...rest } = event.options;
             let requestData: any = {
+                ...rest,
+                model: preferredModel,
                 messages: event.messages,
-                options: rest,
             };
 
             if (hasValue(this._helper.origin)) {
