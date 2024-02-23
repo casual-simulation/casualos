@@ -28,71 +28,92 @@ export class GoogleAIChatInterface implements AIChatInterface {
     async chat(
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
-        const model = this._genAI.getGenerativeModel({ model: request.model });
+        try {
+            const model = this._genAI.getGenerativeModel({
+                model: request.model,
+            });
 
-        const messages = request.messages.map((m) => mapMessage(m));
+            const messages = request.messages.map((m) => mapMessage(m));
 
-        const historyMessages = messages.slice(0, messages.length - 1);
-        const lastMessage = messages[messages.length - 1];
-        if (historyMessages.length > 0) {
-            if (
-                lastMessage.role !== 'user' ||
-                historyMessages[historyMessages.length - 1].role !== 'model'
-            ) {
+            const historyMessages = messages.slice(0, messages.length - 1);
+            const lastMessage = messages[messages.length - 1];
+            if (historyMessages.length > 0) {
+                if (
+                    lastMessage.role !== 'user' ||
+                    historyMessages[historyMessages.length - 1].role !== 'model'
+                ) {
+                    return {
+                        choices: [
+                            {
+                                role: 'system',
+                                content:
+                                    'When using Google Gemini, the last message must be from the user and the second to last message (if provided) must be from the model.',
+                            },
+                        ],
+                        totalTokens: 0,
+                    };
+                }
+            }
+
+            if (lastMessage.role !== 'user') {
                 return {
                     choices: [
                         {
                             role: 'system',
                             content:
-                                'When using Google Gemini, the last message must be from the user and the second to last message (if provided) must be from the model.',
+                                'When using Google Gemini, the last message must be from the user.',
                         },
                     ],
                     totalTokens: 0,
                 };
             }
-        }
 
-        if (lastMessage.role !== 'user') {
+            const chat = model.startChat({
+                history: historyMessages,
+                generationConfig: {
+                    maxOutputTokens: request.maxTokens,
+                    topP: request.topP,
+                    temperature: request.temperature,
+                    stopSequences: request.stopWords,
+                },
+            });
+
+            const result = await chat.sendMessage(lastMessage.parts);
+
+            const response = result.response;
+
+            const chatContents = await chat.getHistory();
+            const tokens = await model.countTokens({
+                contents: chatContents,
+            });
+
             return {
                 choices: [
                     {
-                        role: 'system',
-                        content:
-                            'When using Google Gemini, the last message must be from the user.',
+                        role: 'assistant',
+                        content: response.text(),
                     },
                 ],
-                totalTokens: 0,
+                totalTokens: tokens.totalTokens,
             };
+        } catch (err) {
+            if (err instanceof Error) {
+                console.error(
+                    '[GoogleAIChatInterface] Error occurred while generating content.',
+                    err
+                );
+                return {
+                    choices: [
+                        {
+                            role: 'system',
+                            content: `Error: ${err.message}`,
+                        },
+                    ],
+                    totalTokens: 0,
+                };
+            }
+            throw err;
         }
-
-        const chat = model.startChat({
-            history: historyMessages,
-            generationConfig: {
-                maxOutputTokens: request.maxTokens,
-                topP: request.topP,
-                temperature: request.temperature,
-                stopSequences: request.stopWords,
-            },
-        });
-
-        const result = await chat.sendMessage(lastMessage.parts);
-
-        const response = result.response;
-
-        const chatContents = await chat.getHistory();
-        const tokens = await model.countTokens({
-            contents: chatContents,
-        });
-
-        return {
-            choices: [
-                {
-                    role: 'assistant',
-                    content: response.text(),
-                },
-            ],
-            totalTokens: tokens.totalTokens,
-        };
     }
 }
 
