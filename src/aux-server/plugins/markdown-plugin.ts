@@ -3,6 +3,7 @@ import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkToc from 'remark-toc';
+import rehypeSlug from 'rehype-slug';
 import { unified } from 'unified';
 import { createFilter } from '@rollup/pluginutils';
 
@@ -22,6 +23,7 @@ export default function markdownPlugin(options: Options = {}): Plugin {
         .use(remarkParse)
         .use(remarkToc, { ordered: true, tight: true })
         .use(remarkRehype)
+        .use(rehypeSlug)
         .use(rehypeStringify, { allowDangerousHtml: true });
 
     return {

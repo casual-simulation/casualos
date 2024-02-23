@@ -7,6 +7,7 @@
 ### :rocket: Features
 
 -   Added the `formLDrawPartsAddress` to set the address that LDraw parts should be loaded from.
+-   Updated the policies.
 
 ### :bug: Bug Fixes
 

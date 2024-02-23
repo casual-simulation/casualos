@@ -22,6 +22,8 @@ import {
 } from './SubscriptionConfiguration';
 import { merge } from 'lodash';
 
+console.log = jest.fn();
+
 describe('AIController', () => {
     let controller: AIController;
     let chatInterface: {

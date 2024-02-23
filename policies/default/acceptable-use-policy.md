@@ -1,50 +1,65 @@
-﻿## Casual Simulation Web Services Acceptable Use Policy
+﻿Last updated on February 22nd, 2024
 
-Last updated on April 18th, 2022
+## Contents
 
-By using our products or services, you agree to this Acceptable Use Policy as well as our Terms of Service and Privacy Policy.
+## About this Acceptable Use Policy
 
-About this Acceptable Use Policy
-
-This Acceptable Use Policy pertains to the legal obligations you assume when you access the following websites:
+This Acceptable Use Policy pertains to the legal obligations You assume when You access the following websites:
 
 -   ab1.bot
--   alpha.ab1.bot
--   static.ab1.bot
--   stable.ab1.bot
--   ab1.link
--   casualos.com
--   alpha.casualos.com
--   static.casualos.com
--   stable.casualos.com
--   publicos.com
 -   publicos.link
--   auxplayer.com
--   alpha.auxplayer.com
--   static.auxplayer.com
--   stable.auxplayer.com
--   auxplayer.org
--   static.auxplayer.org
--   stable.auxplayer.org
--   auxbackend.com
--   webhook.auxbackend.com
--   websocket.auxbackend.com
 -   docs.casualos.com
--   docs.ab1.bot
+-   alpha.ab1.bot
+-   ab1.link
+-   publicos.com
+-   auxplayer.org
 
-This Acceptable Use Policy further relates to any access points, endpoints, webhooks, or any other services provided at the below above listed domains (“Services”) and create a legal agreement between you (“you” or “your”) and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (“Casual Simulation,” “we,” “us,” or “our”).
+This Acceptable Use Policy further relates to any access points, endpoints, webhooks, or any other services provided at the above listed domains ("Services") and create a legal agreement between You ("you" or "your") and Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address is 1740 44th S T SW STE 5 Wyoming, MI 49519 ("Casual Simulation," "We," "Us," or  "Our").
 
-If you are using the Services on behalf of you personally, “you” means you individually; if you represent an organization, “you” means your organization. You agree that by accessing our Services, you are agreeing to this Acceptable Use Policy, our Terms of Service, and Privacy Policy. If you do not agree with this Acceptable Use Policy THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+IF WE AGREE TO A SEPARATE WRITTEN AGREEMENT WITH YOU IN WRITING, THEN THAT AGREEMENT SHALL OVERRULE AND SUPERCEDE THIS ACCEPTABLE USE POLICY IN THE EVENT OF A CONFLICT. To discuss such an arrangement please email us at <hello@casualsimulation.org>, and We will respond promptly.
 
-The intent of this document is to clarify what we consider to be acceptable use of the Services.
-If you are found to be in violation of any of the below policies, you will receive a notice via the most expedient means we have to contact you at our discretion including email if we are able. Unless you explain or correct your behavior within 72 hours your content will be deleted and your access will be suspended or otherwise limited to our Services at our sole discretion. We will do our best to work with you and ensure a fair outcome in all cases. We reserve the right to immediately suspend, without notice, any content, account, or IP address which we determine to be submitting spam or other potentially damaging or disruptive content to the Services.
-If we have no means of identifying or reaching you we will immediately suspend, without notice, any content, account, IP address, aux bundle, or source which we determine to be submitting spam or other potentially damaging or disruptive content to the Services. We further reserve the right to suspend or block any source or means of access to the Services we suspect to be damaging and disruptive in any form.
-If your access or content has been blocked, suspended, or hindered without notice you may reach us at hello@casualsimulation.org to discuss the specifics of your situation. When your account or access is suspended, public access to content contributed by you may be blocked or removed, and your access may be suspended or deleted at our discretion. Access to other functionality or information within the Services may also be blocked or disabled.
-Illegal Use. The Services may not be used for illegal purposes. Examples of this include using the Services for fraudulent purposes or operating a phishing site (used to obtain account and password information).
-Spam. Users that do not publish meaningful content, use deceptive means to generate revenue or traffic, or whose primary purpose is affiliate marketing, will be suspended or their access impeded or otherwise blocked.
-Identity Theft and Privacy. Users that misleadingly appropriate the identity of another person are not permitted. Users may not post other people's personally identifying or confidential information, including but not limited to credit card numbers, Social Security Numbers, and driver's and other license numbers. You may not post information such as other people's passwords, usernames, phone numbers, addresses and e-mail addresses unless already publicly accessible on the Web.
-Hate Content, Defamation, and Libel. Hate speech and other objectionable content that is unlawful, defamatory, and fraudulent. Note that an allegation of defamatory expression, in and of itself, does not establish defamation. The truth or falsehood of a bit of expression is a key element in establishing defamation, and we are not in a position to make that sort of fact-based judgment. That said, if we have reason to believe that a particular form of media is defamatory (a court order, for example), we will remove that media.
-Disruptions and Exploits. We will terminate accounts and block addresses of those who attempt unauthorized use of the Services.
-Copyright. Using copyrighted material does not constitute infringement in all cases. In general, however, users should be careful when using copyrighted content without the permission of those who created it.  
-Mass Registration and Automation. Accounts that are registered automatically or systematically will be removed and access will be permanently suspended.
-Sexually Explicit Material. Accounts or media that use Services to post sexually explicit or pornographic material, or links to it, will be terminated or suspended.
+If You are using the Services on behalf of You personally, "you" means You individually; if You represent an organization, "you" means Your organization. You agree that by accessing Our Services, You are agreeing to this Acceptable Use Policy, Our [Terms of Service](https://docs.google.com/document/d/1GVbK4Y23nlWFKGN0TTViVYHmPizNygWrFuy6pAZzuic/edit), and [Privacy Policy](https://docs.google.com/document/d/1Vn0YfI98DImvfl4yMuwQ-ZIRYkfm9Hw7ne8o3K-pz_Y/edit). If You do not agree with this Acceptable Use Policy THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+
+The intent of this document is to clarify what We consider to be acceptable use of the Services.
+
+If You are found to be in violation of any of the below policies, You will receive a notice via the most expedient means We have to contact You at Our discretion including email if We are able. Unless You explain or correct Your behavior within 72 hours Your content will be deleted and Your access will be suspended or otherwise limited to Our Services at Our sole discretion. We will do Our best to work with You and ensure a fair outcome in all cases. We reserve the right to immediately suspend, without notice, any content, account, or IP address which We determine to be submitting spam or other potentially damaging or disruptive content to the Services.
+
+If We have no means of identifying or reaching You We will immediately suspend, without notice, any content, account, IP address, aux bundle, or source which We determine to be submitting spam or other potentially damaging or disruptive content to the Services. We further reserve the right to suspend or block any source or means of access to the Services We suspect to be damaging and disruptive in any form.
+
+If Your access or content has been blocked, suspended, or hindered without notice You may reach Us at <hello@casualsimulation.org> to discuss the specifics of Your situation. When Your account or access is suspended, public access to content contributed by You may be blocked or removed, and Your access may be suspended or deleted at Our discretion. Access to other functionality or information within the Services may also be blocked or disabled.
+
+## Illegal Use
+
+The Services may not be used for illegal purposes. Examples of this include using the Services for fraudulent purposes or operating a phishing site (used to obtain account and password information).
+
+## Spam
+
+Users that do not publish meaningful content, use deceptive means to generate revenue or traffic, or whose primary purpose is affiliate marketing, will be suspended or their access impeded or otherwise blocked.
+
+## Identity Theft and Privacy
+
+Users that misleadingly appropriate the identity of another person are not permitted. Users may not post other people's personally identifying or confidential information, including but not limited to credit card numbers, Social Security Numbers, and driver's and other license numbers. You may not post information such as other people's passwords, usernames, phone numbers, addresses and e-mail addresses unless already publicly accessible on the web.
+
+## Hate Content, Defamation, and Libel
+
+Hate speech and other objectionable content that is unlawful, defamatory, and fraudulent. Note that an allegation of defamatory expression, in and of itself, does not establish defamation. The truth or falsehood of a bit of expression is a key element in establishing defamation, and We are not in a position to make that sort of fact-based judgment. That said, if We have reason to believe that a particular form of media is defamatory (a court order, for example), We will remove that media.
+
+## Disruptions and Exploits
+
+We will terminate accounts and block addresses of those who attempt unauthorized use of the Services.
+
+## Copyright
+
+Using copyrighted material does not constitute infringement in all cases. In general, however, users should be careful when using copyrighted content without the permission of those who created it.
+
+## Mass Registration and Automation
+
+Accounts that are registered automatically or systematically will be removed and access will be permanently suspended.
+
+## Sexually Explicit Material
+
+Accounts or media that use Services to post sexually explicit or pornographic material, or links to it, will be terminated or suspended.
+
+## Collection of Personally Identifiable Information
+
+You may not use the Services to collect any personally identifiable information ("PII") that may be used to identify an individual user including but not limited to a names, locations, IP addresses, or other data that can be used to identify specific persons.
