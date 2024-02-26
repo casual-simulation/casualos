@@ -1,6 +1,10 @@
 import { PrivacyFeatures } from '@casual-simulation/aux-common';
 import { RegexRule } from './Utils';
 import { ServerError } from '@casual-simulation/aux-common/Errors';
+import {
+    AuthenticatorTransportFuture,
+    CredentialDeviceType,
+} from '@simplewebauthn/types';
 
 /**
  * Defines an interface that represents an auth store.
@@ -185,6 +189,17 @@ export interface AuthStore {
     setCurrentLoginRequest(userId: string, requestId: string): Promise<void>;
 
     /**
+     * Sets the current WebAuthn challenge that the user is trying to complete.
+     * At any particular moment, only one WebAuthn challenge is allowed to be completed by a user.
+     * @param userId The ID of the user.
+     * @param challenge The challenge.
+     */
+    setCurrentWebAuthnChallenge(
+        userId: string,
+        challenge: string
+    ): Promise<void>;
+
+    /**
      * Gets the list of email rules.
      */
     listEmailRules(): Promise<RegexRule[]>;
@@ -267,6 +282,18 @@ export interface AuthStore {
     updateSubscriptionPeriod(
         request: UpdateSubscriptionPeriodRequest
     ): Promise<void>;
+
+    /**
+     * Gets the list of authenticators for the given user.
+     * @param userId The ID of the user.
+     */
+    listUserAuthenticators(userId: string): Promise<AuthUserAuthenticator[]>;
+
+    /**
+     * Saves the given authenticator.
+     * @param authenticator The authenticator that should be saved.
+     */
+    saveUserAuthenticator(authenticator: AuthUserAuthenticator): Promise<void>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -341,6 +368,11 @@ export interface AuthUser {
     currentLoginRequestId: string | null | undefined;
 
     /**
+     * The current WebAuthn challenge that the user is trying to complete.
+     */
+    currentWebAuthnChallenge?: string | null | undefined;
+
+    /**
      * The Unix time in miliseconds that the user was banned.
      * If set to any positive number, then the user should be considered banned and unable to perform any operations.
      * Null/undefined if the user is not banned and allowed access into the system.
@@ -372,6 +404,44 @@ export interface AuthUser {
      * If null or omitted, then the user has access to all features.
      */
     privacyFeatures?: PrivacyFeatures | null;
+}
+
+export interface AuthUserAuthenticator {
+    /**
+     * The ID of the authenticator.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that this authenticator is for.
+     */
+    userId: string;
+
+    /**
+     * The ID of the credential that this authenticator is for.
+     */
+    credentialId: string;
+
+    /**
+     * The public key of the credential.
+     */
+    credentialPublicKey: Uint8Array;
+
+    /**
+     * The counter for the credential.
+     */
+    counter: number;
+
+    /**
+     * The device type of the credential.
+     */
+    credentialDeviceType: CredentialDeviceType;
+
+    /**
+     * Whether the credential is backed up.
+     */
+    credentialBackedUp: boolean;
+    transports?: AuthenticatorTransportFuture[];
 }
 
 /**

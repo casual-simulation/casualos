@@ -5,8 +5,11 @@ import {
     AuthSession,
     AuthStore,
     AuthUser,
+    AuthUserAuthenticator,
 } from './AuthStore';
 import {
+    NotAuthorizedError,
+    NotLoggedInError,
     NotSupportedError,
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
@@ -18,7 +21,7 @@ import {
     verifyPassword,
     verifyPasswordAgainstHashes,
 } from '@casual-simulation/crypto';
-import { fromByteArray } from 'base64-js';
+import { fromByteArray, toByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import {
     cleanupObject,
@@ -49,6 +52,15 @@ import {
 import { DateTime } from 'luxon';
 import { PrivoConfiguration } from './PrivoConfiguration';
 import { ZodIssue } from 'zod';
+import type {
+    PublicKeyCredentialCreationOptionsJSON,
+    RegistrationResponseJSON,
+} from '@simplewebauthn/types';
+import {
+    generateAuthenticationOptions,
+    generateRegistrationOptions,
+    verifyRegistrationResponse,
+} from '@simplewebauthn/server';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -126,6 +138,23 @@ export const MAX_OPEN_AI_API_KEY_LENGTH = 100;
  */
 export const PRIVO_OPEN_ID_PROVIDER = 'privo';
 
+export interface RelyingParty {
+    /**
+     * The human readable name of the relying party.
+     */
+    name: string;
+
+    /**
+     * The domain of the relying party.
+     */
+    id: string;
+
+    /**
+     * The HTTP origin that the relying party is hosted on.
+     */
+    origin: string;
+}
+
 /**
  * Defines a class that is able to authenticate users.
  */
@@ -135,19 +164,30 @@ export class AuthController {
     private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
+    private _webAuthNRelyingParty: RelyingParty | null;
+
+    get relyingParty() {
+        return this._webAuthNRelyingParty;
+    }
+
+    set relyingParty(value: RelyingParty | null) {
+        this._webAuthNRelyingParty = value;
+    }
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
         forceAllowSubscriptionFeatures: boolean = false,
-        privoClient: PrivoClientInterface = null
+        privoClient: PrivoClientInterface = null,
+        relyingParty: RelyingParty = null
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
+        this._webAuthNRelyingParty = relyingParty;
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -1157,6 +1197,161 @@ export class AuthController {
         } catch (err) {
             console.error(
                 `[AuthController] Error occurred while requesting Privo sign up`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestWebAuthnRegistrationOptions(
+        request: RequestWebAuthnRegistration
+    ): Promise<RequestWebAuthnRegistrationResult> {
+        try {
+            if (!this._webAuthNRelyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthN is not supported on this server.',
+                };
+            }
+
+            const user = await this._store.findUser(request.userId);
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const authenticators = await this._store.listUserAuthenticators(
+                user.id
+            );
+            const options = await generateRegistrationOptions({
+                rpName: this._webAuthNRelyingParty.name,
+                rpID: this._webAuthNRelyingParty.id,
+                userID: user.id,
+                userName: user.email ?? user.phoneNumber,
+                attestationType: 'none',
+                excludeCredentials: authenticators.map((auth) => ({
+                    id: toByteArray(auth.credentialId),
+                    type: 'public-key',
+                    transports: auth.transports,
+                })),
+                authenticatorSelection: {
+                    residentKey: 'preferred',
+                    userVerification: 'preferred',
+                    authenticatorAttachment: 'platform',
+                },
+            });
+
+            await this._store.setCurrentWebAuthnChallenge(
+                user.id,
+                options.challenge
+            );
+
+            return {
+                success: true,
+                options,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting WebAuthN registration options`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async completeWebAuthnRegistration(
+        request: CompleteWebAuthnRegistrationRequest
+    ): Promise<CompleteWebAuthnRegistrationResult> {
+        try {
+            if (!this._webAuthNRelyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthN is not supported on this server.',
+                };
+            }
+
+            const user = await this._store.findUser(request.userId);
+
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const currentChallenge = user.currentWebAuthnChallenge;
+
+            try {
+                const verification = await verifyRegistrationResponse({
+                    response: request.response,
+                    expectedChallenge: currentChallenge,
+                    expectedOrigin: this._webAuthNRelyingParty.origin,
+                    expectedRPID: this._webAuthNRelyingParty.id,
+                });
+
+                if (verification.verified) {
+                    const registration = verification.registrationInfo;
+                    const credentialId = fromByteArray(
+                        registration.credentialID
+                    );
+                    const authenticator: AuthUserAuthenticator = {
+                        id: uuid(),
+                        userId: user.id,
+                        credentialId,
+                        credentialPublicKey: registration.credentialPublicKey,
+                        counter: registration.counter,
+                        credentialBackedUp: registration.credentialBackedUp,
+                        credentialDeviceType: registration.credentialDeviceType,
+                        transports: request.response.response.transports,
+                    };
+
+                    await this._store.setCurrentWebAuthnChallenge(
+                        user.id,
+                        null
+                    );
+                    await this._store.saveUserAuthenticator(authenticator);
+
+                    return {
+                        success: true,
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The registration response was not authorized.',
+                    };
+                }
+            } catch (err) {
+                console.error(
+                    `[AuthController] Error occurred while verifying WebAuthN registration response`,
+                    err
+                );
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: err.message,
+                };
+            }
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while completing WebAuthN registration`,
                 err
             );
             return {
@@ -3141,6 +3336,59 @@ export interface IsValidDisplayNameSuccess {
      * Whether the display name contains the user's name.
      */
     containsName?: boolean;
+}
+
+export interface RequestWebAuthnRegistration {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+}
+
+export type RequestWebAuthnRegistrationResult =
+    | RequestWebAuthnRegistrationSuccess
+    | RequestWebAuthnRegistrationFailure;
+
+export interface RequestWebAuthnRegistrationSuccess {
+    success: true;
+    options: PublicKeyCredentialCreationOptionsJSON;
+}
+
+export interface RequestWebAuthnRegistrationFailure {
+    success: false;
+    errorCode: ServerError | NotLoggedInError | NotSupportedError;
+    errorMessage: string;
+}
+
+export interface CompleteWebAuthnRegistrationRequest {
+    /**
+     * The ID of the user that is logged in.
+     */
+    userId: string;
+
+    /**
+     * The registration response.
+     */
+    response: RegistrationResponseJSON;
+}
+
+export type CompleteWebAuthnRegistrationResult =
+    | CompleteWebAuthnRegistrationSuccess
+    | CompleteWebAuthnRegistrationFailure;
+
+export interface CompleteWebAuthnRegistrationSuccess {
+    success: true;
+}
+
+export interface CompleteWebAuthnRegistrationFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | NotAuthorizedError
+        | 'unacceptable_request';
+    errorMessage: string;
 }
 
 export interface IsValidDisplayNameFailure {

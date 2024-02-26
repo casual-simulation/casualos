@@ -9,6 +9,8 @@ import {
     LOGIN_REQUEST_LIFETIME_MS,
     OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
     PRIVO_OPEN_ID_PROVIDER,
+    RelyingParty,
+    RequestWebAuthnRegistrationSuccess,
     SESSION_LIFETIME_MS,
 } from './AuthController';
 import {
@@ -38,6 +40,14 @@ import {
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
 import { PrivoClientInterface } from './PrivoClient';
+import {
+    VerifiedRegistrationResponse,
+    VerifyAuthenticationResponseOpts,
+    verifyRegistrationResponse,
+    generateRegistrationOptions,
+    GenerateRegistrationOptionsOpts,
+} from '@simplewebauthn/server';
+import { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/types';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -54,6 +64,30 @@ const originalDateNow = Date.now;
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
+
+jest.mock('@simplewebauthn/server');
+let verifyRegistrationResponseMock: jest.Mock<
+    Promise<VerifiedRegistrationResponse>,
+    [VerifyAuthenticationResponseOpts]
+> = verifyRegistrationResponse as any;
+let generateRegistrationOptionsMock: jest.Mock<
+    Promise<PublicKeyCredentialCreationOptionsJSON>,
+    [GenerateRegistrationOptionsOpts]
+> = generateRegistrationOptions as any;
+
+generateRegistrationOptionsMock.mockImplementation(async (opts) => {
+    const generateRegistrationOptions = jest.requireActual(
+        '@simplewebauthn/server'
+    ).generateRegistrationOptions;
+    return generateRegistrationOptions(opts);
+});
+
+verifyRegistrationResponseMock.mockImplementation(async (opts) => {
+    const verifyRegistrationResponse = jest.requireActual(
+        '@simplewebauthn/server'
+    ).verifyRegistrationResponse;
+    return verifyRegistrationResponse(opts);
+});
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -85,6 +119,7 @@ describe('AuthController', () => {
         >;
     };
     let nowMock: jest.Mock<number>;
+    let relyingParty: RelyingParty;
 
     beforeEach(() => {
         nowMock = Date.now = jest.fn();
@@ -131,12 +166,19 @@ describe('AuthController', () => {
             checkDisplayName: jest.fn(),
         };
 
+        relyingParty = {
+            name: 'example relying party',
+            id: 'example.com',
+            origin: 'https://example.com',
+        };
+
         controller = new AuthController(
             store,
             messenger,
             store,
             undefined,
-            privoClient
+            privoClient,
+            relyingParty
         );
 
         uuidMock.mockReset();
@@ -2037,6 +2079,220 @@ describe('AuthController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'The given provider is not supported.',
+            });
+        });
+    });
+
+    describe('requestWebAuthnRegistrationOptions()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 1,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should return the generated options', async () => {
+            const response =
+                (await controller.requestWebAuthnRegistrationOptions({
+                    userId,
+                })) as RequestWebAuthnRegistrationSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                options: {
+                    challenge: expect.any(String),
+                    rp: {
+                        name: relyingParty.name,
+                        id: relyingParty.id,
+                    },
+                    user: {
+                        id: userId,
+                        name: 'email',
+                        displayName: 'email',
+                    },
+                    pubKeyCredParams: [
+                        {
+                            alg: -8,
+                            type: 'public-key',
+                        },
+                        {
+                            alg: -7,
+                            type: 'public-key',
+                        },
+                        {
+                            alg: -257,
+                            type: 'public-key',
+                        },
+                    ],
+                    timeout: 60000,
+                    attestation: 'none',
+                    excludeCredentials: [],
+                    authenticatorSelection: {
+                        authenticatorAttachment: 'platform',
+                        requireResidentKey: false,
+                        residentKey: 'preferred',
+                        userVerification: 'preferred',
+                    },
+                    extensions: {
+                        credProps: true,
+                    },
+                },
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(
+                response.options.challenge
+            );
+        });
+
+        it('should return not_supported if no relying party has been configured', async () => {
+            controller.relyingParty = null;
+            const response =
+                await controller.requestWebAuthnRegistrationOptions({
+                    userId,
+                });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'WebAuthN is not supported on this server.',
+            });
+        });
+    });
+
+    describe('completeWebAuthnRegistration()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 1,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should complete the registration', async () => {
+            uuidMock.mockReturnValueOnce('authenticatorId');
+            verifyRegistrationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                registrationInfo: {
+                    credentialID: new Uint8Array([1, 2, 3]),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    origin: relyingParty.origin,
+                    userVerified: true,
+                    credentialBackedUp: false,
+                    credentialDeviceType: 'singleDevice',
+                    credentialType: 'public-key',
+                    attestationObject: new Uint8Array([7, 8, 9]),
+                    aaguid: 'aaguid',
+                    fmt: 'tpm',
+                    authenticatorExtensionResults: {},
+                    rpID: relyingParty.id,
+                },
+            });
+            const response = await controller.completeWebAuthnRegistration({
+                userId,
+                response: {
+                    id: 'id',
+                    rawId: 'rawId',
+                    response: {
+                        attestationObject: 'attestation',
+                        clientDataJSON: 'clientDataJSON',
+                        authenticatorData: 'authenticatorData',
+                        publicKey: 'publicKey',
+                        publicKeyAlgorithm: -7,
+                        transports: ['usb'],
+                    },
+                    clientExtensionResults: {},
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+            });
+
+            expect(response).toEqual({
+                success: true,
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(null);
+
+            const authenticators = await store.listUserAuthenticators(userId);
+
+            expect(authenticators).toEqual([
+                {
+                    id: 'authenticatorId',
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    credentialDeviceType: 'singleDevice',
+                    credentialBackedUp: false,
+                    transports: ['usb'],
+                },
+            ]);
+        });
+
+        it('should return not_supported if no relying party has been configured', async () => {
+            controller.relyingParty = null;
+            const response = await controller.completeWebAuthnRegistration({
+                userId,
+                response: {} as any,
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'WebAuthN is not supported on this server.',
             });
         });
     });

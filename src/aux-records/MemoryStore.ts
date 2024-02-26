@@ -10,6 +10,7 @@ import {
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
+    AuthUserAuthenticator,
     ListSessionsDataResult,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
@@ -157,6 +158,7 @@ export class MemoryStore
         NotificationMessenger
 {
     private _users: AuthUser[] = [];
+    private _userAuthenticators: AuthUserAuthenticator[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
     private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
@@ -361,6 +363,25 @@ export class MemoryStore
         newStore.roleAssignments = cloneDeep(this.roleAssignments);
 
         return newStore;
+    }
+
+    async listUserAuthenticators(
+        userId: string
+    ): Promise<AuthUserAuthenticator[]> {
+        return this._userAuthenticators.filter((a) => a.userId === userId);
+    }
+
+    async saveUserAuthenticator(
+        authenticator: AuthUserAuthenticator
+    ): Promise<void> {
+        const index = this._userAuthenticators.findIndex(
+            (a) => a.id === authenticator.id
+        );
+        if (index >= 0) {
+            this._userAuthenticators[index] = authenticator;
+        } else {
+            this._userAuthenticators.push(authenticator);
+        }
     }
 
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
@@ -1207,6 +1228,20 @@ export class MemoryStore
             this._users[userIndex] = {
                 ...user,
                 currentLoginRequestId: requestId,
+            };
+        }
+    }
+
+    async setCurrentWebAuthnChallenge(
+        userId: string,
+        challenge: string
+    ): Promise<void> {
+        const userIndex = this._users.findIndex((u) => u.id === userId);
+        if (userIndex >= 0) {
+            const user = this._users[userIndex];
+            this._users[userIndex] = {
+                ...user,
+                currentWebAuthnChallenge: challenge,
             };
         }
     }
