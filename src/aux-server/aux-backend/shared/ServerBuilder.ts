@@ -475,7 +475,8 @@ export class ServerBuilder implements SubscriptionLike {
             s3.filesStorageClass,
             s3Client,
             s3.host,
-            undefined
+            undefined,
+            s3.publicFilesUrl
         );
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
@@ -1443,6 +1444,16 @@ const s3Schema = z.object({
             'The S3 File Storage Class that should be used for file records.'
         )
         .nonempty(),
+
+    publicFilesUrl: z
+        .string()
+        .describe(
+            'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default S3 URL will be used. ' +
+                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
+                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
+        )
+        .nonempty()
+        .optional(),
 
     messagesBucket: z
         .string()

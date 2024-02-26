@@ -39,6 +39,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
     private _s3Host: string;
     private _s3: S3;
     private _credentialProvider: AwsCredentialIdentityProvider;
+    private _publicFilesUrl: string | null;
 
     private _lookup: FileRecordsLookup;
 
@@ -50,7 +51,8 @@ export class S3FileRecordsStore implements FileRecordsStore {
         storageClass: string = 'STANDARD',
         s3: S3,
         s3Host: string = null,
-        credentialProvider: AwsCredentialIdentityProvider = fromNodeProviderChain()
+        credentialProvider: AwsCredentialIdentityProvider = fromNodeProviderChain(),
+        publicFilesUrl: string = null
     ) {
         this._region = region;
         this._bucket = bucket;
@@ -60,6 +62,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         this._s3 = s3;
         this._s3Host = s3Host;
         this._credentialProvider = credentialProvider;
+        this._publicFilesUrl = publicFilesUrl;
 
         if (this._lookup.listUploadedFiles) {
             this.listUploadedFiles = async (
@@ -79,7 +82,8 @@ export class S3FileRecordsStore implements FileRecordsStore {
                         url: this._fileUrl(
                             recordName,
                             f.fileName,
-                            bucket ?? this._bucket
+                            bucket ?? this._bucket,
+                            isPublicFile(f.markers)
                         ).href,
                     }));
 
@@ -220,7 +224,10 @@ export class S3FileRecordsStore implements FileRecordsStore {
         const fileUrl = this._fileUrl(
             request.recordName,
             request.fileName,
-            this._bucket
+            this._bucket,
+
+            // Presigned file uploads always have to use an S3 URL
+            false
         );
         const requiredHeaders = {
             'content-type': request.fileMimeType,
@@ -276,7 +283,10 @@ export class S3FileRecordsStore implements FileRecordsStore {
         const fileUrl = this._fileUrl(
             request.recordName,
             request.fileName,
-            this._bucket
+            this._bucket,
+
+            // Presigned file reads always have to use an S3 URL
+            false
         );
         const requiredHeaders = {
             host: fileUrl.host,
@@ -334,7 +344,8 @@ export class S3FileRecordsStore implements FileRecordsStore {
                 const url = this._fileUrl(
                     result.recordName,
                     result.fileName,
-                    result.bucket ?? this._defaultBucket
+                    result.bucket ?? this._defaultBucket,
+                    isPublicFile(result.markers)
                 );
                 return {
                     success: true,
@@ -449,9 +460,14 @@ export class S3FileRecordsStore implements FileRecordsStore {
     private _fileUrl(
         recordName: string,
         fileName: string,
-        bucket: string
+        bucket: string,
+        isPublic: boolean
     ): URL {
         let filePath = this._fileKey(recordName, fileName);
+
+        if (isPublic && this._publicFilesUrl) {
+            return new URL(`${this._publicFilesUrl}/${filePath}`);
+        }
 
         if (this._s3Host) {
             filePath = `${this._s3Host}/${bucket}/${filePath}`;
@@ -470,11 +486,19 @@ export class S3FileRecordsStore implements FileRecordsStore {
  * @param markers The markers that are applied to the file.
  */
 export function s3AclForMarkers(markers: readonly string[]): string {
-    if (markers.some((m) => m === PUBLIC_READ_MARKER)) {
+    if (isPublicFile(markers)) {
         return 'public-read';
     }
 
     return 'private';
+}
+
+/**
+ * Determines whether the given markers indicate that the file is public.
+ * @param markers The markers that are applied to the file.
+ */
+export function isPublicFile(markers: readonly string[]): boolean {
+    return markers.some((m) => m === PUBLIC_READ_MARKER);
 }
 
 /**
