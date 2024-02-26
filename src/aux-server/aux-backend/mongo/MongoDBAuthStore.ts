@@ -287,7 +287,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         address: string,
         addressType: AddressType
     ): Promise<AuthUser> {
-        const user = await this._users.findOne(
+        let user = await this._users.findOne(
             addressType === 'email'
                 ? {
                       email: { $eq: address },
@@ -296,6 +296,15 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                       phoneNumber: { $eq: address },
                   }
         );
+
+        if (!user && addressType === 'email') {
+            // find the user by a case insensitive email
+            user = await this._users.findOne({
+                $expr: {
+                    $eq: [{ $toLower: '$email' }, { $toLower: address }],
+                },
+            });
+        }
 
         if (user) {
             const { _id, ...rest } = user;
