@@ -459,6 +459,12 @@ export interface ListedLookupFile {
     description: string;
     sizeInBytes: number;
     uploaded: boolean;
+
+    /**
+     * The bucket that the file is stored in.
+     * Null if the file is stored in the default bucket.
+     */
+    bucket: string | null;
     markers: string[] | null;
 }
 

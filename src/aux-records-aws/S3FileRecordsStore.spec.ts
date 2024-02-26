@@ -64,6 +64,7 @@ describe('S3FileRecordsStore', () => {
         store = new S3FileRecordsStore(
             'us-east-1',
             'test-bucket',
+            'default-bucket',
             lookup,
             'STANDARD',
             s3 as any,
@@ -106,6 +107,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'test-bucket',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -212,6 +214,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'ab1-link-filesbucket-404655125928',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -324,6 +327,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'test-bucket',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -403,6 +407,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'ab1-link-filesbucket-404655125928',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -478,6 +483,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
         });
@@ -496,7 +502,7 @@ describe('S3FileRecordsStore', () => {
     });
 
     describe('getFileRecord()', () => {
-        it('should get the file record from the DynamoDB table', async () => {
+        it('should get the file record', async () => {
             await lookup.addFileRecord(
                 'test record',
                 'test file.xml',
@@ -504,6 +510,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
 
@@ -517,6 +524,37 @@ describe('S3FileRecordsStore', () => {
                 recordName: 'test record',
                 fileName: 'test file.xml',
                 url: 'https://test-bucket.s3.amazonaws.com/test%20record/test%20file.xml',
+                publisherId: 'publisherId',
+                subjectId: 'subjectId',
+                sizeInBytes: 256,
+                description: 'test description',
+                uploaded: false,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should use the default bucket if the file record does not have a bucket', async () => {
+            await lookup.addFileRecord(
+                'test record',
+                'test file.xml',
+                'publisherId',
+                'subjectId',
+                256,
+                'test description',
+                null,
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await store.getFileRecord(
+                'test record',
+                'test file.xml'
+            )) as GetFileRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+                url: 'https://default-bucket.s3.amazonaws.com/test%20record/test%20file.xml',
                 publisherId: 'publisherId',
                 subjectId: 'subjectId',
                 sizeInBytes: 256,
@@ -549,6 +587,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
             s3.deleteObject.mockReturnValue(awsResult({}));
@@ -580,6 +619,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
 
@@ -596,6 +636,52 @@ describe('S3FileRecordsStore', () => {
                 'test file.xml'
             );
             expect(record?.uploaded).toBe(true);
+        });
+    });
+
+    describe('getFileNameFromUrl()', () => {
+        it('should work if given a custom S3 host', async () => {
+            store = new S3FileRecordsStore(
+                'us-east-1',
+                'test-bucket',
+                'default-bucket',
+                lookup,
+                'STANDARD',
+                s3 as any,
+                'http://s3:4567/path',
+                credentialsProvider
+            );
+
+            const result = await store.getFileNameFromUrl(
+                'http://s3:4567/path/test%20record/test%20file.xml'
+            );
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+            });
+        });
+
+        it('should return the file name from the given URL', async () => {
+            const result = await store.getFileNameFromUrl(
+                'https://test-bucket.s3.amazonaws.com/test%20record/test%20file.xml'
+            );
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+            });
+        });
+
+        it('should support bucket names that dont match the configured bucket', async () => {
+            const result = await store.getFileNameFromUrl(
+                'https://different-bucket.s3.amazonaws.com/test%20record/test%20file.xml'
+            );
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+            });
         });
     });
 });

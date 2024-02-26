@@ -470,6 +470,7 @@ export class ServerBuilder implements SubscriptionLike {
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
+            s3.defaultFilesBucket ?? s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
             s3Client,
@@ -1429,6 +1430,13 @@ const s3Schema = z.object({
             'The name of the bucket that file records should be placed in.'
         )
         .nonempty(),
+    defaultFilesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that file records were originally placed in. This is used for backwards compatibility for file records that were uploaded before changing the filesBucket was supported. If not specified, then filesBucket is used.'
+        )
+        .nonempty()
+        .optional(),
     filesStorageClass: z
         .string()
         .describe(

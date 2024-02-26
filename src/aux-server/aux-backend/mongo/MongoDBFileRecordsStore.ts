@@ -282,6 +282,7 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
                 sizeInBytes: f.sizeInBytes,
                 markers: f.markers,
                 uploaded: f.uploaded,
+                bucket: f.bucket,
             })),
             totalCount: count,
         };
