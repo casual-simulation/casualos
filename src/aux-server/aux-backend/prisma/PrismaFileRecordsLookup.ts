@@ -57,6 +57,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 uploaded: !result.uploadedAt
                     ? false
                     : result.uploadedAt <= new Date(),
+                bucket: result.bucket,
             };
         } else {
             return null;
@@ -85,6 +86,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 markers: true,
                 description: true,
                 uploadedAt: true,
+                bucket: true,
             },
             take: 10,
         });
@@ -105,6 +107,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 markers: convertMarkers(r.markers),
                 description: r.description,
                 uploaded: r.uploadedAt < now,
+                bucket: r.bucket,
             })),
             totalCount: count,
         };
@@ -117,6 +120,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         subjectId: string,
         sizeInBytes: number,
         description: string,
+        bucket: string,
         markers: string[]
     ): Promise<AddFileResult> {
         try {
@@ -129,6 +133,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                     sizeInBytes,
                     description,
                     markers,
+                    bucket,
                     uploadedAt: null,
                 },
             });

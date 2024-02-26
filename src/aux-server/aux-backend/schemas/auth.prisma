@@ -553,6 +553,8 @@ model FileRecord {
     sizeInBytes BigInt
     description String? @db.String(128)
 
+    bucket String?
+
     uploadedAt DateTime?
 
     markers String[]

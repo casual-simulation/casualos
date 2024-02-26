@@ -11,6 +11,10 @@
     -   Now, if an exact match is not found, a case-insensitive search will be made for users when attempting to login by email.
     -   This will prevent cases where a user gets a new account because they mistakenly changed the case of their email address.
     -   Technically, email addresses are supposed to be case-sensitive, but pretty much every email server treats them as case-insensitive.
+-   Support configuring a custom file URL for public file records stored in S3.
+    -   This makes it easy to support setting a custom domain or CDN or public file records.
+    -   It does not support private file records at this moment.
+-   Support changing the bucket that S3 files are stored in.
 
 ## V3.2.16
 
