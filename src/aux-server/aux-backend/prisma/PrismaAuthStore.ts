@@ -126,7 +126,7 @@ export class PrismaAuthStore implements AuthStore {
         if (!address) {
             return null;
         }
-        const user = await this._client.user.findUnique({
+        let user = await this._client.user.findUnique({
             where:
                 addressType === 'email'
                     ? {
@@ -136,6 +136,18 @@ export class PrismaAuthStore implements AuthStore {
                           phoneNumber: address,
                       },
         });
+
+        // If no exact match was found for email, then try to find a case-insensitive match.
+        if (!user && addressType === 'email') {
+            user = await this._client.user.findFirst({
+                where: {
+                    email: {
+                        equals: address,
+                        mode: 'insensitive',
+                    },
+                },
+            });
+        }
 
         return this._convertToAuthUser(user);
     }
