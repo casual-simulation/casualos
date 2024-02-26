@@ -193,6 +193,8 @@ import {
     openImageClassifier as calcOpenImageClassifier,
     OpenImageClassifierAction,
     ImageClassifierOptions,
+    ClassifyImagesOptions,
+    ClassifyImagesResult,
     isBotDate,
     DATE_TAG_PREFIX,
     parseBotDate,
@@ -3030,6 +3032,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 openImageClassifier,
                 closeImageClassifier,
+                classifyImages,
 
                 openPhotoCamera,
                 capturePhoto,
@@ -6408,6 +6411,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const action = calcOpenImageClassifier(false, {}, task.taskId);
         return addAsyncAction(task, action);
     }
+
+    function classifyImages(
+        options: ClassifyImagesOptions
+    ): Promise<ClassifyImagesResult>;
 
     /**
      * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag @onPhotoCameraOpened} shout once opened.
