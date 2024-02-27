@@ -2545,6 +2545,79 @@ describe('AuthController', () => {
             ]);
         });
 
+        it('should reject the login if the user is banned', async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                banTimeMs: 300,
+            });
+
+            const requestId = 'requestId';
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+            uuidMock.mockReturnValueOnce('sessionId');
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: 1000,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const response = await controller.completeWebAuthnLogin({
+                requestId: requestId,
+                ipAddress: '123.456.789',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'user_is_banned',
+                errorMessage: 'The user has been banned.',
+            });
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(store.sessions).toEqual([]);
+        });
+
         it('should return a not_supported result if no relying party is configured', async () => {
             controller.relyingParty = null;
             const response = await controller.completeWebAuthnLogin({

@@ -1472,6 +1472,15 @@ export class AuthController {
                 };
             }
 
+            if (user.banTimeMs > 0) {
+                return {
+                    success: false,
+                    errorCode: 'user_is_banned',
+                    errorMessage: 'The user has been banned.',
+                    banReason: user.banReason,
+                };
+            }
+
             try {
                 const options = await verifyAuthenticationResponse({
                     response: request.response,
@@ -3670,8 +3679,14 @@ export interface CompleteWebAuthnLoginFailure {
         | ServerError
         | NotLoggedInError
         | NotSupportedError
-        | CompleteLoginFailure['errorCode'];
+        | CompleteLoginFailure['errorCode']
+        | LoginRequestFailure['errorCode'];
     errorMessage: string;
+
+    /**
+     * The ban reason for the user.
+     */
+    banReason?: AuthUser['banReason'];
 }
 
 export type CompleteWebAuthnRegistrationResult =
