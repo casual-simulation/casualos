@@ -563,23 +563,34 @@ export class PrismaAuthStore implements AuthStore {
     async saveUserAuthenticator(
         authenticator: AuthUserAuthenticator
     ): Promise<void> {
-        const data: UserAuthenticator = {
-            id: authenticator.id,
-            userId: authenticator.userId,
-            credentialId: authenticator.credentialId,
-            counter: authenticator.counter,
-            credentialBackedUp: authenticator.credentialBackedUp,
-            credentialDeviceType: authenticator.credentialDeviceType,
-            credentialPublicKey: Buffer.from(authenticator.credentialPublicKey),
-            transports: authenticator.transports,
-        };
-
         await this._client.userAuthenticator.upsert({
             where: {
                 id: authenticator.id,
             },
-            create: data,
-            update: data,
+            create: {
+                id: authenticator.id,
+                userId: authenticator.userId,
+                credentialId: authenticator.credentialId,
+                counter: authenticator.counter,
+                credentialBackedUp: authenticator.credentialBackedUp,
+                credentialDeviceType: authenticator.credentialDeviceType,
+                credentialPublicKey: Buffer.from(
+                    authenticator.credentialPublicKey
+                ),
+                transports: authenticator.transports,
+            },
+            update: {
+                id: authenticator.id,
+                userId: authenticator.userId,
+                credentialId: authenticator.credentialId,
+                counter: authenticator.counter,
+                credentialBackedUp: authenticator.credentialBackedUp,
+                credentialDeviceType: authenticator.credentialDeviceType,
+                credentialPublicKey: Buffer.from(
+                    authenticator.credentialPublicKey
+                ),
+                transports: authenticator.transports,
+            },
         });
     }
 
