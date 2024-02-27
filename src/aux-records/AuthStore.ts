@@ -77,6 +77,14 @@ export interface AuthStore {
     ): Promise<AuthOpenIDLoginRequest | null>;
 
     /**
+     * Finds the WebAuthn login request with the given request ID.
+     * @param requestId The ID of the request.
+     */
+    findWebAuthnLoginRequest(
+        requestId: string
+    ): Promise<AuthWebAuthnLoginRequest | null>;
+
+    /**
      * Finds a login session for the given user and session ID.
      * @param userId The ID of the user.
      * @param sessionId The ID of the session.
@@ -98,6 +106,14 @@ export interface AuthStore {
     ): Promise<AuthOpenIDLoginRequest>;
 
     /**
+     * Saves the given WebAuthn login request.
+     * @param request The request that should be saved.
+     */
+    saveWebAuthnLoginRequest(
+        request: AuthWebAuthnLoginRequest
+    ): Promise<AuthWebAuthnLoginRequest>;
+
+    /**
      * Marks the login request as completed.
      * @param userId The ID oof the user.
      * @param requestId The ID of the request.
@@ -116,6 +132,18 @@ export interface AuthStore {
      */
     markOpenIDLoginRequestComplete(
         requestId: string,
+        completedTimeMs: number
+    ): Promise<void>;
+
+    /**
+     * Marks the login request as completed.
+     * @param requestId The ID of the request.
+     * @param userId The ID of the user that completed the request.
+     * @param completedTimeMs The time that the request was completed.
+     */
+    markWebAuthnLoginRequestComplete(
+        requestId: string,
+        userId: string,
         completedTimeMs: number
     ): Promise<void>;
 
@@ -290,6 +318,15 @@ export interface AuthStore {
     listUserAuthenticators(userId: string): Promise<AuthUserAuthenticator[]>;
 
     /**
+     * Finds the authenticator with the given credentialId. Includes the user that the authenticator is for.
+     * Returns an object with null properties if the authenticator could not be found.
+     * @param credentialId The ID of the credential that the authenticator should represent.
+     */
+    findUserAuthenticatorByCredentialId(
+        credentialId: string
+    ): Promise<AuthUserAuthenticatorWithUser | null>;
+
+    /**
      * Saves the given authenticator.
      * @param authenticator The authenticator that should be saved.
      */
@@ -444,6 +481,11 @@ export interface AuthUserAuthenticator {
     transports?: AuthenticatorTransportFuture[];
 }
 
+export interface AuthUserAuthenticatorWithUser {
+    authenticator: AuthUserAuthenticator;
+    user: AuthUser;
+}
+
 /**
  * Defines an interface that represents the data a login request contains.
  */
@@ -524,6 +566,45 @@ export interface AuthLoginRequest {
     // oidRedirectUrl?: string | null;
 }
 
+export interface AuthWebAuthnLoginRequest {
+    /**
+     * The ID of the request.
+     */
+    requestId: string;
+
+    /**
+     * The unix timestamp in miliseconds that the request was made at.
+     */
+    requestTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request will expire at.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request was completed at.
+     * If null, then the request has not been completed.
+     */
+    completedTimeMs: number | null;
+
+    /**
+     * The challenge that the request should match.
+     */
+    challenge: string;
+
+    /**
+     * The IP Address that the request came from.
+     */
+    ipAddress: string;
+
+    /**
+     * The ID of the user that the request was completed for.
+     * Null if the request has not been completed.
+     */
+    userId: string | null;
+}
+
 /**
  * Defines an interface that represents a login session for the user.
  */
@@ -573,6 +654,11 @@ export interface AuthSession {
      * The ID of the OpenID login request that aws used to obtain this session.
      */
     oidRequestId?: string | null;
+
+    /**
+     * The ID of the WebAuthn login request that was used to obtain this session.
+     */
+    webauthnRequestId?: string | null;
 
     /**
      * The ID of the previous session that was used to obtain this session.

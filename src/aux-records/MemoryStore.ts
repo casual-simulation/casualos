@@ -11,6 +11,8 @@ import {
     AuthSubscriptionPeriod,
     AuthUser,
     AuthUserAuthenticator,
+    AuthUserAuthenticatorWithUser,
+    AuthWebAuthnLoginRequest,
     ListSessionsDataResult,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
@@ -161,6 +163,7 @@ export class MemoryStore
     private _userAuthenticators: AuthUserAuthenticator[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
     private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
+    private _webauthnLoginRequests: AuthWebAuthnLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
@@ -235,6 +238,10 @@ export class MemoryStore
 
     get openIdLoginRequests() {
         return this._oidLoginRequests;
+    }
+
+    get webauthnLoginRequests() {
+        return this._webauthnLoginRequests;
     }
 
     get sessions() {
@@ -1216,6 +1223,57 @@ export class MemoryStore
         }
 
         return request;
+    }
+
+    async findWebAuthnLoginRequest(
+        requestId: string
+    ): Promise<AuthWebAuthnLoginRequest> {
+        return this._webauthnLoginRequests.find(
+            (r) => r.requestId === requestId
+        );
+    }
+
+    async saveWebAuthnLoginRequest(
+        request: AuthWebAuthnLoginRequest
+    ): Promise<AuthWebAuthnLoginRequest> {
+        const index = this._webauthnLoginRequests.findIndex(
+            (r) => r.requestId === request.requestId
+        );
+        if (index >= 0) {
+            this._webauthnLoginRequests[index] = request;
+        } else {
+            this._webauthnLoginRequests.push(request);
+        }
+
+        return request;
+    }
+
+    async markWebAuthnLoginRequestComplete(
+        requestId: string,
+        userId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        const index = this._webauthnLoginRequests.findIndex(
+            (r) => r.requestId === requestId
+        );
+        if (index >= 0) {
+            const request = this._webauthnLoginRequests[index];
+            request.userId = userId;
+            request.completedTimeMs = completedTimeMs;
+        }
+    }
+
+    async findUserAuthenticatorByCredentialId(
+        credentialId: string
+    ): Promise<AuthUserAuthenticatorWithUser> {
+        const authenticator = this._userAuthenticators.find(
+            (a) => a.credentialId === credentialId
+        );
+        if (!authenticator) {
+            return { authenticator: null, user: null };
+        }
+        const user = await this.findUser(authenticator.userId);
+        return { authenticator, user };
     }
 
     async setCurrentLoginRequest(

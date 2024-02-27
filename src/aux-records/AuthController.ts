@@ -55,10 +55,14 @@ import { ZodIssue } from 'zod';
 import type {
     PublicKeyCredentialCreationOptionsJSON,
     RegistrationResponseJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+    AuthenticationResponseJSON,
 } from '@simplewebauthn/types';
 import {
+    VerifiedAuthenticationResponse,
     generateAuthenticationOptions,
     generateRegistrationOptions,
+    verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server';
 
@@ -71,6 +75,11 @@ export const LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 5; // 5 minutes
  * The number of miliseconds that an Open ID login request should be valid for before expiration.
  */
 export const OPEN_ID_LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 20; // 20 minutes
+
+/**
+ * The number of miliseconds that a WebAuthN request should be valid for before expiration.
+ */
+export const WEB_AUTHN_LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 5; // 5 minutes
 
 /**
  * The number of bytes that should be used for login request IDs.
@@ -1207,7 +1216,7 @@ export class AuthController {
         }
     }
 
-    async requestWebAuthnRegistrationOptions(
+    async requestWebAuthnRegistration(
         request: RequestWebAuthnRegistration
     ): Promise<RequestWebAuthnRegistrationResult> {
         try {
@@ -1215,7 +1224,7 @@ export class AuthController {
                 return {
                     success: false,
                     errorCode: 'not_supported',
-                    errorMessage: 'WebAuthN is not supported on this server.',
+                    errorMessage: 'WebAuthn is not supported on this server.',
                 };
             }
 
@@ -1261,7 +1270,7 @@ export class AuthController {
             };
         } catch (err) {
             console.error(
-                `[AuthController] Error occurred while requesting WebAuthN registration options`,
+                `[AuthController] Error occurred while requesting WebAuthn registration options`,
                 err
             );
             return {
@@ -1280,7 +1289,7 @@ export class AuthController {
                 return {
                     success: false,
                     errorCode: 'not_supported',
-                    errorMessage: 'WebAuthN is not supported on this server.',
+                    errorMessage: 'WebAuthn is not supported on this server.',
                 };
             }
 
@@ -1340,7 +1349,7 @@ export class AuthController {
                 }
             } catch (err) {
                 console.error(
-                    `[AuthController] Error occurred while verifying WebAuthN registration response`,
+                    `[AuthController] Error occurred while verifying WebAuthn registration response`,
                     err
                 );
                 return {
@@ -1351,7 +1360,211 @@ export class AuthController {
             }
         } catch (err) {
             console.error(
-                `[AuthController] Error occurred while completing WebAuthN registration`,
+                `[AuthController] Error occurred while completing WebAuthn registration`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestWebAuthnLogin(
+        request: RequestWebAuthnLogin
+    ): Promise<RequestWebAuthnLoginResult> {
+        try {
+            if (!this.relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const options = await generateAuthenticationOptions({
+                rpID: this.relyingParty.id,
+                userVerification: 'preferred',
+            });
+
+            const requestId = uuid();
+            const nowMs = Date.now();
+            await this._store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: options.challenge,
+                requestTimeMs: nowMs,
+                expireTimeMs: nowMs + WEB_AUTHN_LOGIN_REQUEST_LIFETIME_MS,
+                completedTimeMs: null,
+                ipAddress: request.ipAddress,
+                userId: null,
+            });
+
+            return {
+                success: true,
+                requestId,
+                options,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting WebAuthn login`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async completeWebAuthnLogin(
+        request: CompleteWebAuthnLoginRequest
+    ): Promise<CompleteWebAuthnLoginResult> {
+        try {
+            if (!this.relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const loginRequest = await this._store.findWebAuthnLoginRequest(
+                request.requestId
+            );
+
+            if (!loginRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            let validRequest = true;
+            if (Date.now() >= loginRequest.expireTimeMs) {
+                validRequest = false;
+            } else if (loginRequest.completedTimeMs > 0) {
+                validRequest = false;
+            } else if (loginRequest.ipAddress !== request.ipAddress) {
+                validRequest = false;
+            }
+
+            if (!validRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            const { authenticator, user } =
+                await this._store.findUserAuthenticatorByCredentialId(
+                    request.response.id
+                );
+
+            if (!authenticator) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            try {
+                const options = await verifyAuthenticationResponse({
+                    response: request.response,
+                    expectedChallenge: loginRequest.challenge,
+                    expectedOrigin: this.relyingParty.origin,
+                    expectedRPID: this.relyingParty.id,
+                    authenticator: {
+                        credentialID: toByteArray(authenticator.credentialId),
+                        counter: authenticator.counter,
+                        credentialPublicKey: authenticator.credentialPublicKey,
+                        transports: authenticator.transports,
+                    },
+                });
+
+                if (!options.verified) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                    };
+                }
+            } catch (err) {
+                console.error(
+                    `[AuthController] Error occurred while verifying WebAuthn login response`,
+                    err
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: err.message,
+                };
+            }
+
+            const sessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const sessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const now = Date.now();
+
+            const session: AuthSession = {
+                userId: user.id,
+                sessionId: sessionId,
+
+                requestId: null,
+                oidRequestId: null,
+                webauthnRequestId: loginRequest.requestId,
+
+                // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                // so we should use a hash that is optimized for high-entropy inputs.
+                secretHash: hashHighEntropyPasswordWithSalt(
+                    sessionSecret,
+                    sessionId
+                ),
+                connectionSecret: connectionSecret,
+                grantedTimeMs: now,
+                revokeTimeMs: null,
+                expireTimeMs: now + SESSION_LIFETIME_MS,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+            };
+            await this._store.markWebAuthnLoginRequestComplete(
+                loginRequest.requestId,
+                user.id,
+                Date.now()
+            );
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionKey: formatV1SessionKey(
+                    loginRequest.userId,
+                    sessionId,
+                    sessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    loginRequest.userId,
+                    sessionId,
+                    connectionSecret,
+                    session.expireTimeMs
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting WebAuthn login`,
                 err
             );
             return {
@@ -3370,6 +3583,95 @@ export interface CompleteWebAuthnRegistrationRequest {
      * The registration response.
      */
     response: RegistrationResponseJSON;
+}
+
+export interface RequestWebAuthnLogin {
+    /**
+     * The IP Address that the login request is from.
+     */
+    ipAddress: string;
+}
+
+export type RequestWebAuthnLoginResult =
+    | RequestWebAuthnLoginSuccess
+    | RequestWebAuthnLoginFailure;
+
+export interface RequestWebAuthnLoginSuccess {
+    success: true;
+    /**
+     * The ID of the login request.
+     */
+    requestId: string;
+
+    /**
+     * The options for the login request.
+     */
+    options: PublicKeyCredentialRequestOptionsJSON;
+}
+
+export interface RequestWebAuthnLoginFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | LoginRequestFailure['errorCode'];
+    errorMessage: string;
+}
+
+export interface CompleteWebAuthnLoginRequest {
+    /**
+     * The ID of the login request.
+     */
+    requestId: string;
+
+    /**
+     * The response to the login request.
+     */
+    response: AuthenticationResponseJSON;
+
+    /**
+     * The IP Address that the login request is from.
+     */
+    ipAddress: string;
+}
+
+export type CompleteWebAuthnLoginResult =
+    | CompleteWebAuthnLoginSuccess
+    | CompleteWebAuthnLoginFailure;
+
+export interface CompleteWebAuthnLoginSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that the session is for.
+     */
+    userId: string;
+
+    /**
+     * The secret key that provides access for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The unix timestamp in miliseconds that the session will expire at.
+     */
+    expireTimeMs: number;
+}
+
+export interface CompleteWebAuthnLoginFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | CompleteLoginFailure['errorCode'];
+    errorMessage: string;
 }
 
 export type CompleteWebAuthnRegistrationResult =
