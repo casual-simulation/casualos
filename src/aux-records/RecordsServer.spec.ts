@@ -17,6 +17,7 @@ import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
     PRIVO_OPEN_ID_PROVIDER,
+    RelyingParty,
 } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
@@ -113,6 +114,69 @@ import {
     AssignPermissionToSubjectAndMarkerSuccess,
     AssignPermissionToSubjectAndResourceSuccess,
 } from './PolicyStore';
+import {
+    GenerateAuthenticationOptionsOpts,
+    GenerateRegistrationOptionsOpts,
+    VerifiedAuthenticationResponse,
+    VerifiedRegistrationResponse,
+    VerifyAuthenticationResponseOpts,
+    generateAuthenticationOptions,
+    generateRegistrationOptions,
+    verifyAuthenticationResponse,
+    verifyRegistrationResponse,
+} from '@simplewebauthn/server';
+import {
+    PublicKeyCredentialCreationOptionsJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/types';
+import { fromByteArray } from 'base64-js';
+
+jest.mock('@simplewebauthn/server');
+let verifyRegistrationResponseMock: jest.Mock<
+    Promise<VerifiedRegistrationResponse>,
+    [VerifyAuthenticationResponseOpts]
+> = verifyRegistrationResponse as any;
+let generateRegistrationOptionsMock: jest.Mock<
+    Promise<PublicKeyCredentialCreationOptionsJSON>,
+    [GenerateRegistrationOptionsOpts]
+> = generateRegistrationOptions as any;
+let generateAuthenticationOptionsMock: jest.Mock<
+    Promise<PublicKeyCredentialRequestOptionsJSON>,
+    [GenerateAuthenticationOptionsOpts]
+> = generateAuthenticationOptions as any;
+
+let verifyAuthenticationResponseMock: jest.Mock<
+    Promise<VerifiedAuthenticationResponse>,
+    [VerifyAuthenticationResponseOpts]
+> = verifyAuthenticationResponse as any;
+
+generateRegistrationOptionsMock.mockImplementation(async (opts) => {
+    const generateRegistrationOptions = jest.requireActual(
+        '@simplewebauthn/server'
+    ).generateRegistrationOptions;
+    return generateRegistrationOptions(opts);
+});
+
+verifyRegistrationResponseMock.mockImplementation(async (opts) => {
+    const verifyRegistrationResponse = jest.requireActual(
+        '@simplewebauthn/server'
+    ).verifyRegistrationResponse;
+    return verifyRegistrationResponse(opts);
+});
+
+generateAuthenticationOptionsMock.mockImplementation(async (opts) => {
+    const generateAuthenticationOptions = jest.requireActual(
+        '@simplewebauthn/server'
+    ).generateAuthenticationOptions;
+    return generateAuthenticationOptions(opts);
+});
+
+verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
+    const verifyAuthenticationResponse = jest.requireActual(
+        '@simplewebauthn/server'
+    ).verifyAuthenticationResponse;
+    return verifyAuthenticationResponse(opts);
+});
 
 console.log = jest.fn();
 
@@ -273,6 +337,7 @@ describe('RecordsServer', () => {
     let expireTimeMs: number;
     let sessionSecret: string;
     let recordKey: string;
+    let relyingParty: RelyingParty;
 
     const livekitEndpoint: string = 'https://livekit-endpoint.com';
     const livekitApiKey: string = 'livekit_api_key';
@@ -362,12 +427,18 @@ describe('RecordsServer', () => {
             checkEmail: jest.fn(),
             checkDisplayName: jest.fn(),
         };
+        relyingParty = {
+            id: 'relying_party_id',
+            name: 'Relying Party',
+            origin: 'https://example.com',
+        };
         authController = new AuthController(
             store,
             authMessenger,
             store,
             undefined,
-            privoClient
+            privoClient,
+            relyingParty
         );
         livekitController = new LivekitController(
             livekitApiKey,
@@ -2685,6 +2756,318 @@ describe('RecordsServer', () => {
                 dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
                 parentEmail: 'parent@example.com',
                 displayName: 'displayName',
+            })
+        );
+    });
+
+    describe('GET /api/v2/webauthn/register/options', () => {
+        it('should return the webauthn registration options', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    '/api/v2/webauthn/register/options',
+                    authenticatedHeaders
+                )
+            );
+
+            const response = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    options: {
+                        attestation: 'none',
+                        authenticatorSelection: {
+                            authenticatorAttachment: 'platform',
+                            requireResidentKey: false,
+                            residentKey: 'preferred',
+                            userVerification: 'preferred',
+                        },
+                        challenge: expect.any(String),
+                        excludeCredentials: [],
+                        extensions: {
+                            credProps: true,
+                        },
+                        pubKeyCredParams: [
+                            {
+                                alg: -8,
+                                type: 'public-key',
+                            },
+                            {
+                                alg: -7,
+                                type: 'public-key',
+                            },
+                            {
+                                alg: -257,
+                                type: 'public-key',
+                            },
+                        ],
+                        rp: {
+                            id: 'relying_party_id',
+                            name: 'Relying Party',
+                        },
+                        timeout: 60000,
+                        user: {
+                            displayName: 'test@example.com',
+                            id: userId,
+                            name: 'test@example.com',
+                        },
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(
+                response.options.challenge
+            );
+        });
+
+        testOrigin('GET', '/api/v2/webauthn/register/options');
+        testAuthorization(() =>
+            httpGet('/api/v2/webauthn/register/options', authenticatedHeaders)
+        );
+        testRateLimit('GET', `/api/v2/webauthn/register/options`);
+    });
+
+    describe('POST /api/v2/webauthn/register', () => {
+        it('should register the authenticator', async () => {
+            verifyRegistrationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                registrationInfo: {
+                    credentialID: new Uint8Array([1, 2, 3]),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    origin: relyingParty.origin,
+                    userVerified: true,
+                    credentialBackedUp: false,
+                    credentialDeviceType: 'singleDevice',
+                    credentialType: 'public-key',
+                    attestationObject: new Uint8Array([7, 8, 9]),
+                    aaguid: 'aaguid',
+                    fmt: 'tpm',
+                    authenticatorExtensionResults: {},
+                    rpID: relyingParty.id,
+                },
+            });
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/webauthn/register',
+                    JSON.stringify({
+                        response: {
+                            id: 'id',
+                            rawId: 'rawId',
+                            response: {
+                                attestationObject: 'attestation',
+                                clientDataJSON: 'clientDataJSON',
+                                authenticatorData: 'authenticatorData',
+                                publicKey: 'publicKey',
+                                publicKeyAlgorithm: -7,
+                                transports: ['usb'],
+                            },
+                            clientExtensionResults: {},
+                            type: 'public-key',
+                            authenticatorAttachment: 'platform',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(null);
+
+            const authenticators = await store.listUserAuthenticators(userId);
+            expect(authenticators).toEqual([
+                {
+                    id: expect.any(String),
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    credentialDeviceType: 'singleDevice',
+                    credentialBackedUp: false,
+                    transports: ['usb'],
+                },
+            ]);
+        });
+
+        testOrigin('POST', '/api/v2/webauthn/register');
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/webauthn/register',
+                JSON.stringify({
+                    response: {
+                        id: 'id',
+                        rawId: 'rawId',
+                        response: {
+                            attestationObject: 'attestation',
+                            clientDataJSON: 'clientDataJSON',
+                            authenticatorData: 'authenticatorData',
+                            publicKey: 'publicKey',
+                            publicKeyAlgorithm: -7,
+                            transports: ['usb'],
+                        },
+                        clientExtensionResults: {},
+                        type: 'public-key',
+                        authenticatorAttachment: 'platform',
+                    },
+                }),
+                authenticatedHeaders
+            )
+        );
+        testRateLimit('POST', `/api/v2/webauthn/register`);
+    });
+
+    describe('GET /api/v2/webauthn/login/options', () => {
+        beforeEach(() => {
+            delete authenticatedHeaders['authorization'];
+        });
+
+        it('should return the webauthn registration options', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/webauthn/login/options', authenticatedHeaders)
+            );
+
+            const response = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    requestId: expect.any(String),
+                    options: {
+                        userVerification: 'preferred',
+                        challenge: expect.any(String),
+                        rpId: relyingParty.id,
+                        timeout: 60000,
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const loginRequest = await store.findWebAuthnLoginRequest(
+                response.requestId
+            );
+            expect(loginRequest).toEqual({
+                requestId: response.requestId,
+                userId: null,
+                challenge: response.options.challenge,
+                requestTimeMs: expect.any(Number),
+                expireTimeMs: expect.any(Number),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+            });
+        });
+
+        testOrigin('GET', '/api/v2/webauthn/login/options');
+        testRateLimit('GET', `/api/v2/webauthn/login/options`);
+    });
+
+    describe('GET /api/v2/webauthn/login', () => {
+        beforeEach(() => {
+            delete authenticatedHeaders['authorization'];
+        });
+
+        it('should return the webauthn registration options', async () => {
+            const requestId = 'requestId';
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: Date.now() + 1000 * 60,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/webauthn/login',
+                    JSON.stringify({
+                        requestId: requestId,
+                        response: {
+                            id: fromByteArray(new Uint8Array([1, 2, 3])),
+                            rawId: 'rawId',
+                            clientExtensionResults: {},
+                            response: {
+                                authenticatorData: 'authenticatorData',
+                                clientDataJSON: 'clientDataJSON',
+                                signature: 'signature',
+                            },
+                            type: 'public-key',
+                            authenticatorAttachment: 'platform',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: userId,
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/webauthn/login', () =>
+            JSON.stringify({
+                requestId: 'requestId',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+            })
+        );
+        testRateLimit('POST', `/api/v2/webauthn/login`, () =>
+            JSON.stringify({
+                requestId: 'requestId',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
             })
         );
     });
@@ -14275,6 +14658,8 @@ describe('RecordsServer', () => {
             ...response,
             body: json,
         }).toEqual(expected);
+
+        return json;
     }
 
     function expectWebsocketHttpResponseBodyToEqual(
