@@ -470,11 +470,13 @@ export class ServerBuilder implements SubscriptionLike {
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
+            s3.defaultFilesBucket ?? s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
             s3Client,
             s3.host,
-            undefined
+            undefined,
+            s3.publicFilesUrl
         );
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
@@ -1429,12 +1431,29 @@ const s3Schema = z.object({
             'The name of the bucket that file records should be placed in.'
         )
         .nonempty(),
+    defaultFilesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that file records were originally placed in. This is used for backwards compatibility for file records that were uploaded before changing the filesBucket was supported. If not specified, then filesBucket is used.'
+        )
+        .nonempty()
+        .optional(),
     filesStorageClass: z
         .string()
         .describe(
             'The S3 File Storage Class that should be used for file records.'
         )
         .nonempty(),
+
+    publicFilesUrl: z
+        .string()
+        .describe(
+            'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default S3 URL will be used. ' +
+                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
+                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
+        )
+        .nonempty()
+        .optional(),
 
     messagesBucket: z
         .string()

@@ -164,6 +164,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             subjectId,
             sizeInBytes,
             description,
+            null, // MongoDB does not have buckets
             markers
         );
     }
@@ -245,6 +246,7 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
             subjectId: record.subjectId,
             sizeInBytes: record.sizeInBytes,
             uploaded: record.uploaded,
+            bucket: record.bucket,
             markers: record.markers,
         };
     }
@@ -280,6 +282,7 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
                 sizeInBytes: f.sizeInBytes,
                 markers: f.markers,
                 uploaded: f.uploaded,
+                bucket: f.bucket,
             })),
             totalCount: count,
         };
@@ -292,6 +295,7 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
         subjectId: string,
         sizeInBytes: number,
         description: string,
+        bucket: string,
         markers: string[]
     ): Promise<AddFileResult> {
         const record = await this._collection.findOne({
@@ -315,6 +319,7 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
             sizeInBytes,
             description,
             uploaded: false,
+            bucket,
             markers,
         });
 
@@ -418,5 +423,6 @@ export interface MongoFileRecord {
     sizeInBytes: number;
     description: string;
     uploaded: boolean;
+    bucket: string;
     markers?: string[];
 }

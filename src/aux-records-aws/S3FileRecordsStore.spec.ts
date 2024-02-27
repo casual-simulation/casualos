@@ -2,6 +2,7 @@ import {
     S3FileRecordsStore,
     EMPTY_STRING_SHA256_HASH_HEX,
     s3AclForMarkers,
+    isPublicFile,
 } from './S3FileRecordsStore';
 import {
     awsResult,
@@ -64,6 +65,7 @@ describe('S3FileRecordsStore', () => {
         store = new S3FileRecordsStore(
             'us-east-1',
             'test-bucket',
+            'default-bucket',
             lookup,
             'STANDARD',
             s3 as any,
@@ -106,6 +108,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'test-bucket',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -212,6 +215,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'ab1-link-filesbucket-404655125928',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -297,6 +301,47 @@ describe('S3FileRecordsStore', () => {
                 Authorization: expect.any(String),
             });
         });
+
+        it('should ignore the public files URL', async () => {
+            store = new S3FileRecordsStore(
+                'us-east-1',
+                'test-bucket',
+                'default-bucket',
+                lookup,
+                'STANDARD',
+                s3 as any,
+                undefined,
+                credentialsProvider,
+                'https://public-files.com/path'
+            );
+
+            const result = (await store.presignFileUpload({
+                recordName: 'test record',
+                fileName: 'test file.xml',
+                fileSha256Hex: 'test-sha256',
+                fileMimeType: 'test-mime-type',
+                fileByteLength: 100,
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            })) as PresignFileUploadSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.uploadUrl).toBe(
+                'https://test-bucket.s3.amazonaws.com/test%20record/test%20file.xml'
+            );
+            expect(result.uploadMethod).toBe('PUT');
+            expect(result.uploadHeaders).toEqual({
+                host: 'test-bucket.s3.amazonaws.com',
+                'content-type': 'test-mime-type',
+                'content-length': '100',
+                'cache-control': 'max-age=31536000',
+                'x-amz-acl': 'public-read',
+                'x-amz-content-sha256': 'test-sha256',
+                'x-amz-storage-class': 'STANDARD',
+                'x-amz-date': expect.any(String),
+                Authorization: expect.any(String),
+            });
+        });
     });
 
     describe('presignFileRead()', () => {
@@ -324,6 +369,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'test-bucket',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -403,6 +449,7 @@ describe('S3FileRecordsStore', () => {
             store = new S3FileRecordsStore(
                 'us-east-1',
                 'ab1-link-filesbucket-404655125928',
+                'default-bucket',
                 lookup,
                 'STANDARD',
                 s3 as any,
@@ -449,6 +496,38 @@ describe('S3FileRecordsStore', () => {
             expect(result.requestMethod).toBe('GET');
             expect(result.requestHeaders).toEqual(signature.headers);
         });
+
+        it('should ignore the public files URL', async () => {
+            store = new S3FileRecordsStore(
+                'us-east-1',
+                'test-bucket',
+                'default-bucket',
+                lookup,
+                'STANDARD',
+                s3 as any,
+                undefined,
+                credentialsProvider,
+                'https://public-files.com/path'
+            );
+
+            const result = (await store.presignFileRead({
+                recordName: 'test record',
+                fileName: 'test file.xml',
+                headers: {},
+            })) as PresignFileReadSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.requestUrl).toBe(
+                'https://test-bucket.s3.amazonaws.com/test%20record/test%20file.xml?response-cache-control=max-age%3D31536000'
+            );
+            expect(result.requestMethod).toBe('GET');
+            expect(result.requestHeaders).toEqual({
+                host: 'test-bucket.s3.amazonaws.com',
+                'x-amz-content-sha256': EMPTY_STRING_SHA256_HASH_HEX,
+                'x-amz-date': expect.any(String),
+                Authorization: expect.any(String),
+            });
+        });
     });
 
     describe('addFileRecord()', () => {
@@ -478,6 +557,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
         });
@@ -496,7 +576,7 @@ describe('S3FileRecordsStore', () => {
     });
 
     describe('getFileRecord()', () => {
-        it('should get the file record from the DynamoDB table', async () => {
+        it('should get the file record', async () => {
             await lookup.addFileRecord(
                 'test record',
                 'test file.xml',
@@ -504,6 +584,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
 
@@ -517,6 +598,80 @@ describe('S3FileRecordsStore', () => {
                 recordName: 'test record',
                 fileName: 'test file.xml',
                 url: 'https://test-bucket.s3.amazonaws.com/test%20record/test%20file.xml',
+                publisherId: 'publisherId',
+                subjectId: 'subjectId',
+                sizeInBytes: 256,
+                description: 'test description',
+                uploaded: false,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should use the default bucket if the file record does not have a bucket', async () => {
+            await lookup.addFileRecord(
+                'test record',
+                'test file.xml',
+                'publisherId',
+                'subjectId',
+                256,
+                'test description',
+                null,
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await store.getFileRecord(
+                'test record',
+                'test file.xml'
+            )) as GetFileRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+                url: 'https://default-bucket.s3.amazonaws.com/test%20record/test%20file.xml',
+                publisherId: 'publisherId',
+                subjectId: 'subjectId',
+                sizeInBytes: 256,
+                description: 'test description',
+                uploaded: false,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should use the public files URL if the file record is public', async () => {
+            store = new S3FileRecordsStore(
+                'us-east-1',
+                'test-bucket',
+                'default-bucket',
+                lookup,
+                'STANDARD',
+                s3 as any,
+                undefined,
+                credentialsProvider,
+                'https://public-files.com/path'
+            );
+
+            await lookup.addFileRecord(
+                'test record',
+                'test file.xml',
+                'publisherId',
+                'subjectId',
+                256,
+                'test description',
+                null,
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await store.getFileRecord(
+                'test record',
+                'test file.xml'
+            )) as GetFileRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+                url: 'https://public-files.com/path/test%20record/test%20file.xml',
                 publisherId: 'publisherId',
                 subjectId: 'subjectId',
                 sizeInBytes: 256,
@@ -549,6 +704,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
             s3.deleteObject.mockReturnValue(awsResult({}));
@@ -580,6 +736,7 @@ describe('S3FileRecordsStore', () => {
                 'subjectId',
                 256,
                 'test description',
+                'test-bucket',
                 [PUBLIC_READ_MARKER]
             );
 
@@ -598,6 +755,52 @@ describe('S3FileRecordsStore', () => {
             expect(record?.uploaded).toBe(true);
         });
     });
+
+    describe('getFileNameFromUrl()', () => {
+        it('should work if given a custom S3 host', async () => {
+            store = new S3FileRecordsStore(
+                'us-east-1',
+                'test-bucket',
+                'default-bucket',
+                lookup,
+                'STANDARD',
+                s3 as any,
+                'http://s3:4567/path',
+                credentialsProvider
+            );
+
+            const result = await store.getFileNameFromUrl(
+                'http://s3:4567/path/test%20record/test%20file.xml'
+            );
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+            });
+        });
+
+        it('should return the file name from the given URL', async () => {
+            const result = await store.getFileNameFromUrl(
+                'https://test-bucket.s3.amazonaws.com/test%20record/test%20file.xml'
+            );
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+            });
+        });
+
+        it('should support bucket names that dont match the configured bucket', async () => {
+            const result = await store.getFileNameFromUrl(
+                'https://different-bucket.s3.amazonaws.com/test%20record/test%20file.xml'
+            );
+            expect(result).toEqual({
+                success: true,
+                recordName: 'test record',
+                fileName: 'test file.xml',
+            });
+        });
+    });
 });
 
 describe('s3AclForMarkers()', () => {
@@ -608,5 +811,16 @@ describe('s3AclForMarkers()', () => {
 
     it.each(cases)('%s', (name, markers, expected) => {
         expect(s3AclForMarkers(markers)).toBe(expected);
+    });
+});
+
+describe('isPublicFile()', () => {
+    const cases = [
+        ['public', [PUBLIC_READ_MARKER], true] as const,
+        ['private', ['secret'], false] as const,
+    ];
+
+    it.each(cases)('%s', (name, markers, expected) => {
+        expect(isPublicFile(markers)).toBe(expected);
     });
 });
