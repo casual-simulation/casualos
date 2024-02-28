@@ -1124,6 +1124,12 @@ export class PrismaAuthStore implements AuthStore {
                     allowAI: user.allowAI ?? true,
                     allowPublicInsts: user.allowPublicInsts ?? true,
                 },
+                currentWebAuthnChallenge: user.currentWebAuthnChallenge,
+                subscriptionInfoId: user.subscriptionInfoId,
+                subscriptionPeriodEndMs: convertToMillis(user.subscriptionPeriodEnd),
+                subscriptionPeriodStartMs: convertToMillis(
+                    user.subscriptionPeriodStart
+                ),
             };
         }
         return null;
