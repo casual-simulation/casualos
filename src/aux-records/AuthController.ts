@@ -21,7 +21,7 @@ import {
     verifyPassword,
     verifyPasswordAgainstHashes,
 } from '@casual-simulation/crypto';
-import { fromByteArray, toByteArray } from 'base64-js';
+import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import {
     cleanupObject,
@@ -65,6 +65,7 @@ import {
     verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server';
+import { base64URLStringToBuffer, bufferToBase64URLString } from './Base64UrlUtils';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -1248,7 +1249,7 @@ export class AuthController {
                 userName: user.email ?? user.phoneNumber,
                 attestationType: 'none',
                 excludeCredentials: authenticators.map((auth) => ({
-                    id: toByteArray(auth.credentialId),
+                    id: base64URLStringToBuffer(auth.credentialId),
                     type: 'public-key',
                     transports: auth.transports,
                 })),
@@ -1316,7 +1317,7 @@ export class AuthController {
 
                 if (verification.verified) {
                     const registration = verification.registrationInfo;
-                    const credentialId = fromByteArray(
+                    const credentialId = bufferToBase64URLString(
                         registration.credentialID
                     );
                     const authenticator: AuthUserAuthenticator = {
@@ -1435,6 +1436,7 @@ export class AuthController {
             );
 
             if (!loginRequest) {
+                console.error('could not find login request!');
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -1444,10 +1446,13 @@ export class AuthController {
 
             let validRequest = true;
             if (Date.now() >= loginRequest.expireTimeMs) {
+                console.error('Expired!');
                 validRequest = false;
             } else if (loginRequest.completedTimeMs > 0) {
+                console.error('Completed!')
                 validRequest = false;
             } else if (loginRequest.ipAddress !== request.ipAddress) {
+                console.error('Wrong IP!')
                 validRequest = false;
             }
 
@@ -1465,6 +1470,7 @@ export class AuthController {
                 );
 
             if (!authenticator) {
+                console.error('No Authenticator!')
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -1488,7 +1494,7 @@ export class AuthController {
                     expectedOrigin: this.relyingParty.origin,
                     expectedRPID: this.relyingParty.id,
                     authenticator: {
-                        credentialID: toByteArray(authenticator.credentialId),
+                        credentialID: new Uint8Array(base64URLStringToBuffer(authenticator.credentialId)),
                         counter: authenticator.counter,
                         credentialPublicKey: authenticator.credentialPublicKey,
                         transports: authenticator.transports,
@@ -1496,6 +1502,7 @@ export class AuthController {
                 });
 
                 if (!options.verified) {
+                    console.error('Not verified!')
                     return {
                         success: false,
                         errorCode: 'invalid_request',
@@ -1558,13 +1565,13 @@ export class AuthController {
                 success: true,
                 userId: session.userId,
                 sessionKey: formatV1SessionKey(
-                    loginRequest.userId,
+                    user.id,
                     sessionId,
                     sessionSecret,
                     session.expireTimeMs
                 ),
                 connectionKey: formatV1ConnectionKey(
-                    loginRequest.userId,
+                    user.id,
                     sessionId,
                     connectionSecret,
                     session.expireTimeMs

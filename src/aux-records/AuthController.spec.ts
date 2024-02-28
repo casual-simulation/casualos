@@ -2326,7 +2326,7 @@ describe('AuthController', () => {
         });
     });
 
-    describe.only('requestWebAuthnLogin()', () => {
+    describe('requestWebAuthnLogin()', () => {
         const userId = 'myid';
         const requestId = 'requestId';
         const sessionId = toBase64String('sessionId');
@@ -2411,7 +2411,7 @@ describe('AuthController', () => {
         });
     });
 
-    describe.only('completeWebAuthnLogin()', () => {
+    describe('completeWebAuthnLogin()', () => {
         const userId = 'myid';
 
         beforeEach(async () => {
