@@ -13,6 +13,7 @@ import {
 import {
     ADDRESS_FIELD,
     CompleteWebAuthnLoginResult,
+    FormError,
     RequestWebAuthnLoginResult,
     getFormErrors,
 } from '@casual-simulation/aux-records';
@@ -44,6 +45,7 @@ export default class EnterAddressDialog extends Vue {
     showEnterAddress: boolean = false;
     address: string = '';
     supportsConditionalUi: boolean = false;
+    processingKind: 'webauthn' | 'login' = 'login';
 
     get emailFieldHint() {
         if (this.status.supportsSms) {
@@ -84,9 +86,10 @@ export default class EnterAddressDialog extends Vue {
     }
 
     get formErrors() {
-        return this.status.errors ?? [];
+        return [...(this.status.errors ?? []), ...this.extraErrors];
     }
 
+    extraErrors: FormError[] = [];
     acceptedTerms: boolean = false;
     processing: boolean = false;
 
@@ -110,10 +113,12 @@ export default class EnterAddressDialog extends Vue {
         this._endpoint = appManager.authCoordinator.authEndpoints.get(
             this.endpoint
         );
+        this.extraErrors = [];
         this.address = '';
         this.acceptedTerms = false;
         this.processing = false;
         this.showEnterAddress = true;
+        this.processingKind = 'login';
     }
 
     async mounted() {
@@ -169,6 +174,7 @@ export default class EnterAddressDialog extends Vue {
 
     async webAuthnLogin(useBrowserAutofill: boolean = false) {
         this.processing = !useBrowserAutofill;
+        this.processingKind = 'webauthn';
         try {
             const result = await this.loginWithWebAuthn(useBrowserAutofill);
             if (result.success === true) {
@@ -182,7 +188,7 @@ export default class EnterAddressDialog extends Vue {
                         result
                     );
                 } else {
-                    this.formErrors.push(...getFormErrors(result as any));
+                    this.extraErrors = getFormErrors(result as any);
                 }
             }
         } finally {
@@ -219,7 +225,7 @@ export default class EnterAddressDialog extends Vue {
                 return {
                     success: false as const,
                     errorCode: 'server_error' as const,
-                    errorMessage: 'Error: ' + err.message,
+                    errorMessage: err.message,
                 };
             }
         }

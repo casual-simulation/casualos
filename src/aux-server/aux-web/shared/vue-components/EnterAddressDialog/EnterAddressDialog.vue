@@ -48,7 +48,7 @@
                     :disabled="processing"
                 >
                     <md-progress-spinner
-                        v-if="processing"
+                        v-if="processing && processingKind === 'webauthn'"
                         md-mode="indeterminate"
                         :md-diameter="20"
                         :md-stroke="2"
@@ -58,7 +58,7 @@
                 </md-button>
                 <md-button type="button" class="md-primary" @click="login()" :disabled="processing">
                     <md-progress-spinner
-                        v-if="processing"
+                        v-if="processing && processingKind === 'email'"
                         md-mode="indeterminate"
                         :md-diameter="20"
                         :md-stroke="2"
