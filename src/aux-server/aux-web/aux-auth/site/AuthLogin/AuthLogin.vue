@@ -34,6 +34,7 @@
                                     enterAddressErrorMessage
                                 }}</span>
                             </md-field>
+                            <field-errors :field="null" :errors="errors"/>
                         </div>
                     </div>
                     <div class="terms-of-service-container">

@@ -89,6 +89,7 @@ import { appManager } from 'aux-web/shared/AppManager';
 import OAuthRedirect from './OAuthRedirect/OAuthRedirect';
 import PrivoRegistrationCard from './PrivoRegistrationCard/PrivoRegistrationCard';
 import AuthChildrenPrivacyPolicy from './AuthChildrenPrivacyPolicy/AuthChildrenPrivacyPolicy';
+import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -232,6 +233,14 @@ const routes: RouteConfig[] = [
         name: 'sign-up',
         component: PrivoRegistrationCard,
     },
+    {
+        path: '/webauthn',
+        name: 'webauthn-register',
+        component: AuthRegisterWebAuthn,
+        props: (route) => ({
+            after: route.query['after'],
+        }),
+    }
 ];
 
 const router = new VueRouter({

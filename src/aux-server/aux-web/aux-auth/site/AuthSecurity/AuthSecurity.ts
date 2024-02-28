@@ -13,6 +13,7 @@ import type { ListedSession } from '@casual-simulation/aux-records/AuthControlle
 import { DateTime } from 'luxon';
 import SessionLocation from '../SessionLocation/SessionLocation';
 import RelativeTime from '../RelativeTime/RelativeTime';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 
 @Component({
     components: {
@@ -25,6 +26,7 @@ export default class AuthSecurity extends Vue {
 
     sessions: ListedSession[] = [];
     loading: boolean = false;
+    showAddPasskey: boolean = false;
 
     showConfirmRevokeAllSessions: boolean = false;
 
@@ -32,6 +34,7 @@ export default class AuthSecurity extends Vue {
         this.sessions = [];
         this.loading = false;
         this.showConfirmRevokeAllSessions = false;
+        this.showAddPasskey = browserSupportsWebAuthn();
     }
 
     mounted() {
@@ -48,6 +51,10 @@ export default class AuthSecurity extends Vue {
 
     beforeDestroy() {
         this._sub?.unsubscribe();
+    }
+
+    addPasskey() {
+        this.$router.push({ name: 'webauthn-register' });
     }
 
     async revokeSession(session: ListedSession) {

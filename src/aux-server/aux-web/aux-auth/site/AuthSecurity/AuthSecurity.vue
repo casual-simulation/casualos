@@ -55,6 +55,9 @@
                 </md-table-row>
             </md-table>
         </div>
+        <div>
+            <md-button v-if="showAddPasskey" @click="addPasskey()">Add Passkey</md-button>
+        </div>
 
         <md-dialog-confirm
             :md-active.sync="showConfirmRevokeAllSessions"

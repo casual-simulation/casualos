@@ -54,6 +54,8 @@ import type {
     RequestWebAuthnLoginResult,
     RequestWebAuthnRegistrationResult,
     CompleteWebAuthnLoginResult,
+    RequestWebAuthnRegistration,
+    CompleteWebAuthnRegistrationResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -75,7 +77,7 @@ import {
     AuthenticationResponseJSON,
     RegistrationResponseJSON,
 } from '@simplewebauthn/types';
-import { startAuthentication } from '@simplewebauthn/browser';
+import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -358,7 +360,7 @@ export class AuthManager {
                 optionsResult.options,
                 useBrowserAutofill
             );
-            const result = await this.completeWebAuthnLogin(response);
+            const result = await this.completeWebAuthnLogin(optionsResult.requestId, response);
 
             if (result.success === true) {
                 this.savedSessionKey = result.sessionKey;
@@ -366,8 +368,33 @@ export class AuthManager {
                 this._userId = result.userId;
             }
 
-            if (result) {
+            return result;
+        }
+        return optionsResult;
+    }
+
+    async addPasskeyWithWebAuthn(): Promise<RequestWebAuthnRegistrationResult | CompleteWebAuthnRegistrationResult> {
+        const optionsResult = await this.getWebAuthnRegistrationOptions();
+        if (optionsResult.success === true) {
+            try {
+                const response = await startRegistration(
+                    optionsResult.options,
+                );
+                const result = await this.completeWebAuthnRegistration(response);
                 return result;
+            } catch(error) {
+                console.error(error);
+                if (error.name === 'InvalidStateError') {
+                    return {
+                        success: true,
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'Error: ' + error.message
+                    };
+                }
             }
         }
         return optionsResult;
@@ -395,7 +422,10 @@ export class AuthManager {
                     response: r,
                 }),
                 method: 'POST',
-                headers: this._authenticationHeaders(),
+                headers: {
+                    ...this._authenticationHeaders(),
+                    "Content-Type": "application/json"
+                },
             }
         );
 
@@ -416,16 +446,21 @@ export class AuthManager {
     }
 
     async completeWebAuthnLogin(
+        requestId: string,
         r: AuthenticationResponseJSON
     ): Promise<CompleteWebAuthnLoginResult> {
         const response = await fetch(
             `${this.apiEndpoint}/api/v2/webauthn/login`,
             {
                 body: JSON.stringify({
+                    requestId,
                     response: r,
                 }),
                 method: 'POST',
-                headers: this._authenticationHeaders(),
+                headers: {
+                    ...this._authenticationHeaders(),
+                    "Content-Type": "application/json"
+                },
             }
         );
 
