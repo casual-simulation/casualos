@@ -197,7 +197,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _authStore: AuthStore;
     private _authMessenger: AuthMessenger;
     private _authController: AuthController;
-    private _relyingParty: RelyingParty;
+    private _relyingParties: RelyingParty[];
 
     private _recordsStore: RecordsStore;
     private _recordsController: RecordsController;
@@ -695,11 +695,11 @@ export class ServerBuilder implements SubscriptionLike {
         if (!options.webauthn) {
             throw new Error('WebAuthn options must be provided.');
         }
-        this._relyingParty = {
-            id: options.webauthn.relyingParty.id,
-            name: options.webauthn.relyingParty.name,
-            origin: options.webauthn.relyingParty.origin,
-        };
+        this._relyingParties = options.webauthn.relyingParties.map((rp) => ({
+            id: rp.id,
+            name: rp.name,
+            origin: rp.origin,
+        }));
         return this;
     }
 
@@ -1152,7 +1152,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._configStore,
             this._forceAllowAllSubscriptionFeatures,
             this._privoClient,
-            this._relyingParty
+            this._relyingParties ?? []
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
