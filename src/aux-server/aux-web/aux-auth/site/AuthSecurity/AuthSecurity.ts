@@ -34,7 +34,8 @@ export default class AuthSecurity extends Vue {
         this.sessions = [];
         this.loading = false;
         this.showConfirmRevokeAllSessions = false;
-        this.showAddPasskey = browserSupportsWebAuthn();
+        this.showAddPasskey =
+            !authManager.usePrivoLogin && browserSupportsWebAuthn();
     }
 
     mounted() {
