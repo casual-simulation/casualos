@@ -17,6 +17,7 @@
                             <md-input
                                 name="email"
                                 id="email"
+                                :type="supportsSms ? 'text' : 'email'"
                                 autocomplete="email webauthn"
                                 v-model="address"
                                 :disabled="processing"

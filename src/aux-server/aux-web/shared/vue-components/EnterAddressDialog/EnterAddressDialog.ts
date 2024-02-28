@@ -55,6 +55,10 @@ export default class EnterAddressDialog extends Vue {
         }
     }
 
+    get supportsSms() {
+        return !!this.status.supportsSms;
+    }
+
     get supportsWebAuthn() {
         return !!this.status.supportsWebAuthn && !this.supportsConditionalUi;
     }
@@ -127,6 +131,9 @@ export default class EnterAddressDialog extends Vue {
             const browserInfo = Bowser.getParser(navigator.userAgent);
             const isSafari = browserInfo.isBrowser('safari', true);
             if (!isSafari && (await browserSupportsWebAuthnAutofill())) {
+                console.log(
+                    '[EnterAddressDialog] Browser supports WebAuthn autofill.'
+                );
                 this.supportsConditionalUi = true;
                 await this.webAuthnLogin(true);
             } else if (isSafari) {
@@ -160,6 +167,7 @@ export default class EnterAddressDialog extends Vue {
 
     async login() {
         this.processing = true;
+        this.processingKind = 'login';
         WebAuthnAbortService.cancelCeremony();
         if (!this.status.supportsSms || mightBeEmailAddress(this.address)) {
             await this._endpoint.provideEmailAddress(
