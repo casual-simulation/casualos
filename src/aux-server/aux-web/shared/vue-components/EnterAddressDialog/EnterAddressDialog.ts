@@ -24,6 +24,7 @@ import {
     WebAuthnAbortService,
 } from '@simplewebauthn/browser';
 import { AuthenticationResponseJSON } from '@simplewebauthn/types';
+import Bowser from 'bowser';
 
 @Component({
     components: {
@@ -118,9 +119,16 @@ export default class EnterAddressDialog extends Vue {
     async mounted() {
         if (this.status.supportsWebAuthn) {
             this._apiEndpoint = await this._endpoint.getRecordsOrigin();
-            if (await browserSupportsWebAuthnAutofill()) {
+            const browserInfo = Bowser.getParser(navigator.userAgent);
+            const isSafari = browserInfo.isBrowser('safari', true);
+            if (!isSafari && (await browserSupportsWebAuthnAutofill())) {
                 this.supportsConditionalUi = true;
                 await this.webAuthnLogin(true);
+            } else if (isSafari) {
+                this.supportsConditionalUi = false;
+                console.log(
+                    '[EnterAddressDialog] Safari detected, not using WebAuthn autofill'
+                );
             }
         }
     }
