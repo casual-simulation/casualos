@@ -77,7 +77,10 @@ import {
     AuthenticationResponseJSON,
     RegistrationResponseJSON,
 } from '@simplewebauthn/types';
-import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
+import {
+    startAuthentication,
+    startRegistration,
+} from '@simplewebauthn/browser';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -356,33 +359,50 @@ export class AuthManager {
     ): Promise<CompleteWebAuthnLoginResult | RequestWebAuthnLoginResult> {
         const optionsResult = await this.getWebAuthnLoginOptions();
         if (optionsResult.success === true) {
-            const response = await startAuthentication(
-                optionsResult.options,
-                useBrowserAutofill
-            );
-            const result = await this.completeWebAuthnLogin(optionsResult.requestId, response);
+            try {
+                const response = await startAuthentication(
+                    optionsResult.options,
+                    useBrowserAutofill
+                );
+                const result = await this.completeWebAuthnLogin(
+                    optionsResult.requestId,
+                    response
+                );
 
-            if (result.success === true) {
-                this.savedSessionKey = result.sessionKey;
-                this.savedConnectionKey = result.connectionKey;
-                this._userId = result.userId;
+                if (result.success === true) {
+                    this.savedSessionKey = result.sessionKey;
+                    this.savedConnectionKey = result.connectionKey;
+                    this._userId = result.userId;
+                }
+
+                return result;
+            } catch (err) {
+                console.error(
+                    '[AuthManager] Error while logging in with WebAuthn:',
+                    err
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'Error: ' + err.message,
+                };
             }
-
-            return result;
         }
         return optionsResult;
     }
 
-    async addPasskeyWithWebAuthn(): Promise<RequestWebAuthnRegistrationResult | CompleteWebAuthnRegistrationResult> {
+    async addPasskeyWithWebAuthn(): Promise<
+        RequestWebAuthnRegistrationResult | CompleteWebAuthnRegistrationResult
+    > {
         const optionsResult = await this.getWebAuthnRegistrationOptions();
         if (optionsResult.success === true) {
             try {
-                const response = await startRegistration(
-                    optionsResult.options,
+                const response = await startRegistration(optionsResult.options);
+                const result = await this.completeWebAuthnRegistration(
+                    response
                 );
-                const result = await this.completeWebAuthnRegistration(response);
                 return result;
-            } catch(error) {
+            } catch (error) {
                 console.error(error);
                 if (error.name === 'InvalidStateError') {
                     return {
@@ -392,7 +412,7 @@ export class AuthManager {
                     return {
                         success: false,
                         errorCode: 'server_error',
-                        errorMessage: 'Error: ' + error.message
+                        errorMessage: 'Error: ' + error.message,
                     };
                 }
             }
@@ -424,7 +444,7 @@ export class AuthManager {
                 method: 'POST',
                 headers: {
                     ...this._authenticationHeaders(),
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json',
                 },
             }
         );
@@ -459,7 +479,7 @@ export class AuthManager {
                 method: 'POST',
                 headers: {
                     ...this._authenticationHeaders(),
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json',
                 },
             }
         );
