@@ -691,10 +691,6 @@ export class AuthHandler implements AuxAuth {
             this._regularLoginWithCustomUICore(cancelSignal),
         ]);
 
-        this._loginUIStatus.next({
-            page: false,
-        });
-
         return userId;
     }
 
@@ -714,6 +710,10 @@ export class AuthHandler implements AuxAuth {
         authManager.updateLoginStateFromResult(result);
         await authManager.loadUserInfo();
         await this._loadUserInfo();
+
+        this._loginUIStatus.next({
+            page: false,
+        });
 
         return authManager.userId;
     }
@@ -802,6 +802,19 @@ export class AuthHandler implements AuxAuth {
 
         await authManager.loadUserInfo();
         await this._loadUserInfo();
+
+        if (!cancelSignal.canceled && browserSupportsWebAuthn()) {
+            // show prompt to add a key
+            this._loginUIStatus.next({
+                page: 'show_register_webauthn',
+                apiEndpoint: authManager.apiEndpoint,
+                authenticationHeaders: authManager.getAuthenticationHeaders(),
+            });
+        } else {
+            this._loginUIStatus.next({
+                page: false,
+            });
+        }
 
         return authManager.userId;
     }

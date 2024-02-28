@@ -21,6 +21,7 @@ import FieldErrors from '../FieldErrors/FieldErrors';
 import {
     browserSupportsWebAuthnAutofill,
     startAuthentication,
+    WebAuthnAbortService,
 } from '@simplewebauthn/browser';
 import { AuthenticationResponseJSON } from '@simplewebauthn/types';
 
@@ -138,6 +139,7 @@ export default class EnterAddressDialog extends Vue {
 
     cancelLogin() {
         if (!this.processing) {
+            WebAuthnAbortService.cancelCeremony();
             this._endpoint.cancelLogin();
         }
         this.showEnterAddress = false;
@@ -145,6 +147,7 @@ export default class EnterAddressDialog extends Vue {
 
     async login() {
         this.processing = true;
+        WebAuthnAbortService.cancelCeremony();
         if (!this.status.supportsSms || mightBeEmailAddress(this.address)) {
             await this._endpoint.provideEmailAddress(
                 this.address,
@@ -163,9 +166,9 @@ export default class EnterAddressDialog extends Vue {
             if (result.success === true) {
                 await this._endpoint.provideLoginResult(result);
                 console.log('Success!');
-                // this.showEnterAddress = false;
             } else {
-                if (result.errorCode === 'invalid_origin') {
+                if (result.errorCode === 'aborted') {
+                } else if (result.errorCode === 'invalid_origin') {
                     console.error(
                         '[EnterAddressDialog] Unable to use WebAuthn:',
                         result
@@ -194,6 +197,13 @@ export default class EnterAddressDialog extends Vue {
 
                 return result;
             } catch (err) {
+                if (err.name === 'AbortError') {
+                    return {
+                        success: false as const,
+                        errorCode: 'aborted' as const,
+                        errorMessage: 'The operation was aborted.',
+                    };
+                }
                 console.error(
                     '[AuthManager] Error while logging in with WebAuthn:',
                     err

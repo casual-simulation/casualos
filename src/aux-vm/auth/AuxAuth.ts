@@ -44,7 +44,8 @@ export type LoginUIStatus =
     | LoginUIShowIframe
     | LoginUIHasAccount
     | LoginUIPrivoSignUp
-    | LoginUIUpdatePasswordLink;
+    | LoginUIUpdatePasswordLink
+    | LoginUIRegisterWebAuthn;
 
 export interface LoginUINoStatus {
     page: false;
@@ -167,6 +168,12 @@ export interface LoginUIUpdatePasswordLink {
      * Whether a parent email was provided by the user.
      */
     providedParentEmail: boolean;
+}
+
+export interface LoginUIRegisterWebAuthn {
+    page: 'show_register_webauthn';
+    apiEndpoint: string;
+    authenticationHeaders: Record<string, string>;
 }
 
 export interface PrivoSignUpInfo {
