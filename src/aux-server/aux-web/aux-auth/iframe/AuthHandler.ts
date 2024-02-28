@@ -59,6 +59,7 @@ import {
     filter,
     switchMap,
     mergeAll,
+    concatMap,
 } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { OAUTH_LOGIN_CHANNEL_NAME } from '../shared/AuthManager';
@@ -733,7 +734,7 @@ export class AuthHandler implements AuxAuth {
         ).pipe(mergeAll(), share());
 
         const logins = loginRequests.pipe(
-            switchMap((result) => {
+            concatMap((result) => {
                 if (result.success === true) {
                     const address = result.address;
                     const addressType = result.addressType;
