@@ -1240,9 +1240,9 @@ export class MemoryStore
             (r) => r.requestId === request.requestId
         );
         if (index >= 0) {
-            this._webauthnLoginRequests[index] = request;
+            this._webauthnLoginRequests[index] = { ...request };
         } else {
-            this._webauthnLoginRequests.push(request);
+            this._webauthnLoginRequests.push({ ...request });
         }
 
         return request;
@@ -1260,6 +1260,7 @@ export class MemoryStore
             const request = this._webauthnLoginRequests[index];
             request.userId = userId;
             request.completedTimeMs = completedTimeMs;
+            this._webauthnLoginRequests[index] = { ...request };
         }
     }
 
