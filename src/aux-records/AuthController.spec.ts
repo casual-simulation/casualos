@@ -209,7 +209,7 @@ describe('AuthController', () => {
             store,
             undefined,
             privoClient,
-            relyingParty
+            [relyingParty]
         );
 
         uuidMock.mockReset();
@@ -2151,6 +2151,7 @@ describe('AuthController', () => {
         it('should return the generated options', async () => {
             const response = (await controller.requestWebAuthnRegistration({
                 userId,
+                origin: relyingParty.origin,
             })) as RequestWebAuthnRegistrationSuccess;
 
             expect(response).toEqual({
@@ -2202,15 +2203,30 @@ describe('AuthController', () => {
         });
 
         it('should return not_supported if no relying party has been configured', async () => {
-            controller.relyingParty = null;
+            controller.relyingParties = [];
             const response = await controller.requestWebAuthnRegistration({
                 userId,
+                origin: relyingParty.origin,
             });
 
             expect(response).toEqual({
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return invalid_origin if the request comes from a wrong origin', async () => {
+            const response = await controller.requestWebAuthnRegistration({
+                userId,
+                origin: 'wrong',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
             });
         });
     });
@@ -2286,6 +2302,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
+                origin: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2312,16 +2329,32 @@ describe('AuthController', () => {
         });
 
         it('should return not_supported if no relying party has been configured', async () => {
-            controller.relyingParty = null;
+            controller.relyingParties = [];
             const response = await controller.completeWebAuthnRegistration({
                 userId,
                 response: {} as any,
+                origin: relyingParty.origin,
             });
 
             expect(response).toEqual({
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return invalid_origin if the request comes from a wrong origin', async () => {
+            const response = await controller.completeWebAuthnRegistration({
+                userId,
+                response: {} as any,
+                origin: 'wrong',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
             });
         });
     });
@@ -2364,6 +2397,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('requestId');
             const response = (await controller.requestWebAuthnLogin({
                 ipAddress: '123.456.789',
+                origin: relyingParty.origin,
             })) as RequestWebAuthnLoginSuccess;
 
             expect(response).toEqual({
@@ -2398,15 +2432,30 @@ describe('AuthController', () => {
         });
 
         it('should return a not_supported result if no relying party is configured', async () => {
-            controller.relyingParty = null;
+            controller.relyingParties = [];
             const response = await controller.requestWebAuthnLogin({
                 ipAddress: '123.456.789',
+                origin: relyingParty.origin,
             });
 
             expect(response).toEqual({
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return a invalid_origin result if the request comes from the wrong origin', async () => {
+            const response = await controller.requestWebAuthnLogin({
+                ipAddress: '123.456.789',
+                origin: 'wrong',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
             });
         });
     });
@@ -2478,6 +2527,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
+                origin: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2606,6 +2656,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
+                origin: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2619,7 +2670,7 @@ describe('AuthController', () => {
         });
 
         it('should return a not_supported result if no relying party is configured', async () => {
-            controller.relyingParty = null;
+            controller.relyingParties = [];
             const response = await controller.completeWebAuthnLogin({
                 requestId: 'requestId',
                 ipAddress: '123.456.789',
@@ -2635,12 +2686,40 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
+                origin: relyingParty.origin,
             });
 
             expect(response).toEqual({
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return a invalid_origin result if the request comes from the wrong origin', async () => {
+            const response = await controller.completeWebAuthnLogin({
+                requestId: 'requestId',
+                ipAddress: '123.456.789',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+                origin: 'wrong',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
             });
         });
     });

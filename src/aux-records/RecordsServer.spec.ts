@@ -430,7 +430,7 @@ describe('RecordsServer', () => {
         relyingParty = {
             id: 'relying_party_id',
             name: 'Relying Party',
-            origin: 'https://example.com',
+            origin: accountOrigin,
         };
         authController = new AuthController(
             store,
@@ -438,7 +438,7 @@ describe('RecordsServer', () => {
             store,
             undefined,
             privoClient,
-            relyingParty
+            [relyingParty]
         );
         livekitController = new LivekitController(
             livekitApiKey,
@@ -2821,7 +2821,13 @@ describe('RecordsServer', () => {
             );
         });
 
-        testOrigin('GET', '/api/v2/webauthn/register/options');
+        testOrigin(
+            'GET',
+            '/api/v2/webauthn/register/options',
+            undefined,
+            true,
+            true
+        );
         testAuthorization(() =>
             httpGet('/api/v2/webauthn/register/options', authenticatedHeaders)
         );
@@ -2898,7 +2904,30 @@ describe('RecordsServer', () => {
             ]);
         });
 
-        testOrigin('POST', '/api/v2/webauthn/register');
+        testOrigin(
+            'POST',
+            '/api/v2/webauthn/register',
+            () =>
+                JSON.stringify({
+                    response: {
+                        id: 'id',
+                        rawId: 'rawId',
+                        response: {
+                            attestationObject: 'attestation',
+                            clientDataJSON: 'clientDataJSON',
+                            authenticatorData: 'authenticatorData',
+                            publicKey: 'publicKey',
+                            publicKeyAlgorithm: -7,
+                            transports: ['usb'],
+                        },
+                        clientExtensionResults: {},
+                        type: 'public-key',
+                        authenticatorAttachment: 'platform',
+                    },
+                }),
+            true,
+            true
+        );
         testAuthorization(() =>
             httpPost(
                 '/api/v2/webauthn/register',
@@ -2964,7 +2993,7 @@ describe('RecordsServer', () => {
             });
         });
 
-        testOrigin('GET', '/api/v2/webauthn/login/options');
+        testOrigin('GET', '/api/v2/webauthn/login/options', undefined, true);
         testRateLimit('GET', `/api/v2/webauthn/login/options`);
     });
 
@@ -3036,22 +3065,26 @@ describe('RecordsServer', () => {
             });
         });
 
-        testOrigin('POST', '/api/v2/webauthn/login', () =>
-            JSON.stringify({
-                requestId: 'requestId',
-                response: {
-                    id: fromByteArray(new Uint8Array([1, 2, 3])),
-                    rawId: 'rawId',
-                    clientExtensionResults: {},
+        testOrigin(
+            'POST',
+            '/api/v2/webauthn/login',
+            () =>
+                JSON.stringify({
+                    requestId: 'requestId',
                     response: {
-                        authenticatorData: 'authenticatorData',
-                        clientDataJSON: 'clientDataJSON',
-                        signature: 'signature',
+                        id: fromByteArray(new Uint8Array([1, 2, 3])),
+                        rawId: 'rawId',
+                        clientExtensionResults: {},
+                        response: {
+                            authenticatorData: 'authenticatorData',
+                            clientDataJSON: 'clientDataJSON',
+                            signature: 'signature',
+                        },
+                        type: 'public-key',
+                        authenticatorAttachment: 'platform',
                     },
-                    type: 'public-key',
-                    authenticatorAttachment: 'platform',
-                },
-            })
+                }),
+            true
         );
         testRateLimit('POST', `/api/v2/webauthn/login`, () =>
             JSON.stringify({
@@ -14704,11 +14737,18 @@ describe('RecordsServer', () => {
     function testOrigin(
         method: GenericHttpRequest['method'],
         url: string,
-        createBody: () => string | null = () => null
+        createBody: () => string | null = () => null,
+        allowHeaders: boolean = false,
+        provideSessionKey: boolean = false
     ) {
         it('should return a 403 status code if the request is made from a non-account origin', async () => {
             const result = await server.handleHttpRequest(
-                httpRequest(method, url, createBody(), defaultHeaders)
+                httpRequest(method, url, createBody(), {
+                    ...defaultHeaders,
+                    ...(provideSessionKey
+                        ? { authorization: 'Bearer ' + sessionKey }
+                        : {}),
+                })
             );
 
             expect(result).toEqual({
@@ -14719,7 +14759,11 @@ describe('RecordsServer', () => {
                     errorMessage:
                         'The request must be made from an authorized origin.',
                 }),
-                headers: {},
+                headers: {
+                    ...(allowHeaders
+                        ? corsHeaders(defaultHeaders['origin'])
+                        : {}),
+                },
             });
         });
     }

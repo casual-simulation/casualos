@@ -65,7 +65,10 @@ import {
     verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server';
-import { base64URLStringToBuffer, bufferToBase64URLString } from './Base64UrlUtils';
+import {
+    base64URLStringToBuffer,
+    bufferToBase64URLString,
+} from './Base64UrlUtils';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -174,14 +177,14 @@ export class AuthController {
     private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
-    private _webAuthNRelyingParty: RelyingParty | null;
+    private _webAuthNRelyingParties: RelyingParty[];
 
-    get relyingParty() {
-        return this._webAuthNRelyingParty;
+    get relyingParties() {
+        return this._webAuthNRelyingParties;
     }
 
-    set relyingParty(value: RelyingParty | null) {
-        this._webAuthNRelyingParty = value;
+    set relyingParties(value: RelyingParty[]) {
+        this._webAuthNRelyingParties = value;
     }
 
     constructor(
@@ -190,14 +193,14 @@ export class AuthController {
         configStore: ConfigurationStore,
         forceAllowSubscriptionFeatures: boolean = false,
         privoClient: PrivoClientInterface = null,
-        relyingParty: RelyingParty = null
+        relyingParties: RelyingParty[] = []
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
-        this._webAuthNRelyingParty = relyingParty;
+        this._webAuthNRelyingParties = relyingParties;
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -1217,15 +1220,32 @@ export class AuthController {
         }
     }
 
+    private _findRelyingPartyForOrigin(origin: string): RelyingParty {
+        return this._webAuthNRelyingParties.find((rp) => rp.origin === origin);
+    }
+
     async requestWebAuthnRegistration(
         request: RequestWebAuthnRegistration
     ): Promise<RequestWebAuthnRegistrationResult> {
         try {
-            if (!this._webAuthNRelyingParty) {
+            if (this._webAuthNRelyingParties.length <= 0) {
                 return {
                     success: false,
                     errorCode: 'not_supported',
                     errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const relyingParty = this._findRelyingPartyForOrigin(
+                request.origin
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
                 };
             }
 
@@ -1243,8 +1263,8 @@ export class AuthController {
                 user.id
             );
             const options = await generateRegistrationOptions({
-                rpName: this._webAuthNRelyingParty.name,
-                rpID: this._webAuthNRelyingParty.id,
+                rpName: relyingParty.name,
+                rpID: relyingParty.id,
                 userID: user.id,
                 userName: user.email ?? user.phoneNumber,
                 attestationType: 'none',
@@ -1286,11 +1306,24 @@ export class AuthController {
         request: CompleteWebAuthnRegistrationRequest
     ): Promise<CompleteWebAuthnRegistrationResult> {
         try {
-            if (!this._webAuthNRelyingParty) {
+            if (this._webAuthNRelyingParties.length <= 0) {
                 return {
                     success: false,
                     errorCode: 'not_supported',
                     errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const relyingParty = this._findRelyingPartyForOrigin(
+                request.origin
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
                 };
             }
 
@@ -1311,8 +1344,8 @@ export class AuthController {
                 const verification = await verifyRegistrationResponse({
                     response: request.response,
                     expectedChallenge: currentChallenge,
-                    expectedOrigin: this._webAuthNRelyingParty.origin,
-                    expectedRPID: this._webAuthNRelyingParty.id,
+                    expectedOrigin: relyingParty.origin,
+                    expectedRPID: relyingParty.id,
                 });
 
                 if (verification.verified) {
@@ -1376,7 +1409,7 @@ export class AuthController {
         request: RequestWebAuthnLogin
     ): Promise<RequestWebAuthnLoginResult> {
         try {
-            if (!this.relyingParty) {
+            if (this._webAuthNRelyingParties.length <= 0) {
                 return {
                     success: false,
                     errorCode: 'not_supported',
@@ -1384,8 +1417,21 @@ export class AuthController {
                 };
             }
 
+            const relyingParty = this._findRelyingPartyForOrigin(
+                request.origin
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                };
+            }
+
             const options = await generateAuthenticationOptions({
-                rpID: this.relyingParty.id,
+                rpID: relyingParty.id,
                 userVerification: 'preferred',
             });
 
@@ -1423,11 +1469,24 @@ export class AuthController {
         request: CompleteWebAuthnLoginRequest
     ): Promise<CompleteWebAuthnLoginResult> {
         try {
-            if (!this.relyingParty) {
+            if (this._webAuthNRelyingParties.length <= 0) {
                 return {
                     success: false,
                     errorCode: 'not_supported',
                     errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const relyingParty = this._findRelyingPartyForOrigin(
+                request.origin
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
                 };
             }
 
@@ -1449,10 +1508,10 @@ export class AuthController {
                 console.error('Expired!');
                 validRequest = false;
             } else if (loginRequest.completedTimeMs > 0) {
-                console.error('Completed!')
+                console.error('Completed!');
                 validRequest = false;
             } else if (loginRequest.ipAddress !== request.ipAddress) {
-                console.error('Wrong IP!')
+                console.error('Wrong IP!');
                 validRequest = false;
             }
 
@@ -1470,7 +1529,7 @@ export class AuthController {
                 );
 
             if (!authenticator) {
-                console.error('No Authenticator!')
+                console.error('No Authenticator!');
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -1491,10 +1550,12 @@ export class AuthController {
                 const options = await verifyAuthenticationResponse({
                     response: request.response,
                     expectedChallenge: loginRequest.challenge,
-                    expectedOrigin: this.relyingParty.origin,
-                    expectedRPID: this.relyingParty.id,
+                    expectedOrigin: relyingParty.origin,
+                    expectedRPID: relyingParty.id,
                     authenticator: {
-                        credentialID: new Uint8Array(base64URLStringToBuffer(authenticator.credentialId)),
+                        credentialID: new Uint8Array(
+                            base64URLStringToBuffer(authenticator.credentialId)
+                        ),
                         counter: authenticator.counter,
                         credentialPublicKey: authenticator.credentialPublicKey,
                         transports: authenticator.transports,
@@ -1502,7 +1563,7 @@ export class AuthController {
                 });
 
                 if (!options.verified) {
-                    console.error('Not verified!')
+                    console.error('Not verified!');
                     return {
                         success: false,
                         errorCode: 'invalid_request',
@@ -3572,6 +3633,11 @@ export interface RequestWebAuthnRegistration {
      * The ID of the user that is currently logged in.
      */
     userId: string;
+
+    /*
+     * The HTTP origin that the request is coming from.
+     */
+    origin: string;
 }
 
 export type RequestWebAuthnRegistrationResult =
@@ -3585,7 +3651,11 @@ export interface RequestWebAuthnRegistrationSuccess {
 
 export interface RequestWebAuthnRegistrationFailure {
     success: false;
-    errorCode: ServerError | NotLoggedInError | NotSupportedError;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | 'invalid_origin';
     errorMessage: string;
 }
 
@@ -3599,6 +3669,11 @@ export interface CompleteWebAuthnRegistrationRequest {
      * The registration response.
      */
     response: RegistrationResponseJSON;
+
+    /**
+     * The HTTP origin that the request was made from.
+     */
+    origin: string;
 }
 
 export interface RequestWebAuthnLogin {
@@ -3606,6 +3681,11 @@ export interface RequestWebAuthnLogin {
      * The IP Address that the login request is from.
      */
     ipAddress: string;
+
+    /**
+     * The HTTP origin that the request is coming from.
+     */
+    origin: string;
 }
 
 export type RequestWebAuthnLoginResult =
@@ -3631,7 +3711,8 @@ export interface RequestWebAuthnLoginFailure {
         | ServerError
         | NotLoggedInError
         | NotSupportedError
-        | LoginRequestFailure['errorCode'];
+        | LoginRequestFailure['errorCode']
+        | 'invalid_origin';
     errorMessage: string;
 }
 
@@ -3650,6 +3731,11 @@ export interface CompleteWebAuthnLoginRequest {
      * The IP Address that the login request is from.
      */
     ipAddress: string;
+
+    /**
+     * The HTTP origin that the request is coming from.
+     */
+    origin: string;
 }
 
 export type CompleteWebAuthnLoginResult =
@@ -3687,7 +3773,8 @@ export interface CompleteWebAuthnLoginFailure {
         | NotLoggedInError
         | NotSupportedError
         | CompleteLoginFailure['errorCode']
-        | LoginRequestFailure['errorCode'];
+        | LoginRequestFailure['errorCode']
+        | 'invalid_origin';
     errorMessage: string;
 
     /**
@@ -3711,6 +3798,7 @@ export interface CompleteWebAuthnRegistrationFailure {
         | NotLoggedInError
         | NotSupportedError
         | NotAuthorizedError
+        | 'invalid_origin'
         | 'unacceptable_request';
     errorMessage: string;
 }

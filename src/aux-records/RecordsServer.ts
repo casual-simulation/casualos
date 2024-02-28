@@ -568,7 +568,7 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._webAuthnRegisterOptions(request),
-                this._allowedAccountOrigins
+                true
             );
         } else if (
             request.method === 'POST' &&
@@ -577,7 +577,7 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._webAuthnRegister(request),
-                this._allowedAccountOrigins
+                true
             );
         } else if (
             request.method === 'GET' &&
@@ -586,7 +586,7 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._webAuthnLoginOptions(request),
-                this._allowedAccountOrigins
+                true
             );
         } else if (
             request.method === 'POST' &&
@@ -595,7 +595,7 @@ export class RecordsServer {
             return formatResponse(
                 request,
                 await this._webAuthnLogin(request),
-                this._allowedAccountOrigins
+                true
             );
         } else if (
             request.method === 'POST' &&
@@ -4057,9 +4057,8 @@ export class RecordsServer {
     private async _webAuthnRegisterOptions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
 
         const validation = await this._validateSessionKey(request);
 
@@ -4072,6 +4071,7 @@ export class RecordsServer {
 
         const result = await this._auth.requestWebAuthnRegistration({
             userId: validation.userId,
+            origin: request.headers.origin,
         });
 
         return returnResult(result);
@@ -4080,9 +4080,8 @@ export class RecordsServer {
     private async _webAuthnRegister(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
 
         if (typeof request.body !== 'string') {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
@@ -4142,6 +4141,7 @@ export class RecordsServer {
         const result = await this._auth.completeWebAuthnRegistration({
             userId: validation.userId,
             response: response as any,
+            origin: request.headers.origin,
         });
 
         return returnResult(result);
@@ -4150,12 +4150,12 @@ export class RecordsServer {
     private async _webAuthnLoginOptions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
 
         const result = await this._auth.requestWebAuthnLogin({
             ipAddress: request.ipAddress,
+            origin: request.headers.origin,
         });
 
         return returnResult(result);
@@ -4164,9 +4164,8 @@ export class RecordsServer {
     private async _webAuthnLogin(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
 
         if (typeof request.body !== 'string') {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
@@ -4217,6 +4216,7 @@ export class RecordsServer {
             requestId: requestId,
             ipAddress: request.ipAddress,
             response: response as any,
+            origin: request.headers.origin,
         });
 
         return returnResult(result);

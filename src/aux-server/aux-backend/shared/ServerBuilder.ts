@@ -1967,22 +1967,26 @@ const apiGatewaySchema = z.object({
 const wsSchema = z.object({});
 
 const webauthnSchema = z.object({
-    relyingParty: z.object({
-        name: z
-            .string()
-            .describe('The human-readable name of the relying party.')
-            .nonempty(),
-        id: z
-            .string()
-            .describe(
-                'The ID of the relying party. Should be the domain of the relying party.'
-            )
-            .nonempty(),
-        origin: z
-            .string()
-            .describe('The HTTP origin of the relying party.')
-            .nonempty(),
-    }),
+    relyingParties: z
+        .array(
+            z.object({
+                name: z
+                    .string()
+                    .describe('The human-readable name of the relying party.')
+                    .nonempty(),
+                id: z
+                    .string()
+                    .describe(
+                        'The ID of the relying party. Should be the domain of the relying party.'
+                    )
+                    .nonempty(),
+                origin: z
+                    .string()
+                    .describe('The HTTP origin of the relying party.')
+                    .nonempty(),
+            })
+        )
+        .describe('The relying parties that should be supported.'),
 });
 
 export const optionsSchema = z.object({
