@@ -967,6 +967,12 @@ importers:
       '@prisma/client':
         specifier: ^5.7.0
         version: 5.7.0(prisma@5.7.0)
+      '@simplewebauthn/browser':
+        specifier: 9.0.1
+        version: 9.0.1
+      '@simplewebauthn/types':
+        specifier: 9.0.1
+        version: 9.0.1
       '@teachablemachine/image':
         specifier: 0.8.5
         version: 0.8.5(@tensorflow/tfjs@4.2.0)
@@ -6438,6 +6444,12 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@simplewebauthn/browser@9.0.1:
+    resolution: {integrity: sha512-wD2WpbkaEP4170s13/HUxPcAV5y4ZXaKo1TfNklS5zDefPinIgXOpgz1kpEvobAsaLPa2KeH7AKKX/od1mrBJw==}
+    dependencies:
+      '@simplewebauthn/types': 9.0.1
+    dev: false
 
   /@simplewebauthn/server@9.0.3:
     resolution: {integrity: sha512-FMZieoBosrVLFxCnxPFD9Enhd1U7D8nidVDT4MsHc6l4fdVcjoeHjDueeXCloO1k5O/fZg1fsSXXPKbY2XTzDA==}

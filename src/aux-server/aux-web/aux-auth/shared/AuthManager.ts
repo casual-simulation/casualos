@@ -51,6 +51,9 @@ import type {
     CompleteOpenIDLoginResult,
     IsValidEmailAddressResult,
     IsValidDisplayNameResult,
+    RequestWebAuthnLoginResult,
+    RequestWebAuthnRegistrationResult,
+    CompleteWebAuthnLoginResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -68,6 +71,11 @@ import type {
     RemoteCausalRepoProtocol,
     ResourceKinds,
 } from '@casual-simulation/aux-common';
+import {
+    AuthenticationResponseJSON,
+    RegistrationResponseJSON,
+} from '@simplewebauthn/types';
+import { startAuthentication } from '@simplewebauthn/browser';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -339,6 +347,90 @@ export class AuthManager {
             }
         );
         return response.data;
+    }
+
+    async loginWithWebAuthn(
+        useBrowserAutofill?: boolean
+    ): Promise<CompleteWebAuthnLoginResult | RequestWebAuthnLoginResult> {
+        const optionsResult = await this.getWebAuthnLoginOptions();
+        if (optionsResult.success === true) {
+            const response = await startAuthentication(
+                optionsResult.options,
+                useBrowserAutofill
+            );
+            const result = await this.completeWebAuthnLogin(response);
+
+            if (result.success === true) {
+                this.savedSessionKey = result.sessionKey;
+                this.savedConnectionKey = result.connectionKey;
+                this._userId = result.userId;
+            }
+
+            if (result) {
+                return result;
+            }
+        }
+        return optionsResult;
+    }
+
+    async getWebAuthnRegistrationOptions(): Promise<RequestWebAuthnRegistrationResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/register/options`,
+            {
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
+    }
+
+    async completeWebAuthnRegistration(
+        r: RegistrationResponseJSON
+    ): Promise<RequestWebAuthnRegistrationResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/register`,
+            {
+                body: JSON.stringify({
+                    response: r,
+                }),
+                method: 'POST',
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
+    }
+
+    async getWebAuthnLoginOptions(): Promise<RequestWebAuthnLoginResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/login/options`,
+            {
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
+    }
+
+    async completeWebAuthnLogin(
+        r: AuthenticationResponseJSON
+    ): Promise<CompleteWebAuthnLoginResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/login`,
+            {
+                body: JSON.stringify({
+                    response: r,
+                }),
+                method: 'POST',
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
     }
 
     async logout(revokeSessionKey: boolean = true) {

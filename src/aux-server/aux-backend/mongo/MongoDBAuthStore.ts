@@ -24,6 +24,9 @@ import {
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
+    AuthUserAuthenticator,
+    AuthUserAuthenticatorWithUser,
+    AuthWebAuthnLoginRequest,
     ListSessionsDataResult,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
@@ -96,6 +99,48 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         this._comIdRequests = db.collection<MongoDBStudioComIdRequest>(
             STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME
         );
+    }
+
+    // TODO: Implement
+    findWebAuthnLoginRequest(
+        requestId: string
+    ): Promise<AuthWebAuthnLoginRequest> {
+        throw new Error('Method not implemented.');
+    }
+
+    saveWebAuthnLoginRequest(
+        request: AuthWebAuthnLoginRequest
+    ): Promise<AuthWebAuthnLoginRequest> {
+        throw new Error('Method not implemented.');
+    }
+
+    markWebAuthnLoginRequestComplete(
+        requestId: string,
+        userId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    setCurrentWebAuthnChallenge(
+        userId: string,
+        challenge: string
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    listUserAuthenticators(userId: string): Promise<AuthUserAuthenticator[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    findUserAuthenticatorByCredentialId(
+        credentialId: string
+    ): Promise<AuthUserAuthenticatorWithUser> {
+        throw new Error('Method not implemented.');
+    }
+
+    saveUserAuthenticator(authenticator: AuthUserAuthenticator): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {

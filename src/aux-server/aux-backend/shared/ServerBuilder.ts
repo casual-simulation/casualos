@@ -37,6 +37,7 @@ import {
     ModerationController,
     ModerationStore,
     GoogleAIChatInterface,
+    RelyingParty,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -196,6 +197,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _authStore: AuthStore;
     private _authMessenger: AuthMessenger;
     private _authController: AuthController;
+    private _relyingParty: RelyingParty;
 
     private _recordsStore: RecordsStore;
     private _recordsController: RecordsController;
@@ -686,6 +688,21 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useWebAuthn(
+        options: Pick<BuilderOptions, 'webauthn'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using WebAuthn.');
+        if (!options.webauthn) {
+            throw new Error('WebAuthn options must be provided.');
+        }
+        this._relyingParty = {
+            id: options.webauthn.relyingParty.id,
+            name: options.webauthn.relyingParty.name,
+            origin: options.webauthn.relyingParty.origin,
+        };
+        return this;
+    }
+
     useLivekit(options: Pick<BuilderOptions, 'livekit'> = this._options): this {
         console.log('[ServerBuilder] Using Livekit.');
         if (
@@ -1134,7 +1151,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._authMessenger,
             this._configStore,
             this._forceAllowAllSubscriptionFeatures,
-            this._privoClient
+            this._privoClient,
+            this._relyingParty
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
@@ -1948,6 +1966,25 @@ const apiGatewaySchema = z.object({
 
 const wsSchema = z.object({});
 
+const webauthnSchema = z.object({
+    relyingParty: z.object({
+        name: z
+            .string()
+            .describe('The human-readable name of the relying party.')
+            .nonempty(),
+        id: z
+            .string()
+            .describe(
+                'The ID of the relying party. Should be the domain of the relying party.'
+            )
+            .nonempty(),
+        origin: z
+            .string()
+            .describe('The HTTP origin of the relying party.')
+            .nonempty(),
+    }),
+});
+
 export const optionsSchema = z.object({
     s3: s3Schema
         .describe(
@@ -2033,6 +2070,12 @@ export const optionsSchema = z.object({
     privo: privoSchema
         .describe(
             'Privo configuration options. If omitted, then Privo features will be disabled.'
+        )
+        .optional(),
+
+    webauthn: webauthnSchema
+        .describe(
+            'WebAuthn configuration options. If omitted, then WebAuthn features will be disabled.'
         )
         .optional(),
 

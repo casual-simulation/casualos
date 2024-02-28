@@ -13,7 +13,7 @@
                                 <md-input
                                     name="address"
                                     id="address"
-                                    autocomplete="email"
+                                    autocomplete="email webauthn"
                                     v-model="address"
                                     :disabled="processing"
                                 />

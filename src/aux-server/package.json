@@ -147,7 +147,9 @@
         "vue-property-decorator": "9.1.2",
         "vue-router": "3.5.4",
         "ws": "7.4.6",
-        "zod": "3.22.4"
+        "zod": "3.22.4",
+        "@simplewebauthn/browser": "9.0.1",
+        "@simplewebauthn/types": "9.0.1"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.2.16",

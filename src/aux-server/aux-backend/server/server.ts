@@ -236,6 +236,10 @@ export class Server {
             builder.useNotifications();
         }
 
+        if (options.webauthn) {
+            builder.useWebAuthn();
+        }
+
         builder.useAutomaticPlugins();
 
         const {

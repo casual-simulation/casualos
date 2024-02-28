@@ -8,6 +8,10 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { CompleteOpenIDLoginSuccess } from '@casual-simulation/aux-records';
 import HasAccountCard from '../HasAccountCard/HasAccountCard';
+import {
+    browserSupportsWebAuthnAutofill,
+    startAuthentication,
+} from '@simplewebauthn/browser';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
@@ -139,6 +143,16 @@ export default class AuthLogin extends Vue {
                 this.$router.push({ name: 'home' });
             }
         } else if (authManager.usePrivoLogin) {
+        } else if (await browserSupportsWebAuthnAutofill()) {
+            const result = await authManager.loginWithWebAuthn(true);
+            if (result.success === true) {
+                await authManager.loadUserInfo();
+                if (this.after) {
+                    this.$router.push({ name: this.after });
+                } else {
+                    this.$router.push({ name: 'home' });
+                }
+            }
         }
     }
 

@@ -135,6 +135,10 @@ export function constructServerBuilder() {
         builder.useNotifications();
     }
 
+    if (config.webauthn) {
+        builder.useWebAuthn();
+    }
+
     builder.useAutomaticPlugins();
 
     return builder;
