@@ -40,6 +40,21 @@
             </p>
         </md-dialog-content>
         <md-dialog-actions>
+            <md-button
+                v-if="supportsWebAuthn"
+                type="button"
+                @click="loginWithWebAuthn()"
+                :disabled="processing"
+            >
+                <md-progress-spinner
+                    v-if="processing"
+                    md-mode="indeterminate"
+                    :md-diameter="20"
+                    :md-stroke="2"
+                    >Processing</md-progress-spinner
+                >
+                <span v-else>Login with Passkey</span>
+            </md-button>
             <md-button type="button" class="md-primary" @click="login()" :disabled="processing">
                 <md-progress-spinner
                     v-if="processing"

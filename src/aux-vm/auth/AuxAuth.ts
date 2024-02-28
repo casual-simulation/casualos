@@ -75,6 +75,11 @@ export interface LoginUIAddressStatus {
      * Whether SMS phone numbers are supported for login.
      */
     supportsSms?: boolean;
+
+    /**
+     * Whether WebAuthn is supported for login.
+     */
+    supportsWebAuthn?: boolean;
 }
 
 export interface LoginUICheckAddressStatus {
@@ -309,6 +314,12 @@ export interface AuxAuth {
         email: string,
         acceptedTermsOfService: boolean
     ): Promise<void>;
+
+    /**
+     * Specifies that WebAuthn login should be used for the current login session.
+     * Only supported on protocol version 10 or more.
+     */
+    provideWebAuthnLogin(): Promise<void>;
 
     /**
      * Determines whether the given email address is valid.

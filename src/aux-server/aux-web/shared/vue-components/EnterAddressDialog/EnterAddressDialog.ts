@@ -40,6 +40,10 @@ export default class EnterAddressDialog extends Vue {
         }
     }
 
+    get supportsWebAuthn() {
+        return !!this.status.supportsWebAuthn;
+    }
+
     get enterAddressErrorMessage() {
         if (this.status.supportsSms) {
             return 'Please enter an Email Address or Phone Number';
@@ -127,5 +131,10 @@ export default class EnterAddressDialog extends Vue {
             const sms = cleanPhoneNumber(this.address);
             await this._endpoint.provideSmsNumber(sms, this.acceptedTerms);
         }
+    }
+
+    async loginWithWebAuthn() {
+        this.processing = true;
+        await this._endpoint.provideWebAuthn();
     }
 }

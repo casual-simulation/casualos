@@ -175,6 +175,11 @@ export interface AuthHelperInterface extends SubscriptionLike {
     provideCode(code: string): Promise<void>;
 
     /**
+     * Specifies that WebAuthn should be used for login.
+     */
+    provideWebAuthn(): Promise<void>;
+
+    /**
      * Cancels the current login if it is using the custom UI flow.
      */
     cancelLogin(): Promise<void>;
