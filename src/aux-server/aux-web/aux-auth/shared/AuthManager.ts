@@ -442,7 +442,7 @@ export class AuthManager {
 
     async completeWebAuthnRegistration(
         r: RegistrationResponseJSON
-    ): Promise<RequestWebAuthnRegistrationResult> {
+    ): Promise<CompleteWebAuthnRegistrationResult> {
         const response = await fetch(
             `${this.apiEndpoint}/api/v2/webauthn/register`,
             {
@@ -1483,7 +1483,11 @@ export class AuthManager {
         return response.data;
     }
 
-    private _authenticationHeaders(): any {
+    getAuthenticationHeaders(): Record<string, string> {
+        return this._authenticationHeaders();
+    }
+
+    private _authenticationHeaders(): Record<string, string> {
         return {
             Authorization: `Bearer ${this.savedSessionKey}`,
         };
