@@ -1221,6 +1221,9 @@ export class AuthController {
     }
 
     private _findRelyingPartyForOrigin(origin: string): RelyingParty {
+        if (!origin) {
+            return this._webAuthNRelyingParties[0];
+        }
         return this._webAuthNRelyingParties.find((rp) => rp.origin === origin);
     }
 
@@ -3637,7 +3640,7 @@ export interface RequestWebAuthnRegistration {
     /*
      * The HTTP origin that the request is coming from.
      */
-    origin: string;
+    origin: string | null;
 }
 
 export type RequestWebAuthnRegistrationResult =
@@ -3684,8 +3687,9 @@ export interface RequestWebAuthnLogin {
 
     /**
      * The HTTP origin that the request is coming from.
+     * Null if the request is coming from the same origin as the server.
      */
-    origin: string;
+    origin: string | null;
 }
 
 export type RequestWebAuthnLoginResult =
@@ -3734,8 +3738,9 @@ export interface CompleteWebAuthnLoginRequest {
 
     /**
      * The HTTP origin that the request is coming from.
+     * Null if the origin is from the same origin as the server.
      */
-    origin: string;
+    origin: string | null;
 }
 
 export type CompleteWebAuthnLoginResult =
