@@ -56,6 +56,8 @@ import type {
     CompleteWebAuthnLoginResult,
     RequestWebAuthnRegistration,
     CompleteWebAuthnRegistrationResult,
+    CompleteWebAuthnLoginSuccess,
+    CompleteLoginSuccess,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -370,9 +372,7 @@ export class AuthManager {
                 );
 
                 if (result.success === true) {
-                    this.savedSessionKey = result.sessionKey;
-                    this.savedConnectionKey = result.connectionKey;
-                    this._userId = result.userId;
+                    this.updateLoginStateFromResult(result);
                 }
 
                 return result;
@@ -389,6 +389,14 @@ export class AuthManager {
             }
         }
         return optionsResult;
+    }
+
+    updateLoginStateFromResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): void {
+        this.savedSessionKey = result.sessionKey;
+        this.savedConnectionKey = result.connectionKey;
+        this._userId = result.userId;
     }
 
     async addPasskeyWithWebAuthn(): Promise<
@@ -1192,9 +1200,7 @@ export class AuthManager {
         const result = response.data;
 
         if (result.success === true) {
-            this.savedSessionKey = result.sessionKey;
-            this.savedConnectionKey = result.connectionKey;
-            this._userId = result.userId;
+            this.updateLoginStateFromResult(result);
         }
 
         return result;
@@ -1220,9 +1226,7 @@ export class AuthManager {
         const result = response.data;
 
         if (result.success === true) {
-            this.savedSessionKey = result.sessionKey;
-            this.savedConnectionKey = result.connectionKey;
-            this._userId = result.userId;
+            this.updateLoginStateFromResult(result);
         }
 
         return result;
@@ -1240,9 +1244,7 @@ export class AuthManager {
         );
 
         if (result.success === true) {
-            this.savedSessionKey = result.sessionKey;
-            this.savedConnectionKey = result.connectionKey;
-            this._userId = result.userId;
+            this.updateLoginStateFromResult(result);
         }
 
         return result;

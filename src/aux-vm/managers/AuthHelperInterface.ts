@@ -4,6 +4,8 @@ import type {
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import {
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
@@ -175,11 +177,6 @@ export interface AuthHelperInterface extends SubscriptionLike {
     provideCode(code: string): Promise<void>;
 
     /**
-     * Specifies that WebAuthn should be used for login.
-     */
-    provideWebAuthn(): Promise<void>;
-
-    /**
      * Cancels the current login if it is using the custom UI flow.
      */
     cancelLogin(): Promise<void>;
@@ -215,4 +212,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
         recordName: string,
         permission: AvailablePermissions
     ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult>;
+
+    /**
+     * Provides the given login result to be used for the login process.
+     * @param result The result that should be used.
+     */
+    provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void>;
 }

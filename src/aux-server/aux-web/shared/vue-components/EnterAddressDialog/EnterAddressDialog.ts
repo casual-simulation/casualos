@@ -10,9 +10,19 @@ import {
     cleanPhoneNumber,
     mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
-import { ADDRESS_FIELD } from '@casual-simulation/aux-records';
+import {
+    ADDRESS_FIELD,
+    CompleteWebAuthnLoginResult,
+    RequestWebAuthnLoginResult,
+    getFormErrors,
+} from '@casual-simulation/aux-records';
 import { Prop, Watch } from 'vue-property-decorator';
 import FieldErrors from '../FieldErrors/FieldErrors';
+import {
+    browserSupportsWebAuthnAutofill,
+    startAuthentication,
+} from '@simplewebauthn/browser';
+import { AuthenticationResponseJSON } from '@simplewebauthn/types';
 
 @Component({
     components: {
@@ -31,6 +41,7 @@ export default class EnterAddressDialog extends Vue {
 
     showEnterAddress: boolean = false;
     address: string = '';
+    supportsConditionalUi: boolean = false;
 
     get emailFieldHint() {
         if (this.status.supportsSms) {
@@ -41,7 +52,7 @@ export default class EnterAddressDialog extends Vue {
     }
 
     get supportsWebAuthn() {
-        return !!this.status.supportsWebAuthn;
+        return !!this.status.supportsWebAuthn && !this.supportsConditionalUi;
     }
 
     get enterAddressErrorMessage() {
@@ -77,6 +88,8 @@ export default class EnterAddressDialog extends Vue {
     acceptedTerms: boolean = false;
     processing: boolean = false;
 
+    private _apiEndpoint: string;
+
     @Watch('status')
     onStatusChanged() {
         this.processing = false;
@@ -99,6 +112,16 @@ export default class EnterAddressDialog extends Vue {
         this.acceptedTerms = false;
         this.processing = false;
         this.showEnterAddress = true;
+    }
+
+    async mounted() {
+        if (this.status.supportsWebAuthn) {
+            this._apiEndpoint = await this._endpoint.getRecordsOrigin();
+            if (await browserSupportsWebAuthnAutofill()) {
+                this.supportsConditionalUi = true;
+                await this.webAuthnLogin(true);
+            }
+        }
     }
 
     beforeDestroy() {
@@ -133,8 +156,87 @@ export default class EnterAddressDialog extends Vue {
         }
     }
 
-    async loginWithWebAuthn() {
-        this.processing = true;
-        await this._endpoint.provideWebAuthn();
+    async webAuthnLogin(useBrowserAutofill: boolean = false) {
+        this.processing = !useBrowserAutofill;
+        try {
+            const result = await this.loginWithWebAuthn(useBrowserAutofill);
+            if (result.success === true) {
+                await this._endpoint.provideLoginResult(result);
+                console.log('Success!');
+                // this.showEnterAddress = false;
+            } else {
+                if (result.errorCode === 'invalid_origin') {
+                    console.error(
+                        '[EnterAddressDialog] Unable to use WebAuthn:',
+                        result
+                    );
+                } else {
+                    this.formErrors.push(...getFormErrors(result as any));
+                }
+            }
+        } finally {
+            this.processing = false;
+        }
+    }
+
+    async loginWithWebAuthn(useBrowserAutofill: boolean = false) {
+        const optionsResult = await this.getWebAuthnLoginOptions();
+        if (optionsResult.success === true) {
+            try {
+                const response = await startAuthentication(
+                    optionsResult.options,
+                    useBrowserAutofill
+                );
+                const result = await this.completeWebAuthnLogin(
+                    optionsResult.requestId,
+                    response
+                );
+
+                return result;
+            } catch (err) {
+                console.error(
+                    '[AuthManager] Error while logging in with WebAuthn:',
+                    err
+                );
+                return {
+                    success: false as const,
+                    errorCode: 'server_error' as const,
+                    errorMessage: 'Error: ' + err.message,
+                };
+            }
+        }
+        return optionsResult;
+    }
+
+    async getWebAuthnLoginOptions(): Promise<RequestWebAuthnLoginResult> {
+        const response = await fetch(
+            `${this._apiEndpoint}/api/v2/webauthn/login/options`,
+            {}
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
+    }
+
+    async completeWebAuthnLogin(
+        requestId: string,
+        r: AuthenticationResponseJSON
+    ): Promise<CompleteWebAuthnLoginResult> {
+        const response = await fetch(
+            `${this._apiEndpoint}/api/v2/webauthn/login`,
+            {
+                body: JSON.stringify({
+                    requestId,
+                    response: r,
+                }),
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
     }
 }

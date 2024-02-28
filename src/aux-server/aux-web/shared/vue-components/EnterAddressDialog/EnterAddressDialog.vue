@@ -16,7 +16,7 @@
                         <md-input
                             name="email"
                             id="email"
-                            autocomplete="email"
+                            autocomplete="email webauthn"
                             v-model="address"
                             :disabled="processing"
                         />
@@ -43,7 +43,7 @@
             <md-button
                 v-if="supportsWebAuthn"
                 type="button"
-                @click="loginWithWebAuthn()"
+                @click="webAuthnLogin()"
                 :disabled="processing"
             >
                 <md-progress-spinner

@@ -39,6 +39,8 @@ import {
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -92,7 +94,9 @@ export class AuthHandler implements AuxAuth {
     private _providedCodes: Subject<string> = new Subject();
     private _providedHasAccount: Subject<boolean> = new Subject();
     private _providedPrivoSignUpInfo: Subject<PrivoSignUpInfo> = new Subject();
-    private _providedWebAuthnLogin: Subject<void> = new Subject();
+    private _providedLoginResults: Subject<
+        CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    > = new Subject();
     private _oauthRedirectComplete: Subject<void> = new Subject();
     private _oauthChannel: BroadcastChannel = new BroadcastChannel(
         OAUTH_LOGIN_CHANNEL_NAME
@@ -110,6 +114,12 @@ export class AuthHandler implements AuxAuth {
                 this._oauthRedirectComplete.next();
             }
         });
+    }
+
+    async provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void> {
+        this._providedLoginResults.next(result);
     }
 
     private _init() {
@@ -439,11 +449,6 @@ export class AuthHandler implements AuxAuth {
         this._providedSms.next(sms);
     }
 
-    async provideWebAuthnLogin(): Promise<void> {
-        console.log('[AuthHandler] Got webauthn login.');
-        this._providedWebAuthnLogin.next();
-    }
-
     async isValidEmailAddress(
         email: string
     ): Promise<IsValidEmailAddressResult> {
@@ -682,7 +687,7 @@ export class AuthHandler implements AuxAuth {
         });
 
         const userId = await Promise.race([
-            this._regularLoginWithWebAuthn(cancelSignal),
+            this._regularLoginWithProvidedLogin(cancelSignal),
             this._regularLoginWithCustomUICore(cancelSignal),
         ]);
 
@@ -693,46 +698,24 @@ export class AuthHandler implements AuxAuth {
         return userId;
     }
 
-    private _regularLoginWithWebAuthn(cancelSignal: {
+    private async _regularLoginWithProvidedLogin(cancelSignal: {
         canceled: boolean;
     }): Promise<string> {
-        return new Promise<string>(async (resolve, reject) => {
-            if (browserSupportsWebAuthn()) {
-                const loginRequests = this._providedWebAuthnLogin.pipe(
-                    filter((email) => !cancelSignal.canceled)
-                );
+        const loginResults = this._providedLoginResults.pipe(
+            filter(() => !cancelSignal.canceled)
+        );
 
-                await firstValueFrom(loginRequests);
+        const result = await firstValueFrom(loginResults);
 
-                const result = await authManager.loginWithWebAuthn(false);
-                if (result.success === true) {
-                    await authManager.loadUserInfo();
-                    await this._loadUserInfo();
-                    this._loginUIStatus.next({
-                        page: false,
-                    });
+        if (cancelSignal.canceled) {
+            return;
+        }
 
-                    resolve(authManager.userId);
-                    return;
-                } else {
-                    console.error(
-                        '[AuthLogin] Could not login with WebAuthn:',
-                        result
-                    );
-                    this._loginUIStatus.next({
-                        page: 'enter_address',
-                        siteName: this.siteName,
-                        termsOfServiceUrl: this.termsOfServiceUrl,
-                        privacyPolicyUrl: this.privacyPolicyUrl,
-                        errors: getFormErrors(result),
-                        supportsSms: this._supportsSms,
-                        supportsWebAuthn: this._supportsWebAuthn,
-                    });
+        authManager.updateLoginStateFromResult(result);
+        await authManager.loadUserInfo();
+        await this._loadUserInfo();
 
-                    // Do not resolve anything so that the Promise.race() is not completed.
-                }
-            }
-        });
+        return authManager.userId;
     }
 
     private async _regularLoginWithCustomUICore(cancelSignal: {

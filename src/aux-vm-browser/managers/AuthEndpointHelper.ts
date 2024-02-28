@@ -26,6 +26,8 @@ import {
     PublicRecordKeyPolicy,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
 } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
@@ -525,7 +527,9 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.provideCode(code);
     }
 
-    async provideWebAuthn(): Promise<void> {
+    async provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void> {
         if (!hasValue(this._origin)) {
             return;
         }
@@ -535,7 +539,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (this._protocolVersion < 10) {
             return;
         }
-        return await this._proxy.provideWebAuthnLogin();
+        return await this._proxy.provideLoginResult(result);
     }
 
     async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {

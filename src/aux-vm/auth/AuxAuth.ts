@@ -4,6 +4,8 @@ import type {
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import {
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,
     FormError,
     GetPlayerConfigResult,
@@ -316,12 +318,6 @@ export interface AuxAuth {
     ): Promise<void>;
 
     /**
-     * Specifies that WebAuthn login should be used for the current login session.
-     * Only supported on protocol version 10 or more.
-     */
-    provideWebAuthnLogin(): Promise<void>;
-
-    /**
      * Determines whether the given email address is valid.
      * Only supported on protocol version 9 or more.
      * @param email The email address to check.
@@ -430,4 +426,13 @@ export interface AuxAuth {
         recordName: string,
         permission: AvailablePermissions
     ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult>;
+
+    /**
+     * Provides the given login result to be used for the login process.
+     * Only supported on protocol version 10 or more.
+     * @param result The result that should be used.
+     */
+    provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void>;
 }
