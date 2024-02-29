@@ -36,6 +36,7 @@ import { Db, Collection, FilterQuery } from 'mongodb';
 import { v4 as uuid } from 'uuid';
 
 export const USERS_COLLECTION_NAME = 'users';
+export const USER_AUTHENTICATORS_COLLECTION_NAME = 'userAuthenticators';
 export const LOGIN_REQUESTS_COLLECTION_NAME = 'loginRequests';
 export const SESSIONS_COLLECTION_NAME = 'sessions';
 export const EMAIL_RULES_COLLECTION_NAME = 'emailRules';
@@ -47,6 +48,7 @@ export const RECORDS_COLLECTION_NAME = 'records';
 export const RECORD_KEYS_COLLECTION_NAME = 'recordKeys';
 export const STUDIOS_COLLECTION_NAME = 'studios';
 export const STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME = 'studioComIdRequests';
+export const WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME = 'webAuthnLoginRequests';
 
 export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _users: Collection<MongoDBAuthUser>;
@@ -61,6 +63,8 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _keyCollection: Collection<RecordKey>;
     private _studios: Collection<MongoDBStudio>;
     private _comIdRequests: Collection<MongoDBStudioComIdRequest>;
+    private _userAuthenticators: Collection<MongoDBUserAuthenticator>;
+    private _webauthnLoginRequests: Collection<MongoDBWebAuthnLoginRequest>;
 
     private _db: Db;
 
@@ -99,48 +103,157 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         this._comIdRequests = db.collection<MongoDBStudioComIdRequest>(
             STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME
         );
+        this._userAuthenticators = db.collection<MongoDBUserAuthenticator>(
+            USER_AUTHENTICATORS_COLLECTION_NAME
+        );
+        this._webauthnLoginRequests =
+            db.collection<MongoDBWebAuthnLoginRequest>(
+                WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
+            );
     }
 
-    // TODO: Implement
+    async saveUserAuthenticatorCounter(
+        id: string,
+        newCounter: number
+    ): Promise<void> {
+        await this._userAuthenticators.updateOne(
+            {
+                _id: id,
+            },
+            {
+                $set: {
+                    counter: newCounter,
+                },
+            }
+        );
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number> {
+        const result = await this._userAuthenticators.deleteOne({
+            _id: authenticatorId,
+            userId: userId,
+        });
+
+        return result.deletedCount;
+    }
+
     findWebAuthnLoginRequest(
         requestId: string
     ): Promise<AuthWebAuthnLoginRequest> {
-        throw new Error('Method not implemented.');
+        return this._webauthnLoginRequests.findOne({
+            requestId,
+        });
     }
 
-    saveWebAuthnLoginRequest(
+    async saveWebAuthnLoginRequest(
         request: AuthWebAuthnLoginRequest
     ): Promise<AuthWebAuthnLoginRequest> {
-        throw new Error('Method not implemented.');
+        await this._webauthnLoginRequests.updateOne(
+            {
+                _id: request.requestId,
+            },
+            {
+                $set: {
+                    ...request,
+                },
+            },
+            {
+                upsert: true,
+            }
+        );
+
+        return request;
     }
 
-    markWebAuthnLoginRequestComplete(
+    async markWebAuthnLoginRequestComplete(
         requestId: string,
         userId: string,
         completedTimeMs: number
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._webauthnLoginRequests.updateOne(
+            {
+                requestId,
+            },
+            {
+                $set: {
+                    userId,
+                    completedTimeMs,
+                },
+            }
+        );
     }
 
-    setCurrentWebAuthnChallenge(
+    async setCurrentWebAuthnChallenge(
         userId: string,
         challenge: string
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._users.updateOne(
+            {
+                _id: userId,
+            },
+            {
+                $set: {
+                    currentWebAuthnChallenge: challenge,
+                },
+            }
+        );
     }
 
-    listUserAuthenticators(userId: string): Promise<AuthUserAuthenticator[]> {
-        throw new Error('Method not implemented.');
+    async listUserAuthenticators(
+        userId: string
+    ): Promise<AuthUserAuthenticator[]> {
+        const result = await this._userAuthenticators
+            .find({
+                userId,
+            })
+            .toArray();
+
+        return result.map((r) => {
+            const { _id, ...rest } = r;
+            return {
+                id: _id,
+                ...rest,
+            };
+        });
     }
 
-    findUserAuthenticatorByCredentialId(
+    async findUserAuthenticatorByCredentialId(
         credentialId: string
     ): Promise<AuthUserAuthenticatorWithUser> {
-        throw new Error('Method not implemented.');
+        const result = await this._userAuthenticators.findOne({
+            credentialId,
+        });
+
+        if (result) {
+            const user = await this.findUser(result.userId);
+            return {
+                authenticator: result,
+                user,
+            };
+        }
+
+        return null;
     }
 
-    saveUserAuthenticator(authenticator: AuthUserAuthenticator): Promise<void> {
-        throw new Error('Method not implemented.');
+    async saveUserAuthenticator(
+        authenticator: AuthUserAuthenticator
+    ): Promise<void> {
+        await this._userAuthenticators.updateOne(
+            {
+                _id: authenticator.id,
+            },
+            {
+                $set: {
+                    ...authenticator,
+                },
+            },
+            {
+                upsert: true,
+            }
+        );
     }
 
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
@@ -1282,6 +1395,14 @@ export interface MongoDBAuthUser {
     privoParentServiceId?: string;
 
     privacyFeatures?: PrivacyFeatures;
+}
+
+export interface MongoDBUserAuthenticator extends AuthUserAuthenticator {
+    _id: string;
+}
+
+export interface MongoDBWebAuthnLoginRequest extends AuthWebAuthnLoginRequest {
+    _id: string;
 }
 
 export interface MongoDBLoginRequest {
