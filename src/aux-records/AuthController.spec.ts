@@ -2382,6 +2382,7 @@ describe('AuthController', () => {
                     transports: ['usb'],
                     aaguid: 'aaguid',
                     registeringUserAgent: 'ua',
+                    createdAtMs: 400,
                 },
             ]);
         });
@@ -2450,6 +2451,7 @@ describe('AuthController', () => {
                     transports: ['usb'],
                     aaguid: 'aaguid',
                     registeringUserAgent: 'ua',
+                    createdAtMs: 400,
                 },
             ]);
         });
@@ -2675,6 +2677,7 @@ describe('AuthController', () => {
                 transports: ['usb'],
                 aaguid: '',
                 registeringUserAgent: 'ua',
+                createdAtMs: 100,
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({
@@ -2797,6 +2800,7 @@ describe('AuthController', () => {
                 transports: ['usb'],
                 aaguid: '',
                 registeringUserAgent: 'ua',
+                createdAtMs: 100,
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({
@@ -2928,6 +2932,7 @@ describe('AuthController', () => {
                 transports: ['usb'],
                 aaguid: '',
                 registeringUserAgent: 'ua',
+                createdAtMs: 100,
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({

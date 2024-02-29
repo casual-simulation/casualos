@@ -2901,6 +2901,7 @@ describe('RecordsServer', () => {
                     credentialBackedUp: false,
                     transports: ['usb'],
                     aaguid: 'aaguid',
+                    createdAtMs: expect.any(Number),
                 },
             ]);
         });
@@ -3026,6 +3027,7 @@ describe('RecordsServer', () => {
                 transports: ['usb'],
                 aaguid: '',
                 registeringUserAgent: 'ua',
+                createdAtMs: 100,
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({

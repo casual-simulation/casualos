@@ -1363,6 +1363,7 @@ export class AuthController {
                         transports: request.response.response.transports,
                         aaguid: verification.registrationInfo.aaguid,
                         registeringUserAgent: request.userAgent,
+                        createdAtMs: Date.now(),
                     };
 
                     await this._store.setCurrentWebAuthnChallenge(

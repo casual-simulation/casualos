@@ -491,6 +491,11 @@ export interface AuthUserAuthenticator {
      */
     credentialBackedUp: boolean;
     transports?: AuthenticatorTransportFuture[];
+
+    /**
+     * The unix time in miliseconds that the authenticator was created at.
+     */
+    createdAtMs: number;
 }
 
 export interface AuthUserAuthenticatorWithUser {
