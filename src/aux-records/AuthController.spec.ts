@@ -3023,6 +3023,200 @@ describe('AuthController', () => {
         });
     });
 
+    describe('listUserAuthenticators()', () => {
+        const userId = 'myid';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId3',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4, 5])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7, 8]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua3',
+                createdAtMs: 400,
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should return the list of authenticators that are registered for the user', async () => {
+            const response = await controller.listUserAuthenticators(userId);
+
+            expect(response).toEqual({
+                success: true,
+                authenticators: [
+                    {
+                        id: 'authenticatorId',
+                        counter: 0,
+                        credentialBackedUp: true,
+                        credentialDeviceType: 'singleDevice',
+                        credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                        transports: ['usb'],
+                        aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                        registeringUserAgent: 'ua1',
+                        createdAtMs: 400,
+                        userId: userId,
+                    },
+                    {
+                        id: 'authenticatorId2',
+                        counter: 0,
+                        credentialBackedUp: true,
+                        credentialDeviceType: 'singleDevice',
+                        credentialId: fromByteArray(
+                            new Uint8Array([1, 2, 3, 4])
+                        ),
+                        transports: ['usb'],
+                        aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                        registeringUserAgent: 'ua2',
+                        createdAtMs: 400,
+                        userId: userId,
+                    },
+                    {
+                        id: 'authenticatorId3',
+                        counter: 0,
+                        credentialBackedUp: true,
+                        credentialDeviceType: 'singleDevice',
+                        credentialId: fromByteArray(
+                            new Uint8Array([1, 2, 3, 4, 5])
+                        ),
+                        transports: ['usb'],
+                        aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                        registeringUserAgent: 'ua3',
+                        createdAtMs: 400,
+                        userId: userId,
+                    },
+                ],
+            });
+        });
+    });
+
+    describe('deleteUserAuthenticator()', () => {
+        const userId = 'myid';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId3',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4, 5])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7, 8]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua3',
+                createdAtMs: 400,
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should delete the given user authenticator', async () => {
+            expect(store.userAuthenticators).toHaveLength(3);
+
+            const response = await controller.deleteUserAuthenticator(
+                userId,
+                'authenticatorId3'
+            );
+
+            expect(response).toEqual({
+                success: true,
+            });
+
+            expect(store.userAuthenticators).toHaveLength(2);
+        });
+
+        it('should return authenticator_not_found if the authenticator doesnt exist', async () => {
+            const response = await controller.deleteUserAuthenticator(
+                userId,
+                'missingId'
+            );
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_found',
+                errorMessage: 'The given authenticator was not found.',
+            });
+        });
+    });
+
     describe('processOpenIDAuthorizationCode()', () => {
         describe('privo', () => {
             beforeEach(() => {

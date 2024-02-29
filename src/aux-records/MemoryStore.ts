@@ -232,6 +232,10 @@ export class MemoryStore
         return this._users;
     }
 
+    get userAuthenticators(): AuthUserAuthenticator[] {
+        return this._userAuthenticators;
+    }
+
     get loginRequests() {
         return this._loginRequests;
     }
@@ -1275,6 +1279,21 @@ export class MemoryStore
         }
         const user = await this.findUser(authenticator.userId);
         return { authenticator, user };
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number> {
+        const index = this._userAuthenticators.findIndex(
+            (a) => a.userId === userId && a.id === authenticatorId
+        );
+        if (index >= 0) {
+            this._userAuthenticators.splice(index, 1);
+            return 1;
+        }
+
+        return 0;
     }
 
     async setCurrentLoginRequest(

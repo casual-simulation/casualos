@@ -1,5 +1,6 @@
 import {
     AddressType,
+    AuthListedUserAuthenticator,
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
     AuthSession,
@@ -1646,6 +1647,91 @@ export class AuthController {
         } catch (err) {
             console.error(
                 `[AuthController] Error occurred while requesting WebAuthn login`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async listUserAuthenticators(
+        userId: string
+    ): Promise<ListUserAuthenticatorsResult> {
+        try {
+            if (!userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const authenticators = await this._store.listUserAuthenticators(
+                userId
+            );
+            return {
+                success: true,
+                authenticators: authenticators.map((a) => ({
+                    id: a.id,
+                    aaguid: a.aaguid,
+                    userId: a.userId,
+                    credentialId: a.credentialId,
+                    credentialDeviceType: a.credentialDeviceType,
+                    credentialBackedUp: a.credentialBackedUp,
+                    counter: a.counter,
+                    transports: a.transports,
+                    registeringUserAgent: a.registeringUserAgent,
+                    createdAtMs: a.createdAtMs,
+                })),
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while listing user authenticators`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<DeleteUserAuthenticatorResult> {
+        try {
+            if (!userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const numDeleted = await this._store.deleteUserAuthenticator(
+                userId,
+                authenticatorId
+            );
+            if (numDeleted <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The given authenticator was not found.',
+                };
+            }
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while deleting a user authenticator`,
                 err
             );
             return {
@@ -3811,6 +3897,39 @@ export interface CompleteWebAuthnRegistrationFailure {
         | NotAuthorizedError
         | 'invalid_origin'
         | 'unacceptable_request';
+    errorMessage: string;
+}
+
+export type ListUserAuthenticatorsResult =
+    | ListUserAuthenticatorsSuccess
+    | ListUserAuthenticatorsFailure;
+
+export interface ListUserAuthenticatorsSuccess {
+    success: true;
+    authenticators: AuthListedUserAuthenticator[];
+}
+
+export interface ListUserAuthenticatorsFailure {
+    success: false;
+    errorCode: ServerError | NotLoggedInError;
+    errorMessage: string;
+}
+
+export type DeleteUserAuthenticatorResult =
+    | DeleteUserAuthenticatorSuccess
+    | DeleteUserAuthenticatorFailure;
+
+export interface DeleteUserAuthenticatorSuccess {
+    success: true;
+}
+
+export interface DeleteUserAuthenticatorFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'not_found';
     errorMessage: string;
 }
 

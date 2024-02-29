@@ -316,7 +316,9 @@ export interface AuthStore {
      * Gets the list of authenticators for the given user.
      * @param userId The ID of the user.
      */
-    listUserAuthenticators(userId: string): Promise<AuthUserAuthenticator[]>;
+    listUserAuthenticators(
+        userId: string
+    ): Promise<AuthListedUserAuthenticator[]>;
 
     /**
      * Finds the authenticator with the given credentialId. Includes the user that the authenticator is for.
@@ -332,6 +334,17 @@ export interface AuthStore {
      * @param authenticator The authenticator that should be saved.
      */
     saveUserAuthenticator(authenticator: AuthUserAuthenticator): Promise<void>;
+
+    /**
+     * Deletes the authenticator with the given ID.
+     * Returns the number of items that were deleted.
+     * @param userId The ID of the user whose authenticator should be deleted.
+     * @param authenticatorId The ID of the authenticator that should be deleted.
+     */
+    deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -464,6 +477,55 @@ export interface AuthUserAuthenticator {
      * The public key of the credential.
      */
     credentialPublicKey: Uint8Array;
+
+    /**
+     * The counter for the credential.
+     */
+    counter: number;
+
+    /**
+     * The device type of the credential.
+     */
+    credentialDeviceType: CredentialDeviceType;
+
+    /**
+     * The AAGUID of the authenticator that the credential uses.
+     */
+    aaguid: string;
+
+    /**
+     * The user agent of the browser that registered the authenticator.
+     * Null if the authenticator was not registered by a user agent.
+     */
+    registeringUserAgent: string | null;
+
+    /**
+     * Whether the credential is backed up.
+     */
+    credentialBackedUp: boolean;
+    transports?: AuthenticatorTransportFuture[];
+
+    /**
+     * The unix time in miliseconds that the authenticator was created at.
+     */
+    createdAtMs: number;
+}
+
+export interface AuthListedUserAuthenticator {
+    /**
+     * The ID of the authenticator.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that this authenticator is for.
+     */
+    userId: string;
+
+    /**
+     * The ID of the credential that this authenticator is for.
+     */
+    credentialId: string;
 
     /**
      * The counter for the credential.
