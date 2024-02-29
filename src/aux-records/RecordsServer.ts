@@ -4148,6 +4148,7 @@ export class RecordsServer {
                 request.headers.origin ??
                 request.headers['x-dev-proxy-host'] ??
                 request.headers.host,
+            userAgent: request.headers['user-agent'],
         });
 
         return returnResult(result);

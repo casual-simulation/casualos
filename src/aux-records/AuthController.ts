@@ -69,6 +69,7 @@ import {
     base64URLStringToBuffer,
     bufferToBase64URLString,
 } from './Base64UrlUtils';
+import { getInfoForAAGUID } from './AAGUID';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -1360,6 +1361,8 @@ export class AuthController {
                         credentialBackedUp: registration.credentialBackedUp,
                         credentialDeviceType: registration.credentialDeviceType,
                         transports: request.response.response.transports,
+                        aaguid: verification.registrationInfo.aaguid,
+                        registeringUserAgent: request.userAgent,
                     };
 
                     await this._store.setCurrentWebAuthnChallenge(
@@ -3674,6 +3677,11 @@ export interface CompleteWebAuthnRegistrationRequest {
      * The HTTP origin or host that the request was made from.
      */
     originOrHost: string;
+
+    /**
+     * The user agent that the request was made from.
+     */
+    userAgent: string | null;
 }
 
 export interface RequestWebAuthnLogin {

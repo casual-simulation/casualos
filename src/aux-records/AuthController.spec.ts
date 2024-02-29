@@ -2358,6 +2358,7 @@ describe('AuthController', () => {
                     authenticatorAttachment: 'platform',
                 },
                 originOrHost: relyingParty.origin,
+                userAgent: 'ua',
             });
 
             expect(response).toEqual({
@@ -2379,6 +2380,8 @@ describe('AuthController', () => {
                     credentialDeviceType: 'singleDevice',
                     credentialBackedUp: false,
                     transports: ['usb'],
+                    aaguid: 'aaguid',
+                    registeringUserAgent: 'ua',
                 },
             ]);
         });
@@ -2423,6 +2426,7 @@ describe('AuthController', () => {
 
                 // Non-cross-origin requests don't include the origin header
                 originOrHost: null,
+                userAgent: 'ua',
             });
 
             expect(response).toEqual({
@@ -2444,6 +2448,8 @@ describe('AuthController', () => {
                     credentialDeviceType: 'singleDevice',
                     credentialBackedUp: false,
                     transports: ['usb'],
+                    aaguid: 'aaguid',
+                    registeringUserAgent: 'ua',
                 },
             ]);
         });
@@ -2454,6 +2460,7 @@ describe('AuthController', () => {
                 userId,
                 response: {} as any,
                 originOrHost: relyingParty.origin,
+                userAgent: 'ua',
             });
 
             expect(response).toEqual({
@@ -2468,6 +2475,7 @@ describe('AuthController', () => {
                 userId,
                 response: {} as any,
                 originOrHost: 'wrong',
+                userAgent: 'ua',
             });
 
             expect(response).toEqual({
@@ -2665,6 +2673,8 @@ describe('AuthController', () => {
                 credentialDeviceType: 'singleDevice',
                 credentialPublicKey: new Uint8Array([4, 5, 6]),
                 transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({
@@ -2785,6 +2795,8 @@ describe('AuthController', () => {
                 credentialDeviceType: 'singleDevice',
                 credentialPublicKey: new Uint8Array([4, 5, 6]),
                 transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({
@@ -2914,6 +2926,8 @@ describe('AuthController', () => {
                 credentialDeviceType: 'singleDevice',
                 credentialPublicKey: new Uint8Array([4, 5, 6]),
                 transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({

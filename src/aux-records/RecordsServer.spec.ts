@@ -2900,6 +2900,7 @@ describe('RecordsServer', () => {
                     credentialDeviceType: 'singleDevice',
                     credentialBackedUp: false,
                     transports: ['usb'],
+                    aaguid: 'aaguid',
                 },
             ]);
         });
@@ -3002,7 +3003,7 @@ describe('RecordsServer', () => {
             delete authenticatedHeaders['authorization'];
         });
 
-        it('should return the webauthn registration options', async () => {
+        it('should return the webauthn login options', async () => {
             const requestId = 'requestId';
             await store.saveWebAuthnLoginRequest({
                 requestId: requestId,
@@ -3023,6 +3024,8 @@ describe('RecordsServer', () => {
                 credentialDeviceType: 'singleDevice',
                 credentialPublicKey: new Uint8Array([4, 5, 6]),
                 transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
             });
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({

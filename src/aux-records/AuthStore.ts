@@ -5,6 +5,7 @@ import {
     AuthenticatorTransportFuture,
     CredentialDeviceType,
 } from '@simplewebauthn/types';
+import { AttestationFormat } from '@simplewebauthn/server/script/helpers/decodeAttestationObject';
 
 /**
  * Defines an interface that represents an auth store.
@@ -473,6 +474,17 @@ export interface AuthUserAuthenticator {
      * The device type of the credential.
      */
     credentialDeviceType: CredentialDeviceType;
+
+    /**
+     * The AAGUID of the authenticator that the credential uses.
+     */
+    aaguid: string;
+
+    /**
+     * The user agent of the browser that registered the authenticator.
+     * Null if the authenticator was not registered by a user agent.
+     */
+    registeringUserAgent: string | null;
 
     /**
      * Whether the credential is backed up.
