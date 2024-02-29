@@ -92,6 +92,9 @@ model UserAuthenticator {
     credentialDeviceType String @db.String(32)
     credentialBackedUp Boolean
 
+    aaguid String @db.Uuid
+    registeringUserAgent String? @db.String(512)
+
     transports String[]
 
     createdAt DateTime @default(now())
