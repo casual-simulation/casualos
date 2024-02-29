@@ -10,6 +10,14 @@
                 </md-button>
                 <md-menu-content>
                     <md-menu-item @click="addPasskey()">Create Passkey</md-menu-item>
+                    <md-menu-item
+                        ><a
+                            href="https://blog.google/technology/safety-security/the-beginning-of-the-end-of-the-password/"
+                            target="_blank"
+                            rel="noreferrer"
+                            >What are passkeys?</a
+                        ></md-menu-item
+                    >
                 </md-menu-content>
             </md-menu>
         </div>
