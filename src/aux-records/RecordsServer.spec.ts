@@ -2999,7 +2999,7 @@ describe('RecordsServer', () => {
         testRateLimit('GET', `/api/v2/webauthn/login/options`);
     });
 
-    describe('GET /api/v2/webauthn/login', () => {
+    describe('POST /api/v2/webauthn/login', () => {
         beforeEach(() => {
             delete authenticatedHeaders['authorization'];
         });
@@ -3107,6 +3107,102 @@ describe('RecordsServer', () => {
                     authenticatorAttachment: 'platform',
                 },
             })
+        );
+    });
+
+    describe('GET /api/v2/webauthn/authenticators', () => {
+        it('should return the list of authenticators that the user has registered', async () => {
+            const requestId = 'requestId';
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: Date.now() + 1000 * 60,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: 'aaguid1',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 100,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: 'aaguid2',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/webauthn/authenticators', authenticatedHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authenticators: [
+                        {
+                            id: 'authenticatorId',
+                            userId: userId,
+                            credentialId: fromByteArray(
+                                new Uint8Array([1, 2, 3])
+                            ),
+                            counter: 0,
+                            credentialBackedUp: true,
+                            credentialDeviceType: 'singleDevice',
+                            transports: ['usb'],
+                            aaguid: 'aaguid1',
+                            registeringUserAgent: 'ua1',
+                            createdAtMs: 100,
+                        },
+                        {
+                            id: 'authenticatorId2',
+                            userId: userId,
+                            credentialId: fromByteArray(
+                                new Uint8Array([1, 2, 3, 4])
+                            ),
+                            counter: 0,
+                            credentialBackedUp: true,
+                            credentialDeviceType: 'singleDevice',
+                            transports: ['usb'],
+                            aaguid: 'aaguid2',
+                            registeringUserAgent: 'ua2',
+                            createdAtMs: 100,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', '/api/v2/webauthn/authenticators');
+        testRateLimit('GET', `/api/v2/webauthn/authenticators`);
+        testAuthorization(() =>
+            httpGet('/api/v2/webauthn/authenticators', authenticatedHeaders)
         );
     });
 

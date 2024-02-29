@@ -598,6 +598,15 @@ export class RecordsServer {
                 true
             );
         } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/webauthn/authenticators'
+        ) {
+            return formatResponse(
+                request,
+                await this._listWebAuthnAuthenticators(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/meet/token'
         ) {
@@ -4231,6 +4240,29 @@ export class RecordsServer {
                 request.headers['x-dev-proxy-host'] ??
                 request.headers.host,
         });
+
+        return returnResult(result);
+    }
+
+    private async _listWebAuthnAuthenticators(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._auth.listUserAuthenticators(
+            validation.userId
+        );
 
         return returnResult(result);
     }
