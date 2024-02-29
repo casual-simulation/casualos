@@ -151,7 +151,7 @@ export default defineConfig(({ command, mode }) => {
                     ...policies.files,
                 },
             }),
-            process.env.VITE_BASIC_SSL === 'true' ? basicSsl() : [],
+            process.argv.some((a) => a === '--ssl') ? basicSsl() : [],
         ],
         assetsInclude: ['**/*.gltf', '**/*.glb'],
         define: {
