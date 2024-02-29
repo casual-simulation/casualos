@@ -34,6 +34,7 @@ import type {
     ListPermissionsResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
+    AuthListedUserAuthenticator,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -58,6 +59,7 @@ import type {
     CompleteWebAuthnRegistrationResult,
     CompleteWebAuthnLoginSuccess,
     CompleteLoginSuccess,
+    ListUserAuthenticatorsResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -389,6 +391,35 @@ export class AuthManager {
             }
         }
         return optionsResult;
+    }
+
+    async listAuthenticators(): Promise<ListUserAuthenticatorsResult> {
+        const response = await axios.get<ListUserAuthenticatorsResult>(
+            `${this.apiEndpoint}/api/v2/webauthn/authenticators`,
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => true,
+            }
+        );
+
+        return response.data;
+    }
+
+    async deleteUserAuthenticator(
+        authenticatorId: string
+    ): Promise<ListUserAuthenticatorsResult> {
+        const response = await axios.post<ListUserAuthenticatorsResult>(
+            `${this.apiEndpoint}/api/v2/webauthn/authenticators/delete`,
+            {
+                authenticatorId,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => true,
+            }
+        );
+
+        return response.data;
     }
 
     updateLoginStateFromResult(

@@ -1,8 +1,10 @@
-.sessions-title {
+.sessions-title,
+.passkeys-title {
     display: flex;
     align-items: center;
 }
 
-.sessions-title > .md-title {
+.sessions-title > .md-title,
+.passkeys-title > .md-title {
     flex: 1;
 }

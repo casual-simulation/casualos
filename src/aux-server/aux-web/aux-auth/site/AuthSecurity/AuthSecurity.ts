@@ -14,6 +14,12 @@ import { DateTime } from 'luxon';
 import SessionLocation from '../SessionLocation/SessionLocation';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
+import {
+    AAGUIDInfo,
+    AuthenticatorKind,
+    getInfoForAAGUID,
+} from '@casual-simulation/aux-records/AAGUID';
+import Bowser from 'bowser';
 
 @Component({
     components: {
@@ -27,6 +33,7 @@ export default class AuthSecurity extends Vue {
     sessions: ListedSession[] = [];
     loading: boolean = false;
     showAddPasskey: boolean = false;
+    passkeys: Passkey[] = [];
 
     showConfirmRevokeAllSessions: boolean = false;
 
@@ -76,6 +83,13 @@ export default class AuthSecurity extends Vue {
         }
     }
 
+    async deletePasskey(passkey: Passkey) {
+        const result = await authManager.deleteUserAuthenticator(passkey.id);
+        if (result.success) {
+            this._loadPasskeys();
+        }
+    }
+
     requestRevokeAllSessions() {
         this.showConfirmRevokeAllSessions = true;
     }
@@ -117,6 +131,8 @@ export default class AuthSecurity extends Vue {
             this.sessions = sortBy(filteredSessions, (s) =>
                 s.revokeTimeMs ? s.revokeTimeMs : -s.expireTimeMs
             );
+
+            await this._loadPasskeys();
         } catch (err) {
             console.error('[AuthSecurity] Unable to load sessions:', err);
             this.sessions = [];
@@ -124,4 +140,46 @@ export default class AuthSecurity extends Vue {
             this.loading = false;
         }
     }
+
+    private async _loadPasskeys() {
+        const result = await authManager.listAuthenticators();
+        if (result.success === true) {
+            this.passkeys = result.authenticators.map((auth) => {
+                const info = getInfoForAAGUID(auth.aaguid);
+                const parser = auth.registeringUserAgent
+                    ? Bowser.getParser(auth.registeringUserAgent)
+                    : null;
+                let creationDescription: string;
+                let userAgentDescription: string;
+                if (parser) {
+                    creationDescription = `Created by ${parser.getBrowserName()} on ${parser.getOSName()}`;
+                    userAgentDescription = `${parser.getBrowserName()} ${parser.getBrowserVersion()} on ${parser.getOSName()} ${parser.getOSVersion()}`;
+                } else {
+                    creationDescription = 'Created by unknown browser';
+                    userAgentDescription = 'unknown';
+                }
+                return {
+                    id: auth.id,
+                    name: info.name,
+                    kind: info.kind,
+                    creationDescription,
+                    userAgentDescription,
+                    counter: auth.counter,
+                    createdAtMs: auth.createdAtMs,
+                };
+            });
+        } else {
+            this.passkeys = [];
+        }
+    }
+}
+
+interface Passkey {
+    id: string;
+    name: string;
+    kind: AuthenticatorKind;
+    creationDescription: string;
+    userAgentDescription: string;
+    counter: number;
+    createdAtMs: number;
 }
