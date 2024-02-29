@@ -608,6 +608,15 @@ export class RecordsServer {
             );
         } else if (
             request.method === 'POST' &&
+            request.path === '/api/v2/webauthn/authenticators/delete'
+        ) {
+            return formatResponse(
+                request,
+                await this._deleteWebAuthnAuthenticator(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
             request.path === '/api/v2/meet/token'
         ) {
             return formatResponse(
@@ -4262,6 +4271,52 @@ export class RecordsServer {
 
         const result = await this._auth.listUserAuthenticators(
             validation.userId
+        );
+
+        return returnResult(result);
+    }
+
+    private async _deleteWebAuthnAuthenticator(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            authenticatorId: z.string().nonempty(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { authenticatorId } = parseResult.data;
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._auth.deleteUserAuthenticator(
+            validation.userId,
+            authenticatorId
         );
 
         return returnResult(result);

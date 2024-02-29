@@ -3206,6 +3206,99 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/webauthn/authenticators/delete', () => {
+        it('should delete the given authenticator', async () => {
+            const requestId = 'requestId';
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: Date.now() + 1000 * 60,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: 'aaguid1',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 100,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: 'aaguid2',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/webauthn/authenticators/delete',
+                    JSON.stringify({
+                        authenticatorId: 'authenticatorId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const authenticators = await store.listUserAuthenticators(userId);
+            expect(authenticators).toEqual([
+                {
+                    id: 'authenticatorId2',
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                    counter: 0,
+                    credentialBackedUp: true,
+                    credentialDeviceType: 'singleDevice',
+                    credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                    transports: ['usb'],
+                    aaguid: 'aaguid2',
+                    registeringUserAgent: 'ua2',
+                    createdAtMs: 100,
+                },
+            ]);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/webauthn/authenticators/delete',
+            () =>
+                JSON.stringify({
+                    authenticatorId: 'authenticatorId',
+                }),
+            () => authenticatedHeaders
+        );
+    });
+
     describe('POST /api/v2/meet/token', () => {
         const roomName = 'test';
         const userName = 'userName';
