@@ -207,7 +207,20 @@ export default defineConfig(({ command, mode }) => {
                 ],
             },
             proxy: {
-                '/api': 'http://localhost:2998',
+                '/api': {
+                    target: 'http://localhost:2998',
+                    configure: (proxy) => {
+                        proxy.on(
+                            'proxyReq',
+                            function (proxyReq, req, res, options) {
+                                proxyReq.setHeader(
+                                    'X-Dev-Proxy-Host',
+                                    req.headers.host as any
+                                );
+                            }
+                        );
+                    },
+                },
                 '/s3': {
                     target: 'http://localhost:4566',
                     changeOrigin: true,

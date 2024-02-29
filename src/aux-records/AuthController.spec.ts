@@ -1,6 +1,7 @@
 import {
     AuthController,
     CompleteLoginSuccess,
+    findRelyingPartyForOrigin,
     getPrivacyFeaturesFromPermissions,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_TOKEN_ERROR_MESSAGE,
@@ -2151,7 +2152,7 @@ describe('AuthController', () => {
         it('should return the generated options', async () => {
             const response = (await controller.requestWebAuthnRegistration({
                 userId,
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             })) as RequestWebAuthnRegistrationSuccess;
 
             expect(response).toEqual({
@@ -2205,7 +2206,7 @@ describe('AuthController', () => {
         it('should work when not given an origin', async () => {
             const response = (await controller.requestWebAuthnRegistration({
                 userId,
-                origin: null,
+                originOrHost: null,
             })) as RequestWebAuthnRegistrationSuccess;
 
             expect(response).toEqual({
@@ -2260,7 +2261,7 @@ describe('AuthController', () => {
             controller.relyingParties = [];
             const response = await controller.requestWebAuthnRegistration({
                 userId,
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2273,7 +2274,7 @@ describe('AuthController', () => {
         it('should return invalid_origin if the request comes from a wrong origin', async () => {
             const response = await controller.requestWebAuthnRegistration({
                 userId,
-                origin: 'wrong',
+                originOrHost: 'wrong',
             });
 
             expect(response).toEqual({
@@ -2356,7 +2357,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2421,7 +2422,7 @@ describe('AuthController', () => {
                 },
 
                 // Non-cross-origin requests don't include the origin header
-                origin: null,
+                originOrHost: null,
             });
 
             expect(response).toEqual({
@@ -2452,7 +2453,7 @@ describe('AuthController', () => {
             const response = await controller.completeWebAuthnRegistration({
                 userId,
                 response: {} as any,
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2466,7 +2467,7 @@ describe('AuthController', () => {
             const response = await controller.completeWebAuthnRegistration({
                 userId,
                 response: {} as any,
-                origin: 'wrong',
+                originOrHost: 'wrong',
             });
 
             expect(response).toEqual({
@@ -2516,7 +2517,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('requestId');
             const response = (await controller.requestWebAuthnLogin({
                 ipAddress: '123.456.789',
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             })) as RequestWebAuthnLoginSuccess;
 
             expect(response).toEqual({
@@ -2556,7 +2557,7 @@ describe('AuthController', () => {
                 ipAddress: '123.456.789',
 
                 // non-cross-origin requests don't include the origin header
-                origin: null,
+                originOrHost: null,
             })) as RequestWebAuthnLoginSuccess;
 
             expect(response).toEqual({
@@ -2594,7 +2595,7 @@ describe('AuthController', () => {
             controller.relyingParties = [];
             const response = await controller.requestWebAuthnLogin({
                 ipAddress: '123.456.789',
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2607,7 +2608,7 @@ describe('AuthController', () => {
         it('should return a invalid_origin result if the request comes from the wrong origin', async () => {
             const response = await controller.requestWebAuthnLogin({
                 ipAddress: '123.456.789',
-                origin: 'wrong',
+                originOrHost: 'wrong',
             });
 
             expect(response).toEqual({
@@ -2686,7 +2687,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2806,7 +2807,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
-                origin: null,
+                originOrHost: null,
             });
 
             expect(response).toEqual({
@@ -2935,7 +2936,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2965,7 +2966,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
-                origin: relyingParty.origin,
+                originOrHost: relyingParty.origin,
             });
 
             expect(response).toEqual({
@@ -2991,7 +2992,7 @@ describe('AuthController', () => {
                     type: 'public-key',
                     authenticatorAttachment: 'platform',
                 },
-                origin: 'wrong',
+                originOrHost: 'wrong',
             });
 
             expect(response).toEqual({
@@ -7669,6 +7670,42 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
             allowAI: false,
             allowPublicInsts: true,
         });
+    });
+});
+
+describe('findRelyingPartyForOrigin()', () => {
+    const parties: RelyingParty[] = [
+        {
+            id: 'example',
+            name: 'Test',
+            origin: 'https://example.com',
+        },
+        {
+            id: 'example',
+            name: 'Test Port',
+            origin: 'https://example.com:3000',
+        },
+        {
+            id: 'different',
+            name: 'Different with port',
+            origin: 'https://different.com:3000',
+        },
+    ];
+
+    it('should return the first relying party if there is no origin', () => {
+        expect(findRelyingPartyForOrigin(parties, null)).toEqual(parties[0]);
+    });
+
+    it('should return the relying party that exactly matches the given origin', () => {
+        expect(
+            findRelyingPartyForOrigin(parties, 'https://different.com:3000')
+        ).toEqual(parties[2]);
+    });
+
+    it('should return the relying party that matches the given domain and port', () => {
+        expect(findRelyingPartyForOrigin(parties, 'example.com:3000')).toEqual(
+            parties[1]
+        );
     });
 });
 

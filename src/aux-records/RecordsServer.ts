@@ -4071,7 +4071,10 @@ export class RecordsServer {
 
         const result = await this._auth.requestWebAuthnRegistration({
             userId: validation.userId,
-            origin: request.headers.origin,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
         });
 
         return returnResult(result);
@@ -4141,7 +4144,10 @@ export class RecordsServer {
         const result = await this._auth.completeWebAuthnRegistration({
             userId: validation.userId,
             response: response as any,
-            origin: request.headers.origin,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
         });
 
         return returnResult(result);
@@ -4155,7 +4161,10 @@ export class RecordsServer {
 
         const result = await this._auth.requestWebAuthnLogin({
             ipAddress: request.ipAddress,
-            origin: request.headers.origin,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
         });
 
         return returnResult(result);
@@ -4216,7 +4225,10 @@ export class RecordsServer {
             requestId: requestId,
             ipAddress: request.ipAddress,
             response: response as any,
-            origin: request.headers.origin,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
         });
 
         return returnResult(result);

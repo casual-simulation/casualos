@@ -1220,13 +1220,6 @@ export class AuthController {
         }
     }
 
-    private _findRelyingPartyForOrigin(origin: string): RelyingParty {
-        if (!origin) {
-            return this._webAuthNRelyingParties[0];
-        }
-        return this._webAuthNRelyingParties.find((rp) => rp.origin === origin);
-    }
-
     async requestWebAuthnRegistration(
         request: RequestWebAuthnRegistration
     ): Promise<RequestWebAuthnRegistrationResult> {
@@ -1239,8 +1232,9 @@ export class AuthController {
                 };
             }
 
-            const relyingParty = this._findRelyingPartyForOrigin(
-                request.origin
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
             );
 
             if (!relyingParty) {
@@ -1317,8 +1311,9 @@ export class AuthController {
                 };
             }
 
-            const relyingParty = this._findRelyingPartyForOrigin(
-                request.origin
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
             );
 
             if (!relyingParty) {
@@ -1420,8 +1415,9 @@ export class AuthController {
                 };
             }
 
-            const relyingParty = this._findRelyingPartyForOrigin(
-                request.origin
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
             );
 
             if (!relyingParty) {
@@ -1480,8 +1476,9 @@ export class AuthController {
                 };
             }
 
-            const relyingParty = this._findRelyingPartyForOrigin(
-                request.origin
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
             );
 
             if (!relyingParty) {
@@ -3638,9 +3635,9 @@ export interface RequestWebAuthnRegistration {
     userId: string;
 
     /*
-     * The HTTP origin that the request is coming from.
+     * The HTTP origin or host that the request is coming from.
      */
-    origin: string | null;
+    originOrHost: string | null;
 }
 
 export type RequestWebAuthnRegistrationResult =
@@ -3674,9 +3671,9 @@ export interface CompleteWebAuthnRegistrationRequest {
     response: RegistrationResponseJSON;
 
     /**
-     * The HTTP origin that the request was made from.
+     * The HTTP origin or host that the request was made from.
      */
-    origin: string;
+    originOrHost: string;
 }
 
 export interface RequestWebAuthnLogin {
@@ -3686,10 +3683,10 @@ export interface RequestWebAuthnLogin {
     ipAddress: string;
 
     /**
-     * The HTTP origin that the request is coming from.
+     * The HTTP origin or host that the request is coming from.
      * Null if the request is coming from the same origin as the server.
      */
-    origin: string | null;
+    originOrHost: string | null;
 }
 
 export type RequestWebAuthnLoginResult =
@@ -3737,10 +3734,10 @@ export interface CompleteWebAuthnLoginRequest {
     ipAddress: string;
 
     /**
-     * The HTTP origin that the request is coming from.
+     * The HTTP origin or host that the request is coming from.
      * Null if the origin is from the same origin as the server.
      */
-    origin: string | null;
+    originOrHost: string | null;
 }
 
 export type CompleteWebAuthnLoginResult =
@@ -3845,4 +3842,24 @@ export function getPrivacyFeaturesFromPermissions(
         allowAI,
         allowPublicInsts,
     };
+}
+
+export function findRelyingPartyForOrigin(
+    relyingParties: RelyingParty[],
+    originOrHost: string
+): RelyingParty {
+    if (!originOrHost) {
+        return relyingParties[0];
+    }
+    return relyingParties.find((rp) => {
+        const matchesOrigin = rp.origin === originOrHost;
+
+        if (matchesOrigin) {
+            return true;
+        }
+
+        const originUrl = new URL(rp.origin);
+        const host = originUrl.host;
+        return originOrHost === host;
+    });
 }

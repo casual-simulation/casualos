@@ -1977,7 +1977,7 @@ const webauthnSchema = z.object({
                 id: z
                     .string()
                     .describe(
-                        'The ID of the relying party. Should be the domain of the relying party.'
+                        'The ID of the relying party. Should be the domain of the relying party. Note that this does not mean that it has to be unique. Instead, it just needs to match the domain that the passkeys can be used on.'
                     )
                     .nonempty(),
                 origin: z
