@@ -2682,7 +2682,15 @@ describe('AuthController', () => {
 
             verifyAuthenticationResponseMock.mockResolvedValueOnce({
                 verified: true,
-                authenticationInfo: {} as any,
+                authenticationInfo: {
+                    newCounter: 1,
+                    credentialBackedUp: true,
+                    credentialDeviceType: 'singleDevice',
+                    credentialID: new Uint8Array([1, 2, 3]),
+                    origin: relyingParty.origin,
+                    rpID: relyingParty.id,
+                    userVerified: true,
+                },
             });
 
             const response = await controller.completeWebAuthnLogin({
@@ -2766,6 +2774,24 @@ describe('AuthController', () => {
                     phoneNumber: 'phonenumber',
                 },
             ]);
+
+            expect(
+                await store.findUserAuthenticatorByCredentialId(
+                    fromByteArray(new Uint8Array([1, 2, 3]))
+                )
+            ).toEqual({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 1,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
+                createdAtMs: 100,
+            });
         });
 
         it('should work if not given an origin', async () => {

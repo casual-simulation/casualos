@@ -519,6 +519,37 @@ export class PrismaAuthStore implements AuthStore {
         return auths.map((a) => this._convertToUserAuthenticator(a));
     }
 
+    async saveUserAuthenticatorCounter(
+        id: string,
+        newCounter: number
+    ): Promise<void> {
+        await this._client.userAuthenticator.update({
+            where: {
+                id: id,
+            },
+            data: {
+                counter: newCounter,
+            },
+        });
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number> {
+        const result = await this._client.userAuthenticator.delete({
+            where: {
+                id: authenticatorId,
+                userId,
+            },
+        });
+
+        if (result) {
+            return 1;
+        }
+        return 0;
+    }
+
     private _convertToUserAuthenticator(
         authenticator: UserAuthenticator
     ): AuthUserAuthenticator {
@@ -535,6 +566,9 @@ export class PrismaAuthStore implements AuthStore {
             ),
             transports:
                 authenticator.transports as AuthUserAuthenticator['transports'],
+            aaguid: authenticator.aaguid,
+            registeringUserAgent: authenticator.registeringUserAgent,
+            createdAtMs: convertToMillis(authenticator.createdAt),
         };
     }
 
@@ -578,6 +612,9 @@ export class PrismaAuthStore implements AuthStore {
                     authenticator.credentialPublicKey
                 ),
                 transports: authenticator.transports,
+                aaguid: authenticator.aaguid,
+                registeringUserAgent: authenticator.registeringUserAgent,
+                createdAt: convertToDate(authenticator.createdAtMs),
             },
             update: {
                 id: authenticator.id,
@@ -590,6 +627,8 @@ export class PrismaAuthStore implements AuthStore {
                     authenticator.credentialPublicKey
                 ),
                 transports: authenticator.transports,
+                aaguid: authenticator.aaguid,
+                registeringUserAgent: authenticator.registeringUserAgent,
             },
         });
     }
@@ -1126,7 +1165,9 @@ export class PrismaAuthStore implements AuthStore {
                 },
                 currentWebAuthnChallenge: user.currentWebAuthnChallenge,
                 subscriptionInfoId: user.subscriptionInfoId,
-                subscriptionPeriodEndMs: convertToMillis(user.subscriptionPeriodEnd),
+                subscriptionPeriodEndMs: convertToMillis(
+                    user.subscriptionPeriodEnd
+                ),
                 subscriptionPeriodStartMs: convertToMillis(
                     user.subscriptionPeriodStart
                 ),

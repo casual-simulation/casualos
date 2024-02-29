@@ -336,6 +336,13 @@ export interface AuthStore {
     saveUserAuthenticator(authenticator: AuthUserAuthenticator): Promise<void>;
 
     /**
+     * Saves the counter for the given authenticator.
+     * @param id The ID of the authenticator.
+     * @param newCounter The counter that should be saved.
+     */
+    saveUserAuthenticatorCounter(id: string, newCounter: number): Promise<void>;
+
+    /**
      * Deletes the authenticator with the given ID.
      * Returns the number of items that were deleted.
      * @param userId The ID of the user whose authenticator should be deleted.

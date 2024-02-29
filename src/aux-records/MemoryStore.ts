@@ -1281,6 +1281,19 @@ export class MemoryStore
         return { authenticator, user };
     }
 
+    async saveUserAuthenticatorCounter(
+        id: string,
+        newCounter: number
+    ): Promise<void> {
+        const index = this._userAuthenticators.findIndex((a) => a.id === id);
+        if (index >= 0) {
+            this._userAuthenticators[index] = {
+                ...this._userAuthenticators[index],
+                counter: newCounter,
+            };
+        }
+    }
+
     async deleteUserAuthenticator(
         userId: string,
         authenticatorId: string

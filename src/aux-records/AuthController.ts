@@ -1575,6 +1575,11 @@ export class AuthController {
                         errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
                     };
                 }
+
+                await this._store.saveUserAuthenticatorCounter(
+                    authenticator.id,
+                    options.authenticationInfo.newCounter
+                );
             } catch (err) {
                 console.error(
                     `[AuthController] Error occurred while verifying WebAuthn login response`,
