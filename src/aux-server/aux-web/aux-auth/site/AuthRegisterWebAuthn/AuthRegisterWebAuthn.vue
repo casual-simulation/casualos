@@ -8,12 +8,20 @@
                 <md-card-content>
                     <div class="md-layout md-gutter">
                         <div class="md-layout-item">
+                            <p>Do you want to add a passkey to your account for this device?</p>
                             <p>
-                               Do you want to add a passkey to your account for this device?
-                               Passkeys are quick and secure way to login without using a password.
-                               Learn more <a href="https://blog.google/technology/safety-security/the-beginning-of-the-end-of-the-password/" target="_blank" referrerpolicy="no-referrer">here.</a>
+                                Passkeys are quick and secure way to login without using a password.
                             </p>
-                            <field-errors :errors="errors" :field="null"/>
+                            <p>
+                                Learn more
+                                <a
+                                    href="https://blog.google/technology/safety-security/the-beginning-of-the-end-of-the-password/"
+                                    target="_blank"
+                                    referrerpolicy="no-referrer"
+                                    >here.</a
+                                >
+                            </p>
+                            <field-errors :errors="errors" :field="null" />
                         </div>
                     </div>
                 </md-card-content>
