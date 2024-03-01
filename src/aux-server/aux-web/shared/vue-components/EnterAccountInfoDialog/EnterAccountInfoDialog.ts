@@ -61,7 +61,7 @@ export default class EnterAccountInfoDialog extends Vue {
     acceptedTerms: boolean = false;
     name: string = '';
     displayName: string = '';
-    dateOfBirth: Date = null;
+    dateOfBirth: string = null;
     parentEmail: string = null;
     processing: boolean = false;
     errors: FormError[] = [];
@@ -97,6 +97,10 @@ export default class EnterAccountInfoDialog extends Vue {
         return hasParentEmailError ? 'md-invalid' : '';
     }
 
+    get maxDate() {
+        return DateTime.local().toFormat('yyyy-MM-dd');
+    }
+
     get registerEmailFieldHint() {
         if (this.requireEmail) {
             return 'Email';
@@ -111,7 +115,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get requireEmail() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) >= 18;
         }
         return false;
@@ -119,7 +123,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get requireParentEmail() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) < 18;
         }
         return false;
@@ -127,7 +131,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get requireTermsOfService() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) >= 18;
         }
         return false;
@@ -135,7 +139,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get dateOfBirthText() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return dob.toLocaleString(DateTime.DATE_MED);
         }
         return '';
@@ -266,6 +270,18 @@ export default class EnterAccountInfoDialog extends Vue {
             return;
         }
 
+        const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
+        if (dob > DateTime.local()) {
+            this.errors = [
+                {
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Please enter a date in the past.',
+                },
+            ];
+            return;
+        }
+
         this.errors = [];
         this.enterDateOfBirth = false;
     }
@@ -281,7 +297,10 @@ export default class EnterAccountInfoDialog extends Vue {
             acceptedTermsOfService: this.acceptedTerms,
             email: this.email,
             name: this.name,
-            dateOfBirth: this.dateOfBirth,
+            dateOfBirth: DateTime.fromFormat(
+                this.dateOfBirth,
+                'yyyy-MM-dd'
+            ).toJSDate(),
             displayName: this.displayName,
             parentEmail: this.parentEmail,
         };
