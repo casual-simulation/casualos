@@ -53,6 +53,8 @@
         "tweetnacl": "1.0.3",
         "uuid": "^8.3.2",
         "yjs": "13.6.8",
-        "zod": "3.22.4"
+        "zod": "3.22.4",
+        "@simplewebauthn/server": "9.0.3",
+        "@simplewebauthn/types": "9.0.1"
     }
 }

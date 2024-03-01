@@ -34,6 +34,7 @@ import type {
     ListPermissionsResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
+    AuthListedUserAuthenticator,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -51,6 +52,14 @@ import type {
     CompleteOpenIDLoginResult,
     IsValidEmailAddressResult,
     IsValidDisplayNameResult,
+    RequestWebAuthnLoginResult,
+    RequestWebAuthnRegistrationResult,
+    CompleteWebAuthnLoginResult,
+    RequestWebAuthnRegistration,
+    CompleteWebAuthnRegistrationResult,
+    CompleteWebAuthnLoginSuccess,
+    CompleteLoginSuccess,
+    ListUserAuthenticatorsResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -68,6 +77,14 @@ import type {
     RemoteCausalRepoProtocol,
     ResourceKinds,
 } from '@casual-simulation/aux-common';
+import {
+    AuthenticationResponseJSON,
+    RegistrationResponseJSON,
+} from '@simplewebauthn/types';
+import {
+    startAuthentication,
+    startRegistration,
+} from '@simplewebauthn/browser';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -339,6 +356,175 @@ export class AuthManager {
             }
         );
         return response.data;
+    }
+
+    async loginWithWebAuthn(
+        useBrowserAutofill?: boolean
+    ): Promise<CompleteWebAuthnLoginResult | RequestWebAuthnLoginResult> {
+        const optionsResult = await this.getWebAuthnLoginOptions();
+        if (optionsResult.success === true) {
+            try {
+                const response = await startAuthentication(
+                    optionsResult.options,
+                    useBrowserAutofill
+                );
+                const result = await this.completeWebAuthnLogin(
+                    optionsResult.requestId,
+                    response
+                );
+
+                if (result.success === true) {
+                    this.updateLoginStateFromResult(result);
+                }
+
+                return result;
+            } catch (err) {
+                console.error(
+                    '[AuthManager] Error while logging in with WebAuthn:',
+                    err
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'Error: ' + err.message,
+                };
+            }
+        }
+        return optionsResult;
+    }
+
+    async listAuthenticators(): Promise<ListUserAuthenticatorsResult> {
+        const response = await axios.get<ListUserAuthenticatorsResult>(
+            `${this.apiEndpoint}/api/v2/webauthn/authenticators`,
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => true,
+            }
+        );
+
+        return response.data;
+    }
+
+    async deleteUserAuthenticator(
+        authenticatorId: string
+    ): Promise<ListUserAuthenticatorsResult> {
+        const response = await axios.post<ListUserAuthenticatorsResult>(
+            `${this.apiEndpoint}/api/v2/webauthn/authenticators/delete`,
+            {
+                authenticatorId,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => true,
+            }
+        );
+
+        return response.data;
+    }
+
+    updateLoginStateFromResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): void {
+        this.savedSessionKey = result.sessionKey;
+        this.savedConnectionKey = result.connectionKey;
+        this._userId = result.userId;
+    }
+
+    async addPasskeyWithWebAuthn(): Promise<
+        RequestWebAuthnRegistrationResult | CompleteWebAuthnRegistrationResult
+    > {
+        const optionsResult = await this.getWebAuthnRegistrationOptions();
+        if (optionsResult.success === true) {
+            try {
+                const response = await startRegistration(optionsResult.options);
+                const result = await this.completeWebAuthnRegistration(
+                    response
+                );
+                return result;
+            } catch (error) {
+                console.error(error);
+                if (error.name === 'InvalidStateError') {
+                    return {
+                        success: true,
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'Error: ' + error.message,
+                    };
+                }
+            }
+        }
+        return optionsResult;
+    }
+
+    async getWebAuthnRegistrationOptions(): Promise<RequestWebAuthnRegistrationResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/register/options`,
+            {
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
+    }
+
+    async completeWebAuthnRegistration(
+        r: RegistrationResponseJSON
+    ): Promise<CompleteWebAuthnRegistrationResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/register`,
+            {
+                body: JSON.stringify({
+                    response: r,
+                }),
+                method: 'POST',
+                headers: {
+                    ...this._authenticationHeaders(),
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
+    }
+
+    async getWebAuthnLoginOptions(): Promise<RequestWebAuthnLoginResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/login/options`,
+            {
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
+    }
+
+    async completeWebAuthnLogin(
+        requestId: string,
+        r: AuthenticationResponseJSON
+    ): Promise<CompleteWebAuthnLoginResult> {
+        const response = await fetch(
+            `${this.apiEndpoint}/api/v2/webauthn/login`,
+            {
+                body: JSON.stringify({
+                    requestId,
+                    response: r,
+                }),
+                method: 'POST',
+                headers: {
+                    ...this._authenticationHeaders(),
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const json = await response.text();
+        return JSON.parse(json);
     }
 
     async logout(revokeSessionKey: boolean = true) {
@@ -1045,9 +1231,7 @@ export class AuthManager {
         const result = response.data;
 
         if (result.success === true) {
-            this.savedSessionKey = result.sessionKey;
-            this.savedConnectionKey = result.connectionKey;
-            this._userId = result.userId;
+            this.updateLoginStateFromResult(result);
         }
 
         return result;
@@ -1073,9 +1257,7 @@ export class AuthManager {
         const result = response.data;
 
         if (result.success === true) {
-            this.savedSessionKey = result.sessionKey;
-            this.savedConnectionKey = result.connectionKey;
-            this._userId = result.userId;
+            this.updateLoginStateFromResult(result);
         }
 
         return result;
@@ -1093,9 +1275,7 @@ export class AuthManager {
         );
 
         if (result.success === true) {
-            this.savedSessionKey = result.sessionKey;
-            this.savedConnectionKey = result.connectionKey;
-            this._userId = result.userId;
+            this.updateLoginStateFromResult(result);
         }
 
         return result;
@@ -1334,7 +1514,11 @@ export class AuthManager {
         return response.data;
     }
 
-    private _authenticationHeaders(): any {
+    getAuthenticationHeaders(): Record<string, string> {
+        return this._authenticationHeaders();
+    }
+
+    private _authenticationHeaders(): Record<string, string> {
         return {
             Authorization: `Bearer ${this.savedSessionKey}`,
         };

@@ -1,6 +1,11 @@
 import { PrivacyFeatures } from '@casual-simulation/aux-common';
 import { RegexRule } from './Utils';
 import { ServerError } from '@casual-simulation/aux-common/Errors';
+import {
+    AuthenticatorTransportFuture,
+    CredentialDeviceType,
+} from '@simplewebauthn/types';
+import { AttestationFormat } from '@simplewebauthn/server/script/helpers/decodeAttestationObject';
 
 /**
  * Defines an interface that represents an auth store.
@@ -73,6 +78,14 @@ export interface AuthStore {
     ): Promise<AuthOpenIDLoginRequest | null>;
 
     /**
+     * Finds the WebAuthn login request with the given request ID.
+     * @param requestId The ID of the request.
+     */
+    findWebAuthnLoginRequest(
+        requestId: string
+    ): Promise<AuthWebAuthnLoginRequest | null>;
+
+    /**
      * Finds a login session for the given user and session ID.
      * @param userId The ID of the user.
      * @param sessionId The ID of the session.
@@ -94,6 +107,14 @@ export interface AuthStore {
     ): Promise<AuthOpenIDLoginRequest>;
 
     /**
+     * Saves the given WebAuthn login request.
+     * @param request The request that should be saved.
+     */
+    saveWebAuthnLoginRequest(
+        request: AuthWebAuthnLoginRequest
+    ): Promise<AuthWebAuthnLoginRequest>;
+
+    /**
      * Marks the login request as completed.
      * @param userId The ID oof the user.
      * @param requestId The ID of the request.
@@ -112,6 +133,18 @@ export interface AuthStore {
      */
     markOpenIDLoginRequestComplete(
         requestId: string,
+        completedTimeMs: number
+    ): Promise<void>;
+
+    /**
+     * Marks the login request as completed.
+     * @param requestId The ID of the request.
+     * @param userId The ID of the user that completed the request.
+     * @param completedTimeMs The time that the request was completed.
+     */
+    markWebAuthnLoginRequestComplete(
+        requestId: string,
+        userId: string,
         completedTimeMs: number
     ): Promise<void>;
 
@@ -183,6 +216,17 @@ export interface AuthStore {
      * @param requestId The ID of the login request.
      */
     setCurrentLoginRequest(userId: string, requestId: string): Promise<void>;
+
+    /**
+     * Sets the current WebAuthn challenge that the user is trying to complete.
+     * At any particular moment, only one WebAuthn challenge is allowed to be completed by a user.
+     * @param userId The ID of the user.
+     * @param challenge The challenge.
+     */
+    setCurrentWebAuthnChallenge(
+        userId: string,
+        challenge: string
+    ): Promise<void>;
 
     /**
      * Gets the list of email rules.
@@ -267,6 +311,47 @@ export interface AuthStore {
     updateSubscriptionPeriod(
         request: UpdateSubscriptionPeriodRequest
     ): Promise<void>;
+
+    /**
+     * Gets the list of authenticators for the given user.
+     * @param userId The ID of the user.
+     */
+    listUserAuthenticators(
+        userId: string
+    ): Promise<AuthListedUserAuthenticator[]>;
+
+    /**
+     * Finds the authenticator with the given credentialId. Includes the user that the authenticator is for.
+     * Returns an object with null properties if the authenticator could not be found.
+     * @param credentialId The ID of the credential that the authenticator should represent.
+     */
+    findUserAuthenticatorByCredentialId(
+        credentialId: string
+    ): Promise<AuthUserAuthenticatorWithUser | null>;
+
+    /**
+     * Saves the given authenticator.
+     * @param authenticator The authenticator that should be saved.
+     */
+    saveUserAuthenticator(authenticator: AuthUserAuthenticator): Promise<void>;
+
+    /**
+     * Saves the counter for the given authenticator.
+     * @param id The ID of the authenticator.
+     * @param newCounter The counter that should be saved.
+     */
+    saveUserAuthenticatorCounter(id: string, newCounter: number): Promise<void>;
+
+    /**
+     * Deletes the authenticator with the given ID.
+     * Returns the number of items that were deleted.
+     * @param userId The ID of the user whose authenticator should be deleted.
+     * @param authenticatorId The ID of the authenticator that should be deleted.
+     */
+    deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -341,6 +426,11 @@ export interface AuthUser {
     currentLoginRequestId: string | null | undefined;
 
     /**
+     * The current WebAuthn challenge that the user is trying to complete.
+     */
+    currentWebAuthnChallenge?: string | null | undefined;
+
+    /**
      * The Unix time in miliseconds that the user was banned.
      * If set to any positive number, then the user should be considered banned and unable to perform any operations.
      * Null/undefined if the user is not banned and allowed access into the system.
@@ -372,6 +462,114 @@ export interface AuthUser {
      * If null or omitted, then the user has access to all features.
      */
     privacyFeatures?: PrivacyFeatures | null;
+}
+
+export interface AuthUserAuthenticator {
+    /**
+     * The ID of the authenticator.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that this authenticator is for.
+     */
+    userId: string;
+
+    /**
+     * The ID of the credential that this authenticator is for.
+     */
+    credentialId: string;
+
+    /**
+     * The public key of the credential.
+     */
+    credentialPublicKey: Uint8Array;
+
+    /**
+     * The counter for the credential.
+     */
+    counter: number;
+
+    /**
+     * The device type of the credential.
+     */
+    credentialDeviceType: CredentialDeviceType;
+
+    /**
+     * The AAGUID of the authenticator that the credential uses.
+     */
+    aaguid: string;
+
+    /**
+     * The user agent of the browser that registered the authenticator.
+     * Null if the authenticator was not registered by a user agent.
+     */
+    registeringUserAgent: string | null;
+
+    /**
+     * Whether the credential is backed up.
+     */
+    credentialBackedUp: boolean;
+    transports?: AuthenticatorTransportFuture[];
+
+    /**
+     * The unix time in miliseconds that the authenticator was created at.
+     */
+    createdAtMs: number;
+}
+
+export interface AuthListedUserAuthenticator {
+    /**
+     * The ID of the authenticator.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that this authenticator is for.
+     */
+    userId: string;
+
+    /**
+     * The ID of the credential that this authenticator is for.
+     */
+    credentialId: string;
+
+    /**
+     * The counter for the credential.
+     */
+    counter: number;
+
+    /**
+     * The device type of the credential.
+     */
+    credentialDeviceType: CredentialDeviceType;
+
+    /**
+     * The AAGUID of the authenticator that the credential uses.
+     */
+    aaguid: string;
+
+    /**
+     * The user agent of the browser that registered the authenticator.
+     * Null if the authenticator was not registered by a user agent.
+     */
+    registeringUserAgent: string | null;
+
+    /**
+     * Whether the credential is backed up.
+     */
+    credentialBackedUp: boolean;
+    transports?: AuthenticatorTransportFuture[];
+
+    /**
+     * The unix time in miliseconds that the authenticator was created at.
+     */
+    createdAtMs: number;
+}
+
+export interface AuthUserAuthenticatorWithUser {
+    authenticator: AuthUserAuthenticator;
+    user: AuthUser;
 }
 
 /**
@@ -454,6 +652,45 @@ export interface AuthLoginRequest {
     // oidRedirectUrl?: string | null;
 }
 
+export interface AuthWebAuthnLoginRequest {
+    /**
+     * The ID of the request.
+     */
+    requestId: string;
+
+    /**
+     * The unix timestamp in miliseconds that the request was made at.
+     */
+    requestTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request will expire at.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The unix timestamp in miliseconds that the request was completed at.
+     * If null, then the request has not been completed.
+     */
+    completedTimeMs: number | null;
+
+    /**
+     * The challenge that the request should match.
+     */
+    challenge: string;
+
+    /**
+     * The IP Address that the request came from.
+     */
+    ipAddress: string;
+
+    /**
+     * The ID of the user that the request was completed for.
+     * Null if the request has not been completed.
+     */
+    userId: string | null;
+}
+
 /**
  * Defines an interface that represents a login session for the user.
  */
@@ -503,6 +740,11 @@ export interface AuthSession {
      * The ID of the OpenID login request that aws used to obtain this session.
      */
     oidRequestId?: string | null;
+
+    /**
+     * The ID of the WebAuthn login request that was used to obtain this session.
+     */
+    webauthnRequestId?: string | null;
 
     /**
      * The ID of the previous session that was used to obtain this session.

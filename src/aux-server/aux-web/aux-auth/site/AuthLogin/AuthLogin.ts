@@ -6,14 +6,20 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
-import { CompleteOpenIDLoginSuccess } from '@casual-simulation/aux-records';
+import { CompleteOpenIDLoginSuccess, FormError, getFormErrors } from '@casual-simulation/aux-records';
 import HasAccountCard from '../HasAccountCard/HasAccountCard';
+import {
+    browserSupportsWebAuthnAutofill,
+    startAuthentication,
+} from '@simplewebauthn/browser';
+import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
 @Component({
     components: {
         'has-account-card': HasAccountCard,
+        'field-errors': FieldErrors,
     },
 })
 export default class AuthLogin extends Vue {
@@ -28,6 +34,8 @@ export default class AuthLogin extends Vue {
     showEnterAddressError: boolean = false;
     showBannedUserError: boolean = false;
     supportsSms: boolean = false;
+
+    errors: FormError[] = [];
 
     @Prop({ default: null }) after: string;
 
@@ -64,6 +72,7 @@ export default class AuthLogin extends Vue {
         this.processing = false;
         this._loggedIn = false;
         this.supportsSms = ENABLE_SMS_AUTHENTICATION === true;
+        this.errors = [];
     }
 
     async mounted() {
@@ -139,6 +148,22 @@ export default class AuthLogin extends Vue {
                 this.$router.push({ name: 'home' });
             }
         } else if (authManager.usePrivoLogin) {
+        } else if (await browserSupportsWebAuthnAutofill()) {
+            const result = await authManager.loginWithWebAuthn(true);
+            if (result.success === true) {
+                await authManager.loadUserInfo();
+                if (this.after) {
+                    this.$router.push({ name: this.after });
+                } else {
+                    this.$router.push({ name: 'home' });
+                }
+            } else {
+                console.error(
+                    '[AuthLogin] Could not login with WebAuthn:',
+                    result
+                );
+                this.errors = getFormErrors(result);
+            }
         }
     }
 

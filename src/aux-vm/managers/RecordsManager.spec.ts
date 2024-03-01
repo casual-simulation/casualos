@@ -130,6 +130,7 @@ describe('RecordsManager', () => {
             getWebsocketProtocol: jest.fn().mockResolvedValue('websocket'),
             getComIdWebConfig: jest.fn(),
             grantPermission: jest.fn(),
+            provideLoginResult: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },
@@ -176,6 +177,7 @@ describe('RecordsManager', () => {
             getPolicyUrls: jest.fn(),
             getComIdWebConfig: jest.fn(),
             grantPermission: jest.fn(),
+            provideLoginResult: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },

@@ -26,6 +26,8 @@ import {
     PublicRecordKeyPolicy,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
 } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
@@ -153,6 +155,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
         this._iframe.src = iframeUrl;
         this._iframe.style.display = 'none';
+        this._iframe.allow = 'publickey-credentials-get *';
         this._iframe.className = 'auth-helper-iframe';
 
         let promise = waitForLoad(this._iframe);
@@ -522,6 +525,21 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             return;
         }
         return await this._proxy.provideCode(code);
+    }
+
+    async provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 10) {
+            return;
+        }
+        return await this._proxy.provideLoginResult(result);
     }
 
     async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {

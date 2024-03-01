@@ -4,6 +4,8 @@ import type {
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
 import {
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,
     FormError,
     GetPlayerConfigResult,
@@ -42,7 +44,8 @@ export type LoginUIStatus =
     | LoginUIShowIframe
     | LoginUIHasAccount
     | LoginUIPrivoSignUp
-    | LoginUIUpdatePasswordLink;
+    | LoginUIUpdatePasswordLink
+    | LoginUIRegisterWebAuthn;
 
 export interface LoginUINoStatus {
     page: false;
@@ -75,6 +78,11 @@ export interface LoginUIAddressStatus {
      * Whether SMS phone numbers are supported for login.
      */
     supportsSms?: boolean;
+
+    /**
+     * Whether WebAuthn is supported for login.
+     */
+    supportsWebAuthn?: boolean;
 }
 
 export interface LoginUICheckAddressStatus {
@@ -160,6 +168,12 @@ export interface LoginUIUpdatePasswordLink {
      * Whether a parent email was provided by the user.
      */
     providedParentEmail: boolean;
+}
+
+export interface LoginUIRegisterWebAuthn {
+    page: 'show_register_webauthn';
+    apiEndpoint: string;
+    authenticationHeaders: Record<string, string>;
 }
 
 export interface PrivoSignUpInfo {
@@ -419,4 +433,13 @@ export interface AuxAuth {
         recordName: string,
         permission: AvailablePermissions
     ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult>;
+
+    /**
+     * Provides the given login result to be used for the login process.
+     * Only supported on protocol version 10 or more.
+     * @param result The result that should be used.
+     */
+    provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void>;
 }
