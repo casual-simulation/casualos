@@ -20,6 +20,7 @@
     -   On CasualOS, passkeys offer a quicker way to login that doesn't require checking your email or phone number every time.
     -   On supported devices, if you login using a traditional method, CasualOS will ask you if you want to register a passkey for the device.
     -   Upon your next login, you can use the passkey to login instead of having to enter your email and wait for a code.
+-   Changed the date of birth input to handle manually-typed input better.
 
 ## V3.2.16
 
