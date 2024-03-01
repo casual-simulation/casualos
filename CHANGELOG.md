@@ -21,6 +21,7 @@
     -   On supported devices, if you login using a traditional method, CasualOS will ask you if you want to register a passkey for the device.
     -   Upon your next login, you can use the passkey to login instead of having to enter your email and wait for a code.
 -   Changed the date of birth input to handle manually-typed input better.
+-   Added the ability to track some load time metrics using SimpleAnalytics events.
 
 ## V3.2.16
 
