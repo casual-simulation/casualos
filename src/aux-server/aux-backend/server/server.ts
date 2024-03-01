@@ -236,6 +236,10 @@ export class Server {
             builder.useNotifications();
         }
 
+        if (options.webauthn) {
+            builder.useWebAuthn();
+        }
+
         builder.useAutomaticPlugins();
 
         const {
@@ -492,14 +496,16 @@ export class Server {
             console.log('[Server] Websockets integration disabled.');
         }
 
-        interval(30 * 1000)
-            .pipe(
-                concatMap(
-                    async () =>
-                        await websocketController.savePermanentBranches()
+        if (websocketController) {
+            interval(30 * 1000)
+                .pipe(
+                    concatMap(
+                        async () =>
+                            await websocketController.savePermanentBranches()
+                    )
                 )
-            )
-            .subscribe();
+                .subscribe();
+        }
 
         function handleRecordsCorsHeaders(req: Request, res: Response) {
             if (allowedRecordsOrigins.has(req.headers.origin as string)) {

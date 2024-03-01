@@ -23,6 +23,7 @@ model User {
     allSessionRevokeTime DateTime?
     currentLoginRequestId String? @unique
     currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
+    currentWebAuthnChallenge String?
     banTime DateTime?
     banReason String? @db.String(128)
 
@@ -46,6 +47,7 @@ model User {
     allowPublicInsts Boolean?
 
     loginRequests LoginRequest[]
+    webauthnLoginRequests WebAuthnLoginRequest[]
     sessions AuthSession[]
     records Record[]
     recordKeys RecordKey[]
@@ -71,6 +73,29 @@ model User {
 
     instReports UserInstReport[]
     comIdRequests StudioComIdRequest[]
+    authenticators UserAuthenticator[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model UserAuthenticator {
+    id String @id @db.Uuid
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserAuthenticator_userId_fkey1")
+
+    credentialId String @db.String(512) @unique
+    credentialPublicKey Bytes @db.Bytes()
+
+    counter Int
+    credentialDeviceType String @db.String(32)
+    credentialBackedUp Boolean
+
+    aaguid String @db.Uuid
+    registeringUserAgent String? @db.String(512)
+
+    transports String[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -131,6 +156,9 @@ model AuthSession {
     oidRequestId String? @db.Uuid
     oidRequest OpenIDLoginRequest? @relation(fields: [oidRequestId], references: [requestId], map: "AuthSession_oidRequestId_fkey1")
 
+    webauthnRequestId String? @db.Uuid
+    webauthnRequest WebAuthnLoginRequest? @relation(fields: [webauthnRequestId], references: [requestId], map: "AuthSession_webauthnRequestId_fkey1")
+
     previousSessionId String? @unique
     previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [sessionId])
     previousSession1 AuthSession? @relation("PreviousSession")
@@ -163,6 +191,24 @@ model OpenIDLoginRequest {
 
     authorizationCode String?
     authorizationTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    authSessions AuthSession[]
+}
+
+model WebAuthnLoginRequest {
+    requestId String @id @db.Uuid
+    challenge String
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "WebAuthnLoginRequest_userId_fkey1")
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    ipAddress String
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -552,6 +598,8 @@ model FileRecord {
 
     sizeInBytes BigInt
     description String? @db.String(128)
+
+    bucket String?
 
     uploadedAt DateTime?
 

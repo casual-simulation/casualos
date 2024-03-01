@@ -231,7 +231,11 @@ import {
     Photo,
     getEasing,
     enableCollaboration as calcEnableCollaboration,
+    showAccountInfo as calcShowAccountInfo,
     reportInst as calcReportInst,
+    getRecordsEndpoint as calcGetRecordsEndpoint,
+    ldrawCountAddressBuildSteps as calcLdrawCountAddressBuildSteps,
+    ldrawCountTextBuildSteps as calcLdrawCountTextBuildSteps,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -2993,6 +2997,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 device,
                 isCollaborative,
                 enableCollaboration,
+                showAccountInfo,
                 getAB1BootstrapURL,
                 enableAR,
                 disableAR,
@@ -3221,6 +3226,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 listUserStudios,
 
+                getRecordsEndpoint,
+
                 convertGeolocationToWhat3Words,
 
                 raycastFromCamera,
@@ -3230,6 +3237,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 startFormAnimation,
                 stopFormAnimation,
                 listFormAnimations,
+                ldrawCountAddressBuildSteps,
+                ldrawCountTextBuildSteps,
                 attachDebugger,
                 detachDebugger,
 
@@ -4555,8 +4564,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/bytes
      * @docname bytes.toBase64String
      */
-    function toBase64String(bytes: Uint8Array): string {
-        return fromByteArray(bytes);
+    function toBase64String(bytes: Uint8Array | ArrayBuffer): string {
+        if (bytes instanceof ArrayBuffer || bytes instanceof Uint8Array) {
+            const byteArray =
+                bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+            return fromByteArray(byteArray);
+        } else {
+            throw new Error(
+                'Invalid input. Expected Uint8Array or ArrayBuffer.'
+            );
+        }
     }
 
     /**
@@ -4620,12 +4637,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname bytes.toBase64Url
      */
     function toBase64Url(
-        bytes: Uint8Array | string,
+        bytes: Uint8Array | ArrayBuffer | string,
         mimeType?: string
     ): string {
-        let base64: string =
-            typeof bytes === 'string' ? bytes : toBase64String(bytes);
-        return `data:${mimeType || 'image/png'};base64,${base64}`;
+        if (
+            bytes instanceof ArrayBuffer ||
+            bytes instanceof Uint8Array ||
+            typeof bytes === 'string'
+        ) {
+            let base64: string =
+                typeof bytes === 'string' ? bytes : toBase64String(bytes);
+            return `data:${mimeType || 'image/png'};base64,${base64}`;
+        } else {
+            throw new Error(
+                'Invalid input. Expected Uint8Array or ArrayBuffer.'
+            );
+        }
     }
 
     /**
@@ -4702,6 +4729,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * });
      * console.log(`${response.role}: ${response.content}`);
      *
+     * @example Ask the AI to describe an uploaded image.
+     * const files = await os.showUploadFiles();
+     * const firstFile = files[0];
+     * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+     * const response = await ai.chat({
+     *    role: 'user',
+     *    content: [
+     *        {
+     *            base64: base64,
+     *            mimeType: firstFile.mimeType,
+     *        },
+     *        {
+     *            text: 'please describe the image'
+     *        }
+     *    ]
+     * }, {
+     *    preferredModel: 'gemini-pro-vision'
+     * });
+     *
+     * os.toast(response.content);
+     *
+     *
      * @dochash actions/ai
      * @docname ai.chat
      * @docid ai.chat-message
@@ -4758,6 +4807,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * }
      *
      * os.toast("Goodbye!");
+     *
+     * @example Ask the AI to describe an uploaded image.
+     * const files = await os.showUploadFiles();
+     * const firstFile = files[0];
+     * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+     * const response = await ai.chat([{
+     *    role: 'user',
+     *    content: [
+     *        {
+     *            base64: base64,
+     *            mimeType: firstFile.mimeType,
+     *        },
+     *        {
+     *            text: 'please describe the image'
+     *        }
+     *    ]
+     * }], {
+     *    preferredModel: 'gemini-pro-vision'
+     * });
+     *
+     * os.toast(response.content);
      *
      * @dochash actions/ai
      * @docname ai.chat
@@ -5663,6 +5733,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return Promise.resolve();
+    }
+
+    /**
+     * Attempts to show the "Account Info" dialog.
+     * Does nothing if the user is not logged in.
+     *
+     * @example Show the "Account Info" dialog.
+     * await os.showAccountInfo();
+     *
+     * @dochash actions/os/system
+     * @docname os.showAccountInfo
+     */
+    function showAccountInfo(): Promise<void> {
+        const task = context.createTask();
+        const event = calcShowAccountInfo(task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -8011,6 +8097,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param permission the permission that should be added.
      * @param options the options for the operation.
      *
+     * @example Grant a permission in "recordName" to the "myRole" role to access all resources with the "secret" marker.
+     * const result = await os.grantPermission('recordName', {
+     *     marker: 'secret',
+     *
+     *     // any kind of resource
+     *     resourceKind: null,
+     *
+     *     // all actions
+     *     action: null,
+     *
+     *     subjectType: 'role',
+     *     subjectId: 'myRole',
+     *
+     *     options: {},
+     *
+     *     // Never expire
+     *     expireTimeMs: null
+     * });
+     *
+     * @example Grant a permission to access the data record at "myAddress".
+     * const result = await os.grantPermission('recordName', {
+     *     resourceKind: 'data',
+     *     resourceId: 'myAddress',
+     *
+     *     // all actions
+     *     action: null,
+     *
+     *     subjectType: 'role',
+     *     subjectId: 'myRole',
+     *
+     *     options: {},
+     *
+     *     // Never expire
+     *     expireTimeMs: null
+     * });
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantPermission
@@ -8068,6 +8190,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName the name of the record.
      * @param options the options for the operation.
      *
+     * @example Grant the current inst admin permissions in the "myRecord" record.
+     * const result = await os.grantInstAdminPermission('myRecord');
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.grantInstAdminPermission
@@ -8095,6 +8220,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param userId the ID of the user that should be granted the role.
      * @param expireTimeMs the time that the role grant expires. If `null`, then the role will not expire.
      * @param options the options for the operation.
+     *
+     * @example Grant the "myRole" role to the user with the ID "myUserId" in the "myRecord" record.
+     * const result = await os.grantUserRole('myRecord', 'myRole', 'myUserId');
+     *
+     * @example Grant a role to a user for 24 hours.
+     * const result = await os.grantUserRole('myRecord', 'myRole', 'myUserId', DateTime.now().plus({ hours: 24 }).toMillis());
      *
      * @dochash actions/os/records
      * @docgroup 01-records
@@ -8129,6 +8260,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param userId the ID of the user.
      * @param options the options for the operation.
      *
+     * @example Revoke the "myRole" role from the user with the ID "myUserId" in the "myRecord" record.
+     * const result = await os.revokeUserRole('myRecord', 'myRole', 'myUserId');
+     *
      * @dochash actions/os/records
      * @docgroup 01-records
      * @docname os.revokeUserRole
@@ -8160,6 +8294,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param inst the inst that should be granted the role.
      * @param expireTimeMs the time that the role grant expires. If null, then the role will not expire.
      * @param options the options for the operation.
+     *
+     * @example Grant the "myRole" role to a public inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.grantInstRole('myRecord', 'myRole', '/myInst');
+     *
+     * @example Grant the "myRole" role to a studio inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.grantInstRole('myRecord', 'myRole', 'myRecord/myInst');
+     *
+     * @example Grant a role to an inst for 24 hours.
+     * const result = await os.grantInstRole('myRecord', 'myRole', 'myInst/myInst', DateTime.now().plus({ hours: 24 }).toMillis());
      *
      * @dochash actions/os/records
      * @docgroup 01-records
@@ -8193,6 +8336,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param role the role that should be revoked from the inst.
      * @param inst the inst that the role should be revoked from.
      * @param options the options for the operation.
+     *
+     * @example Revoke the "myRole" role from a public inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.revokeInstRole('myRecord', 'myRole', '/myInst');
+     *
+     * @example Revoke the "myRole" role from a studio inst with the name "myInst" in the "myRecord" record.
+     * const result = await os.revokeInstRole('myRecord', 'myRole', 'myRecord/myInst');
      *
      * @dochash actions/os/records
      * @docgroup 01-records
@@ -9266,6 +9415,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
+     *
+     * @example Get the default records endpoint.
+     * const endpoint = await os.getRecordsEndpoint();
+     * os.toast("The default records endpoint is: " + endpoint);
+     *
+     * @dochash actions/os/records
+     * @docname os.getRecordsEndpoint
+     */
+    function getRecordsEndpoint(): Promise<string> {
+        const task = context.createTask();
+        const event = calcGetRecordsEndpoint(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Converts the given geolocation to a [what3words](https://what3words.com/) address. Returns a promise that resolves with the 3 word address.
      * @param location The latitude and longitude that should be converted to a 3 word address.
      *
@@ -9573,6 +9738,55 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListFormAnimations(address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Counts the number of build steps that exist in the given lego [LDraw](https://ldraw.org/) file.
+     * Returns a promise that resolves with the number of build steps.
+     *
+     * @param address The address of the file.
+     *
+     * @example Count the number of build steps in an example LDraw file
+     * const steps = await os.ldrawCountAddressBuildSteps('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/ldraw/officialLibrary/models/car.ldr_Packed.mpd');
+     * os.toast("There are " + steps + " build steps in the file.");
+     *
+     * @example Animate the build steps of a bot
+     * const steps = await os.ldrawCountAddressBuildSteps('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/ldraw/officialLibrary/models/car.ldr_Packed.mpd');
+     * for (let i = 0; i < steps; i++) {
+     *    masks.formBuildStep = i;
+     * }
+     *
+     * @dochash actions/os/ldraw
+     * @docname os.ldrawCountTextBuildSteps
+     */
+    function ldrawCountAddressBuildSteps(address: string): Promise<number> {
+        const task = context.createTask();
+        const event = calcLdrawCountAddressBuildSteps(address, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Counts the number of build steps that exist in the given lego [LDraw](https://ldraw.org/) file.
+     * Returns a promise that resolves with the number of build steps.
+     *
+     * @param text The text content of the file.
+     *
+     * @example Count the number of build steps in an uploaded LDraw file
+     * const files = await os.showUploadFiles();
+     * const file = files[0];
+     * const steps = await os.ldrawCountTextBuildSteps(file.data);
+     * os.toast("There are " + steps + " build steps in the file.");
+     *
+     * @dochash actions/os/ldraw
+     * @doctitle LDraw Actions
+     * @docsidebar LDraw
+     * @docdescription Actions for working with LDraw models and files.
+     * @docname os.ldrawCountTextBuildSteps
+     */
+    function ldrawCountTextBuildSteps(text: string): Promise<number> {
+        const task = context.createTask();
+        const event = calcLdrawCountTextBuildSteps(text, task.taskId);
         return addAsyncAction(task, event);
     }
 

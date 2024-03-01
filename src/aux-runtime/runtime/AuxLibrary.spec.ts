@@ -136,6 +136,9 @@ import {
     getCurrentInstUpdate,
     openPhotoCamera,
     enableCollaboration,
+    getRecordsEndpoint,
+    ldrawCountAddressBuildSteps,
+    ldrawCountTextBuildSteps,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -174,6 +177,7 @@ import {
     DEFAULT_BRANCH_NAME,
     remote,
     reportInst,
+    showAccountInfo,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import {
@@ -3378,6 +3382,15 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([]);
 
                 await expect(promise).resolves.toBeUndefined();
+            });
+        });
+
+        describe('os.showAccountInfo()', () => {
+            it('should emit a ShowAccountInfoAction', () => {
+                const promise: any = library.api.os.showAccountInfo();
+                const expected = showAccountInfo(context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -7325,6 +7338,16 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.getRecordsEndpoint()', () => {
+            it('should return a promise that resolves to the records endpoint', async () => {
+                const result: any = library.api.os.getRecordsEndpoint();
+                const action = result[ORIGINAL_OBJECT];
+                const expected = getRecordsEndpoint(context.tasks.size);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.convertGeolocationToWhat3Words()', () => {
             it('should send a ConvertGeolocationToWhat3WordsAction', () => {
                 const promise: any =
@@ -7655,6 +7678,32 @@ describe('AuxLibrary', () => {
                 ]);
                 expect(result).toEqual([]);
                 expect(context.actions).toEqual([]);
+            });
+        });
+
+        describe('os.ldrawCountAddressBuildSteps()', () => {
+            it('should emit a LDrawCountBuildStepsAction', () => {
+                const promise: any =
+                    library.api.os.ldrawCountAddressBuildSteps('address');
+                const expected = ldrawCountAddressBuildSteps(
+                    'address',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.ldrawCountTextBuildSteps()', () => {
+            it('should emit a LDrawCountBuildStepsAction', () => {
+                const promise: any =
+                    library.api.os.ldrawCountTextBuildSteps('text');
+                const expected = ldrawCountTextBuildSteps(
+                    'text',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -17010,6 +17059,22 @@ describe('AuxLibrary', () => {
                 )
             ).toBe('AQIDBAU=');
         });
+
+        it('should convert the given ArrayBuffer to a base64 string', () => {
+            const arrayBuffer = new Uint8Array([1, 2, 3, 4, 5]).buffer;
+            const expectedBase64String = 'AQIDBAU=';
+            const base64String = library.api.bytes.toBase64String(arrayBuffer);
+            expect(base64String).toBe(expectedBase64String);
+        });
+
+        it('should throw error when not given Uint8Array or ArrayBuffer', () => {
+            const invalidValue: any = 'invalid value';
+            expect(() => {
+                library.api.bytes.toBase64String(invalidValue);
+            }).toThrowError(
+                'Invalid input. Expected Uint8Array or ArrayBuffer.'
+            );
+        });
     });
 
     describe('bytes.fromBase64String()', () => {
@@ -17046,6 +17111,26 @@ describe('AuxLibrary', () => {
         it('should support base64 strings', () => {
             expect(library.api.bytes.toBase64Url('AQIDBAU=')).toBe(
                 'data:image/png;base64,AQIDBAU='
+            );
+        });
+        it('should convert the given value to base64Url string when given an ArrayBuffer', () => {
+            const arrayBuffer = new ArrayBuffer(5);
+            const view = new Uint8Array(arrayBuffer);
+            view[0] = 1;
+            view[1] = 2;
+            view[2] = 3;
+            view[3] = 4;
+            view[4] = 5;
+            expect(library.api.bytes.toBase64Url(arrayBuffer)).toBe(
+                'data:image/png;base64,AQIDBAU='
+            );
+        });
+        it('should throw an error when not given Uint8Array or ArrayBuffer', () => {
+            const invalidInput: any = new Blob();
+            expect(() => {
+                library.api.bytes.toBase64Url(invalidInput);
+            }).toThrowError(
+                'Invalid input. Expected Uint8Array or ArrayBuffer.'
             );
         });
 

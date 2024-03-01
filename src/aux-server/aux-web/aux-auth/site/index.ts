@@ -88,6 +88,8 @@ import './global.css';
 import { appManager } from 'aux-web/shared/AppManager';
 import OAuthRedirect from './OAuthRedirect/OAuthRedirect';
 import PrivoRegistrationCard from './PrivoRegistrationCard/PrivoRegistrationCard';
+import AuthChildrenPrivacyPolicy from './AuthChildrenPrivacyPolicy/AuthChildrenPrivacyPolicy';
+import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -146,6 +148,11 @@ const routes: RouteConfig[] = [
         path: '/privacy-policy',
         name: 'privacy-policy',
         component: AuthPrivacyPolicy,
+    },
+    {
+        path: '/children-privacy-policy',
+        name: 'children-privacy-policy',
+        component: AuthChildrenPrivacyPolicy,
     },
     {
         path: '/acceptable-use-policy',
@@ -226,6 +233,14 @@ const routes: RouteConfig[] = [
         name: 'sign-up',
         component: PrivoRegistrationCard,
     },
+    {
+        path: '/webauthn',
+        name: 'webauthn-register',
+        component: AuthRegisterWebAuthn,
+        props: (route) => ({
+            after: route.query['after'],
+        }),
+    }
 ];
 
 const router = new VueRouter({
@@ -300,6 +315,7 @@ const publicPages = new Set([
     'code',
     'terms',
     'privacy-policy',
+    'children-privacy-policy',
     'acceptable-use-policy',
     'olx-terms-of-service',
     'oauth-redirect',

@@ -7,6 +7,7 @@ import {
     ConnectionClient,
     RemoteCausalRepoProtocol,
     GenericHttpRequest,
+    GetRecordsEndpointAction,
 } from '@casual-simulation/aux-common';
 import {
     ListRecordDataAction,
@@ -61,6 +62,7 @@ import {
     ReportInstResult,
     GrantResourcePermissionResult,
     RevokePermissionResult,
+    formatInstId,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -222,7 +224,17 @@ export class RecordsManager {
                 this._aiGenerateImage(event);
             } else if (event.type === 'list_user_studios') {
                 this._listUserStudios(event);
+            } else if (event.type === 'get_records_endpoint') {
+                this._getRecordsEndpoint(event);
             }
+        }
+    }
+
+    private _getRecordsEndpoint(event: GetRecordsEndpointAction) {
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, this._config.recordsOrigin)
+            );
         }
     }
 
@@ -276,8 +288,13 @@ export class RecordsManager {
                 data: event.data,
             };
 
-            if (hasValue(this._helper.inst)) {
-                requestData.instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                requestData.instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             if (hasValue(event.options.markers)) {
@@ -336,8 +353,13 @@ export class RecordsManager {
 
             let instances: string[] = undefined;
 
-            if (this._helper.inst) {
-                instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             if (hasValue(event.taskId)) {
@@ -401,8 +423,13 @@ export class RecordsManager {
             }
 
             let instances: string[] = undefined;
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             if (hasValue(event.taskId)) {
@@ -456,8 +483,13 @@ export class RecordsManager {
             console.log('[RecordsManager] Deleting data...', event);
 
             let instances: string[] = undefined;
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result: AxiosResponse<RecordDataResult> = await axios.request(
@@ -602,8 +634,13 @@ export class RecordsManager {
             }
 
             let instances: string[] = undefined;
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
@@ -692,8 +729,13 @@ export class RecordsManager {
             }
 
             let instances: string[] = undefined;
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result: AxiosResponse<ReadFileResult> = await axios.get(
@@ -760,8 +802,13 @@ export class RecordsManager {
             console.log('[RecordsManager] Deleting file...', event);
 
             let instances: string[] = undefined;
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result: AxiosResponse<EraseFileResult> = await axios.request({
@@ -804,8 +851,13 @@ export class RecordsManager {
             console.log('[RecordsManager] Recording event...', event);
 
             let instances: string[] = undefined;
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
@@ -854,8 +906,13 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 let instances: string[] = undefined;
-                if (hasValue(this._helper.inst)) {
-                    instances = [this._helper.inst];
+                if (hasValue(this._helper.origin)) {
+                    instances = [
+                        formatInstId(
+                            this._helper.origin.recordName,
+                            this._helper.origin.inst
+                        ),
+                    ];
                 }
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
@@ -1083,10 +1140,20 @@ export class RecordsManager {
                 '[RecordsManager] Granting policy permission...',
                 event
             );
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
             let requestData: any = {
                 recordName: event.recordName,
                 permission: event.permission,
-                instances: [this._helper.inst],
+                instances,
             };
 
             const result: AxiosResponse<
@@ -1136,10 +1203,20 @@ export class RecordsManager {
                 '[RecordsManager] Revoking policy permission...',
                 event
             );
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
             let requestData: any = {
                 recordName: event.recordName,
                 permissionId: event.permissionId,
-                instances: [this._helper.inst],
+                instances,
             };
 
             const result: AxiosResponse<RevokePermissionResult> =
@@ -1189,6 +1266,18 @@ export class RecordsManager {
                 return;
             }
 
+            if (!hasValue(this._helper.origin)) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncError(
+                            event.taskId,
+                            'Unable to grant inst admin permission with no simulation origin!'
+                        )
+                    );
+                }
+                return;
+            }
+
             const now = DateTime.now();
             const plusOneDay = now.plus({ day: 1 });
             const startOfNextDay = plusOneDay.set({
@@ -1201,7 +1290,10 @@ export class RecordsManager {
             console.log('[RecordsManager] Granting inst admin role...', event);
             let requestData: any = {
                 recordName: event.recordName,
-                inst: this._helper.inst,
+                inst: formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
                 role: 'admin',
                 expireTimeMs: startOfNextDay.toMillis(),
             };
@@ -1245,13 +1337,24 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Granting role...', event);
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
             let requestData: any = {
                 recordName: event.recordName,
                 userId: event.userId,
                 inst: event.inst,
                 role: event.role,
                 expireTimeMs: event.expireTimeMs,
-                instances: [this._helper.inst],
+                instances,
             };
 
             const result: AxiosResponse<GrantRoleResult> = await axios.post(
@@ -1289,13 +1392,23 @@ export class RecordsManager {
                 return;
             }
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
             console.log('[RecordsManager] Revoking role...', event);
             let requestData: any = {
                 recordName: event.recordName,
                 userId: event.userId,
                 inst: event.inst,
                 role: event.role,
-                instances: [this._helper.inst],
+                instances,
             };
 
             const result: AxiosResponse<RevokeRoleResult> = await axios.post(
@@ -1349,14 +1462,20 @@ export class RecordsManager {
                 return;
             }
 
-            const { endpoint, ...rest } = event.options;
+            const { endpoint, preferredModel, ...rest } = event.options;
             let requestData: any = {
+                ...rest,
+                model: preferredModel,
                 messages: event.messages,
-                options: rest,
             };
 
-            if (hasValue(this._helper.inst)) {
-                requestData.instances = [this._helper.inst];
+            if (hasValue(this._helper.origin)) {
+                requestData.instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result: AxiosResponse<AIChatResponse> = await axios.post(
@@ -1410,9 +1529,14 @@ export class RecordsManager {
                 blockadeLabs: blockadeLabs,
             };
 
-            let instances: string[];
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result: AxiosResponse<AIGenerateSkyboxResponse> =
@@ -1527,9 +1651,14 @@ export class RecordsManager {
                 ...rest,
             };
 
-            let instances: string[];
-            if (hasValue(this._helper.inst)) {
-                instances = [this._helper.inst];
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
             }
 
             const result =

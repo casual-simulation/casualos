@@ -14,7 +14,7 @@
                 </router-link>
                 <md-button v-if="showLogout" @click="logout">Sign Out</md-button>
             </md-app-toolbar>
-            <md-app-drawer v-if="showLogout" md-permanent="clipped">
+            <md-app-drawer v-if="showSidebar" md-permanent="clipped">
                 <md-list>
                     <md-list-item :to="{ name: 'home' }">
                         <md-icon>person</md-icon>

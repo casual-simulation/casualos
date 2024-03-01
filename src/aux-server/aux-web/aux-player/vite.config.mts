@@ -134,7 +134,7 @@ export default defineConfig(({ command, mode }) => ({
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
             : []),
-        process.env.VITE_BASIC_SSL === 'true' ? basicSsl() : [],
+        process.argv.some((a) => a === '--ssl') ? basicSsl() : [],
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
     define: {

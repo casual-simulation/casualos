@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus start -p 3001",
+    "start": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus start -p 3001",
     "build": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus build",
     "swizzle": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus swizzle",
     "deploy": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus deploy",

@@ -16,7 +16,12 @@
             </p>
             <md-field v-if="showCode" :class="codeFieldClass">
                 <label>Code</label>
-                <md-input v-model="loginCode" @keydown.enter.native="sendCode()"></md-input>
+                <md-input
+                    v-model="loginCode"
+                    @keydown.enter.native="sendCode()"
+                    inputmode="decimal"
+                    autocomplete="one-time-code"
+                ></md-input>
                 <field-errors field="code" :errors="formErrors" />
             </md-field>
 

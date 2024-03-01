@@ -13,7 +13,8 @@
                                 <md-input
                                     name="address"
                                     id="address"
-                                    autocomplete="email"
+                                    autocomplete="email webauthn"
+                                    :type="supportsSms ? 'text' : 'email'"
                                     v-model="address"
                                     :disabled="processing"
                                 />
@@ -34,6 +35,7 @@
                                     enterAddressErrorMessage
                                 }}</span>
                             </md-field>
+                            <field-errors :field="null" :errors="errors" />
                         </div>
                     </div>
                     <div class="terms-of-service-container">

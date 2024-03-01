@@ -29,6 +29,7 @@ import {
     RuntimeStateVersion,
     isPromise,
 } from '@casual-simulation/aux-runtime';
+import { SimulationOrigin } from '../../managers/Simulation';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -37,6 +38,7 @@ export class TestAuxVM implements AuxVM {
     events: BotAction[];
     formulas: string[];
 
+    origin: SimulationOrigin;
     id: string;
     configBotId: string;
 

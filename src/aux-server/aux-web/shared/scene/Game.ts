@@ -1333,7 +1333,11 @@ export abstract class Game {
                 )
             );
             this.mainCameraRig.mainCamera.position.set(0, 0, 0);
-            this.mainCameraRig.mainCamera.rotation.set(0, 0, 0);
+            if (this._povImu) {
+                this.mainCameraRig.mainCamera.rotation.set(0, 0, 0);
+            } else {
+                this.mainCameraRig.mainCamera.rotation.set(Math.PI / 2, 0, 0);
+            }
             this.mainCameraRig.cameraParent.updateMatrixWorld(true);
             this.mainCameraRig.mainCamera.updateMatrixWorld(true);
         }

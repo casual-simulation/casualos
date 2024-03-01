@@ -94,6 +94,7 @@ import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import { AnimationMixerHandle } from '../AnimationHelper';
 import { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
+import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -110,6 +111,8 @@ interface CancellationToken {
     isCanceled: boolean;
 }
 
+let ldrawLoader: LDrawLoader = null;
+
 export class BotShapeDecorator
     extends AuxBot3DDecoratorBase
     implements IMeshDecorator
@@ -118,6 +121,7 @@ export class BotShapeDecorator
     private _subShape: BotSubShape = null;
     private _gltfVersion: number = null;
     private _address: string = null;
+    private _ldrawPartsAddress: string = null;
     private _animation: any = null;
     private _scaleMode: BotScaleMode = null;
     private _canHaveStroke = false;
@@ -213,6 +217,12 @@ export class BotShapeDecorator
             'auxFormAnimationAddress',
             null
         );
+        const ldrawPartsAddress = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormLDrawPartsAddress',
+            null
+        );
         if (
             this._needsUpdate(
                 shape,
@@ -221,7 +231,8 @@ export class BotShapeDecorator
                 address,
                 aspectRatio,
                 animationAddress,
-                version
+                version,
+                ldrawPartsAddress
             )
         ) {
             this._rebuildShape(
@@ -231,7 +242,8 @@ export class BotShapeDecorator
                 address,
                 aspectRatio,
                 animationAddress,
-                version
+                version,
+                ldrawPartsAddress
             );
         }
 
@@ -251,6 +263,7 @@ export class BotShapeDecorator
         this._updateLightPenumbra(calc);
         this._updateLightDecay(calc);
         this._updateLightGroundColor(calc);
+        this._updateBuildStep(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -289,7 +302,8 @@ export class BotShapeDecorator
         address: string,
         aspectRatio: number,
         animationAddress: string,
-        version: number
+        version: number,
+        ldrawPartsAddress: string
     ) {
         return (
             this._shape !== shape ||
@@ -299,7 +313,8 @@ export class BotShapeDecorator
             (shape === 'mesh' &&
                 (this._address !== address ||
                     this._animationAddress !== animationAddress ||
-                    this._gltfVersion !== version))
+                    this._gltfVersion !== version ||
+                    this._ldrawPartsAddress !== ldrawPartsAddress))
         );
     }
 
@@ -870,6 +885,25 @@ export class BotShapeDecorator
         }
     }
 
+    private _updateBuildStep(calc: BotCalculationContext) {
+        if (this._subShape === 'ldraw' || this._subShape === 'ldrawText') {
+            const buildStep = calculateNumericalTagValue(
+                calc,
+                this.bot3D.bot,
+                'auxFormBuildStep',
+                Infinity
+            );
+            if (this.scene) {
+                this.scene.traverse((obj) => {
+                    if (obj instanceof Group) {
+                        const step = obj.userData.buildingStep ?? 0;
+                        obj.visible = step <= buildStep;
+                    }
+                });
+            }
+        }
+    }
+
     private _rebuildShape(
         shape: BotShape,
         subShape: BotSubShape,
@@ -877,7 +911,8 @@ export class BotShapeDecorator
         address: string,
         addressAspectRatio: number,
         animationAddress: string,
-        version: number
+        version: number,
+        ldrawPartsAddress: string
     ) {
         this._shape = shape;
         this._subShape = subShape;
@@ -886,6 +921,7 @@ export class BotShapeDecorator
         this._addressAspectRatio = addressAspectRatio;
         this._animationAddress = animationAddress;
         this._gltfVersion = version;
+        this._ldrawPartsAddress = ldrawPartsAddress;
         if (
             this.mesh ||
             this.scene ||
@@ -914,6 +950,11 @@ export class BotShapeDecorator
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
+            } else if (
+                this._address &&
+                (this._subShape === 'ldraw' || this._subShape === 'ldrawText')
+            ) {
+                this._createLDraw();
             } else {
                 this._createCube();
             }
@@ -1148,6 +1189,150 @@ export class BotShapeDecorator
         this._updateColor(null);
         this._updateOpacity(null);
         this._updateRenderOrder(null);
+        this.bot3D.updateMatrixWorld(true);
+    }
+
+    private async _createLDraw() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+        let token: CancellationToken = {
+            isCanceled: false,
+        };
+        this._meshCancellationToken = token;
+
+        if (this._subShape === 'ldraw') {
+            await this._loadLDraw(this._address, token);
+        } else {
+            await this._parseLDraw(this._address, token);
+        }
+    }
+
+    private async _loadLDraw(
+        url: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!ldrawLoader) {
+                ldrawLoader = new LDrawLoader();
+            }
+            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
+            const ldraw = await ldrawLoader.loadAsync(url);
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setLDraw(ldraw);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to load LDraw:',
+                url,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    private async _parseLDraw(
+        text: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!ldrawLoader) {
+                ldrawLoader = new LDrawLoader();
+            }
+            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
+            const ldraw = await new Promise<Group>((resolve, reject) => {
+                try {
+                    (ldrawLoader.parse as any)(text, (group: Group) =>
+                        resolve(group)
+                    );
+                } catch (err) {
+                    reject(err);
+                }
+            });
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setLDraw(ldraw);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to parse LDraw:',
+                text,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    private _setLDraw(ldraw: Group) {
+        const group = new Group();
+        group.add(ldraw);
+
+        // Positioning
+        group.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
+        let box = new Box3();
+        box.setFromObject(group);
+        let size = new Vector3();
+        box.getSize(size);
+        let center = new Vector3();
+        box.getCenter(center);
+        const maxScale = Math.max(size.x, size.y, size.z);
+
+        if (this._scaleMode !== 'absolute') {
+            size.divideScalar(maxScale);
+            center.divideScalar(maxScale);
+            group.scale.divideScalar(maxScale);
+        }
+
+        let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
+
+        // Group
+        group.position.copy(bottomCenter);
+        this.scene = group;
+        this.container.add(this.scene);
+
+        this.mesh = findFirstMesh(this.scene);
+
+        // Collider
+        const collider = (this.collider = createCube(1));
+        this.collider.scale.copy(size);
+        setColor(collider, 'clear');
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+
+        this.scene.traverse((obj) => {
+            if (obj instanceof Mesh) {
+                const material = obj.material;
+                if (material) {
+                    registerMaterial(material);
+
+                    if (material.color) {
+                        material[DEFAULT_COLOR] = material.color;
+                    }
+
+                    if (
+                        typeof material.opacity === 'number' &&
+                        !Number.isNaN(material.opacity)
+                    ) {
+                        material[DEFAULT_OPACITY] = material.opacity;
+                    }
+
+                    if (typeof material.transparent === 'boolean') {
+                        material[DEFAULT_TRANSPARENT] = material.transparent;
+                    }
+                }
+            }
+        });
+
+        this._updateColor(null);
+        this._updateOpacity(null);
+        this._updateRenderOrder(null);
+        this._updateBuildStep(null);
         this.bot3D.updateMatrixWorld(true);
     }
 

@@ -26,6 +26,7 @@ import {
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
+import { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a VM that is able to wrap a remote aux channel.
@@ -50,6 +51,7 @@ export class RemoteAuxVM implements AuxVM {
     private _proxy: Remote<AuxChannel>;
     private _id: string;
     private _configBotId: string;
+    private _origin: SimulationOrigin;
 
     closed: boolean;
 
@@ -64,11 +66,21 @@ export class RemoteAuxVM implements AuxVM {
         return this._configBotId;
     }
 
+    get origin() {
+        return this._origin;
+    }
+
     /**
      * Creates a new Simulation VM.
      */
-    constructor(id: string, configBotId: string, channel: Remote<AuxChannel>) {
+    constructor(
+        id: string,
+        origin: SimulationOrigin,
+        configBotId: string,
+        channel: Remote<AuxChannel>
+    ) {
         this._id = id;
+        this._origin = origin;
         this._configBotId = configBotId;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
@@ -234,10 +246,11 @@ export class RemoteAuxVM implements AuxVM {
 
     protected _createSubVM(
         id: string,
+        origin: SimulationOrigin,
         configBotId: string,
         channel: Remote<AuxChannel>
     ): AuxVM {
-        return new RemoteAuxVM(id, configBotId, channel);
+        return new RemoteAuxVM(id, origin, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
@@ -247,7 +260,7 @@ export class RemoteAuxVM implements AuxVM {
 
         const subVM = {
             id,
-            vm: this._createSubVM(id, configBotId, channel),
+            vm: this._createSubVM(id, this.origin, configBotId, channel),
             channel,
         };
 

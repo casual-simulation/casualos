@@ -25,7 +25,7 @@ export default class PrivoRegistrationCard extends Vue {
     acceptedTerms: boolean = false;
     name: string = '';
     displayName: string = '';
-    dateOfBirth: Date = null;
+    dateOfBirth: string = null;
     parentEmail: string = null;
     updatePasswordUrl: string = '';
     enterDateOfBirth: boolean = true;
@@ -75,7 +75,7 @@ export default class PrivoRegistrationCard extends Vue {
 
     get requireEmail() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) >= 18;
         }
         return false;
@@ -83,7 +83,7 @@ export default class PrivoRegistrationCard extends Vue {
 
     get requireParentEmail() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) < 18;
         }
         return false;
@@ -91,7 +91,7 @@ export default class PrivoRegistrationCard extends Vue {
 
     get requireTermsOfService() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) >= 18;
         }
         return false;
@@ -103,10 +103,14 @@ export default class PrivoRegistrationCard extends Vue {
 
     get dateOfBirthText() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return dob.toLocaleString(DateTime.DATE_MED);
         }
         return '';
+    }
+
+    get maxDate() {
+        return DateTime.local().toFormat('yyyy-MM-dd');
     }
 
     created() {
@@ -219,6 +223,18 @@ export default class PrivoRegistrationCard extends Vue {
             return;
         }
 
+        const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
+        if (dob > DateTime.local()) {
+            this.errors = [
+                {
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Please enter a date in the past.',
+                },
+            ];
+            return;
+        }
+
         this.errors = [];
         this.enterDateOfBirth = false;
     }
@@ -272,7 +288,10 @@ export default class PrivoRegistrationCard extends Vue {
                 email: this.email,
                 name: this.name,
                 displayName: this.displayName,
-                dateOfBirth: this.dateOfBirth,
+                dateOfBirth: DateTime.fromFormat(
+                    this.dateOfBirth,
+                    'yyyy-MM-dd'
+                ).toJSDate(),
                 acceptedTermsOfService: this.acceptedTerms,
                 parentEmail: this.parentEmail,
             });

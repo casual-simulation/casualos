@@ -171,7 +171,10 @@ export type AsyncActions =
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
     | OpenPhotoCameraAction
-    | EnableCollaborationAction;
+    | EnableCollaborationAction
+    | GetRecordsEndpointAction
+    | ShowAccountInfoAction
+    | LDrawCountBuildStepsAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -1636,6 +1639,13 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
  */
 export interface EnableCollaborationAction extends AsyncAction {
     type: 'enable_collaboration';
+}
+
+/**
+ * An event that is used to show the account info dialog.
+ */
+export interface ShowAccountInfoAction extends AsyncAction {
+    type: 'show_account_info';
 }
 
 /**
@@ -3320,6 +3330,23 @@ export interface FormAnimationData {
 }
 
 /**
+ * Defines an event that retrieves the build steps for a given LDraw model.
+ */
+export interface LDrawCountBuildStepsAction extends AsyncAction {
+    type: 'ldraw_count_build_steps';
+
+    /**
+     * The address that the build steps should be retrieved from.
+     */
+    address?: string;
+
+    /**
+     * The text that contains the LDraw model.
+     */
+    text?: string;
+}
+
+/**
  * The portals that contain a camera that can be raycasted from.
  *
  * @dochash types/os/portals
@@ -3406,6 +3433,13 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
      * The metadata for the event.
      */
     metadata: any;
+}
+
+/**
+ * An action that is used to retrieve the default records endpoint.
+ */
+export interface GetRecordsEndpointAction extends AsyncAction {
+    type: 'get_records_endpoint';
 }
 
 /**z
@@ -4239,6 +4273,19 @@ export function enableCollaboration(
 ): EnableCollaborationAction {
     return {
         type: 'enable_collaboration',
+        taskId,
+    };
+}
+
+/**
+ * Creates a ShowAccountInfoAction.
+ * @param taskId The ID of the async task.
+ */
+export function showAccountInfo(
+    taskId?: number | string
+): ShowAccountInfoAction {
+    return {
+        type: 'show_account_info',
         taskId,
     };
 }
@@ -5194,6 +5241,38 @@ export function listFormAnimations(
 }
 
 /**
+ * Creates a new LDrawCountBuildStepsAction.
+ * @param address The address of the LDraw file that should be used.
+ * @param taskId The ID of the async task.
+ */
+export function ldrawCountAddressBuildSteps(
+    address: string,
+    taskId?: number | string
+): LDrawCountBuildStepsAction {
+    return {
+        type: 'ldraw_count_build_steps',
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new LDrawCountBuildStepsAction.
+ * @param text The text content of the LDraw file that should be used.
+ * @param taskId The ID of the async task.
+ */
+export function ldrawCountTextBuildSteps(
+    text: string,
+    taskId?: number | string
+): LDrawCountBuildStepsAction {
+    return {
+        type: 'ldraw_count_build_steps',
+        text,
+        taskId,
+    };
+}
+
+/**
  * Creates a new ConfigureWakeLockAction.
  * @param enabled Whether the wake lock should be enabled.
  * @param taskId The ID of the async task.
@@ -5237,6 +5316,19 @@ export function analyticsRecordEvent(
         type: 'analytics_record_event',
         name,
         metadata,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetRecordsEndpointAction.
+ * @param taskId The ID of the async task.
+ */
+export function getRecordsEndpoint(
+    taskId?: number | string
+): GetRecordsEndpointAction {
+    return {
+        type: 'get_records_endpoint',
         taskId,
     };
 }

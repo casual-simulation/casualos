@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 
 @Component({
     components: {},
@@ -84,6 +85,11 @@ export default class AuthLogin extends Vue {
 
     private async _loadInfoAndNavigate() {
         await authManager.loadUserInfo();
+
+        if (browserSupportsWebAuthn()) {
+            this.$router.push({ name: 'webauthn-register', query: { after: this.after } });
+            return;
+        }
 
         if (this.after) {
             this.$router.push({ name: this.after });

@@ -1,8 +1,70 @@
 # CasualOS Changelog
 
+## V3.2.17
+
+#### Date: 3/1/2024
+
+### :rocket: Features
+
+-   Support case-insensitive matching of email address when logging in.
+    -   Previous versions would create separate accounts for email addresses that differed only in case.
+    -   Now, if an exact match is not found, a case-insensitive search will be made for users when attempting to login by email.
+    -   This will prevent cases where a user gets a new account because they mistakenly changed the case of their email address.
+    -   Technically, email addresses are supposed to be case-sensitive, but pretty much every email server treats them as case-insensitive.
+-   Support configuring a custom file URL for public file records stored in S3.
+    -   This makes it easy to support setting a custom domain or CDN or public file records.
+    -   It does not support private file records at this moment.
+-   Support changing the bucket that S3 files are stored in.
+-   Added support for [passkeys](https://blog.google/technology/safety-security/the-beginning-of-the-end-of-the-password/).
+    -   Passkeys are new way to sign in to apps and websites without a password. Depending on your device and platform, passkeys can even be synced across your devices.
+    -   On CasualOS, passkeys offer a quicker way to login that doesn't require checking your email or phone number every time.
+    -   On supported devices, if you login using a traditional method, CasualOS will ask you if you want to register a passkey for the device.
+    -   Upon your next login, you can use the passkey to login instead of having to enter your email and wait for a code.
+-   Changed the date of birth input to handle manually-typed input better.
+-   Added the ability to track some load time metrics using SimpleAnalytics events.
+
+## V3.2.16
+
+#### Date: 2/23/2024
+
+### :rocket: Features
+
+-   Added the `formLDrawPartsAddress` to set the address that LDraw parts should be loaded from.
+-   Updated the policies.
+-   Added the ability to configure CasualOS to support Google AI for `ai.chat()`.
+-   Added the ability to include image data in `ai.chat()` requests.
+    -   `ai.chat()` messages now support accepting an array of content which can either represent text or image data.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where percent-based sizing of custom apps was broken due to a change made in v3.2.14.
+-   Fixed an issue where bots stored in local insts might not receive the `@onInstJoined` shout.
+-   Fixed an issue where POV mode would start with the camera facing down when IMU support is disabled.
+-   Fixed an issue where `ai.chat()` would not actually honor any options.
+
+## V3.2.15
+
+#### Date: 2/20/2024
+
+### :rocket: Features
+
+-   Added the `ldraw` and `ldrawText` subforms.
+    -   When paired with `#form = "mesh"`, they both allow rendering a [LDraw](https://ldraw.org/) file as the bot's form.
+    -   `ldraw` - Renders the LDraw URL stored in `#formAddress`
+    -   `ldrawText` - Renders the LDraw text stored in `#formAddress`
+-   Added the `os.ldrawCountAddressBuildSteps(address)` and `os.ldrawCountTextBuildSteps(text)` functions.
+    -   `os.ldrawCountAddressBuildSteps(address)` counts and returns the number of build steps that are in the LDraw file at the given URL. Returns a promise that resolves with the number of build steps that the file has.
+    -   `os.ldrawCountTextBuildSteps(text)` counts and returns the number of build steps that are in the given LDraw text. Returns a promise that resolves with the number of build steps that the file has.
+-   Improved `os.showUploadFiles()` to return `.mpd` and `.ldr` files as text.
+    -   This makes it easier for users to work with LDraw files.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where public and local insts could not publish records.
+
 ## V3.2.14
 
-#### Date: 2/15/2024
+#### Date: 2/19/2024
 
 ### :boom: Breaking Changes
 
@@ -40,6 +102,7 @@
     -   A dialog will appear on Safari asking if you want to enter XR when trying to enable AR/VR through CasualOS. This is an extra security measure enforced by Safari.
     -   visionOS currently only supports `immersive-vr` mode of WebXR sessions.
     -   Added pinch select gesture detection for. This allows for pointer-based bot interaction on the Vision Pro since Safari does not implement select events while hand tracking in WebXR.
+-   Categorized tags to seperate documentation pages.
 -   Added the ability to support domain-level isolation for insts.
     -   The `VM_ORIGIN` environment variable can now be configured to tell CasualOS to load insts into a unique HTTP Origin so that insts are isolated from each other.
     -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.
@@ -48,6 +111,12 @@
 -   Added the ability to track rate limits for the WebSocket API separately from the HTTP API.
     -   The `websocketRateLimit` property on the `SERVER_CONFIG` controls the websockets rate limits. If not specified, then the options from `rateLimit` will be used for websockets and HTTP.
     -   Additionally, the `websocketRateLimitPrefix` in `redis` controls the namespace that values are stored at in Redis. If not specified, then the `rateLimitPrefix` will be used for both.
+-   Added the `os.getRecordsEndpoint()` function to get the default records endpoint.
+    -   Records actions, like `os.recordData()`, `os.getData()`, `os.recordFile()`, etc. can be passed an endpoint which specifies which backend should be used for the request.
+    -   If no endpoint is specified, then a default is used.
+    -   `os.getRecordsEndpoint()` returns a promise that resolves to the endpoint that is used by default.
+-   Added the `os.showAccountInfo()` function to show the "Account Information" dialog for users who are logged in.
+-   Implemented `ArrayBuffer` support for `bytes.toBase64String()` and `bytes.toBase64Url()` functions.
 
 ### :bug: Bug Fixes
 

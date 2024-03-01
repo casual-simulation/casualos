@@ -1,7 +1,7 @@
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from 'rxjs';
-import { filter, map, scan } from 'rxjs/operators';
+import { filter, first, map, scan, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
 import {
     ConnectionIndicator,
@@ -82,6 +82,13 @@ interface StoredInst {
     version?: VersionInfo;
     vmOrigin: string;
 }
+
+declare function sa_event(
+    name: string,
+    metadata: any,
+    callback: Function
+): void;
+declare function sa_event(name: string, callback: Function): void;
 
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 
@@ -209,6 +216,7 @@ export class AppManager {
                 config,
                 new AuxVMImpl(
                     id,
+                    origin,
                     {
                         configBotId: configBotId,
                         config,
@@ -407,7 +415,7 @@ export class AppManager {
 
     private async _initCore() {
         console.log('[AppManager] Starting init...');
-        this._reportTime('Time to start');
+        this._reportTime('Time to start', 'start');
         console.log(
             '[AppManager] CasualOS Version:',
             this.version.latestTaggedVersion,
@@ -416,24 +424,38 @@ export class AppManager {
         await this._initIndexedDB();
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
-        this._reportTime('Time to config');
+        this._reportTime('Time to config', 'config');
         await Promise.all([
             this._loadDeviceInfo().then(() => {
-                this._reportTime('Time to device info');
+                this._reportTime('Time to device info', 'device_info');
             }),
             this._initAuth().then(() => {
-                this._reportTime('Time to auth');
+                this._reportTime('Time to auth', 'auth');
             }),
         ]);
         await this._initComId();
-        this._reportTime('Time to init');
+        this._reportTime('Time to init', 'init');
         this._sendProgress('Initialized.', 1, true);
     }
 
-    private _reportTime(message: string) {
-        console.log(
-            `[AppManager] ${message}: ${Date.now() - this._startLoadTime}ms`
-        );
+    private _reportTime(
+        message: string,
+        timeKind: string,
+        basis: number = this._startLoadTime
+    ) {
+        const time = Date.now() - basis;
+        console.log(`[AppManager] ${message}: ${time}ms`);
+
+        if (typeof sa_event === 'function') {
+            sa_event(
+                `time_${timeKind}`,
+                {
+                    time,
+                    message,
+                },
+                () => {}
+            );
+        }
     }
 
     private async _initAuth() {
@@ -663,6 +685,7 @@ export class AppManager {
         inst: string,
         isStatic: boolean
     ) {
+        const timeBasis = Date.now();
         const simulationId = getSimulationId(recordName, inst, isStatic);
         if (
             (this.simulationManager.primary &&
@@ -678,6 +701,26 @@ export class AppManager {
             inst,
             isStatic
         );
+
+        this._primaryPromise.then((manager) => {
+            this._reportTime(
+                'Time to create primary simulation',
+                'create_sim',
+                timeBasis
+            );
+            manager.connection.syncStateChanged
+                .pipe(
+                    first((state) => state),
+                    tap(() => {
+                        this._reportTime(
+                            'Time to first sync',
+                            'first_sync',
+                            timeBasis
+                        );
+                    })
+                )
+                .subscribe();
+        });
 
         return await this._primaryPromise;
     }
@@ -704,7 +747,6 @@ export class AppManager {
         });
 
         this._initOffline();
-        this._reportTime('Time to primary simulation');
         this._primarySimulationAvailableSubject.next(true);
 
         const sim = this.simulationManager.primary;

@@ -20,9 +20,21 @@ export default {
         {
             type: 'category',
             label: 'Reference',
-            items: [
+            items: [{
+                type: 'category',
+                label: 'Tags',
+                items: [
                 'tags',
-                'listen-tags',
+                'tags/info',
+                'tags/behavior',
+                'tags/visualization',
+                'tags/dimension',
+                'tags/portal-bot',
+                'tags/history',
+                'tags/config-bot',
+                'tags/auth-bot',
+                'tags/listen',
+            ]},
                 {
                     type: 'category',
                     label: 'Actions',
@@ -51,6 +63,7 @@ export default {
                                 'actions/os/geolocation',
                                 'actions/os/image-classification',
                                 'actions/os/input',
+                                'actions/os/ldraw',
                                 'actions/os/media',
                                 'actions/os/moderation',
                                 'actions/os/portals',

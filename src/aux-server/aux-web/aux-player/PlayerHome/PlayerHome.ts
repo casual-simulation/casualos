@@ -411,7 +411,7 @@ export default class PlayerHome extends Vue {
             this._loadPrivateInst();
         } else if (isPublicInst(option)) {
             this._loadPublicInst();
-        } else if (option === 'enter join code') {
+        } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
         } else {
             this.showBios = true;

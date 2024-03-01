@@ -36,6 +36,8 @@ import {
     MultiNotificationMessenger,
     ModerationController,
     ModerationStore,
+    GoogleAIChatInterface,
+    RelyingParty,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -195,6 +197,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _authStore: AuthStore;
     private _authMessenger: AuthMessenger;
     private _authController: AuthController;
+    private _relyingParties: RelyingParty[];
 
     private _recordsStore: RecordsStore;
     private _recordsController: RecordsController;
@@ -226,7 +229,8 @@ export class ServerBuilder implements SubscriptionLike {
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
 
-    private _chatInterface: AIChatInterface = null;
+    private _openAIChatInterface: AIChatInterface = null;
+    private _googleAIChatInterface: AIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
@@ -468,11 +472,13 @@ export class ServerBuilder implements SubscriptionLike {
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
+            s3.defaultFilesBucket ?? s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
             s3Client,
             s3.host,
-            undefined
+            undefined,
+            s3.publicFilesUrl
         );
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
@@ -679,6 +685,21 @@ export class ServerBuilder implements SubscriptionLike {
     useAllowedAccountOrigins(origins: Set<string>): this {
         console.log('[ServerBuilder] Using account origins:', origins);
         this._allowedAccountOrigins = origins;
+        return this;
+    }
+
+    useWebAuthn(
+        options: Pick<BuilderOptions, 'webauthn'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using WebAuthn.');
+        if (!options.webauthn) {
+            throw new Error('WebAuthn options must be provided.');
+        }
+        this._relyingParties = options.webauthn.relyingParties.map((rp) => ({
+            id: rp.id,
+            name: rp.name,
+            origin: rp.origin,
+        }));
         return this;
     }
 
@@ -939,7 +960,7 @@ export class ServerBuilder implements SubscriptionLike {
     useAI(
         options: Pick<
             BuilderOptions,
-            'openai' | 'ai' | 'blockadeLabs' | 'stabilityai'
+            'openai' | 'ai' | 'blockadeLabs' | 'stabilityai' | 'googleai'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using AI.');
@@ -947,10 +968,17 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('AI options must be provided.');
         }
 
-        if (options.openai && options.ai.chat?.provider === 'openai') {
+        if (options.openai) {
             console.log('[ServerBuilder] Using OpenAI Chat.');
-            this._chatInterface = new OpenAIChatInterface({
+            this._openAIChatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
+            });
+        }
+
+        if (options.googleai) {
+            console.log('[ServerBuilder] Using Google AI Chat.');
+            this._googleAIChatInterface = new GoogleAIChatInterface({
+                apiKey: options.googleai.apiKey,
             });
         }
 
@@ -1002,12 +1030,26 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyStore,
         };
 
-        if (this._chatInterface && options.ai.chat) {
+        if (this._openAIChatInterface && options.ai.chat) {
             this._aiConfiguration.chat = {
-                interface: this._chatInterface,
+                interfaces: {
+                    openai: this._openAIChatInterface,
+                    google: this._googleAIChatInterface,
+                },
                 options: {
                     defaultModel: options.ai.chat.defaultModel,
-                    allowedChatModels: options.ai.chat.allowedModels,
+                    defaultModelProvider: options.ai.chat.provider,
+                    allowedChatModels: options.ai.chat.allowedModels.map((m) =>
+                        typeof m === 'string'
+                            ? {
+                                  provider: options.ai.chat.provider,
+                                  model: m,
+                              }
+                            : {
+                                  provider: m.provider,
+                                  model: m.model,
+                              }
+                    ),
                     allowedChatSubscriptionTiers:
                         options.ai.chat.allowedSubscriptionTiers,
                 },
@@ -1109,7 +1151,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._authMessenger,
             this._configStore,
             this._forceAllowAllSubscriptionFeatures,
-            this._privoClient
+            this._privoClient,
+            this._relyingParties ?? []
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
@@ -1406,12 +1449,29 @@ const s3Schema = z.object({
             'The name of the bucket that file records should be placed in.'
         )
         .nonempty(),
+    defaultFilesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that file records were originally placed in. This is used for backwards compatibility for file records that were uploaded before changing the filesBucket was supported. If not specified, then filesBucket is used.'
+        )
+        .nonempty()
+        .optional(),
     filesStorageClass: z
         .string()
         .describe(
             'The S3 File Storage Class that should be used for file records.'
         )
         .nonempty(),
+
+    publicFilesUrl: z
+        .string()
+        .describe(
+            'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default S3 URL will be used. ' +
+                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
+                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
+        )
+        .nonempty()
+        .optional(),
 
     messagesBucket: z
         .string()
@@ -1743,6 +1803,13 @@ const openAiSchema = z.object({
         .nonempty(),
 });
 
+const googleAiSchema = z.object({
+    apiKey: z
+        .string()
+        .describe('The Google AI API Key that should be used.')
+        .nonempty(),
+});
+
 const blockadeLabsSchema = z.object({
     apiKey: z
         .string()
@@ -1761,9 +1828,9 @@ const aiSchema = z.object({
     chat: z
         .object({
             provider: z
-                .literal('openai')
+                .enum(['openai', 'google'])
                 .describe(
-                    'The provider that should be used for Chat AI requests.'
+                    'The provider that should be used by default for Chat AI request models that dont have an associated provider.'
                 ),
             defaultModel: z
                 .string()
@@ -1772,7 +1839,15 @@ const aiSchema = z.object({
                 )
                 .nonempty(),
             allowedModels: z
-                .array(z.string().nonempty())
+                .array(
+                    z.union([
+                        z.string().nonempty(),
+                        z.object({
+                            provider: z.enum(['openai', 'google']).optional(),
+                            model: z.string().nonempty(),
+                        }),
+                    ])
+                )
                 .describe(
                     'The list of models that are allowed to be used for Chat AI requets.'
                 ),
@@ -1891,6 +1966,29 @@ const apiGatewaySchema = z.object({
 
 const wsSchema = z.object({});
 
+const webauthnSchema = z.object({
+    relyingParties: z
+        .array(
+            z.object({
+                name: z
+                    .string()
+                    .describe('The human-readable name of the relying party.')
+                    .nonempty(),
+                id: z
+                    .string()
+                    .describe(
+                        'The ID of the relying party. Should be the domain of the relying party. Note that this does not mean that it has to be unique. Instead, it just needs to match the domain that the passkeys can be used on.'
+                    )
+                    .nonempty(),
+                origin: z
+                    .string()
+                    .describe('The HTTP origin of the relying party.')
+                    .nonempty(),
+            })
+        )
+        .describe('The relying parties that should be supported.'),
+});
+
 export const optionsSchema = z.object({
     s3: s3Schema
         .describe(
@@ -1957,6 +2055,11 @@ export const optionsSchema = z.object({
             'Stability AI options. If omitted, then it will not be possible to use Stable Diffusion.'
         )
         .optional(),
+    googleai: googleAiSchema
+        .describe(
+            'Google AI options. If omitted, then it will not be possible to use Google AI (i.e. Gemini)'
+        )
+        .optional(),
     ai: aiSchema
         .describe(
             'AI configuration options. If omitted, then all AI features will be disabled.'
@@ -1971,6 +2074,12 @@ export const optionsSchema = z.object({
     privo: privoSchema
         .describe(
             'Privo configuration options. If omitted, then Privo features will be disabled.'
+        )
+        .optional(),
+
+    webauthn: webauthnSchema
+        .describe(
+            'WebAuthn configuration options. If omitted, then WebAuthn features will be disabled.'
         )
         .optional(),
 

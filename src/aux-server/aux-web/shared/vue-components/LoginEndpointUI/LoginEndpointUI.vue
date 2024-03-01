@@ -27,9 +27,16 @@
             v-else-if="page === 'show_update_password_link'"
             :endpoint="endpoint"
             :status="loginUIStatus"
-            @close="closePasswordLinkDialog()"
+            @close="closeDialog()"
         >
         </update-password-link-dialog>
+        <register-webauthn-dialog
+            v-else-if="page === 'show_register_webauthn'"
+            :endpoint="endpoint"
+            :status="loginUIStatus"
+            @close="closeDialog()"
+        >
+        </register-webauthn-dialog>
     </div>
 </template>
 <script src="./LoginEndpointUI.ts"></script>

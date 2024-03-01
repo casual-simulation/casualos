@@ -47,6 +47,10 @@ export default class AuthApp extends Vue {
         return location.hostname;
     }
 
+    get showSidebar() {
+        return this.showLogout && this.$route.name !== 'webauthn-register';
+    }
+
     onExpandRecords() {
         if (!this.showRecords) {
             this.loadRecords();

@@ -21,7 +21,7 @@ appManager.simulationFactory = async (id, origin, config) => {
             isStatic: !!origin.isStatic,
         },
         config,
-        new AuxVMImpl(id, {
+        new AuxVMImpl(id, origin, {
             configBotId,
             config,
             partitions,

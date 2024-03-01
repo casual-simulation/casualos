@@ -23,6 +23,8 @@ module.exports = {
         '^esbuild-wasm/esbuild.wasm\\?url$':
             '<rootDir>/__mocks__/esbuild.wasm.js',
         '^aux-jest-matchers$': '<rootDir>/jest/jest-matchers.ts',
+        '^@simplewebauthn/browser$':
+            '<rootDir>/__mocks__/@simplewebauthn/browser.js',
     },
     transform: {
         '^.+\\.tsx?$': [
