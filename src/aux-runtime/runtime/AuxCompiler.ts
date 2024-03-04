@@ -1,8 +1,6 @@
 import {
     calculateFinalLineLocation,
-    calculateIndexFromLocation,
     calculateOriginalLineLocation,
-    CodeLocation,
     Transpiler,
     TranspilerResult,
 } from './Transpiler';
@@ -34,6 +32,7 @@ import type {
     AsyncFunctionDeclaration,
     ReturnStatement,
 } from '@casual-simulation/engine262';
+import { CodeLocation } from './TranspilerUtils';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
