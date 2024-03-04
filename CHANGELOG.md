@@ -23,6 +23,10 @@
 -   Changed the date of birth input to handle manually-typed input better.
 -   Added the ability to track some load time metrics using SimpleAnalytics events.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.calculateRayFromCamera()` would return incorrect results for the ray origin.
+
 ## V3.2.16
 
 #### Date: 2/23/2024
