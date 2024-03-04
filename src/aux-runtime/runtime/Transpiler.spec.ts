@@ -25,6 +25,7 @@ describe('Transpiler', () => {
                 '@tag.nested',
             ],
             ['should not convert #tag to _listTagValues(tag)', '#tag', '#tag'],
+            ['should support return statements', 'return 123', '#tag'],
         ];
         it.each(cases)('%s', (description, code, expected) => {
             const transpiler = new Transpiler();
