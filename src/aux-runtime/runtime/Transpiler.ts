@@ -219,7 +219,7 @@ export class Transpiler {
      */
     private _parse(code: string): any {
         const node = this._parser.parse(code, {
-            ecmaVersion: <any>11,
+            ecmaVersion: <any>14,
             locations: true,
             sourceType: 'module',
         });
