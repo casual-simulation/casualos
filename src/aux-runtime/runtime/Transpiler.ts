@@ -114,6 +114,11 @@ export interface TranspilerOptions {
     jsxFactory?: string;
     jsxFragment?: string;
     forceSync?: boolean;
+
+    /**
+     * The name of the function that should be called for ES Module imports.
+     */
+    importFactory?: string;
 }
 
 /**
@@ -126,6 +131,7 @@ export class Transpiler {
     private _parser: typeof Acorn.Parser;
     private _jsxFactory: string;
     private _jsxFragment: string;
+    private _importFactory: string;
     private _forceSync: boolean;
     private _cache: LRUCache<string, TranspilerResult>;
 
@@ -144,6 +150,7 @@ export class Transpiler {
         this._parser = Acorn.Parser.extend(AcornJSX());
         this._jsxFactory = options?.jsxFactory ?? 'h';
         this._jsxFragment = options?.jsxFragment ?? 'Fragment';
+        this._importFactory = options?.importFactory ?? 'importModule';
         this._forceSync = options?.forceSync ?? false;
     }
 
@@ -214,6 +221,7 @@ export class Transpiler {
         const node = this._parser.parse(code, {
             ecmaVersion: <any>11,
             locations: true,
+            sourceType: 'module',
         });
         return node;
     }
@@ -259,7 +267,9 @@ export class Transpiler {
 
         traverse(<any>node, {
             enter: <any>((n: any, parent: any) => {
-                if (n.type === 'WhileStatement') {
+                if (n.type === 'ImportDeclaration') {
+                    this._replaceImportDeclaration(n, parent, doc, text);
+                } else if (n.type === 'WhileStatement') {
                     this._replaceWhileStatement(n, doc, text);
                 } else if (n.type === 'DoWhileStatement') {
                     this._replaceDoWhileStatement(n, doc, text);
@@ -316,6 +326,122 @@ export class Transpiler {
                 JSXEmptyExpression: [],
             },
         });
+    }
+
+    private _replaceImportDeclaration(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text
+    ): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const statementEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.end,
+            1,
+            true
+        );
+        const sourceStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.start,
+            -1,
+            true
+        );
+
+        const sourceEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.end,
+            1,
+            true
+        );
+
+        let currentIndex = absoluteStart.index;
+
+        let importCall = node.specifiers.length > 0 ? `const ` : '';
+
+        const namespaceImport = node.specifiers.find(
+            (s: any) => s.type === 'ImportNamespaceSpecifier'
+        );
+        const defaultImport = node.specifiers.find(
+            (s: any) => s.type === 'ImportDefaultSpecifier'
+        );
+
+        let hasFactory = false;
+        if (namespaceImport) {
+            hasFactory = true;
+            importCall += `${namespaceImport.local.name} = await ${this._importFactory}(`;
+        } else {
+            let addedBraces = false;
+            for (let specifier of node.specifiers) {
+                if (specifier.type === 'ImportSpecifier') {
+                    if (!addedBraces) {
+                        addedBraces = true;
+                        importCall += `{ `;
+                    }
+                    if (specifier.local === specifier.imported) {
+                        importCall += `${specifier.local.name}, `;
+                    } else {
+                        importCall += `${specifier.imported.name}: ${specifier.local.name}, `;
+                    }
+                } else if (specifier.type === 'ImportDefaultSpecifier') {
+                    if (!addedBraces) {
+                        addedBraces = true;
+                        importCall += `{ `;
+                    }
+                    importCall += `default: ${specifier.local.name}, `;
+                }
+            }
+
+            if (addedBraces) {
+                importCall += `}`;
+            }
+            if (node.specifiers.length > 0) {
+                importCall += ` = `;
+            }
+
+            importCall += `await ${this._importFactory}(`;
+        }
+
+        text.insert(currentIndex, importCall);
+
+        currentIndex += importCall.length;
+
+        const absoluteSourceEnd = createAbsolutePositionFromRelativePosition(
+            sourceEnd,
+            doc
+        );
+
+        text.insert(absoluteSourceEnd.index, ')');
+
+        if (namespaceImport && defaultImport) {
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                statementEnd,
+                doc
+            );
+
+            let defaultImportSource = `\nconst { default: ${defaultImport.local.name} } = ${namespaceImport.local.name};`;
+            text.insert(absoluteEnd.index + 1, defaultImportSource);
+        }
+
+        const absoluteSourceStart = createAbsolutePositionFromRelativePosition(
+            sourceStart,
+            doc
+        );
+
+        text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
     }
 
     private _replaceWhileStatement(node: any, doc: Doc, text: Text): any {

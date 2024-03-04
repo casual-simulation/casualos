@@ -742,6 +742,149 @@ describe('Transpiler', () => {
                 );
             });
         });
+
+        describe('imports', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({});
+            });
+
+            it('should be able to compile simple import statements', () => {
+                const result = transpiler.transpile(`import "test";`);
+
+                expect(result).toBe(`await importModule("test");`);
+            });
+
+            it('should be able to compile default import statements', () => {
+                const result = transpiler.transpile(
+                    `import testModule from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { default: testModule, } = await importModule("test");`
+                );
+            });
+
+            it('should be able to compile named import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, } = await importModule("test");`
+                );
+            });
+
+            it('should support named import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2, } = await importModule("test");`
+                );
+            });
+
+            it('should support default and named import statements', () => {
+                const result = transpiler.transpile(
+                    `import defaultImport, { myImport, myImport2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { default: defaultImport, myImport, myImport2, } = await importModule("test");`
+                );
+            });
+
+            it('should support namespace import statements', () => {
+                const result = transpiler.transpile(
+                    `import * as everything from "test";`
+                );
+
+                expect(result).toBe(
+                    `const everything = await importModule("test");`
+                );
+            });
+
+            it('should support named import statements with renaming', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test");`
+                );
+            });
+
+            it('should support the default import and namespace import', () => {
+                const result = transpiler.transpile(
+                    `import MyImport, * as Everything from "test";`
+                );
+
+                expect(result).toBe(
+                    `const Everything = await importModule("test");\nconst { default: MyImport } = Everything;`
+                );
+            });
+
+            it('should support when the statement doesnt end with a semi-colon', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test"`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test")`
+                );
+            });
+
+            it('should support multiple import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";
+                     import Module from "test2";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test");
+                     const { default: Module, } = await importModule("test2");`
+                );
+            });
+
+            it('should support other statements after import statments', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";
+                     console.log('abc');`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test");
+                     console.log('abc');`
+                );
+            });
+
+            it('should support other statements before import statments', () => {
+                const result = transpiler.transpile(
+                    `console.log('abc');
+                     import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `console.log('abc');
+                     const { myImport, myImport2: otherImport, } = await importModule("test");`
+                );
+            });
+
+            it('should support using a custom import factory', () => {
+                transpiler = new Transpiler({
+                    importFactory: 'myImportModule',
+                });
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await myImportModule("test");`
+                );
+            });
+        });
     });
 
     describe('replaceMacros()', () => {
