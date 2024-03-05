@@ -60,7 +60,7 @@ import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime';
+import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 
 export interface TableBot {
     /**
