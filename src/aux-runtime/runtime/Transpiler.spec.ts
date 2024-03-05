@@ -5,11 +5,13 @@ import {
     anyArgument,
     replaceMacros,
     calculateOriginalLineLocation,
-    calculateIndexFromLocation,
-    calculateLocationFromIndex,
     TranspilerResult,
     calculateFinalLineLocation,
 } from './Transpiler';
+import {
+    calculateIndexFromLocation,
+    calculateLocationFromIndex,
+} from './TranspilerUtils';
 
 describe('Transpiler', () => {
     describe('transpile()', () => {

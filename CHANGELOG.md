@@ -26,6 +26,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.calculateRayFromCamera()` would return incorrect results for the ray origin.
+-   Improved CasualOS to delay installation of the service worker until either the inst is fully loaded or the BIOS is shown.
 
 ## V3.2.16
 

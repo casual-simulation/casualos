@@ -246,8 +246,8 @@ importers:
         specifier: 9.0.0
         version: 9.0.0
       rollup-plugin-visualizer:
-        specifier: 5.10.0
-        version: 5.10.0
+        specifier: 5.12.0
+        version: 5.12.0
       sass:
         specifier: 1.56.1
         version: 1.56.1
@@ -19323,8 +19323,8 @@ packages:
       terser: 5.26.0
     dev: true
 
-  /rollup-plugin-visualizer@5.10.0:
-    resolution: {integrity: sha512-N4AkNL0qFvipegbDJ0kupS+8eKGjL0q+lYwV46NflLX/B8Rh73wz3kCIdg50bR6XVhNcaMA4Eb519xtm90Ckfg==}
+  /rollup-plugin-visualizer@5.12.0:
+    resolution: {integrity: sha512-8/NU9jXcHRs7Nnj07PF2o4gjxmm9lXIrZ8r175bT9dK8qoLlvKTwRMArRCMgpMGlq8CTLugRvEmyMeMXIU2pNQ==}
     engines: {node: '>=14'}
     hasBin: true
     peerDependencies:
