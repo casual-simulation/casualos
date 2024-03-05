@@ -9,6 +9,11 @@ import {
     isScript,
     parseScript,
     hasValue,
+    BotModule,
+    ImportFunc,
+    ExportFunc,
+    isModule,
+    parseModule,
 } from '@casual-simulation/aux-common/bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -767,7 +772,12 @@ export class AuxCompiler {
     }
 
     private _parseScript(script: string): string {
-        return script;
+        return parseScript(script);
+    }
+
+    private _parseModule(script: string): TranspilerResult {
+        script = parseModule(script);
+        return this._transpiler.transpileWithMetadata(script);
     }
 
     private _compileFunction<T>(
@@ -787,13 +797,18 @@ export class AuxCompiler {
         // seems to work.
 
         let async = false;
+        let moduleTranspilerResult: TranspilerResult;
         if (isScript(script)) {
-            script = parseScript(script);
-        }
-        if (script.indexOf('await ') >= 0) {
+            script = this._parseScript(script);
+        } else if (isModule(script)) {
+            moduleTranspilerResult = this._parseModule(script);
+            // All modules are async
             async = true;
         }
-        script = this._parseScript(script);
+        if (!async && script.indexOf('await ') >= 0) {
+            async = true;
+        }
+
         let transpilerLineOffset = 0;
         let scriptLineOffset = 0;
         let customGlobalThis = false;
@@ -835,7 +850,7 @@ export class AuxCompiler {
         }
 
         let scriptCode: string;
-        scriptCode = `\n { \n${script}\n }`;
+        scriptCode = `\n { \n${moduleTranspilerResult?.code ?? script}\n }`;
         transpilerLineOffset += 2;
 
         let withCodeStart = '';
@@ -1105,6 +1120,13 @@ export interface AuxScriptMetadata {
      * The context that the function was created with.
      */
     context: any;
+}
+
+export interface CompiledBotModule extends BotModule {
+    /**
+     * The script that the module was compiled from.
+     */
+    scriptFunc: AuxCompiledScript;
 }
 
 /**

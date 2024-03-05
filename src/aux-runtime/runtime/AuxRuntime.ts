@@ -70,6 +70,12 @@ import {
     formatBotRotation,
     parseTaggedNumber,
     REPLACE_BOT_SYMBOL,
+    BotModule,
+    IdentifiedBotModule,
+    isModule,
+    ImportFunc,
+    ExportFunc,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common/bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
@@ -80,6 +86,8 @@ import {
     isInterpretableFunction,
     FUNCTION_METADATA,
     AuxScriptMetadata,
+    CompiledBotModule,
+    AuxCompileOptions,
 } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -314,6 +322,16 @@ export class AuxRuntime
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
     private _interpreter: InterpreterType;
 
+    // /**
+    //  * The map of module IDs to their respective modules.
+    //  */
+    // private _cachedModules: Map<string, RuntimeModule> = new Map();
+
+    // /**
+    //  * The map of tags (botID.tag.space) to their respective modules.
+    //  */
+    // private _tagToModuleMap: Map<string, RuntimeModule> = new Map();
+
     /**
      * The number of times that the runtime can call onError for an error from the same script.
      */
@@ -469,6 +487,30 @@ export class AuxRuntime
                 if (isInterpretableFunction(val)) {
                     this._interpretedTagSpecificApi[key] =
                         getInterpretableFunction(val);
+                }
+            }
+        }
+    }
+
+    /**
+     * Attempts to resolve the module with the given name.
+     * @param moduleName The name of the module to resolve.
+     */
+    async resolveModule(moduleName: string): Promise<IdentifiedBotModule> {
+        for (let id in this.currentState) {
+            const bot = this.currentState[id];
+            const system = calculateStringTagValue(null, bot, 'system', null);
+
+            if (system && moduleName.startsWith(system)) {
+                const tag = moduleName.substring(system.length + 1);
+                const mod = bot.modules[tag];
+                if (mod) {
+                    return {
+                        ...mod,
+                        botId: id,
+                        id: moduleName,
+                        tag: tag,
+                    };
                 }
             }
         }
@@ -2549,6 +2591,7 @@ export class AuxRuntime
             precalculated: true,
             tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
+            modules: {},
             values: {},
             script: null,
             originalTagEditValues: {},
@@ -2872,7 +2915,11 @@ export class AuxRuntime
     }
 
     private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
-        let { value, listener } = this._compileValue(bot, tag, tagValue);
+        let { value, listener, module } = this._compileValue(
+            bot,
+            tag,
+            tagValue
+        );
         if (listener) {
             bot.listeners[tag] = listener;
             this._globalContext.recordListenerPresense(bot.id, tag, true);
@@ -2880,6 +2927,13 @@ export class AuxRuntime
             delete bot.listeners[tag];
             this._globalContext.recordListenerPresense(bot.id, tag, false);
         }
+
+        if (module) {
+            bot.modules[tag] = module;
+        } else if (!!bot.modules[tag]) {
+            delete bot.modules[tag];
+        }
+
         if (typeof value !== 'function') {
             if (hasValue(value)) {
                 bot.values[tag] = value;
@@ -2898,8 +2952,10 @@ export class AuxRuntime
     ): {
         value: any;
         listener: AuxCompiledScript;
+        module: CompiledBotModule;
     } {
         let listener: AuxCompiledScript;
+        let module: CompiledBotModule;
         if (isFormula(value)) {
             const parsed = value.substring(DNA_TAG_PREFIX.length);
             const transformed = replaceMacros(parsed);
@@ -2911,6 +2967,12 @@ export class AuxRuntime
         } else if (isScript(value)) {
             try {
                 listener = this._compile(bot, tag, value, {});
+            } catch (ex) {
+                value = ex;
+            }
+        } else if (isModule(value)) {
+            try {
+                module = this._compileModule(bot, tag, value, {});
             } catch (ex) {
                 value = ex;
             }
@@ -2943,7 +3005,7 @@ export class AuxRuntime
             }
         }
 
-        return { value, listener };
+        return { value, listener, module };
     }
 
     private _compileTagMaskValue(
@@ -3020,13 +3082,13 @@ export class AuxRuntime
         }
 
         const constants = {
-            ...this._library.api,
+            ...(options.api ?? this._library.api),
             tagName: tag,
             globalThis: this._globalObject,
         };
 
         const specifics = {
-            ...this._library.tagSpecificApi,
+            ...(options.tagSpecificApi ?? this._library.tagSpecificApi),
         };
 
         if (this._interpreter) {
@@ -3087,7 +3149,7 @@ export class AuxRuntime
                 configBot: () => this.context.playerBot,
                 links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
             },
-            arguments: [['that', 'data']],
+            arguments: [['that', 'data'], 'importModule', 'exportModule'],
         });
 
         if (hasValue(bot)) {
@@ -3097,6 +3159,24 @@ export class AuxRuntime
         }
 
         return func;
+    }
+
+    private _compileModule(
+        bot: CompiledBot,
+        tag: string,
+        script: string,
+        options: CompileOptions
+    ): CompiledBotModule {
+        const func = this._compile(bot, tag, script, {
+            ...options,
+        });
+
+        return {
+            moduleFunc: (imports, exports) => {
+                return func(null, imports, exports);
+            },
+            scriptFunc: func,
+        };
     }
 
     private _handleError(err: any, bot: Bot, tag: string): ScriptError {
@@ -3511,7 +3591,17 @@ export class AuxRuntime
 /**
  * Options that are used to influence the behavior of the compiled script.
  */
-interface CompileOptions {}
+interface CompileOptions {
+    /**
+     * The API that should be used instead of the defaults.
+     */
+    api?: AuxCompileOptions<any>['constants'];
+
+    /**
+     * The tag-specific API that should be used instead of the defaults.
+     */
+    tagSpecificApi?: AuxCompileOptions<any>['variables'];
+}
 
 interface UncompiledScript {
     bot: CompiledBot;

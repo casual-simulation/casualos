@@ -59,6 +59,8 @@ import {
     formatBotVector,
     formatBotRotation,
     calculateDimensions,
+    isModule,
+    parseModule,
 } from './BotCalculations';
 import { Bot, BotsState, DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
 import { v4 as uuid } from 'uuid';
@@ -98,6 +100,17 @@ describe('BotCalculations', () => {
         });
     });
 
+    describe('isModule()', () => {
+        it('should be true when value starts with a "📄" sign', () => {
+            expect(isModule('📄')).toBeTruthy();
+            expect(isModule('a📄')).toBeFalsy();
+        });
+
+        it('should be false when value does not start with a "📄" sign', () => {
+            expect(isModule('abc')).toBeFalsy();
+        });
+    });
+
     describe('parseScript()', () => {
         it('should return the script when value starts with a "@" sign', () => {
             expect(parseScript('@')).toBe('');
@@ -106,6 +119,17 @@ describe('BotCalculations', () => {
 
         it('should return null when the value does not start with an "@" sign', () => {
             expect(parseScript('abc')).toBe(null);
+        });
+    });
+
+    describe('isModule()', () => {
+        it('should return the script when value starts with a "📄" sign', () => {
+            expect(parseModule('📄abc')).toBe('abc');
+            expect(parseModule('a📄')).toBe(null);
+        });
+
+        it('should return null when value does not start with a "📄" sign', () => {
+            expect(parseModule('abc')).toBe(null);
         });
     });
 

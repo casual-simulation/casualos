@@ -533,6 +533,14 @@ export function isScript(value: unknown): value is string {
 }
 
 /**
+ * Determines if the given value represents a script.
+ * @param value The value.
+ */
+export function isModule(value: unknown): value is string {
+    return typeof value === 'string' && value.indexOf('📄') === 0;
+}
+
+/**
  * Determiens if the given value represents a bot link.
  * @param value The value.
  */
@@ -631,6 +639,19 @@ export function parseScript(value: unknown): string | null {
  */
 export function parseScriptSafe(value: string): string {
     return parseScript(value) ?? value;
+}
+
+/**
+ * Parses the given value into a module script.
+ * Returns the module script if the value is a module.
+ * Returns null if the value is not a module.
+ * @param value The value to parse.
+ */
+export function parseModule(value: unknown): string | null {
+    if (isModule(value)) {
+        return value.substring('📄'.length);
+    }
+    return null;
 }
 
 /**

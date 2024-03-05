@@ -40,6 +40,28 @@ describe('AuxCompiler', () => {
             expect(func()).toEqual(3);
         });
 
+        it('should support compiling scripts', () => {
+            const func = compiler.compile('@return 1 + 2');
+
+            expect(func()).toEqual(3);
+        });
+
+        it('should always compile modules as async', async () => {
+            const func = compiler.compile('📄', {
+                arguments: ['importModule'],
+            });
+
+            expect(await func()).toBeUndefined();
+        });
+
+        it('should be able to compile import statements', async () => {
+            const func = compiler.compile('📄import abc from "test";', {
+                arguments: ['importModule'],
+            });
+
+            expect(await func(async () => ({}))).toEqual(undefined);
+        });
+
         it('should support compiling with an interpreter', () => {
             const interpreter = new Interpreter();
             const func = compiler.compile('return 1 + 2', {

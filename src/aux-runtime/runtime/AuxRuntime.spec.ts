@@ -8166,6 +8166,48 @@ describe('AuxRuntime', () => {
                     });
                 });
             });
+
+            describe('imports', () => {
+                it('should be able to import scripts by system tag', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello', null);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+            });
+        });
+
+        describe.only('resolveModule()', () => {
+            it('should return a module from the system', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m?.id).toBe('module.library');
+                expect(m?.botId).toBe('test2');
+                expect(m?.tag).toBe('library');
+            });
         });
 
         describe('dna tags', () => {

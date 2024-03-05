@@ -1,5 +1,6 @@
 import { type } from 'os';
 import { TagEditOp } from './AuxStateHelpers';
+import { BotModule } from './BotModule';
 
 export type PartialBot = Partial<Bot>;
 
@@ -298,6 +299,27 @@ export interface CompiledBotListeners {
      * Gets the listener in the given tag.
      */
     [tag: string]: (arg?: any) => any;
+}
+
+/**
+ * An interface that maps module names to compiled modules.
+ *
+ * ```typescript
+ * interface Modules {
+ *      [tag: string]: BotModule;
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listeners
+ * @docid CompiledBotModules
+ */
+export interface CompiledBotModules {
+    /**
+     * Gets the listener in the given tag.
+     */
+    [tag: string]: BotModule;
 }
 
 /**
