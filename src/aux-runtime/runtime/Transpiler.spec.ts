@@ -759,6 +759,13 @@ describe('Transpiler', () => {
                 expect(result).toBe(`await importModule("test");`);
             });
 
+            it('should mark the script as a module', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`import "test";`);
+
+                expect(result.metadata.isModule).toBe(true);
+            });
+
             it('should be able to compile default import statements', () => {
                 const result = transpiler.transpile(
                     `import testModule from "test";`
@@ -885,6 +892,141 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     `const { myImport, myImport2: otherImport, } = await myImportModule("test");`
+                );
+            });
+        });
+
+        describe('exports', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({});
+            });
+
+            it('should be able to compile object export statements', () => {
+                const result = transpiler.transpile(
+                    `const value = "test"; export { value };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test"; export({ value, });`
+                );
+            });
+
+            it('should mark the script as a module', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `const value = "test"; export { value };`
+                );
+                expect(result.metadata.isModule).toBe(true);
+            });
+
+            it('should be able to compile empty export statements', () => {
+                const result = transpiler.transpile(`export { };`);
+
+                expect(result).toBe(`export({});`);
+            });
+
+            it('should work if the semi-colon is omitted', () => {
+                const result = transpiler.transpile(
+                    `const value = "test";\nexport { value }`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nexport({ value, });`
+                );
+            });
+
+            it('should work if the space after "export" is omitted', () => {
+                const result = transpiler.transpile(
+                    `const value = "test";\nexport{ value };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nexport({ value, });`
+                );
+            });
+
+            it('should be able to compile object export statements with aliases', () => {
+                const result = transpiler.transpile(
+                    `const value = "test"; export { value as otherValue };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test"; export({ otherValue: value, });`
+                );
+            });
+
+            it('should be able to compile variable export statements', () => {
+                const result = transpiler.transpile(
+                    `export const value = "test";`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nexport({ value, });`
+                );
+            });
+
+            it('should be able to compile multiple variable export statements', () => {
+                const result = transpiler.transpile(
+                    `export const value = "test", value2 = 123;`
+                );
+
+                expect(result).toBe(
+                    `const value = "test", value2 = 123;\nexport({ value, value2, });`
+                );
+            });
+
+            it('should be able to compile mutable variable statements', () => {
+                const result = transpiler.transpile(
+                    `export let value = "test";`
+                );
+
+                expect(result).toBe(`let value = "test";\nexport({ value, });`);
+            });
+
+            it('should be able to compile function export statements', () => {
+                const result = transpiler.transpile(
+                    `export function myFunc() { return "test"; }`
+                );
+
+                expect(result).toBe(
+                    `function myFunc() { return "test"; }\nexport({ myFunc, });`
+                );
+            });
+
+            it('should be able to compile default export statements', () => {
+                const result = transpiler.transpile(`export default "test";`);
+
+                expect(result).toBe(`export({ default: "test" });`);
+            });
+
+            it('should be able to compile empty export from source statements', () => {
+                const result = transpiler.transpile(`export {} from "test";`);
+
+                expect(result).toBe(`export({});`);
+            });
+
+            it('should be able to compile export all statements', () => {
+                const result = transpiler.transpile(`export * from "test";`);
+
+                expect(result).toBe(`export("test");`);
+            });
+
+            it('should be able to compile export object from source statements', () => {
+                const result = transpiler.transpile(
+                    `export { value, value2 } from "test";`
+                );
+
+                expect(result).toBe(`export("test", ['value', 'value2', ]);`);
+            });
+
+            it('should be able to compile export object statements from source with aliases', () => {
+                const result = transpiler.transpile(
+                    `export { value as example, value2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `export("test", [['value', 'example'], 'value2', ]);`
                 );
             });
         });

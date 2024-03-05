@@ -203,15 +203,18 @@ export class Transpiler {
         const text = doc.getText();
         text.insert(0, code);
 
-        this._replace(node, doc, text);
+        let metadata: TranspilerResult['metadata'] = {
+            doc,
+            text,
+            isModule: false,
+        };
+
+        this._replace(node, doc, text, metadata);
         const finalCode = text.toString();
         const result: TranspilerResult = {
             code: finalCode,
             original: macroed,
-            metadata: {
-                doc,
-                text,
-            },
+            metadata,
         };
         this._cache.set(code, result);
 
@@ -265,7 +268,12 @@ export class Transpiler {
         });
     }
 
-    private _replace(node: Acorn.Node, doc: Doc, text: Text): void {
+    private _replace(
+        node: Acorn.Node,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
         if (!node) {
             return;
         }
@@ -273,7 +281,37 @@ export class Transpiler {
         traverse(<any>node, {
             enter: <any>((n: any, parent: any) => {
                 if (n.type === 'ImportDeclaration') {
-                    this._replaceImportDeclaration(n, parent, doc, text);
+                    this._replaceImportDeclaration(
+                        n,
+                        parent,
+                        doc,
+                        text,
+                        metadata
+                    );
+                } else if (n.type === 'ExportNamedDeclaration') {
+                    this._replaceExportNamedDeclaration(
+                        n,
+                        parent,
+                        doc,
+                        text,
+                        metadata
+                    );
+                } else if (n.type === 'ExportDefaultDeclaration') {
+                    this._replaceExportDefaultDeclaration(
+                        n,
+                        parent,
+                        doc,
+                        text,
+                        metadata
+                    );
+                } else if (n.type === 'ExportAllDeclaration') {
+                    this._replaceExportAllDeclaration(
+                        n,
+                        parent,
+                        doc,
+                        text,
+                        metadata
+                    );
                 } else if (n.type === 'WhileStatement') {
                     this._replaceWhileStatement(n, doc, text);
                 } else if (n.type === 'DoWhileStatement') {
@@ -285,13 +323,13 @@ export class Transpiler {
                 } else if (n.type === 'ForOfStatement') {
                     this._replaceForOfStatement(n, doc, text);
                 } else if (n.type === 'JSXElement') {
-                    this._replaceJSXElement(n, doc, text);
+                    this._replaceJSXElement(n, doc, text, metadata);
                 } else if (n.type === 'JSXText') {
                     this._replaceJSXText(n, doc, text);
                 } else if (n.type === 'JSXExpressionContainer') {
                     this._replaceJSXExpressionContainer(n, doc, text);
                 } else if (n.type === 'JSXFragment') {
-                    this._replaceJSXFragment(n, doc, text);
+                    this._replaceJSXFragment(n, doc, text, metadata);
                 } else if (n.type === 'JSXEmptyExpression') {
                     this._replaceJSXEmptyExpression(n, doc, text);
                 } else if (
@@ -337,8 +375,11 @@ export class Transpiler {
         node: any,
         parent: any,
         doc: Doc,
-        text: Text
+        text: Text,
+        metadata: TranspilerResult['metadata']
     ): any {
+        metadata.isModule = true;
+
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 
@@ -449,6 +490,420 @@ export class Transpiler {
         text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
     }
 
+    private _replaceExportNamedDeclaration(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        if (node.declaration) {
+            this._replaceExportVariableDeclaration(
+                node,
+                parent,
+                doc,
+                text,
+                metadata
+            );
+        } else if (node.source) {
+            this._replaceExportFromSourceDeclaration(
+                node,
+                parent,
+                doc,
+                text,
+                metadata
+            );
+        } else {
+            this._replaceExportSpecifiersDeclaration(
+                node,
+                parent,
+                doc,
+                text,
+                metadata
+            );
+        }
+    }
+
+    private _replaceExportVariableDeclaration(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
+        metadata.isModule = true;
+
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const declarationStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.declaration.start,
+            undefined,
+            true
+        );
+
+        const declarationEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.declaration.end,
+            -1,
+            true
+        );
+
+        text.delete(
+            absoluteStart.index,
+            declarationStart.index - absoluteStart.index
+        );
+
+        const absoluteDeclarationEnd =
+            createAbsolutePositionFromRelativePosition(declarationEnd, doc);
+
+        let exportCall = `\nexport({ `;
+
+        if (node.declaration.type === 'VariableDeclaration') {
+            for (let declaration of node.declaration.declarations) {
+                exportCall += `${declaration.id.name}, `;
+            }
+        } else {
+            exportCall += `${node.declaration.id.name}, `;
+        }
+
+        exportCall += `});`;
+
+        text.insert(absoluteDeclarationEnd.index + 1, exportCall);
+    }
+
+    private _replaceExportSpecifiersDeclaration(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
+        metadata.isModule = true;
+
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+
+        const relativeEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        if (node.specifiers.length > 0) {
+            let exportCall = `export({ `;
+
+            for (let specifier of node.specifiers) {
+                if (specifier.local === specifier.exported) {
+                    exportCall += `${specifier.local.name}, `;
+                } else {
+                    exportCall += `${specifier.exported.name}: ${specifier.local.name}, `;
+                }
+            }
+
+            exportCall += `});`;
+
+            let currentIndex = absoluteStart.index;
+            text.insert(currentIndex, exportCall);
+
+            currentIndex += exportCall.length;
+
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                relativeEnd,
+                doc
+            );
+
+            text.delete(currentIndex, absoluteEnd.index);
+        } else {
+            let exportCall = `export({});`;
+            let currentIndex = absoluteStart.index;
+            text.insert(currentIndex, exportCall);
+
+            currentIndex += exportCall.length;
+
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                relativeEnd,
+                doc
+            );
+
+            text.delete(currentIndex, absoluteEnd.index);
+        }
+    }
+
+    private _replaceExportFromSourceDeclaration(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
+        metadata.isModule = true;
+
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+
+        const relativeSourceStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.start,
+            -1,
+            true
+        );
+
+        const relativeSourceEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.end,
+            -1,
+            true
+        );
+
+        const relativeEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        if (node.specifiers.length > 0) {
+            let exportCall = `export(`;
+
+            let specifiers = ', [';
+            for (let specifier of node.specifiers) {
+                if (specifier.local === specifier.exported) {
+                    specifiers += `'${specifier.local.name}', `;
+                } else {
+                    specifiers += `['${specifier.local.name}', '${specifier.exported.name}'], `;
+                }
+            }
+
+            specifiers += ']);';
+
+            let currentIndex = absoluteStart.index;
+            text.insert(currentIndex, exportCall);
+            currentIndex += exportCall.length;
+
+            const sourceEnd = createAbsolutePositionFromRelativePosition(
+                relativeSourceEnd,
+                doc
+            );
+
+            text.insert(sourceEnd.index, specifiers);
+
+            const sourceStart = createAbsolutePositionFromRelativePosition(
+                relativeSourceStart,
+                doc
+            );
+
+            text.delete(currentIndex, sourceStart.index - currentIndex);
+
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                relativeEnd,
+                doc
+            );
+            const finalSourceEnd = createAbsolutePositionFromRelativePosition(
+                relativeSourceEnd,
+                doc
+            );
+
+            text.delete(
+                absoluteEnd.index - 1,
+                absoluteEnd.index - finalSourceEnd.index
+            );
+        } else {
+            let exportCall = `export({});`;
+            let currentIndex = absoluteStart.index;
+            text.insert(currentIndex, exportCall);
+
+            currentIndex += exportCall.length;
+
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                relativeEnd,
+                doc
+            );
+
+            text.delete(currentIndex, absoluteEnd.index);
+        }
+    }
+
+    private _replaceExportDefaultDeclaration(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
+        metadata.isModule = true;
+
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+
+        const declarationStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.declaration.start,
+            -1,
+            true
+        );
+
+        const declarationEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.declaration.end,
+            -1,
+            true
+        );
+
+        const relativeEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        let exportCall = `export({ default: `;
+        let currentIndex = absoluteStart.index;
+        text.insert(currentIndex, exportCall);
+
+        currentIndex += exportCall.length;
+
+        const absoluteDeclarationStart =
+            createAbsolutePositionFromRelativePosition(declarationStart, doc);
+
+        text.delete(
+            currentIndex,
+            absoluteDeclarationStart.index - currentIndex
+        );
+
+        const absoluteDeclarationEnd =
+            createAbsolutePositionFromRelativePosition(declarationEnd, doc);
+
+        text.insert(absoluteDeclarationEnd.index, ' });');
+
+        const absoulteEnd = createAbsolutePositionFromRelativePosition(
+            relativeEnd,
+            doc
+        );
+
+        text.delete(absoulteEnd.index - 1, 1);
+    }
+
+    private _replaceExportAllDeclaration(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): void {
+        metadata.isModule = true;
+
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+
+        const sourceStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.start,
+            -1,
+            true
+        );
+
+        const sourceEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.end,
+            -1,
+            true
+        );
+
+        const relativeEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        let exportCall = `export(`;
+        let currentIndex = absoluteStart.index;
+        text.insert(currentIndex, exportCall);
+
+        currentIndex += exportCall.length;
+
+        const absolutesourceStart = createAbsolutePositionFromRelativePosition(
+            sourceStart,
+            doc
+        );
+
+        text.delete(currentIndex, absolutesourceStart.index - currentIndex);
+
+        const absoluteSourceEnd = createAbsolutePositionFromRelativePosition(
+            sourceEnd,
+            doc
+        );
+
+        text.insert(absoluteSourceEnd.index, ');');
+
+        const absoulteEnd = createAbsolutePositionFromRelativePosition(
+            relativeEnd,
+            doc
+        );
+
+        text.delete(absoulteEnd.index - 1, 1);
+    }
+
     private _replaceWhileStatement(node: any, doc: Doc, text: Text): any {
         this._insertEnergyCheckIntoStatement(doc, text, node.body);
     }
@@ -469,13 +924,19 @@ export class Transpiler {
         this._insertEnergyCheckIntoStatement(doc, text, node.body);
     }
 
-    private _replaceJSXElement(node: any, doc: Doc, text: Text): any {
+    private _replaceJSXElement(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
         this._insertJSXFactoryCall(
             node,
             node.openingElement,
             node.closingElement,
             doc,
-            text
+            text,
+            metadata
         );
 
         this._removeTag(
@@ -487,13 +948,19 @@ export class Transpiler {
         );
     }
 
-    private _replaceJSXFragment(node: any, doc: Doc, text: Text): any {
+    private _replaceJSXFragment(
+        node: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
         this._insertJSXFactoryCall(
             node,
             node.openingFragment,
             node.closingFragment,
             doc,
-            text
+            text,
+            metadata
         );
 
         this._removeTag(
@@ -544,7 +1011,8 @@ export class Transpiler {
         openElement: any,
         closeElement: any,
         doc: Doc,
-        text: Text
+        text: Text,
+        metadata: TranspilerResult['metadata']
     ): void {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
@@ -637,14 +1105,21 @@ export class Transpiler {
                 openElement,
                 openElement.attributes,
                 doc,
-                text
+                text,
+                metadata
             );
         } else {
             const props = `null,`;
             text.insert(currentIndex, props);
         }
 
-        this._replaceJSXElementChildren(node, node.children, doc, text);
+        this._replaceJSXElementChildren(
+            node,
+            node.children,
+            doc,
+            text,
+            metadata
+        );
 
         const absoluteEnd = createAbsolutePositionFromRelativePosition(
             end,
@@ -659,7 +1134,8 @@ export class Transpiler {
         openElement: any,
         attributes: any[],
         doc: Doc,
-        text: Text
+        text: Text,
+        metadata: TranspilerResult['metadata']
     ): void {
         // doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
@@ -716,9 +1192,9 @@ export class Transpiler {
             index++;
 
             if (attr.type === 'JSXSpreadAttribute') {
-                this._replace(attr.argument, doc, text);
+                this._replace(attr.argument, doc, text, metadata);
             } else {
-                this._replace(attr.value, doc, text);
+                this._replace(attr.value, doc, text, metadata);
             }
         }
 
@@ -739,7 +1215,8 @@ export class Transpiler {
         node: any,
         children: any,
         doc: Doc,
-        text: Text
+        text: Text,
+        metadata: TranspilerResult['metadata']
     ): void {
         const version = { '0': getClock(doc, 0) };
 
@@ -751,7 +1228,7 @@ export class Transpiler {
                 undefined,
                 true
             );
-            this._replace(child, doc, text);
+            this._replace(child, doc, text, metadata);
 
             doc.clientID += 1;
             const absoluteEnd = createAbsolutePositionFromRelativePosition(
@@ -1149,6 +1626,11 @@ export interface TranspilerResult {
          * The text structure that was used to edit the code.
          */
         text: Text;
+
+        /**
+         * Whether the code is a module (contains import or export statements).
+         */
+        isModule: boolean;
     };
 }
 
