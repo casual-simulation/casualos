@@ -62,6 +62,14 @@ describe('AuxCompiler', () => {
             expect(await func(async () => ({}))).toEqual(undefined);
         });
 
+        it('should be able to compile scripts with import statements', async () => {
+            const func = compiler.compile('@import abc from "test";', {
+                arguments: ['importModule'],
+            });
+
+            expect(await func(async () => ({}))).toEqual(undefined);
+        });
+
         it('should support compiling with an interpreter', () => {
             const interpreter = new Interpreter();
             const func = compiler.compile('return 1 + 2', {

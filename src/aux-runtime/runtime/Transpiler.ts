@@ -153,6 +153,25 @@ export class Transpiler {
             max: 1000,
         });
         this._parser = Acorn.Parser.extend(AcornJSX());
+
+        (this._parser.prototype as any).parseReturnStatement = function (
+            node: any
+        ) {
+            this.next();
+
+            // In `return` (and `break`/`continue`), the keywords with
+            // optional arguments, we eagerly look for a semicolon or the
+            // possibility to insert one.
+
+            if (this.eat(Acorn.tokTypes.semi) || this.insertSemicolon()) {
+                node.argument = null;
+            } else {
+                node.argument = this.parseExpression();
+                this.semicolon();
+            }
+            return this.finishNode(node, 'ReturnStatement');
+        };
+
         this._jsxFactory = options?.jsxFactory ?? 'h';
         this._jsxFragment = options?.jsxFragment ?? 'Fragment';
         this._importFactory = options?.importFactory ?? 'importModule';
