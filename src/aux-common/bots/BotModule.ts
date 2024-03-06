@@ -50,14 +50,6 @@ export interface IdentifiedBotModule extends BotModule {
     tag: string;
 }
 
-// export interface CachedRuntimeModule extends RuntimeModule {
-
-//     /**
-//      * The result of the module's execution.
-//      */
-//     result: BotModuleResult;
-// }
-
 /**
  * Defines an interface that represents the result of importing a module.
  */

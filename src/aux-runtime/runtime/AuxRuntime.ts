@@ -324,11 +324,6 @@ export class AuxRuntime
     private _interpreter: InterpreterType;
 
     // /**
-    //  * The map of module IDs to their respective modules.
-    //  */
-    // private _cachedModules: Map<string, RuntimeModule> = new Map();
-
-    // /**
     //  * The map of tags (botID.tag.space) to their respective modules.
     //  */
     // private _tagToModuleMap: Map<string, RuntimeModule> = new Map();
@@ -496,21 +491,47 @@ export class AuxRuntime
     }
 
     private async _importModule(module: string): Promise<BotModuleResult> {
-        const m = await this.resolveModule(module);
-        if (!m) {
-            throw new Error('Module not found: ' + module);
+        try {
+            const m = await this.resolveModule(module);
+            if (!m) {
+                throw new Error('Module not found: ' + module);
+            }
+
+            const bot = this._compiledState[m.botId];
+            if (bot) {
+                const exports = bot.exports[m.tag];
+                if (exports) {
+                    return await exports;
+                }
+            }
+
+            const promise = this._importModuleCore(m);
+            if (bot) {
+                bot.exports[m.tag] = promise;
+            }
+
+            return await promise;
+        } finally {
+            this._scheduleJobQueueCheck();
         }
+    }
 
-        const exports: BotModuleResult = {};
-        const importFunc: ImportFunc = (id) => this._importModule(id);
-        const exportFunc: ExportFunc = (valueOrSource, e) => {
-            const result = this._resolveExports(valueOrSource, e);
-            Object.assign(exports, result);
-        };
+    private async _importModuleCore(
+        m: IdentifiedBotModule
+    ): Promise<BotModuleResult> {
+        try {
+            const exports: BotModuleResult = {};
+            const importFunc: ImportFunc = (id) => this._importModule(id);
+            const exportFunc: ExportFunc = (valueOrSource, e) => {
+                const result = this._resolveExports(valueOrSource, e);
+                Object.assign(exports, result);
+            };
 
-        await m.moduleFunc(importFunc, exportFunc);
-        this._scheduleJobQueueCheck();
-        return exports;
+            await m.moduleFunc(importFunc, exportFunc);
+            return exports;
+        } finally {
+            this._scheduleJobQueueCheck();
+        }
     }
 
     private _resolveExports(
@@ -2624,6 +2645,7 @@ export class AuxRuntime
             tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
             modules: {},
+            exports: {},
             values: {},
             script: null,
             originalTagEditValues: {},
@@ -2964,6 +2986,9 @@ export class AuxRuntime
             bot.modules[tag] = module;
         } else if (!!bot.modules[tag]) {
             delete bot.modules[tag];
+        }
+        if (bot.exports[tag]) {
+            delete bot.exports[tag];
         }
 
         if (typeof value !== 'function') {

@@ -8172,7 +8172,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello: `@import { abc } from 'module.library'; console.log('imported', abc); os.toast(abc);`,
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
                             }),
                             test2: createBot('test2', {
                                 system: 'module',
@@ -8186,6 +8186,86 @@ describe('AuxRuntime', () => {
                     await waitAsync();
 
                     expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should cache a module between imports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def'; os.toast('side-effect');`,
+                            }),
+                            test3: createBot('test3', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc + '2');`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    // There should only be one side-effect
+                    expect(events).toEqual([
+                        [toast('side-effect')],
+                        [toast('def'), toast('def2')],
+                    ]);
+
+                    events.splice(0, events.length);
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+                    expect(events).toEqual([[toast('def'), toast('def2')]]);
+                });
+
+                it('should clear the cache for a module if the bot is changed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def'; os.toast('side-effect');`,
+                            }),
+                            test3: createBot('test3', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc + '2');`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    // There should only be one side-effect
+                    expect(events).toEqual([
+                        [toast('side-effect')],
+                        [toast('def'), toast('def2')],
+                    ]);
+
+                    events.splice(0, events.length);
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: {
+                                tags: {
+                                    library: `📄export const abc = 'ghi'; os.toast('side-effect2');`,
+                                },
+                            },
+                        })
+                    );
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [toast('side-effect2')],
+                        [toast('ghi'), toast('ghi2')],
+                    ]);
                 });
             });
         });

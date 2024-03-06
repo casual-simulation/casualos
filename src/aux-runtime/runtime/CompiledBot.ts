@@ -10,6 +10,7 @@ import {
     BotAction,
     CompiledBotModules,
     BotModule,
+    CompiledBotExports,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import type {
@@ -51,6 +52,11 @@ export interface CompiledBot extends PrecalculatedBot {
      * The modules that are defined by this bot.
      */
     modules: CompiledBotModules;
+
+    /**
+     * The exports that the compiled bot has.
+     */
+    exports: CompiledBotExports;
 
     /**
      * The script bot that the compiled bot has been setup to use.
@@ -182,6 +188,7 @@ export function createCompiledBot(
             values,
             listeners: listeners,
             modules: modules,
+            exports: {},
             signatures,
             script: null,
             originalTagEditValues: {},
@@ -197,6 +204,7 @@ export function createCompiledBot(
         values,
         listeners: listeners,
         modules: modules,
+        exports: {},
         signatures,
         script: null,
         originalTagEditValues: {},

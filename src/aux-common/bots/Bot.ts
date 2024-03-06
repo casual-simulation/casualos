@@ -1,6 +1,6 @@
 import { type } from 'os';
 import { TagEditOp } from './AuxStateHelpers';
-import { BotModule } from './BotModule';
+import { BotModule, BotModuleResult } from './BotModule';
 
 export type PartialBot = Partial<Bot>;
 
@@ -320,6 +320,10 @@ export interface CompiledBotModules {
      * Gets the listener in the given tag.
      */
     [tag: string]: BotModule;
+}
+
+export interface CompiledBotExports {
+    [tag: string]: Promise<BotModuleResult>;
 }
 
 /**
