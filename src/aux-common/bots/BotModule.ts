@@ -11,8 +11,8 @@ export type ImportFunc = (id: string) => Promise<BotModuleResult>;
  */
 export type ExportFunc = (
     valueOrSource: object | string,
-    exports?: ([string] | [string, string])[]
-) => void;
+    exports?: (string | [string, string])[]
+) => Promise<void>;
 
 /**
  * Defines a ES Module that can be loaded by the {@link AuxRuntime}.

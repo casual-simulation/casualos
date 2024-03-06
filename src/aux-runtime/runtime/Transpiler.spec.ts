@@ -908,7 +908,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const value = "test"; exports({ value, });`
+                    `const value = "test"; await exports({ value, });`
                 );
             });
 
@@ -922,7 +922,7 @@ describe('Transpiler', () => {
             it('should be able to compile empty export statements', () => {
                 const result = transpiler.transpile(`export { };`);
 
-                expect(result).toBe(`exports({});`);
+                expect(result).toBe(`await exports({});`);
             });
 
             it('should work if the semi-colon is omitted', () => {
@@ -931,7 +931,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const value = "test";\nexports({ value, });`
+                    `const value = "test";\nawait exports({ value, });`
                 );
             });
 
@@ -941,7 +941,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const value = "test";\nexports({ value, });`
+                    `const value = "test";\nawait exports({ value, });`
                 );
             });
 
@@ -951,7 +951,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const value = "test"; exports({ otherValue: value, });`
+                    `const value = "test"; await exports({ otherValue: value, });`
                 );
             });
 
@@ -961,7 +961,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const value = "test";\nexports({ value, });`
+                    `const value = "test";\nawait exports({ value, });`
                 );
             });
 
@@ -971,7 +971,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const value = "test", value2 = 123;\nexports({ value, value2, });`
+                    `const value = "test", value2 = 123;\nawait exports({ value, value2, });`
                 );
             });
 
@@ -981,7 +981,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `let value = "test";\nexports({ value, });`
+                    `let value = "test";\nawait exports({ value, });`
                 );
             });
 
@@ -991,26 +991,26 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `function myFunc() { return "test"; }\nexports({ myFunc, });`
+                    `function myFunc() { return "test"; }\nawait exports({ myFunc, });`
                 );
             });
 
             it('should be able to compile default export statements', () => {
                 const result = transpiler.transpile(`export default "test";`);
 
-                expect(result).toBe(`exports({ default: "test" });`);
+                expect(result).toBe(`await exports({ default: "test" });`);
             });
 
             it('should be able to compile empty export from source statements', () => {
                 const result = transpiler.transpile(`export {} from "test";`);
 
-                expect(result).toBe(`exports({});`);
+                expect(result).toBe(`await exports({});`);
             });
 
             it('should be able to compile export all statements', () => {
                 const result = transpiler.transpile(`export * from "test";`);
 
-                expect(result).toBe(`exports("test");`);
+                expect(result).toBe(`await exports("test");`);
             });
 
             it('should be able to compile export object from source statements', () => {
@@ -1018,7 +1018,9 @@ describe('Transpiler', () => {
                     `export { value, value2 } from "test";`
                 );
 
-                expect(result).toBe(`exports("test", ['value', 'value2', ]);`);
+                expect(result).toBe(
+                    `await exports("test", ['value', 'value2', ]);`
+                );
             });
 
             it('should be able to compile export object statements from source with aliases', () => {
@@ -1027,7 +1029,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `exports("test", [['value', 'example'], 'value2', ]);`
+                    `await exports("test", [['value', 'example'], 'value2', ]);`
                 );
             });
 
@@ -1040,7 +1042,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `myExport("test", [['value', 'example'], 'value2', ]);`
+                    `await myExport("test", [['value', 'example'], 'value2', ]);`
                 );
             });
         });

@@ -595,7 +595,7 @@ export class Transpiler {
         const absoluteDeclarationEnd =
             createAbsolutePositionFromRelativePosition(declarationEnd, doc);
 
-        let exportCall = `\n${this._exportFactory}({ `;
+        let exportCall = `\nawait ${this._exportFactory}({ `;
 
         if (node.declaration.type === 'VariableDeclaration') {
             for (let declaration of node.declaration.declarations) {
@@ -640,7 +640,7 @@ export class Transpiler {
         );
 
         if (node.specifiers.length > 0) {
-            let exportCall = `${this._exportFactory}({ `;
+            let exportCall = `await ${this._exportFactory}({ `;
 
             for (let specifier of node.specifiers) {
                 if (specifier.local === specifier.exported) {
@@ -664,7 +664,7 @@ export class Transpiler {
 
             text.delete(currentIndex, absoluteEnd.index);
         } else {
-            let exportCall = `${this._exportFactory}({});`;
+            let exportCall = `await ${this._exportFactory}({});`;
             let currentIndex = absoluteStart.index;
             text.insert(currentIndex, exportCall);
 
@@ -725,7 +725,7 @@ export class Transpiler {
         );
 
         if (node.specifiers.length > 0) {
-            let exportCall = `${this._exportFactory}(`;
+            let exportCall = `await ${this._exportFactory}(`;
 
             let specifiers = ', [';
             for (let specifier of node.specifiers) {
@@ -770,7 +770,7 @@ export class Transpiler {
                 absoluteEnd.index - finalSourceEnd.index
             );
         } else {
-            let exportCall = `${this._exportFactory}({});`;
+            let exportCall = `await ${this._exportFactory}({});`;
             let currentIndex = absoluteStart.index;
             text.insert(currentIndex, exportCall);
 
@@ -830,7 +830,7 @@ export class Transpiler {
             true
         );
 
-        let exportCall = `${this._exportFactory}({ default: `;
+        let exportCall = `await ${this._exportFactory}({ default: `;
         let currentIndex = absoluteStart.index;
         text.insert(currentIndex, exportCall);
 
@@ -902,7 +902,7 @@ export class Transpiler {
             true
         );
 
-        let exportCall = `${this._exportFactory}(`;
+        let exportCall = `await ${this._exportFactory}(`;
         let currentIndex = absoluteStart.index;
         text.insert(currentIndex, exportCall);
 

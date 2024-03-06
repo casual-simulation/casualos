@@ -522,8 +522,9 @@ export class AuxRuntime
         try {
             const exports: BotModuleResult = {};
             const importFunc: ImportFunc = (id) => this._importModule(id);
-            const exportFunc: ExportFunc = (valueOrSource, e) => {
-                const result = this._resolveExports(valueOrSource, e);
+            const exportFunc: ExportFunc = async (valueOrSource, e) => {
+                const result = await this._resolveExports(valueOrSource, e);
+                this._scheduleJobQueueCheck();
                 Object.assign(exports, result);
             };
 
@@ -534,12 +535,27 @@ export class AuxRuntime
         }
     }
 
-    private _resolveExports(
+    private async _resolveExports(
         valueOrSource: string | object,
-        exports: ([string] | [string, string])[]
-    ): BotModuleResult {
+        exports: (string | [string, string])[]
+    ): Promise<BotModuleResult> {
         if (typeof valueOrSource === 'string') {
-            return {};
+            const sourceModule = await this._importModule(valueOrSource);
+            if (exports) {
+                const result: BotModuleResult = {};
+                for (let val of exports) {
+                    if (typeof val === 'string') {
+                        result[val] = sourceModule[val];
+                    } else {
+                        const [source, target] = val;
+                        const key = target ?? source;
+                        result[key] = sourceModule[source];
+                    }
+                }
+                return result;
+            } else {
+                return sourceModule;
+            }
         } else {
             return valueOrSource;
         }
