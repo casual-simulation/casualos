@@ -125,6 +125,8 @@ html.ar-app .webxr-sessions canvas {
     overscroll-behavior: none;
     overflow-y: hidden;
     touch-action: none;
+
+    z-index: 2;
 }
 
 .md-badge.md-primary.menu-badge {
