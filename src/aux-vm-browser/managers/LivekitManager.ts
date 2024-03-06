@@ -31,8 +31,7 @@ import {
     RoomLeave,
     SetRoomOptions,
 } from '@casual-simulation/aux-vm/managers';
-import {
-    createLocalVideoTrack,
+import type {
     LocalParticipant,
     LocalTrackPublication,
     Participant,
@@ -45,6 +44,7 @@ import {
     VideoQuality,
 } from 'livekit-client';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
+type LivekitModule = typeof import('livekit-client');
 
 /**
  * Defines a class that is able to manage Livekit rooms and make streams available to scripts.
@@ -62,6 +62,7 @@ export class LivekitManager implements SubscriptionLike {
 
     private _onTrackNeedsAttachment = new Subject<Track>();
     private _onTrackNeedsDetachment = new Subject<Track>();
+    private _livekit: LivekitModule;
 
     /**
      * Gets an observable that resolves whenever a track needs to be attached to the document.
@@ -100,39 +101,55 @@ export class LivekitManager implements SubscriptionLike {
 
     async joinRoom(join: RoomJoin): Promise<void> {
         try {
-            const room = new Room({
+            this._livekit = await import('livekit-client');
+            const room = new this._livekit.Room({
                 adaptiveStream: false,
                 dynacast: true,
                 ...join.options,
             });
 
-            room.on(RoomEvent.TrackSubscribed, this._onTrackSubscribed(room))
+            room.on(
+                this._livekit.RoomEvent.TrackSubscribed,
+                this._onTrackSubscribed(room)
+            )
                 .on(
-                    RoomEvent.TrackUnsubscribed,
+                    this._livekit.RoomEvent.TrackUnsubscribed,
                     this._onTrackUnsubscribed(room)
                 )
-                .on(RoomEvent.Disconnected, this._onDisconnected(room))
-                .on(RoomEvent.Reconnected, this._onReconnected(room))
                 .on(
-                    RoomEvent.LocalTrackPublished,
+                    this._livekit.RoomEvent.Disconnected,
+                    this._onDisconnected(room)
+                )
+                .on(
+                    this._livekit.RoomEvent.Reconnected,
+                    this._onReconnected(room)
+                )
+                .on(
+                    this._livekit.RoomEvent.LocalTrackPublished,
                     this._onLocalTrackPublished(room)
                 )
                 .on(
-                    RoomEvent.LocalTrackUnpublished,
+                    this._livekit.RoomEvent.LocalTrackUnpublished,
                     this._onLocalTrackUnpublished(room)
                 )
-                .on(RoomEvent.TrackMuted, this._onTrackMuted(room))
-                .on(RoomEvent.TrackUnmuted, this._onTrackUnmuted(room))
                 .on(
-                    RoomEvent.ActiveSpeakersChanged,
+                    this._livekit.RoomEvent.TrackMuted,
+                    this._onTrackMuted(room)
+                )
+                .on(
+                    this._livekit.RoomEvent.TrackUnmuted,
+                    this._onTrackUnmuted(room)
+                )
+                .on(
+                    this._livekit.RoomEvent.ActiveSpeakersChanged,
                     this._onActiveSpeakersChanged(room)
                 )
                 .on(
-                    RoomEvent.ParticipantConnected,
+                    this._livekit.RoomEvent.ParticipantConnected,
                     this._onParticipantConnected(room)
                 )
                 .on(
-                    RoomEvent.ParticipantDisconnected,
+                    this._livekit.RoomEvent.ParticipantDisconnected,
                     this._onParticipantDisconnected(room)
                 );
 
@@ -241,7 +258,7 @@ export class LivekitManager implements SubscriptionLike {
             const room = this._rooms.find(
                 (r) => r.name === setRoomOptions.roomName
             );
-            if (!room) {
+            if (!room || !this._livekit) {
                 setRoomOptions.reject(
                     'room_not_found',
                     'The specified room was not found.'
@@ -342,20 +359,24 @@ export class LivekitManager implements SubscriptionLike {
             screen: false,
         };
 
-        for (let [id, pub] of participant.tracks) {
-            if (!pub.isMuted && pub.isEnabled) {
-                if (
-                    pub.kind === Track.Kind.Audio &&
-                    pub.source === Track.Source.Microphone
-                ) {
-                    options.audio = true;
-                } else if (
-                    pub.kind === Track.Kind.Video &&
-                    pub.source === Track.Source.Camera
-                ) {
-                    options.video = true;
-                } else if (pub.source === Track.Source.ScreenShare) {
-                    options.screen = true;
+        if (this._livekit) {
+            for (let [id, pub] of participant.tracks) {
+                if (!pub.isMuted && pub.isEnabled) {
+                    if (
+                        pub.kind === this._livekit.Track.Kind.Audio &&
+                        pub.source === this._livekit.Track.Source.Microphone
+                    ) {
+                        options.audio = true;
+                    } else if (
+                        pub.kind === this._livekit.Track.Kind.Video &&
+                        pub.source === this._livekit.Track.Source.Camera
+                    ) {
+                        options.video = true;
+                    } else if (
+                        pub.source === this._livekit.Track.Source.ScreenShare
+                    ) {
+                        options.screen = true;
+                    }
                 }
             }
         }
@@ -378,7 +399,7 @@ export class LivekitManager implements SubscriptionLike {
     private async _getRoomTrackOptions(event: GetRoomTrackOptionsAction) {
         try {
             const room = this._rooms.find((r) => r.name === event.roomName);
-            if (!room) {
+            if (!room || !this._livekit) {
                 this._helper.transaction(
                     asyncResult(event.taskId, {
                         success: false,
@@ -431,7 +452,7 @@ export class LivekitManager implements SubscriptionLike {
     private async _setRoomTrackOptions(event: SetRoomTrackOptionsAction) {
         try {
             const room = this._rooms.find((r) => r.name === event.roomName);
-            if (!room) {
+            if (!room || !this._livekit) {
                 this._helper.transaction(
                     asyncResult(event.taskId, {
                         success: false,
@@ -459,28 +480,30 @@ export class LivekitManager implements SubscriptionLike {
 
             let promises = [] as Promise<void>[];
             if ('muted' in event.options) {
-                if (pub instanceof LocalTrackPublication) {
+                if (pub instanceof this._livekit.LocalTrackPublication) {
                     if (event.options.muted) {
                         promises.push(pub.mute().then(() => {}));
                     } else {
                         promises.push(pub.unmute().then(() => {}));
                     }
-                } else if (pub instanceof RemoteTrackPublication) {
+                } else if (
+                    pub instanceof this._livekit.RemoteTrackPublication
+                ) {
                     pub.setEnabled(!event.options.muted);
                 }
             }
 
             if ('videoQuality' in event.options) {
-                if (pub instanceof RemoteTrackPublication) {
-                    let quality = VideoQuality.HIGH;
+                if (pub instanceof this._livekit.RemoteTrackPublication) {
+                    let quality = this._livekit.VideoQuality.HIGH;
                     if (event.options.videoQuality === 'off') {
-                        quality = VideoQuality.OFF;
+                        quality = this._livekit.VideoQuality.OFF;
                     } else if (event.options.videoQuality === 'medium') {
-                        quality = VideoQuality.MEDIUM;
+                        quality = this._livekit.VideoQuality.MEDIUM;
                     } else if (event.options.videoQuality === 'low') {
-                        quality = VideoQuality.LOW;
+                        quality = this._livekit.VideoQuality.LOW;
                     } else {
-                        quality = VideoQuality.HIGH;
+                        quality = this._livekit.VideoQuality.HIGH;
                     }
                     pub.setVideoQuality(quality);
                 }
@@ -525,7 +548,7 @@ export class LivekitManager implements SubscriptionLike {
     private async _getRoomRemoteOptions(event: GetRoomRemoteOptionsAction) {
         try {
             const room = this._rooms.find((r) => r.name === event.roomName);
-            if (!room) {
+            if (!room || !this._livekit) {
                 this._helper.transaction(
                     asyncResult(event.taskId, {
                         success: false,
@@ -620,8 +643,8 @@ export class LivekitManager implements SubscriptionLike {
                 this._trackArg(room.name, pub, participant, address, track)
             );
             if (
-                track.kind === Track.Kind.Audio ||
-                track.kind === Track.Kind.Video
+                track.kind === this._livekit.Track.Kind.Audio ||
+                track.kind === this._livekit.Track.Kind.Video
             ) {
                 this._onTrackNeedsAttachment.next(track);
             }
@@ -647,8 +670,8 @@ export class LivekitManager implements SubscriptionLike {
             }
 
             if (
-                track.kind === Track.Kind.Audio ||
-                track.kind === Track.Kind.Video
+                track.kind === this._livekit.Track.Kind.Audio ||
+                track.kind === this._livekit.Track.Kind.Video
             ) {
                 this._onTrackNeedsDetachment.next(track);
             }
@@ -668,7 +691,7 @@ export class LivekitManager implements SubscriptionLike {
                 null,
                 this._trackArg(room.name, pub, participant, address, track)
             );
-            if (track.kind === Track.Kind.Video) {
+            if (track.kind === this._livekit.Track.Kind.Video) {
                 this._onTrackNeedsAttachment.next(track);
             }
         };
@@ -689,7 +712,7 @@ export class LivekitManager implements SubscriptionLike {
                 );
             }
 
-            if (track.kind === Track.Kind.Video) {
+            if (track.kind === this._livekit.Track.Kind.Video) {
                 this._onTrackNeedsDetachment.next(track);
             }
         };
@@ -715,7 +738,7 @@ export class LivekitManager implements SubscriptionLike {
         t?: Track
     ) {
         const track = t ?? pub.track;
-        const isRemote = pub instanceof RemoteTrackPublication;
+        const isRemote = pub instanceof this._livekit.RemoteTrackPublication;
         const common = {
             isRemote: isRemote,
             remoteId: participant.identity,
@@ -723,7 +746,7 @@ export class LivekitManager implements SubscriptionLike {
             kind: this._getTrackKind(track),
             source: track.source,
         };
-        if (pub.kind === Track.Kind.Video) {
+        if (pub.kind === this._livekit.Track.Kind.Video) {
             return {
                 ...common,
                 dimensions: pub.dimensions,
@@ -825,7 +848,7 @@ export class LivekitManager implements SubscriptionLike {
         this._addressToTrack.set(address, track);
         this._addressToPublication.set(address, pub);
         this._addressToParticipant.set(address, participant);
-        if (track.kind === Track.Kind.Video) {
+        if (track.kind === this._livekit.Track.Kind.Video) {
             this._addressToVideo.set(
                 address,
                 track.attach() as HTMLVideoElement
@@ -848,17 +871,19 @@ export class LivekitManager implements SubscriptionLike {
     }
 
     private _getTrackKind(track: Track): 'video' | 'audio' {
-        return track.kind === Track.Kind.Video ? 'video' : 'audio';
+        return track.kind === this._livekit.Track.Kind.Video
+            ? 'video'
+            : 'audio';
     }
 
     private _getTrackQuality(publication: TrackPublication): TrackVideoQuality {
-        if (publication instanceof RemoteTrackPublication) {
+        if (publication instanceof this._livekit.RemoteTrackPublication) {
             const quality = publication.videoQuality;
-            if (quality === VideoQuality.HIGH) {
+            if (quality === this._livekit.VideoQuality.HIGH) {
                 return 'high';
-            } else if (quality === VideoQuality.MEDIUM) {
+            } else if (quality === this._livekit.VideoQuality.MEDIUM) {
                 return 'medium';
-            } else if (quality === VideoQuality.LOW) {
+            } else if (quality === this._livekit.VideoQuality.LOW) {
                 return 'low';
             } else {
                 return 'off';
@@ -873,7 +898,7 @@ export class LivekitManager implements SubscriptionLike {
         publication: TrackPublication,
         participant: Participant
     ): string {
-        if (publication.kind === Track.Kind.Video) {
+        if (publication.kind === this._livekit.Track.Kind.Video) {
             return `casualos://video-element/${participant.identity}-${publication.trackSid}`;
         } else {
             return `casualos://audio-element/${participant.identity}-${publication.trackSid}`;

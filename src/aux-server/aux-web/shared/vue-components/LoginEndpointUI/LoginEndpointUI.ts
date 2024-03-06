@@ -9,6 +9,7 @@ import EnterAddressDialog from '../EnterAddressDialog/EnterAddressDialog';
 import HasAccountDialog from '../HasAccountDialog/HasAccountDialog';
 import UpdatePasswordLinkDialog from '../UpdatePasswordLinkDialog/UpdatePasswordLinkDialog';
 import EnterAccountInfoDialog from '../EnterAccountInfoDialog/EnterAccountInfoDialog';
+import RegisterWebAuthnDialog from '../RegisterWebAuthnDialog/RegisterWebAuthnDialog';
 
 @Component({
     components: {
@@ -17,6 +18,7 @@ import EnterAccountInfoDialog from '../EnterAccountInfoDialog/EnterAccountInfoDi
         'has-account-dialog': HasAccountDialog,
         'enter-account-info-dialog': EnterAccountInfoDialog,
         'update-password-link-dialog': UpdatePasswordLinkDialog,
+        'register-webauthn-dialog': RegisterWebAuthnDialog,
     },
 })
 export default class LoginEndpointUI extends Vue {
@@ -54,7 +56,7 @@ export default class LoginEndpointUI extends Vue {
         this._sub.unsubscribe();
     }
 
-    closePasswordLinkDialog() {
+    closeDialog() {
         this.loginUIStatus = null;
     }
 

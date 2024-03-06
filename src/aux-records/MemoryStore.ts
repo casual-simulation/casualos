@@ -10,6 +10,9 @@ import {
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
+    AuthUserAuthenticator,
+    AuthUserAuthenticatorWithUser,
+    AuthWebAuthnLoginRequest,
     ListSessionsDataResult,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
@@ -157,8 +160,10 @@ export class MemoryStore
         NotificationMessenger
 {
     private _users: AuthUser[] = [];
+    private _userAuthenticators: AuthUserAuthenticator[] = [];
     private _loginRequests: AuthLoginRequest[] = [];
     private _oidLoginRequests: AuthOpenIDLoginRequest[] = [];
+    private _webauthnLoginRequests: AuthWebAuthnLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
@@ -227,12 +232,20 @@ export class MemoryStore
         return this._users;
     }
 
+    get userAuthenticators(): AuthUserAuthenticator[] {
+        return this._userAuthenticators;
+    }
+
     get loginRequests() {
         return this._loginRequests;
     }
 
     get openIdLoginRequests() {
         return this._oidLoginRequests;
+    }
+
+    get webauthnLoginRequests() {
+        return this._webauthnLoginRequests;
     }
 
     get sessions() {
@@ -361,6 +374,25 @@ export class MemoryStore
         newStore.roleAssignments = cloneDeep(this.roleAssignments);
 
         return newStore;
+    }
+
+    async listUserAuthenticators(
+        userId: string
+    ): Promise<AuthUserAuthenticator[]> {
+        return this._userAuthenticators.filter((a) => a.userId === userId);
+    }
+
+    async saveUserAuthenticator(
+        authenticator: AuthUserAuthenticator
+    ): Promise<void> {
+        const index = this._userAuthenticators.findIndex(
+            (a) => a.id === authenticator.id
+        );
+        if (index >= 0) {
+            this._userAuthenticators[index] = authenticator;
+        } else {
+            this._userAuthenticators.push(authenticator);
+        }
     }
 
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
@@ -1197,6 +1229,86 @@ export class MemoryStore
         return request;
     }
 
+    async findWebAuthnLoginRequest(
+        requestId: string
+    ): Promise<AuthWebAuthnLoginRequest> {
+        return this._webauthnLoginRequests.find(
+            (r) => r.requestId === requestId
+        );
+    }
+
+    async saveWebAuthnLoginRequest(
+        request: AuthWebAuthnLoginRequest
+    ): Promise<AuthWebAuthnLoginRequest> {
+        const index = this._webauthnLoginRequests.findIndex(
+            (r) => r.requestId === request.requestId
+        );
+        if (index >= 0) {
+            this._webauthnLoginRequests[index] = { ...request };
+        } else {
+            this._webauthnLoginRequests.push({ ...request });
+        }
+
+        return request;
+    }
+
+    async markWebAuthnLoginRequestComplete(
+        requestId: string,
+        userId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        const index = this._webauthnLoginRequests.findIndex(
+            (r) => r.requestId === requestId
+        );
+        if (index >= 0) {
+            const request = this._webauthnLoginRequests[index];
+            request.userId = userId;
+            request.completedTimeMs = completedTimeMs;
+            this._webauthnLoginRequests[index] = { ...request };
+        }
+    }
+
+    async findUserAuthenticatorByCredentialId(
+        credentialId: string
+    ): Promise<AuthUserAuthenticatorWithUser> {
+        const authenticator = this._userAuthenticators.find(
+            (a) => a.credentialId === credentialId
+        );
+        if (!authenticator) {
+            return { authenticator: null, user: null };
+        }
+        const user = await this.findUser(authenticator.userId);
+        return { authenticator, user };
+    }
+
+    async saveUserAuthenticatorCounter(
+        id: string,
+        newCounter: number
+    ): Promise<void> {
+        const index = this._userAuthenticators.findIndex((a) => a.id === id);
+        if (index >= 0) {
+            this._userAuthenticators[index] = {
+                ...this._userAuthenticators[index],
+                counter: newCounter,
+            };
+        }
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number> {
+        const index = this._userAuthenticators.findIndex(
+            (a) => a.userId === userId && a.id === authenticatorId
+        );
+        if (index >= 0) {
+            this._userAuthenticators.splice(index, 1);
+            return 1;
+        }
+
+        return 0;
+    }
+
     async setCurrentLoginRequest(
         userId: string,
         requestId: string
@@ -1207,6 +1319,20 @@ export class MemoryStore
             this._users[userIndex] = {
                 ...user,
                 currentLoginRequestId: requestId,
+            };
+        }
+    }
+
+    async setCurrentWebAuthnChallenge(
+        userId: string,
+        challenge: string
+    ): Promise<void> {
+        const userIndex = this._users.findIndex((u) => u.id === userId);
+        if (userIndex >= 0) {
+            const user = this._users[userIndex];
+            this._users[userIndex] = {
+                ...user,
+                currentWebAuthnChallenge: challenge,
             };
         }
     }

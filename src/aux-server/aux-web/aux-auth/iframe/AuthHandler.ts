@@ -39,6 +39,8 @@ import {
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -57,9 +59,14 @@ import {
     filter,
     switchMap,
     mergeAll,
+    concatMap,
 } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { OAUTH_LOGIN_CHANNEL_NAME } from '../shared/AuthManager';
+import {
+    browserSupportsWebAuthn,
+    browserSupportsWebAuthnAutofill,
+} from '@simplewebauthn/browser';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
@@ -88,6 +95,9 @@ export class AuthHandler implements AuxAuth {
     private _providedCodes: Subject<string> = new Subject();
     private _providedHasAccount: Subject<boolean> = new Subject();
     private _providedPrivoSignUpInfo: Subject<PrivoSignUpInfo> = new Subject();
+    private _providedLoginResults: Subject<
+        CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    > = new Subject();
     private _oauthRedirectComplete: Subject<void> = new Subject();
     private _oauthChannel: BroadcastChannel = new BroadcastChannel(
         OAUTH_LOGIN_CHANNEL_NAME
@@ -105,6 +115,12 @@ export class AuthHandler implements AuxAuth {
                 this._oauthRedirectComplete.next();
             }
         });
+    }
+
+    async provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void> {
+        this._providedLoginResults.next(result);
     }
 
     private _init() {
@@ -295,7 +311,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 9;
+        return 10;
     }
 
     async getRecordsOrigin(): Promise<string> {
@@ -369,6 +385,7 @@ export class AuthHandler implements AuxAuth {
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
                 supportsSms: this._supportsSms,
+                supportsWebAuthn: this._supportsWebAuthn,
                 errors: errors,
             });
             return;
@@ -423,6 +440,7 @@ export class AuthHandler implements AuxAuth {
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
                 supportsSms: this._supportsSms,
+                supportsWebAuthn: this._supportsWebAuthn,
                 errors: errors,
             });
             return;
@@ -665,9 +683,45 @@ export class AuthHandler implements AuxAuth {
             privacyPolicyUrl: this.privacyPolicyUrl,
             siteName: this.siteName,
             supportsSms: this._supportsSms,
+            supportsWebAuthn: this._supportsWebAuthn,
             errors: [],
         });
 
+        const userId = await Promise.race([
+            this._regularLoginWithProvidedLogin(cancelSignal),
+            this._regularLoginWithCustomUICore(cancelSignal),
+        ]);
+
+        return userId;
+    }
+
+    private async _regularLoginWithProvidedLogin(cancelSignal: {
+        canceled: boolean;
+    }): Promise<string> {
+        const loginResults = this._providedLoginResults.pipe(
+            filter(() => !cancelSignal.canceled)
+        );
+
+        const result = await firstValueFrom(loginResults);
+
+        if (cancelSignal.canceled) {
+            return;
+        }
+
+        authManager.updateLoginStateFromResult(result);
+        await authManager.loadUserInfo();
+        await this._loadUserInfo();
+
+        this._loginUIStatus.next({
+            page: false,
+        });
+
+        return authManager.userId;
+    }
+
+    private async _regularLoginWithCustomUICore(cancelSignal: {
+        canceled: boolean;
+    }): Promise<string> {
         const loginRequests = merge(
             this._providedEmails.pipe(
                 filter((email) => !cancelSignal.canceled),
@@ -680,7 +734,7 @@ export class AuthHandler implements AuxAuth {
         ).pipe(mergeAll(), share());
 
         const logins = loginRequests.pipe(
-            switchMap((result) => {
+            concatMap((result) => {
                 if (result.success === true) {
                     const address = result.address;
                     const addressType = result.addressType;
@@ -732,6 +786,7 @@ export class AuthHandler implements AuxAuth {
                         privacyPolicyUrl: this.privacyPolicyUrl,
                         errors: errors,
                         supportsSms: this._supportsSms,
+                        supportsWebAuthn: this._supportsWebAuthn,
                     });
 
                     return NEVER;
@@ -749,9 +804,18 @@ export class AuthHandler implements AuxAuth {
         await authManager.loadUserInfo();
         await this._loadUserInfo();
 
-        this._loginUIStatus.next({
-            page: false,
-        });
+        if (!cancelSignal.canceled && browserSupportsWebAuthn()) {
+            // show prompt to add a key
+            this._loginUIStatus.next({
+                page: 'show_register_webauthn',
+                apiEndpoint: authManager.apiEndpoint,
+                authenticationHeaders: authManager.getAuthenticationHeaders(),
+            });
+        } else {
+            this._loginUIStatus.next({
+                page: false,
+            });
+        }
 
         return authManager.userId;
     }
@@ -977,5 +1041,9 @@ export class AuthHandler implements AuxAuth {
 
     private get _supportsSms() {
         return ENABLE_SMS_AUTHENTICATION === true;
+    }
+
+    private get _supportsWebAuthn() {
+        return browserSupportsWebAuthn();
     }
 }

@@ -116,6 +116,7 @@ describe('AuthCoordinator', () => {
             getWebsocketProtocol: jest.fn(),
             getComIdWebConfig: jest.fn(),
             grantPermission: jest.fn(),
+            provideLoginResult: jest.fn(),
             get supportsAuthentication() {
                 return true;
             },

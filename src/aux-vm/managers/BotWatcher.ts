@@ -31,7 +31,7 @@ import { VersionVector } from '@casual-simulation/aux-common';
 import {
     RuntimeStateVersion,
     updateRuntimeVersion,
-} from '@casual-simulation/aux-runtime';
+} from '@casual-simulation/aux-runtime/runtime/RuntimeStateVersion';
 
 /**
  * Defines an interface that contains information about an updated bot.

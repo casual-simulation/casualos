@@ -562,6 +562,60 @@ export class RecordsServer {
                 this._allowedAccountOrigins
             );
         } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/webauthn/register/options'
+        ) {
+            return formatResponse(
+                request,
+                await this._webAuthnRegisterOptions(request),
+                true
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/webauthn/register'
+        ) {
+            return formatResponse(
+                request,
+                await this._webAuthnRegister(request),
+                true
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/webauthn/login/options'
+        ) {
+            return formatResponse(
+                request,
+                await this._webAuthnLoginOptions(request),
+                true
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/webauthn/login'
+        ) {
+            return formatResponse(
+                request,
+                await this._webAuthnLogin(request),
+                true
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/webauthn/authenticators'
+        ) {
+            return formatResponse(
+                request,
+                await this._listWebAuthnAuthenticators(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/webauthn/authenticators/delete'
+        ) {
+            return formatResponse(
+                request,
+                await this._deleteWebAuthnAuthenticator(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/meet/token'
         ) {
@@ -4014,6 +4068,256 @@ export class RecordsServer {
             displayName,
             ipAddress: request.ipAddress,
         });
+
+        return returnResult(result);
+    }
+
+    private async _webAuthnRegisterOptions(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._auth.requestWebAuthnRegistration({
+            userId: validation.userId,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _webAuthnRegister(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            response: z.object({
+                id: z.string().nonempty(),
+                rawId: z.string().nonempty(),
+                response: z.object({
+                    clientDataJSON: z.string().nonempty(),
+                    attestationObject: z.string().nonempty(),
+                    authenticatorData: z.string().nonempty().optional(),
+                    transports: z.array(z.string().min(1).max(64)).optional(),
+                    publicKeyAlgorithm: z.number().optional(),
+                    publicKey: z.string().nonempty().optional(),
+                }),
+                authenticatorAttachment: z
+                    .enum(['cross-platform', 'platform'])
+                    .optional(),
+                clientExtensionResults: z.object({
+                    appid: z.boolean().optional(),
+                    credProps: z
+                        .object({
+                            rk: z.boolean().optional(),
+                        })
+                        .optional(),
+                    hmacCreateSecret: z.boolean().optional(),
+                }),
+                type: z.literal('public-key'),
+            }),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { response } = parseResult.data;
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._auth.completeWebAuthnRegistration({
+            userId: validation.userId,
+            response: response as any,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
+            userAgent: request.headers['user-agent'],
+        });
+
+        return returnResult(result);
+    }
+
+    private async _webAuthnLoginOptions(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
+
+        const result = await this._auth.requestWebAuthnLogin({
+            ipAddress: request.ipAddress,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _webAuthnLogin(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        // We don't validate origin because the AuthController will validate it based on the allowed
+        // relying parties.
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            requestId: z.string().nonempty(),
+            response: z.object({
+                id: z.string().nonempty(),
+                rawId: z.string().nonempty(),
+                response: z.object({
+                    clientDataJSON: z.string().nonempty(),
+                    authenticatorData: z.string().nonempty(),
+                    signature: z.string().nonempty(),
+                    userHandle: z.string().nonempty().optional(),
+                }),
+                authenticatorAttachment: z
+                    .enum(['cross-platform', 'platform'])
+                    .optional(),
+                clientExtensionResults: z.object({
+                    appid: z.boolean().optional(),
+                    credProps: z
+                        .object({
+                            rk: z.boolean().optional(),
+                        })
+                        .optional(),
+                    hmacCreateSecret: z.boolean().optional(),
+                }),
+                type: z.literal('public-key'),
+            }),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { response, requestId } = parseResult.data;
+
+        const result = await this._auth.completeWebAuthnLogin({
+            requestId: requestId,
+            ipAddress: request.ipAddress,
+            response: response as any,
+            originOrHost:
+                request.headers.origin ??
+                request.headers['x-dev-proxy-host'] ??
+                request.headers.host,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _listWebAuthnAuthenticators(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._auth.listUserAuthenticators(
+            validation.userId
+        );
+
+        return returnResult(result);
+    }
+
+    private async _deleteWebAuthnAuthenticator(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            authenticatorId: z.string().nonempty(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { authenticatorId } = parseResult.data;
+
+        const validation = await this._validateSessionKey(request);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._auth.deleteUserAuthenticator(
+            validation.userId,
+            authenticatorId
+        );
 
         return returnResult(result);
     }

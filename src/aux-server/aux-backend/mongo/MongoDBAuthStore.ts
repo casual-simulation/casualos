@@ -24,6 +24,9 @@ import {
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
+    AuthUserAuthenticator,
+    AuthUserAuthenticatorWithUser,
+    AuthWebAuthnLoginRequest,
     ListSessionsDataResult,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
@@ -33,6 +36,7 @@ import { Db, Collection, FilterQuery } from 'mongodb';
 import { v4 as uuid } from 'uuid';
 
 export const USERS_COLLECTION_NAME = 'users';
+export const USER_AUTHENTICATORS_COLLECTION_NAME = 'userAuthenticators';
 export const LOGIN_REQUESTS_COLLECTION_NAME = 'loginRequests';
 export const SESSIONS_COLLECTION_NAME = 'sessions';
 export const EMAIL_RULES_COLLECTION_NAME = 'emailRules';
@@ -44,6 +48,7 @@ export const RECORDS_COLLECTION_NAME = 'records';
 export const RECORD_KEYS_COLLECTION_NAME = 'recordKeys';
 export const STUDIOS_COLLECTION_NAME = 'studios';
 export const STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME = 'studioComIdRequests';
+export const WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME = 'webAuthnLoginRequests';
 
 export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _users: Collection<MongoDBAuthUser>;
@@ -58,6 +63,8 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     private _keyCollection: Collection<RecordKey>;
     private _studios: Collection<MongoDBStudio>;
     private _comIdRequests: Collection<MongoDBStudioComIdRequest>;
+    private _userAuthenticators: Collection<MongoDBUserAuthenticator>;
+    private _webauthnLoginRequests: Collection<MongoDBWebAuthnLoginRequest>;
 
     private _db: Db;
 
@@ -95,6 +102,157 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         this._studios = db.collection<MongoDBStudio>(STUDIOS_COLLECTION_NAME);
         this._comIdRequests = db.collection<MongoDBStudioComIdRequest>(
             STUDIO_COM_ID_REQEUSTS_COLLECTION_NAME
+        );
+        this._userAuthenticators = db.collection<MongoDBUserAuthenticator>(
+            USER_AUTHENTICATORS_COLLECTION_NAME
+        );
+        this._webauthnLoginRequests =
+            db.collection<MongoDBWebAuthnLoginRequest>(
+                WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
+            );
+    }
+
+    async saveUserAuthenticatorCounter(
+        id: string,
+        newCounter: number
+    ): Promise<void> {
+        await this._userAuthenticators.updateOne(
+            {
+                _id: id,
+            },
+            {
+                $set: {
+                    counter: newCounter,
+                },
+            }
+        );
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number> {
+        const result = await this._userAuthenticators.deleteOne({
+            _id: authenticatorId,
+            userId: userId,
+        });
+
+        return result.deletedCount;
+    }
+
+    findWebAuthnLoginRequest(
+        requestId: string
+    ): Promise<AuthWebAuthnLoginRequest> {
+        return this._webauthnLoginRequests.findOne({
+            requestId,
+        });
+    }
+
+    async saveWebAuthnLoginRequest(
+        request: AuthWebAuthnLoginRequest
+    ): Promise<AuthWebAuthnLoginRequest> {
+        await this._webauthnLoginRequests.updateOne(
+            {
+                _id: request.requestId,
+            },
+            {
+                $set: {
+                    ...request,
+                },
+            },
+            {
+                upsert: true,
+            }
+        );
+
+        return request;
+    }
+
+    async markWebAuthnLoginRequestComplete(
+        requestId: string,
+        userId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        await this._webauthnLoginRequests.updateOne(
+            {
+                requestId,
+            },
+            {
+                $set: {
+                    userId,
+                    completedTimeMs,
+                },
+            }
+        );
+    }
+
+    async setCurrentWebAuthnChallenge(
+        userId: string,
+        challenge: string
+    ): Promise<void> {
+        await this._users.updateOne(
+            {
+                _id: userId,
+            },
+            {
+                $set: {
+                    currentWebAuthnChallenge: challenge,
+                },
+            }
+        );
+    }
+
+    async listUserAuthenticators(
+        userId: string
+    ): Promise<AuthUserAuthenticator[]> {
+        const result = await this._userAuthenticators
+            .find({
+                userId,
+            })
+            .toArray();
+
+        return result.map((r) => {
+            const { _id, ...rest } = r;
+            return {
+                id: _id,
+                ...rest,
+            };
+        });
+    }
+
+    async findUserAuthenticatorByCredentialId(
+        credentialId: string
+    ): Promise<AuthUserAuthenticatorWithUser> {
+        const result = await this._userAuthenticators.findOne({
+            credentialId,
+        });
+
+        if (result) {
+            const user = await this.findUser(result.userId);
+            return {
+                authenticator: result,
+                user,
+            };
+        }
+
+        return null;
+    }
+
+    async saveUserAuthenticator(
+        authenticator: AuthUserAuthenticator
+    ): Promise<void> {
+        await this._userAuthenticators.updateOne(
+            {
+                _id: authenticator.id,
+            },
+            {
+                $set: {
+                    ...authenticator,
+                },
+            },
+            {
+                upsert: true,
+            }
         );
     }
 
@@ -287,7 +445,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         address: string,
         addressType: AddressType
     ): Promise<AuthUser> {
-        const user = await this._users.findOne(
+        let user = await this._users.findOne(
             addressType === 'email'
                 ? {
                       email: { $eq: address },
@@ -296,6 +454,15 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                       phoneNumber: { $eq: address },
                   }
         );
+
+        if (!user && addressType === 'email') {
+            // find the user by a case insensitive email
+            user = await this._users.findOne({
+                $expr: {
+                    $eq: [{ $toLower: '$email' }, { $toLower: address }],
+                },
+            });
+        }
 
         if (user) {
             const { _id, ...rest } = user;
@@ -1228,6 +1395,14 @@ export interface MongoDBAuthUser {
     privoParentServiceId?: string;
 
     privacyFeatures?: PrivacyFeatures;
+}
+
+export interface MongoDBUserAuthenticator extends AuthUserAuthenticator {
+    _id: string;
+}
+
+export interface MongoDBWebAuthnLoginRequest extends AuthWebAuthnLoginRequest {
+    _id: string;
 }
 
 export interface MongoDBLoginRequest {

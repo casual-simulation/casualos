@@ -364,6 +364,10 @@ export default class PlayerHome extends Vue {
         this.showBios = true;
         const options = await this._getBiosOptions();
         this.biosOptions = options;
+
+        // If we show the BIOS options, then
+        // we should have time to initialize the service worker
+        appManager.initOffline();
     }
 
     async signIn() {
@@ -411,7 +415,7 @@ export default class PlayerHome extends Vue {
             this._loadPrivateInst();
         } else if (isPublicInst(option)) {
             this._loadPublicInst();
-        } else if (option === 'enter join code') {
+        } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
         } else {
             this.showBios = true;

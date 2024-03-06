@@ -1,5 +1,34 @@
 # CasualOS Changelog
 
+## V3.2.17
+
+#### Date: 3/6/2024
+
+### :rocket: Features
+
+-   Support case-insensitive matching of email address when logging in.
+    -   Previous versions would create separate accounts for email addresses that differed only in case.
+    -   Now, if an exact match is not found, a case-insensitive search will be made for users when attempting to login by email.
+    -   This will prevent cases where a user gets a new account because they mistakenly changed the case of their email address.
+    -   Technically, email addresses are supposed to be case-sensitive, but pretty much every email server treats them as case-insensitive.
+-   Support configuring a custom file URL for public file records stored in S3.
+    -   This makes it easy to support setting a custom domain or CDN or public file records.
+    -   It does not support private file records at this moment.
+-   Support changing the bucket that S3 files are stored in.
+-   Added support for [passkeys](https://blog.google/technology/safety-security/the-beginning-of-the-end-of-the-password/).
+    -   Passkeys are new way to sign in to apps and websites without a password. Depending on your device and platform, passkeys can even be synced across your devices.
+    -   On CasualOS, passkeys offer a quicker way to login that doesn't require checking your email or phone number every time.
+    -   On supported devices, if you login using a traditional method, CasualOS will ask you if you want to register a passkey for the device.
+    -   Upon your next login, you can use the passkey to login instead of having to enter your email and wait for a code.
+-   Changed the date of birth input to handle manually-typed input better.
+-   Added the ability to track some load time metrics using SimpleAnalytics events.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.calculateRayFromCamera()` would return incorrect results for the ray origin.
+-   Improved CasualOS to delay installation of the service worker until either the inst is fully loaded or the BIOS is shown.
+-   Fixed an issue where the `miniMapPortal` and `miniGridPortal` were not able to be resized.
+
 ## V3.2.16
 
 #### Date: 2/23/2024

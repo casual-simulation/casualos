@@ -52,6 +52,7 @@ export function listenForChannel(origin?: string): Promise<MessagePort> {
             if (msg.data.type === 'init_port') {
                 if (!origin || msg.origin === origin) {
                     globalThis.removeEventListener('message', listener);
+                    msg.data.port.origin = origin;
                     resolve(msg.data.port);
                 }
             }

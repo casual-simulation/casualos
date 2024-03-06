@@ -34,29 +34,35 @@ export const EMPTY_STRING_SHA256_HASH_HEX =
 export class S3FileRecordsStore implements FileRecordsStore {
     private _region: string;
     private _bucket: string;
+    private _defaultBucket: string;
     private _storageClass: string;
     private _s3Host: string;
     private _s3: S3;
     private _credentialProvider: AwsCredentialIdentityProvider;
+    private _publicFilesUrl: string | null;
 
     private _lookup: FileRecordsLookup;
 
     constructor(
         region: string,
         bucket: string,
+        defaultBucket: string,
         fileLookup: FileRecordsLookup,
         storageClass: string = 'STANDARD',
         s3: S3,
         s3Host: string = null,
-        credentialProvider: AwsCredentialIdentityProvider = fromNodeProviderChain()
+        credentialProvider: AwsCredentialIdentityProvider = fromNodeProviderChain(),
+        publicFilesUrl: string = null
     ) {
         this._region = region;
         this._bucket = bucket;
+        this._defaultBucket = defaultBucket;
         this._lookup = fileLookup;
         this._storageClass = storageClass;
         this._s3 = s3;
         this._s3Host = s3Host;
         this._credentialProvider = credentialProvider;
+        this._publicFilesUrl = publicFilesUrl;
 
         if (this._lookup.listUploadedFiles) {
             this.listUploadedFiles = async (
@@ -71,9 +77,14 @@ export class S3FileRecordsStore implements FileRecordsStore {
                 if (!result.success) {
                     return result as ListFilesLookupFailure;
                 } else {
-                    const files = result.files.map((f) => ({
+                    const files = result.files.map(({ bucket, ...f }) => ({
                         ...f,
-                        url: this._fileUrl(recordName, f.fileName).href,
+                        url: this._fileUrl(
+                            recordName,
+                            f.fileName,
+                            bucket ?? this._bucket,
+                            isPublicFile(f.markers)
+                        ).href,
                     }));
 
                     return {
@@ -104,27 +115,87 @@ export class S3FileRecordsStore implements FileRecordsStore {
     async getFileNameFromUrl(
         fileUrl: string
     ): Promise<GetFileNameFromUrlResult> {
-        const host = this._fileHost();
-        if (fileUrl.startsWith(host)) {
-            let recordNameAndFileName = fileUrl.slice(host.length + 1);
-            let firstSlash = recordNameAndFileName.indexOf('/');
-            if (firstSlash < 0) {
+        try {
+            if (this._s3Host) {
+                if (fileUrl.startsWith(this._s3Host)) {
+                    const recordNameAndFileName = fileUrl.slice(
+                        this._s3Host.length + 1
+                    );
+                    const firstSlash = recordNameAndFileName.indexOf('/');
+                    if (firstSlash < 0) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_url',
+                            errorMessage:
+                                'The URL does not match an expected format.',
+                        };
+                    }
+                    const recordName = decodeURIComponent(
+                        recordNameAndFileName.slice(0, firstSlash)
+                    );
+                    const fileName = decodeURIComponent(
+                        recordNameAndFileName.slice(firstSlash + 1)
+                    );
+
+                    if (recordName && fileName) {
+                        return {
+                            success: true,
+                            recordName,
+                            fileName,
+                        };
+                    }
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_url',
+                        errorMessage:
+                            'The URL does not match an expected format.',
+                    };
+                }
+
                 return {
                     success: false,
                     errorCode: 'unacceptable_url',
                     errorMessage: 'The URL does not match an expected format.',
                 };
             }
-            let recordName = recordNameAndFileName.slice(0, firstSlash);
-            let fileName = recordNameAndFileName.slice(firstSlash + 1);
 
-            if (recordName && fileName) {
+            const url = new URL(fileUrl);
+            if (url.pathname) {
+                const recordNameAndFileName = url.pathname.slice(1);
+                const firstSlash = recordNameAndFileName.indexOf('/');
+                if (firstSlash < 0) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_url',
+                        errorMessage:
+                            'The URL does not match an expected format.',
+                    };
+                }
+                const recordName = decodeURIComponent(
+                    recordNameAndFileName.slice(0, firstSlash)
+                );
+                const fileName = decodeURIComponent(
+                    recordNameAndFileName.slice(firstSlash + 1)
+                );
+
+                if (recordName && fileName) {
+                    return {
+                        success: true,
+                        recordName,
+                        fileName,
+                    };
+                }
                 return {
-                    success: true,
-                    recordName,
-                    fileName,
+                    success: false,
+                    errorCode: 'unacceptable_url',
+                    errorMessage: 'The URL does not match an expected format.',
                 };
             }
+        } catch (err) {
+            console.error(
+                '[S3FileRecordsStore] An error occurred while getting file name from URL:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'unacceptable_url',
@@ -150,7 +221,14 @@ export class S3FileRecordsStore implements FileRecordsStore {
         const accessKeyId = credentials ? credentials.accessKeyId : null;
 
         const now = request.date ?? new Date();
-        const fileUrl = this._fileUrl(request.recordName, request.fileName);
+        const fileUrl = this._fileUrl(
+            request.recordName,
+            request.fileName,
+            this._bucket,
+
+            // Presigned file uploads always have to use an S3 URL
+            false
+        );
         const requiredHeaders = {
             'content-type': request.fileMimeType,
             'content-length': request.fileByteLength.toString(),
@@ -202,7 +280,14 @@ export class S3FileRecordsStore implements FileRecordsStore {
         const accessKeyId = credentials ? credentials.accessKeyId : null;
 
         const now = request.date ?? new Date();
-        const fileUrl = this._fileUrl(request.recordName, request.fileName);
+        const fileUrl = this._fileUrl(
+            request.recordName,
+            request.fileName,
+            this._bucket,
+
+            // Presigned file reads always have to use an S3 URL
+            false
+        );
         const requiredHeaders = {
             host: fileUrl.host,
         };
@@ -256,7 +341,12 @@ export class S3FileRecordsStore implements FileRecordsStore {
             );
 
             if (result) {
-                const url = this._fileUrl(result.recordName, result.fileName);
+                const url = this._fileUrl(
+                    result.recordName,
+                    result.fileName,
+                    result.bucket ?? this._defaultBucket,
+                    isPublicFile(result.markers)
+                );
                 return {
                     success: true,
                     recordName: result.recordName,
@@ -305,6 +395,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
             subjectId,
             sizeInBytes,
             description,
+            this._bucket,
             markers
         );
     }
@@ -366,22 +457,23 @@ export class S3FileRecordsStore implements FileRecordsStore {
         return await this._credentialProvider();
     }
 
-    private _fileUrl(recordName: string, fileName: string): URL {
+    private _fileUrl(
+        recordName: string,
+        fileName: string,
+        bucket: string,
+        isPublic: boolean
+    ): URL {
         let filePath = this._fileKey(recordName, fileName);
 
-        if (this._s3Host) {
-            filePath = `${this._s3Host}/${this._bucket}/${filePath}`;
+        if (isPublic && this._publicFilesUrl) {
+            return new URL(`${this._publicFilesUrl}/${filePath}`);
         }
 
-        return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`);
-    }
-
-    private _fileHost() {
         if (this._s3Host) {
-            return this._s3Host;
+            filePath = `${this._s3Host}/${bucket}/${filePath}`;
         }
 
-        return `https://${this._bucket}.s3.amazonaws.com`;
+        return new URL(filePath, `https://${bucket}.s3.amazonaws.com`);
     }
 
     private _fileKey(recordName: string, fileName: string): string {
@@ -394,11 +486,19 @@ export class S3FileRecordsStore implements FileRecordsStore {
  * @param markers The markers that are applied to the file.
  */
 export function s3AclForMarkers(markers: readonly string[]): string {
-    if (markers.some((m) => m === PUBLIC_READ_MARKER)) {
+    if (isPublicFile(markers)) {
         return 'public-read';
     }
 
     return 'private';
+}
+
+/**
+ * Determines whether the given markers indicate that the file is public.
+ * @param markers The markers that are applied to the file.
+ */
+export function isPublicFile(markers: readonly string[]): boolean {
+    return markers.some((m) => m === PUBLIC_READ_MARKER);
 }
 
 /**

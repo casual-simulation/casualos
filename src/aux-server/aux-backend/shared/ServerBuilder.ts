@@ -37,6 +37,7 @@ import {
     ModerationController,
     ModerationStore,
     GoogleAIChatInterface,
+    RelyingParty,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -196,6 +197,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _authStore: AuthStore;
     private _authMessenger: AuthMessenger;
     private _authController: AuthController;
+    private _relyingParties: RelyingParty[];
 
     private _recordsStore: RecordsStore;
     private _recordsController: RecordsController;
@@ -470,11 +472,13 @@ export class ServerBuilder implements SubscriptionLike {
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
+            s3.defaultFilesBucket ?? s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
             s3Client,
             s3.host,
-            undefined
+            undefined,
+            s3.publicFilesUrl
         );
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
@@ -681,6 +685,21 @@ export class ServerBuilder implements SubscriptionLike {
     useAllowedAccountOrigins(origins: Set<string>): this {
         console.log('[ServerBuilder] Using account origins:', origins);
         this._allowedAccountOrigins = origins;
+        return this;
+    }
+
+    useWebAuthn(
+        options: Pick<BuilderOptions, 'webauthn'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using WebAuthn.');
+        if (!options.webauthn) {
+            throw new Error('WebAuthn options must be provided.');
+        }
+        this._relyingParties = options.webauthn.relyingParties.map((rp) => ({
+            id: rp.id,
+            name: rp.name,
+            origin: rp.origin,
+        }));
         return this;
     }
 
@@ -1132,7 +1151,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._authMessenger,
             this._configStore,
             this._forceAllowAllSubscriptionFeatures,
-            this._privoClient
+            this._privoClient,
+            this._relyingParties ?? []
         );
         this._recordsController = new RecordsController({
             store: this._recordsStore,
@@ -1429,12 +1449,29 @@ const s3Schema = z.object({
             'The name of the bucket that file records should be placed in.'
         )
         .nonempty(),
+    defaultFilesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that file records were originally placed in. This is used for backwards compatibility for file records that were uploaded before changing the filesBucket was supported. If not specified, then filesBucket is used.'
+        )
+        .nonempty()
+        .optional(),
     filesStorageClass: z
         .string()
         .describe(
             'The S3 File Storage Class that should be used for file records.'
         )
         .nonempty(),
+
+    publicFilesUrl: z
+        .string()
+        .describe(
+            'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default S3 URL will be used. ' +
+                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
+                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
+        )
+        .nonempty()
+        .optional(),
 
     messagesBucket: z
         .string()
@@ -1929,6 +1966,29 @@ const apiGatewaySchema = z.object({
 
 const wsSchema = z.object({});
 
+const webauthnSchema = z.object({
+    relyingParties: z
+        .array(
+            z.object({
+                name: z
+                    .string()
+                    .describe('The human-readable name of the relying party.')
+                    .nonempty(),
+                id: z
+                    .string()
+                    .describe(
+                        'The ID of the relying party. Should be the domain of the relying party. Note that this does not mean that it has to be unique. Instead, it just needs to match the domain that the passkeys can be used on.'
+                    )
+                    .nonempty(),
+                origin: z
+                    .string()
+                    .describe('The HTTP origin of the relying party.')
+                    .nonempty(),
+            })
+        )
+        .describe('The relying parties that should be supported.'),
+});
+
 export const optionsSchema = z.object({
     s3: s3Schema
         .describe(
@@ -2014,6 +2074,12 @@ export const optionsSchema = z.object({
     privo: privoSchema
         .describe(
             'Privo configuration options. If omitted, then Privo features will be disabled.'
+        )
+        .optional(),
+
+    webauthn: webauthnSchema
+        .describe(
+            'WebAuthn configuration options. If omitted, then WebAuthn features will be disabled.'
         )
         .optional(),
 

@@ -11,10 +11,7 @@ import {
     tagAsInterpretableFunction,
 } from './AuxCompiler';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
-import {
-    calculateIndexFromLocation,
-    calculateLocationFromIndex,
-} from './Transpiler';
+import { calculateIndexFromLocation } from './TranspilerUtils';
 import {
     CreateDataProperty,
     Realm,

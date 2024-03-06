@@ -12,16 +12,17 @@
             <form v-if="enterDateOfBirth" @submit.prevent="provideDateOfBirth()">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
-                        <md-datepicker
-                            v-model="dateOfBirth"
-                            :class="dateOfBirthFieldClass"
-                            :md-model-type="Date"
-                            :md-disabled-dates="disabledDates"
-                        >
-                            <label>Date of Birth</label>
-
+                        <md-field class="md-has-value" :class="dateOfBirthFieldClass">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <md-input
+                                name="dateOfBirth"
+                                id="dateOfBirth"
+                                type="date"
+                                v-model="dateOfBirth"
+                                :max="maxDate"
+                            />
                             <field-errors field="dateOfBirth" :errors="errors" />
-                        </md-datepicker>
+                        </md-field>
                     </div>
                 </div>
                 <field-errors :field="null" :errors="errors" />

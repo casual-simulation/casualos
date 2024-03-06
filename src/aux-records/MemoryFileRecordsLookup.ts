@@ -27,6 +27,7 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
                 sizeInBytes: file.sizeInBytes,
                 uploaded: file.uploaded,
                 description: file.description,
+                bucket: file.bucket,
                 markers: file.markers,
             };
         } else {
@@ -58,6 +59,7 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
                 sizeInBytes: f.sizeInBytes,
                 uploaded: f.uploaded,
                 markers: f.markers,
+                bucket: f.bucket,
                 description: f.description,
             })),
             totalCount: count,
@@ -71,6 +73,7 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
         subjectId: string,
         sizeInBytes: number,
         description: string,
+        bucket: string | null,
         markers: string[]
     ): Promise<AddFileResult> {
         if (this._files.has(fileName)) {
@@ -89,6 +92,7 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
             sizeInBytes,
             description,
             markers,
+            bucket,
             uploaded: false,
         };
 
@@ -171,5 +175,6 @@ interface StoredFile {
     sizeInBytes: number;
     uploaded: boolean;
     description: string;
+    bucket: string;
     markers: string[];
 }

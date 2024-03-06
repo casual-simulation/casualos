@@ -372,7 +372,8 @@ export type KnownErrorCodes =
     | 'unacceptable_connection_token'
     | 'invalid_token'
     | 'unacceptable_connection_id'
-    | 'message_not_found';
+    | 'message_not_found'
+    | 'not_found';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -471,6 +472,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'permission_not_found') {
             return 404;
         } else if (response.errorCode === 'message_not_found') {
+            return 404;
+        } else if (response.errorCode === 'not_found') {
             return 404;
         } else {
             return 400;
