@@ -91,6 +91,7 @@ import {
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
     Bot,
+    IdentifiedBotModule,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import {
@@ -8188,6 +8189,26 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('def')]]);
                 });
 
+                it('should support default imports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import abc from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄const abc = 'def'; export default abc;`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
                 it('should cache a module between imports', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -8309,11 +8330,31 @@ describe('AuxRuntime', () => {
 
                     expect(events).toEqual([[toast('def')]]);
                 });
+
+                it('should be able to resolve an import using an async @onResolveModule', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); return '📄export const abc = "def";';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
             });
         });
 
         describe('resolveModule()', () => {
-            it('should call the given export function for exports', async () => {
+            it('should resolve modules based on system and tag', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test2: createBot('test2', {
@@ -8325,6 +8366,138 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 const m = await runtime.resolveModule('module.library');
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            describe('@onResolveModule', () => {
+                it('should shout @onResolveModule if a system could not be found', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test3',
+                        tag: 'library',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should support resolving modules with a promise', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test3',
+                        tag: 'library',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should support resolving a module with a script', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return '📄export default 123;';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        source: '📄export default 123;',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should prefer @onResolveModule over the system tag', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return '📄export default 123;';`,
+                            }),
+                            test3: createBot('test3', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        source: '📄export default 123;',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+            });
+
+            it('should call the given export function for exports', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = (await runtime.resolveModule(
+                    'module.library'
+                )) as IdentifiedBotModule;
 
                 expect(m?.id).toBe('module.library');
                 expect(m?.botId).toBe('test2');
@@ -8350,7 +8523,9 @@ describe('AuxRuntime', () => {
                 );
                 await waitAsync();
 
-                const m = await runtime.resolveModule('module.library');
+                const m = (await runtime.resolveModule(
+                    'module.library'
+                )) as IdentifiedBotModule;
 
                 expect(m?.id).toBe('module.library');
                 expect(m?.botId).toBe('test2');
@@ -8377,7 +8552,9 @@ describe('AuxRuntime', () => {
                 );
                 await waitAsync();
 
-                const m = await runtime.resolveModule('module.library');
+                const m = (await runtime.resolveModule(
+                    'module.library'
+                )) as IdentifiedBotModule;
 
                 expect(m?.id).toBe('module.library');
                 expect(m?.botId).toBe('test2');

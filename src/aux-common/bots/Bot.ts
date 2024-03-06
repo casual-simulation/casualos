@@ -2193,6 +2193,11 @@ export const ON_DISALLOW_COLLABORATION_UPGRADE: string =
     'onDisallowCollaborationUpgrade';
 
 /**
+ * The name of the event that is triggered when a module needs to be resolved.
+ */
+export const ON_RESOLVE_MODULE: string = 'onResolveModule';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots

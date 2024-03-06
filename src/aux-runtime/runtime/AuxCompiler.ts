@@ -815,9 +815,6 @@ export class AuxCompiler {
             } else if (isModule(script)) {
                 transpiled = this._parseModule(script);
             } else {
-                if (!async && (script as string).indexOf('await ') >= 0) {
-                    async = true;
-                }
                 transpiled = this._transpiler.transpileWithMetadata(script);
             }
         } catch (err) {
@@ -842,6 +839,8 @@ export class AuxCompiler {
 
         if (transpiled.metadata.isModule) {
             // All modules are async
+            async = true;
+        } else if (script.indexOf('await ') >= 0) {
             async = true;
         }
         if (options.forceSync) {

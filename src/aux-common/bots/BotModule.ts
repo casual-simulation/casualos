@@ -50,6 +50,18 @@ export interface IdentifiedBotModule extends BotModule {
     tag: string;
 }
 
+export interface SourceModule {
+    /**
+     * The ID of the module.
+     */
+    id: string;
+
+    /**
+     * The source code of the module.
+     */
+    source: string;
+}
+
 /**
  * Defines an interface that represents the result of importing a module.
  */

@@ -640,6 +640,20 @@ describe('Transpiler', () => {
             let transpiler: Transpiler;
 
             beforeEach(() => {
+                transpiler = new Transpiler();
+            });
+
+            it('should be able to compile await statements', () => {
+                const result = transpiler.transpile(`await test();`);
+
+                expect(result).toBe(`await test();`);
+            });
+        });
+
+        describe('force sync', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
                 transpiler = new Transpiler({
                     forceSync: true,
                 });

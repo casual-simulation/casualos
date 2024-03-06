@@ -77,6 +77,8 @@ import {
     ExportFunc,
     calculateStringTagValue,
     BotModuleResult,
+    ON_RESOLVE_MODULE,
+    SourceModule,
 } from '@casual-simulation/aux-common/bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
@@ -323,6 +325,13 @@ export class AuxRuntime
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
     private _interpreter: InterpreterType;
 
+    /**
+     * The map of module IDs to their exports.
+     * Only used for global modules, which are modules that are not attached to a bot (e.g. source modules).
+     */
+    private _cachedGlobalModules: Map<string, Promise<BotModuleResult>> =
+        new Map();
+
     // /**
     //  * The map of tags (botID.tag.space) to their respective modules.
     //  */
@@ -492,22 +501,32 @@ export class AuxRuntime
 
     private async _importModule(module: string): Promise<BotModuleResult> {
         try {
+            const globalModule = this._cachedGlobalModules.get(module);
+            if (globalModule) {
+                return await globalModule;
+            }
+
             const m = await this.resolveModule(module);
             if (!m) {
                 throw new Error('Module not found: ' + module);
             }
 
-            const bot = this._compiledState[m.botId];
-            if (bot) {
-                const exports = bot.exports[m.tag];
-                if (exports) {
-                    return await exports;
+            let bot: CompiledBot;
+            if ('botId' in m) {
+                bot = this._compiledState[m.botId];
+                if (bot) {
+                    const exports = bot.exports[m.tag];
+                    if (exports) {
+                        return await exports;
+                    }
                 }
             }
 
             const promise = this._importModuleCore(m);
             if (bot) {
-                bot.exports[m.tag] = promise;
+                bot.exports[(m as IdentifiedBotModule).tag] = promise;
+            } else {
+                this._cachedGlobalModules.set(module, promise);
             }
 
             return await promise;
@@ -517,7 +536,7 @@ export class AuxRuntime
     }
 
     private async _importModuleCore(
-        m: IdentifiedBotModule
+        m: IdentifiedBotModule | SourceModule
     ): Promise<BotModuleResult> {
         try {
             const exports: BotModuleResult = {};
@@ -528,7 +547,13 @@ export class AuxRuntime
                 Object.assign(exports, result);
             };
 
-            await m.moduleFunc(importFunc, exportFunc);
+            if ('moduleFunc' in m) {
+                await m.moduleFunc(importFunc, exportFunc);
+            } else {
+                const source = (m as SourceModule).source;
+                const mod = this._compileModule(null, null, source, {});
+                await mod.moduleFunc(importFunc, exportFunc);
+            }
             return exports;
         } finally {
             this._scheduleJobQueueCheck();
@@ -565,7 +590,43 @@ export class AuxRuntime
      * Attempts to resolve the module with the given name.
      * @param moduleName The name of the module to resolve.
      */
-    async resolveModule(moduleName: string): Promise<IdentifiedBotModule> {
+    async resolveModule(
+        moduleName: string
+    ): Promise<IdentifiedBotModule | SourceModule> {
+        const shoutResult = this.shout(ON_RESOLVE_MODULE, undefined, {
+            module: moduleName,
+        });
+        const actionResult: ActionResult = isRuntimePromise(shoutResult)
+            ? await shoutResult
+            : shoutResult;
+
+        for (let scriptResult of actionResult.results) {
+            const result = await scriptResult;
+            if (result) {
+                if (
+                    typeof result === 'object' &&
+                    typeof result.botId === 'string' &&
+                    typeof result.tag === 'string'
+                ) {
+                    const bot = this._compiledState[result.botId];
+                    const mod = bot?.modules[result.tag];
+                    if (mod) {
+                        return {
+                            ...mod,
+                            botId: result.botId,
+                            id: moduleName,
+                            tag: result.tag,
+                        };
+                    }
+                } else if (typeof result === 'string') {
+                    return {
+                        id: moduleName,
+                        source: result,
+                    };
+                }
+            }
+        }
+
         for (let id in this.currentState) {
             const bot = this.currentState[id];
             const system = calculateStringTagValue(null, bot, 'system', null);
@@ -583,6 +644,8 @@ export class AuxRuntime
                 }
             }
         }
+
+        return null;
     }
 
     getShoutTimers(): { [shout: string]: number } {
