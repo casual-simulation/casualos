@@ -76,6 +76,7 @@ import {
     ImportFunc,
     ExportFunc,
     calculateStringTagValue,
+    BotModuleResult,
 } from '@casual-simulation/aux-common/bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
@@ -382,6 +383,8 @@ export class AuxRuntime
         );
         this._forceSyncScripts = forceSyncScripts;
         this._globalContext.mockAsyncActions = forceSyncScripts;
+        this._globalContext.importModule = (module: string) =>
+            this._importModule(module);
         this._library = merge(libraryFactory(this._globalContext), {
             api: {
                 os: {
@@ -489,6 +492,35 @@ export class AuxRuntime
                         getInterpretableFunction(val);
                 }
             }
+        }
+    }
+
+    private async _importModule(module: string): Promise<BotModuleResult> {
+        const m = await this.resolveModule(module);
+        if (!m) {
+            throw new Error('Module not found: ' + module);
+        }
+
+        const exports: BotModuleResult = {};
+        const importFunc: ImportFunc = (id) => this._importModule(id);
+        const exportFunc: ExportFunc = (valueOrSource, e) => {
+            const result = this._resolveExports(valueOrSource, e);
+            Object.assign(exports, result);
+        };
+
+        await m.moduleFunc(importFunc, exportFunc);
+        this._scheduleJobQueueCheck();
+        return exports;
+    }
+
+    private _resolveExports(
+        valueOrSource: string | object,
+        exports: ([string] | [string, string])[]
+    ): BotModuleResult {
+        if (typeof valueOrSource === 'string') {
+            return {};
+        } else {
+            return valueOrSource;
         }
     }
 
@@ -3149,7 +3181,7 @@ export class AuxRuntime
                 configBot: () => this.context.playerBot,
                 links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
             },
-            arguments: [['that', 'data'], 'importModule', 'exportModule'],
+            arguments: [['that', 'data'], 'importModule', 'exports'],
         });
 
         if (hasValue(bot)) {
@@ -3173,7 +3205,11 @@ export class AuxRuntime
 
         return {
             moduleFunc: (imports, exports) => {
-                return func(null, imports, exports);
+                return this._wrapWithCurrentPromise(() => {
+                    let result = func(null, imports, exports);
+                    this._scheduleJobQueueCheck();
+                    return result;
+                });
             },
             scriptFunc: func,
         };

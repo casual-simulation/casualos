@@ -15019,9 +15019,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     if (INTERPRETABLE_FUNCTION in listener) {
                         result = yield* (listener as any)[
                             INTERPRETABLE_FUNCTION
-                        ](arg);
+                        ](arg, context.importModule, context.exportModule);
                     } else {
-                        result = listener(arg);
+                        result = (listener as any)(
+                            arg,
+                            context.importModule,
+                            context.exportModule
+                        );
                     }
 
                     if (isGenerator(result)) {

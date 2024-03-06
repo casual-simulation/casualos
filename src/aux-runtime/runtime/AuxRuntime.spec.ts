@@ -8172,7 +8172,7 @@ describe('AuxRuntime', () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
                             test1: createBot('test1', {
-                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                                hello: `@import { abc } from 'module.library'; console.log('imported', abc); os.toast(abc);`,
                             }),
                             test2: createBot('test2', {
                                 system: 'module',
@@ -8181,7 +8181,7 @@ describe('AuxRuntime', () => {
                             test3: createBot('test3', {}),
                         })
                     );
-                    await runtime.shout('hello', null);
+                    await runtime.shout('hello');
 
                     await waitAsync();
 
@@ -8190,8 +8190,8 @@ describe('AuxRuntime', () => {
             });
         });
 
-        describe.only('resolveModule()', () => {
-            it('should return a module from the system', async () => {
+        describe('resolveModule()', () => {
+            it('should call the given export function for exports', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test2: createBot('test2', {
@@ -8207,6 +8207,72 @@ describe('AuxRuntime', () => {
                 expect(m?.id).toBe('module.library');
                 expect(m?.botId).toBe('test2');
                 expect(m?.tag).toBe('library');
+
+                const imp = jest.fn();
+                const exp = jest.fn();
+                await m.moduleFunc(imp, exp);
+
+                expect(exp).toHaveBeenCalledWith({
+                    abc: 'def',
+                });
+            });
+
+            it('should resolve with the returned value from the function', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def'; return 123;`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m?.id).toBe('module.library');
+                expect(m?.botId).toBe('test2');
+                expect(m?.tag).toBe('library');
+
+                const imp = jest.fn();
+                const exp = jest.fn();
+                const result = await m.moduleFunc(imp, exp);
+                expect(result).toBe(123);
+
+                expect(exp).toHaveBeenCalledWith({
+                    abc: 'def',
+                });
+            });
+
+            it('should call the given import function when importing something', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄import { abc } from "test"; return abc;`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m?.id).toBe('module.library');
+                expect(m?.botId).toBe('test2');
+                expect(m?.tag).toBe('library');
+
+                const imp = jest.fn(async (name) => {
+                    if (name === 'test') {
+                        return {
+                            abc: 'def',
+                        };
+                    }
+                });
+                const exp = jest.fn();
+                const result = await m.moduleFunc(imp as any, exp);
+                expect(result).toBe('def');
+
+                expect(imp).toHaveBeenCalledWith('test');
             });
         });
 

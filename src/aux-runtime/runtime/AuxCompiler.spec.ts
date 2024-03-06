@@ -62,6 +62,17 @@ describe('AuxCompiler', () => {
             expect(await func(async () => ({}))).toEqual(undefined);
         });
 
+        it('should be able to compile export statements', async () => {
+            const func = compiler.compile('export const abc = "def";', {
+                arguments: ['exports'],
+            });
+
+            const exportFunc = jest.fn();
+
+            expect(await func(exportFunc)).toEqual(undefined);
+            expect(exportFunc).toHaveBeenCalledWith({ abc: 'def' });
+        });
+
         it('should be able to compile scripts with import statements', async () => {
             const func = compiler.compile('@import abc from "test";', {
                 arguments: ['importModule'],
