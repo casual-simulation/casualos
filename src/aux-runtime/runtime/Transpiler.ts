@@ -124,6 +124,11 @@ export interface TranspilerOptions {
      * The name of the function that should be called for ES Module imports.
      */
     importFactory?: string;
+
+    /**
+     * The name of the function that should be called for ES Module exports.
+     */
+    exportFactory?: string;
 }
 
 /**
@@ -137,6 +142,7 @@ export class Transpiler {
     private _jsxFactory: string;
     private _jsxFragment: string;
     private _importFactory: string;
+    private _exportFactory: string;
     private _forceSync: boolean;
     private _cache: LRUCache<string, TranspilerResult>;
 
@@ -175,6 +181,7 @@ export class Transpiler {
         this._jsxFactory = options?.jsxFactory ?? 'h';
         this._jsxFragment = options?.jsxFragment ?? 'Fragment';
         this._importFactory = options?.importFactory ?? 'importModule';
+        this._exportFactory = options?.exportFactory ?? 'exports';
         this._forceSync = options?.forceSync ?? false;
     }
 
@@ -588,7 +595,7 @@ export class Transpiler {
         const absoluteDeclarationEnd =
             createAbsolutePositionFromRelativePosition(declarationEnd, doc);
 
-        let exportCall = `\nexport({ `;
+        let exportCall = `\n${this._exportFactory}({ `;
 
         if (node.declaration.type === 'VariableDeclaration') {
             for (let declaration of node.declaration.declarations) {
@@ -633,7 +640,7 @@ export class Transpiler {
         );
 
         if (node.specifiers.length > 0) {
-            let exportCall = `export({ `;
+            let exportCall = `${this._exportFactory}({ `;
 
             for (let specifier of node.specifiers) {
                 if (specifier.local === specifier.exported) {
@@ -657,7 +664,7 @@ export class Transpiler {
 
             text.delete(currentIndex, absoluteEnd.index);
         } else {
-            let exportCall = `export({});`;
+            let exportCall = `${this._exportFactory}({});`;
             let currentIndex = absoluteStart.index;
             text.insert(currentIndex, exportCall);
 
@@ -718,7 +725,7 @@ export class Transpiler {
         );
 
         if (node.specifiers.length > 0) {
-            let exportCall = `export(`;
+            let exportCall = `${this._exportFactory}(`;
 
             let specifiers = ', [';
             for (let specifier of node.specifiers) {
@@ -763,7 +770,7 @@ export class Transpiler {
                 absoluteEnd.index - finalSourceEnd.index
             );
         } else {
-            let exportCall = `export({});`;
+            let exportCall = `${this._exportFactory}({});`;
             let currentIndex = absoluteStart.index;
             text.insert(currentIndex, exportCall);
 
@@ -823,7 +830,7 @@ export class Transpiler {
             true
         );
 
-        let exportCall = `export({ default: `;
+        let exportCall = `${this._exportFactory}({ default: `;
         let currentIndex = absoluteStart.index;
         text.insert(currentIndex, exportCall);
 
@@ -895,7 +902,7 @@ export class Transpiler {
             true
         );
 
-        let exportCall = `export(`;
+        let exportCall = `${this._exportFactory}(`;
         let currentIndex = absoluteStart.index;
         text.insert(currentIndex, exportCall);
 
