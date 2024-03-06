@@ -27,6 +27,7 @@
 
 -   Fixed an issue where `os.calculateRayFromCamera()` would return incorrect results for the ray origin.
 -   Improved CasualOS to delay installation of the service worker until either the inst is fully loaded or the BIOS is shown.
+-   Fixed an issue where the `miniMapPortal` and `miniGridPortal` were not able to be resized.
 
 ## V3.2.16
 
