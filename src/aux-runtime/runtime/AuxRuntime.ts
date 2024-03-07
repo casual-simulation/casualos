@@ -641,6 +641,7 @@ export class AuxRuntime
 
         const shoutResult = this.shout(ON_RESOLVE_MODULE, undefined, {
             module: moduleName,
+            meta,
         });
         const actionResult: ActionResult = isRuntimePromise(shoutResult)
             ? await shoutResult

@@ -8519,6 +8519,42 @@ describe('AuxRuntime', () => {
                     ]);
                 });
 
+                it('should include import metadata in the shout', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library', {
+                        botId: 'test99',
+                        tag: 'custom',
+                    });
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test3',
+                        tag: 'library',
+                    });
+
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                module: 'module.library',
+                                meta: { botId: 'test99', tag: 'custom' },
+                            }),
+                        ],
+                    ]);
+                });
+
                 it('should support resolving modules with a promise', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
