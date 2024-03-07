@@ -8351,6 +8351,58 @@ describe('AuxRuntime', () => {
 
                     expect(events).toEqual([[toast('def')]]);
                 });
+
+                it('should be able to resolve the casualos module', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { create } from 'casualos'; create({ abc: 123 });`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: 123,
+                                })
+                            ),
+                        ],
+                    ]);
+                });
+
+                it('should be able to use import.meta', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@os.toast(import.meta)`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                botId: 'test1',
+                                tag: 'hello',
+                            }),
+                        ],
+                    ]);
+                });
             });
         });
 
@@ -8519,6 +8571,33 @@ describe('AuxRuntime', () => {
                     ]);
                 });
 
+                it('should support resolving a module with direct exports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return { exports: { abc: 'def', ghi: 123 } };`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        exports: {
+                            abc: 'def',
+                            ghi: 123,
+                        },
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
                 it('should prefer @onResolveModule over the system tag', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -8571,9 +8650,16 @@ describe('AuxRuntime', () => {
                 const exp = jest.fn();
                 await m.moduleFunc(imp, exp);
 
-                expect(exp).toHaveBeenCalledWith({
-                    abc: 'def',
-                });
+                expect(exp).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    undefined,
+                    {
+                        botId: 'test2',
+                        tag: 'library',
+                    }
+                );
             });
 
             it('should resolve with the returned value from the function', async () => {
@@ -8600,9 +8686,16 @@ describe('AuxRuntime', () => {
                 const result = await m.moduleFunc(imp, exp);
                 expect(result).toBe(123);
 
-                expect(exp).toHaveBeenCalledWith({
-                    abc: 'def',
-                });
+                expect(exp).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    undefined,
+                    {
+                        botId: 'test2',
+                        tag: 'library',
+                    }
+                );
             });
 
             it('should call the given import function when importing something', async () => {
@@ -8635,7 +8728,10 @@ describe('AuxRuntime', () => {
                 const result = await m.moduleFunc(imp as any, exp);
                 expect(result).toBe('def');
 
-                expect(imp).toHaveBeenCalledWith('test');
+                expect(imp).toHaveBeenCalledWith('test', {
+                    botId: 'test2',
+                    tag: 'library',
+                });
             });
         });
 

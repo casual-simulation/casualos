@@ -1,17 +1,23 @@
 /**
  * Defines a function that can be used to import a module.
  * @param id The ID of the module to import.
+ * @param meta The metadata about the import.
  */
-export type ImportFunc = (id: string) => Promise<BotModuleResult>;
+export type ImportFunc = (
+    id: string,
+    meta?: ImportMetadata
+) => Promise<BotModuleResult>;
 
 /**
  * Defines a function that can be used to export a value from a module.
  * @param valueOrSource The value to export or the source code to export.
  * @param exports The exports to export from the source.
+ * @param meta The metadata about the export.
  */
 export type ExportFunc = (
     valueOrSource: object | string,
-    exports?: (string | [string, string])[]
+    exports?: (string | [string, string])[],
+    meta?: ImportMetadata
 ) => Promise<void>;
 
 export interface ImportMetadata {

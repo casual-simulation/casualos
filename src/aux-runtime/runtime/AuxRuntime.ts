@@ -389,8 +389,8 @@ export class AuxRuntime
         );
         this._forceSyncScripts = forceSyncScripts;
         this._globalContext.mockAsyncActions = forceSyncScripts;
-        this._globalContext.importModule = (module: string) =>
-            this._importModule(module);
+        this._globalContext.importModule = (module, meta) =>
+            this._importModule(module, meta);
         this._library = merge(libraryFactory(this._globalContext), {
             api: {
                 os: {
@@ -501,14 +501,17 @@ export class AuxRuntime
         }
     }
 
-    private async _importModule(module: string): Promise<BotModuleResult> {
+    private async _importModule(
+        module: string,
+        meta: ImportMetadata
+    ): Promise<BotModuleResult> {
         try {
             const globalModule = this._cachedGlobalModules.get(module);
             if (globalModule) {
                 return await globalModule;
             }
 
-            const m = await this.resolveModule(module);
+            const m = await this.resolveModule(module, meta);
             if (!m) {
                 throw new Error('Module not found: ' + module);
             }
@@ -542,9 +545,14 @@ export class AuxRuntime
     ): Promise<BotModuleResult> {
         try {
             const exports: BotModuleResult = {};
-            const importFunc: ImportFunc = (id) => this._importModule(id);
-            const exportFunc: ExportFunc = async (valueOrSource, e) => {
-                const result = await this._resolveExports(valueOrSource, e);
+            const importFunc: ImportFunc = (id, meta) =>
+                this._importModule(id, meta);
+            const exportFunc: ExportFunc = async (valueOrSource, e, meta) => {
+                const result = await this._resolveExports(
+                    valueOrSource,
+                    e,
+                    meta
+                );
                 this._scheduleJobQueueCheck();
                 Object.assign(exports, result);
             };
@@ -569,10 +577,11 @@ export class AuxRuntime
 
     private async _resolveExports(
         valueOrSource: string | object,
-        exports: (string | [string, string])[]
+        exports: (string | [string, string])[],
+        meta: ImportMetadata
     ): Promise<BotModuleResult> {
         if (typeof valueOrSource === 'string') {
-            const sourceModule = await this._importModule(valueOrSource);
+            const sourceModule = await this._importModule(valueOrSource, meta);
             if (exports) {
                 const result: BotModuleResult = {};
                 for (let val of exports) {
@@ -640,19 +649,28 @@ export class AuxRuntime
         for (let scriptResult of actionResult.results) {
             const result = await scriptResult;
             if (result) {
-                if (
-                    typeof result === 'object' &&
-                    typeof result.botId === 'string' &&
-                    typeof result.tag === 'string'
-                ) {
-                    const bot = this._compiledState[result.botId];
-                    const mod = bot?.modules[result.tag];
-                    if (mod) {
+                if (typeof result === 'object') {
+                    if (
+                        typeof result.botId === 'string' &&
+                        typeof result.tag === 'string'
+                    ) {
+                        const bot = this._compiledState[result.botId];
+                        const mod = bot?.modules[result.tag];
+                        if (mod) {
+                            return {
+                                ...mod,
+                                botId: result.botId,
+                                id: moduleName,
+                                tag: result.tag,
+                            };
+                        }
+                    } else if (
+                        typeof result.exports === 'object' &&
+                        result.exports
+                    ) {
                         return {
-                            ...mod,
-                            botId: result.botId,
                             id: moduleName,
-                            tag: result.tag,
+                            exports: result.exports,
                         };
                     }
                 } else if (typeof result === 'string') {
@@ -3258,10 +3276,16 @@ export class AuxRuntime
             fileName = `${bot.id}.${diagnosticFunctionName}`;
         }
 
+        const meta: ImportMetadata = {
+            botId: bot?.id,
+            tag: tag,
+        };
+
         const constants = {
             ...(options.api ?? this._library.api),
             tagName: tag,
             globalThis: this._globalObject,
+            importMeta: meta,
         };
 
         const specifics = {
@@ -3337,8 +3361,15 @@ export class AuxRuntime
 
         if (func.metadata.isModule) {
             func.moduleFunc = (imports, exports) => {
+                const importFunc = (module: string) => {
+                    return imports(module, meta);
+                };
+                const exportFunc = (
+                    valueOrSource: string,
+                    exp: (string | [string, string])[]
+                ) => exports(valueOrSource, exp, meta);
                 return this._wrapWithCurrentPromise(() => {
-                    let result = func(null, imports, exports);
+                    let result = func(null, importFunc, exportFunc);
                     this._scheduleJobQueueCheck();
                     return result;
                 });
