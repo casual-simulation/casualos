@@ -8427,6 +8427,111 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should be able to resolve modules on the same bot by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module.component',
+                            library: `📄export const abc = 'def';`,
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('.library', {
+                    botId: 'test2',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.component.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on different bots by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module.component',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('.library', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.component.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on parent systems by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule(':library', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on adjacent systems by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module.other',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule(':other.library', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.other.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
             it('should be able to resolve regular scripts as modules', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({

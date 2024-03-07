@@ -683,6 +683,36 @@ export class AuxRuntime
             }
         }
 
+        const isRelativeImport =
+            moduleName.startsWith('.') || moduleName.startsWith(':');
+
+        if (isRelativeImport) {
+            if (!meta) {
+                throw new Error(
+                    'Cannot resolve relative import without metadata'
+                );
+            }
+
+            const bot = this._compiledState[meta.botId];
+            if (!bot) {
+                throw new Error('Cannot resolve relative import without bot');
+            }
+
+            const system = calculateStringTagValue(null, bot, 'system', null);
+            const split = system.split('.');
+
+            for (let i = 0; i < moduleName.length; i++) {
+                if (moduleName[i] === ':') {
+                    split.pop();
+                } else if (moduleName[i] === '.') {
+                } else {
+                    moduleName =
+                        split.join('.') + '.' + moduleName.substring(i);
+                    break;
+                }
+            }
+        }
+
         for (let id in this.currentState) {
             const bot = this.currentState[id];
             const system = calculateStringTagValue(null, bot, 'system', null);
