@@ -92,6 +92,7 @@ import {
     ROTATION_TAG_PREFIX,
     Bot,
     IdentifiedBotModule,
+    ExportsModule,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import {
@@ -8392,6 +8393,49 @@ describe('AuxRuntime', () => {
                     botId: 'test2',
                     tag: 'library',
                 });
+            });
+
+            it('should resolve a special module for the "casualos" module', async () => {
+                const m = (await runtime.resolveModule(
+                    'casualos'
+                )) as ExportsModule;
+                expect(m.id).toBe('casualos');
+                expect(Object.keys(m.exports)).toMatchSnapshot();
+            });
+
+            it('should be able to resolve tag-specific API functions when given import metadata', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {}),
+                    })
+                );
+                await waitAsync();
+                const m = (await runtime.resolveModule('casualos', {
+                    botId: 'test2',
+                    tag: null,
+                })) as ExportsModule;
+                expect(m.id).toBe('casualos');
+                expect(Object.keys(m.exports)).toMatchSnapshot();
+
+                expect(typeof m.exports.create).toBe('function');
+
+                uuidMock.mockReturnValue('uuid');
+                const b = m.exports.create({ abc: 'def' });
+
+                expect(isRuntimeBot(b)).toBe(true);
+                expect(b.id).toBe('uuid');
+                expect(b.tags.creator).toBe('test2');
+                expect(b.tags.abc).toBe('def');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', { creator: 'test2', abc: 'def' })
+                        ),
+                    ],
+                ]);
             });
 
             describe('@onResolveModule', () => {

@@ -79,6 +79,8 @@ import {
     BotModuleResult,
     ON_RESOLVE_MODULE,
     SourceModule,
+    ResolvedBotModule,
+    ImportMetadata,
 } from '@casual-simulation/aux-common/bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
@@ -536,7 +538,7 @@ export class AuxRuntime
     }
 
     private async _importModuleCore(
-        m: IdentifiedBotModule | SourceModule
+        m: ResolvedBotModule
     ): Promise<BotModuleResult> {
         try {
             const exports: BotModuleResult = {};
@@ -549,13 +551,15 @@ export class AuxRuntime
 
             if ('moduleFunc' in m) {
                 await m.moduleFunc(importFunc, exportFunc);
-            } else {
+            } else if ('source' in m) {
                 const source = (m as SourceModule).source;
                 const mod = this._compile(null, null, source, {});
 
                 if (mod.moduleFunc) {
                     await mod.moduleFunc(importFunc, exportFunc);
                 }
+            } else if ('exports' in m) {
+                Object.assign(exports, m.exports);
             }
             return exports;
         } finally {
@@ -592,10 +596,40 @@ export class AuxRuntime
     /**
      * Attempts to resolve the module with the given name.
      * @param moduleName The name of the module to resolve.
+     * @param meta The metadata that should be used to resolve the module.
      */
     async resolveModule(
-        moduleName: string
-    ): Promise<IdentifiedBotModule | SourceModule> {
+        moduleName: string,
+        meta?: ImportMetadata
+    ): Promise<ResolvedBotModule> {
+        if (moduleName === 'casualos') {
+            let exports = {
+                ...this._library.api,
+            };
+
+            const bot = meta?.botId ? this._compiledState[meta.botId] : null;
+            const ctx: TagSpecificApiOptions = {
+                bot,
+                tag: meta?.tag,
+                creator: bot
+                    ? this._getRuntimeBot(bot.script.tags.creator)
+                    : null,
+                config: null,
+            };
+            for (let key in this._library.tagSpecificApi) {
+                if (!this._library.tagSpecificApi.hasOwnProperty(key)) {
+                    continue;
+                }
+                const result = this._library.tagSpecificApi[key](ctx);
+                exports[key] = result;
+            }
+
+            return {
+                id: 'casualos',
+                exports,
+            };
+        }
+
         const shoutResult = this.shout(ON_RESOLVE_MODULE, undefined, {
             module: moduleName,
         });

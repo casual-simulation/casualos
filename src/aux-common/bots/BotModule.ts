@@ -14,6 +14,18 @@ export type ExportFunc = (
     exports?: (string | [string, string])[]
 ) => Promise<void>;
 
+export interface ImportMetadata {
+    /**
+     * The ID of the bot that the module is defined in.
+     */
+    botId?: string;
+
+    /**
+     * The name of the tag that the module is defined in.
+     */
+    tag?: string;
+}
+
 /**
  * Defines a ES Module that can be loaded by the {@link AuxRuntime}.
  */
@@ -30,8 +42,14 @@ export interface BotModule {
     ) => Promise<any>;
 }
 
+export type ResolvedBotModule =
+    | IdentifiedBotModule
+    | SourceModule
+    | ExportsModule;
+
 /**
  * Defines a module that has been identified by the {@link AuxRuntime}.
+ * It is made up of a link to a bot and a tag.
  */
 export interface IdentifiedBotModule extends BotModule {
     /**
@@ -50,6 +68,9 @@ export interface IdentifiedBotModule extends BotModule {
     tag: string;
 }
 
+/**
+ * Defines a module that is made up of source code.
+ */
 export interface SourceModule {
     /**
      * The ID of the module.
@@ -60,6 +81,21 @@ export interface SourceModule {
      * The source code of the module.
      */
     source: string;
+}
+
+/**
+ * Defines a module that is made up of exports.
+ */
+export interface ExportsModule {
+    /**
+     * The ID of the module.
+     */
+    id: string;
+
+    /**
+     * The exports of the module.
+     */
+    exports: BotModuleResult;
 }
 
 /**
