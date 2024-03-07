@@ -512,6 +512,7 @@ export class AuxCompiler {
             isAsync: async,
             constructedFunction,
             context: options?.context,
+            isModule: transpilerResult.metadata.isModule,
         };
 
         if (options) {
@@ -1139,6 +1140,11 @@ export interface AuxScriptMetadata {
     isAsync: boolean;
 
     /**
+     * Whether the function contains a module.
+     */
+    isModule: boolean;
+
+    /**
      * The function that was constructed by the interpreter.
      */
     constructedFunction: ConstructedFunction;
@@ -1149,12 +1155,7 @@ export interface AuxScriptMetadata {
     context: any;
 }
 
-export interface CompiledBotModule extends BotModule {
-    /**
-     * The script that the module was compiled from.
-     */
-    scriptFunc: AuxCompiledScript;
-}
+export interface CompiledBotModule extends BotModule, AuxCompiledScript {}
 
 /**
  * The set of options that a script should be compiled with.

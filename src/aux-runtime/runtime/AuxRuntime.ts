@@ -551,8 +551,11 @@ export class AuxRuntime
                 await m.moduleFunc(importFunc, exportFunc);
             } else {
                 const source = (m as SourceModule).source;
-                const mod = this._compileModule(null, null, source, {});
-                await mod.moduleFunc(importFunc, exportFunc);
+                const mod = this._compile(null, null, source, {});
+
+                if (mod.moduleFunc) {
+                    await mod.moduleFunc(importFunc, exportFunc);
+                }
             }
             return exports;
         } finally {
@@ -3087,10 +3090,10 @@ export class AuxRuntime
         value: any
     ): {
         value: any;
-        listener: AuxCompiledScript;
+        listener: CompiledBotModule;
         module: CompiledBotModule;
     } {
-        let listener: AuxCompiledScript;
+        let listener: CompiledBotModule;
         let module: CompiledBotModule;
         if (isFormula(value)) {
             const parsed = value.substring(DNA_TAG_PREFIX.length);
@@ -3108,7 +3111,7 @@ export class AuxRuntime
             }
         } else if (isModule(value)) {
             try {
-                module = this._compileModule(bot, tag, value, {});
+                module = this._compile(bot, tag, value, {});
             } catch (ex) {
                 value = ex;
             }
@@ -3139,6 +3142,10 @@ export class AuxRuntime
             if (result) {
                 value = result;
             }
+        }
+
+        if (listener?.moduleFunc && !module) {
+            module = listener;
         }
 
         return { value, listener, module };
@@ -3204,7 +3211,7 @@ export class AuxRuntime
         tag: string,
         script: string,
         options: CompileOptions
-    ) {
+    ): CompiledBotModule {
         script = replaceMacros(script);
 
         let functionName: string;
@@ -3286,7 +3293,7 @@ export class AuxRuntime
                 links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
             },
             arguments: [['that', 'data'], 'importModule', 'exports'],
-        });
+        }) as CompiledBotModule;
 
         if (hasValue(bot)) {
             this._functionMap.set(functionName, func);
@@ -3294,29 +3301,19 @@ export class AuxRuntime
             botFunctionNames.add(functionName);
         }
 
-        return func;
-    }
-
-    private _compileModule(
-        bot: CompiledBot,
-        tag: string,
-        script: string,
-        options: CompileOptions
-    ): CompiledBotModule {
-        const func = this._compile(bot, tag, script, {
-            ...options,
-        });
-
-        return {
-            moduleFunc: (imports, exports) => {
+        if (func.metadata.isModule) {
+            func.moduleFunc = (imports, exports) => {
                 return this._wrapWithCurrentPromise(() => {
                     let result = func(null, imports, exports);
                     this._scheduleJobQueueCheck();
                     return result;
                 });
-            },
-            scriptFunc: func,
-        };
+            };
+        } else {
+            func.moduleFunc = null;
+        }
+
+        return func;
     }
 
     private _handleError(err: any, bot: Bot, tag: string): ScriptError {

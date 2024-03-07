@@ -8374,6 +8374,26 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should be able to resolve regular scripts as modules', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `@export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
             describe('@onResolveModule', () => {
                 it('should shout @onResolveModule if a system could not be found', async () => {
                     runtime.stateUpdated(
