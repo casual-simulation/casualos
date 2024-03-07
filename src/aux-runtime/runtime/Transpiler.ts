@@ -126,6 +126,11 @@ export interface TranspilerOptions {
     importFactory?: string;
 
     /**
+     * The name of the variable that should be used to access the import.meta object.
+     */
+    importMetaFactory?: string;
+
+    /**
      * The name of the function that should be called for ES Module exports.
      */
     exportFactory?: string;
@@ -142,6 +147,7 @@ export class Transpiler {
     private _jsxFactory: string;
     private _jsxFragment: string;
     private _importFactory: string;
+    private _importMetaFactory: string;
     private _exportFactory: string;
     private _forceSync: boolean;
     private _cache: LRUCache<string, TranspilerResult>;
@@ -181,6 +187,7 @@ export class Transpiler {
         this._jsxFactory = options?.jsxFactory ?? 'h';
         this._jsxFragment = options?.jsxFragment ?? 'Fragment';
         this._importFactory = options?.importFactory ?? 'importModule';
+        this._importMetaFactory = options?.importMetaFactory ?? 'importMeta';
         this._exportFactory = options?.exportFactory ?? 'exports';
         this._forceSync = options?.forceSync ?? false;
     }
@@ -338,6 +345,12 @@ export class Transpiler {
                         text,
                         metadata
                     );
+                } else if (
+                    n.type === 'MetaProperty' &&
+                    n.meta.name === 'import' &&
+                    n.property.name === 'meta'
+                ) {
+                    this._replaceImportMeta(n, parent, doc, text, metadata);
                 } else if (n.type === 'WhileStatement') {
                     this._replaceWhileStatement(n, doc, text);
                 } else if (n.type === 'DoWhileStatement') {
@@ -496,7 +509,7 @@ export class Transpiler {
             doc
         );
 
-        text.insert(absoluteSourceEnd.index, ')');
+        text.insert(absoluteSourceEnd.index, `, ${this._importMetaFactory})`);
 
         if (namespaceImport && defaultImport) {
             const absoluteEnd = createAbsolutePositionFromRelativePosition(
@@ -514,6 +527,41 @@ export class Transpiler {
         );
 
         text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
+    }
+
+    private _replaceImportMeta(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        metadata.isModule = true;
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.end,
+            1,
+            true
+        );
+
+        text.insert(absoluteEnd.index, `${this._importMetaFactory}`);
+        text.delete(
+            absoluteStart.index,
+            absoluteEnd.index - absoluteStart.index
+        );
     }
 
     private _replaceExportNamedDeclaration(

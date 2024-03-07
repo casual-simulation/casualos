@@ -769,7 +769,7 @@ describe('Transpiler', () => {
             it('should be able to compile simple import statements', () => {
                 const result = transpiler.transpile(`import "test";`);
 
-                expect(result).toBe(`await importModule("test");`);
+                expect(result).toBe(`await importModule("test", importMeta);`);
             });
 
             it('should mark the script as a module', () => {
@@ -785,7 +785,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { default: testModule, } = await importModule("test");`
+                    `const { default: testModule, } = await importModule("test", importMeta);`
                 );
             });
 
@@ -795,7 +795,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { myImport, } = await importModule("test");`
+                    `const { myImport, } = await importModule("test", importMeta);`
                 );
             });
 
@@ -805,7 +805,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { myImport, myImport2, } = await importModule("test");`
+                    `const { myImport, myImport2, } = await importModule("test", importMeta);`
                 );
             });
 
@@ -815,7 +815,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { default: defaultImport, myImport, myImport2, } = await importModule("test");`
+                    `const { default: defaultImport, myImport, myImport2, } = await importModule("test", importMeta);`
                 );
             });
 
@@ -825,7 +825,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const everything = await importModule("test");`
+                    `const everything = await importModule("test", importMeta);`
                 );
             });
 
@@ -835,7 +835,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { myImport, myImport2: otherImport, } = await importModule("test");`
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);`
                 );
             });
 
@@ -845,7 +845,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const Everything = await importModule("test");\nconst { default: MyImport } = Everything;`
+                    `const Everything = await importModule("test", importMeta);\nconst { default: MyImport } = Everything;`
                 );
             });
 
@@ -855,7 +855,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { myImport, myImport2: otherImport, } = await importModule("test")`
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta)`
                 );
             });
 
@@ -866,8 +866,8 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { myImport, myImport2: otherImport, } = await importModule("test");
-                     const { default: Module, } = await importModule("test2");`
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);
+                     const { default: Module, } = await importModule("test2", importMeta);`
                 );
             });
 
@@ -878,7 +878,7 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { myImport, myImport2: otherImport, } = await importModule("test");
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);
                      console.log('abc');`
                 );
             });
@@ -891,7 +891,7 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(
                     `console.log('abc');
-                     const { myImport, myImport2: otherImport, } = await importModule("test");`
+                     const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);`
                 );
             });
 
@@ -904,8 +904,16 @@ describe('Transpiler', () => {
                 );
 
                 expect(result).toBe(
-                    `const { myImport, myImport2: otherImport, } = await myImportModule("test");`
+                    `const { myImport, myImport2: otherImport, } = await myImportModule("test", importMeta);`
                 );
+            });
+
+            it('should convert import.meta statements', () => {
+                const result = transpiler.transpile(
+                    `console.log(import.meta);`
+                );
+
+                expect(result).toBe(`console.log(importMeta);`);
             });
         });
 
