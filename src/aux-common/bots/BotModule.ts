@@ -51,7 +51,8 @@ export interface BotModule {
 export type ResolvedBotModule =
     | IdentifiedBotModule
     | SourceModule
-    | ExportsModule;
+    | ExportsModule
+    | UrlModule;
 
 /**
  * Defines a module that has been identified by the {@link AuxRuntime}.
@@ -87,6 +88,21 @@ export interface SourceModule {
      * The source code of the module.
      */
     source: string;
+}
+
+/**
+ * Defines a module that is loaded from a URL.
+ */
+export interface UrlModule {
+    /**
+     * The ID of the module.
+     */
+    id: string;
+
+    /**
+     * The URL that the module is located at.
+     */
+    url: string;
 }
 
 /**

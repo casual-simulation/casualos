@@ -144,6 +144,7 @@ import { AuxDevice } from './AuxDevice';
 import {
     isPromise,
     isRuntimePromise,
+    isUrl,
     markAsRuntimePromise,
     RuntimePromise,
 } from './Utils';
@@ -571,6 +572,8 @@ export class AuxRuntime
                 }
             } else if ('exports' in m) {
                 Object.assign(exports, m.exports);
+            } else if ('url' in m) {
+                return await this.dynamicImport(m.url);
             }
             return exports;
         } finally {
@@ -688,10 +691,17 @@ export class AuxRuntime
                         };
                     }
                 } else if (typeof result === 'string') {
-                    return {
-                        id: moduleName,
-                        source: result,
-                    };
+                    if (isUrl(result)) {
+                        return {
+                            id: moduleName,
+                            url: result,
+                        };
+                    } else {
+                        return {
+                            id: moduleName,
+                            source: result,
+                        };
+                    }
                 }
             }
         }
@@ -744,18 +754,10 @@ export class AuxRuntime
             }
         }
 
-        let isUrl: boolean = false;
-        try {
-            const url = new URL(moduleName);
-            if (url) {
-                isUrl = true;
-            }
-        } catch (err) {}
-
-        if (isUrl) {
+        if (isUrl(moduleName)) {
             return {
                 id: moduleName,
-                exports: await this.dynamicImport(moduleName),
+                url: moduleName,
             };
         }
 

@@ -8403,6 +8403,26 @@ describe('AuxRuntime', () => {
                         ],
                     ]);
                 });
+
+                it('should use dynamic imports on modules that are URLs', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'https://example.com'; os.toast(abc);`,
+                            }),
+                        })
+                    );
+
+                    runtime.dynamicImport = jest.fn().mockResolvedValue({
+                        abc: 123,
+                    });
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(123)]]);
+                });
             });
         });
 
@@ -8583,16 +8603,8 @@ describe('AuxRuntime', () => {
 
                 expect(m).toMatchObject({
                     id: 'https://example.com',
-                    exports: {
-                        default: {
-                            value: 123,
-                        },
-                    },
+                    url: 'https://example.com',
                 });
-
-                expect(runtime.dynamicImport).toHaveBeenCalledWith(
-                    'https://example.com'
-                );
             });
 
             it('should be able to resolve regular scripts as modules', async () => {
@@ -8768,6 +8780,30 @@ describe('AuxRuntime', () => {
                     expect(m).toMatchObject({
                         id: 'module.library',
                         source: '📄export default 123;',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should support resolving a module with a URL', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return 'https://example.com';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        url: 'https://example.com',
                     });
 
                     expect(events).toEqual([
