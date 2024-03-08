@@ -606,6 +606,16 @@ export class AuxRuntime
     }
 
     /**
+     * Performs a dynamic import() of the given module.
+     * Uses the JS Engine's native import() functionality.
+     * @param module The module that should be imported.
+     * @returns Returns a promise that resolves with the module's exports.
+     */
+    async dynamicImport(module: string): Promise<BotModuleResult> {
+        return await import(module);
+    }
+
+    /**
      * Attempts to resolve the module with the given name.
      * @param moduleName The name of the module to resolve.
      * @param meta The metadata that should be used to resolve the module.
@@ -732,6 +742,21 @@ export class AuxRuntime
                     };
                 }
             }
+        }
+
+        let isUrl: boolean = false;
+        try {
+            const url = new URL(moduleName);
+            if (url) {
+                isUrl = true;
+            }
+        } catch (err) {}
+
+        if (isUrl) {
+            return {
+                id: moduleName,
+                exports: await this.dynamicImport(moduleName),
+            };
         }
 
         return null;

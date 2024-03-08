@@ -8559,6 +8559,42 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should use dynamic imports on modules that are URLs', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                runtime.dynamicImport = jest.fn().mockResolvedValue({
+                    default: {
+                        value: 123,
+                    },
+                });
+
+                const m = await runtime.resolveModule('https://example.com', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'https://example.com',
+                    exports: {
+                        default: {
+                            value: 123,
+                        },
+                    },
+                });
+
+                expect(runtime.dynamicImport).toHaveBeenCalledWith(
+                    'https://example.com'
+                );
+            });
+
             it('should be able to resolve regular scripts as modules', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
