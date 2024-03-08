@@ -183,6 +183,7 @@ import type {
 } from '@casual-simulation/engine262';
 import {
     isGenerator,
+    markAsUncopiableObject,
     UNCOPIABLE,
     unwind,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
@@ -507,7 +508,8 @@ export class AuxRuntime
 
     private async _importModule(
         module: string,
-        meta: ImportMetadata
+        meta: ImportMetadata,
+        dependencyChain: string[] = []
     ): Promise<BotModuleResult> {
         try {
             const globalModule = this._cachedGlobalModules.get(module);
@@ -518,6 +520,17 @@ export class AuxRuntime
             const m = await this.resolveModule(module, meta);
             if (!m) {
                 throw new Error('Module not found: ' + module);
+            }
+
+            if (dependencyChain.length > 1) {
+                const index = dependencyChain.indexOf(m.id);
+                if (index >= 0) {
+                    throw new Error(
+                        `Circular dependency detected: ${dependencyChain
+                            .slice(index)
+                            .join(' -> ')} -> ${m.id}`
+                    );
+                }
             }
 
             let bot: CompiledBot;
@@ -531,7 +544,10 @@ export class AuxRuntime
                 }
             }
 
-            const promise = this._importModuleCore(m);
+            const promise = this._importModuleCore(m, [
+                ...dependencyChain,
+                m.id,
+            ]);
             if (bot) {
                 bot.exports[(m as IdentifiedBotModule).tag] = promise;
             } else {
@@ -545,17 +561,19 @@ export class AuxRuntime
     }
 
     private async _importModuleCore(
-        m: ResolvedBotModule
+        m: ResolvedBotModule,
+        dependencyChain: string[]
     ): Promise<BotModuleResult> {
         try {
             const exports: BotModuleResult = {};
             const importFunc: ImportFunc = (id, meta) =>
-                this._importModule(id, meta);
+                this._importModule(id, meta, dependencyChain);
             const exportFunc: ExportFunc = async (valueOrSource, e, meta) => {
                 const result = await this._resolveExports(
                     valueOrSource,
                     e,
-                    meta
+                    meta,
+                    dependencyChain
                 );
                 this._scheduleJobQueueCheck();
                 Object.assign(exports, result);
@@ -584,10 +602,15 @@ export class AuxRuntime
     private async _resolveExports(
         valueOrSource: string | object,
         exports: (string | [string, string])[],
-        meta: ImportMetadata
+        meta: ImportMetadata,
+        dependencyChain: string[]
     ): Promise<BotModuleResult> {
         if (typeof valueOrSource === 'string') {
-            const sourceModule = await this._importModule(valueOrSource, meta);
+            const sourceModule = await this._importModule(
+                valueOrSource,
+                meta,
+                dependencyChain
+            );
             if (exports) {
                 const result: BotModuleResult = {};
                 for (let val of exports) {
@@ -3446,11 +3469,13 @@ export class AuxRuntime
         if (err instanceof RanOutOfEnergyError) {
             throw err;
         }
-        let data: ScriptError = {
+        // Script errors are uncopiable because otherwise the interpreter might try
+        // and run into weird issues.
+        let data: ScriptError = markAsUncopiableObject({
             error: err,
             bot: bot,
             tag: tag,
-        };
+        });
         if (err instanceof Error) {
             try {
                 const newStack = this._compiler.calculateOriginalStackTrace(

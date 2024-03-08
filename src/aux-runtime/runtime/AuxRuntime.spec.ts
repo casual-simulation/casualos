@@ -8423,6 +8423,60 @@ describe('AuxRuntime', () => {
 
                     expect(events).toEqual([[toast(123)]]);
                 });
+
+                it('should not propogate changes to exported variables', async () => {
+                    // TODO: This is a limitation of the current implementation
+                    // The native ES module system would cause 123 to be toasted instead of "def".
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc, test } from 'module.library'; test(); os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export let abc = 'def'; export function test() { abc = 123 ; }`,
+                            }),
+                        })
+                    );
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should reject when a circular dependency is detected', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; import { num } from "module.library2"; os.toast(abc); os.toast(num);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄import { test2 } from ".library2"; export function test1() { return 1; }; export const abc = test2();`,
+                                library2: `📄import { test1 } from ".library"; export function test2() { return 2; }; export const num = test1();`,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[]]);
+
+                    let error: any;
+                    try {
+                        await result.results[0];
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error?.error?.error.error.message).toEqual(
+                        'Circular dependency detected: module.library -> module.library2 -> module.library'
+                    );
+                });
             });
         });
 
