@@ -3,8 +3,11 @@ import {
     AuxCompileOptions,
     AuxCompiler,
     createInterpretableFunction,
+    EXPORT_FACTORY,
     FUNCTION_METADATA,
     getInterpretableFunction,
+    IMPORT_FACTORY,
+    IMPORT_META_FACTORY,
     INTERPRETABLE_FUNCTION,
     isInterpretableFunction,
     replaceSyntaxErrorLineNumber,
@@ -48,7 +51,7 @@ describe('AuxCompiler', () => {
 
         it('should always compile modules as async', async () => {
             const func = compiler.compile('📄', {
-                arguments: ['importModule'],
+                arguments: [IMPORT_FACTORY],
             });
 
             expect(await func()).toBeUndefined();
@@ -56,15 +59,23 @@ describe('AuxCompiler', () => {
 
         it('should be able to compile import statements', async () => {
             const func = compiler.compile('📄import abc from "test";', {
-                arguments: ['importModule'],
+                arguments: [IMPORT_FACTORY, IMPORT_META_FACTORY],
             });
 
             expect(await func(async () => ({}))).toEqual(undefined);
         });
 
+        it('should be able to compile import.meta statements', async () => {
+            const func = compiler.compile('📄return import.meta;', {
+                arguments: [IMPORT_META_FACTORY],
+            });
+
+            expect(await func('abc')).toBe('abc');
+        });
+
         it('should be able to compile export statements', async () => {
             const func = compiler.compile('export const abc = "def";', {
-                arguments: ['exports'],
+                arguments: [EXPORT_FACTORY],
             });
 
             const exportFunc = jest.fn();
@@ -75,7 +86,7 @@ describe('AuxCompiler', () => {
 
         it('should be able to compile scripts with import statements', async () => {
             const func = compiler.compile('@import abc from "test";', {
-                arguments: ['importModule'],
+                arguments: [IMPORT_FACTORY, IMPORT_META_FACTORY],
             });
 
             expect(await func(async () => ({}))).toEqual(undefined);
