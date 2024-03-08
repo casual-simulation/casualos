@@ -266,8 +266,8 @@ Array [
   "arguments",
   "that",
   "data",
-  "importModule",
-  "exports",
+  "___importModule",
+  "___exportModule",
   "create",
   "setTimeout",
   "setInterval",
@@ -387,7 +387,7 @@ Array [
   "web",
   "analytics",
   "tagName",
-  "importMeta",
+  "___importMeta",
   "test",
 ]
 `;

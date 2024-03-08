@@ -109,6 +109,9 @@ export function getInterpretableFunction<T extends Function>(obj: unknown): T {
 
 const JSX_FACTORY = 'html.h';
 const JSX_FRAGMENT_FACTORY = 'html.f';
+export const IMPORT_FACTORY = '___importModule';
+export const IMPORT_META_FACTORY = '___importMeta';
+export const EXPORT_FACTORY = '___exportModule';
 
 /**
  * Defines a class that can compile scripts and formulas
@@ -118,6 +121,9 @@ export class AuxCompiler {
     private _transpiler = new Transpiler({
         jsxFactory: JSX_FACTORY,
         jsxFragment: JSX_FRAGMENT_FACTORY,
+        importFactory: IMPORT_FACTORY,
+        importMetaFactory: IMPORT_META_FACTORY,
+        exportFactory: EXPORT_FACTORY,
     });
     private _functionCache = new Map<string, Function>();
 

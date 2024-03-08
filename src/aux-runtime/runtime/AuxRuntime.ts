@@ -93,6 +93,9 @@ import {
     AuxScriptMetadata,
     CompiledBotModule,
     AuxCompileOptions,
+    IMPORT_META_FACTORY,
+    IMPORT_FACTORY,
+    EXPORT_FACTORY,
 } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -3316,7 +3319,7 @@ export class AuxRuntime
             ...(options.api ?? this._library.api),
             tagName: tag,
             globalThis: this._globalObject,
-            importMeta: meta,
+            [IMPORT_META_FACTORY]: meta,
         };
 
         const specifics = {
@@ -3381,7 +3384,7 @@ export class AuxRuntime
                 configBot: () => this.context.playerBot,
                 links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
             },
-            arguments: [['that', 'data'], 'importModule', 'exports'],
+            arguments: [['that', 'data'], IMPORT_FACTORY, EXPORT_FACTORY],
         }) as CompiledBotModule;
 
         if (hasValue(bot)) {
