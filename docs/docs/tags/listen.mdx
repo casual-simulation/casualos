@@ -2167,10 +2167,15 @@ A shout that is sent to all bots when <ActionLink action='os.enableCollaboration
 
 ### `@onResolveModule`
 
-A shout that is sent to all bots when a module is resolved.
+A shout that is sent to all bots when a module is being resolved.
 Used to resolve statements like `import { foo } from 'myCustomModule'`.
 
 In the case that multiple bots are listening for this shout, the first bot to resolve a non-null value will be used.
+If none of the bots return a valid value, then the default mechanism for resolving modules will be used.
+
+The default mechanism for resolving modules is as follows:
+-   Scripts based on system tag. You can import exported functions and variables from any script based on the system tag of its bot. For example, `import {abc} from "example.system.tag"` can be used to import the `abc` variable or function from the bot with the `example.system` system and the `tag` tag.
+-   URLs. The URLs can be imported. For example, `import { sortBy } from 'https://esm.run/lodash-es';"` imports the [`sortBy` function](https://lodash.com/docs/4.17.15#sortBy) from the [`lodash-es` module](https://www.npmjs.com/package/lodash-es) provided by [https://esm.run](https://esm.run).
 
 #### Arguments:
 ```typescript
