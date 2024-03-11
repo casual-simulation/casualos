@@ -107,6 +107,7 @@ import {
     deviceResult,
     deviceError,
     DEFAULT_BRANCH_NAME,
+    ON_RESOLVE_MODULE,
 } from '@casual-simulation/aux-common';
 import { possibleTagValueCases } from '@casual-simulation/aux-common/bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
@@ -8751,6 +8752,59 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([
                         [toast({ module: 'module.library' })],
                     ]);
+                });
+
+                it('should not shout @onResolveModule if attempting to resolve from inside a @onResolveModule', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library', {
+                        botId: 'random',
+                        tag: ON_RESOLVE_MODULE,
+                    });
+
+                    await waitAsync();
+
+                    expect(m === null).toBe(true);
+                    expect(events).toEqual([]);
+                });
+
+                it('should not shout @onResolveModule for imports that @onResolveModule has', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@import { abc } from 'module.library'; os.toast(abc); return { botId: 'test4', tag: 'tag' };`,
+                            }),
+                            test3: createBot('test3', {
+                                system: 'module',
+                                library: '📄export const abc = "def";',
+                            }),
+                            test4: createBot('test4', {
+                                tag: '📄export const num = 123;',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('custom.module');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'custom.module',
+                        botId: 'test4',
+                        tag: 'tag',
+                    });
+                    expect(events).toEqual([[toast('def')]]);
                 });
 
                 it('should include import metadata in the shout', async () => {

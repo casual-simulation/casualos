@@ -509,7 +509,8 @@ export class AuxRuntime
     private async _importModule(
         module: string,
         meta: ImportMetadata,
-        dependencyChain: string[] = []
+        dependencyChain: string[] = [],
+        allowCustomResolution: boolean = true
     ): Promise<BotModuleResult> {
         try {
             const globalModule = this._cachedGlobalModules.get(module);
@@ -517,7 +518,9 @@ export class AuxRuntime
                 return await globalModule;
             }
 
-            const m = await this.resolveModule(module, meta);
+            const allowResolution =
+                meta.tag !== ON_RESOLVE_MODULE && allowCustomResolution;
+            const m = await this.resolveModule(module, meta, allowResolution);
             if (!m) {
                 throw new Error('Module not found: ' + module);
             }
@@ -544,10 +547,11 @@ export class AuxRuntime
                 }
             }
 
-            const promise = this._importModuleCore(m, [
-                ...dependencyChain,
-                m.id,
-            ]);
+            const promise = this._importModuleCore(
+                m,
+                [...dependencyChain, m.id],
+                allowResolution
+            );
             if (bot) {
                 bot.exports[(m as IdentifiedBotModule).tag] = promise;
             } else {
@@ -562,18 +566,25 @@ export class AuxRuntime
 
     private async _importModuleCore(
         m: ResolvedBotModule,
-        dependencyChain: string[]
+        dependencyChain: string[],
+        allowCustomResolution: boolean
     ): Promise<BotModuleResult> {
         try {
             const exports: BotModuleResult = {};
             const importFunc: ImportFunc = (id, meta) =>
-                this._importModule(id, meta, dependencyChain);
+                this._importModule(
+                    id,
+                    meta,
+                    dependencyChain,
+                    allowCustomResolution
+                );
             const exportFunc: ExportFunc = async (valueOrSource, e, meta) => {
                 const result = await this._resolveExports(
                     valueOrSource,
                     e,
                     meta,
-                    dependencyChain
+                    dependencyChain,
+                    allowCustomResolution
                 );
                 this._scheduleJobQueueCheck();
                 Object.assign(exports, result);
@@ -603,13 +614,15 @@ export class AuxRuntime
         valueOrSource: string | object,
         exports: (string | [string, string])[],
         meta: ImportMetadata,
-        dependencyChain: string[]
+        dependencyChain: string[],
+        allowCustomResolution: boolean
     ): Promise<BotModuleResult> {
         if (typeof valueOrSource === 'string') {
             const sourceModule = await this._importModule(
                 valueOrSource,
                 meta,
-                dependencyChain
+                dependencyChain,
+                allowCustomResolution
             );
             if (exports) {
                 const result: BotModuleResult = {};
@@ -649,8 +662,13 @@ export class AuxRuntime
      */
     async resolveModule(
         moduleName: string,
-        meta?: ImportMetadata
+        meta?: ImportMetadata,
+        allowCustomResolution: boolean = true
     ): Promise<ResolvedBotModule> {
+        if (meta?.tag === ON_RESOLVE_MODULE) {
+            allowCustomResolution = false;
+        }
+
         if (moduleName === 'casualos') {
             let exports = {
                 ...this._library.api,
@@ -679,52 +697,54 @@ export class AuxRuntime
             };
         }
 
-        const shoutResult = this.shout(ON_RESOLVE_MODULE, undefined, {
-            module: moduleName,
-            meta,
-        });
-        const actionResult: ActionResult = isRuntimePromise(shoutResult)
-            ? await shoutResult
-            : shoutResult;
+        if (allowCustomResolution) {
+            const shoutResult = this.shout(ON_RESOLVE_MODULE, undefined, {
+                module: moduleName,
+                meta,
+            });
+            const actionResult: ActionResult = isRuntimePromise(shoutResult)
+                ? await shoutResult
+                : shoutResult;
 
-        for (let scriptResult of actionResult.results) {
-            const result = await scriptResult;
-            if (result) {
-                if (typeof result === 'object') {
-                    if (
-                        typeof result.botId === 'string' &&
-                        typeof result.tag === 'string'
-                    ) {
-                        const bot = this._compiledState[result.botId];
-                        const mod = bot?.modules[result.tag];
-                        if (mod) {
+            for (let scriptResult of actionResult.results) {
+                const result = await scriptResult;
+                if (result) {
+                    if (typeof result === 'object') {
+                        if (
+                            typeof result.botId === 'string' &&
+                            typeof result.tag === 'string'
+                        ) {
+                            const bot = this._compiledState[result.botId];
+                            const mod = bot?.modules[result.tag];
+                            if (mod) {
+                                return {
+                                    ...mod,
+                                    botId: result.botId,
+                                    id: moduleName,
+                                    tag: result.tag,
+                                };
+                            }
+                        } else if (
+                            typeof result.exports === 'object' &&
+                            result.exports
+                        ) {
                             return {
-                                ...mod,
-                                botId: result.botId,
                                 id: moduleName,
-                                tag: result.tag,
+                                exports: result.exports,
                             };
                         }
-                    } else if (
-                        typeof result.exports === 'object' &&
-                        result.exports
-                    ) {
-                        return {
-                            id: moduleName,
-                            exports: result.exports,
-                        };
-                    }
-                } else if (typeof result === 'string') {
-                    if (isUrl(result)) {
-                        return {
-                            id: moduleName,
-                            url: result,
-                        };
-                    } else {
-                        return {
-                            id: moduleName,
-                            source: result,
-                        };
+                    } else if (typeof result === 'string') {
+                        if (isUrl(result)) {
+                            return {
+                                id: moduleName,
+                                url: result,
+                            };
+                        } else {
+                            return {
+                                id: moduleName,
+                                source: result,
+                            };
+                        }
                     }
                 }
             }
