@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V3.2.18
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added support for ES Module-style `import` and `export` statements.
+    -   [ES Modules](https://javascript.info/modules-intro) are a way to organize code into separate listeners.
+    -   With this update, CasualOS now supports using [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) statements in scripts.
+    -   By default, modules can be imported from 2 different places:
+        -   Scripts based on system tag. You can import exported functions and variables from any script based on the system tag of its bot. For example, `import {abc} from "example.system.tag"` can be used to import the `abc` variable or function from the bot with the `example.system` system and the `tag` tag.
+        -   URLs. The URLs can be imported. For example, `import { sortBy } from 'https://esm.run/lodash-es';"` imports the [`sortBy` function](https://lodash.com/docs/4.17.15#sortBy) from the [`lodash-es` module](https://www.npmjs.com/package/lodash-es) provided by [https://esm.run](https://esm.run).
+    -   In addition to the default ways, you can provide your own custom module resolution logic by using `@onResolveModule`.
+        -   See the documentation for `@onResolveModule` for more information.
+
 ## V3.2.17
 
 #### Date: 3/6/2024
