@@ -47,6 +47,8 @@ import {
     getSystemPortalPane,
     getOpenSystemPortalPane,
     updatedBot,
+    isModule,
+    parseModule,
 } from '@casual-simulation/aux-common';
 import {
     BotHelper,
@@ -1580,11 +1582,13 @@ export function searchTag(
     let matches: SystemPortalSearchMatch[] = [];
     let prefix: string;
     let isValueScript = false;
+    let isValueModule = false;
     let isValueFormula = false;
     let isValueLink = false;
 
     if (hasValue(str)) {
         isValueScript = isScript(str);
+        isValueModule = isModule(str);
         isValueFormula = isFormula(str);
         isValueLink = isBotLink(str);
         prefix = getScriptPrefix(prefixes, str);
@@ -1594,6 +1598,9 @@ export function searchTag(
         if (isValueScript) {
             parsedValue = parseScript(str);
             offset = 1;
+        } else if (isValueModule) {
+            parsedValue = parseModule(str);
+            offset = '📄'.length;
         } else if (isValueFormula) {
             parsedValue = parseFormula(str);
             offset = DNA_TAG_PREFIX.length;

@@ -3124,6 +3124,7 @@ describe('BotCalculations', () => {
         const prefixes = [...KNOWN_TAG_PREFIXES];
         const cases = [
             ['@abc', '@'] as const,
+            ['📄abc', '📄'] as const,
             ['🔢123', '🔢'] as const,
             ['📅date', '📅'] as const,
             ['📝string', '📝'] as const,
@@ -3143,6 +3144,7 @@ describe('BotCalculations', () => {
         const prefixes = [...KNOWN_TAG_PREFIXES];
         const cases = [
             ['@abc', true] as const,
+            ['📄abc', true] as const,
             ['🔢123', true] as const,
             ['📅date', true] as const,
             ['📝string', true] as const,

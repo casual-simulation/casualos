@@ -2386,6 +2386,11 @@ export const ROTATION_TAG_PREFIX: string = '🔁';
 export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 
 /**
+ * The default script prefixes for library portals.
+ */
+export const LIBRARY_SCRIPT_PREFIX = '📄';
+
+/**
  * The list of known tag prefixes.
  */
 export const KNOWN_TAG_PREFIXES: string[] = [
@@ -2397,6 +2402,7 @@ export const KNOWN_TAG_PREFIXES: string[] = [
     NUMBER_TAG_PREFIX,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
+    LIBRARY_SCRIPT_PREFIX,
 ];
 
 /**
