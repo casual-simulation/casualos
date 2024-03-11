@@ -655,6 +655,16 @@ export function parseModule(value: unknown): string | null {
 }
 
 /**
+ * Parses the given value into a script.
+ * Returns the script if the value is a script.
+ * Returns the value if it is not a script.
+ * @param value The value to parse.
+ */
+export function parseModuleSafe(value: string): string {
+    return parseModule(value) ?? value;
+}
+
+/**
  * Parses the given value into a formula.
  * Returns the formula if the value is a formula.
  * Returns null if the value is not a formula.
