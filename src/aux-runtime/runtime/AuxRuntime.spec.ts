@@ -8191,6 +8191,26 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('def')]]);
                 });
 
+                it('should be able to import listeners by system tag', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `@export const abc = 'def';`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
                 it('should support default imports', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -8219,7 +8239,7 @@ describe('AuxRuntime', () => {
                             }),
                             test2: createBot('test2', {
                                 system: 'module',
-                                library: `📄export const abc = 'def'; os.toast('side-effect');`,
+                                library: `@export const abc = 'def'; os.toast('side-effect');`,
                             }),
                             test3: createBot('test3', {
                                 hello: `@import { abc } from 'module.library'; os.toast(abc + '2');`,
@@ -8252,7 +8272,7 @@ describe('AuxRuntime', () => {
                             }),
                             test2: createBot('test2', {
                                 system: 'module',
-                                library: `📄export const abc = 'def'; os.toast('side-effect');`,
+                                library: `@export const abc = 'def'; os.toast('side-effect');`,
                             }),
                             test3: createBot('test3', {
                                 hello: `@import { abc } from 'module.library'; os.toast(abc + '2');`,
@@ -8275,7 +8295,7 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test2: {
                                 tags: {
-                                    library: `📄export const abc = 'ghi'; os.toast('side-effect2');`,
+                                    library: `@export const abc = 'ghi'; os.toast('side-effect2');`,
                                 },
                             },
                         })
@@ -8358,6 +8378,34 @@ describe('AuxRuntime', () => {
                         stateUpdatedEvent({
                             test1: createBot('test1', {
                                 hello: `@import { create } from 'casualos'; create({ abc: 123 });`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: 123,
+                                })
+                            ),
+                        ],
+                    ]);
+                });
+
+                it('should be able to import tag-specific APIs from casualos in library modules', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { test } from '.library'; test();`,
+                                library: `📄import { create } from 'casualos'; export function test() { create({ abc: 123 }); };`,
                             }),
                         })
                     );
@@ -8477,6 +8525,53 @@ describe('AuxRuntime', () => {
                     expect(error?.error?.error.error.message).toEqual(
                         'Circular dependency detected: module.library -> module.library2 -> module.library'
                     );
+                });
+
+                it('should require that library modules import API functions from casualos', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; abc();`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄import { os } from "casualos"; export function abc() { os.toast("def"); }`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should throw an error if os functions are not imported from the casualos module', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; abc();`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export function abc() { os.toast("def"); }`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(errors.length).toBe(1);
+                    expect(errors[0].length).toBe(1);
+                    expect(errors[0][0].bot.id).toBe('test1');
+                    expect(errors[0][0].tag).toBe('hello');
+                    expect(errors[0][0].error).toBeInstanceOf(Error);
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(0);
                 });
             });
         });

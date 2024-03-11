@@ -3268,7 +3268,10 @@ export class AuxRuntime
             }
         } else if (isModule(value)) {
             try {
-                module = this._compile(bot, tag, value, {});
+                module = this._compile(bot, tag, value, {
+                    api: {},
+                    tagSpecificApi: {},
+                });
             } catch (ex) {
                 value = ex;
             }
@@ -3400,8 +3403,11 @@ export class AuxRuntime
         if (this._interpreter) {
             delete constants.globalThis;
             // if (this.canTriggerBreakpoint) {
-            Object.assign(constants, this._interpretedApi);
-            Object.assign(specifics, this._interpretedTagSpecificApi);
+            Object.assign(constants, options.api ?? this._interpretedApi);
+            Object.assign(
+                specifics,
+                options.tagSpecificApi ?? this._interpretedTagSpecificApi
+            );
             // }
         }
 
