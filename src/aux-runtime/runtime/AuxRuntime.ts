@@ -638,6 +638,7 @@ export class AuxRuntime
      * @returns Returns a promise that resolves with the module's exports.
      */
     async dynamicImport(module: string): Promise<BotModuleResult> {
+        /* @vite-ignore */
         return await import(module);
     }
 
