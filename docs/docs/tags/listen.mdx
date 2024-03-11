@@ -2164,3 +2164,116 @@ A shout that is sent to all bots when <ActionLink action='os.enableCollaboration
 ### `@onDisallowCollaborationUpgrade`
 
 A shout that is sent to all bots when <ActionLink action='os.enableCollaboration'/> is no longer able to be called.
+
+### `@onResolveModule`
+
+A shout that is sent to all bots when a module is resolved.
+Used to resolve statements like `import { foo } from 'myCustomModule'`.
+
+In the case that multiple bots are listening for this shout, the first bot to resolve a non-null value will be used.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The module that is being imported.
+     */
+    module: string;
+
+    /**
+     * The metadata for the import.
+     */
+    meta: {
+        /**
+         * The ID of the bot that is importing this module.
+        */
+        botId?: string;
+
+        /**
+         * The ID of the space that is importing this module.
+        */
+        tag?: string;
+    }
+};
+```
+
+Should return an object with the following form:
+
+```typescript
+/**
+ * The type that should be returned.
+ * It can be one of four different types:
+ * - An object that references the bot and a tag that the module is defined in.
+ * - An object that contains a set of exports.
+ * - A string that contains the source code of the module.
+ * - A string that contains the URL that the module can be accessed at.
+*/
+type ResolvedBotModule =
+    | IdentifiedBotModule
+    | ExportsBotModule
+    | string;
+
+/**
+ * The type of object that should be returned if the module is attached to a script tag on a bot.
+*/
+interface IdentifiedBotModule {
+    /**
+     * The ID of the bot.
+    */
+    botId: string;
+
+    /**
+     * The tag that the module is defined in.
+    */
+    tag: string;
+}
+
+/**
+ * The type of object that should be returned if the module is a set of exports.
+*/
+interface ExportsBotModule {
+    /**
+     * The exports of the module.
+    */
+    [key: string]: any;
+}
+```
+
+#### Examples:
+
+```typescript title="Return a module that is defined on a bot."
+if (that.module === 'myCustomModule') {
+    return {
+        botId: "abc-123",
+        tag: "myModule"
+    };
+}
+```
+
+```typescript title="Return a set of exports for the module"
+if (that.module === 'myCustomModule') {
+    return {
+        exports: {
+            num: 123,
+            myFunc: () => os.toast('hello from myFunc()')
+        }
+    };
+}
+```
+
+```typescript title="Return the source code of the module"
+if (that.module === 'myCustomModule') {
+    return `
+        export const num = 123;
+        export function myFunc() {
+            os.toast('hello from myFunc()');
+        }
+    `;
+}
+```
+
+```typescript title="Return the URL of the module"
+if (that.module === 'myCustomModule') {
+    return 'https://example.com/myCustomModule.js';
+}
+```
