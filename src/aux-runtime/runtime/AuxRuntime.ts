@@ -765,7 +765,12 @@ export class AuxRuntime
                 throw new Error('Cannot resolve relative import without bot');
             }
 
-            const system = calculateStringTagValue(null, bot, 'system', null);
+            const system = calculateStringTagValue(
+                null,
+                bot,
+                'system',
+                `🔗${bot.id}`
+            );
             const split = system.split('.');
 
             for (let i = 0; i < moduleName.length; i++) {
@@ -782,7 +787,12 @@ export class AuxRuntime
 
         for (let id in this.currentState) {
             const bot = this.currentState[id];
-            const system = calculateStringTagValue(null, bot, 'system', null);
+            const system = calculateStringTagValue(
+                null,
+                bot,
+                'system',
+                `🔗${id}`
+            );
 
             if (system && moduleName.startsWith(system)) {
                 const tag = moduleName.substring(system.length + 1);

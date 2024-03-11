@@ -8597,6 +8597,25 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should resolve modules based on ID and tag if the bot does not have a system', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            library: `📄export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('🔗test2.library');
+
+                expect(m).toMatchObject({
+                    id: '🔗test2.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
             it('should be able to resolve modules on the same bot by relative import', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -8616,6 +8635,29 @@ describe('AuxRuntime', () => {
 
                 expect(m).toMatchObject({
                     id: 'module.component.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on the same bot even if they dont have a system', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            library: `📄export const abc = 'def';`,
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('.library', {
+                    botId: 'test2',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: '🔗test2.library',
                     botId: 'test2',
                     tag: 'library',
                 });
