@@ -29,6 +29,7 @@
             import { os } from 'casualos';
             os.toast('Hello from my module!');
             ```
+-   Updated CasualOS to support ECMAScript 14.
 
 ## V3.2.17
 
