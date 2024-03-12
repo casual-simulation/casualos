@@ -8231,6 +8231,26 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('def')]]);
                 });
 
+                it('should support dynamic imports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@const abc = (await import('module.library')).default; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄const abc = 'def'; export default abc;`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
                 it('should cache a module between imports', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({

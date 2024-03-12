@@ -321,6 +321,14 @@ export class Transpiler {
                         text,
                         metadata
                     );
+                } else if (n.type === 'ImportExpression') {
+                    this._replaceImportExpression(
+                        n,
+                        parent,
+                        doc,
+                        text,
+                        metadata
+                    );
                 } else if (n.type === 'ExportNamedDeclaration') {
                     this._replaceExportNamedDeclaration(
                         n,
@@ -520,6 +528,65 @@ export class Transpiler {
             let defaultImportSource = `\nconst { default: ${defaultImport.local.name} } = ${namespaceImport.local.name};`;
             text.insert(absoluteEnd.index + 1, defaultImportSource);
         }
+
+        const absoluteSourceStart = createAbsolutePositionFromRelativePosition(
+            sourceStart,
+            doc
+        );
+
+        text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
+    }
+
+    private _replaceImportExpression(
+        node: any,
+        parent: any,
+        doc: Doc,
+        text: Text,
+        metadata: TranspilerResult['metadata']
+    ): any {
+        metadata.isModule = true;
+
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const sourceStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.start,
+            -1,
+            true
+        );
+
+        const sourceEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.source.end,
+            1,
+            true
+        );
+
+        let currentIndex = absoluteStart.index;
+
+        let importCall = `${this._importFactory}(`;
+
+        text.insert(currentIndex, importCall);
+
+        currentIndex += importCall.length;
+
+        const absoluteSourceEnd = createAbsolutePositionFromRelativePosition(
+            sourceEnd,
+            doc
+        );
+
+        text.insert(absoluteSourceEnd.index, `, ${this._importMetaFactory}`);
 
         const absoluteSourceStart = createAbsolutePositionFromRelativePosition(
             sourceStart,

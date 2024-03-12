@@ -633,7 +633,7 @@ describe('Transpiler', () => {
         it('should support dynamic import statements', () => {
             const transpiler = new Transpiler();
             const result = transpiler.transpile('import("test");');
-            expect(result.trim()).toEqual('import("test");');
+            expect(result.trim()).toEqual('importModule("test", importMeta);');
         });
 
         describe('async', () => {
@@ -768,6 +768,12 @@ describe('Transpiler', () => {
 
             it('should be able to compile simple import statements', () => {
                 const result = transpiler.transpile(`import "test";`);
+
+                expect(result).toBe(`await importModule("test", importMeta);`);
+            });
+
+            it('should be able to compile dynamic import statements', () => {
+                const result = transpiler.transpile(`await import("test");`);
 
                 expect(result).toBe(`await importModule("test", importMeta);`);
             });
