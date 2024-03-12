@@ -93,6 +93,7 @@ import {
     Bot,
     IdentifiedBotModule,
     ExportsModule,
+    PartialPrecalculatedBotsState,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import {
@@ -1022,6 +1023,83 @@ describe('AuxRuntime', () => {
                         expect(runtime.currentState['test'].values).toEqual({
                             value1: '🔁wrong',
                         });
+                    });
+                });
+
+                describe('system', () => {
+                    it('should add the bot to the systemMap', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    system: 'module2',
+                                    num: 123,
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createPrecalculatedBot('test2', {
+                                    system: 'module2',
+                                    num: 123,
+                                }),
+                            },
+                            addedBots: ['test', 'test2'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test'])],
+                                ['module2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should keep both bots in the map', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    system: 'module',
+                                    num: 123,
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createPrecalculatedBot('test2', {
+                                    system: 'module',
+                                    num: 123,
+                                }),
+                            },
+                            addedBots: ['test', 'test2'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([['module', new Set(['test', 'test2'])]])
+                        );
                     });
                 });
 
@@ -2063,6 +2141,63 @@ describe('AuxRuntime', () => {
                         await waitAsync();
 
                         expect(runtime.context.energy).toBe(0);
+                    });
+                });
+
+                describe('system', () => {
+                    it('should remove the bot from the systemMap', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                    system: 'module2',
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                    system: 'module3',
+                                }),
+                            })
+                        );
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test', 'test2'])],
+                                ['module2', new Set(['test3'])],
+                                ['module3', new Set(['test4'])],
+                            ])
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: null,
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: null,
+                            },
+                            addedBots: [],
+                            removedBots: ['test'],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test2'])],
+                                ['module2', new Set(['test3'])],
+                                ['module3', new Set(['test4'])],
+                            ])
+                        );
                     });
                 });
             });
@@ -3216,6 +3351,317 @@ describe('AuxRuntime', () => {
                         expect(runtime.currentState['test'].values).toEqual({
                             value1: '🔁wrong',
                         });
+                    });
+                });
+
+                describe('system', () => {
+                    it('should add added systems to the system map', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: 'module',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'module2',
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: 'module',
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: 'module',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'module2',
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: 'module2',
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test'])],
+                                ['module2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should update updated systems in the system map', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module2',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: 'different',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'different2',
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: 'different',
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: 'different',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'different2',
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: 'different2',
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['different', new Set(['test'])],
+                                ['different2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should with with tag edits', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module2',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: 'maodule',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: 'maodule2',
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['maodule', new Set(['test'])],
+                                ['maodule2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should delete deleted systems from the system map', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module2',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: null,
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: null,
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: null,
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: null,
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: null,
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: null,
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(new Map([]));
                     });
                 });
 
@@ -8669,6 +9115,32 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            it('should resolve the first module that exists from bots that have the same system', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            system: 'module',
+                        }),
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test3: createBot('test3', {
+                            system: 'module',
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
             it('should resolve modules based on ID and tag if the bot does not have a system', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
@@ -9333,6 +9805,33 @@ describe('AuxRuntime', () => {
                     botId: 'test2',
                     tag: 'library',
                 });
+            });
+
+            it('should be able to resolve modules based on system quickly', async () => {
+                let state: PartialPrecalculatedBotsState = {};
+                for (let i = 0; i < 1000; i++) {
+                    state[`test${i}`] = createBot(`test${i}`, {
+                        system: 'module.' + i,
+                        library: `📄export const abc = 'def${i}';`,
+                    });
+                }
+                runtime.stateUpdated(stateUpdatedEvent(state));
+                await waitAsync();
+
+                const startTime = Date.now();
+                for (let i = 0; i < 10000; i++) {
+                    const m = await runtime.resolveModule('module.999.library');
+
+                    expect(m).toMatchObject({
+                        id: 'module.999.library',
+                        botId: 'test999',
+                        tag: 'library',
+                    });
+                }
+                const endTime = Date.now();
+
+                // Each resolve should take less than 0.5 milliseconds on average
+                expect(endTime - startTime).toBeLessThan(5000);
             });
         });
 

@@ -339,10 +339,10 @@ export class AuxRuntime
     private _cachedGlobalModules: Map<string, Promise<BotModuleResult>> =
         new Map();
 
-    // /**
-    //  * The map of tags (botID.tag.space) to their respective modules.
-    //  */
-    // private _tagToModuleMap: Map<string, RuntimeModule> = new Map();
+    /**
+     * The map of system IDs to their respective bot IDs.
+     */
+    private _systemMap: Map<string, Set<string>> = new Map();
 
     /**
      * The number of times that the runtime can call onError for an error from the same script.
@@ -363,6 +363,10 @@ export class AuxRuntime
 
     get canTriggerBreakpoint() {
         return !!this._interpreter && this._interpreter.debugging;
+    }
+
+    get systemMap() {
+        return this._systemMap;
     }
 
     /**
@@ -795,24 +799,33 @@ export class AuxRuntime
             }
         }
 
-        for (let id in this.currentState) {
-            const bot = this.currentState[id];
-            const system = calculateStringTagValue(
-                null,
-                bot,
-                'system',
-                `🔗${id}`
-            );
+        if (moduleName.startsWith('🔗')) {
+            const [id, tag] = moduleName.substring('🔗'.length).split('.');
+            const bot = this._compiledState[id];
+            if (bot && tag) {
+                return {
+                    id: moduleName,
+                    botId: bot.id,
+                    tag: tag,
+                };
+            }
+        }
 
-            if (system && moduleName.startsWith(system)) {
-                const tag = moduleName.substring(system.length + 1);
-                const mod = bot.modules[tag];
-                if (mod) {
-                    return {
-                        botId: id,
-                        id: moduleName,
-                        tag: tag,
-                    };
+        const lastIndex = moduleName.lastIndexOf('.');
+        if (lastIndex >= 0) {
+            const system = moduleName.substring(0, lastIndex);
+            const tag = moduleName.substring(lastIndex + 1);
+            const botIds = this._systemMap.get(system);
+            if (botIds) {
+                for (let id of botIds) {
+                    const bot = this._compiledState[id];
+                    if (bot && bot.modules[tag]) {
+                        return {
+                            botId: id,
+                            id: moduleName,
+                            tag: tag,
+                        };
+                    }
                 }
             }
         }
@@ -2398,6 +2411,12 @@ export class AuxRuntime
             if (bot) {
                 removeFromContext(this._globalContext, [bot.script]);
 
+                const system = bot.values['system'];
+                if (hasValue(system)) {
+                    const map = this._systemMap.get(system);
+                    map?.delete(bot.id);
+                }
+
                 for (let breakpoint of bot.breakpoints) {
                     this._interpreter.removeBreakpointById(breakpoint.id);
                     this._breakpoints.delete(breakpoint.id);
@@ -2412,6 +2431,7 @@ export class AuxRuntime
                 }
                 this._botFunctionMap.delete(id);
             }
+
             nextUpdate.state[id] = null;
             nextUpdate.removedBots.push(id);
         }
@@ -3250,6 +3270,32 @@ export class AuxRuntime
         }
 
         if (typeof value !== 'function') {
+            if (tag === 'system') {
+                const originalValue = bot.values[tag];
+                if (originalValue !== value) {
+                    if (hasValue(originalValue)) {
+                        let originalSystemBots =
+                            this._systemMap.get(originalValue);
+                        if (originalSystemBots) {
+                            // originalSystemBots = new Set();
+                            // this._systemMap.set(originalValue ?? value, originalSystemBots);
+                            originalSystemBots.delete(bot.id);
+                            if (originalSystemBots.size <= 0) {
+                                this._systemMap.delete(originalValue);
+                            }
+                        }
+                    }
+
+                    if (hasValue(value)) {
+                        let systemBots = this._systemMap.get(value);
+                        if (!systemBots) {
+                            systemBots = new Set();
+                            this._systemMap.set(value, systemBots);
+                        }
+                        systemBots.add(bot.id);
+                    }
+                }
+            }
             if (hasValue(value)) {
                 bot.values[tag] = value;
             } else {
