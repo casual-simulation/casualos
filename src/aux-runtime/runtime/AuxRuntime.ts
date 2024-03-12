@@ -507,42 +507,50 @@ export class AuxRuntime
     }
 
     private async _importModule(
-        module: string,
+        module: string | ResolvedBotModule,
         meta: ImportMetadata,
         dependencyChain: string[] = [],
         allowCustomResolution: boolean = true
     ): Promise<BotModuleResult> {
         try {
-            const globalModule = this._cachedGlobalModules.get(module);
-            if (globalModule) {
-                return await globalModule;
-            }
-
+            let m: ResolvedBotModule;
+            let bot: CompiledBot;
             const allowResolution =
                 meta.tag !== ON_RESOLVE_MODULE && allowCustomResolution;
-            const m = await this.resolveModule(module, meta, allowResolution);
-            if (!m) {
-                throw new Error('Module not found: ' + module);
-            }
-
-            if (dependencyChain.length > 1) {
-                const index = dependencyChain.indexOf(m.id);
-                if (index >= 0) {
-                    throw new Error(
-                        `Circular dependency detected: ${dependencyChain
-                            .slice(index)
-                            .join(' -> ')} -> ${m.id}`
-                    );
+            if (typeof module !== 'string') {
+                m = module;
+                if (!m) {
+                    throw new Error('Module not found: ' + module);
                 }
-            }
+            } else {
+                const globalModule = this._cachedGlobalModules.get(module);
+                if (globalModule) {
+                    return await globalModule;
+                }
 
-            let bot: CompiledBot;
-            if ('botId' in m) {
-                bot = this._compiledState[m.botId];
-                if (bot) {
-                    const exports = bot.exports[m.tag];
-                    if (exports) {
-                        return await exports;
+                m = await this.resolveModule(module, meta, allowResolution);
+                if (!m) {
+                    throw new Error('Module not found: ' + module);
+                }
+
+                if (dependencyChain.length > 1) {
+                    const index = dependencyChain.indexOf(m.id);
+                    if (index >= 0) {
+                        throw new Error(
+                            `Circular dependency detected: ${dependencyChain
+                                .slice(index)
+                                .join(' -> ')} -> ${m.id}`
+                        );
+                    }
+                }
+
+                if ('botId' in m) {
+                    bot = this._compiledState[m.botId];
+                    if (bot) {
+                        const exports = bot.exports[m.tag];
+                        if (exports) {
+                            return await exports;
+                        }
                     }
                 }
             }
@@ -555,7 +563,7 @@ export class AuxRuntime
             if (bot) {
                 bot.exports[(m as IdentifiedBotModule).tag] = promise;
             } else {
-                this._cachedGlobalModules.set(module, promise);
+                this._cachedGlobalModules.set(m.id, promise);
             }
 
             return await promise;
@@ -590,8 +598,12 @@ export class AuxRuntime
                 Object.assign(exports, result);
             };
 
-            if ('moduleFunc' in m) {
-                await m.moduleFunc(importFunc, exportFunc);
+            if ('botId' in m) {
+                const bot = this._compiledState[m.botId];
+                const module = bot?.modules[m.tag];
+                if (module) {
+                    await module.moduleFunc(importFunc, exportFunc);
+                }
             } else if ('source' in m) {
                 const source = (m as SourceModule).source;
                 const mod = this._compile(null, null, source, {});
@@ -717,7 +729,6 @@ export class AuxRuntime
                             const mod = bot?.modules[result.tag];
                             if (mod) {
                                 return {
-                                    ...mod,
                                     botId: result.botId,
                                     id: moduleName,
                                     tag: result.tag,
@@ -798,7 +809,6 @@ export class AuxRuntime
                 const mod = bot.modules[tag];
                 if (mod) {
                     return {
-                        ...mod,
                         botId: id,
                         id: moduleName,
                         tag: tag,
@@ -3393,10 +3403,19 @@ export class AuxRuntime
             fileName = `${bot.id}.${diagnosticFunctionName}`;
         }
 
-        const meta: ImportMetadata = {
+        const meta: ImportMetadata = markAsUncopiableObject({
             botId: bot?.id,
             tag: tag,
-        };
+        });
+
+        Object.defineProperty(meta, 'resolve', {
+            enumerable: false,
+            configurable: false,
+            writable: false,
+            value: async (module: string) => {
+                return await this.resolveModule(module, meta, true);
+            },
+        });
 
         const constants = {
             ...(options.api ?? this._library.api),
@@ -3480,7 +3499,7 @@ export class AuxRuntime
         }
 
         if (func.metadata.isModule) {
-            func.moduleFunc = (imports, exports) => {
+            const moduleFunc: BotModule['moduleFunc'] = (imports, exports) => {
                 const importFunc = (module: string) => {
                     return imports(module, meta);
                 };
@@ -3494,6 +3513,7 @@ export class AuxRuntime
                     return result;
                 });
             };
+            func.moduleFunc = moduleFunc;
         } else {
             func.moduleFunc = null;
         }

@@ -8473,6 +8473,58 @@ describe('AuxRuntime', () => {
                     ]);
                 });
 
+                it('should be able to use import.meta.resolve()', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@os.toast(await import.meta.resolve('module.library'))`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                id: 'module.library',
+                                botId: 'test2',
+                                tag: 'library',
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should be able to dynamically import modules resolved from import.meta.resolve()', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@const resolved = await import.meta.resolve('module.library'); const { abc } = await import(resolved); os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
                 it('should use dynamic imports on modules that are URLs', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -8964,6 +9016,43 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('def')]]);
                 });
 
+                it('should not shout @onResolveModule when using import.meta.resolve()', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@const resolved = await import.meta.resolve('module.library'); os.toast(resolved); return { botId: 'test4', tag: 'tag' };`,
+                            }),
+                            test3: createBot('test3', {
+                                system: 'module',
+                                library: '📄export const abc = "def";',
+                            }),
+                            test4: createBot('test4', {
+                                tag: '📄export const num = 123;',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('custom.module');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'custom.module',
+                        botId: 'test4',
+                        tag: 'tag',
+                    });
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                id: 'module.library',
+                                botId: 'test3',
+                                tag: 'library',
+                            }),
+                        ],
+                    ]);
+                });
+
                 it('should include import metadata in the shout', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -9153,7 +9242,10 @@ describe('AuxRuntime', () => {
 
                 const imp = jest.fn();
                 const exp = jest.fn();
-                await m.moduleFunc(imp, exp);
+
+                const bot = runtime.currentState[m.botId];
+                const mod = bot.modules[m.tag];
+                await mod.moduleFunc(imp, exp);
 
                 expect(exp).toHaveBeenCalledWith(
                     {
@@ -9188,7 +9280,9 @@ describe('AuxRuntime', () => {
 
                 const imp = jest.fn();
                 const exp = jest.fn();
-                const result = await m.moduleFunc(imp, exp);
+                const bot = runtime.currentState[m.botId];
+                const mod = bot.modules[m.tag];
+                const result = await mod.moduleFunc(imp, exp);
                 expect(result).toBe(123);
 
                 expect(exp).toHaveBeenCalledWith(
@@ -9230,7 +9324,9 @@ describe('AuxRuntime', () => {
                     }
                 });
                 const exp = jest.fn();
-                const result = await m.moduleFunc(imp as any, exp);
+                const bot = runtime.currentState[m.botId];
+                const mod = bot.modules[m.tag];
+                const result = await mod.moduleFunc(imp as any, exp);
                 expect(result).toBe('def');
 
                 expect(imp).toHaveBeenCalledWith('test', {

@@ -4,7 +4,7 @@
  * @param meta The metadata about the import.
  */
 export type ImportFunc = (
-    id: string,
+    id: string | ResolvedBotModule,
     meta?: ImportMetadata
 ) => Promise<BotModuleResult>;
 
@@ -30,6 +30,13 @@ export interface ImportMetadata {
      * The name of the tag that the module is defined in.
      */
     tag?: string;
+
+    /**
+     * Attempts to resolve the given module.
+     * Returns a promise that resolves with the module that should be used. If the module cannot be resolved, the promise will resolve with undefined.
+     * @param module The module to resolve.
+     */
+    resolve?(module: string): Promise<ResolvedBotModule>;
 }
 
 /**
@@ -58,7 +65,7 @@ export type ResolvedBotModule =
  * Defines a module that has been identified by the {@link AuxRuntime}.
  * It is made up of a link to a bot and a tag.
  */
-export interface IdentifiedBotModule extends BotModule {
+export interface IdentifiedBotModule {
     /**
      * The ID of the module.
      */
