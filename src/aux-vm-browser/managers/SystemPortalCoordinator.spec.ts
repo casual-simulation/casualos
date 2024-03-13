@@ -4921,6 +4921,24 @@ describe('searchTag()', () => {
         });
     });
 
+    it('should support library tags', () => {
+        expect(
+            searchTag('test', null, '📄abcdefghi', 'abcdef', KNOWN_TAG_PREFIXES)
+        ).toEqual({
+            tag: 'test',
+            prefix: '📄',
+            matches: [
+                {
+                    text: 'abcdefghi',
+                    index: 2,
+                    endIndex: 8,
+                    highlightStartIndex: 0,
+                    highlightEndIndex: 6,
+                },
+            ],
+        });
+    });
+
     it('should support tag links', () => {
         expect(
             searchTag('test', null, '🔗abcdefghi', 'abcdef', KNOWN_TAG_PREFIXES)

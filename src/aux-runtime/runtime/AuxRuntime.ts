@@ -70,6 +70,17 @@ import {
     formatBotRotation,
     parseTaggedNumber,
     REPLACE_BOT_SYMBOL,
+    BotModule,
+    IdentifiedBotModule,
+    isModule,
+    ImportFunc,
+    ExportFunc,
+    calculateStringTagValue,
+    BotModuleResult,
+    ON_RESOLVE_MODULE,
+    SourceModule,
+    ResolvedBotModule,
+    ImportMetadata,
 } from '@casual-simulation/aux-common/bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
@@ -80,6 +91,11 @@ import {
     isInterpretableFunction,
     FUNCTION_METADATA,
     AuxScriptMetadata,
+    CompiledBotModule,
+    AuxCompileOptions,
+    IMPORT_META_FACTORY,
+    IMPORT_FACTORY,
+    EXPORT_FACTORY,
 } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -128,6 +144,7 @@ import { AuxDevice } from './AuxDevice';
 import {
     isPromise,
     isRuntimePromise,
+    isUrl,
     markAsRuntimePromise,
     RuntimePromise,
 } from './Utils';
@@ -166,6 +183,7 @@ import type {
 } from '@casual-simulation/engine262';
 import {
     isGenerator,
+    markAsUncopiableObject,
     UNCOPIABLE,
     unwind,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
@@ -315,6 +333,18 @@ export class AuxRuntime
     private _interpreter: InterpreterType;
 
     /**
+     * The map of module IDs to their exports.
+     * Only used for global modules, which are modules that are not attached to a bot (e.g. source modules).
+     */
+    private _cachedGlobalModules: Map<string, Promise<BotModuleResult>> =
+        new Map();
+
+    /**
+     * The map of system IDs to their respective bot IDs.
+     */
+    private _systemMap: Map<string, Set<string>> = new Map();
+
+    /**
      * The number of times that the runtime can call onError for an error from the same script.
      */
     repeatedErrorLimit: number = 1000;
@@ -333,6 +363,10 @@ export class AuxRuntime
 
     get canTriggerBreakpoint() {
         return !!this._interpreter && this._interpreter.debugging;
+    }
+
+    get systemMap() {
+        return this._systemMap;
     }
 
     /**
@@ -364,6 +398,8 @@ export class AuxRuntime
         );
         this._forceSyncScripts = forceSyncScripts;
         this._globalContext.mockAsyncActions = forceSyncScripts;
+        this._globalContext.importModule = (module, meta) =>
+            this._importModule(module, meta);
         this._library = merge(libraryFactory(this._globalContext), {
             api: {
                 os: {
@@ -472,6 +508,336 @@ export class AuxRuntime
                 }
             }
         }
+    }
+
+    private async _importModule(
+        module: string | ResolvedBotModule,
+        meta: ImportMetadata,
+        dependencyChain: string[] = [],
+        allowCustomResolution: boolean = true
+    ): Promise<BotModuleResult> {
+        try {
+            let m: ResolvedBotModule;
+            let bot: CompiledBot;
+            const allowResolution =
+                meta.tag !== ON_RESOLVE_MODULE && allowCustomResolution;
+            if (typeof module !== 'string') {
+                m = module;
+                if (!m) {
+                    throw new Error('Module not found: ' + module);
+                }
+            } else {
+                const globalModule = this._cachedGlobalModules.get(module);
+                if (globalModule) {
+                    return await globalModule;
+                }
+
+                m = await this.resolveModule(module, meta, allowResolution);
+                if (!m) {
+                    throw new Error('Module not found: ' + module);
+                }
+
+                if (dependencyChain.length > 1) {
+                    const index = dependencyChain.indexOf(m.id);
+                    if (index >= 0) {
+                        throw new Error(
+                            `Circular dependency detected: ${dependencyChain
+                                .slice(index)
+                                .join(' -> ')} -> ${m.id}`
+                        );
+                    }
+                }
+
+                if ('botId' in m) {
+                    bot = this._compiledState[m.botId];
+                    if (bot) {
+                        const exports = bot.exports[m.tag];
+                        if (exports) {
+                            return await exports;
+                        }
+                    }
+                }
+            }
+
+            const promise = this._importModuleCore(
+                m,
+                [...dependencyChain, m.id],
+                allowResolution
+            );
+            if (bot) {
+                bot.exports[(m as IdentifiedBotModule).tag] = promise;
+            } else {
+                this._cachedGlobalModules.set(m.id, promise);
+            }
+
+            return await promise;
+        } finally {
+            this._scheduleJobQueueCheck();
+        }
+    }
+
+    private async _importModuleCore(
+        m: ResolvedBotModule,
+        dependencyChain: string[],
+        allowCustomResolution: boolean
+    ): Promise<BotModuleResult> {
+        try {
+            const exports: BotModuleResult = {};
+            const importFunc: ImportFunc = (id, meta) =>
+                this._importModule(
+                    id,
+                    meta,
+                    dependencyChain,
+                    allowCustomResolution
+                );
+            const exportFunc: ExportFunc = async (valueOrSource, e, meta) => {
+                const result = await this._resolveExports(
+                    valueOrSource,
+                    e,
+                    meta,
+                    dependencyChain,
+                    allowCustomResolution
+                );
+                this._scheduleJobQueueCheck();
+                Object.assign(exports, result);
+            };
+
+            if ('botId' in m) {
+                const bot = this._compiledState[m.botId];
+                const module = bot?.modules[m.tag];
+                if (module) {
+                    await module.moduleFunc(importFunc, exportFunc);
+                }
+            } else if ('source' in m) {
+                const source = (m as SourceModule).source;
+                const mod = this._compile(null, null, source, {});
+
+                if (mod.moduleFunc) {
+                    await mod.moduleFunc(importFunc, exportFunc);
+                }
+            } else if ('exports' in m) {
+                Object.assign(exports, m.exports);
+            } else if ('url' in m) {
+                return await this.dynamicImport(m.url);
+            }
+            return exports;
+        } finally {
+            this._scheduleJobQueueCheck();
+        }
+    }
+
+    private async _resolveExports(
+        valueOrSource: string | object,
+        exports: (string | [string, string])[],
+        meta: ImportMetadata,
+        dependencyChain: string[],
+        allowCustomResolution: boolean
+    ): Promise<BotModuleResult> {
+        if (typeof valueOrSource === 'string') {
+            const sourceModule = await this._importModule(
+                valueOrSource,
+                meta,
+                dependencyChain,
+                allowCustomResolution
+            );
+            if (exports) {
+                const result: BotModuleResult = {};
+                for (let val of exports) {
+                    if (typeof val === 'string') {
+                        result[val] = sourceModule[val];
+                    } else {
+                        const [source, target] = val;
+                        const key = target ?? source;
+                        result[key] = sourceModule[source];
+                    }
+                }
+                return result;
+            } else {
+                return sourceModule;
+            }
+        } else {
+            return valueOrSource;
+        }
+    }
+
+    /**
+     * Performs a dynamic import() of the given module.
+     * Uses the JS Engine's native import() functionality.
+     * @param module The module that should be imported.
+     * @returns Returns a promise that resolves with the module's exports.
+     */
+    async dynamicImport(module: string): Promise<BotModuleResult> {
+        return await import(/* @vite-ignore */ module);
+    }
+
+    /**
+     * Attempts to resolve the module with the given name.
+     * @param moduleName The name of the module to resolve.
+     * @param meta The metadata that should be used to resolve the module.
+     */
+    async resolveModule(
+        moduleName: string,
+        meta?: ImportMetadata,
+        allowCustomResolution: boolean = true
+    ): Promise<ResolvedBotModule> {
+        if (meta?.tag === ON_RESOLVE_MODULE) {
+            allowCustomResolution = false;
+        }
+
+        if (moduleName === 'casualos') {
+            let exports = {
+                ...this._library.api,
+            };
+
+            const bot = meta?.botId ? this._compiledState[meta.botId] : null;
+            const ctx: TagSpecificApiOptions = {
+                bot,
+                tag: meta?.tag,
+                creator: bot
+                    ? this._getRuntimeBot(bot.script.tags.creator)
+                    : null,
+                config: null,
+            };
+            for (let key in this._library.tagSpecificApi) {
+                if (!this._library.tagSpecificApi.hasOwnProperty(key)) {
+                    continue;
+                }
+                const result = this._library.tagSpecificApi[key](ctx);
+                exports[key] = result;
+            }
+
+            return {
+                id: 'casualos',
+                exports,
+            };
+        }
+
+        if (allowCustomResolution) {
+            const shoutResult = this.shout(ON_RESOLVE_MODULE, undefined, {
+                module: moduleName,
+                meta,
+            });
+            const actionResult: ActionResult = isRuntimePromise(shoutResult)
+                ? await shoutResult
+                : shoutResult;
+
+            for (let scriptResult of actionResult.results) {
+                const result = await scriptResult;
+                if (result) {
+                    if (typeof result === 'object') {
+                        if (
+                            typeof result.botId === 'string' &&
+                            typeof result.tag === 'string'
+                        ) {
+                            const bot = this._compiledState[result.botId];
+                            const mod = bot?.modules[result.tag];
+                            if (mod) {
+                                return {
+                                    botId: result.botId,
+                                    id: moduleName,
+                                    tag: result.tag,
+                                };
+                            }
+                        } else if (
+                            typeof result.exports === 'object' &&
+                            result.exports
+                        ) {
+                            return {
+                                id: moduleName,
+                                exports: result.exports,
+                            };
+                        }
+                    } else if (typeof result === 'string') {
+                        if (isUrl(result)) {
+                            return {
+                                id: moduleName,
+                                url: result,
+                            };
+                        } else {
+                            return {
+                                id: moduleName,
+                                source: result,
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        const isRelativeImport =
+            moduleName.startsWith('.') || moduleName.startsWith(':');
+
+        if (isRelativeImport) {
+            if (!meta) {
+                throw new Error(
+                    'Cannot resolve relative import without metadata'
+                );
+            }
+
+            const bot = this._compiledState[meta.botId];
+            if (!bot) {
+                throw new Error('Cannot resolve relative import without bot');
+            }
+
+            const system = calculateStringTagValue(
+                null,
+                bot,
+                'system',
+                `🔗${bot.id}`
+            );
+            const split = system.split('.');
+
+            for (let i = 0; i < moduleName.length; i++) {
+                if (moduleName[i] === ':') {
+                    split.pop();
+                } else if (moduleName[i] === '.') {
+                } else {
+                    moduleName =
+                        split.join('.') + '.' + moduleName.substring(i);
+                    break;
+                }
+            }
+        }
+
+        if (moduleName.startsWith('🔗')) {
+            const [id, tag] = moduleName.substring('🔗'.length).split('.');
+            const bot = this._compiledState[id];
+            if (bot && tag) {
+                return {
+                    id: moduleName,
+                    botId: bot.id,
+                    tag: tag,
+                };
+            }
+        }
+
+        const lastIndex = moduleName.lastIndexOf('.');
+        if (lastIndex >= 0) {
+            const system = moduleName.substring(0, lastIndex);
+            const tag = moduleName.substring(lastIndex + 1);
+            const botIds = this._systemMap.get(system);
+            if (botIds) {
+                for (let id of botIds) {
+                    const bot = this._compiledState[id];
+                    if (bot && bot.modules[tag]) {
+                        return {
+                            botId: id,
+                            id: moduleName,
+                            tag: tag,
+                        };
+                    }
+                }
+            }
+        }
+
+        if (isUrl(moduleName)) {
+            return {
+                id: moduleName,
+                url: moduleName,
+            };
+        }
+
+        return null;
     }
 
     getShoutTimers(): { [shout: string]: number } {
@@ -2045,6 +2411,12 @@ export class AuxRuntime
             if (bot) {
                 removeFromContext(this._globalContext, [bot.script]);
 
+                const system = bot.values['system'];
+                if (hasValue(system)) {
+                    const map = this._systemMap.get(system);
+                    map?.delete(bot.id);
+                }
+
                 for (let breakpoint of bot.breakpoints) {
                     this._interpreter.removeBreakpointById(breakpoint.id);
                     this._breakpoints.delete(breakpoint.id);
@@ -2059,6 +2431,7 @@ export class AuxRuntime
                 }
                 this._botFunctionMap.delete(id);
             }
+
             nextUpdate.state[id] = null;
             nextUpdate.removedBots.push(id);
         }
@@ -2549,6 +2922,8 @@ export class AuxRuntime
             precalculated: true,
             tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
+            modules: {},
+            exports: {},
             values: {},
             script: null,
             originalTagEditValues: {},
@@ -2872,7 +3247,11 @@ export class AuxRuntime
     }
 
     private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
-        let { value, listener } = this._compileValue(bot, tag, tagValue);
+        let { value, listener, module } = this._compileValue(
+            bot,
+            tag,
+            tagValue
+        );
         if (listener) {
             bot.listeners[tag] = listener;
             this._globalContext.recordListenerPresense(bot.id, tag, true);
@@ -2880,7 +3259,43 @@ export class AuxRuntime
             delete bot.listeners[tag];
             this._globalContext.recordListenerPresense(bot.id, tag, false);
         }
+
+        if (module) {
+            bot.modules[tag] = module;
+        } else if (!!bot.modules[tag]) {
+            delete bot.modules[tag];
+        }
+        if (bot.exports[tag]) {
+            delete bot.exports[tag];
+        }
+
         if (typeof value !== 'function') {
+            if (tag === 'system') {
+                const originalValue = bot.values[tag];
+                if (originalValue !== value) {
+                    if (hasValue(originalValue)) {
+                        let originalSystemBots =
+                            this._systemMap.get(originalValue);
+                        if (originalSystemBots) {
+                            // originalSystemBots = new Set();
+                            // this._systemMap.set(originalValue ?? value, originalSystemBots);
+                            originalSystemBots.delete(bot.id);
+                            if (originalSystemBots.size <= 0) {
+                                this._systemMap.delete(originalValue);
+                            }
+                        }
+                    }
+
+                    if (hasValue(value)) {
+                        let systemBots = this._systemMap.get(value);
+                        if (!systemBots) {
+                            systemBots = new Set();
+                            this._systemMap.set(value, systemBots);
+                        }
+                        systemBots.add(bot.id);
+                    }
+                }
+            }
             if (hasValue(value)) {
                 bot.values[tag] = value;
             } else {
@@ -2897,9 +3312,11 @@ export class AuxRuntime
         value: any
     ): {
         value: any;
-        listener: AuxCompiledScript;
+        listener: CompiledBotModule;
+        module: CompiledBotModule;
     } {
-        let listener: AuxCompiledScript;
+        let listener: CompiledBotModule;
+        let module: CompiledBotModule;
         if (isFormula(value)) {
             const parsed = value.substring(DNA_TAG_PREFIX.length);
             const transformed = replaceMacros(parsed);
@@ -2911,6 +3328,15 @@ export class AuxRuntime
         } else if (isScript(value)) {
             try {
                 listener = this._compile(bot, tag, value, {});
+            } catch (ex) {
+                value = ex;
+            }
+        } else if (isModule(value)) {
+            try {
+                module = this._compile(bot, tag, value, {
+                    api: {},
+                    tagSpecificApi: {},
+                });
             } catch (ex) {
                 value = ex;
             }
@@ -2943,7 +3369,11 @@ export class AuxRuntime
             }
         }
 
-        return { value, listener };
+        if (listener?.moduleFunc && !module) {
+            module = listener;
+        }
+
+        return { value, listener, module };
     }
 
     private _compileTagMaskValue(
@@ -3006,7 +3436,7 @@ export class AuxRuntime
         tag: string,
         script: string,
         options: CompileOptions
-    ) {
+    ): CompiledBotModule {
         script = replaceMacros(script);
 
         let functionName: string;
@@ -3019,21 +3449,39 @@ export class AuxRuntime
             fileName = `${bot.id}.${diagnosticFunctionName}`;
         }
 
+        const meta: ImportMetadata = markAsUncopiableObject({
+            botId: bot?.id,
+            tag: tag,
+        });
+
+        Object.defineProperty(meta, 'resolve', {
+            enumerable: false,
+            configurable: false,
+            writable: false,
+            value: async (module: string) => {
+                return await this.resolveModule(module, meta, true);
+            },
+        });
+
         const constants = {
-            ...this._library.api,
+            ...(options.api ?? this._library.api),
             tagName: tag,
             globalThis: this._globalObject,
+            [IMPORT_META_FACTORY]: meta,
         };
 
         const specifics = {
-            ...this._library.tagSpecificApi,
+            ...(options.tagSpecificApi ?? this._library.tagSpecificApi),
         };
 
         if (this._interpreter) {
             delete constants.globalThis;
             // if (this.canTriggerBreakpoint) {
-            Object.assign(constants, this._interpretedApi);
-            Object.assign(specifics, this._interpretedTagSpecificApi);
+            Object.assign(constants, options.api ?? this._interpretedApi);
+            Object.assign(
+                specifics,
+                options.tagSpecificApi ?? this._interpretedTagSpecificApi
+            );
             // }
         }
 
@@ -3087,13 +3535,33 @@ export class AuxRuntime
                 configBot: () => this.context.playerBot,
                 links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
             },
-            arguments: [['that', 'data']],
-        });
+            arguments: [['that', 'data'], IMPORT_FACTORY, EXPORT_FACTORY],
+        }) as CompiledBotModule;
 
         if (hasValue(bot)) {
             this._functionMap.set(functionName, func);
             const botFunctionNames = this._getFunctionNamesForBot(bot.id);
             botFunctionNames.add(functionName);
+        }
+
+        if (func.metadata.isModule) {
+            const moduleFunc: BotModule['moduleFunc'] = (imports, exports) => {
+                const importFunc = (module: string) => {
+                    return imports(module, meta);
+                };
+                const exportFunc = (
+                    valueOrSource: string,
+                    exp: (string | [string, string])[]
+                ) => exports(valueOrSource, exp, meta);
+                return this._wrapWithCurrentPromise(() => {
+                    let result = func(null, importFunc, exportFunc);
+                    this._scheduleJobQueueCheck();
+                    return result;
+                });
+            };
+            func.moduleFunc = moduleFunc;
+        } else {
+            func.moduleFunc = null;
         }
 
         return func;
@@ -3103,11 +3571,13 @@ export class AuxRuntime
         if (err instanceof RanOutOfEnergyError) {
             throw err;
         }
-        let data: ScriptError = {
+        // Script errors are uncopiable because otherwise the interpreter might try
+        // and run into weird issues.
+        let data: ScriptError = markAsUncopiableObject({
             error: err,
             bot: bot,
             tag: tag,
-        };
+        });
         if (err instanceof Error) {
             try {
                 const newStack = this._compiler.calculateOriginalStackTrace(
@@ -3511,7 +3981,17 @@ export class AuxRuntime
 /**
  * Options that are used to influence the behavior of the compiled script.
  */
-interface CompileOptions {}
+interface CompileOptions {
+    /**
+     * The API that should be used instead of the defaults.
+     */
+    api?: AuxCompileOptions<any>['constants'];
+
+    /**
+     * The tag-specific API that should be used instead of the defaults.
+     */
+    tagSpecificApi?: AuxCompileOptions<any>['variables'];
+}
 
 interface UncompiledScript {
     bot: CompiledBot;

@@ -91,6 +91,9 @@ import {
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
     Bot,
+    IdentifiedBotModule,
+    ExportsModule,
+    PartialPrecalculatedBotsState,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import {
@@ -105,6 +108,7 @@ import {
     deviceResult,
     deviceError,
     DEFAULT_BRANCH_NAME,
+    ON_RESOLVE_MODULE,
 } from '@casual-simulation/aux-common';
 import { possibleTagValueCases } from '@casual-simulation/aux-common/bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
@@ -1019,6 +1023,83 @@ describe('AuxRuntime', () => {
                         expect(runtime.currentState['test'].values).toEqual({
                             value1: '🔁wrong',
                         });
+                    });
+                });
+
+                describe('system', () => {
+                    it('should add the bot to the systemMap', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    system: 'module2',
+                                    num: 123,
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createPrecalculatedBot('test2', {
+                                    system: 'module2',
+                                    num: 123,
+                                }),
+                            },
+                            addedBots: ['test', 'test2'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test'])],
+                                ['module2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should keep both bots in the map', () => {
+                        const update = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    system: 'module',
+                                    num: 123,
+                                }),
+                            })
+                        );
+
+                        expect(update).toEqual({
+                            state: {
+                                test: createPrecalculatedBot('test', {
+                                    system: 'module',
+                                    abc: 'def',
+                                }),
+                                test2: createPrecalculatedBot('test2', {
+                                    system: 'module',
+                                    num: 123,
+                                }),
+                            },
+                            addedBots: ['test', 'test2'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([['module', new Set(['test', 'test2'])]])
+                        );
                     });
                 });
 
@@ -2060,6 +2141,63 @@ describe('AuxRuntime', () => {
                         await waitAsync();
 
                         expect(runtime.context.energy).toBe(0);
+                    });
+                });
+
+                describe('system', () => {
+                    it('should remove the bot from the systemMap', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                    system: 'module2',
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                    system: 'module3',
+                                }),
+                            })
+                        );
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test', 'test2'])],
+                                ['module2', new Set(['test3'])],
+                                ['module3', new Set(['test4'])],
+                            ])
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: null,
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: null,
+                            },
+                            addedBots: [],
+                            removedBots: ['test'],
+                            updatedBots: [],
+                            version: null,
+                        });
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test2'])],
+                                ['module2', new Set(['test3'])],
+                                ['module3', new Set(['test4'])],
+                            ])
+                        );
                     });
                 });
             });
@@ -3213,6 +3351,317 @@ describe('AuxRuntime', () => {
                         expect(runtime.currentState['test'].values).toEqual({
                             value1: '🔁wrong',
                         });
+                    });
+                });
+
+                describe('system', () => {
+                    it('should add added systems to the system map', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: 'module',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'module2',
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: 'module',
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: 'module',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'module2',
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: 'module2',
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['module', new Set(['test'])],
+                                ['module2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should update updated systems in the system map', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module2',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: 'different',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'different2',
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: 'different',
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: 'different',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: 'different2',
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: 'different2',
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['different', new Set(['test'])],
+                                ['different2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should with with tag edits', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module2',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: 'maodule',
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: edit(
+                                            {},
+                                            preserve(1),
+                                            insert('a')
+                                        ),
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: 'maodule2',
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(
+                            new Map([
+                                ['maodule', new Set(['test'])],
+                                ['maodule2', new Set(['test2'])],
+                            ])
+                        );
+                    });
+
+                    it('should delete deleted systems from the system map', () => {
+                        const update1 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: createBot('test', {
+                                    abc: 'def',
+                                    system: 'module',
+                                }),
+                                test2: createBot('test2', {
+                                    num: 123,
+                                    system: 'module2',
+                                }),
+                                test3: createBot('test3', {
+                                    value: true,
+                                }),
+                                test4: createBot('test4', {
+                                    tag1: 'test',
+                                    tag2: 'other',
+                                }),
+                            })
+                        );
+
+                        const update2 = runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test: {
+                                    tags: {
+                                        system: null,
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: null,
+                                        num: 456,
+                                    },
+                                },
+                            })
+                        );
+
+                        expect(update2).toEqual({
+                            state: {
+                                test: {
+                                    tags: {
+                                        system: null,
+                                        other: true,
+                                    },
+                                    values: {
+                                        system: null,
+                                        other: true,
+                                    },
+                                },
+                                test2: {
+                                    tags: {
+                                        system: null,
+                                        num: 456,
+                                    },
+                                    values: {
+                                        system: null,
+                                        num: 456,
+                                    },
+                                },
+                            },
+                            addedBots: [],
+                            removedBots: [],
+                            updatedBots: ['test', 'test2'],
+                            version: null,
+                        });
+
+                        expect(runtime.systemMap).toEqual(new Map([]));
                     });
                 });
 
@@ -8165,6 +8614,1224 @@ describe('AuxRuntime', () => {
                         ]);
                     });
                 });
+            });
+
+            describe('imports', () => {
+                it('should be able to import scripts by system tag', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should be able to import listeners by system tag', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `@export const abc = 'def';`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should support default imports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import abc from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄const abc = 'def'; export default abc;`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should support dynamic imports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@const abc = (await import('module.library')).default; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄const abc = 'def'; export default abc;`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should cache a module between imports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `@export const abc = 'def'; os.toast('side-effect');`,
+                            }),
+                            test3: createBot('test3', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc + '2');`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    // There should only be one side-effect
+                    expect(events).toEqual([
+                        [toast('side-effect')],
+                        [toast('def'), toast('def2')],
+                    ]);
+
+                    events.splice(0, events.length);
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+                    expect(events).toEqual([[toast('def'), toast('def2')]]);
+                });
+
+                it('should clear the cache for a module if the bot is changed', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `@export const abc = 'def'; os.toast('side-effect');`,
+                            }),
+                            test3: createBot('test3', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc + '2');`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    // There should only be one side-effect
+                    expect(events).toEqual([
+                        [toast('side-effect')],
+                        [toast('def'), toast('def2')],
+                    ]);
+
+                    events.splice(0, events.length);
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: {
+                                tags: {
+                                    library: `@export const abc = 'ghi'; os.toast('side-effect2');`,
+                                },
+                            },
+                        })
+                    );
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [toast('side-effect2')],
+                        [toast('ghi'), toast('ghi2')],
+                    ]);
+                });
+
+                it('should be able to export other modules', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export * from 'module.library2';`,
+                                library2: `📄export const abc = 'def';`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should be able to export specific variables from other modules', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export { abc } from 'module.library2';`,
+                                library2: `📄export const abc = 'def'; export const num = 123;`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should be able to resolve an import using an async @onResolveModule', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); return '📄export const abc = "def";';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should be able to resolve the casualos module', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { create } from 'casualos'; create({ abc: 123 });`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: 123,
+                                })
+                            ),
+                        ],
+                    ]);
+                });
+
+                it('should be able to import tag-specific APIs from casualos in library modules', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { test } from '.library'; test();`,
+                                library: `📄import { create } from 'casualos'; export function test() { create({ abc: 123 }); };`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('uuid', {
+                                    creator: 'test1',
+                                    abc: 123,
+                                })
+                            ),
+                        ],
+                    ]);
+                });
+
+                it('should be able to use import.meta', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@os.toast(import.meta)`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                botId: 'test1',
+                                tag: 'hello',
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should be able to use import.meta.resolve()', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@os.toast(await import.meta.resolve('module.library'))`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                id: 'module.library',
+                                botId: 'test2',
+                                tag: 'library',
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should be able to dynamically import modules resolved from import.meta.resolve()', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@const resolved = await import.meta.resolve('module.library'); const { abc } = await import(resolved); os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    uuidMock.mockReturnValue('uuid');
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should use dynamic imports on modules that are URLs', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'https://example.com'; os.toast(abc);`,
+                            }),
+                        })
+                    );
+
+                    runtime.dynamicImport = jest.fn().mockResolvedValue({
+                        abc: 123,
+                    });
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast(123)]]);
+                });
+
+                it('should not propogate changes to exported variables', async () => {
+                    // TODO: This is a limitation of the current implementation
+                    // The native ES module system would cause 123 to be toasted instead of "def".
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc, test } from 'module.library'; test(); os.toast(abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export let abc = 'def'; export function test() { abc = 123 ; }`,
+                            }),
+                        })
+                    );
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should reject when a circular dependency is detected', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; import { num } from "module.library2"; os.toast(abc); os.toast(num);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄import { test2 } from ".library2"; export function test1() { return 1; }; export const abc = test2();`,
+                                library2: `📄import { test1 } from ".library"; export function test2() { return 2; }; export const num = test1();`,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[]]);
+
+                    let error: any;
+                    try {
+                        await result.results[0];
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error?.error?.error.error.message).toEqual(
+                        'Circular dependency detected: module.library -> module.library2 -> module.library'
+                    );
+                });
+
+                it('should require that library modules import API functions from casualos', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; abc();`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄import { os } from "casualos"; export function abc() { os.toast("def"); }`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should throw an error if os functions are not imported from the casualos module', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; abc();`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export function abc() { os.toast("def"); }`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(errors.length).toBe(1);
+                    expect(errors[0].length).toBe(1);
+                    expect(errors[0][0].bot.id).toBe('test1');
+                    expect(errors[0][0].tag).toBe('hello');
+                    expect(errors[0][0].error).toBeInstanceOf(Error);
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(0);
+                });
+            });
+        });
+
+        describe('resolveModule()', () => {
+            it('should resolve modules based on system and tag', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should resolve the first module that exists from bots that have the same system', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            system: 'module',
+                        }),
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test3: createBot('test3', {
+                            system: 'module',
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should resolve modules based on ID and tag if the bot does not have a system', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            library: `📄export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('🔗test2.library');
+
+                expect(m).toMatchObject({
+                    id: '🔗test2.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on the same bot by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module.component',
+                            library: `📄export const abc = 'def';`,
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('.library', {
+                    botId: 'test2',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.component.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on the same bot even if they dont have a system', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            library: `📄export const abc = 'def';`,
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('.library', {
+                    botId: 'test2',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: '🔗test2.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on different bots by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module.component',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('.library', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.component.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on parent systems by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule(':library', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on grandparent systems by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test1: createBot('test1', {
+                            system: 'module.component.child',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('::library', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should be able to resolve modules on adjacent systems by relative import', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module.other',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule(':other.library', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'module.other.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should use dynamic imports on modules that are URLs', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            system: 'module.component',
+                            test: 123,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                runtime.dynamicImport = jest.fn().mockResolvedValue({
+                    default: {
+                        value: 123,
+                    },
+                });
+
+                const m = await runtime.resolveModule('https://example.com', {
+                    botId: 'test1',
+                    tag: 'test',
+                });
+
+                expect(m).toMatchObject({
+                    id: 'https://example.com',
+                    url: 'https://example.com',
+                });
+            });
+
+            it('should be able to resolve regular scripts as modules', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `@export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = await runtime.resolveModule('module.library');
+
+                expect(m).toMatchObject({
+                    id: 'module.library',
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it('should resolve a special module for the "casualos" module', async () => {
+                const m = (await runtime.resolveModule(
+                    'casualos'
+                )) as ExportsModule;
+                expect(m.id).toBe('casualos');
+                expect(Object.keys(m.exports)).toMatchSnapshot();
+            });
+
+            it('should be able to resolve tag-specific API functions when given import metadata', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {}),
+                    })
+                );
+                await waitAsync();
+                const m = (await runtime.resolveModule('casualos', {
+                    botId: 'test2',
+                    tag: null,
+                })) as ExportsModule;
+                expect(m.id).toBe('casualos');
+                expect(Object.keys(m.exports)).toMatchSnapshot();
+
+                expect(typeof m.exports.create).toBe('function');
+
+                uuidMock.mockReturnValue('uuid');
+                const b = m.exports.create({ abc: 'def' });
+
+                expect(isRuntimeBot(b)).toBe(true);
+                expect(b.id).toBe('uuid');
+                expect(b.tags.creator).toBe('test2');
+                expect(b.tags.abc).toBe('def');
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [
+                        botAdded(
+                            createBot('uuid', { creator: 'test2', abc: 'def' })
+                        ),
+                    ],
+                ]);
+            });
+
+            describe('@onResolveModule', () => {
+                it('should shout @onResolveModule if a system could not be found', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test3',
+                        tag: 'library',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should not shout @onResolveModule if attempting to resolve from inside a @onResolveModule', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library', {
+                        botId: 'random',
+                        tag: ON_RESOLVE_MODULE,
+                    });
+
+                    await waitAsync();
+
+                    expect(m === null).toBe(true);
+                    expect(events).toEqual([]);
+                });
+
+                it('should not shout @onResolveModule for imports that @onResolveModule has', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@import { abc } from 'module.library'; os.toast(abc); return { botId: 'test4', tag: 'tag' };`,
+                            }),
+                            test3: createBot('test3', {
+                                system: 'module',
+                                library: '📄export const abc = "def";',
+                            }),
+                            test4: createBot('test4', {
+                                tag: '📄export const num = 123;',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('custom.module');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'custom.module',
+                        botId: 'test4',
+                        tag: 'tag',
+                    });
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should not shout @onResolveModule when using import.meta.resolve()', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@const resolved = await import.meta.resolve('module.library'); os.toast(resolved); return { botId: 'test4', tag: 'tag' };`,
+                            }),
+                            test3: createBot('test3', {
+                                system: 'module',
+                                library: '📄export const abc = "def";',
+                            }),
+                            test4: createBot('test4', {
+                                tag: '📄export const num = 123;',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('custom.module');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'custom.module',
+                        botId: 'test4',
+                        tag: 'tag',
+                    });
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                id: 'module.library',
+                                botId: 'test3',
+                                tag: 'library',
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should include import metadata in the shout', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library', {
+                        botId: 'test99',
+                        tag: 'custom',
+                    });
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test3',
+                        tag: 'library',
+                    });
+
+                    expect(events).toEqual([
+                        [
+                            toast({
+                                module: 'module.library',
+                                meta: { botId: 'test99', tag: 'custom' },
+                            }),
+                        ],
+                    ]);
+                });
+
+                it('should support resolving modules with a promise', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return { botId: 'test3', tag: 'library' };`,
+                            }),
+                            test3: createBot('test3', {
+                                library: '📄export const abc = "def";',
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        botId: 'test3',
+                        tag: 'library',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should support resolving a module with a script', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return '📄export default 123;';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        source: '📄export default 123;',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should support resolving a module with a URL', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return 'https://example.com';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        url: 'https://example.com',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should support resolving a module with direct exports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return { exports: { abc: 'def', ghi: 123 } };`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        exports: {
+                            abc: 'def',
+                            ghi: 123,
+                        },
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+
+                it('should prefer @onResolveModule over the system tag', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test2: createBot('test2', {
+                                onResolveModule: `@await Promise.resolve(0); os.toast(that); return '📄export default 123;';`,
+                            }),
+                            test3: createBot('test3', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                        })
+                    );
+                    await waitAsync();
+
+                    const m = await runtime.resolveModule('module.library');
+
+                    await waitAsync();
+
+                    expect(m).toMatchObject({
+                        id: 'module.library',
+                        source: '📄export default 123;',
+                    });
+
+                    expect(events).toEqual([
+                        [toast({ module: 'module.library' })],
+                    ]);
+                });
+            });
+
+            it('should call the given export function for exports', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def';`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = (await runtime.resolveModule(
+                    'module.library'
+                )) as IdentifiedBotModule;
+
+                expect(m?.id).toBe('module.library');
+                expect(m?.botId).toBe('test2');
+                expect(m?.tag).toBe('library');
+
+                const imp = jest.fn();
+                const exp = jest.fn();
+
+                const bot = runtime.currentState[m.botId];
+                const mod = bot.modules[m.tag];
+                await mod.moduleFunc(imp, exp);
+
+                expect(exp).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    undefined,
+                    {
+                        botId: 'test2',
+                        tag: 'library',
+                    }
+                );
+            });
+
+            it('should resolve with the returned value from the function', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄export const abc = 'def'; return 123;`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = (await runtime.resolveModule(
+                    'module.library'
+                )) as IdentifiedBotModule;
+
+                expect(m?.id).toBe('module.library');
+                expect(m?.botId).toBe('test2');
+                expect(m?.tag).toBe('library');
+
+                const imp = jest.fn();
+                const exp = jest.fn();
+                const bot = runtime.currentState[m.botId];
+                const mod = bot.modules[m.tag];
+                const result = await mod.moduleFunc(imp, exp);
+                expect(result).toBe(123);
+
+                expect(exp).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    undefined,
+                    {
+                        botId: 'test2',
+                        tag: 'library',
+                    }
+                );
+            });
+
+            it('should call the given import function when importing something', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test2: createBot('test2', {
+                            system: 'module',
+                            library: `📄import { abc } from "test"; return abc;`,
+                        }),
+                    })
+                );
+                await waitAsync();
+
+                const m = (await runtime.resolveModule(
+                    'module.library'
+                )) as IdentifiedBotModule;
+
+                expect(m?.id).toBe('module.library');
+                expect(m?.botId).toBe('test2');
+                expect(m?.tag).toBe('library');
+
+                const imp = jest.fn(async (name) => {
+                    if (name === 'test') {
+                        return {
+                            abc: 'def',
+                        };
+                    }
+                });
+                const exp = jest.fn();
+                const bot = runtime.currentState[m.botId];
+                const mod = bot.modules[m.tag];
+                const result = await mod.moduleFunc(imp as any, exp);
+                expect(result).toBe('def');
+
+                expect(imp).toHaveBeenCalledWith('test', {
+                    botId: 'test2',
+                    tag: 'library',
+                });
+            });
+
+            it.skip('should be able to resolve modules based on system quickly', async () => {
+                let state: PartialPrecalculatedBotsState = {};
+                for (let i = 0; i < 1000; i++) {
+                    state[`test${i}`] = createBot(`test${i}`, {
+                        system: 'module.' + i,
+                        library: `📄export const abc = 'def${i}';`,
+                    });
+                }
+                runtime.stateUpdated(stateUpdatedEvent(state));
+                await waitAsync();
+
+                const startTime = Date.now();
+                for (let i = 0; i < 10000; i++) {
+                    const m = await runtime.resolveModule('module.999.library');
+
+                    expect(m).toMatchObject({
+                        id: 'module.999.library',
+                        botId: 'test999',
+                        tag: 'library',
+                    });
+                }
+                const endTime = Date.now();
+
+                // Each resolve should take less than 0.5 milliseconds on average
+                expect(endTime - startTime).toBeLessThan(5000);
             });
         });
 

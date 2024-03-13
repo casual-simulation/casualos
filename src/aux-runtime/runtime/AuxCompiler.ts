@@ -9,6 +9,11 @@ import {
     isScript,
     parseScript,
     hasValue,
+    BotModule,
+    ImportFunc,
+    ExportFunc,
+    isModule,
+    parseModule,
 } from '@casual-simulation/aux-common/bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -104,6 +109,9 @@ export function getInterpretableFunction<T extends Function>(obj: unknown): T {
 
 const JSX_FACTORY = 'html.h';
 const JSX_FRAGMENT_FACTORY = 'html.f';
+export const IMPORT_FACTORY = '___importModule';
+export const IMPORT_META_FACTORY = '___importMeta';
+export const EXPORT_FACTORY = '___exportModule';
 
 /**
  * Defines a class that can compile scripts and formulas
@@ -113,6 +121,9 @@ export class AuxCompiler {
     private _transpiler = new Transpiler({
         jsxFactory: JSX_FACTORY,
         jsxFragment: JSX_FRAGMENT_FACTORY,
+        importFactory: IMPORT_FACTORY,
+        importMetaFactory: IMPORT_META_FACTORY,
+        exportFactory: EXPORT_FACTORY,
     });
     private _functionCache = new Map<string, Function>();
 
@@ -424,7 +435,10 @@ export class AuxCompiler {
 
         let transpiledLocation: CodeLocation = {
             lineNumber:
-                location.lineNumber - func.metadata.scriptLineOffset - 1,
+                location.lineNumber -
+                func.metadata.scriptLineOffset -
+                func.metadata.transpilerLineOffset -
+                1,
             column: location.column - 1,
         };
 
@@ -434,7 +448,7 @@ export class AuxCompiler {
         );
 
         return {
-            lineNumber: result.lineNumber - func.metadata.transpilerLineOffset,
+            lineNumber: result.lineNumber,
             column: result.column,
         };
     }
@@ -457,8 +471,7 @@ export class AuxCompiler {
         }
 
         let transpiledLocation: CodeLocation = {
-            lineNumber:
-                location.lineNumber + func.metadata.transpilerLineOffset,
+            lineNumber: location.lineNumber,
             column: location.column,
         };
 
@@ -468,7 +481,10 @@ export class AuxCompiler {
         );
 
         return {
-            lineNumber: result.lineNumber + func.metadata.scriptLineOffset,
+            lineNumber:
+                result.lineNumber +
+                func.metadata.scriptLineOffset +
+                func.metadata.transpilerLineOffset,
             column: result.column,
         };
     }
@@ -502,6 +518,7 @@ export class AuxCompiler {
             isAsync: async,
             constructedFunction,
             context: options?.context,
+            isModule: transpilerResult.metadata.isModule,
         };
 
         if (options) {
@@ -766,8 +783,14 @@ export class AuxCompiler {
         return returnedValues;
     }
 
-    private _parseScript(script: string): string {
-        return script;
+    private _parseScript(script: string): TranspilerResult {
+        script = parseScript(script);
+        return this._transpiler.transpileWithMetadata(script);
+    }
+
+    private _parseModule(script: string): TranspilerResult {
+        script = parseModule(script);
+        return this._transpiler.transpileWithMetadata(script);
     }
 
     private _compileFunction<T>(
@@ -786,16 +809,50 @@ export class AuxCompiler {
         // compiler, but for now this ad-hoc method
         // seems to work.
 
+        this._transpiler.forceSync = options.forceSync ?? false;
+
         let async = false;
-        if (isScript(script)) {
-            script = parseScript(script);
-        }
-        if (script.indexOf('await ') >= 0) {
-            async = true;
-        }
-        script = this._parseScript(script);
+        let transpiled: TranspilerResult;
         let transpilerLineOffset = 0;
         let scriptLineOffset = 0;
+        let syntaxErrorLineOffset = 0;
+        try {
+            if (isScript(script)) {
+                transpiled = this._parseScript(script);
+            } else if (isModule(script)) {
+                transpiled = this._parseModule(script);
+            } else {
+                transpiled = this._transpiler.transpileWithMetadata(script);
+            }
+        } catch (err) {
+            if (err instanceof SyntaxError) {
+                const replaced = replaceSyntaxErrorLineNumber(
+                    err,
+                    (location) => ({
+                        lineNumber:
+                            location.lineNumber -
+                            transpilerLineOffset -
+                            syntaxErrorLineOffset,
+                        column: location.column,
+                    })
+                );
+
+                if (replaced) {
+                    throw replaced;
+                }
+            }
+            throw err;
+        }
+
+        if (transpiled.metadata.isModule) {
+            // All modules are async
+            async = true;
+        } else if (script.indexOf('await ') >= 0) {
+            async = true;
+        }
+        if (options.forceSync) {
+            async = false;
+        }
         let customGlobalThis = false;
 
         let constantsCode = '';
@@ -835,7 +892,7 @@ export class AuxCompiler {
         }
 
         let scriptCode: string;
-        scriptCode = `\n { \n${script}\n }`;
+        scriptCode = `\n { \n${transpiled.code}\n }`;
         transpilerLineOffset += 2;
 
         let withCodeStart = '';
@@ -846,8 +903,6 @@ export class AuxCompiler {
             scriptLineOffset += 1;
         }
 
-        let syntaxErrorLineOffset = 0;
-
         // Function needs a name because acorn doesn't understand
         // that this function is allowed to be anonymous.
         let functionCode = `function ${
@@ -856,16 +911,10 @@ export class AuxCompiler {
         if (async) {
             functionCode = `async ` + functionCode;
         }
-        try {
-            if (options.forceSync) {
-                async = false;
-            }
-            this._transpiler.forceSync = options.forceSync ?? false;
-            const transpiled =
-                this._transpiler.transpileWithMetadata(functionCode);
 
+        try {
             if (options.interpreter) {
-                const finalCode = `${constantsCode}return ${transpiled.code};`;
+                const finalCode = `${constantsCode}return ${functionCode};`;
 
                 syntaxErrorLineOffset += 1;
                 scriptLineOffset += 1;
@@ -910,7 +959,7 @@ export class AuxCompiler {
                     constructedFunction: func,
                 };
             } else {
-                const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${transpiled.code}; }${withCodeEnd}`;
+                const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${functionCode}; }${withCodeEnd}`;
 
                 let func = this._buildFunction(finalCode, options);
                 (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;
@@ -1097,6 +1146,11 @@ export interface AuxScriptMetadata {
     isAsync: boolean;
 
     /**
+     * Whether the function contains a module.
+     */
+    isModule: boolean;
+
+    /**
      * The function that was constructed by the interpreter.
      */
     constructedFunction: ConstructedFunction;
@@ -1106,6 +1160,8 @@ export interface AuxScriptMetadata {
      */
     context: any;
 }
+
+export interface CompiledBotModule extends BotModule, AuxCompiledScript {}
 
 /**
  * The set of options that a script should be compiled with.

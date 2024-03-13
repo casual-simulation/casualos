@@ -8,6 +8,9 @@ import {
     CompiledBotListeners,
     RuntimeBot,
     BotAction,
+    CompiledBotModules,
+    BotModule,
+    CompiledBotExports,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import type {
@@ -44,6 +47,16 @@ export interface CompiledBot extends PrecalculatedBot {
      * The tags that are listeners and have been compiled into functions.
      */
     listeners: CompiledBotListeners;
+
+    /**
+     * The modules that are defined by this bot.
+     */
+    modules: CompiledBotModules;
+
+    /**
+     * The exports that the compiled bot has.
+     */
+    exports: CompiledBotExports;
 
     /**
      * The script bot that the compiled bot has been setup to use.
@@ -155,6 +168,7 @@ export interface RuntimeBreakpoint extends Omit<Breakpoint, 'func'> {
  * @param space The space that the bot is in.
  * @param compiledValues The compiled values that the bot should use.
  * @param listeners The listeners that the bot should have.
+ * @param modules The modules that the bot should have.
  */
 export function createCompiledBot(
     id = uuid(),
@@ -162,7 +176,8 @@ export function createCompiledBot(
     tags?: Bot['tags'],
     space?: BotSpace,
     listeners: CompiledBotListeners = {},
-    signatures?: BotSignatures
+    signatures?: BotSignatures,
+    modules: CompiledBotModules = {}
 ): CompiledBot {
     if (hasValue(space)) {
         return {
@@ -172,6 +187,8 @@ export function createCompiledBot(
             tags: tags || values,
             values,
             listeners: listeners,
+            modules: modules,
+            exports: {},
             signatures,
             script: null,
             originalTagEditValues: {},
@@ -186,6 +203,8 @@ export function createCompiledBot(
         tags: tags || values,
         values,
         listeners: listeners,
+        modules: modules,
+        exports: {},
         signatures,
         script: null,
         originalTagEditValues: {},
