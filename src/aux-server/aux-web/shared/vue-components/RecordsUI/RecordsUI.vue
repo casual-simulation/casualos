@@ -78,116 +78,6 @@
         </md-dialog>
 
         <md-dialog
-            :md-active.sync="showEnterAddress"
-            @md-closed="cancelLogin(true)"
-            :md-close-on-esc="true"
-            :md-click-outside-to-close="true"
-            :md-fullscreen="true"
-            class="input-dialog"
-        >
-            <md-dialog-title>Login with {{ loginSiteName }}</md-dialog-title>
-            <md-dialog-content class="input-dialog-content">
-                <div class="md-layout md-gutter">
-                    <div class="md-layout-item">
-                        <md-field :class="emailFieldClass">
-                            <label for="email">{{ emailFieldHint }}</label>
-                            <md-input
-                                name="email"
-                                id="email"
-                                autocomplete="email"
-                                v-model="email"
-                                :disabled="processing"
-                            />
-                            <span v-if="showEmailError" class="md-error"
-                                >This email is not allowed</span
-                            >
-                            <span v-if="showSmsError" class="md-error"
-                                >This phone number is not allowed</span
-                            >
-                            <span v-if="showInvalidAddressError" class="md-error"
-                                >This value is not recognized as a phone number or email
-                                address</span
-                            >
-                            <span v-if="showEnterAddressError" class="md-error">{{
-                                enterAddressErrorMessage
-                            }}</span>
-                            <span v-if="showBannedUserError" class="md-error"
-                                >This user has been banned.</span
-                            >
-                        </md-field>
-                    </div>
-                </div>
-                <div class="terms-of-service-container">
-                    <div v-show="showTermsOfServiceError" class="terms-of-service-error">
-                        Please accept the terms of service.
-                    </div>
-                    <div class="terms-of-service-wrapper">
-                        <md-checkbox v-model="acceptedTerms" id="terms-of-service"> </md-checkbox>
-                        <label for="terms-of-service">
-                            I accept the
-                            <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
-                        </label>
-                    </div>
-                </div>
-            </md-dialog-content>
-            <md-dialog-actions>
-                <md-button type="button" class="md-primary" @click="login()" :disabled="processing">
-                    <md-progress-spinner
-                        v-if="processing"
-                        md-mode="indeterminate"
-                        :md-diameter="20"
-                        :md-stroke="2"
-                        >Processing</md-progress-spinner
-                    >
-                    <span v-else>Login</span>
-                </md-button>
-            </md-dialog-actions>
-        </md-dialog>
-
-        <md-dialog
-            :md-active.sync="showCheckAddress"
-            :md-close-on-esc="false"
-            :md-click-outside-to-close="true"
-            :md-fullscreen="true"
-            @md-closed="hideCheckAddress(true)"
-            class="input-dialog"
-        >
-            <md-dialog-title>{{ checkAddressTitle }}</md-dialog-title>
-            <md-dialog-content>
-                <p>
-                    We sent a login code to <strong>{{ addressToCheck }}</strong
-                    >. <span v-if="showCode">Enter it below to complete login.</span
-                    ><span v-else>Click the included link to complete login.</span>
-                </p>
-                <md-field v-if="showCode" :class="codeFieldClass">
-                    <label>Code</label>
-                    <md-input v-model="loginCode" @keydown.enter.native="sendCode()"></md-input>
-                    <span v-if="showInvalidCodeError" class="md-error"
-                        >The code does not match</span
-                    >
-                </md-field>
-            </md-dialog-content>
-            <md-dialog-actions>
-                <md-button @click="hideCheckAddress()">Cancel</md-button>
-                <md-button
-                    v-if="showCode"
-                    class="md-primary"
-                    @click="sendCode()"
-                    :disabled="processing"
-                >
-                    <md-progress-spinner
-                        v-if="processing"
-                        md-mode="indeterminate"
-                        :md-diameter="20"
-                        :md-stroke="2"
-                        >Processing</md-progress-spinner
-                    >
-                    <span v-else>Send</span>
-                </md-button>
-            </md-dialog-actions>
-        </md-dialog>
-
-        <md-dialog
             :md-active.sync="showGrantInstAdminPermission"
             :md-fullscreen="false"
             @md-closed="cancelGrantInstPermission()"
@@ -196,8 +86,12 @@
             <md-dialog-title>Grant inst Admin?</md-dialog-title>
             <md-dialog-content class="allow-record-data-dialog-content">
                 <p>
-                    Do you want to grant this inst (<strong>{{ grantInstId }}</strong
-                    >) admin permission to {{ allowRecordName }}?
+                    This will allow the inst (<strong>{{ grantInstId }}</strong
+                    >) to access your personal cloud data (<a
+                        target="_blank"
+                        :href="grantRecordsOrigin"
+                        >{{ grantRecordsOrigin }}</a
+                    >, Record Name: {{ allowRecordName }}).
                 </p>
                 <p>
                     This will allow the inst to perform the following actions when you are logged
@@ -213,6 +107,15 @@
                     <li>Grant or revoke any permissions to any resource markers.</li>
                     <li>Grant or revoke any roles to any users.</li>
                 </ul>
+                <p class="important-warning">
+                    <strong
+                        >Important warning: If you grant this inst Admin access, other public insts
+                        may have access to your cloud data if you visit them and it has been
+                        programmed to do so. Please be careful when visiting public insts and make
+                        sure you know the person sharing, whom you may be sharing with and what
+                        permissions they have set.</strong
+                    >
+                </p>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="grantInstPermission()">Grant Admin</md-button>
@@ -226,7 +129,7 @@
             </md-dialog-actions>
         </md-dialog>
 
-        <div v-show="showIframe" class="md-overlay md-fixed md-dialog-overlay"></div>
+        <!-- <div v-show="showIframe" class="md-overlay md-fixed md-dialog-overlay"></div> -->
     </div>
 </template>
 <script src="./RecordsUI.ts"></script>

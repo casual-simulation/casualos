@@ -1,82 +1,104 @@
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
-    calculateBotValue,
-    getBotShape,
+    BotScaleMode,
     BotShape,
-    getBotSubShape,
     BotSubShape,
+    LocalActions,
+    StartFormAnimationAction,
+    calculateBooleanTagValue,
+    calculateBotIds,
+    calculateBotValue,
     calculateNumericalTagValue,
+    calculateStringTagValue,
+    getBotScaleMode,
+    getBotShape,
+    getBotSubShape,
     hasValue,
     isBotPointable,
-    LocalActions,
-    BotScaleMode,
-    getBotScaleMode,
-    calculateStringTagValue,
-    StartFormAnimationAction,
 } from '@casual-simulation/aux-common';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
-    Mesh,
-    Group,
-    Vector3,
-    Box3,
-    Object3D,
-    AnimationMixer,
     AnimationAction,
-    MathUtils as ThreeMath,
-    LoopRepeat,
-    LoopOnce,
+    AnimationMixer,
+    Box3,
     Color,
+    DirectionalLight,
+    Group,
+    HemisphereLight,
+    LoopOnce,
+    LoopRepeat,
+    Mesh,
+    Object3D,
+    PointLight,
+    SpotLight,
+    MathUtils as ThreeMath,
+    Vector3,
+    AmbientLight,
+    Light,
+    Material,
 } from '@casual-simulation/three';
+import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
+import { sortBy } from 'lodash';
+import { SubscriptionLike } from 'rxjs';
+import HelixUrl from '../../public/meshes/dna_form.glb';
+import EggUrl from '../../public/meshes/egg.glb';
+import { AuxBot3D } from '../AuxBot3D';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { getGLTFPool } from '../GLTFHelpers';
+import { Game } from '../Game';
+import { GameObject } from '../GameObject';
+import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
+import { LineSegments } from '../LineSegments';
+import { createCubeStroke } from '../MeshUtils';
 import {
-    createCube,
-    isTransparent,
-    disposeMesh,
-    createSphere,
-    createSprite,
-    disposeGroup,
-    disposeObject3D,
-    setColor,
-    buildSRGBColor,
-    calculateScale,
-    baseAuxMeshMaterial,
-    createCircle,
     DEFAULT_COLOR,
     DEFAULT_OPACITY,
     DEFAULT_TRANSPARENT,
+    baseAuxMeshMaterial,
+    baseAuxPointLight,
+    buildSRGBColor,
+    calculateScale,
+    createCircle,
+    createCube,
+    createSkybox,
+    createSphere,
+    createSprite,
+    disposeGroup,
+    disposeMesh,
+    disposeObject3D,
+    isTransparent,
     registerMaterial,
+    setColor,
+    setDepthTest,
+    setDepthWrite,
+    setLightIntensity,
     setOpacity,
+    setLightDistance,
+    setLightAngle,
+    setLightPenumbra,
+    setLightDecay,
+    setLightGroundColor,
 } from '../SceneUtils';
-import { createCubeStroke } from '../MeshUtils';
-import { LineSegments } from '../LineSegments';
-import { IMeshDecorator } from './IMeshDecorator';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
-import { getGLTFPool } from '../GLTFHelpers';
-import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
-import { Game } from '../Game';
-import { GameObject } from '../GameObject';
 import { FrustumHelper } from '../helpers/FrustumHelper';
-import HelixUrl from '../../public/meshes/dna_form.glb';
-import EggUrl from '../../public/meshes/egg.glb';
 import { Axial, HexMesh } from '../hex';
-import { sortBy } from 'lodash';
-import { SubscriptionLike } from 'rxjs';
+import { IMeshDecorator } from './IMeshDecorator';
 // import { MeshLineMaterial } from 'three.meshline';
 import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
+import { Block, Keyboard, update as updateMeshUI } from 'three-mesh-ui';
 import FontJSON from 'three-mesh-ui/examples/assets/Roboto-msdf.json';
 import FontImage from 'three-mesh-ui/examples/assets/Roboto-msdf.png';
 import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
 import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
-import { Keyboard, Block, update as updateMeshUI } from 'three-mesh-ui';
 import { AnimationMixerHandle } from '../AnimationHelper';
+import { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
+import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 
 export const gltfPool = getGLTFPool('main');
 
+const DEFAULT_LIGHT_TARGET = new Object3D();
 const KEYBOARD_COLORS = {
     keyboardBack: 0x858585,
     panelBack: 0x262626,
@@ -89,6 +111,8 @@ interface CancellationToken {
     isCanceled: boolean;
 }
 
+let ldrawLoader: LDrawLoader = null;
+
 export class BotShapeDecorator
     extends AuxBot3DDecoratorBase
     implements IMeshDecorator
@@ -97,6 +121,7 @@ export class BotShapeDecorator
     private _subShape: BotSubShape = null;
     private _gltfVersion: number = null;
     private _address: string = null;
+    private _ldrawPartsAddress: string = null;
     private _animation: any = null;
     private _scaleMode: BotScaleMode = null;
     private _canHaveStroke = false;
@@ -118,9 +143,11 @@ export class BotShapeDecorator
 
     private _game: Game;
     private _shapeSubscription: SubscriptionLike;
+    private _finder: AuxBotVisualizerFinder;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
+    light: Light;
 
     collider: Object3D;
     scene: Group;
@@ -144,9 +171,10 @@ export class BotShapeDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(bot3D: AuxBot3D, game: Game) {
+    constructor(bot3D: AuxBot3D, game: Game, finder: AuxBotVisualizerFinder) {
         super(bot3D);
         this._game = game;
+        this._finder = finder;
     }
 
     frameUpdate() {
@@ -154,6 +182,7 @@ export class BotShapeDecorator
             this._animationMixer.update(this._game.getTime().deltaTime);
             this.scene?.updateMatrixWorld(true);
         }
+        this._updateLightTarget(null);
     }
 
     botUpdated(calc: BotCalculationContext): void {
@@ -188,6 +217,12 @@ export class BotShapeDecorator
             'auxFormAnimationAddress',
             null
         );
+        const ldrawPartsAddress = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'auxFormLDrawPartsAddress',
+            null
+        );
         if (
             this._needsUpdate(
                 shape,
@@ -196,7 +231,8 @@ export class BotShapeDecorator
                 address,
                 aspectRatio,
                 animationAddress,
-                version
+                version,
+                ldrawPartsAddress
             )
         ) {
             this._rebuildShape(
@@ -206,7 +242,8 @@ export class BotShapeDecorator
                 address,
                 aspectRatio,
                 animationAddress,
-                version
+                version,
+                ldrawPartsAddress
             );
         }
 
@@ -217,15 +254,25 @@ export class BotShapeDecorator
         this._updateRenderOrder(calc);
         this._updateAnimation(animation);
         this._updateAspectRatio(aspectRatio);
+        this._updateDepth(calc);
+        this._updateDepthWrite(calc);
+        this._updateLightIntensity(calc);
+        this._updateLightTarget(calc);
+        this._updateLightDistance(calc);
+        this._updateLightAngle(calc);
+        this._updateLightPenumbra(calc);
+        this._updateLightDecay(calc);
+        this._updateLightGroundColor(calc);
+        this._updateBuildStep(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
             const scale = calculateScale(calc, this.bot3D.bot, gridScale);
-            if (scale.x > scale.z) {
-                const widthToHeightRatio = scale.z / scale.x;
+            if (scale.x > scale.y) {
+                const widthToHeightRatio = scale.y / scale.x;
                 this._iframe.setPlaneSize(1, widthToHeightRatio);
             } else {
-                const heightToWidthRatio = scale.x / scale.z;
+                const heightToWidthRatio = scale.x / scale.y;
                 this._iframe.setPlaneSize(heightToWidthRatio, 1);
             }
 
@@ -255,7 +302,8 @@ export class BotShapeDecorator
         address: string,
         aspectRatio: number,
         animationAddress: string,
-        version: number
+        version: number,
+        ldrawPartsAddress: string
     ) {
         return (
             this._shape !== shape ||
@@ -265,7 +313,8 @@ export class BotShapeDecorator
             (shape === 'mesh' &&
                 (this._address !== address ||
                     this._animationAddress !== animationAddress ||
-                    this._gltfVersion !== version))
+                    this._gltfVersion !== version ||
+                    this._ldrawPartsAddress !== ldrawPartsAddress))
         );
     }
 
@@ -489,9 +538,14 @@ export class BotShapeDecorator
         }
 
         this.bot3D.display.remove(this.container);
+        this.light = null;
+
         disposeMesh(this.mesh, true, true, true);
         if (this.stroke) {
             this.stroke.dispose();
+        }
+        if (this.collider) {
+            this.container.remove(this.collider);
         }
         disposeObject3D(this.collider);
         if (this._iframe) {
@@ -549,6 +603,84 @@ export class BotShapeDecorator
         const color = calculateBotValue(calc, this.bot3D.bot, 'auxColor');
         this._setColor(color);
     }
+    private _updateDepth(calc: BotCalculationContext) {
+        const depthTest = calculateBooleanTagValue(
+            calc,
+            this.bot3D.bot,
+            'formDepthTest',
+            true
+        );
+        this._setDepthTest(depthTest);
+    }
+
+    private _updateDepthWrite(calc: BotCalculationContext) {
+        const depthWrite = calculateBooleanTagValue(
+            calc,
+            this.bot3D.bot,
+            'formDepthWrite',
+            true
+        );
+        this._setDepthWrite(depthWrite);
+    }
+
+    private _updateLightIntensity(calc: BotCalculationContext) {
+        const lightIntensity = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightIntensity',
+            1
+        );
+        this._setLightIntensity(lightIntensity);
+    }
+
+    private _updateLightDistance(calc: BotCalculationContext) {
+        const lightDistance = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightDistance',
+            0
+        );
+        this._setLightDistance(lightDistance);
+    }
+
+    private _updateLightAngle(calc: BotCalculationContext) {
+        const lightAngle = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightAngle',
+            Math.PI * 0.3333333333333
+        );
+        this._setLightAngle(lightAngle);
+    }
+
+    private _updateLightPenumbra(calc: BotCalculationContext) {
+        const lightPenumbra = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightPenumbra',
+            0
+        );
+        this._setLightPenumbra(lightPenumbra);
+    }
+
+    private _updateLightDecay(calc: BotCalculationContext) {
+        const lightDecay = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formLightDecay',
+            2
+        );
+        this._setLightDecay(lightDecay);
+    }
+
+    private _updateLightGroundColor(calc: BotCalculationContext) {
+        const groundColor = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'formLightGroundColor'
+        );
+        this._setLightGroundColor(groundColor);
+    }
 
     private _updateOpacity(calc: BotCalculationContext) {
         const opacity = calculateNumericalTagValue(
@@ -570,6 +702,7 @@ export class BotShapeDecorator
             });
         } else {
             setColor(this.mesh, color);
+            setColor(this.light, color);
         }
 
         if (this._keyboard) {
@@ -599,6 +732,103 @@ export class BotShapeDecorator
                     });
                 }
             }
+        }
+    }
+    private _setDepthTest(depthTest: boolean) {
+        if (this.scene) {
+            // Change depth
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    setDepthTest(obj, depthTest);
+                }
+            });
+        } else {
+            setDepthTest(this.mesh, depthTest);
+        }
+    }
+    private _setDepthWrite(depthWrite: boolean) {
+        if (this.scene) {
+            // Change
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    setDepthWrite(obj, depthWrite);
+                }
+            });
+        } else {
+            setDepthWrite(this.mesh, depthWrite);
+        }
+    }
+
+    private _setLightIntensity(lightIntensity: number) {
+        if (this.scene) {
+            // Change
+            this.scene.traverse((obj) => {
+                if (obj instanceof Light) {
+                    setLightIntensity(obj, lightIntensity);
+                }
+            });
+        } else {
+            setLightIntensity(this.light, lightIntensity);
+        }
+    }
+
+    private _setLightDistance(lightDistance: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightDistance(obj, lightDistance);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightDistance(this.light, lightDistance);
+        }
+    }
+
+    private _setLightAngle(lightAngle: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightAngle(obj, lightAngle);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightAngle(this.light, lightAngle);
+        }
+    }
+
+    private _setLightPenumbra(lightPenumbra: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightPenumbra(obj, lightPenumbra);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightPenumbra(this.light, lightPenumbra);
+        }
+    }
+
+    private _setLightDecay(lightDecay: number) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof SpotLight) {
+                    setLightDecay(obj, lightDecay);
+                }
+            });
+        } else if (this.light instanceof SpotLight) {
+            setLightDecay(this.light, lightDecay);
+        }
+    }
+
+    private _setLightGroundColor(lightColor: any) {
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof HemisphereLight) {
+                    setLightGroundColor(obj, lightColor);
+                }
+            });
+        } else if (this.light instanceof HemisphereLight) {
+            setLightGroundColor(this.light, lightColor);
         }
     }
 
@@ -655,6 +885,25 @@ export class BotShapeDecorator
         }
     }
 
+    private _updateBuildStep(calc: BotCalculationContext) {
+        if (this._subShape === 'ldraw' || this._subShape === 'ldrawText') {
+            const buildStep = calculateNumericalTagValue(
+                calc,
+                this.bot3D.bot,
+                'auxFormBuildStep',
+                Infinity
+            );
+            if (this.scene) {
+                this.scene.traverse((obj) => {
+                    if (obj instanceof Group) {
+                        const step = obj.userData.buildingStep ?? 0;
+                        obj.visible = step <= buildStep;
+                    }
+                });
+            }
+        }
+    }
+
     private _rebuildShape(
         shape: BotShape,
         subShape: BotSubShape,
@@ -662,7 +911,8 @@ export class BotShapeDecorator
         address: string,
         addressAspectRatio: number,
         animationAddress: string,
-        version: number
+        version: number,
+        ldrawPartsAddress: string
     ) {
         this._shape = shape;
         this._subShape = subShape;
@@ -671,11 +921,13 @@ export class BotShapeDecorator
         this._addressAspectRatio = addressAspectRatio;
         this._animationAddress = animationAddress;
         this._gltfVersion = version;
+        this._ldrawPartsAddress = ldrawPartsAddress;
         if (
             this.mesh ||
             this.scene ||
             this._shapeSubscription ||
-            this._keyboard
+            this._keyboard ||
+            this.light
         ) {
             this.dispose();
         }
@@ -689,6 +941,8 @@ export class BotShapeDecorator
 
         if (this._shape === 'cube') {
             this._createCube();
+        } else if (this._shape === 'skybox') {
+            this._createSkybox();
         } else if (this._shape === 'sphere') {
             this._createSphere();
         } else if (this._shape === 'sprite') {
@@ -696,6 +950,11 @@ export class BotShapeDecorator
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
+            } else if (
+                this._address &&
+                (this._subShape === 'ldraw' || this._subShape === 'ldrawText')
+            ) {
+                this._createLDraw();
             } else {
                 this._createCube();
             }
@@ -728,6 +987,20 @@ export class BotShapeDecorator
             this._createCircle();
         } else if (this._shape === 'keyboard') {
             this._createKeyboard();
+        } else if (this._shape === 'light') {
+            if (this._subShape === 'pointLight') {
+                this._createPointLight();
+            } else if (this._subShape === 'ambientLight') {
+                this._createAmbientLight();
+            } else if (this._subShape === 'directionalLight') {
+                this._createDirectionalLight();
+            } else if (this._subShape === 'spotLight') {
+                this._createSpotLight();
+            } else if (this._subShape === 'hemisphereLight') {
+                this._createHemisphereLight();
+            } else {
+                this._createPointLight();
+            }
         }
 
         this.onMeshUpdated.invoke(this);
@@ -919,6 +1192,150 @@ export class BotShapeDecorator
         this.bot3D.updateMatrixWorld(true);
     }
 
+    private async _createLDraw() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+        let token: CancellationToken = {
+            isCanceled: false,
+        };
+        this._meshCancellationToken = token;
+
+        if (this._subShape === 'ldraw') {
+            await this._loadLDraw(this._address, token);
+        } else {
+            await this._parseLDraw(this._address, token);
+        }
+    }
+
+    private async _loadLDraw(
+        url: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!ldrawLoader) {
+                ldrawLoader = new LDrawLoader();
+            }
+            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
+            const ldraw = await ldrawLoader.loadAsync(url);
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setLDraw(ldraw);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to load LDraw:',
+                url,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    private async _parseLDraw(
+        text: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!ldrawLoader) {
+                ldrawLoader = new LDrawLoader();
+            }
+            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
+            const ldraw = await new Promise<Group>((resolve, reject) => {
+                try {
+                    (ldrawLoader.parse as any)(text, (group: Group) =>
+                        resolve(group)
+                    );
+                } catch (err) {
+                    reject(err);
+                }
+            });
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setLDraw(ldraw);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to parse LDraw:',
+                text,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    private _setLDraw(ldraw: Group) {
+        const group = new Group();
+        group.add(ldraw);
+
+        // Positioning
+        group.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
+        let box = new Box3();
+        box.setFromObject(group);
+        let size = new Vector3();
+        box.getSize(size);
+        let center = new Vector3();
+        box.getCenter(center);
+        const maxScale = Math.max(size.x, size.y, size.z);
+
+        if (this._scaleMode !== 'absolute') {
+            size.divideScalar(maxScale);
+            center.divideScalar(maxScale);
+            group.scale.divideScalar(maxScale);
+        }
+
+        let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
+
+        // Group
+        group.position.copy(bottomCenter);
+        this.scene = group;
+        this.container.add(this.scene);
+
+        this.mesh = findFirstMesh(this.scene);
+
+        // Collider
+        const collider = (this.collider = createCube(1));
+        this.collider.scale.copy(size);
+        setColor(collider, 'clear');
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+
+        this.scene.traverse((obj) => {
+            if (obj instanceof Mesh) {
+                const material = obj.material;
+                if (material) {
+                    registerMaterial(material);
+
+                    if (material.color) {
+                        material[DEFAULT_COLOR] = material.color;
+                    }
+
+                    if (
+                        typeof material.opacity === 'number' &&
+                        !Number.isNaN(material.opacity)
+                    ) {
+                        material[DEFAULT_OPACITY] = material.opacity;
+                    }
+
+                    if (typeof material.transparent === 'boolean') {
+                        material[DEFAULT_TRANSPARENT] = material.transparent;
+                    }
+                }
+            }
+        });
+
+        this._updateColor(null);
+        this._updateOpacity(null);
+        this._updateRenderOrder(null);
+        this._updateBuildStep(null);
+        this.bot3D.updateMatrixWorld(true);
+    }
+
     private _processGLTFAnimations(gltf: GLTF) {
         // Animations
         if (gltf.animations.length > 0) {
@@ -939,6 +1356,18 @@ export class BotShapeDecorator
 
     private _createSprite() {
         this.mesh = this.collider = createSprite(this._addressAspectRatio);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createSkybox() {
+        this.mesh = this.collider = createSkybox(
+            new Vector3(0, 0, 0),
+            0x000000,
+            0.5
+        );
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
@@ -1085,6 +1514,114 @@ export class BotShapeDecorator
             this._updateColor(null);
             this._updateOpacity(null);
             this._updateRenderOrder(null);
+        }
+    }
+
+    private _createPointLight() {
+        //Create Collider
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        //Create pointLight
+        const pointLight = new PointLight(0xffffff, 1, 10, 2);
+        this.light = pointLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(pointLight);
+        pointLight.position.set(0, 0, 0);
+    }
+    private _createAmbientLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const ambientLight = new AmbientLight(0x404040, 1);
+        this.light = ambientLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(ambientLight);
+        ambientLight.position.set(0, 0, 0);
+    }
+
+    private _createDirectionalLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const directionalLight = new DirectionalLight(0xffffff, 0.5);
+        this.light = directionalLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(directionalLight);
+        directionalLight.position.set(0, 0, 0);
+    }
+
+    private _createSpotLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const spotLight = new SpotLight(
+            0x00ff00,
+            1,
+            0,
+            Math.PI * 0.3333333333333,
+            0,
+            2
+        ); //color, intensity, distance, angle, penumbra, decay
+        this.light = spotLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(spotLight);
+        spotLight.position.set(0, 0, 0);
+
+        //Todo
+        // spotLight.castShadow = true;
+
+        // spotLight.shadow.mapSize.width = 1024;
+        // spotLight.shadow.mapSize.height = 1024;
+
+        // spotLight.shadow.camera.near = 500;
+        // spotLight.shadow.camera.far = 4000;
+        // spotLight.shadow.camera.fov = 30;
+    }
+    private _createHemisphereLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const hemisphereLight = new HemisphereLight(0xffffff, 0xffffff, 1);
+        this.light = hemisphereLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(hemisphereLight);
+        hemisphereLight.position.set(0, 0, 0);
+    }
+    private _updateLightTarget(calc: BotCalculationContext) {
+        if (!this._finder) {
+            return;
+        } else if (
+            !(
+                this.light instanceof SpotLight ||
+                this.light instanceof DirectionalLight
+            )
+        ) {
+            return;
+        }
+        let lightTarget = calculateBotIds(this.bot3D.bot, 'formLightTarget');
+
+        if (!hasValue(lightTarget)) {
+            this.light.target = DEFAULT_LIGHT_TARGET;
+            return;
+        }
+
+        let hasLightTarget = false;
+
+        for (let id of lightTarget) {
+            if (this.bot3D.bot.id === id) continue;
+            const bots = this._finder.findBotsById(id);
+            const auxBot = bots.find((bot) => {
+                return bot instanceof AuxBot3D;
+            }) as AuxBot3D;
+            if (auxBot) {
+                this.light.target = auxBot;
+                hasLightTarget = true;
+                break;
+            }
+        }
+        if (!hasLightTarget) {
+            this.light.target = DEFAULT_LIGHT_TARGET;
         }
     }
 

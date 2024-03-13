@@ -16,11 +16,12 @@
                 "../../node_modules/@casual-simulation/monaco-editor"
             ]
         },
-        "lib": ["es2015", "es5", "dom"]
+        "lib": ["es2015", "es5", "dom"],
+        "skipLibCheck": true
     },
     "include": [
         "./aux-web/**/*",
-        "./server/**/*",
+        "./aux-backend/**/*",
         "./shared/**/*",
         "./typings/**/*"
         // "./node_modules/@casual-simulation/aux-common/**/*"
@@ -28,10 +29,13 @@
     "exclude": [
         "**/node_modules/**",
         "./aux-web/aux-player/sw.ts",
-        "./aux-web/aux-player/vite.config.ts"
+        "./aux-web/aux-player/vite.config.mts",
+        "./aux-web/aux-auth/sw.ts",
+        "./aux-web/aux-auth/vite.config.mts"
     ],
     "references": [
         { "path": "../aux-common" },
+        { "path": "../aux-runtime" },
         { "path": "../aux-records" },
         { "path": "../aux-vm-browser" },
         { "path": "../aux-components" },

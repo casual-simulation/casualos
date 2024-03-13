@@ -86,7 +86,6 @@ declare module 'downloadjs' {
 declare var PRODUCTION: boolean;
 declare var GIT_HASH: string;
 declare var GIT_TAG: string;
-declare var PROXY_CORS_REQUESTS: boolean;
 
 interface Navigator {
     getUserMedia(
@@ -115,3 +114,8 @@ interface Window {
 }
 
 declare function importScripts(...scripts: string[]): void;
+
+declare module '*.md' {
+    const content: string;
+    export default content;
+}

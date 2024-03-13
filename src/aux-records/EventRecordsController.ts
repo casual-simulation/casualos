@@ -1,9 +1,13 @@
 import {
-    AuthorizeDenied,
+    AuthorizeSubjectFailure,
     PolicyController,
-    returnAuthorizationResult,
+    getMarkerResourcesForUpdate,
 } from './PolicyController';
-import { NotLoggedInError, ServerError } from './Errors';
+import {
+    NotLoggedInError,
+    NotSupportedError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 import {
     EventRecordsStore,
     AddEventCountStoreResult,
@@ -15,8 +19,23 @@ import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
-import { cleanupObject, getMarkersOrDefault } from './Utils';
+import { cleanupObject, getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
+import {
+    ACCOUNT_MARKER,
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+
+export interface EventRecordsConfiguration {
+    policies: PolicyController;
+    store: EventRecordsStore;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that is able to manage event (count) records.
@@ -25,15 +44,18 @@ export class EventRecordsController {
     private _policies: PolicyController;
     // private _manager: RecordsController;
     private _store: EventRecordsStore;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
     /**
      * Creates a DataRecordsController.
-     * @param policies The controller that should be used to validate policies.
-     * @param store The store that should be used to save data.
+     * @param config The configuration to use.
      */
-    constructor(policies: PolicyController, store: EventRecordsStore) {
-        this._policies = policies;
-        this._store = store;
+    constructor(config: EventRecordsConfiguration) {
+        this._policies = config.policies;
+        this._store = config.store;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -76,24 +98,26 @@ export class EventRecordsController {
                 return event;
             }
 
-            const markers = getMarkersOrDefault(event.markers);
+            const markers = getRootMarkersOrDefault(event.markers);
 
             const authorizeResult =
-                await this._policies.authorizeRequestUsingContext(
+                await this._policies.authorizeUserAndInstances(
                     context.context,
                     {
-                        action: 'event.increment',
-                        ...baseRequest,
-                        eventName: eventName,
-                        resourceMarkers: markers,
+                        resourceKind: 'event',
+                        resourceId: eventName,
+                        action: 'increment',
+                        userId: subjectId,
+                        instances: instances,
+                        markers: markers,
                     }
                 );
 
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
+            if (authorizeResult.success === false) {
+                return authorizeResult;
             }
 
-            const policy = authorizeResult.subject.subjectPolicy;
+            const policy = context.context.subjectPolicy;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -101,6 +125,27 @@ export class EventRecordsController {
                     errorCode: 'not_logged_in',
                     errorMessage:
                         'The user must be logged in in order to record events.',
+                };
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionEventMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.events.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of events.',
                 };
             }
 
@@ -125,10 +170,14 @@ export class EventRecordsController {
                 };
             }
         } catch (err) {
+            console.error(
+                `[EventRecordsController] A server error occurred while adding count:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -171,17 +220,23 @@ export class EventRecordsController {
                 return result;
             }
 
-            const markers = getMarkersOrDefault(result.markers);
+            const markers = getRootMarkersOrDefault(result.markers);
 
-            const authorizeResult = await this._policies.authorizeRequest({
-                action: 'event.count',
-                ...baseRequest,
-                eventName,
-                resourceMarkers: markers,
-            });
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        resourceKind: 'event',
+                        resourceId: eventName,
+                        action: 'count',
+                        userId: userId,
+                        instances: instances,
+                        markers: markers,
+                    }
+                );
 
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
+            if (authorizeResult.success === false) {
+                return authorizeResult;
             }
 
             return {
@@ -192,10 +247,14 @@ export class EventRecordsController {
                 markers: markers,
             };
         } catch (err) {
+            console.error(
+                `[EventRecordsController] A server error occurred while getting count:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -234,26 +293,53 @@ export class EventRecordsController {
             }
 
             const markers = request.markers;
-            const existingMarkers = getMarkersOrDefault(result.markers);
+            const existingMarkers = getRootMarkersOrDefault(result.markers);
+            const resourceMarkers = markers ?? existingMarkers;
 
-            const addedMarkers = markers
-                ? without(markers, ...existingMarkers)
-                : [];
-            const removedMarkers = markers
-                ? without(existingMarkers, ...markers)
-                : [];
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        resources: [
+                            {
+                                resourceKind: 'event',
+                                resourceId: eventName,
+                                action: 'update',
+                                markers: resourceMarkers,
+                            },
+                            ...getMarkerResourcesForUpdate(
+                                existingMarkers,
+                                markers
+                            ),
+                        ],
+                        userId: request.userId,
+                        instances: request.instances,
+                    }
+                );
 
-            const authorizeResult = await this._policies.authorizeRequest({
-                action: 'event.update',
-                ...baseRequest,
-                eventName,
-                existingMarkers: existingMarkers,
-                addedMarkers: addedMarkers,
-                removedMarkers: removedMarkers,
-            });
+            if (authorizeResult.success === false) {
+                return authorizeResult;
+            }
 
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
+            const metricsResult =
+                await this._metrics.getSubscriptionEventMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.events.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of events.',
+                };
             }
 
             const update = await this._store.updateEvent(
@@ -273,40 +359,176 @@ export class EventRecordsController {
                 success: true,
             };
         } catch (err) {
+            console.error(
+                `[EventRecordsController] A server error occurred while updating event:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async listEvents(
+        recordKeyOrRecordName: string,
+        eventName: string | null,
+        userId: string,
+        instances?: string[]
+    ): Promise<ListEventsResult> {
+        try {
+            if (!this._store.listEvents) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+                instances: instances,
+            };
+
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        resourceKind: 'event',
+                        action: 'list',
+                        userId: userId,
+                        instances: instances,
+                        markers: [ACCOUNT_MARKER],
+                    }
+                );
+
+            if (authorizeResult.success === false) {
+                return authorizeResult;
+            }
+
+            const recordName = context.context.recordName;
+            const result = await this._store.listEvents(recordName, eventName);
+
+            if (result.success === false) {
+                return result;
+            }
+
+            return {
+                success: true,
+                totalCount: result.totalCount,
+                events: result.events.map((e) => ({
+                    ...e,
+                    markers: getRootMarkersOrDefault(e.markers),
+                })),
+            };
+        } catch (err) {
+            console.error(
+                '[EventRecordsController] Failed to list events:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
             };
         }
     }
 }
 
+/**
+ * Defines the possible results of a "add event count" request.
+ *
+ * @dochash types/records/events
+ * @doctitle Event Types
+ * @docsidebar Events
+ * @docdescription Event records are useful for keeping track of how many times an event has occurred.
+ * @docgroup 01-add
+ * @docorder 0
+ * @docname AddCountResult
+ */
 export type AddCountResult = AddCountSuccess | AddCountFailure;
 
+/**
+ * Defines an interface that represents a successful "add event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-add
+ * @docorder 1
+ * @docname AddCountSuccess
+ */
 export interface AddCountSuccess {
     success: true;
+    /**
+     * The name of the record.
+     */
     recordName: string;
+
+    /**
+     * The name of the event that the count was added to.
+     */
     eventName: string;
+
+    /**
+     * The number of events that were added.
+     */
     countAdded: number;
 }
 
+/**
+ * Defines an interface that represents a failed "add event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 01-add
+ * @docorder 2
+ * @docname AddCountFailure
+ */
 export interface AddCountFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddEventCountStoreFailure['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | 'not_supported';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * Defines the possible results of a "get event count" request.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-count
+ * @docorder 0
+ * @docname GetCountResult
+ */
 export type GetCountResult = GetCountSuccess | GetCountFailure;
 
 /**
- * Defines an interface that represents a successful "get data" result.
+ * Defines an interface that represents a successful "get event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-count
+ * @docorder 1
+ * @docname GetCountSuccess
  */
 export interface GetCountSuccess {
     success: true;
@@ -332,16 +554,40 @@ export interface GetCountSuccess {
     markers: string[];
 }
 
+/**
+ * Defines an interface that represents a failed "get event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-count
+ * @docorder 2
+ * @docname GetCountFailure
+ */
 export interface GetCountFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | GetEventCountStoreFailure['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | 'not_supported';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * Defines an interface that represents a request to update an event.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 0
+ * @docname UpdateEventRecordRequest
+ */
 export interface UpdateEventRecordRequest {
     /**
      * The record key or the name of the record that should be updated.
@@ -377,19 +623,66 @@ export interface UpdateEventRecordRequest {
     instances?: string[];
 }
 
+/**
+ * Defines the possible results of an "update event" request.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 1
+ * @docname UpdateEventRecordResult
+ */
 export type UpdateEventRecordResult =
     | UpdateEventRecordSuccess
     | UpdateEventRecordFailure;
 
+/**
+ * Defines an interface that represents a successful "update event" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 2
+ * @docname UpdateEventRecordSuccess
+ */
 export interface UpdateEventRecordSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed "update event" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 3
+ * @docname UpdateEventRecordFailure
+ */
 export interface UpdateEventRecordFailure {
     success: false;
     errorCode:
         | ServerError
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
+}
+
+export type ListEventsResult = ListEventsSuccess | ListEventsFailure;
+
+export interface ListEventsSuccess {
+    success: true;
+    events: ListedEvent[];
+    totalCount: number;
+}
+
+export interface ListEventsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotSupportedError
+        | AuthorizeSubjectFailure['errorCode']
+        | ValidatePublicRecordKeyFailure['errorCode'];
+    errorMessage: string;
+}
+
+export interface ListedEvent {
+    eventName: string;
+    markers: string[];
 }

@@ -31,6 +31,10 @@ import {
 } from '@casual-simulation/three';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
+import {
+    Rotation,
+    Vector3 as CasualOSVector3,
+} from '@casual-simulation/aux-common/math';
 
 @Component({})
 export default class ImuPortal extends Vue {
@@ -188,38 +192,29 @@ export default class ImuPortal extends Vue {
         sim: RemoteSimulation,
         sub: Subscription
     ): Promise<boolean> {
-        if (typeof AbsoluteOrientationSensor === 'undefined') {
+        if (typeof RelativeOrientationSensor === 'undefined') {
             return false;
         }
 
         try {
-            const sensor = new AbsoluteOrientationSensor({
-                // referenceFrame: 'screen'
+            const sensor = new RelativeOrientationSensor({
+                referenceFrame: 'screen',
             });
+            let rotationOffset: Quaternion = null;
 
             const readingListener = (event: any) => {
                 const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
                 if (portalBot) {
                     const [x, y, z, w] = sensor.quaternion;
 
-                    const quaternion = new Quaternion(x, y, z, w).invert();
+                    const quaternion = new Quaternion(x, y, z, w);
+                    if (!rotationOffset) {
+                        rotationOffset =
+                            this._calculateRotationOffset(quaternion);
+                    }
+                    quaternion.premultiply(rotationOffset);
 
-                    const rotation = new Matrix4().makeRotationFromQuaternion(
-                        quaternion
-                    );
-
-                    let q1 = new Matrix4().makeRotationAxis(
-                        new Vector3(1, 0, 0),
-                        Math.PI / 2
-                    );
-
-                    rotation.premultiply(q1);
-
-                    const mirror = new Matrix4().makeScale(1, -1, 1);
-                    rotation.premultiply(mirror).multiply(mirror);
-
-                    quaternion.setFromRotationMatrix(rotation);
-
+                    // console.log('[ImuPortal] Got reading', quaternion)
                     let update = {
                         imuSupported: true,
                         deviceRotationX: quaternion.x,
@@ -289,12 +284,12 @@ export default class ImuPortal extends Vue {
                         return true;
                     } else {
                         console.error(
-                            '[ImuPortal] Unable to start the AbsoluteOrientationSensor. The correct permissions have not been granted.'
+                            '[ImuPortal] Unable to start the RelativeOrientationSensor. The correct permissions have not been granted.'
                         );
                     }
                 } catch (ex) {
                     console.error(
-                        '[ImuPortal] Unable to start the AbsoluteOrientationSensor',
+                        '[ImuPortal] Unable to start the RelativeOrientationSensor',
                         ex
                     );
                 }
@@ -302,7 +297,7 @@ export default class ImuPortal extends Vue {
             }
         } catch (ex) {
             console.error(
-                '[ImuPortal] Unable to start the AbsoluteOrientationSensor',
+                '[ImuPortal] Unable to start the RelativeOrientationSensor',
                 ex
             );
             return false;
@@ -348,6 +343,7 @@ export default class ImuPortal extends Vue {
             }
 
             if (hasPermission) {
+                let rotationOffset: Quaternion = null;
                 const orientationListener = (event: DeviceOrientationEvent) => {
                     const portalBot = getPortalConfigBot(sim, IMU_PORTAL);
                     if (portalBot) {
@@ -372,54 +368,15 @@ export default class ImuPortal extends Vue {
                         // they are in the order that the greek alphabet uses (a, b, g)
                         // this means the order is Z, Y, and then X.
                         euler.set(beta, gamma, alpha, 'ZXY');
-
-                        // we convert this euler rotation to a 4x4 matrix rotation
-                        // so that we can manipulate in 4D and not worry too much about gimbal lock.
-                        const rotation = new Matrix4().makeRotationFromEuler(
-                            euler
-                        );
-
-                        const orientation = MathUtils.degToRad(
-                            <number>window.orientation ?? 0
-                        );
-
-                        let q1 = new Matrix4();
-                        // Adjust for orientation
-                        q1.makeRotationAxis(new Vector3(0, 0, 1), -orientation);
-
-                        rotation.multiply(q1);
-
-                        // Create a rotation that is -90 degrees around the
-                        // X axis.
-                        q1.makeRotationAxis(new Vector3(1, 0, 0), -Math.PI / 2);
-
-                        // Apply the -90 degree rotation twice.
-                        // The first is to rotate -90 degrees so that
-                        // 0 on the X axis means the phone is perpendicular to the ground.
-                        // The second is to rotate -90 degrees so that the Y and Z axes are swapped.
-                        rotation.premultiply(q1).premultiply(q1);
-
-                        // Here we take out the second X axis rotation
-                        // but since it is multiplied on the right
-                        // the coordinate conversion stays.
-                        // However, the Z axis has been negated as a result of this conversion.
-                        // This is because the new Z axis was the old Y axis, and that axis is now pointing
-                        // the opposite direction that the old Z axis was pointing. (right hand rule)
-                        q1.invert();
-                        rotation.multiply(q1);
-
-                        // Because we need to mirror the Z axis,
-                        // we need to change handedness. However any scale operation we apply
-                        // mirrors the other two axes. So (-1, 1, 1) mirrors the Y and Z axes but not the
-                        // X axis. Therefore we need to invert the matrix to mirror all the rotations
-                        // and then scale by (1, 1, -1) to mirror the X and Y axes back to how they were.
-                        rotation.invert();
-
-                        const mirror = new Matrix4().makeScale(1, 1, -1);
-                        rotation.premultiply(mirror).multiply(mirror);
-
                         let quaternion = new Quaternion();
-                        quaternion.setFromRotationMatrix(rotation);
+                        quaternion.setFromEuler(euler);
+
+                        if (!rotationOffset) {
+                            rotationOffset =
+                                this._calculateRotationOffset(quaternion);
+                        }
+
+                        quaternion.premultiply(rotationOffset);
 
                         const update = {
                             imuSupported: true,
@@ -463,6 +420,22 @@ export default class ImuPortal extends Vue {
             );
             return false;
         }
+    }
+
+    private _calculateRotationOffset(rotation: Quaternion) {
+        const forward = new Vector3(0, 1, 0).applyQuaternion(rotation);
+        const forwardRotation = new Rotation({
+            direction: new CasualOSVector3(forward.x, forward.y, forward.z),
+            upwards: new CasualOSVector3(0, 0, 1),
+            errorHandling: 'nudge',
+        });
+        const initialRotation = forwardRotation.invert();
+        return new Quaternion(
+            initialRotation.quaternion.x,
+            initialRotation.quaternion.y,
+            initialRotation.quaternion.z,
+            initialRotation.quaternion.w
+        );
     }
 
     private async _updatePortalBot(

@@ -5,36 +5,38 @@ import {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import { ServerError } from './Errors';
+import {
+    NotSupportedError,
+    ServerError,
+    SubscriptionLimitReached,
+} from '@casual-simulation/aux-common/Errors';
 import {
     ADMIN_ROLE_NAME,
-    AssignPolicyPermission,
-    AvailableDataPermissions,
-    AvailableEventPermissions,
-    AvailableFilePermissions,
     AvailablePermissions,
-    AvailablePolicyPermissions,
-    CreateDataPermission,
-    CreateFilePermission,
-    DataPermission,
-    Permission,
-    PolicyDocument,
-    PolicyPermission,
+    ResourceKinds,
+    ActionKinds,
+    PUBLIC_READ_MARKER,
+    SubjectType,
     ACCOUNT_MARKER,
-    AvailableRolePermissions,
-} from './PolicyPermissions';
-import { PublicRecordKeyPolicy } from './RecordsStore';
+    DenialReason,
+    PrivacyFeatures,
+    PermissionOptions,
+} from '@casual-simulation/aux-common';
+import { ListedStudioAssignment, PublicRecordKeyPolicy } from './RecordsStore';
 import {
     AssignedRole,
+    AssignPermissionToSubjectAndMarkerFailure,
     getExpireTime,
-    GetUserPolicyFailure,
+    getPublicMarkersPermission,
+    MarkerPermissionAssignment,
     PolicyStore,
+    ResourcePermissionAssignment,
     RoleAssignment,
-    UpdateUserPolicyFailure,
     UpdateUserRolesFailure,
-    UserPolicyRecord,
 } from './PolicyStore';
-import { intersectionBy, isEqual, sortBy, union } from 'lodash';
+import { sortBy, without } from 'lodash';
+import { getRootMarker, getRootMarkersOrDefault } from './Utils';
+import { normalizeInstId, parseInstId } from './websockets';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -46,26 +48,137 @@ export const MAX_ALLOWED_INSTANCES = 2;
  */
 export const MAX_ALLOWED_MARKERS = 2;
 
-/**
- * A generic not_authorized result.
- */
-export const NOT_AUTHORIZED_RESULT: Omit<AuthorizeDenied, 'reason'> = {
-    allowed: false,
-    errorCode: 'not_authorized',
-    errorMessage: 'You are not authorized to perform this action.',
-};
+const ALLOWED_RECORD_KEY_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
+    ['data', ['read', 'create', 'delete', 'update', 'list']],
+    ['file', ['read', 'create', 'delete']],
+    ['event', ['create', 'count', 'increment', 'update']],
+    [
+        'inst',
+        ['read', 'create', 'delete', 'update', 'updateData', 'sendAction'],
+    ],
+];
+
+const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
+    ['data', ['read', 'create', 'delete', 'update', 'list']],
+    ['file', ['read', 'create', 'delete', 'list']],
+    ['event', ['create', 'count', 'increment', 'list']],
+    [
+        'inst',
+        [
+            'read',
+            'create',
+            'delete',
+            'update',
+            'updateData',
+            'sendAction',
+            'list',
+        ],
+    ],
+];
+
+function constructAllowedResourcesLookup(
+    allowedResources: [ResourceKinds, ActionKinds[]][]
+): Set<string> {
+    const lookup = new Set<string>();
+    for (let [resourceKind, actions] of allowedResources) {
+        for (let action of actions) {
+            lookup.add(`${resourceKind}.${action}`);
+        }
+    }
+    return lookup;
+}
+
+const ALLOWED_RECORD_KEY_RESOURCES_LOOKUP = constructAllowedResourcesLookup(
+    ALLOWED_RECORD_KEY_RESOURCES
+);
+const ALLOWED_STUDIO_MEMBER_RESOURCES_LOOKUP = constructAllowedResourcesLookup(
+    ALLOWED_STUDIO_MEMBER_RESOURCES
+);
 
 /**
- * A not_authorized result that indicates too many instances were used.
+ * Determines if the given resource kind and action are allowed to be accessed by a record key.
+ * @param resourceKind The kind of the resource kind.
+ * @param action The action.
  */
-export const NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT: AuthorizeResult = {
-    allowed: false,
-    errorCode: 'not_authorized',
-    errorMessage: `This action is not authorized because more than ${MAX_ALLOWED_INSTANCES} instances are loaded.`,
-    reason: {
-        type: 'too_many_insts',
-    },
-};
+function isAllowedRecordKeyResource(
+    resourceKind: string,
+    action: string
+): boolean {
+    return ALLOWED_RECORD_KEY_RESOURCES_LOOKUP.has(`${resourceKind}.${action}`);
+}
+
+/**
+ * Determines if the given resource kind and action are allowed to be accessed by a studio member.
+ * @param resourceKind The kind of the resource kind.
+ * @param action The action.
+ */
+function isAllowedStudioMemberResource(
+    resourceKind: string,
+    action: string
+): boolean {
+    return ALLOWED_STUDIO_MEMBER_RESOURCES_LOOKUP.has(
+        `${resourceKind}.${action}`
+    );
+}
+
+/**
+ * Gets the resources that need to be authorized when creating a resource with the given markers.
+ * @param markers The markers that will be placed on the resource.
+ */
+export function getMarkerResourcesForCreation(
+    markers: string[]
+): ResourceInfo[] {
+    // If the resource has the PUBLIC_READ_MARKER, then we only need the "create" permission and not the "assign" permission.
+    return markers
+        .filter((m) => m !== PUBLIC_READ_MARKER)
+        .map(
+            (m) =>
+                ({
+                    resourceKind: 'marker',
+                    resourceId: m,
+                    action: 'assign',
+                    markers: [ACCOUNT_MARKER],
+                } as ResourceInfo)
+        );
+}
+
+/**
+ * Gets the resources that need to be authorized when updating a resource with the given markers.
+ * @param existingMarkers The markers that already exist on the resource.
+ * @param newMarkers The markers that will replace the existing markers. If null, then no markers will be added or removed.
+ */
+export function getMarkerResourcesForUpdate(
+    existingMarkers: string[],
+    newMarkers: string[]
+): ResourceInfo[] {
+    const addedMarkers = newMarkers
+        ? without(newMarkers, ...existingMarkers)
+        : [];
+    const removedMarkers = newMarkers
+        ? without(existingMarkers, ...newMarkers)
+        : [];
+
+    const resources: ResourceInfo[] = [];
+    for (let marker of addedMarkers) {
+        resources.push({
+            resourceKind: 'marker',
+            resourceId: marker,
+            action: 'assign',
+            markers: [ACCOUNT_MARKER],
+        });
+    }
+
+    for (let marker of removedMarkers) {
+        resources.push({
+            resourceKind: 'marker',
+            resourceId: marker,
+            action: 'unassign',
+            markers: [ACCOUNT_MARKER],
+        });
+    }
+
+    return resources;
+}
 
 /**
  * Defines a class that is able to calculate the policies and permissions that are allowed for specific actions.
@@ -91,11 +204,14 @@ export class PolicyController {
      * @returns The authorization context that will be used to evaluate whether the request is authorized.
      */
     async constructAuthorizationContext(
-        request: Omit<AuthorizeRequestBase, 'action'>
+        request: ConstructAuthorizationContextRequest
     ): Promise<ConstructAuthorizationContextResult> {
         let recordKeyResult: ValidatePublicRecordKeyResult | null = null;
         let recordName: string;
+        let recordKeyCreatorId: string;
         let ownerId: string;
+        let studioId: string;
+        let studioMembers: ListedStudioAssignment[] = undefined;
         const recordKeyProvided = isRecordKey(request.recordKeyOrRecordName);
         if (recordKeyProvided) {
             recordKeyResult = await this._records.validatePublicRecordKey(
@@ -104,6 +220,7 @@ export class PolicyController {
             if (recordKeyResult.success === true) {
                 recordName = recordKeyResult.recordName;
                 ownerId = recordKeyResult.ownerId;
+                recordKeyCreatorId = recordKeyResult.keyCreatorId;
             } else {
                 return {
                     success: false,
@@ -113,7 +230,8 @@ export class PolicyController {
             }
         } else {
             const result = await this._records.validateRecordName(
-                request.recordKeyOrRecordName
+                request.recordKeyOrRecordName,
+                request.userId
             );
 
             if (result.success === false) {
@@ -126,6 +244,8 @@ export class PolicyController {
 
             recordName = result.recordName;
             ownerId = result.ownerId;
+            studioId = result.studioId;
+            studioMembers = result.studioMembers;
         }
 
         const subjectPolicy =
@@ -133,12 +253,49 @@ export class PolicyController {
                 ? recordKeyResult.policy
                 : 'subjectfull';
 
+        let recordOwnerPrivacyFeatures: PrivacyFeatures = null;
+        let userPrivacyFeatures: PrivacyFeatures = null;
+        if (ownerId) {
+            recordOwnerPrivacyFeatures =
+                await this._policies.getUserPrivacyFeatures(ownerId);
+        }
+
+        if (!recordOwnerPrivacyFeatures) {
+            recordOwnerPrivacyFeatures = {
+                allowAI: true,
+                allowPublicData: true,
+                allowPublicInsts: true,
+                publishData: true,
+            };
+        }
+
+        if (request.userId) {
+            userPrivacyFeatures = await this._policies.getUserPrivacyFeatures(
+                request.userId
+            );
+        }
+
+        if (!userPrivacyFeatures) {
+            userPrivacyFeatures = {
+                allowAI: true,
+                allowPublicData: true,
+                allowPublicInsts: true,
+                publishData: true,
+            };
+        }
+
         const context: AuthorizationContext = {
             recordName,
             recordKeyResult,
             subjectPolicy,
             recordKeyProvided,
+            recordKeyCreatorId,
             recordOwnerId: ownerId,
+            recordOwnerPrivacyFeatures,
+            recordStudioId: studioId,
+            recordStudioMembers: studioMembers,
+            userId: request.userId,
+            userPrivacyFeatures,
         };
 
         return {
@@ -148,31 +305,55 @@ export class PolicyController {
     }
 
     /**
-     * Attempts to authorize the given request.
-     * Returns a promise that resolves with information about the security properties of the request.
+     * Attempts to authorize the given user and instances for the action and resource(s).
      * @param context The authorization context for the request.
      * @param request The request.
      */
-    async authorizeRequest(
-        request: AuthorizeRequest
-    ): Promise<AuthorizeResult> {
+    async authorizeUserAndInstances(
+        context: AuthorizationContext,
+        request: AuthorizeUserAndInstancesRequest
+    ): Promise<AuthorizeUserAndInstancesResult> {
         try {
-            const context = await this.constructAuthorizationContext(request);
-            if (context.success === false) {
-                return {
-                    allowed: false,
-                    errorCode: context.errorCode,
-                    errorMessage: context.errorMessage,
-                };
+            const authorization = await this.authorizeSubjects(context, {
+                action: request.action,
+                markers: request.markers,
+                resourceKind: request.resourceKind,
+                resourceId: request.resourceId,
+                subjects: [
+                    {
+                        subjectType: 'user',
+                        subjectId: request.userId,
+                    },
+                    ...(request.instances ?? []).map(
+                        (i) =>
+                            ({
+                                subjectType: 'inst',
+                                subjectId: i,
+                            } as AuthorizeSubject)
+                    ),
+                ],
+            });
+
+            if (authorization.success === false) {
+                return authorization;
             }
-            return await this._authorizeRequestUsingContext(
-                context.context,
-                request
+
+            const userResult = authorization.results.find(
+                (r) =>
+                    r.subjectType === 'user' && r.subjectId === request.userId
             );
-        } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+
             return {
-                allowed: false,
+                ...authorization,
+                user: userResult,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing user and instances.',
+                err
+            );
+            return {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
             };
@@ -180,21 +361,1084 @@ export class PolicyController {
     }
 
     /**
-     * Attempts to authorize the given request.
-     * Returns a promise that resolves with information about the security properties of the request.
+     * Attempts to authorize the given user and instances for the given resources.
      * @param context The authorization context for the request.
      * @param request The request.
      */
-    async authorizeRequestUsingContext(
+    async authorizeUserAndInstancesForResources(
         context: AuthorizationContext,
-        request: AuthorizeRequest
-    ): Promise<AuthorizeResult> {
+        request: AuthorizeUserAndInstancesForResources
+    ): Promise<AuthorizeUserAndInstancesForResourcesResult> {
         try {
-            return this._authorizeRequestUsingContext(context, request);
-        } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+            const subjects: AuthorizeSubject[] = [
+                {
+                    subjectType: 'user',
+                    subjectId: request.userId,
+                },
+                ...(request.instances ?? []).map(
+                    (i) =>
+                        ({
+                            subjectType: 'inst',
+                            subjectId: i,
+                        } as AuthorizeSubject)
+                ),
+            ];
+
+            const subjectPermission = new Map<string, AuthorizedSubject>();
+            const results: AuthorizedResource[] = [];
+            const recordName = context.recordName;
+
+            for (let resource of request.resources) {
+                let subjectsToAuthorize: AuthorizeSubject[] = [];
+                let authorizations: AuthorizedSubject[] = [];
+
+                for (let subject of subjects) {
+                    const subjectKey = `${subject.subjectType}.${subject.subjectId}`;
+                    const authorizedSubject = subjectPermission.get(subjectKey);
+
+                    if (authorizedSubject) {
+                        const permission = authorizedSubject.permission;
+                        const isCorrectResourceKind =
+                            permission.resourceKind === null ||
+                            permission.resourceKind === resource.resourceKind;
+                        const isCorrectAction =
+                            permission.action === null ||
+                            permission.action === resource.action;
+                        const isCorrectMarker =
+                            !('marker' in permission) ||
+                            resource.markers.includes(permission.marker);
+                        const isCorrectResource =
+                            !('resourceId' in permission) ||
+                            permission.resourceId === null ||
+                            permission.resourceId === resource.resourceId;
+
+                        if (
+                            isCorrectResourceKind &&
+                            isCorrectAction &&
+                            isCorrectMarker &&
+                            isCorrectResource
+                        ) {
+                            // Record the authorization
+                            authorizations.push(authorizedSubject);
+                        } else {
+                            subjectsToAuthorize.push(subject);
+                        }
+                    } else {
+                        subjectsToAuthorize.push(subject);
+                    }
+                }
+
+                if (subjectsToAuthorize.length > 0) {
+                    const result = await this.authorizeSubjects(context, {
+                        action: resource.action,
+                        markers: resource.markers,
+                        resourceKind: resource.resourceKind,
+                        resourceId: resource.resourceId,
+                        subjects: subjectsToAuthorize,
+                    });
+
+                    if (result.success === false) {
+                        return result;
+                    }
+                    for (let authorization of result.results) {
+                        const subjectKey = `${authorization.subjectType}.${authorization.subjectId}`;
+                        authorizations.push(authorization);
+
+                        const permission = authorization.permission;
+
+                        const existingAuthorization =
+                            subjectPermission.get(subjectKey);
+                        if (!existingAuthorization) {
+                            subjectPermission.set(subjectKey, authorization);
+                        } else {
+                            const existingPermission =
+                                existingAuthorization.permission;
+
+                            const isResourceKindMoreGeneral =
+                                permission.resourceKind === null &&
+                                existingPermission.resourceKind !== null;
+                            const isActionMoreGeneral =
+                                permission.action === null &&
+                                existingPermission.action !== null;
+                            const isMarkerMoreGeneral =
+                                'marker' in permission &&
+                                'marker' in existingPermission &&
+                                permission.marker === null &&
+                                existingPermission.marker !== null;
+                            const isResourceMoreGeneral =
+                                'resourceId' in permission &&
+                                'resourceId' in existingPermission &&
+                                permission.resourceId === null &&
+                                existingPermission.resourceId !== null;
+
+                            if (
+                                isResourceKindMoreGeneral ||
+                                isActionMoreGeneral ||
+                                isMarkerMoreGeneral ||
+                                isResourceMoreGeneral
+                            ) {
+                                subjectPermission.set(
+                                    subjectKey,
+                                    authorization
+                                );
+                            }
+                        }
+                    }
+                }
+
+                if (authorizations.length !== subjects.length) {
+                    console.error(
+                        '[PolicyController] [authorizeUserAndInstancesForResources] The number of authorizations does not match the number of subjects!'
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    };
+                }
+
+                results.push({
+                    success: true,
+                    recordName: recordName,
+                    resourceKind: resource.resourceKind,
+                    resourceId: resource.resourceId,
+                    action: resource.action,
+                    markers: resource.markers,
+                    results: authorizations,
+                    user: authorizations.find(
+                        (r) =>
+                            r.subjectType === 'user' &&
+                            r.subjectId === request.userId
+                    ),
+                });
+            }
+
             return {
-                allowed: false,
+                success: true,
+                recordName: recordName,
+                results,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing user and instances for resources.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given subjects for the action and resource(s).
+     * @param context The authorization context for the request.
+     * @param request The request.
+     */
+    async authorizeSubjects(
+        context: AuthorizationContext,
+        request: AuthorizeSubjectsRequest
+    ): Promise<AuthorizeSubjectsResult> {
+        try {
+            if (request.subjects.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide at least one subject to authorize.',
+                };
+            }
+
+            const results: AuthorizedSubject[] = [];
+            for (let subject of request.subjects) {
+                const subjectResult = await this.authorizeSubjectUsingContext(
+                    context,
+                    {
+                        ...subject,
+                        action: request.action,
+                        resourceKind: request.resourceKind,
+                        resourceId: request.resourceId,
+                        markers: request.markers,
+                    }
+                );
+
+                if (subjectResult.success === false) {
+                    return subjectResult;
+                }
+
+                results.push({
+                    ...subjectResult,
+                    subjectType: subject.subjectType,
+                    subjectId: subject.subjectId,
+                });
+            }
+
+            return {
+                success: true,
+                recordName: context.recordName,
+                results: results,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing subjects.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given subject for the action and resource(s).
+     * Returns a promise that resolves with information about the security properties of the request.
+     * @param context The context for the request.
+     * @param request The request to authorize.
+     */
+    async authorizeSubject(
+        context: ConstructAuthorizationContextResult,
+        request: AuthorizeSubjectRequest
+    ): Promise<AuthorizeSubjectResult> {
+        try {
+            if (context.success === false) {
+                return context;
+            }
+
+            return await this.authorizeSubjectUsingContext(
+                context.context,
+                request
+            );
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing a subject.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to authorize the given subject for the action and resource(s).
+     * Returns a promise that resolves with information about the security properties of the request.
+     * @param context The context for the request.
+     * @param request The request to authorize.
+     */
+    async authorizeSubjectUsingContext(
+        context: AuthorizationContext,
+        request: AuthorizeSubjectRequest
+    ): Promise<AuthorizeSubjectResult> {
+        const result = await this._authorizeSubjectUsingContext(
+            context,
+            request
+        );
+
+        if (result.success) {
+            console.log(
+                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, ${request.subjectType}: ${request.subjectId}, userId: ${context.userId}] Request authorized.`
+            );
+        } else {
+            console.log(
+                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, ${request.subjectType}: ${request.subjectId}, userId: ${context.userId}] Request denied:`,
+                result
+            );
+        }
+
+        return result;
+    }
+
+    /**
+     * Attempts to authorize the given subject for the action and resource(s).
+     * Returns a promise that resolves with information about the security properties of the request.
+     * @param context The context for the request.
+     * @param request The request to authorize.
+     */
+    private async _authorizeSubjectUsingContext(
+        context: AuthorizationContext,
+        request: AuthorizeSubjectRequest
+    ): Promise<AuthorizeSubjectResult> {
+        try {
+            const markers = getRootMarkersOrDefault(request.markers);
+            if (request.action === 'list' && markers.length > 1) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `The "${request.action}" action cannot be used with multiple markers.`,
+                    reason: {
+                        type: 'too_many_markers',
+                    },
+                };
+            }
+
+            if (!context.userPrivacyFeatures.publishData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'disabled_privacy_feature',
+                        recordName: context.recordName,
+                        subjectType: 'user',
+                        subjectId: context.userId,
+                        resourceKind: request.resourceKind,
+                        action: request.action,
+                        resourceId: request.resourceId,
+                        privacyFeature: 'publishData',
+                    },
+                };
+            }
+
+            const recordName = context.recordName;
+            const subjectType = request.subjectType;
+            let subjectId = request.subjectId;
+
+            if (subjectType === 'inst') {
+                subjectId = normalizeInstId(subjectId);
+            }
+
+            const publicPermission = getPublicMarkersPermission(
+                markers,
+                request.resourceKind,
+                request.action
+            );
+
+            if (
+                context.recordOwnerId &&
+                context.userId !== context.recordOwnerId
+            ) {
+                if (!context.recordOwnerPrivacyFeatures.allowPublicData) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: context.recordName,
+                            subjectType: 'user',
+                            subjectId: context.userId,
+                            resourceKind: request.resourceKind,
+                            action: request.action,
+                            resourceId: request.resourceId,
+                            privacyFeature: 'allowPublicData',
+                        },
+                    };
+                }
+
+                if (
+                    request.resourceKind === 'inst' &&
+                    (!context.recordOwnerPrivacyFeatures.allowPublicInsts ||
+                        !context.userPrivacyFeatures.allowPublicInsts)
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: context.recordName,
+                            subjectType: 'user',
+                            subjectId: context.userId,
+                            resourceKind: request.resourceKind,
+                            action: request.action,
+                            resourceId: request.resourceId,
+                            privacyFeature: 'allowPublicInsts',
+                        },
+                    };
+                }
+            }
+
+            if (publicPermission) {
+                if (!context.userPrivacyFeatures.allowPublicData) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'disabled_privacy_feature',
+                            recordName: context.recordName,
+                            subjectType: 'user',
+                            subjectId: context.userId,
+                            resourceKind: request.resourceKind,
+                            action: request.action,
+                            resourceId: request.resourceId,
+                            privacyFeature: 'allowPublicData',
+                        },
+                    };
+                }
+
+                return {
+                    success: true,
+                    recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+                        subjectType: subjectType,
+                        subjectId: subjectId,
+                        resourceKind: publicPermission.resourceKind,
+                        action: publicPermission.action,
+                        marker: publicPermission.marker,
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation:
+                        publicPermission.marker === PUBLIC_READ_MARKER
+                            ? 'Resource has the publicRead marker.'
+                            : 'Resource has the publicWrite marker.',
+                };
+            }
+
+            if (subjectType === 'role' && subjectId === ADMIN_ROLE_NAME) {
+                return {
+                    success: true,
+                    recordName: recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+
+                        // Record owners are treated as if they are admins in the record
+                        subjectType: 'role',
+                        subjectId: ADMIN_ROLE_NAME,
+
+                        // Admins get all access to all resources in a record
+                        resourceKind: null,
+                        action: null,
+
+                        marker: markers[0],
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation: `Role is "${ADMIN_ROLE_NAME}".`,
+                };
+            }
+
+            if (
+                context.recordKeyProvided &&
+                context.recordKeyResult &&
+                context.recordKeyResult.success &&
+                isAllowedRecordKeyResource(request.resourceKind, request.action)
+            ) {
+                if (
+                    context.subjectPolicy === 'subjectfull' &&
+                    subjectType === 'user' &&
+                    !subjectId
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'You must be logged in in order to use this record key.',
+                    };
+                }
+
+                return {
+                    success: true,
+                    recordName: context.recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+
+                        // Record owners are treated as if they are admins in the record
+                        subjectType: 'role',
+                        subjectId: ADMIN_ROLE_NAME,
+
+                        // Admins get all access to all resources in a record
+                        resourceKind: request.resourceKind,
+                        action: request.action,
+
+                        marker: markers[0],
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation: 'A recordKey was used.',
+                };
+            }
+
+            if (subjectType === 'user' && subjectId) {
+                if (subjectId === context.recordOwnerId) {
+                    return {
+                        success: true,
+                        recordName: recordName,
+                        permission: {
+                            id: null,
+                            recordName: recordName,
+                            userId: null,
+
+                            // Record owners are treated as if they are admins in the record
+                            subjectType: 'role',
+                            subjectId: ADMIN_ROLE_NAME,
+
+                            // Admins get all access to all resources in a record
+                            resourceKind: null,
+                            action: null,
+
+                            marker: markers[0],
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        explanation: 'User is the owner of the record.',
+                    };
+                } else if (context.recordStudioMembers) {
+                    const member = context.recordStudioMembers.find(
+                        (m) => m.userId === subjectId
+                    );
+
+                    if (member) {
+                        if (member.role === 'admin') {
+                            return {
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
+                                    userId: null,
+
+                                    // Admins in a studio are treated as if they are admins in the record.
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+
+                                    // Admins get all access to all resources in a record
+                                    resourceKind: null,
+                                    action: null,
+
+                                    marker: markers[0],
+                                    options: {},
+
+                                    // No expiration
+                                    expireTimeMs: null,
+                                },
+                                explanation:
+                                    "User is an admin in the record's studio.",
+                            };
+                        } else if (
+                            member.role === 'member' &&
+                            isAllowedStudioMemberResource(
+                                request.resourceKind,
+                                request.action
+                            )
+                        ) {
+                            return {
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
+
+                                    // Members in a studio are treated as if they are granted direct access to most resources
+                                    // in the record.
+                                    userId: subjectId,
+                                    subjectType: 'user',
+                                    subjectId: subjectId,
+
+                                    // Not all actions or resources are granted though
+                                    resourceKind: request.resourceKind,
+                                    action: request.action,
+
+                                    marker: markers[0],
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation:
+                                    "User is a member in the record's studio.",
+                            };
+                        }
+                    }
+                }
+            } else if (subjectType === 'inst' && subjectId) {
+                const instId = parseInstId(subjectId);
+                if (!instId) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'Invalid inst ID. It must contain a forward slash',
+                    };
+                }
+
+                if (instId.recordName) {
+                    if (instId.recordName === recordName) {
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: subjectId,
+
+                                // resourceKind and action are specified
+                                // because insts don't necessarily have all permissions in the record
+                                resourceKind: request.resourceKind,
+                                action: request.action,
+
+                                marker: markers[0],
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record.`,
+                        };
+                    }
+
+                    const instRecord = await this._records.validateRecordName(
+                        instId.recordName,
+                        context.userId
+                    );
+
+                    if (instRecord.success === false) {
+                        return instRecord;
+                    } else if (
+                        instRecord.ownerId &&
+                        instRecord.ownerId === context.recordOwnerId
+                    ) {
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: subjectId,
+
+                                // resourceKind and action are specified
+                                // because insts don't necessarily have all permissions in the record
+                                resourceKind: request.resourceKind,
+                                action: request.action,
+
+                                marker: markers[0],
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record's (${recordName}) owner (${context.recordOwnerId}).`,
+                        };
+                    } else if (
+                        instRecord.studioId &&
+                        instRecord.studioId === context.recordStudioId
+                    ) {
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+
+                                userId: null,
+                                subjectType: 'inst',
+                                subjectId: subjectId,
+
+                                // resourceKind and action are specified
+                                // because insts don't necessarily have all permissions in the record
+                                resourceKind: request.resourceKind,
+                                action: request.action,
+
+                                marker: markers[0],
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: `Inst is owned by the record's (${recordName}) studio (${context.recordStudioId}).`,
+                        };
+                    }
+                }
+            }
+
+            if (subjectId) {
+                if (subjectType === 'inst' || subjectType === 'user') {
+                    // check for admin role
+                    const roles =
+                        subjectType === 'user'
+                            ? await this._policies.listRolesForUser(
+                                  recordName,
+                                  subjectId
+                              )
+                            : await this._policies.listRolesForInst(
+                                  recordName,
+                                  subjectId
+                              );
+
+                    const role = roles.find((r) => r.role === ADMIN_ROLE_NAME);
+                    if (role) {
+                        const kindString =
+                            subjectType === 'user' ? 'User' : 'Inst';
+                        return {
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName: recordName,
+                                userId: null,
+
+                                // Admins in a studio are treated as if they are admins in the record.
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // Admins get all access to all resources in a record
+                                resourceKind: null,
+                                action: null,
+
+                                marker: markers[0],
+                                options: {},
+
+                                // No expiration
+                                expireTimeMs: role.expireTimeMs,
+                            },
+                            explanation: `${kindString} is assigned the "${ADMIN_ROLE_NAME}" role.`,
+                        };
+                    }
+                }
+
+                let permission:
+                    | ResourcePermissionAssignment
+                    | MarkerPermissionAssignment = null;
+                if (request.resourceId) {
+                    const result =
+                        await this._policies.getPermissionForSubjectAndResource(
+                            subjectType,
+                            subjectId,
+                            recordName,
+                            request.resourceKind,
+                            request.resourceId,
+                            request.action,
+                            Date.now()
+                        );
+
+                    if (result.success === false) {
+                        return result;
+                    }
+
+                    permission = result.permissionAssignment;
+                }
+
+                if (!permission) {
+                    const result =
+                        await this._policies.getPermissionForSubjectAndMarkers(
+                            subjectType,
+                            subjectId,
+                            recordName,
+                            request.resourceKind,
+                            markers,
+                            request.action,
+                            Date.now()
+                        );
+
+                    if (result.success === false) {
+                        return result;
+                    }
+
+                    permission = result.permissionAssignment;
+                }
+
+                if (permission) {
+                    return {
+                        success: true,
+                        recordName,
+                        permission: permission,
+                        explanation: explainationForPermissionAssignment(
+                            subjectType,
+                            permission
+                        ),
+                    };
+                }
+            }
+
+            if (
+                !subjectId &&
+                (!context.recordKeyProvided ||
+                    !isAllowedRecordKeyResource(
+                        request.resourceKind,
+                        request.action
+                    ))
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            return {
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    subjectType: subjectType,
+                    subjectId: subjectId,
+                    resourceKind: request.resourceKind,
+                    resourceId: request.resourceId,
+                    action: request.action,
+                },
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while authorizing a subject.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of permissions in the given record.
+     * @param recordKeyOrRecordName The name of the record.
+     * @param userId The ID of the currently logged in user.
+     * @param instances The instances that are loaded.
+     */
+    async listPermissions(
+        recordKeyOrRecordName: string,
+        userId: string,
+        instances?: string[] | null
+    ): Promise<ListPermissionsResult> {
+        try {
+            const context = await this.constructAuthorizationContext({
+                recordKeyOrRecordName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    userId,
+                    instances,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const recordName = context.context.recordName;
+
+            const result = await this._policies.listPermissionsInRecord(
+                recordName
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            return {
+                success: true,
+                recordName,
+                resourcePermissions: result.resourceAssignments.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            resourceId: r.resourceId,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedResourcePermission)
+                ),
+                markerPermissions: result.markerAssignments.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            marker: r.marker,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedMarkerPermission)
+                ),
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while listing permissions.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of permissions that have been assigned to the given marker.
+     * @param recordKeyOrRecordName The name of the record.
+     * @param marker The marker that the permissions should be listed for.
+     * @param userId The ID of the currently logged in user.
+     * @param instances The instances that are loaded.
+     */
+    async listPermissionsForMarker(
+        recordKeyOrRecordName: string,
+        marker: string,
+        userId: string,
+        instances?: string[] | null
+    ): Promise<ListPermissionsForMarkerResult> {
+        try {
+            marker = getRootMarker(marker);
+
+            const context = await this.constructAuthorizationContext({
+                recordKeyOrRecordName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    userId,
+                    instances,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const recordName = context.context.recordName;
+
+            const result = await this._policies.listPermissionsForMarker(
+                recordName,
+                marker
+            );
+            return {
+                success: true,
+                recordName,
+                markerPermissions: result.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            marker: r.marker,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedMarkerPermission)
+                ),
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while listing permissions for marker.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of permissions that have been assigned to the given marker.
+     * @param recordKeyOrRecordName The name of the record.
+     * @param resourceKind The kind of the resource.
+     * @param resourceId The ID of the resource.
+     * @param userId The ID of the currently logged in user.
+     * @param instances The instances that are loaded.
+     */
+    async listPermissionsForResource(
+        recordKeyOrRecordName: string,
+        resourceKind: ResourceKinds,
+        resourceId: string,
+        userId: string,
+        instances?: string[] | null
+    ): Promise<ListPermissionsForResourceResult> {
+        try {
+            const context = await this.constructAuthorizationContext({
+                recordKeyOrRecordName,
+                userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    userId,
+                    instances,
+                    resourceKind: 'marker',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const recordName = context.context.recordName;
+
+            const result = await this._policies.listPermissionsForResource(
+                recordName,
+                resourceKind,
+                resourceId
+            );
+
+            return {
+                success: true,
+                recordName,
+                resourcePermissions: result.map(
+                    (r) =>
+                        ({
+                            id: r.id,
+                            recordName: r.recordName,
+                            subjectType: r.subjectType,
+                            subjectId: r.subjectId,
+                            resourceKind: r.resourceKind,
+                            action: r.action,
+                            resourceId: r.resourceId,
+                            options: r.options,
+                            expireTimeMs: r.expireTimeMs,
+                        } as ListedResourcePermission)
+                ),
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while listing permissions for resource.',
+                err
+            );
+            return {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
             };
@@ -207,7 +1451,7 @@ export class PolicyController {
      */
     async grantMarkerPermission(
         request: GrantMarkerPermissionRequest
-    ): Promise<GrantMarkerPermissionResponse> {
+    ): Promise<GrantMarkerPermissionResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName: request.recordKeyOrRecordName,
@@ -224,82 +1468,68 @@ export class PolicyController {
                 };
             }
 
-            const authorization = await this.authorizeRequestUsingContext(
+            const marker = getRootMarker(request.marker);
+
+            const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'policy.grantPermission',
-                    ...baseRequest,
-                    policy: request.marker,
+                    action: 'grantPermission',
+                    resourceKind: 'marker',
+                    resourceId: marker,
+                    markers: [ACCOUNT_MARKER],
+                    userId: request.userId,
                     instances: request.instances,
                 }
             );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
 
-            const policyResult = await this._policies.getUserPolicy(
-                context.context.recordName,
-                request.marker
+            const recordName = context.context.recordName;
+
+            const assignmentResult =
+                await this._policies.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    request.permission.subjectType,
+                    request.permission.subjectId,
+                    request.permission.resourceKind,
+                    marker,
+                    request.permission.action,
+                    request.permission.options,
+                    request.permission.expireTimeMs
+                );
+
+            if (assignmentResult.success === false) {
+                return assignmentResult;
+            }
+
+            console.log(
+                `[PolicyController] [grantMarkerPermission] [userId: ${
+                    request.userId
+                }, recordName: ${recordName}, subjectType: ${
+                    request.permission.subjectType
+                }, subjectId: ${
+                    request.permission.subjectId
+                }, marker: ${marker}, resourceKind: ${
+                    request.permission.resourceKind ?? '(null)'
+                }, action: ${
+                    request.permission.action ?? '(null)'
+                }, expireTimeMs: ${
+                    request.permission.expireTimeMs ?? '(null)'
+                }, permissionId: ${
+                    assignmentResult.permissionAssignment.id
+                }] Granted marker permission.`
             );
-
-            if (
-                policyResult.success === false &&
-                policyResult.errorCode !== 'policy_not_found'
-            ) {
-                console.log(
-                    `[PolicyController] Failure while retrieving policy for ${context.context.recordName} and ${request.marker}.`,
-                    policyResult
-                );
-                return {
-                    success: false,
-                    errorCode: policyResult.errorCode,
-                    errorMessage: policyResult.errorMessage,
-                };
-            }
-
-            const policy: UserPolicyRecord = policyResult.success
-                ? policyResult
-                : {
-                      document: {
-                          permissions: [],
-                      },
-                      markers: [ACCOUNT_MARKER],
-                  };
-
-            const alreadyExists = policy.document.permissions.some((p) =>
-                isEqual(p, request.permission)
-            );
-
-            if (!alreadyExists) {
-                console.log(
-                    `[PolicyController] Adding permission to policy for ${context.context.recordName} and ${request.marker}.`,
-                    request.permission
-                );
-                policy.document.permissions.push(request.permission);
-                const updateResult = await this._policies.updateUserPolicy(
-                    context.context.recordName,
-                    request.marker,
-                    {
-                        document: policy.document,
-                        markers: policy.markers,
-                    }
-                );
-
-                if (updateResult.success === false) {
-                    console.log(
-                        `[PolicyController] Policy update failed:`,
-                        updateResult
-                    );
-                    return updateResult;
-                }
-            }
 
             return {
                 success: true,
             };
         } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+            console.error(
+                '[PolicyController] A server error occurred while granting a marker permission.',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -316,6 +1546,87 @@ export class PolicyController {
         request: RevokeMarkerPermissionRequest
     ): Promise<RevokeMarkerPermissionResult> {
         try {
+            const permission =
+                await this._policies.getMarkerPermissionAssignmentById(
+                    request.permissionId
+                );
+
+            if (!permission) {
+                return {
+                    success: false,
+                    errorCode: 'permission_not_found',
+                    errorMessage: 'The permission was not found.',
+                };
+            }
+
+            const baseRequest = {
+                recordKeyOrRecordName: permission.recordName,
+                userId: request.userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    action: 'revokePermission',
+                    resourceKind: 'marker',
+                    resourceId: permission.marker,
+                    markers: [ACCOUNT_MARKER],
+                    userId: request.userId,
+                    instances: request.instances,
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const deleteResult =
+                await this._policies.deleteMarkerPermissionAssignmentById(
+                    permission.id
+                );
+
+            if (!deleteResult.success) {
+                return deleteResult;
+            }
+
+            console.log(
+                `[PolicyController] [revokeMarkerPermission] [userId: ${request.userId}, permissionId: ${request.permissionId}] Revoked marker permission.`
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[PolicyController] A server error occurred while revoking a marker permission.',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to grant a permission to a resource.
+     * @param request The request.
+     */
+    async grantResourcePermission(
+        request: GrantResourcePermissionRequest
+    ): Promise<GrantResourcePermissionResult> {
+        try {
             const baseRequest = {
                 recordKeyOrRecordName: request.recordKeyOrRecordName,
                 userId: request.userId,
@@ -331,82 +1642,86 @@ export class PolicyController {
                 };
             }
 
-            const authorization = await this.authorizeRequestUsingContext(
+            if (!request.permission.resourceId) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide a resourceId for the permission.',
+                };
+            } else if (!request.permission.resourceKind) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide a resourceKind for the permission.',
+                };
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'policy.revokePermission',
-                    ...baseRequest,
-                    policy: request.marker,
+                    action: 'grantPermission',
+
+                    // Resource permissions require access to the "account" marker
+                    // because there is currently no other marker that would make sense
+                    // for per-resource permissions.
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    markers: [ACCOUNT_MARKER],
+                    userId: request.userId,
                     instances: request.instances,
                 }
             );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
 
-            const policyResult = await this._policies.getUserPolicy(
-                context.context.recordName,
-                request.marker
+            const recordName = context.context.recordName;
+
+            const assignmentResult =
+                await this._policies.assignPermissionToSubjectAndResource(
+                    recordName,
+                    request.permission.subjectType,
+                    request.permission.subjectId,
+                    request.permission.resourceKind,
+                    request.permission.resourceId,
+                    request.permission.action,
+                    request.permission.options,
+                    request.permission.expireTimeMs
+                );
+
+            if (assignmentResult.success === false) {
+                return assignmentResult;
+            }
+
+            console.log(
+                `[PolicyController] [grantResourcePermission] [userId: ${
+                    request.userId
+                }, recordName: ${recordName}, subjectType: ${
+                    request.permission.subjectType
+                }, subjectId: ${request.permission.subjectId}, resourceKind: ${
+                    request.permission.resourceKind ?? '(null)'
+                }, resourceId: ${
+                    request.permission.resourceId ?? '(null)'
+                }, action: ${
+                    request.permission.action ?? '(null)'
+                }, expireTimeMs: ${
+                    request.permission.expireTimeMs ?? '(null)'
+                }, permissionId: ${
+                    assignmentResult.permissionAssignment.id
+                }] Granted permission for resource.`
             );
-
-            if (policyResult.success === false) {
-                if (policyResult.errorCode === 'policy_not_found') {
-                    return {
-                        success: true,
-                    };
-                }
-                console.log(
-                    `[PolicyController] Failure while retrieving policy for ${context.context.recordName} and ${request.marker}.`,
-                    policyResult
-                );
-                return {
-                    success: false,
-                    errorCode: policyResult.errorCode,
-                    errorMessage: policyResult.errorMessage,
-                };
-            }
-
-            const policy: UserPolicyRecord = policyResult;
-
-            let hasUpdate = false;
-            for (let i = 0; i < policy.document.permissions.length; i++) {
-                const p = policy.document.permissions[i];
-                if (isEqual(p, request.permission)) {
-                    hasUpdate = true;
-                    policy.document.permissions.splice(i, 1);
-                    i--;
-                }
-            }
-
-            if (hasUpdate) {
-                console.log(
-                    `[PolicyController] Removing permission from policy for ${context.context.recordName} and ${request.marker}.`,
-                    request.permission
-                );
-                const updateResult = await this._policies.updateUserPolicy(
-                    context.context.recordName,
-                    request.marker,
-                    {
-                        document: policy.document,
-                        markers: policy.markers,
-                    }
-                );
-
-                if (updateResult.success === false) {
-                    console.log(
-                        `[PolicyController] Policy update failed:`,
-                        updateResult
-                    );
-                    return updateResult;
-                }
-            }
 
             return {
                 success: true,
             };
         } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+            console.error(
+                '[PolicyController] A server error occurred while granting a resource permission.',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -416,22 +1731,29 @@ export class PolicyController {
     }
 
     /**
-     * Attempts to read the policy for a marker.
-     * @param recordKeyOrRecordName The record key or record name.
-     * @param userId The ID of the user that is currently logged in.
-     * @param marker The marker.
-     * @param instances The instances that the request is being made from.
+     * Attempts to revoke a permission from a resource.
+     * @param request The request for the operation.
      */
-    async readUserPolicy(
-        recordKeyOrRecordName: string,
-        userId: string,
-        marker: string,
-        instances?: string[] | null
-    ): Promise<ReadUserPolicyResult> {
+    async revokeResourcePermission(
+        request: RevokeResourcePermissionRequest
+    ): Promise<RevokeResourcePermissionResult> {
         try {
+            const permission =
+                await this._policies.getResourcePermissionAssignmentById(
+                    request.permissionId
+                );
+
+            if (!permission) {
+                return {
+                    success: false,
+                    errorCode: 'permission_not_found',
+                    errorMessage: 'The permission was not found.',
+                };
+            }
+
             const baseRequest = {
-                recordKeyOrRecordName: recordKeyOrRecordName,
-                userId: userId,
+                recordKeyOrRecordName: permission.recordName,
+                userId: request.userId,
             };
             const context = await this.constructAuthorizationContext(
                 baseRequest
@@ -444,38 +1766,43 @@ export class PolicyController {
                 };
             }
 
-            // Fetch the policy before authorizing because we will need to know which
-            // markers are applied to the policy
-            const result = await this._policies.getUserPolicy(
-                context.context.recordName,
-                marker
-            );
-
-            if (result.success === false) {
-                return result;
-            }
-
-            const authorization = await this.authorizeRequestUsingContext(
+            const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'policy.read',
-                    ...baseRequest,
-                    policy: marker,
-                    instances,
+                    action: 'revokePermission',
+                    resourceKind: 'marker',
+                    resourceId: ACCOUNT_MARKER,
+                    markers: [ACCOUNT_MARKER],
+                    userId: request.userId,
+                    instances: request.instances,
                 }
             );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
+
+            const deleteResult =
+                await this._policies.deleteResourcePermissionAssignmentById(
+                    permission.id
+                );
+
+            if (!deleteResult.success) {
+                return deleteResult;
+            }
+
+            console.log(
+                `[PolicyController] [revokeResourcePermission] [userId: ${request.userId}, permissionId: ${request.permissionId}] Revoked resource permission.`
+            );
 
             return {
                 success: true,
-                document: result.document,
-                markers: result.markers,
             };
         } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+            console.error(
+                '[PolicyController] A server error occurred while revoking a resource permission.',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -485,58 +1812,28 @@ export class PolicyController {
     }
 
     /**
-     * Attempts to list the policies for a record.
-     * @param recordKeyOrRecordName The record key or the name of the record.
-     * @param userId The ID of the user that is currently logged in.
-     * @param startingMarker The marker that policies should be returned after.
-     * @param instances The instances that the request is being made from.
+     * Attempts to revoke the permission with the given ID.
+     * @param request The request for the operation.
      */
-    async listUserPolicies(
-        recordKeyOrRecordName: string,
-        userId: string,
-        startingMarker: string | null,
-        instances?: string[]
-    ): Promise<ListUserPoliciesResult> {
+    async revokePermission(
+        request: RevokePermissionRequest
+    ): Promise<RevokePermissionResult> {
         try {
-            const baseRequest = {
-                recordKeyOrRecordName: recordKeyOrRecordName,
-                userId: userId,
-            };
-            const context = await this.constructAuthorizationContext(
-                baseRequest
-            );
-            if (context.success === false) {
-                return {
-                    success: false,
-                    errorCode: context.errorCode,
-                    errorMessage: context.errorMessage,
-                };
+            const markerResult = await this.revokeMarkerPermission(request);
+
+            if (
+                markerResult.success === false &&
+                markerResult.errorCode === 'permission_not_found'
+            ) {
+                return await this.revokeResourcePermission(request);
             }
 
-            const authorization = await this.authorizeRequestUsingContext(
-                context.context,
-                {
-                    action: 'policy.list',
-                    ...baseRequest,
-                    instances,
-                }
-            );
-
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
-            }
-
-            const result = await this._policies.listUserPolicies(
-                context.context.recordName,
-                startingMarker
-            );
-
-            return {
-                success: true,
-                policies: result,
-            };
+            return markerResult;
         } catch (err) {
-            console.error('[PolicyController] A server error occurred.', err);
+            console.error(
+                '[PolicyController] A server error occurred while revoking a permission.',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -575,17 +1872,19 @@ export class PolicyController {
             }
 
             if (userId !== subjectId || (!!instances && instances.length > 0)) {
-                const authorization = await this.authorizeRequestUsingContext(
+                const authorization = await this.authorizeUserAndInstances(
                     context.context,
                     {
-                        action: 'role.list',
-                        ...baseRequest,
-                        instances,
+                        resourceKind: 'role',
+                        action: 'list',
+                        markers: [ACCOUNT_MARKER],
+                        userId: userId,
+                        instances: instances,
                     }
                 );
 
-                if (authorization.allowed === false) {
-                    return returnAuthorizationResult(authorization);
+                if (authorization.success === false) {
+                    return authorization;
                 }
             }
 
@@ -637,22 +1936,24 @@ export class PolicyController {
                 };
             }
 
-            const authorization = await this.authorizeRequestUsingContext(
+            const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'role.list',
-                    ...baseRequest,
-                    instances,
+                    resourceKind: 'role',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                    userId: userId,
+                    instances: instances,
                 }
             );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
 
             const result = await this._policies.listRolesForInst(
                 context.context.recordName,
-                subjectId
+                normalizeInstId(subjectId)
             );
 
             return {
@@ -676,7 +1977,7 @@ export class PolicyController {
      * @param role The name of the role whose assigments should be listed.
      * @param instances The instances that the request is being made from.
      */
-    async listRoleAssignments(
+    async listAssignedRoles(
         recordKeyOrRecordName: string,
         userId: string,
         role: string,
@@ -698,17 +1999,19 @@ export class PolicyController {
                 };
             }
 
-            const authorization = await this.authorizeRequestUsingContext(
+            const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'role.list',
-                    ...baseRequest,
-                    instances,
+                    resourceKind: 'role',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                    userId: userId,
+                    instances: instances,
                 }
             );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
 
             const result = await this._policies.listAssignmentsForRole(
@@ -719,6 +2022,77 @@ export class PolicyController {
             return {
                 success: true,
                 assignments: result.assignments,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists the role assignments that have been made in the given record.
+     * @param recordKeyOrRecordName The record key or record name.
+     * @param userId The ID of the user that is currently logged in.
+     * @param startingRole The role that assignments should be returned after.
+     * @param instances The instances that the request is being made from.
+     */
+    async listRoleAssignments(
+        recordKeyOrRecordName: string,
+        userId: string,
+        startingRole: string | null,
+        instances?: string[]
+    ): Promise<ListRoleAssignmentsResult> {
+        try {
+            if (!this._policies.listAssignments) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeUserAndInstances(
+                context.context,
+                {
+                    resourceKind: 'role',
+                    action: 'list',
+                    markers: [ACCOUNT_MARKER],
+                    userId: userId,
+                    instances: instances,
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const result = await this._policies.listAssignments(
+                context.context.recordName,
+                startingRole
+            );
+
+            return {
+                success: true,
+                assignments: result.assignments,
+                totalCount: result.totalCount,
             };
         } catch (err) {
             console.error('[PolicyController] A server error occurred.', err);
@@ -761,53 +2135,33 @@ export class PolicyController {
 
             const recordName = context.context.recordName;
             const targetUserId = request.userId;
-            const targetInstance = request.instance;
+            const targetInstance = normalizeInstId(request.instance);
             const expireTimeMs = getExpireTime(request.expireTimeMs);
-            const authorization = await this.authorizeRequestUsingContext(
+
+            const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'role.grant',
-                    ...baseRequest,
-                    instances,
-                    role: request.role,
-                    targetUserId,
-                    targetInstance,
-                    expireTimeMs,
+                    resourceKind: 'role',
+                    action: 'grant',
+                    resourceId: request.role,
+                    markers: [ACCOUNT_MARKER],
+                    userId: userId,
+                    instances: instances,
                 }
             );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
 
-            const makeNewRoles = (
-                roles: AssignedRole[],
-                role: AssignedRole
-            ) => {
-                // Remove all the same roles that expire before the new one.
-                const filtered = roles.filter(
-                    (r) =>
-                        r.role !== request.role ||
-                        getExpireTime(r.expireTimeMs) <= expireTimeMs
-                );
-                return [...filtered, role];
-            };
-
             if (targetUserId) {
-                const roles = await this._policies.listRolesForUser(
-                    recordName,
-                    targetUserId
-                );
-                const newRoles = makeNewRoles(roles, {
-                    role: request.role,
-                    expireTimeMs,
-                });
-
-                const result = await this._policies.updateUserRoles(
+                const result = await this._policies.assignSubjectRole(
                     recordName,
                     targetUserId,
+                    'user',
                     {
-                        roles: newRoles,
+                        role: request.role,
+                        expireTimeMs,
                     }
                 );
 
@@ -819,19 +2173,13 @@ export class PolicyController {
                     success: true,
                 };
             } else if (targetInstance) {
-                const roles = await this._policies.listRolesForInst(
-                    recordName,
-                    targetInstance
-                );
-                const newRoles = makeNewRoles(roles, {
-                    role: request.role,
-                    expireTimeMs,
-                });
-                const result = await this._policies.updateInstRoles(
+                const result = await this._policies.assignSubjectRole(
                     recordName,
                     targetInstance,
+                    'inst',
                     {
-                        roles: newRoles,
+                        role: request.role,
+                        expireTimeMs,
                     }
                 );
 
@@ -891,35 +2239,29 @@ export class PolicyController {
 
             const recordName = context.context.recordName;
             const targetUserId = request.userId;
-            const targetInstance = request.instance;
-            const authorization = await this.authorizeRequestUsingContext(
+            const targetInstance = normalizeInstId(request.instance);
+            const authorization = await this.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'role.revoke',
-                    ...baseRequest,
-                    instances,
-                    role: request.role,
-                    targetUserId,
-                    targetInstance,
+                    resourceKind: 'role',
+                    action: 'revoke',
+                    resourceId: request.role,
+                    markers: [ACCOUNT_MARKER],
+                    userId: userId,
+                    instances: instances,
                 }
             );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
 
             if (targetUserId) {
-                const roles = await this._policies.listRolesForUser(
-                    recordName,
-                    targetUserId
-                );
-                const newRoles = roles.filter((r) => r.role !== request.role);
-                const result = await this._policies.updateUserRoles(
+                const result = await this._policies.revokeSubjectRole(
                     recordName,
                     targetUserId,
-                    {
-                        roles: newRoles,
-                    }
+                    'user',
+                    request.role
                 );
 
                 if (result.success === false) {
@@ -930,17 +2272,11 @@ export class PolicyController {
                     success: true,
                 };
             } else if (targetInstance) {
-                const roles = await this._policies.listRolesForInst(
-                    recordName,
-                    targetInstance
-                );
-                const newRoles = roles.filter((r) => r.role !== request.role);
-                const result = await this._policies.updateInstRoles(
+                const result = await this._policies.revokeSubjectRole(
                     recordName,
                     targetInstance,
-                    {
-                        roles: newRoles,
-                    }
+                    'inst',
+                    request.role
                 );
 
                 if (result.success === false) {
@@ -966,2936 +2302,6 @@ export class PolicyController {
                 errorMessage: 'A server error occurred.',
             };
         }
-    }
-
-    /**
-     * Attempts to authorize the given request.
-     * Returns a promise that resolves with information about the security properties of the request.
-     * @param context The authorization context for the request.
-     * @param request The request.
-     */
-    private async _authorizeRequestUsingContext(
-        context: AuthorizationContext,
-        request: AuthorizeRequest
-    ): Promise<AuthorizeResult> {
-        if (request.action === 'data.create') {
-            return this._authorizeDataCreateRequest(context, request);
-        } else if (request.action === 'data.read') {
-            return this._authorizeDataReadRequest(context, request);
-        } else if (request.action === 'data.update') {
-            return this._authorizeDataUpdateRequest(context, request);
-        } else if (request.action === 'data.delete') {
-            return this._authorizeDataDeleteRequest(context, request);
-        } else if (request.action === 'data.list') {
-            return this._authorizeDataListRequest(context, request);
-        } else if (request.action === 'file.create') {
-            return this._authorizeFileCreateRequest(context, request);
-        } else if (request.action === 'file.read') {
-            return this._authorizeFileReadRequest(context, request);
-        } else if (request.action === 'file.update') {
-            return this._authorizeFileUpdateRequest(context, request);
-        } else if (request.action === 'file.delete') {
-            return this._authorizeFileDeleteRequest(context, request);
-        } else if (request.action === 'event.count') {
-            return this._authorizeEventCountRequest(context, request);
-        } else if (request.action === 'event.increment') {
-            return this._authorizeEventIncrementRequest(context, request);
-        } else if (request.action === 'event.update') {
-            return this._authorizeEventUpdateRequest(context, request);
-        } else if (request.action === 'policy.grantPermission') {
-            return this._authorizePolicyGrantPermissionRequest(
-                context,
-                request
-            );
-        } else if (request.action === 'policy.revokePermission') {
-            return this._authorizePolicyRevokePermissionRequest(
-                context,
-                request
-            );
-        } else if (request.action === 'policy.read') {
-            return this._authorizePolicyReadRequest(context, request);
-        } else if (request.action === 'policy.list') {
-            return this._authorizePolicyListRequest(context, request);
-        } else if (request.action === 'role.list') {
-            return this._authorizeRoleListRequest(context, request);
-        } else if (request.action === 'role.read') {
-            return this._authorizeRoleReadRequest(context, request);
-        } else if (request.action === 'role.grant') {
-            return this._authorizeRoleGrantRequest(context, request);
-        } else if (request.action === 'role.revoke') {
-            return this._authorizeRoleRevokeRequest(context, request);
-        }
-
-        return {
-            allowed: false,
-            errorCode: 'action_not_supported',
-            errorMessage: 'The given action is not supported.',
-        };
-    }
-
-    private async _authorizeDataCreateRequest(
-        context: AuthorizationContext,
-        request: AuthorizeDataCreateRequest
-    ): Promise<AuthorizeResult> {
-        return this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeCreateData(context, type, id);
-            }
-        );
-    }
-
-    /**
-     * Authorizes the given subject for data.create requests.
-     *
-     * @param context The context for the authorization.
-     * @param subjectType The type of subject that is being authorized.
-     * @param id The ID of the subject.
-     * @returns The authorization that approves the subject for the request. Null if the subject is not authorized.
-     */
-    private async _authorizeCreateData(
-        context: RolesContext<AuthorizeDataCreateRequest>,
-        subjectType: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        const authorizations: MarkerAuthorization[] = [];
-        let role: string | true | null = null;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byData('data.create', context.request.address),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, subjectType, id),
-                              this._bySubjectRole(
-                                  context,
-                                  subjectType,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                return {
-                    success: false,
-                    reason: {
-                        type: 'missing_permission',
-                        kind: subjectType,
-                        id,
-                        marker: marker.marker,
-                        permission: 'data.create',
-                        role,
-                    },
-                };
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            const policyPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byPolicy('policy.assign', marker.marker),
-                    this._some(
-                        this._byEveryoneRole(),
-                        this._byRole(actionPermission.permission.role)
-                    )
-                )
-            );
-
-            if (!policyPermission) {
-                return {
-                    success: false,
-                    reason: {
-                        type: 'missing_permission',
-                        kind: subjectType,
-                        id,
-                        marker: marker.marker,
-                        permission: 'policy.assign',
-                        role,
-                    },
-                };
-            }
-
-            authorizations.push({
-                marker: marker.marker,
-                actions: [
-                    {
-                        action: context.request.action,
-                        grantingPolicy: actionPermission.policy,
-                        grantingPermission: actionPermission.permission,
-                    },
-                    {
-                        action: 'policy.assign',
-                        grantingPolicy: policyPermission.policy,
-                        grantingPermission: policyPermission.permission,
-                    },
-                ],
-            });
-        }
-
-        if (!role) {
-            return {
-                success: false,
-                reason: {
-                    type: 'missing_role',
-                },
-            };
-        }
-
-        return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
-            },
-        };
-    }
-
-    private _authorizeDataReadRequest(
-        context: AuthorizationContext,
-        request: AuthorizeReadDataRequest
-    ): Promise<AuthorizeResult> {
-        return this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeDataRead(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeDataRead(
-        context: RolesContext<AuthorizeReadDataRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byData('data.read', context.request.address),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'data.read',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeDataUpdateRequest(
-        context: AuthorizationContext,
-        request: AuthorizeUpdateDataRequest
-    ): Promise<AuthorizeResult> {
-        if (
-            !willMarkersBeRemaining(
-                request.existingMarkers,
-                request.removedMarkers,
-                request.addedMarkers
-            )
-        ) {
-            return {
-                ...NOT_AUTHORIZED_RESULT,
-                reason: {
-                    type: 'no_markers_remaining',
-                },
-            };
-        }
-
-        return this._authorizeRequest(
-            context,
-            request,
-            union(
-                request.existingMarkers,
-                request.addedMarkers,
-                request.removedMarkers
-            ),
-            (context, type, id) => {
-                return this._authorizeDataUpdate(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeDataUpdate(
-        context: RolesContext<AuthorizeUpdateDataRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let authorizations: MarkerAuthorization[] = [];
-        let role: string | true | null = null;
-
-        // The denial reason for if the user does not have permission from an existing marker.
-        let denialReason: DenialReason;
-        let hasPermissionFromExistingMarker = false;
-
-        for (let marker of context.markers) {
-            const isAddedMarker =
-                context.request.addedMarkers &&
-                context.request.addedMarkers.includes(marker.marker);
-            const isRemovedMarker =
-                context.request.removedMarkers &&
-                context.request.removedMarkers.includes(marker.marker);
-            const isExistingMarker = context.request.existingMarkers.includes(
-                marker.marker
-            );
-
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byData('data.update', context.request.address),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                if (isAddedMarker || isRemovedMarker) {
-                    // Deny because the user needs permission for all new & removed markers.
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'data.update',
-                            role,
-                        },
-                    };
-                } else {
-                    // Record that the user does not have permission from this marker.
-                    // May or may not be used depending on if a different existing marker
-                    // provides permission.
-                    denialReason = {
-                        type: 'missing_permission',
-                        kind: type,
-                        id,
-                        marker: marker.marker,
-                        permission: 'data.update',
-                        role,
-                    };
-                    continue;
-                }
-            }
-
-            if (isExistingMarker) {
-                hasPermissionFromExistingMarker = true;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            const actions: ActionAuthorization[] = [
-                {
-                    action: context.request.action,
-                    grantingPolicy: actionPermission.policy,
-                    grantingPermission: actionPermission.permission,
-                },
-            ];
-
-            if (isAddedMarker) {
-                const policyPermission = await this._findPermissionByFilter(
-                    marker.permissions,
-                    this._every(
-                        this._byPolicy('policy.assign', marker.marker),
-                        this._some(
-                            this._byEveryoneRole(),
-                            this._byRole(actionPermission.permission.role)
-                        )
-                    )
-                );
-
-                if (!policyPermission) {
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'policy.assign',
-                            role,
-                        },
-                    };
-                    continue;
-                }
-
-                actions.push({
-                    action: 'policy.assign',
-                    grantingPolicy: policyPermission.policy,
-                    grantingPermission: policyPermission.permission,
-                });
-            } else if (isRemovedMarker) {
-                const policyPermission = await this._findPermissionByFilter(
-                    marker.permissions,
-                    this._every(
-                        this._byPolicy('policy.unassign', marker.marker),
-                        this._some(
-                            this._byEveryoneRole(),
-                            this._byRole(actionPermission.permission.role)
-                        )
-                    )
-                );
-
-                if (!policyPermission) {
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'policy.unassign',
-                            role,
-                        },
-                    };
-                }
-
-                actions.push({
-                    action: 'policy.unassign',
-                    grantingPolicy: policyPermission.policy,
-                    grantingPermission: policyPermission.permission,
-                });
-            }
-
-            authorizations.push({
-                marker: marker.marker,
-                actions,
-            });
-        }
-
-        // Deny the request if the user does not have permission from at least one existing marker.
-        if (!hasPermissionFromExistingMarker && denialReason) {
-            return {
-                success: false,
-                reason: denialReason,
-            };
-        }
-
-        if (!role) {
-            return {
-                success: false,
-                reason: {
-                    type: 'missing_role',
-                },
-            };
-        }
-
-        return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
-            },
-        };
-    }
-
-    private _authorizeDataDeleteRequest(
-        context: AuthorizationContext,
-        request: AuthorizeDeleteDataRequest
-    ): Promise<AuthorizeResult> {
-        return this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeDataDelete(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeDataDelete(
-        context: RolesContext<AuthorizeDeleteDataRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byData('data.delete', context.request.address),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'data.delete',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeDataListRequest(
-        context: AuthorizationContext,
-        request: AuthorizeListDataRequest
-    ): Promise<AuthorizeResult> {
-        const allMarkers = union(...request.dataItems.map((i) => i.markers));
-        return await this._authorizeRequest(
-            context,
-            request,
-            allMarkers,
-            (context, type, id) => {
-                return this._authorizeDataList(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeDataList(
-        context: RolesContext<AuthorizeListDataRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        const authorizations: MarkerAuthorization[] = [];
-        let role: string | true | null = null;
-
-        const allowedDataItems = (context.allowedDataItems =
-            [] as ListedDataItem[]);
-
-        const markers = new Map<
-            string,
-            {
-                marker: MarkerPermission;
-                authorization: MarkerAuthorization;
-                usedPermissions: Set<any>;
-            }
-        >();
-        for (let marker of context.markers) {
-            const authorization: MarkerAuthorization = {
-                marker: marker.marker,
-                actions: [],
-            };
-            authorizations.push(authorization);
-            markers.set(marker.marker, {
-                marker,
-                authorization: authorization,
-                usedPermissions: new Set(),
-            });
-        }
-
-        for (let item of context.request.dataItems) {
-            let itemPermission: PossiblePermission;
-            for (let m of item.markers) {
-                const a = markers.get(m);
-                if (!a) {
-                    continue;
-                }
-                const { marker, authorization, usedPermissions } = a;
-
-                itemPermission = await this._findPermissionByFilter(
-                    marker.permissions,
-                    this._every(
-                        this._byData('data.list', item.address),
-                        role === null
-                            ? this._some(
-                                  this._byEveryoneRole(),
-                                  this._byAdminRole(context, type, id),
-                                  this._bySubjectRole(
-                                      context,
-                                      type,
-                                      context.recordName,
-                                      id
-                                  )
-                              )
-                            : this._byRole(role)
-                    )
-                );
-
-                if (!itemPermission) {
-                    continue;
-                }
-
-                if (role === null) {
-                    role = itemPermission.permission.role;
-                }
-
-                if (!usedPermissions.has(itemPermission.permission)) {
-                    usedPermissions.add(itemPermission.permission);
-                    authorization.actions.push({
-                        action: context.request.action,
-                        grantingPolicy: itemPermission.policy,
-                        grantingPermission: itemPermission.permission,
-                    });
-                }
-
-                if (itemPermission) {
-                    break;
-                }
-            }
-
-            if (itemPermission) {
-                allowedDataItems.push(item);
-            }
-        }
-
-        if (!role) {
-            role = true;
-        }
-
-        return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
-            },
-        };
-    }
-
-    private async _authorizeFileCreateRequest(
-        context: AuthorizationContext,
-        request: AuthorizeCreateFileRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeFileCreate(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeFileCreate(
-        context: RolesContext<AuthorizeCreateFileRequest>,
-        subjectType: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        const authorizations: MarkerAuthorization[] = [];
-        let role: string | true | null = null;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byFile(
-                        'file.create',
-                        context.request.fileSizeInBytes,
-                        context.request.fileMimeType
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, subjectType, id),
-                              this._bySubjectRole(
-                                  context,
-                                  subjectType,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                return {
-                    success: false,
-                    reason: {
-                        type: 'missing_permission',
-                        kind: subjectType,
-                        id,
-                        marker: marker.marker,
-                        permission: 'file.create',
-                        role,
-                    },
-                };
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            const policyPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byPolicy('policy.assign', marker.marker),
-                    this._some(
-                        this._byEveryoneRole(),
-                        this._byRole(actionPermission.permission.role)
-                    )
-                )
-            );
-
-            if (!policyPermission) {
-                return {
-                    success: false,
-                    reason: {
-                        type: 'missing_permission',
-                        kind: subjectType,
-                        id,
-                        marker: marker.marker,
-                        permission: 'policy.assign',
-                        role,
-                    },
-                };
-            }
-
-            authorizations.push({
-                marker: marker.marker,
-                actions: [
-                    {
-                        action: context.request.action,
-                        grantingPolicy: actionPermission.policy,
-                        grantingPermission: actionPermission.permission,
-                    },
-                    {
-                        action: 'policy.assign',
-                        grantingPolicy: policyPermission.policy,
-                        grantingPermission: policyPermission.permission,
-                    },
-                ],
-            });
-        }
-
-        if (!role) {
-            return {
-                success: false,
-                reason: {
-                    type: 'missing_role',
-                },
-            };
-        }
-
-        return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
-            },
-        };
-    }
-
-    private async _authorizeFileReadRequest(
-        context: AuthorizationContext,
-        request: AuthorizeReadFileRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeFileRead(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeFileRead(
-        context: RolesContext<AuthorizeReadFileRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byFile(
-                        'file.read',
-                        context.request.fileSizeInBytes,
-                        context.request.fileMimeType
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'file.read',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeFileUpdateRequest(
-        context: AuthorizationContext,
-        request: AuthorizeUpdateFileRequest
-    ): Promise<AuthorizeResult> {
-        const allMarkers = union(
-            request.existingMarkers,
-            request.addedMarkers,
-            request.removedMarkers
-        );
-        return await this._authorizeRequest(
-            context,
-            request,
-            allMarkers,
-            (context, type, id) => {
-                return this._authorizeFileUpdate(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeFileUpdate(
-        context: RolesContext<AuthorizeUpdateFileRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        if (
-            (!context.request.addedMarkers ||
-                context.request.addedMarkers.length <= 0) &&
-            (!context.request.removedMarkers ||
-                context.request.removedMarkers.length <= 0)
-        ) {
-            return {
-                success: false,
-                reason: {
-                    type: 'no_markers',
-                },
-            };
-        }
-
-        if (
-            !willMarkersBeRemaining(
-                context.request.existingMarkers,
-                context.request.removedMarkers,
-                context.request.addedMarkers
-            )
-        ) {
-            return {
-                success: false,
-                reason: {
-                    type: 'no_markers_remaining',
-                },
-            };
-        }
-
-        const authorizations: MarkerAuthorization[] = [];
-        let role: string | true | null = null;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byFile(
-                        'file.update',
-                        context.request.fileSizeInBytes,
-                        context.request.fileMimeType
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                return {
-                    success: false,
-                    reason: {
-                        type: 'missing_permission',
-                        kind: type,
-                        id,
-                        marker: marker.marker,
-                        permission: 'file.update',
-                        role,
-                    },
-                };
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            const isAddedMarker =
-                context.request.addedMarkers &&
-                context.request.addedMarkers.includes(marker.marker);
-            const isRemovedMarker =
-                context.request.removedMarkers &&
-                context.request.removedMarkers.includes(marker.marker);
-
-            const actions: ActionAuthorization[] = [
-                {
-                    action: context.request.action,
-                    grantingPolicy: actionPermission.policy,
-                    grantingPermission: actionPermission.permission,
-                },
-            ];
-
-            if (isAddedMarker) {
-                const policyPermission = await this._findPermissionByFilter(
-                    marker.permissions,
-                    this._every(
-                        this._byPolicy('policy.assign', marker.marker),
-                        this._some(
-                            this._byEveryoneRole(),
-                            this._byRole(actionPermission.permission.role)
-                        )
-                    )
-                );
-
-                if (!policyPermission) {
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'policy.assign',
-                            role,
-                        },
-                    };
-                }
-
-                actions.push({
-                    action: 'policy.assign',
-                    grantingPolicy: policyPermission.policy,
-                    grantingPermission: policyPermission.permission,
-                });
-            } else if (isRemovedMarker) {
-                const policyPermission = await this._findPermissionByFilter(
-                    marker.permissions,
-                    this._every(
-                        this._byPolicy('policy.unassign', marker.marker),
-                        this._some(
-                            this._byEveryoneRole(),
-                            this._byRole(actionPermission.permission.role)
-                        )
-                    )
-                );
-
-                if (!policyPermission) {
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'policy.unassign',
-                            role,
-                        },
-                    };
-                }
-
-                actions.push({
-                    action: 'policy.unassign',
-                    grantingPolicy: policyPermission.policy,
-                    grantingPermission: policyPermission.permission,
-                });
-            }
-
-            authorizations.push({
-                marker: marker.marker,
-                actions,
-            });
-        }
-
-        if (!role) {
-            return {
-                success: false,
-                reason: {
-                    type: 'missing_role',
-                },
-            };
-        }
-
-        return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
-            },
-        };
-    }
-
-    private async _authorizeFileDeleteRequest(
-        context: AuthorizationContext,
-        request: AuthorizeDeleteFileRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeFileDelete(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeFileDelete(
-        context: RolesContext<AuthorizeDeleteFileRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byFile(
-                        'file.delete',
-                        context.request.fileSizeInBytes,
-                        context.request.fileMimeType
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'file.delete',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeEventCountRequest(
-        context: AuthorizationContext,
-        request: AuthorizeCountEventRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeEventCount(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeEventCount(
-        context: RolesContext<AuthorizeCountEventRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byEvent('event.count', context.request.eventName),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'event.count',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeEventIncrementRequest(
-        context: AuthorizationContext,
-        request: AuthorizeIncrementEventRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            request.resourceMarkers,
-            (context, type, id) => {
-                return this._authorizeEventIncrement(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeEventIncrement(
-        context: RolesContext<AuthorizeIncrementEventRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byEvent('event.increment', context.request.eventName),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'event.increment',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeEventUpdateRequest(
-        context: AuthorizationContext,
-        request: AuthorizeUpdateEventRequest
-    ): Promise<AuthorizeResult> {
-        if (
-            !willMarkersBeRemaining(
-                request.existingMarkers,
-                request.removedMarkers,
-                request.addedMarkers
-            )
-        ) {
-            return {
-                ...NOT_AUTHORIZED_RESULT,
-                reason: {
-                    type: 'no_markers_remaining',
-                },
-            };
-        }
-
-        return await this._authorizeRequest(
-            context,
-            request,
-            union(
-                request.existingMarkers,
-                request.addedMarkers,
-                request.removedMarkers
-            ),
-            (context, type, id) => {
-                return this._authorizeEventUpdate(context, type, id);
-            }
-        );
-    }
-
-    private async _authorizeEventUpdate(
-        context: RolesContext<AuthorizeUpdateEventRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let authorizations: MarkerAuthorization[] = [];
-        let role: string | true | null = null;
-
-        // The denial reason for if the user does not have permission from an existing marker.
-        let denialReason: DenialReason;
-        let hasPermissionFromExistingMarker = false;
-
-        for (let marker of context.markers) {
-            const isAddedMarker =
-                context.request.addedMarkers &&
-                context.request.addedMarkers.includes(marker.marker);
-            const isRemovedMarker =
-                context.request.removedMarkers &&
-                context.request.removedMarkers.includes(marker.marker);
-            const isExistingMarker = context.request.existingMarkers.includes(
-                marker.marker
-            );
-
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byEvent('event.update', context.request.eventName),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._byAdminRole(context, type, id),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              )
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                if (isAddedMarker || isRemovedMarker) {
-                    // Deny because the user needs permission for all new & removed markers.
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'event.update',
-                            role,
-                        },
-                    };
-                } else {
-                    // Record that the user does not have permission from this marker.
-                    // May or may not be used depending on if a different existing marker
-                    // provides permission.
-                    denialReason = {
-                        type: 'missing_permission',
-                        kind: type,
-                        id,
-                        marker: marker.marker,
-                        permission: 'event.update',
-                        role,
-                    };
-                    continue;
-                }
-            }
-
-            if (isExistingMarker) {
-                hasPermissionFromExistingMarker = true;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            const actions: ActionAuthorization[] = [
-                {
-                    action: context.request.action,
-                    grantingPolicy: actionPermission.policy,
-                    grantingPermission: actionPermission.permission,
-                },
-            ];
-
-            if (isAddedMarker) {
-                const policyPermission = await this._findPermissionByFilter(
-                    marker.permissions,
-                    this._every(
-                        this._byPolicy('policy.assign', marker.marker),
-                        this._some(
-                            this._byEveryoneRole(),
-                            this._byRole(actionPermission.permission.role)
-                        )
-                    )
-                );
-
-                if (!policyPermission) {
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'policy.assign',
-                            role,
-                        },
-                    };
-                    continue;
-                }
-
-                actions.push({
-                    action: 'policy.assign',
-                    grantingPolicy: policyPermission.policy,
-                    grantingPermission: policyPermission.permission,
-                });
-            } else if (isRemovedMarker) {
-                const policyPermission = await this._findPermissionByFilter(
-                    marker.permissions,
-                    this._every(
-                        this._byPolicy('policy.unassign', marker.marker),
-                        this._some(
-                            this._byEveryoneRole(),
-                            this._byRole(actionPermission.permission.role)
-                        )
-                    )
-                );
-
-                if (!policyPermission) {
-                    return {
-                        success: false,
-                        reason: {
-                            type: 'missing_permission',
-                            kind: type,
-                            id,
-                            marker: marker.marker,
-                            permission: 'policy.unassign',
-                            role,
-                        },
-                    };
-                }
-
-                actions.push({
-                    action: 'policy.unassign',
-                    grantingPolicy: policyPermission.policy,
-                    grantingPermission: policyPermission.permission,
-                });
-            }
-
-            authorizations.push({
-                marker: marker.marker,
-                actions,
-            });
-        }
-
-        // Deny the request if the user does not have permission from at least one existing marker.
-        if (!hasPermissionFromExistingMarker && denialReason) {
-            return {
-                success: false,
-                reason: denialReason,
-            };
-        }
-
-        if (!role) {
-            return {
-                success: false,
-                reason: {
-                    type: 'missing_role',
-                },
-            };
-        }
-
-        return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
-            },
-        };
-    }
-
-    private async _authorizePolicyGrantPermissionRequest(
-        context: AuthorizationContext,
-        request: AuthorizeGrantPermissionToPolicyRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizePolicyGrantPermission(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizePolicyGrantPermission(
-        context: RolesContext<AuthorizeGrantPermissionToPolicyRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byPolicy(
-                        'policy.grantPermission',
-                        context.request.policy
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'policy.grantPermission',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizePolicyRevokePermissionRequest(
-        context: AuthorizationContext,
-        request: AuthorizeRevokePermissionToPolicyRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizePolicyRevokePermission(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizePolicyRevokePermission(
-        context: RolesContext<AuthorizeRevokePermissionToPolicyRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byPolicy(
-                        'policy.revokePermission',
-                        context.request.policy
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'policy.revokePermission',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizePolicyReadRequest(
-        context: AuthorizationContext,
-        request: AuthorizeReadPolicyRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizePolicyRead(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizePolicyRead(
-        context: RolesContext<AuthorizeReadPolicyRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byPolicy('policy.read', context.request.policy),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'policy.read',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizePolicyListRequest(
-        context: AuthorizationContext,
-        request: AuthorizeListPoliciesRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizePolicyList(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizePolicyList(
-        context: RolesContext<AuthorizeListPoliciesRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byPolicyList('policy.list'),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'policy.list',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeRoleListRequest(
-        context: AuthorizationContext,
-        request: AuthorizeListRolesRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizeRoleList(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizeRoleList(
-        context: RolesContext<AuthorizeListRolesRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byRoleList('role.list'),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'role.list',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeRoleReadRequest(
-        context: AuthorizationContext,
-        request: AuthorizeReadRoleRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizeRoleRead(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizeRoleRead(
-        context: RolesContext<AuthorizeReadRoleRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byRolePermission('role.read', context.request.role),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'role.read',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeRoleGrantRequest(
-        context: AuthorizationContext,
-        request: AuthorizeGrantRoleRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizeRoleGrant(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizeRoleGrant(
-        context: RolesContext<AuthorizeGrantRoleRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        const durationMs =
-            getExpireTime(context.request.expireTimeMs) - Date.now();
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byRoleGrant(
-                        'role.grant',
-                        context.request.role,
-                        context.request.targetUserId,
-                        context.request.targetInstance,
-                        durationMs
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'role.grant',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    private async _authorizeRoleRevokeRequest(
-        context: AuthorizationContext,
-        request: AuthorizeRevokeRoleRequest
-    ): Promise<AuthorizeResult> {
-        return await this._authorizeRequest(
-            context,
-            request,
-            [ACCOUNT_MARKER],
-            (context, type, id) => {
-                return this._authorizeRoleRevoke(context, type, id);
-            },
-            false
-        );
-    }
-
-    private async _authorizeRoleRevoke(
-        context: RolesContext<AuthorizeRevokeRoleRequest>,
-        type: 'user' | 'inst',
-        id: string
-    ): Promise<GenericResult> {
-        let role: string | true | null = null;
-        let denialReason: DenialReason;
-
-        for (let marker of context.markers) {
-            const actionPermission = await this._findPermissionByFilter(
-                marker.permissions,
-                this._every(
-                    this._byRoleRevoke(
-                        'role.revoke',
-                        context.request.role,
-                        context.request.targetUserId,
-                        context.request.targetInstance
-                    ),
-                    role === null
-                        ? this._some(
-                              this._byEveryoneRole(),
-                              this._bySubjectRole(
-                                  context,
-                                  type,
-                                  context.recordName,
-                                  id
-                              ),
-                              this._byRecordOwner(context, type, id)
-                          )
-                        : this._byRole(role)
-                )
-            );
-
-            if (!actionPermission) {
-                denialReason = {
-                    type: 'missing_permission',
-                    kind: type,
-                    id,
-                    marker: marker.marker,
-                    permission: 'role.revoke',
-                    role,
-                };
-                continue;
-            }
-
-            if (role === null) {
-                role = actionPermission.permission.role;
-            }
-
-            return {
-                success: true,
-                authorization: {
-                    role,
-                    markers: [
-                        {
-                            marker: marker.marker,
-                            actions: [
-                                {
-                                    action: context.request.action,
-                                    grantingPolicy: actionPermission.policy,
-                                    grantingPermission:
-                                        actionPermission.permission,
-                                },
-                            ],
-                        },
-                    ],
-                },
-            };
-        }
-
-        return {
-            success: false,
-            reason: denialReason ?? {
-                type: 'missing_role',
-            },
-        };
-    }
-
-    /**
-     * Attempts to authorize the given request based on common request properties.
-     *
-     * Evaluates the recordKey, userId, and instances with the given resource markers and authorize function.
-     * The given authorize function will be called with the User ID, and each inst and should return the authorization that should be used for each case.
-     * If it returns null, then the request is not authorized and will be rejected as such.
-     *
-     * @param context The context for the request.
-     * @param request The request that should be authorized.
-     * @param resourceMarkers The list of markers that need to be validated.
-     * @param authorize The function that should be used to authorize each subject in the request.
-     * @param skipInstanceChecksWhenValidRecordKeyIsProvided Whether or not to skip instance checks when a valid record key is provided.
-     */
-    private async _authorizeRequest<T extends AuthorizeRequestBase>(
-        context: AuthorizationContext,
-        request: T,
-        resourceMarkers: string[],
-        authorize: (
-            context: RolesContext<T>,
-            type: 'user' | 'inst',
-            id: string
-        ) => Promise<GenericResult>,
-        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean = true
-    ): Promise<AuthorizeResult> {
-        if (
-            request.instances &&
-            request.instances.length > MAX_ALLOWED_INSTANCES
-        ) {
-            console.log(
-                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied because too many instances were provided.`
-            );
-            // More than 2 instances should be auto-denied.
-            // This is a "not_authorized" error instead of an "unacceptable_request" because
-            // we want integrators to understand that this is an authentication issue, and not a configuration issue.
-            // If more than 2 instances are loaded, we always want those passed to the controller, even if having more than 2 fails authentication.
-            return NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT;
-        }
-
-        if (resourceMarkers.length <= 0) {
-            console.log(
-                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied because there are no markers.`
-            );
-            return {
-                ...NOT_AUTHORIZED_RESULT,
-                reason: {
-                    type: 'no_markers',
-                },
-            };
-        }
-
-        const markers = await this._listPermissionsForMarkers(
-            context.recordName,
-            resourceMarkers
-        );
-
-        const rolesContext: RolesContext<T> = {
-            ...context,
-            userRoles: null,
-            instRoles: {},
-            markers,
-            request,
-        };
-
-        const userAuthorization = await authorize(
-            rolesContext,
-            'user',
-            request.userId
-        );
-        if (userAuthorization.success === false) {
-            if (!request.userId && !context.recordKeyProvided) {
-                console.log(
-                    `[PolicyController] [action: ${request.action} recordName: ${context.recordName}] Request denied because the user is not signed in.`
-                );
-                return {
-                    allowed: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
-                };
-            }
-            console.log(
-                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied. Reason:`,
-                userAuthorization.reason
-            );
-            return {
-                ...NOT_AUTHORIZED_RESULT,
-                reason: userAuthorization.reason,
-            };
-        }
-
-        const authorizedInstances = await this._authorizeInstances(
-            request.instances,
-            context.recordKeyResult,
-            async (inst) => {
-                let currentItems: ListedDataItem[] | null =
-                    rolesContext.allowedDataItems?.slice();
-                const result = await authorize(rolesContext, 'inst', inst);
-                if (currentItems) {
-                    rolesContext.allowedDataItems = intersectionBy(
-                        currentItems,
-                        rolesContext.allowedDataItems,
-                        (item) => item.address
-                    );
-                }
-                return result;
-            },
-            skipInstanceChecksWhenValidRecordKeyIsProvided
-        );
-
-        if (!Array.isArray(authorizedInstances)) {
-            console.log(
-                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied. Reason:`,
-                authorizedInstances.reason
-            );
-            return {
-                ...NOT_AUTHORIZED_RESULT,
-                reason: authorizedInstances.reason,
-            };
-        }
-
-        const recordKeyOwnerId = context.recordKeyResult?.success
-            ? context.recordKeyResult.keyCreatorId
-            : null;
-        const authorizerId = recordKeyOwnerId ?? request.userId ?? null;
-
-        console.log(
-            `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request authorized.`
-        );
-
-        return {
-            allowed: true,
-            recordName: context.recordName,
-            recordKeyOwnerId: recordKeyOwnerId,
-            authorizerId: authorizerId,
-            subject: {
-                ...userAuthorization.authorization,
-                userId: request.userId,
-                subjectPolicy: context.subjectPolicy,
-            },
-            instances: authorizedInstances,
-            allowedDataItems: rolesContext.allowedDataItems,
-        };
-    }
-
-    private async _authorizeInstances(
-        instances: string[],
-        recordKeyResult: ValidatePublicRecordKeyResult,
-        authorize: (inst: string) => Promise<GenericResult>,
-        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean
-    ): Promise<InstEnvironmentAuthorization[] | GenericDenied> {
-        const authorizedInstances: InstEnvironmentAuthorization[] = [];
-        if (instances) {
-            for (let inst of instances) {
-                if (
-                    skipInstanceChecksWhenValidRecordKeyIsProvided &&
-                    recordKeyResult?.success
-                ) {
-                    authorizedInstances.push({
-                        authorizationType: 'not_required',
-                        inst,
-                    });
-                    continue;
-                }
-
-                const authorization = await authorize(inst);
-                if (authorization.success === false) {
-                    return authorization;
-                }
-
-                authorizedInstances.push({
-                    inst,
-                    authorizationType: 'allowed',
-                    ...authorization.authorization,
-                });
-            }
-        }
-
-        return authorizedInstances;
-    }
-
-    private async _listPermissionsForMarkers(
-        recordName: string,
-        resourceMarkers: string[]
-    ): Promise<MarkerPermission[]> {
-        const promises = resourceMarkers.map(async (m) => {
-            const policies = await this._policies.listPoliciesForMarker(
-                recordName,
-                m
-            );
-
-            return {
-                marker: m,
-                policies,
-            };
-        });
-
-        const markerPolicies = await Promise.all(promises);
-
-        const markers: MarkerPermission[] = [];
-        for (let { marker, policies } of markerPolicies) {
-            let permissions: PossiblePermission[] = [];
-            for (let policy of policies) {
-                for (let permission of policy.permissions) {
-                    permissions.push({
-                        policy,
-                        permission,
-                    });
-                }
-            }
-            markers.push({
-                marker,
-                permissions,
-            });
-        }
-
-        return markers;
-    }
-
-    private _every<T extends Array<any>>(
-        ...filters: ((...args: T) => Promise<boolean>)[]
-    ): (...args: T) => Promise<boolean> {
-        return async (...args) => {
-            for (let filter of filters) {
-                if (!(await filter(...args))) {
-                    return false;
-                }
-            }
-            return true;
-        };
-    }
-
-    private _some<T extends Array<any>>(
-        ...filters: ((...args: T) => Promise<boolean>)[]
-    ): (...args: T) => Promise<boolean> {
-        return async (...args) => {
-            for (let filter of filters) {
-                if (await filter(...args)) {
-                    return true;
-                }
-            }
-            return false;
-        };
-    }
-
-    private _byType(type: AvailablePermissions['type']) {
-        return async (permission: AvailablePermissions) => {
-            return permission.type === type;
-        };
-    }
-
-    private _byData(type: AvailableDataPermissions['type'], address: string) {
-        return async (permission: AvailablePermissions) => {
-            if (permission.type !== type) {
-                return false;
-            }
-            if (permission.addresses === true) {
-                return true;
-            }
-            if (this._testRegex(permission.addresses, address)) {
-                return true;
-            }
-            return false;
-        };
-    }
-
-    private _byFile(
-        type: AvailableFilePermissions['type'],
-        fileSizeInBytes: number,
-        fileMimeType: string
-    ) {
-        return async (permission: AvailablePermissions) => {
-            if (permission.type !== type) {
-                return false;
-            }
-            if (
-                typeof permission.maxFileSizeInBytes === 'number' &&
-                fileSizeInBytes > permission.maxFileSizeInBytes
-            ) {
-                return false;
-            }
-            if (
-                typeof permission.allowedMimeTypes === 'object' &&
-                Array.isArray(permission.allowedMimeTypes)
-            ) {
-                if (!permission.allowedMimeTypes.includes(fileMimeType)) {
-                    return false;
-                }
-            }
-            return true;
-        };
-    }
-
-    private _byEvent(
-        type: AvailableEventPermissions['type'],
-        eventName: string
-    ) {
-        return async (permission: AvailablePermissions) => {
-            if (permission.type !== type) {
-                return false;
-            }
-            if (permission.events === true) {
-                return true;
-            }
-            if (this._testRegex(permission.events, eventName)) {
-                return true;
-            }
-            return false;
-        };
-    }
-
-    private _byRecordOwner(
-        context: AuthorizationContext,
-        subjectType: 'user' | 'inst',
-        id: string
-    ) {
-        if (subjectType === 'inst') {
-            return async () => false;
-        }
-
-        if (context.recordOwnerId === id) {
-            return async () => true;
-        }
-
-        return async () => false;
-    }
-
-    private _byEveryoneRole(): PermissionFilter {
-        return this._byRole(true);
-    }
-
-    private _byAdminRole(
-        context: AuthorizationContext,
-        subjectType: 'user' | 'inst',
-        id: string
-    ): PermissionFilter {
-        if (!!context.recordKeyResult && context.recordKeyResult.success) {
-            return this._byRole(ADMIN_ROLE_NAME);
-        } else {
-            return this._byRecordOwner(context, subjectType, id);
-        }
-    }
-
-    private _bySubjectRole(
-        context: RolesContext<AuthorizeRequestBase>,
-        subjectType: 'user' | 'inst',
-        recordName: string,
-        id: string
-    ): PermissionFilter {
-        if (!id) {
-            return async () => false;
-        }
-        if (subjectType === 'user') {
-            return this._byUserRole(context, recordName, id);
-        } else {
-            return this._byInstRole(context, recordName, id);
-        }
-    }
-
-    private _byUserRole(
-        context: RolesContext<AuthorizeRequestBase>,
-        recordName: string,
-        userId: string
-    ): PermissionFilter {
-        return async (permission) => {
-            if (!context.userRoles) {
-                const roles = await this._policies.listRolesForUser(
-                    recordName,
-                    userId
-                );
-                context.userRoles = new Set(roles.map((r) => r.role));
-            }
-
-            return (
-                typeof permission.role === 'string' &&
-                context.userRoles.has(permission.role)
-            );
-        };
-    }
-
-    private _byInstRole(
-        context: RolesContext<AuthorizeRequestBase>,
-        recordName: string,
-        inst: string
-    ): PermissionFilter {
-        return async (permission) => {
-            if (!context.instRoles[inst]) {
-                const roles = await this._policies.listRolesForInst(
-                    recordName,
-                    inst
-                );
-                context.instRoles[inst] = new Set(roles.map((r) => r.role));
-            }
-
-            return (
-                typeof permission.role === 'string' &&
-                context.instRoles[inst].has(permission.role)
-            );
-        };
-    }
-
-    private _byRole(role: string | boolean): PermissionFilter {
-        return async (permission) => {
-            if (permission.role === role) {
-                return true;
-            }
-            return false;
-        };
-    }
-
-    private _byPolicy(
-        type: AvailablePolicyPermissions['type'],
-        marker: string
-    ): PermissionFilter {
-        return async (permission) => {
-            if (permission.type !== type) {
-                return false;
-            }
-            if (permission.policies === true) {
-                return true;
-            }
-
-            if (this._testRegex(permission.policies, marker)) {
-                return true;
-            }
-
-            return false;
-        };
-    }
-
-    private _byRolePermission(
-        type: AvailableRolePermissions['type'],
-        marker: string
-    ): PermissionFilter {
-        return async (permission) => {
-            if (permission.type !== type) {
-                return false;
-            }
-            if (permission.roles === true) {
-                return true;
-            }
-
-            if (this._testRegex(permission.roles, marker)) {
-                return true;
-            }
-
-            return false;
-        };
-    }
-
-    private _byRoleGrant(
-        type: 'role.grant',
-        role: string,
-        targetUserId: string,
-        targetInstance: string,
-        durationMs: number
-    ): PermissionFilter {
-        return async (permission) => {
-            if (permission.type !== type) {
-                return false;
-            }
-
-            if (
-                typeof permission.maxDurationMs === 'number' &&
-                durationMs > permission.maxDurationMs
-            ) {
-                return false;
-            }
-
-            if (!!targetUserId && !!targetInstance) {
-                return false;
-            } else if (!!targetUserId) {
-                if (permission.userIds === false) {
-                    return false;
-                }
-
-                if (
-                    typeof permission.userIds === 'object' &&
-                    Array.isArray(permission.userIds)
-                ) {
-                    if (permission.userIds.every((id) => id !== targetUserId)) {
-                        return false;
-                    }
-                }
-            } else if (!!targetInstance) {
-                if (permission.instances === false) {
-                    return false;
-                }
-
-                if (
-                    typeof permission.instances === 'string' &&
-                    !this._testRegex(permission.instances, targetInstance)
-                ) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-
-            if (permission.roles === true) {
-                return true;
-            }
-
-            if (this._testRegex(permission.roles, role)) {
-                return true;
-            }
-
-            return false;
-        };
-    }
-
-    private _byRoleRevoke(
-        type: 'role.revoke',
-        role: string,
-        targetUserId: string,
-        targetInstance: string
-    ): PermissionFilter {
-        return async (permission) => {
-            if (permission.type !== type) {
-                return false;
-            }
-
-            if (!!targetUserId && !!targetInstance) {
-                return false;
-            } else if (!!targetUserId) {
-                if (permission.userIds === false) {
-                    return false;
-                }
-
-                if (
-                    typeof permission.userIds === 'object' &&
-                    Array.isArray(permission.userIds)
-                ) {
-                    if (permission.userIds.every((id) => id !== targetUserId)) {
-                        return false;
-                    }
-                }
-            } else if (!!targetInstance) {
-                if (permission.instances === false) {
-                    return false;
-                }
-
-                if (
-                    typeof permission.instances === 'string' &&
-                    !this._testRegex(permission.instances, targetInstance)
-                ) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-
-            if (permission.roles === true) {
-                return true;
-            }
-
-            if (this._testRegex(permission.roles, role)) {
-                return true;
-            }
-
-            return false;
-        };
-    }
-
-    private _byPolicyList(type: 'policy.list'): PermissionFilter {
-        return async (permission) => {
-            if (permission.type !== type) {
-                return false;
-            }
-            if (permission.policies === true) {
-                return true;
-            }
-            return false;
-        };
-    }
-
-    private _byRoleList(type: 'role.list'): PermissionFilter {
-        return async (permission) => {
-            if (permission.type !== type) {
-                return false;
-            }
-            if (permission.roles === true) {
-                return true;
-            }
-            return false;
-        };
-    }
-
-    private _testRegex(regex: string, value: string): boolean {
-        try {
-            return new RegExp(regex).test(value);
-        } catch (err) {
-            return false;
-        }
-    }
-
-    private async _findPermissionByFilter(
-        permissions: PossiblePermission[],
-        filter: PermissionFilter
-    ): Promise<PossiblePermission | null> {
-        for (let permission of permissions) {
-            if (await filter(permission.permission)) {
-                return permission;
-            }
-        }
-        return null;
     }
 }
 
@@ -3929,29 +2335,34 @@ export function willMarkersBeRemaining(
     return false;
 }
 
-export function returnAuthorizationResult(a: AuthorizeDenied): {
-    success: false;
-    errorCode: Exclude<AuthorizeDenied['errorCode'], 'action_not_supported'>;
-    errorMessage: AuthorizeDenied['errorMessage'];
-} & Omit<AuthorizeDenied, 'allowed'> {
-    if (a.errorCode === 'action_not_supported') {
-        return {
-            success: false,
-            errorCode: 'server_error',
-            errorMessage: 'A server error occurred.',
-        };
-    }
-    const { allowed, ...rest } = a;
-    return {
-        success: false,
-        ...rest,
-        errorCode: a.errorCode,
-    };
-}
+/**
+ * Gets a simple human readable explaination for the given permission assignment.
+ */
+export function explainationForPermissionAssignment(
+    subjectType: SubjectType,
+    permissionAssignment:
+        | MarkerPermissionAssignment
+        | ResourcePermissionAssignment
+): string {
+    const subjectString =
+        subjectType === 'user'
+            ? 'User'
+            : subjectType === 'inst'
+            ? 'Inst'
+            : 'Role';
 
-export interface MarkerPermission {
-    marker: string;
-    permissions: PossiblePermission[];
+    let permissionString: string;
+    if ('marker' in permissionAssignment) {
+        permissionString = `${subjectString} was granted access to marker "${permissionAssignment.marker}" by "${permissionAssignment.id}"`;
+    } else {
+        permissionString = `${subjectString} was granted access to resource "${permissionAssignment.resourceId}" by "${permissionAssignment.id}"`;
+    }
+
+    if (permissionAssignment.subjectType === 'role') {
+        permissionString += ` using role "${permissionAssignment.subjectId}"`;
+    }
+
+    return permissionString;
 }
 
 export type ConstructAuthorizationContextResult =
@@ -3965,7 +2376,11 @@ export interface ConstructAuthorizationContextSuccess {
 
 export interface ConstructAuthorizationContextFailure {
     success: false;
-    errorCode: ValidatePublicRecordKeyFailure['errorCode'];
+    errorCode:
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | 'not_authorized'
+        | SubscriptionLimitReached
+        | ServerError;
     errorMessage: string;
 }
 
@@ -3974,570 +2389,41 @@ export interface AuthorizationContext {
     recordKeyProvided: boolean;
     recordName: string;
     recordOwnerId: string;
+    recordStudioId: string;
+    recordStudioMembers?: ListedStudioAssignment[];
     subjectPolicy: PublicRecordKeyPolicy;
+
+    /**
+     * The ID of the user who created the record key.
+     */
+    recordKeyCreatorId: string;
+
+    /**
+     * The privacy features of the user that owns the record.
+     */
+    recordOwnerPrivacyFeatures: PrivacyFeatures;
+
+    /**
+     * The privacy features of the user that is currently logged in.
+     */
+    userPrivacyFeatures: PrivacyFeatures;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
 }
 
-export interface RolesContext<T extends AuthorizeRequestBase>
-    extends AuthorizationContext {
-    userRoles: Set<string> | null;
-    instRoles: {
-        [inst: string]: Set<string>;
-    };
-    markers: MarkerPermission[];
-    request: T;
-
-    allowedDataItems?: ListedDataItem[];
-}
-
-type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
-
-interface PossiblePermission {
-    policy: PolicyDocument;
-    permission: AvailablePermissions;
-}
-
-export type AuthorizeRequest =
-    | AuthorizeDataCreateRequest
-    | AuthorizeReadDataRequest
-    | AuthorizeUpdateDataRequest
-    | AuthorizeDeleteDataRequest
-    | AuthorizeListDataRequest
-    | AuthorizeCreateFileRequest
-    | AuthorizeReadFileRequest
-    | AuthorizeUpdateFileRequest
-    | AuthorizeDeleteFileRequest
-    | AuthorizeCountEventRequest
-    | AuthorizeIncrementEventRequest
-    | AuthorizeUpdateEventRequest
-    | AuthorizeGrantPermissionToPolicyRequest
-    | AuthorizeRevokePermissionToPolicyRequest
-    | AuthorizeReadPolicyRequest
-    | AuthorizeListPoliciesRequest
-    | AuthorizeListRolesRequest
-    | AuthorizeReadRoleRequest
-    | AuthorizeGrantRoleRequest
-    | AuthorizeRevokeRoleRequest;
-
-export interface AuthorizeRequestBase {
+export interface ConstructAuthorizationContextRequest {
     /**
      * The record key that should be used or the name of the record that the request is being authorized for.
      */
     recordKeyOrRecordName: string;
 
     /**
-     * The type of the action that is being authorized.
-     */
-    action: string;
-
-    /**
      * The ID of the user that is currently logged in.
      */
     userId?: string | null;
-
-    /**
-     * The instances that the request is being made from.
-     */
-    instances?: string[] | null;
-}
-
-export interface AuthorizeDataCreateRequest extends AuthorizeRequestBase {
-    action: 'data.create';
-
-    /**
-     * The address that the new record will be placed at.
-     */
-    address: string;
-
-    /**
-     * The list of resource markers that should be applied to the data.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeReadDataRequest extends AuthorizeRequestBase {
-    action: 'data.read';
-
-    /**
-     * The address that the record is placed at.
-     */
-    address: string;
-
-    /**
-     * The list of resource markers that are applied to the data.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeUpdateDataRequest extends AuthorizeRequestBase {
-    action: 'data.update';
-
-    /**
-     * The address that the record is placed at.
-     */
-    address: string;
-
-    /**
-     * The list of resource markers that are applied to the data.
-     */
-    existingMarkers: string[];
-
-    /**
-     * The new resource markers that will be added to the data.
-     * If omitted, then no markers are being added to the data.
-     */
-    addedMarkers?: string[];
-
-    /**
-     * The markers that will be removed from the data.
-     * If omitted, then no markers are being removed from the data.
-     */
-    removedMarkers?: string[];
-}
-
-export interface AuthorizeDeleteDataRequest extends AuthorizeRequestBase {
-    action: 'data.delete';
-
-    /**
-     * The address that the record is placed at.
-     */
-    address: string;
-
-    /**
-     * The list of resource markers that are applied to the data.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeListDataRequest extends AuthorizeRequestBase {
-    action: 'data.list';
-
-    /**
-     * The list of items that should be filtered.
-     */
-    dataItems: ListedDataItem[];
-}
-
-export interface AuthorizeFileRequest extends AuthorizeRequestBase {
-    /**
-     * The size of the file that is being created in bytes.
-     */
-    fileSizeInBytes: number;
-
-    /**
-     * The MIME Type of the file.
-     */
-    fileMimeType: string;
-}
-
-export interface AuthorizeCreateFileRequest extends AuthorizeFileRequest {
-    action: 'file.create';
-
-    /**
-     * The list of resource markers that should be applied to the file.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeReadFileRequest extends AuthorizeFileRequest {
-    action: 'file.read';
-
-    /**
-     * The list of resource markers that are applied to the file.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeUpdateFileRequest extends AuthorizeFileRequest {
-    action: 'file.update';
-
-    /**
-     * The list of resource markers that are applied to the file.
-     */
-    existingMarkers: string[];
-
-    /**
-     * The new resource markers that will be added to the file.
-     * If omitted, then no markers are being added to the file.
-     */
-    addedMarkers?: string[];
-
-    /**
-     * The markers that will be removed from the file.
-     * If omitted, then no markers are being removed from the file.
-     */
-    removedMarkers?: string[];
-}
-
-export interface AuthorizeDeleteFileRequest extends AuthorizeFileRequest {
-    action: 'file.delete';
-
-    /**
-     * The list of resource markers that are applied to the file.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeEventRequest extends AuthorizeRequestBase {
-    /**
-     * The name of the event.
-     */
-    eventName: string;
-}
-
-export interface AuthorizeCountEventRequest extends AuthorizeEventRequest {
-    action: 'event.count';
-
-    /**
-     * The list of resource markers that are applied to the event.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeIncrementEventRequest extends AuthorizeEventRequest {
-    action: 'event.increment';
-
-    /**
-     * The list of resource markers that are applied to the event.
-     */
-    resourceMarkers: string[];
-}
-
-export interface AuthorizeUpdateEventRequest extends AuthorizeEventRequest {
-    action: 'event.update';
-
-    /**
-     * The list of resource markers that are applied to the event.
-     */
-    existingMarkers: string[];
-
-    /**
-     * The new resource markers that will be added to the event.
-     * If omitted, then no markers are being added to the event.
-     */
-    addedMarkers?: string[];
-
-    /**
-     * The markers that will be removed from the event.
-     * If omitted, then no markers are being removed from the event.
-     */
-    removedMarkers?: string[];
-}
-
-export interface AuthorizePolicyRequest extends AuthorizeRequestBase {
-    /**
-     * The name of the policy.
-     */
-    policy: string;
-}
-
-export interface AuthorizeGrantPermissionToPolicyRequest
-    extends AuthorizePolicyRequest {
-    action: 'policy.grantPermission';
-}
-
-export interface AuthorizeRevokePermissionToPolicyRequest
-    extends AuthorizePolicyRequest {
-    action: 'policy.revokePermission';
-}
-
-export interface AuthorizeReadPolicyRequest extends AuthorizePolicyRequest {
-    action: 'policy.read';
-}
-
-export interface AuthorizeListPoliciesRequest
-    extends Omit<AuthorizePolicyRequest, 'policy'> {
-    action: 'policy.list';
-}
-
-export interface AuthorizeRoleRequest extends AuthorizeRequestBase {
-    /**
-     * The name of the role.
-     */
-    role: string;
-}
-
-export interface AuthorizeListRolesRequest
-    extends Omit<AuthorizeRoleRequest, 'role'> {
-    action: 'role.list';
-}
-
-export interface AuthorizeReadRoleRequest extends AuthorizeRoleRequest {
-    action: 'role.read';
-}
-
-export interface AuthorizeGrantRoleRequest extends AuthorizeRoleRequest {
-    action: 'role.grant';
-
-    /**
-     * The ID of the user that the role should be granted to.
-     */
-    targetUserId?: string;
-
-    /**
-     * The inst that the role should be granted to.
-     */
-    targetInstance?: string;
-
-    /**
-     * The time that the grant will expire.
-     * If omitted, then the grant will never expire.
-     */
-    expireTimeMs?: number | null;
-}
-
-export interface AuthorizeRevokeRoleRequest extends AuthorizeRoleRequest {
-    action: 'role.revoke';
-
-    /**
-     * The ID of the user that the role should be granted to.
-     */
-    targetUserId?: string;
-
-    /**
-     * The inst that the role should be granted to.
-     */
-    targetInstance?: string;
-}
-
-export interface ListedDataItem {
-    /**
-     * The address of the item.
-     */
-    address: string;
-
-    /**
-     * The list of markers for the item.
-     */
-    markers: string[];
-}
-
-export type AuthorizeResult = AuthorizeAllowed | AuthorizeDenied;
-
-export interface AuthorizeAllowed {
-    allowed: true;
-
-    /**
-     * The name of the record that the request should be for.
-     */
-    recordName: string;
-
-    /**
-     * The ID of the owner of the record key.
-     * Null if no record key was provided.
-     */
-    recordKeyOwnerId: string | null;
-
-    /**
-     * The ID of the user who (directly or indirectly) authorized the request.
-     * If a valid record key was provided, then this is the ID of the owner of the record key.
-     * If only a user ID was provided, then this is the ID of the user who is logged in.
-     * If no one was logged in, then this is null.
-     */
-    authorizerId: string | null;
-
-    /**
-     * The authorization information about the subject.
-     */
-    subject: SubjectAuthorization;
-
-    /**
-     * The authorization information about the instances.
-     */
-    instances: InstEnvironmentAuthorization[];
-
-    /**
-     * The list of allowed data items.
-     */
-    allowedDataItems?: ListedDataItem[];
-}
-
-export type GenericResult = GenericAllowed | GenericDenied;
-
-export interface GenericAllowed {
-    success: true;
-    authorization: GenericAuthorization;
-}
-
-export interface GenericDenied {
-    success: false;
-    reason: DenialReason;
-}
-
-export interface GenericAuthorization {
-    /**
-     * The role that was selected for authorization.
-     *
-     * If true, then that indicates that the "everyone" role was used.
-     * If a string, then that is the name of the role that was used.
-     */
-    role: string | true;
-
-    /**
-     * The security markers that were evaluated.
-     */
-    markers: MarkerAuthorization[];
-}
-
-/**
- * Defines an interface that contains authorization information aboutthe subject that is party to an action.
- *
- * Generally, this includes information about the user and if they have the correct permissions for the action.
- */
-export interface SubjectAuthorization extends GenericAuthorization {
-    /**
-     * The ID of the user that was authorized.
-     * Null if no user ID was provided.
-     */
-    userId: string | null;
-
-    /**
-     * the policy that should be used for storage of subject information.
-     */
-    subjectPolicy: PublicRecordKeyPolicy;
-}
-
-/**
- * Defines an interface that represents the result of calculating whether a particular action is authorized for a particular marker.
- */
-export interface MarkerAuthorization {
-    /**
-     * The marker that the authorization is for.
-     */
-    marker: string;
-
-    /**
-     * The actions that have been authorized for the marker.
-     */
-    actions: ActionAuthorization[];
-}
-
-/**
- * Defines an interface that represents the result of calculating the policy and permission that grants a particular action.
- */
-export interface ActionAuthorization {
-    /**
-     * The action that was granted.
-     */
-    action: AvailablePermissions['type'];
-
-    /**
-     * The policy document that authorizes the action.
-     */
-    grantingPolicy: PolicyDocument;
-
-    /**
-     * The permission that authorizes the action to be performed.
-     */
-    grantingPermission: AvailablePermissions;
-}
-
-/**
- * Defines an interface that contains authorization information about the environment that is party to an action.
- *
- * Generally, this includes information about the inst that is triggering the operation.
- */
-export type InstEnvironmentAuthorization = AuthorizedInst | NotRequiredInst;
-
-export interface AuthorizedInst extends GenericAuthorization {
-    /**
-     * The type of authorization that this inst has received.
-     */
-    authorizationType: 'allowed';
-
-    /**
-     * The inst that was authorized.
-     */
-    inst: string;
-}
-
-export interface NotRequiredInst {
-    /**
-     * The inst that was authorized.
-     */
-    inst: string;
-
-    /**
-     * The type of authorization that this inst has received.
-     */
-    authorizationType: 'not_required';
-}
-
-export interface AuthorizeDenied {
-    allowed: false;
-    errorCode:
-        | ServerError
-        | ValidatePublicRecordKeyFailure['errorCode']
-        | 'action_not_supported'
-        | 'not_logged_in'
-        | 'not_authorized'
-        | 'unacceptable_request';
-    errorMessage: string;
-
-    /**
-     * The reason that the authorization was denied.
-     */
-    reason?: DenialReason;
-}
-
-export type DenialReason =
-    | NoMarkersDenialReason
-    | MissingPermissionDenialReason
-    | TooManyInstsDenialReason
-    | MissingRoleDenialReason
-    | NoMarkersRemainingDenialReason;
-
-/**
- * Defines an interface that represents a denial reason that is returned when the resource has no markers.
- */
-export interface NoMarkersDenialReason {
-    type: 'no_markers';
-}
-
-export interface MissingPermissionDenialReason {
-    type: 'missing_permission';
-
-    /**
-     * Whether the user or inst is missing the permission.
-     */
-    kind: 'user' | 'inst';
-
-    /**
-     * The ID of the user/inst that is missing the permission.
-     */
-    id: string;
-
-    /**
-     * The marker that was being evaluated.
-     */
-    marker: string;
-
-    /**
-     * The role that was selected for authorization.
-     *
-     * If not specified, then no role could be determined.
-     * This often happens when the user/inst hasn't been assigned a role, but it can also happen when no permissions match any of the roles that the user/inst has assigned.
-     *
-     * If true, then that indicates that the "everyone" role was used.
-     * If a string, then that is the name of the role that was used.
-     */
-    role?: string | true;
-
-    /**
-     * The permission that is missing.
-     */
-    permission: AvailablePermissions['type'];
-}
-
-export interface MissingRoleDenialReason {
-    type: 'missing_role';
-}
-
-export interface NoMarkersRemainingDenialReason {
-    type: 'no_markers_remaining';
-}
-
-export interface TooManyInstsDenialReason {
-    type: 'too_many_insts';
 }
 
 export interface GrantMarkerPermissionRequest {
@@ -4548,95 +2434,279 @@ export interface GrantMarkerPermissionRequest {
     instances?: string[] | null;
 }
 
-export type GrantMarkerPermissionResponse =
+/**
+ * Defines the possible results of granting a permission to a marker.
+ *
+ * @dochash types/records/policies
+ * @doctitle Policy Types
+ * @docsidebar Policies
+ * @docdescription Types for working with policies.
+ * @docgroup 01-grant
+ * @docorder 0
+ * @docname GrantMarkerPermissionResult
+ */
+export type GrantMarkerPermissionResult =
     | GrantMarkerPermissionSuccess
     | GrantMarkerPermissionFailure;
 
+/**
+ * Defines an interface that represents a successful request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantMarkerPermissionSuccess
+ */
 export interface GrantMarkerPermissionSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantMarkerPermissionFailure
+ */
 export interface GrantMarkerPermissionFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
-        | AuthorizeDenied['errorCode']
-        | UpdateUserPolicyFailure['errorCode'];
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | AssignPermissionToSubjectAndMarkerFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
 export interface RevokeMarkerPermissionRequest {
-    recordKeyOrRecordName: string;
+    permissionId: string;
     userId: string;
-    marker: string;
-    permission: AvailablePermissions;
     instances?: string[] | null;
 }
 
+/**
+ * Defines the possible results of revoking a permission from a marker.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 0
+ * @docname RevokeMarkerPermissionResult
+ */
 export type RevokeMarkerPermissionResult =
     | RevokeMarkerPermissionSuccess
     | RevokeMarkerPermissionFailure;
 
+/**
+ * Defines an interface that represents a successful request to revoke a permission from a marker.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 1
+ * @docname RevokeMarkerPermissionSuccess
+ */
 export interface RevokeMarkerPermissionSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to revoke a permission from a marker.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 2
+ * @docname RevokeMarkerPermissionFailure
+ */
 export interface RevokeMarkerPermissionFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
-        | AuthorizeDenied['errorCode']
-        | GetUserPolicyFailure['errorCode']
-        | UpdateUserPolicyFailure['errorCode'];
+        | 'permission_not_found'
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
-export type ReadUserPolicyResult =
-    | ReadUserPolicySuccess
-    | ReadUserPolicyFailure;
-
-export interface ReadUserPolicySuccess {
-    success: true;
-    document: PolicyDocument;
-    markers: string[];
+export interface GrantResourcePermissionRequest {
+    recordKeyOrRecordName: string;
+    userId: string;
+    permission: AvailablePermissions;
+    instances?: string[] | null;
 }
 
-export interface ReadUserPolicyFailure {
+/**
+ * Defines the possible results of granting a permission to a resource.
+ *
+ * @dochash types/records/policies
+ * @docname GrantResourcePermissionResult
+ */
+export type GrantResourcePermissionResult =
+    | GrantResourcePermissionSuccess
+    | GrantResourcePermissionFailure;
+
+/**
+ * Defines an interface that represents a successful request to grant a permission to a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantResourcePermissionSuccess
+ */
+export interface GrantResourcePermissionSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to grant a permission to a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantResourcePermissionFailure
+ */
+export interface GrantResourcePermissionFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
-        | AuthorizeDenied['errorCode']
-        | GetUserPolicyFailure['errorCode'];
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | AssignPermissionToSubjectAndMarkerFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
-export type ListUserPoliciesResult =
-    | ListUserPoliciesSuccess
-    | ListUserPoliciesFailure;
-
-export interface ListUserPoliciesSuccess {
-    success: true;
-    policies: {
-        /**
-         * The marker that the policy is for.
-         */
-        marker: string;
-
-        /**
-         * The document that describes the policy.
-         */
-        document: PolicyDocument;
-
-        /**
-         * The markers that are applied to the policy.
-         */
-        markers: string[];
-    }[];
+export interface RevokeResourcePermissionRequest {
+    permissionId: string;
+    userId: string;
+    instances?: string[] | null;
 }
 
-export interface ListUserPoliciesFailure {
+/**
+ * Defines the possible results of revoking a resource permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 0
+ * @docname RevokeResourcePermissionResult
+ */
+export type RevokeResourcePermissionResult =
+    | RevokeResourcePermissionSuccess
+    | RevokeResourcePermissionFailure;
+
+/**
+ * Defines an interface that represents a successful request to revoke a permission from a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 1
+ * @docname RevokeResourcePermissionSuccess
+ */
+export interface RevokeResourcePermissionSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to revoke a permission from a resource.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 2
+ * @docname RevokeResourcePermissionFailure
+ */
+export interface RevokeResourcePermissionFailure {
     success: false;
-    errorCode: ServerError | AuthorizeDenied['errorCode'];
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | 'permission_not_found'
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+export interface RevokePermissionRequest {
+    permissionId: string;
+    userId: string;
+    instances?: string[] | null;
+}
+
+/**
+ * Defines the possible results of revoking a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 0
+ * @docname RevokeMarkerPermissionResult
+ */
+export type RevokePermissionResult =
+    | RevokePermissionSuccess
+    | RevokePermissionFailure;
+
+/**
+ * Defines an interface that represents a successful request to revoke a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 1
+ * @docname RevokePermissionSuccess
+ */
+export interface RevokePermissionSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to revoke a permission.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 2
+ * @docname RevokePermissionFailure
+ */
+export interface RevokePermissionFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | 'permission_not_found'
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
@@ -4655,7 +2725,10 @@ export interface ListAssignedUserRolesSuccess {
 
 export interface ListAssignedUserRolesFailure {
     success: false;
-    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -4674,7 +2747,10 @@ export interface ListAssignedInstRolesSuccess {
 
 export interface ListAssignedInstRolesFailure {
     success: false;
-    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -4689,11 +2765,20 @@ export interface ListRoleAssignmentsSuccess {
      * The list of assignments for the role.
      */
     assignments: RoleAssignment[];
+
+    /**
+     * The total number of assignments.
+     */
+    totalCount?: number;
 }
 
 export interface ListRoleAssignmentsFailure {
     success: false;
-    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorCode:
+        | ServerError
+        | NotSupportedError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -4704,18 +2789,53 @@ export interface GrantRoleRequest {
     expireTimeMs?: number | null;
 }
 
+/**
+ * Defines the possible results of granting a role.
+ *
+ * @dochash types/records/roles
+ * @doctitle Role Types
+ * @docsidebar Roles
+ * @docdescription Types for working with roles.
+ * @docgroup 01-grant
+ * @docorder 0
+ * @docname GrantRoleResult
+ */
 export type GrantRoleResult = GrantRoleSuccess | GrantRoleFailure;
 
+/**
+ * Defines an interface that represents a successful request to grant a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantRoleSuccess
+ */
 export interface GrantRoleSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to grant a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantRoleFailure
+ */
 export interface GrantRoleFailure {
     success: false;
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
-        | AuthorizeDenied['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | UpdateUserRolesFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
@@ -4725,17 +2845,429 @@ export interface RevokeRoleRequest {
     role: string;
 }
 
+/**
+ * Defines the possible results of revoking a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 0
+ * @docname RevokeRoleResult
+ */
 export type RevokeRoleResult = RevokeRoleSuccess | RevokeRoleFailure;
 
+/**
+ * Defines an interface that represents a successful request to revoke a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 1
+ * @docname RevokeRoleSuccess
+ */
 export interface RevokeRoleSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to revoke a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 2
+ * @docname RevokeRoleFailure
+ */
 export interface RevokeRoleFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | UpdateUserRolesFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+export interface ResourceInfo {
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The ID of the resource.
+     */
+    resourceId: string;
+
+    /**
+     * The kind of the action.
+     */
+    action: ActionKinds;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
+}
+
+export interface AuthorizeSubject {
+    /**
+     * The type of the subject that should be authorized.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the subject that should be authorized.
+     */
+    subjectId: string | null;
+}
+
+export interface AuthorizeUserAndInstancesRequest {
+    /**
+     * The ID of the user that should be authorized.
+     */
+    userId: string;
+
+    /**
+     * The instances that should be authorized.
+     */
+    instances: string[];
+
+    /**
+     * The kind of resource that the action is being performed on.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The kind of the action.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource.
+     * Should be omitted if the action is "list".
+     */
+    resourceId?: string;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
+}
+
+export type AuthorizeUserAndInstancesResult =
+    | AuthorizeUserAndInstancesSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeUserAndInstancesSuccess {
+    success: true;
+    recordName: string;
+
+    /**
+     * The permission that authorizes the user to perform the request.
+     */
+    user: AuthorizedSubject;
+
+    /**
+     * The results for each subject.
+     */
+    results: AuthorizedSubject[];
+}
+
+export interface AuthorizeUserAndInstancesForResources {
+    /**
+     * The ID of the user that should be authorized.
+     */
+    userId: string;
+
+    /**
+     * The instances that should be authorized.
+     */
+    instances: string[];
+
+    /**
+     * The resources that should be authorized.
+     */
+    resources: ResourceInfo[];
+}
+
+export type AuthorizeUserAndInstancesForResourcesResult =
+    | AuthorizeUserAndInstancesForResourcesSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeUserAndInstancesForResourcesSuccess {
+    success: true;
+    recordName: string;
+    results: AuthorizedResource[];
+}
+
+export interface AuthorizedResource
+    extends ResourceInfo,
+        AuthorizeUserAndInstancesSuccess {}
+
+export interface AuthorizeSubjectsRequest {
+    /**
+     * The list of subjects that should be authorized.
+     */
+    subjects: AuthorizeSubject[];
+
+    /**
+     * The kind of resource that the action is being performed on.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The kind of the action.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource.
+     * Should be omitted if the action is "list".
+     */
+    resourceId?: string;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
+}
+
+export interface AuthorizeSubjectRequest {
+    /**
+     * The type of the subject that should be authorized.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the subject that should be authorized.
+     */
+    subjectId: string | null;
+
+    /**
+     * The kind of resource that the action is being performed on.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The kind of the action.
+     */
+    action: ActionKinds;
+
+    /**
+     * The ID of the resource.
+     * Should be omitted if the action is "list".
+     */
+    resourceId?: string;
+
+    /**
+     * The markers that are applied to the resource.
+     */
+    markers: string[];
+}
+
+export type AuthorizeSubjectsResult =
+    | AuthorizeSubjectsSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeSubjectsSuccess {
+    success: true;
+    recordName: string;
+
+    /**
+     * The results for each subject.
+     */
+    results: AuthorizedSubject[];
+}
+
+export type AuthorizeSubjectResult =
+    | AuthorizeSubjectSuccess
+    | AuthorizeSubjectFailure;
+
+export interface AuthorizeSubjectSuccess {
+    success: true;
+
+    /**
+     * The name of the record that the action should be for.
+     */
+    recordName: string;
+
+    /**
+     * The permission that authorizes the request.
+     */
+    permission: MarkerPermissionAssignment | ResourcePermissionAssignment;
+
+    /**
+     * The explaination for the authorization.
+     */
+    explanation: string;
+}
+
+export interface AuthorizedSubject extends AuthorizeSubjectSuccess {
+    /**
+     * The type of the subject that was authorized.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the subject that was authorized.
+     */
+    subjectId: string;
+}
+
+export interface AuthorizeSubjectFailure {
+    success: false;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | 'action_not_supported'
+        | 'not_logged_in'
+        | 'not_authorized'
+        | SubscriptionLimitReached
+        | 'unacceptable_request';
+
+    /**
+     * The error message that occurred.
+     */
+    errorMessage: string;
+
+    /**
+     * The denial reason.
+     */
+    reason?: DenialReason;
+}
+
+export type ListPermissionsResult =
+    | ListPermissionsSuccess
+    | ListPermissionsFailure;
+
+export interface ListPermissionsSuccess {
+    success: true;
+    recordName: string;
+
+    resourcePermissions: ListedResourcePermission[];
+    markerPermissions: ListedMarkerPermission[];
+}
+
+export interface ListPermissionsFailure {
     success: false;
     errorCode:
         | ServerError
-        | AuthorizeDenied['errorCode']
-        | UpdateUserRolesFailure['errorCode'];
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
+}
+
+export type ListPermissionsForMarkerResult =
+    | ListPermissionsForMarkerSuccess
+    | ListPermissionsFailure;
+
+export interface ListPermissionsForMarkerSuccess {
+    success: true;
+    recordName: string;
+    markerPermissions: ListedMarkerPermission[];
+}
+
+export type ListPermissionsForResourceResult =
+    | ListPermissionsForResourceSuccess
+    | ListPermissionsFailure;
+
+export interface ListPermissionsForResourceSuccess {
+    success: true;
+    recordName: string;
+    resourcePermissions: ListedResourcePermission[];
+}
+
+/**
+ * Defines an interface that represents a permission that grants access.
+ */
+export interface ListedPermission {
+    /**
+     * The ID of the permission.
+     */
+    id: string;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The kind of the actions that the subject is allowed to perform.
+     * Null if the subject is allowed to perform any action.
+     */
+    action: ActionKinds | null;
+
+    /**
+     * The options for the permission assignment.
+     */
+    options: PermissionOptions;
+
+    /**
+     * The ID of the subject.
+     */
+    subjectId: string;
+
+    /**
+     * The type of the subject.
+     */
+    subjectType: SubjectType;
+
+    /**
+     * The ID of the user that the assignment grants permission to.
+     * Null if the subject type is not "user".
+     */
+    userId: string | null;
+
+    /**
+     * The time that the permission expires.
+     * Null if the permission never expires.
+     */
+    expireTimeMs: number | null;
+}
+
+/**
+ * Defines an interface that represents a permission that grants access to a single resource.
+ *
+ * @dochash types/permissions
+ * @docname ResourcePermission
+ */
+export interface ListedResourcePermission extends ListedPermission {
+    /**
+     * The kind of the resource.
+     */
+    resourceKind: ResourceKinds;
+
+    /**
+     * The ID of the resource.
+     */
+    resourceId: string;
+}
+
+/**
+ * Defines an interface that represents a permission that grants access to resources with a marker.
+ *
+ * @dochash types/permissions
+ * @docname MarkerPermission
+ */
+export interface ListedMarkerPermission extends ListedPermission {
+    /**
+     * The marker that the permission applies to.
+     */
+    marker: string;
+
+    /**
+     * The kind of the resource.
+     * Null if the permission applies to all resources.
+     */
+    resourceKind: ResourceKinds | null;
 }

@@ -1,4 +1,4 @@
-import type { importInterpreter as expectedImportInterpreter } from '@casual-simulation/aux-common/runtime/AuxRuntimeDynamicImports';
+import type { importInterpreter as expectedImportInterpreter } from '@casual-simulation/aux-runtime/runtime/AuxRuntimeDynamicImports';
 import {
     INTERPRETER_OBJECT,
     REGULAR_OBJECT,

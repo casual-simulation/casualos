@@ -2,16 +2,32 @@ import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
     AuthHelperInterface,
     AuxAuth,
+    LoginHint,
     LoginStatus,
     LoginUIStatus,
+    OAuthRedirectRequest,
+    PolicyUrls,
+    PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { AuthData, hasValue } from '@casual-simulation/aux-common';
 import {
+    AuthData,
+    AvailablePermissions,
+    RemoteCausalRepoProtocol,
+    hasValue,
+} from '@casual-simulation/aux-common';
+import {
+    GetPlayerConfigResult,
     CreatePublicRecordKeyResult,
+    IsValidDisplayNameResult,
+    IsValidEmailAddressResult,
     parseRecordKey,
     PublicRecordKeyPolicy,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
+    CompleteLoginSuccess,
+    CompleteWebAuthnLoginSuccess,
 } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
@@ -32,7 +48,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _proxy: Remote<AuxAuth>;
     private _initialized: boolean = false;
     private _protocolVersion: number = 1;
-    private _sub: Subscription = new Subscription();
+    protected _sub: Subscription = new Subscription();
     private _loginStatus: BehaviorSubject<LoginStatus> =
         new BehaviorSubject<LoginStatus>({});
     private _loginUIStatus: BehaviorSubject<LoginUIStatus> =
@@ -41,15 +57,38 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
     private _initPromise: Promise<void>;
     private _recordsOrigin: string;
+    private _websocketOrigin: string;
+    private _websocketProtocol: RemoteCausalRepoProtocol;
+    private _newTab: Window;
+    private _tabCloseInterval: any;
+    private _requirePrivoLogin: boolean;
+
+    private _authenticationPromise: Promise<AuthData>;
+    private _authenticating: boolean = false;
+
+    get currentLoginStatus() {
+        const status = this._loginStatus.value;
+        if (status.authData || status.isLoading || status.isLoggingIn) {
+            return status;
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Creates a new instance of the AuthHelper class.
      * @param iframeOrigin The URL that the auth iframe should be loaded from.
      * @param defaultRecordsOrigin The HTTP Origin that should be used for the records origin if the auth site does not support protocol version 4.
+     * @param requirePrivoLogin Whether to require that the user login with Privo.
      */
-    constructor(iframeOrigin?: string, defaultRecordsOrigin?: string) {
+    constructor(
+        iframeOrigin?: string,
+        defaultRecordsOrigin?: string,
+        requirePrivoLogin?: boolean
+    ) {
         this._origin = iframeOrigin;
         this._defaultRecordsOrigin = defaultRecordsOrigin;
+        this._requirePrivoLogin = requirePrivoLogin;
     }
 
     get origin(): string {
@@ -99,7 +138,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return this._initPromise;
     }
 
-    private async _initCore() {
+    protected async _initCore() {
         if (!hasValue(this._origin)) {
             throw new Error(
                 'Cannot initialize AuthHelper because no iframe origin is set.'
@@ -116,6 +155,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         });
         this._iframe.src = iframeUrl;
         this._iframe.style.display = 'none';
+        this._iframe.allow = 'publickey-credentials-get *';
         this._iframe.className = 'auth-helper-iframe';
 
         let promise = waitForLoad(this._iframe);
@@ -148,9 +188,21 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 })
             );
         }
+        if (this._protocolVersion >= 9) {
+            await this._proxy.addOAuthRedirectCallback(
+                proxy((request) => {
+                    this._handleOAuthRedirectCallback(request);
+                })
+            );
+        }
 
         if (this._protocolVersion >= 4) {
             this._recordsOrigin = await this._proxy.getRecordsOrigin();
+        }
+
+        if (this._protocolVersion >= 9) {
+            this._websocketOrigin = await this._proxy.getWebsocketOrigin();
+            this._websocketProtocol = await this._proxy.getWebsocketProtocol();
         }
 
         this._loginUIStatus.subscribe((status) => {
@@ -167,6 +219,16 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         this._initialized = true;
     }
 
+    private _handleOAuthRedirectCallback(request: OAuthRedirectRequest) {
+        if (this._newTab && !this._newTab.closed) {
+            this._newTab.location = request.authorizationUrl;
+        } else {
+            console.error(
+                '[AuthEndpointHelper] Cannot handle oauth redirect callback.'
+            );
+        }
+    }
+
     /**
      * Determines if the user is authenticated.
      */
@@ -177,20 +239,43 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._isAuthenticatedCore();
+    }
+
+    protected async _isAuthenticatedCore() {
         return await this._proxy.isLoggedIn();
     }
 
     /**
      * Requests that the user become authenticated if they are not already.
      */
-    async authenticate() {
+    async authenticate(hint?: LoginHint) {
         if (!hasValue(this._origin)) {
             return null;
         }
         if (!this._initialized) {
             await this._init();
         }
-        const result = await this._proxy.login();
+
+        if (this._authenticating) {
+            return await this._authenticationPromise;
+        }
+
+        try {
+            this._authenticating = true;
+            this._authenticationPromise = this._authenticateCore(hint);
+            return await this._authenticationPromise;
+        } finally {
+            this._authenticating = false;
+        }
+    }
+
+    protected async _authenticateCore(hint?: LoginHint) {
+        if (hint === 'sign in') {
+            this._createNewTab();
+        }
+
+        const result = await this._proxy.login(undefined, hint);
 
         if (this._protocolVersion < 2) {
             this._loginStatus.next({
@@ -208,12 +293,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!hasValue(this._origin)) {
             return null;
         }
-        this._loginStatus.next({
-            isLoggingIn: true,
-        });
         if (!this._initialized) {
             await this._init();
         }
+        return await this._authenticateInBackgroundCore();
+    }
+
+    protected async _authenticateInBackgroundCore() {
         const result = await this._proxy.login(true);
         if (this._protocolVersion < 2) {
             this._loginStatus.next({
@@ -238,6 +324,13 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._createPublicRecordKeyCore(recordName, policy);
+    }
+
+    protected async _createPublicRecordKeyCore(
+        recordName: string,
+        policy: PublicRecordKeyPolicy
+    ): Promise<CreatePublicRecordKeyResult> {
         return await this._proxy.createPublicRecordKey(recordName, policy);
     }
 
@@ -251,6 +344,36 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return (
             this._recordsOrigin ?? this._defaultRecordsOrigin ?? this._origin
         );
+    }
+
+    async getWebsocketOrigin(): Promise<string> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 9) {
+            return null;
+        }
+
+        return this._websocketOrigin;
+    }
+
+    async getWebsocketProtocol(): Promise<RemoteCausalRepoProtocol> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 9) {
+            return null;
+        }
+
+        return this._websocketProtocol ?? null;
     }
 
     async getRecordKeyPolicy(
@@ -271,7 +394,29 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (!this._initialized) {
             await this._init();
         }
+        return await this._getAuthTokenCore();
+    }
+
+    protected async _getAuthTokenCore(): Promise<string> {
         return await this._proxy.getAuthToken();
+    }
+
+    async getConnectionKey(): Promise<string> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 6) {
+            return null;
+        }
+        return await this._getConnectionKeyCore();
+    }
+
+    protected async _getConnectionKeyCore(): Promise<string> {
+        return await this._proxy.getConnectionKey();
     }
 
     async openAccountPage(): Promise<void> {
@@ -316,6 +461,43 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         );
     }
 
+    async isValidEmailAddress(
+        email: string
+    ): Promise<IsValidEmailAddressResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidEmailAddress(email);
+    }
+
+    async isValidDisplayName(
+        displayName: string,
+        name: string
+    ): Promise<IsValidDisplayNameResult> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                success: true,
+                allowed: true,
+            };
+        }
+        return await this._proxy.isValidDisplayName(displayName, name);
+    }
+
     async provideSmsNumber(
         sms: string,
         acceptedTermsOfService: boolean
@@ -345,6 +527,53 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.provideCode(code);
     }
 
+    async provideLoginResult(
+        result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
+    ): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 10) {
+            return;
+        }
+        return await this._proxy.provideLoginResult(result);
+    }
+
+    async providePrivoSignUpInfo(info: PrivoSignUpInfo): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+        return await this._proxy.providePrivoSignUpInfo(info);
+    }
+
+    async provideHasAccount(hasAccount: boolean): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+
+        if (hasAccount) {
+            this._createNewTab();
+        }
+
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return;
+        }
+
+        return await this._proxy.provideHasAccount(hasAccount);
+    }
+
     async cancelLogin() {
         if (!hasValue(this._origin)) {
             return;
@@ -356,5 +585,85 @@ export class AuthEndpointHelper implements AuthHelperInterface {
             return;
         }
         return await this._proxy.cancelLogin();
+    }
+
+    async logout() {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 8) {
+            return;
+        }
+        return await this._logoutCore();
+    }
+
+    protected async _logoutCore() {
+        return await this._proxy.logout();
+    }
+
+    async getPolicyUrls(): Promise<PolicyUrls> {
+        if (!hasValue(this._origin)) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        if (this._protocolVersion < 9) {
+            return {
+                privacyPolicyUrl: null,
+                termsOfServiceUrl: null,
+            };
+        }
+        return await this._proxy.getPolicyUrls();
+    }
+
+    async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.getComIdWebConfig(comId);
+    }
+
+    async grantPermission(
+        recordName: string,
+        permission: AvailablePermissions
+    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+        if (!hasValue(this._origin)) {
+            return null;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+        return await this._proxy.grantPermission(recordName, permission);
+    }
+
+    private _createNewTab() {
+        if (!this._requirePrivoLogin) {
+            return;
+        }
+        this._newTab = window.open('/loading-oauth.html', '_blank');
+        if (this._newTab) {
+            if (this._tabCloseInterval) {
+                clearInterval(this._tabCloseInterval);
+            }
+            this._tabCloseInterval = setInterval(() => {
+                if (!this._newTab || this._newTab.closed) {
+                    clearInterval(this._tabCloseInterval);
+                }
+                if (this._newTab?.closed) {
+                    this._newTab = null;
+                    this._proxy.provideOAuthLoginComplete();
+                }
+            }, 500);
+        }
     }
 }

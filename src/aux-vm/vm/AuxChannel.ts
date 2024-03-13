@@ -1,20 +1,20 @@
-import {
-    LocalActions,
-    BotAction,
-    StateUpdatedEvent,
-    RuntimeStateVersion,
-    StoredAux,
-} from '@casual-simulation/aux-common';
-import {
-    StatusUpdate,
-    DeviceAction,
-    CurrentVersion,
-    VersionVector,
-} from '@casual-simulation/causal-trees';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { AuxUser } from '../AuxUser';
 import { Observable, SubscriptionLike } from 'rxjs';
+import {
+    AuxDevice,
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
+import {
+    BotAction,
+    ConnectionIndicator,
+    DeviceAction,
+    PartitionAuthMessage,
+    StateUpdatedEvent,
+    StatusUpdate,
+    StoredAux,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -23,7 +23,7 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (defaultHost: string, user: AuxUser, config: AuxConfig): AuxChannel;
+    new (defaultHost: string, config: AuxConfig): AuxChannel;
 }
 
 /**
@@ -39,7 +39,7 @@ export interface AuxChannel extends SubscriptionLike {
     /**
      * The observable that should be triggered whenever a local event is emitted from the AUX.
      */
-    onLocalEvents: Observable<LocalActions[]>;
+    onLocalEvents: Observable<RuntimeActions[]>;
 
     /**
      * The observable that should be triggered whenever the bots state is updated.
@@ -62,6 +62,11 @@ export interface AuxChannel extends SubscriptionLike {
     onError: Observable<AuxChannelErrorType>;
 
     /**
+     * The observable that is resolved whenever an auth message is sent from a partition.
+     */
+    onAuthMessage: Observable<PartitionAuthMessage>;
+
+    /**
      * The observable that is triggered whenever a sub channel has been added.
      */
     onSubChannelAdded: Observable<AuxSubChannel>;
@@ -80,16 +85,18 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onError The callback that should be triggered whenever an error occurs.
      * @param onSubChannelAdded The callback that should be triggered whenever a sub channel is added.
      * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
+     * @param onAuthMessage The callback that should be triggered whenever an auth message is sent from a partition.
      */
     init(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void,
         onSubChannelAdded?: (channel: AuxSubChannel) => void,
-        onSubChannelRemoved?: (channelId: string) => void
+        onSubChannelRemoved?: (channelId: string) => void,
+        onAuthMessage?: (message: PartitionAuthMessage) => void
     ): Promise<void>;
 
     /**
@@ -101,16 +108,18 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onError The callback that should be triggered whenever an error occurs.
      * @param onSubChannelAdded The callback that should be triggered whenever a sub channel is added.
      * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
+     * @param onAuthMessage The callback that should be triggered whenever an auth message is sent from a partition.
      */
     initAndWait(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void,
         onSubChannelAdded?: (channel: AuxSubChannel) => void,
-        onSubChannelRemoved?: (channelId: string) => void
+        onSubChannelRemoved?: (channelId: string) => void,
+        onAuthMessage?: (message: PartitionAuthMessage) => void
     ): Promise<void>;
 
     /**
@@ -122,29 +131,19 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onError The callback that should be triggered whenever an error occurs.
      * @param onSubChannelAdded The callback that should be triggered whenever a sub channel is added.
      * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
+     * @param onAuthMessage The callback that should be triggered whenever an auth message is sent from a partition.
      */
     registerListeners(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void,
         onSubChannelAdded?: (channel: AuxSubChannel) => void,
-        onSubChannelRemoved?: (channelId: string) => void
+        onSubChannelRemoved?: (channelId: string) => void,
+        onAuthMessage?: (message: PartitionAuthMessage) => void
     ): Promise<void>;
-
-    /**
-     * Sets the user that the channel should use.
-     * @param user The user.
-     */
-    setUser(user: AuxUser): Promise<void>;
-
-    /**
-     * Sets the grant that the channel should use to authenticate the user.
-     * @param grant The grant to use.
-     */
-    setGrant(grant: string): Promise<void>;
 
     /**
      * Sends the given list of bots events to the AUX for processing.
@@ -193,13 +192,25 @@ export interface AuxChannel extends SubscriptionLike {
      * Gets the list of tags that are in use.
      */
     getTags(): Promise<string[]>;
+
+    /**
+     * Updates the device information for the simulation.
+     * @param device The device.
+     */
+    updateDevice(device: AuxDevice): Promise<void>;
+
+    /**
+     * Sends the given auth message.
+     * @param message The message to send.
+     */
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void>;
 }
 
 export interface ChannelActionResult {
     /**
      * The actions that were queued.
      */
-    actions: BotAction[];
+    actions: RuntimeActions[];
 
     /**
      * The results from the scripts that were run.
@@ -229,7 +240,7 @@ export interface AuxSubChannelInfo {
     id: string;
 
     /**
-     * The user info for the sub channel.
+     * The ID of the config bot.
      */
-    user: AuxUser;
+    configBotId: string;
 }

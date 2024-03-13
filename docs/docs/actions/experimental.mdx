@@ -1,0 +1,20 @@
+---
+id: experimental
+title: Experimental Actions
+sidebar_label: Experimental
+description: Experimental actions are actions that are not yet fully supported and may change in the future.
+---
+
+import Doc from '../api-info/actions/experimental.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

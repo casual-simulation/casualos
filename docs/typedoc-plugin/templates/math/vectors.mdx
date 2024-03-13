@@ -1,0 +1,34 @@
+---
+id: {{id}}
+title: {{title}}
+sidebar_label: {{sidebar_label}}
+description: {{description}}
+---
+
+import Doc from '{{{importPath}}}'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '{{{apiPath}}}'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    { value: 'Introduction', id: 'introduction', level: 2 },
+    ...apiTableOfContents(Doc),
+];
+
+<Heading as='h2' id='introduction'>Introduction</Heading>
+
+In CasualOS, Vectors are useful objects that represent 2D/3D positions and directions.
+They are called vectors because in Math it is common to call an ordered list of numbers a "vector".
+
+Additionally, they are useful because we can use vectors to represent X, Y, and Z positions and perform common operations on them like adding them together or finding the distance between them.
+When saved to tags, vectors are stored as [vector tags](/tags#vector-tags).
+
+There are two classes that provide vector functionality:
+
+-   [`Vector2`](#Vector2) provides 2D vectors.
+-   [`Vector3`](#Vector3) provides 3D vectors.
+
+<ApiContents doc={Doc} />

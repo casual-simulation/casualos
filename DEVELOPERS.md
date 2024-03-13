@@ -7,14 +7,15 @@
 
 Make sure you have all the prerequisite tools installed:
 
--   [Node.js](https://nodejs.org/en/download/) v16.18.1 or later.
+-   [Node.js](https://nodejs.org/en/download/) v18.17.1 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
-    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v16.18.1` in your favorite terminal.
+    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v18.17.1` in your favorite terminal.
 -   [Deno](https://deno.land/).
 -   [Rancher Desktop](https://rancherdesktop.io/)
     -   Used to make development with extra services (MongoDB, Redis, etc.) easy.
     -   It works exactly like `docker`, except the command is `nerdctl`.
 -   [AWS CLI](https://aws.amazon.com/cli/)
+-   [CockroachDB](https://www.cockroachlabs.com/docs/stable/install-cockroachdb-mac.html)
 -   (Windows Only)[Visual Studio with C++ tools](https://visualstudio.microsoft.com/)(Windows Only)
     -   Select the "Desktop Development with C++" workflow.
 
@@ -23,10 +24,16 @@ Make sure you have all the prerequisite tools installed:
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
 2. Make sure global dependencies are installed.
-    - `npm install -g lerna jake node-gyp`
+    - `npm install -g jake node-gyp prisma`
     - (Windows Only) [Tell NPM to use the global `node-gyp`.](https://github.com/nodejs/node-gyp/issues/2272) (Older versions of node-gyp cannot detect Visual Studio 2022)
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
-3. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
+3. Enable corepack
+    - `corepack enable`
+4. Start CockroachDB
+    - Use a separate terminal tab
+    - `npm run cockroach`
+    - If you want, you can choose to start CockroachDB when your system starts or use something like Docker to host your CockroachDB instance.
+5. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
@@ -36,11 +43,11 @@ Make sure you have all the prerequisite tools installed:
             ```
             127.0.0.1 casualos.localhost
             ```
-4. Start related services:
+6. Start related services:
     1. `nerdctl compose -f docker/docker-compose.dev.yml up -d`
-5. Bootstrap the project.
+7. Bootstrap the project.
     - `npm run bootstrap`
-6. Install commit hooks.
+8. Install commit hooks.
     - `npx husky install`
 
 ## Commands
@@ -48,6 +55,9 @@ Make sure you have all the prerequisite tools installed:
 When developing there are a couple of key commands you can run.
 Most of them are NPM scripts, so they're easy to run.
 
+-   Install existing dependencies
+    -   `npm run boostrap`
+    -   This runs `pnpm install --frozen-lockfile` which means that the `pnpm-lock.yaml` file will not be updated. If there are packages that need to be added to the lockfile, you need to run `pnpm install` manually.
 -   Build & Run in Watch Mode
     -   `npm run watch`
     -   This will trigger Vite to start in watch mode and run nodemon.
@@ -60,6 +70,12 @@ Most of them are NPM scripts, so they're easy to run.
     -   `npm run test:watch`
 -   Run tests
     -   `npm test`
+-   Start CockroachDB
+    -   `npm run cockroach`
+-   Reset your database
+    -   `prisma migrate reset`
+-   Update your database to match schema (creates a migration if needed)
+    -   `prisma migrate dev`
 
 You can find other scripts in the `package.json` file at the root of the repository.
 
@@ -96,6 +112,25 @@ You can analyze builds to see what is making them large and which dependencies a
 4. Upload the sourcemaps from `src/aux-server/aux-web/dist/assets`.
 5. Advance to the analysis page by clicking the button at the bottom of the page.
 
+## Documentation
+
+The reference documentation is generated automatically from doc comments.
+Here is a brief list of tags that are used to help generate the documentation:
+
+-   `@dochash` - This tells the documentation generator which page a type should be placed in. If a type does not have a `@dochash` tag, then it will only make it into the documentation if it is a child of a type that is included via `@dochash`. Each unique `@dochash` ends up as its own page.
+-   `@doctitle` - The title of a page. Only the first `@doctitle` found for each `@dochash` will be used.
+-   `@docsidebar` - The title of a page in the sidebar. Only the first `@docsidebar` found for each `@dochash` will be used.
+-   `@docdescription` - The SEO description of a page. Only the first `@docdescription` found for each `@dochash` will be used.
+-   `@docname` - The visual name of the type/function being documented.
+-   `@docid` - The ID of the type/function being documented. You can use `{@link ref}` annotations to reference types/functions by their IDs. If omitted, then `@docname` is used as the ID of a type.
+-   `@docgroup` - An internal group ID for the type. Within a page, types are sorted first by `@docgroup`, then by `@docorder`, and finally by `@docid`.
+-   `@docorder` - An internal order for the type. Within a page, types are sorted first by `@docgroup`, then by `@docorder`, and finally by `@docid`.
+-   `@docrename` - Used to rename a type to reference another type. (e.g. `@docrename MyOtherType` will cause all references to this type in the documentation to appear as if they are references to `MyOtherType`)
+-   `@docsource` - Tells the generator to generate an interface with the specified name from the property's type. Useful for properties that utilize type declarations.
+-   `@docreferenceactions` - Tells the generator to find all other types/properties whose IDs match the given regex pattern and include them as extra references for the type.
+-   `{@link [ref]}` - Renders a link to the type with `@docid` matching `[ref]`.
+-   `{@tag [tag]}` - Renders a link to the given `[tag]`. Prefix the tag with `@` to link to listen tags.
+
 ## Projects
 
 ### [AUX Server](./src/aux-server/)
@@ -130,22 +165,6 @@ A set of abstractions and common utilities required to run an AUX on any platfor
 -   [AUX VM Browser](./src/aux-vm-browser)
 -   [AUX VM Client](./src/aux-vm-client)
 -   [AUX VM Node](./src/aux-vm-node)
-
-### [Causal Trees](./src/causal-trees/)
-
-<a href="https://www.npmjs.com/package/@casual-simulation/aux-vm">
-    <img alt="Causal Trees NPM" src="https://img.shields.io/npm/v/@casual-simulation/causal-trees/latest"/>
-</a>
-
-A library to create persistent, distributed, realtime, and conflict-free data types.
-
-#### Related libraries
-
--   [Causal Tree Client Websocket](./src/causal-tree-client-native)
--   [Causal Tree Server](./src/causal-tree-server)
--   [Causal Tree Server Websocket](./src/causal-tree-server-websocket)
--   [Causal Tree Store Browser](./src/causal-tree-store-browser)
--   [Causal Tree Store MongoDB](./src/causal-tree-store-mongodb)
 
 ### [AUX Proxy](./src/aux-proxy/)
 
@@ -205,7 +224,6 @@ Here's a list of the tools and packages that we're using to build CasualOS.
         -   [three](https://threejs.org/) for 3D WebGL rendering.
             -   [troika-three-text](https://github.com/protectwise/troika/tree/master/packages/troika-three-text) for 3D text rendering.
         -   [express](http://expressjs.com/) for the HTTP server.
-        -   [es6-promise](https://github.com/stefanpenner/es6-promise) for ES6-style promises.
         -   [filepond](https://github.com/pqina/filepond) for file uploads.
             -   [vue-filepond](https://github.com/pqina/vue-filepond) for Vue.js integration.
         -   [downloadjs](https://github.com/rndme/download) for file downloads.

@@ -1,6 +1,7 @@
-const path = require('path');
+import path from 'path';
+import { themes } from 'prism-react-renderer';
 
-module.exports = {
+export default {
   title: 'CasualOS',
   tagline: 'Problem Solving For People',
   url: 'https://docs.casualos.com',
@@ -11,7 +12,8 @@ module.exports = {
   deploymentBranch: 'master',
   themeConfig: {
     prism: {
-      theme: require('prism-react-renderer/themes/vsDark')
+      theme: themes.vsDark,
+      darkTheme: themes.vsDark,
     },
     algolia: {
       appId: 'TNXB2QF2YB',
@@ -26,6 +28,12 @@ module.exports = {
         src: 'img/logo.png',
       },
       items: [
+        {
+            type: 'docsVersionDropdown',
+            position: 'left',
+            dropdownItemsAfter: [],
+            dropdownActiveClassDisabled: true,
+        },
         {
           href: 'https://github.com/casual-simulation/casualos',
           label: 'GitHub',
@@ -100,15 +108,15 @@ module.exports = {
             items: [
                 {
                     label: 'Terms of Service',
-                    to: 'https://ab1.link/terms'
+                    to: 'https://publicos.link/terms'
                 },
                 {
                     label: 'Acceptable Use Policy',
-                    to: 'https://ab1.link/acceptable-use-policy'
+                    to: 'https://publicos.link/acceptable-use-policy'
                 },
                 {
                     label: 'Privacy Policy',
-                    to: 'https://ab1.link/privacy-policy'
+                    to: 'https://publicos.link/privacy-policy'
                 },
             ]
         }
@@ -126,15 +134,26 @@ module.exports = {
       {
         docs: {
           routeBasePath: '/', // Serve the docs at the site's root
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: path.resolve('./sidebars.js'),
           tagsBasePath: 'labels',
           // Please change this to your repo.
           editUrl:
             'https://github.com/casual-simulation/casualos/tree/develop/docs',
+
+          lastVersion: 'current',
+          versions: {
+            'current': {
+                label: 'Current',
+             },
+             '3.1.36': {
+                label: 'v3.1.36',
+                path: '3.1.36'
+             }
+          },
         },
         blog: false, // Disable the blog plugin
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: path.resolve('./src/css/custom.css'),
         },
       },
     ],
@@ -145,7 +164,7 @@ module.exports = {
         {
             redirects: [
                 {
-                  to: '/listen-tags', // string
+                  to: '/tags/listen', // string
                   from: '/docs/listen-tags/tags', // string | string[]
                 },
                 {
@@ -161,15 +180,15 @@ module.exports = {
                     from: '/docs/variables', // string | string[]
                 },
                 {
-                    to: '/listen-tags', // string
-                    from: '/docs/listen-tags', // string | string[]
+                    to: '/tags/listen', // string
+                    from: ['/docs/listen-tags', '/listen-tags'], // string | string[]
                 },
                 {
                     to: '/glossary', // string
                     from: '/docs/glossary', // string | string[]
                 },
                 {
-                    to: '/actions', // string
+                    to: '/3.1.36/actions', // string
                     from: '/docs/actions', // string | string[]
                 },
                 {
@@ -184,10 +203,13 @@ module.exports = {
                     to: '/learn/scripting', // string
                     from: '/docs/learn/scripting', // string | string[]
                 },
+                {
+                    to: '/actions/data', // string
+                    from: '/actions', // string | string[]
+                },
             ],
         },
       ],
-      './plugins/simple-analytics',
-      './plugins/typedoc'
+      './plugins/simple-analytics'
   ]
 };

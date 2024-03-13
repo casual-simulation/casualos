@@ -18,7 +18,9 @@ import {
     hasValue,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,
+    LIBRARY_SCRIPT_PREFIX,
 } from '@casual-simulation/aux-common';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface that represents a script prefix.
@@ -58,6 +60,11 @@ export interface ScriptPrefix {
 export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
     {
         prefix: '@',
+        language: 'javascript',
+        isDefault: true,
+    },
+    {
+        prefix: LIBRARY_SCRIPT_PREFIX,
         language: 'javascript',
         isDefault: true,
     },
@@ -167,7 +174,7 @@ export class PortalManager implements SubscriptionLike {
         );
     }
 
-    private _onLocalEvents(events: LocalActions[]): void {
+    private _onLocalEvents(events: RuntimeActions[]): void {
         let newPrefixes: ScriptPrefix[] = [];
         let removedPrefixes: Set<string> = new Set();
         let nextEvents: BotActions[] = [];

@@ -1,27 +1,8 @@
 import { fromByteArray, toByteArray } from 'base64-js';
 import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
-
-/**
- * Converts the given string into a base64 string.
- * @param str The string to convert.
- */
-export function toBase64String(str: string): string {
-    const encoder = new TextEncoder();
-    const array = encoder.encode(str);
-    return fromByteArray(array);
-}
-
-/**
- * Converts the given string from a base64 string.
- * @param base64
- */
-export function fromBase64String(base64: string): string {
-    const decoder = new TextDecoder();
-    const array = toByteArray(base64);
-    return decoder.decode(array);
-}
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import axios from 'axios';
 
 /**
  * Signs the given request and adds the related headers to it.
@@ -323,12 +304,83 @@ export function parseInstancesList(instances: string): string[] {
         .filter((i) => !!i);
 }
 
+export type KnownErrorCodes =
+    | 'not_logged_in'
+    | 'not_supported'
+    | 'data_not_found'
+    | 'data_too_large'
+    | 'record_not_found'
+    | 'file_not_found'
+    | 'session_not_found'
+    | 'operation_not_found'
+    | 'studio_not_found'
+    | 'user_not_found'
+    | 'inst_not_found'
+    | 'session_already_revoked'
+    | 'invalid_code'
+    | 'invalid_key'
+    | 'invalid_request'
+    | 'invalid_origin'
+    | 'invalid_record_key'
+    | 'session_expired'
+    | 'unacceptable_address'
+    | 'unacceptable_user_id'
+    | 'unacceptable_code'
+    | 'unacceptable_session_key'
+    | 'unacceptable_session_id'
+    | 'unacceptable_request_id'
+    | 'unacceptable_ip_address'
+    | 'unacceptable_address_type'
+    | 'unacceptable_expire_time'
+    | 'unacceptable_request'
+    | 'unacceptable_update'
+    | 'address_type_not_supported'
+    | 'server_error'
+    | 'unauthorized_to_create_record_key'
+    | 'price_does_not_match'
+    | 'user_is_banned'
+    | 'rate_limit_exceeded'
+    | 'not_authorized'
+    | 'not_subscribed'
+    | 'invalid_subscription_tier'
+    | 'subscription_limit_reached'
+    | 'record_already_exists'
+    | 'action_not_supported'
+    | 'no_session_key'
+    | 'unacceptable_studio_id'
+    | 'email_already_exists'
+    | 'parent_email_already_exists'
+    | 'parent_email_required'
+    | 'invalid_room_name'
+    | 'invalid_username'
+    | 'invalid_update_policy'
+    | 'invalid_delete_policy'
+    | 'unacceptable_url'
+    | 'file_already_exists'
+    | 'invalid_file_data'
+    | 'invalid_model'
+    | 'roles_too_large'
+    | 'policy_not_found'
+    | 'policy_too_large'
+    | 'invalid_policy'
+    | 'not_completed'
+    | 'invalid_display_name'
+    | 'permission_already_exists'
+    | 'comId_not_found'
+    | 'comId_already_taken'
+    | 'permission_not_found'
+    | 'unacceptable_connection_token'
+    | 'invalid_token'
+    | 'unacceptable_connection_id'
+    | 'message_not_found'
+    | 'not_found';
+
 /**
  * Gets the status code that should be used for the given response.
  * @param response The response.
  */
 export function getStatusCode(
-    response: { success: false; errorCode: string } | { success: true }
+    response: { success: false; errorCode: KnownErrorCodes } | { success: true }
 ) {
     if (response.success === false) {
         if (response.errorCode === 'not_logged_in') {
@@ -347,11 +399,17 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'operation_not_found') {
             return 404;
+        } else if (response.errorCode === 'studio_not_found') {
+            return 404;
+        } else if (response.errorCode === 'user_not_found') {
+            return 404;
         } else if (response.errorCode === 'session_already_revoked') {
             return 200;
         } else if (response.errorCode === 'invalid_code') {
             return 403;
         } else if (response.errorCode === 'invalid_key') {
+            return 403;
+        } else if (response.errorCode === 'invalid_record_key') {
             return 403;
         } else if (response.errorCode === 'invalid_request') {
             return 403;
@@ -393,6 +451,30 @@ export function getStatusCode(
             return 429;
         } else if (response.errorCode === 'not_authorized') {
             return 403;
+        } else if (response.errorCode === 'not_subscribed') {
+            return 403;
+        } else if (response.errorCode === 'invalid_subscription_tier') {
+            return 403;
+        } else if (response.errorCode === 'record_already_exists') {
+            return 403;
+        } else if (response.errorCode === 'subscription_limit_reached') {
+            return 403;
+        } else if (response.errorCode === 'inst_not_found') {
+            return 404;
+        } else if (response.errorCode === 'action_not_supported') {
+            return 500;
+        } else if (response.errorCode === 'policy_not_found') {
+            return 404;
+        } else if (response.errorCode === 'comId_not_found') {
+            return 404;
+        } else if (response.errorCode === 'comId_already_taken') {
+            return 409;
+        } else if (response.errorCode === 'permission_not_found') {
+            return 404;
+        } else if (response.errorCode === 'message_not_found') {
+            return 404;
+        } else if (response.errorCode === 'not_found') {
+            return 404;
         } else {
             return 400;
         }
@@ -502,13 +584,87 @@ export function isActiveSubscription(status: string): boolean {
 }
 
 /**
- * Gets the list of markers that should be used, or the default list if none are provided.
+ * Gets the list of root markers that should be used, or the default list if none are provided.
  * @param markers
  */
-export function getMarkersOrDefault(markers: string[] | null): string[] {
+export function getRootMarkersOrDefault(markers: string[] | null): string[] {
     if (markers === null || markers === undefined || markers.length <= 0) {
         return [PUBLIC_READ_MARKER];
     }
 
-    return markers;
+    return markers.map(getRootMarker);
+}
+
+/**
+ * Gets the root marker from the given marker.
+ * Markers have two parts, the root and the path: "root:path".
+ * The root is the first part of the marker, and contains the security name of the marker. That is, the name of the marker that is used to retrieve permissions for the marker.
+ * The path is the second part of the marker, and contains the path that the marker is for. That is, extra information that can be used to organize marker data.
+ * @param marker The marker that should be parsed.
+ */
+export function getRootMarker(marker: string): string {
+    if (!marker) {
+        return marker;
+    }
+
+    const indexOfColon = marker.indexOf(':');
+    if (indexOfColon < 0) {
+        return marker;
+    }
+    return marker.substring(0, indexOfColon);
+}
+
+/**
+ * Gets the path marker from the given marker.
+ * Markers have two parts, the root and the path: "root:path".
+ * The root is the first part of the marker, and contains the security name of the marker. That is, the name of the marker that is used to retrieve permissions for the marker.
+ * The path is the second part of the marker, and contains the path that the marker is for. That is, extra information that can be used to organize marker data.
+ *
+ * Returns an empty string if the marker does not contain a path.
+ * @param marker The marker that should be parsed.
+ */
+export function getPathMarker(marker: string): string {
+    if (!marker) {
+        return '';
+    }
+
+    const indexOfColon = marker.indexOf(':');
+    if (indexOfColon < 0) {
+        return '';
+    }
+    return marker.substring(indexOfColon + 1);
+}
+
+/**
+ * Handles axios errors and ensures they get logged properly.
+ * @param err The error.
+ */
+export function handleAxiosErrors(err: any) {
+    if (axios.isAxiosError(err)) {
+        console.error(
+            'An axios error occcurred:',
+            '\nStatus:',
+            err.response.status,
+            '\nHeaders:',
+            err.response.headers,
+            '\nData:',
+            err.response.data,
+            '\nRequest:',
+            err.request
+        );
+        throw new Error('An axios error occurred: ' + err.message);
+    } else {
+        throw err;
+    }
+}
+
+/**
+ * Calculates the number of bytes contained in the given string encoded to utf-8.
+ * @param str The string.
+ */
+export function byteLengthOfString(str: string): number {
+    if (typeof Buffer !== 'undefined') {
+        return Buffer.byteLength(str, 'utf8');
+    }
+    return new Blob([str], { type: 'text/plain' }).size;
 }

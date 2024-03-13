@@ -1,5 +1,5 @@
 
-module.exports = function pluginSimpleAnalytics(context, options) {
+export default function pluginSimpleAnalytics(context, options) {
     const { customDomain } = options;
     const isProd = process.env.NODE_ENV === 'production';
     const scriptDomain = customDomain ?? 'scripts.simpleanalyticscdn.com';

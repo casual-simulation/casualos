@@ -1,9 +1,88 @@
-import { ServerError } from './Errors';
+import {
+    NotSupportedError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 
 /**
- * Defines an interface that provides a way to store file records.
+ * Defines an interface for systems that are able to store info about file records.
  */
-export interface FileRecordsStore {
+export interface FileRecordsLookup {
+    /**
+     * Gets the file record for the file with the given name.
+     * @param recordName The name of the record that the file is stored in.
+     * @param fileName The name of the file.
+     */
+    getFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<FileRecord | null>;
+
+    /**
+     * Attempts to list the files in the given record.
+     * @param recordName The name of the record.
+     * @param fileName The name of the file to start listing after.
+     */
+    listUploadedFiles?(
+        recordName: string,
+        fileName: string | null
+    ): Promise<ListFilesLookupResult>;
+
+    /**
+     * Attempts to add a record for a file to the store.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file that should be recorded.
+     * @param publisherId The ID of the publisher that published the record.
+     * @param subjectId The ID of the subject that was logged in when the record was published.
+     * @param sizeInBytes The size of the file in bytes.
+     * @param description The description of the file.
+     * @param bucket The bucket that the file is stored in.
+     * @param markers The resource markers for the file.
+     */
+    addFileRecord(
+        recordName: string,
+        fileName: string,
+        publisherId: string,
+        subjectId: string,
+        sizeInBytes: number,
+        description: string,
+        bucket: string | null,
+        markers: string[]
+    ): Promise<AddFileResult>;
+
+    /**
+     * Attempts to update the given file record.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file.
+     * @param markers The markers that should be set on the file.
+     */
+    updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult>;
+
+    /**
+     * Marks the given file record as having been uploaded.
+     * @param recordName The reocrd that the file was uploaded to.
+     * @param fileName The name of the file that was uploaded.
+     */
+    setFileRecordAsUploaded(
+        recordName: string,
+        fileName: string
+    ): Promise<MarkFileRecordAsUploadedResult>;
+
+    /**
+     * Attempts to delete the given file from the given record.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file that should be deleted.
+     */
+    eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult>;
+}
+
+export interface FileRecordsVault {
     /**
      * Presigns a request to record a file.
      * Returns the URL that should be used to upload the file and the headers that should be included in the upload request.
@@ -23,6 +102,22 @@ export interface FileRecordsStore {
     ): Promise<PresignFileReadResult>;
 
     /**
+     * Attempts to get the record name and file name from the given URL.
+     * @param fileUrl The URL.
+     */
+    getFileNameFromUrl(fileUrl: string): Promise<GetFileNameFromUrlResult>;
+
+    /**
+     * Gets the list of headers that should be allowed via CORS.
+     */
+    getAllowedUploadHeaders(): string[];
+}
+
+/**
+ * Defines an interface that provides a way to store file records.
+ */
+export interface FileRecordsStore extends FileRecordsVault {
+    /**
      * Gets the file record for the file with the given name.
      * @param recordName The name of the record that the file is stored in.
      * @param fileName The name of the file.
@@ -31,6 +126,16 @@ export interface FileRecordsStore {
         recordName: string,
         fileName: string
     ): Promise<GetFileRecordResult>;
+
+    /**
+     * Attempts to list the files in the given record.
+     * @param recordName The name of the record.
+     * @param fileName The name of the file that the listing should start after.
+     */
+    listUploadedFiles?(
+        recordName: string,
+        fileName: string | null
+    ): Promise<ListFilesStoreResult>;
 
     /**
      * Attempts to add a record for a file to the store.
@@ -83,17 +188,58 @@ export interface FileRecordsStore {
         recordName: string,
         fileName: string
     ): Promise<EraseFileStoreResult>;
+}
+
+/**
+ * Defines the structure of a file record.
+ */
+export interface FileRecord {
+    /**
+     * The name of the file.
+     */
+    fileName: string;
 
     /**
-     * Attempts to get the record name and file name from the given URL.
-     * @param fileUrl The URL.
+     * The description of the file.
      */
-    getFileNameFromUrl(fileUrl: string): Promise<GetFileNameFromUrlResult>;
+    description: string;
 
     /**
-     * Gets the list of headers that should be allowed via CORS.
+     * The name of the record that the file was recorded in.
      */
-    getAllowedUploadHeaders(): string[];
+    recordName: string;
+
+    /**
+     * The ID of the publisher that published the record.
+     */
+    publisherId: string;
+
+    /**
+     * The ID of the subject that was logged in when the record was published.
+     */
+    subjectId: string;
+
+    /**
+     * The size of the record in bytes.
+     */
+    sizeInBytes: number;
+
+    /**
+     * Whether the record was uploaded to the server.
+     */
+    uploaded: boolean;
+
+    /**
+     * The resource markers for the file.
+     * Null if the file was created without markers.
+     */
+    markers: string[] | null;
+
+    /**
+     * The bucket that the file is stored in.
+     * If null, then the file is stored in the default bucket.
+     */
+    bucket: string | null;
 }
 
 export type GetFileRecordResult = GetFileRecordSuccess | GetFileRecordFailure;
@@ -263,7 +409,7 @@ export interface PresignFileUploadSuccess {
 
 export interface PresignFileUploadFailure {
     success: false;
-    errorCode: ServerError;
+    errorCode: ServerError | NotSupportedError;
     errorMessage: string;
 }
 
@@ -293,6 +439,61 @@ export interface PresignFileReadSuccess {
 }
 
 export interface PresignFileReadFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListFilesLookupResult =
+    | ListFilesLookupSuccess
+    | ListFilesLookupFailure;
+
+export interface ListFilesLookupSuccess {
+    success: true;
+    files: ListedLookupFile[];
+    totalCount: number;
+}
+
+export interface ListedLookupFile {
+    fileName: string;
+    description: string;
+    sizeInBytes: number;
+    uploaded: boolean;
+
+    /**
+     * The bucket that the file is stored in.
+     * Null if the file is stored in the default bucket.
+     */
+    bucket: string | null;
+    markers: string[] | null;
+}
+
+export interface ListFilesLookupFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListFilesStoreResult =
+    | ListFilesStoreSuccess
+    | ListFilesStoreFailure;
+
+export interface ListFilesStoreSuccess {
+    success: true;
+    files: ListedFileRecord[];
+    totalCount: number;
+}
+
+export interface ListedFileRecord {
+    fileName: string;
+    description: string;
+    sizeInBytes: number;
+    uploaded: boolean;
+    url: string;
+    markers: string[] | null;
+}
+
+export interface ListFilesStoreFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;

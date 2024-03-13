@@ -5,47 +5,12 @@ sidebar_label: Helper Variables
 description: Learn about variables in CasualOS
 ---
 
-<!-- All these components are duplicated because importing them  -->
-<!-- breaks the build for some reason -->
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import { GlossaryRef } from './glossary/index';
-
-export const Alert = ({type, children}) => (
-    <div className={`alert alert--${type}`} role='alert'>
-        {children}
-    </div>
-);
-
-export const NormalCode = ({children}) => (
-  React.createElement('code', {}, ...children)
-);
-
-export const ActionLink = ({action, children}) => (
-  <a href={useBaseUrl('actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
-  {children ? children : (
-      <NormalCode>{action}</NormalCode>
-  )}
-  </a>
-);
-
-export const DataTagLink = ({tag}) => (
-  <a href={useBaseUrl('tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
-    <NormalCode>#{tag}</NormalCode>
-  </a>
-);
-
-export const ListenTagLink = ({tag}) => (
-  <a href={useBaseUrl('listen-tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
-    <NormalCode>{tag}</NormalCode>
-  </a>
-);
-
-export const TagLink = ({tag}) => tag.startsWith('@') ? 
-  (<ListenTagLink tag={tag}/>) : 
-  (<DataTagLink tag={tag}/>);
+import { Alert, NormalCode, DataTagLink, TagLink } from './components.jsx'
 
 CasualOS defines some variables for each listen tag that you create.
-Unlike [actions](./actions.mdx), variables exist to make it easy to access common data.
+Unlike actions, variables exist to make it easy to access common data.
 
 ### `thisBot`
 
@@ -206,7 +171,7 @@ whisper(creatorBot, 'myWhisper');
 The bot that configures the current browsing session.
 This used to be called the "player bot" but was renamed to `configBot` to better indicate what it is used for.
 
-You can find the list of tags that CasualOS uses for the configBot [here](./tags.mdx#config-bot-tags).
+You can find the list of tags that CasualOS uses for the configBot [here](./tags/config-bot.mdx#config-bot-tags).
 
 #### Examples:
 
@@ -264,13 +229,10 @@ Supports the following tags:
 - <TagLink tag='portalColor'/>
 - <TagLink tag='portalLocked'/>
 - <TagLink tag='portalPannable'/>
-- <TagLink tag='portalPannableMinX'/>
-- <TagLink tag='portalPannableMaxX'/>
-- <TagLink tag='portalPannableMinY'/>
-- <TagLink tag='portalPannableMaxY'/>
+- <TagLink tag='portalPannableMin'/>
+- <TagLink tag='portalPannableMax'/>
 - <TagLink tag='portalRotatable'/>
-- <TagLink tag='portalCameraRotationX'/>
-- <TagLink tag='portalCameraRotationY'/>
+- <TagLink tag='portalCameraRotation'/>
 - <TagLink tag='portalZoomable'/>
 - <TagLink tag='portalGridScale'/>
 - <TagLink tag='portalSurfaceScale'/>

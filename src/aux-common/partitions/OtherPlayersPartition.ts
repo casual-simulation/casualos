@@ -1,28 +1,11 @@
 import {
     OtherPlayersClientPartitionConfig,
     OtherPlayersRepoPartitionConfig,
-    RemoteCausalRepoPartitionConfig,
     PartitionConfig,
 } from './AuxPartitionConfig';
 import {
-    User,
-    StatusUpdate,
-    Action,
-    RemoteAction,
-    WatchBranchEvent,
-    DeviceInfo,
-    USERNAME_CLAIM,
-    SESSION_ID_CLAIM,
-    RemoteActions,
-} from '@casual-simulation/causal-trees';
-import {
-    CausalRepoClient,
-    CurrentVersion,
-} from '@casual-simulation/causal-trees/core2';
-import {
     OtherPlayersPartition,
     AuxPartitionRealtimeStrategy,
-    RemoteCausalRepoPartition,
     AuxPartition,
 } from './AuxPartition';
 import {
@@ -49,20 +32,35 @@ import {
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
 } from '../bots';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { skip, startWith } from 'rxjs/operators';
-import { createCausalRepoClientPartition } from './RemoteCausalRepoPartition';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    Subscription,
+    firstValueFrom,
+} from 'rxjs';
+import { filter, first, skip, startWith } from 'rxjs/operators';
 import { sortBy } from 'lodash';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
+import { InstRecordsClient } from '../websockets';
+import {
+    Action,
+    ConnectionInfo,
+    CurrentVersion,
+    RemoteActions,
+    StatusUpdate,
+    getConnectionId,
+} from '../common';
+import { PartitionAuthSource } from './PartitionAuthSource';
 
 export async function createOtherPlayersClientPartition(
     config: PartitionConfig,
-    user: User
+    authSource: PartitionAuthSource
 ): Promise<OtherPlayersPartitionImpl> {
     if (config.type === 'other_players_client') {
         const partition = new OtherPlayersPartitionImpl(
-            user,
             config.client,
+            authSource,
             config
         );
         return partition;
@@ -89,10 +87,13 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
-    private _user: User;
     private _space: string;
+    private _recordName: string;
+    private _inst: string;
     private _branch: string;
     private _state: BotsState;
+    private _skipInitialLoad: boolean;
+    private _authSource: PartitionAuthSource;
 
     /**
      * The map of branch names to partitions.
@@ -119,7 +120,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
      */
     private _watchingBranch: boolean = false;
 
-    private _client: CausalRepoClient;
+    private _client: InstRecordsClient;
     private _synced: boolean;
 
     private: boolean;
@@ -202,23 +203,25 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     }
 
     constructor(
-        user: User,
-        client: CausalRepoClient,
+        client: InstRecordsClient,
+        authSource: PartitionAuthSource,
         config:
             | OtherPlayersClientPartitionConfig
             | OtherPlayersRepoPartitionConfig
     ) {
-        this._user = user;
+        this._recordName = config.recordName;
+        this._inst = config.inst;
         this._branch = config.branch;
         this._client = client;
-        this._childParitionType =
-            config.childPartitionType ?? 'causal_repo_client';
+        this._authSource = authSource;
+        this._childParitionType = config.childPartitionType ?? 'yjs_client';
         this._state = {};
         this._partitions = new Map();
         this._partitionPromises = new Map();
         this._partitionSubs = new Map();
         this._devices = new Map();
         this._synced = false;
+        this._skipInitialLoad = config.skipInitialLoad;
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
@@ -231,33 +234,63 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 const action = <GetRemotesAction>event.event;
                 const connectedDevices = [...this._devices.values()];
                 const sessionIds = sortBy([
-                    this._user.id,
-                    ...connectedDevices.map(
-                        (cd) => cd.deviceInfo.claims[SESSION_ID_CLAIM]
-                    ),
+                    this._client.connection.info.connectionId,
+                    ...connectedDevices.map((cd) => cd.deviceInfo.connectionId),
                 ]);
                 this._onEvents.next([asyncResult(event.taskId, sessionIds)]);
             }
         }
     }
 
-    async setUser(user: User): Promise<void> {
-        for (let partition of this._partitions.values()) {
-            if (partition.setUser) {
-                await partition.setUser(user);
-            }
-        }
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        for (let partition of this._partitions.values()) {
-            if (partition.setGrant) {
-                await partition.setGrant(grant);
-            }
-        }
-    }
-
     connect(): void {
+        if (this._skipInitialLoad) {
+            this._loadWithoutConnecting();
+        } else {
+            this._watchDevices();
+        }
+    }
+
+    async enableCollaboration(): Promise<void> {
+        this._skipInitialLoad = false;
+        this._synced = false;
+        const promise = firstValueFrom(
+            this._onStatusUpdated.pipe(
+                filter((u) => u.type === 'sync' && u.synced)
+            )
+        );
+        this._watchDevices();
+        await promise;
+    }
+
+    private _loadWithoutConnecting() {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+        const indicator = this._client.connection.indicator;
+        const connectionId = indicator
+            ? getConnectionId(indicator)
+            : 'missing-connection-id';
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+            info: this._client.connection.info ?? {
+                connectionId: connectionId,
+                sessionId: null,
+                userId: null,
+            },
+        });
+        this._onStatusUpdated.next({
+            type: 'authorization',
+            authorized: true,
+        });
+        this._onStatusUpdated.next({
+            type: 'sync',
+            synced: true,
+        });
+    }
+
+    private _watchDevices() {
         this._sub.add(
             this._client.connection.connectionState.subscribe((state) => {
                 const connected = state.connected;
@@ -269,7 +302,6 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                     this._onStatusUpdated.next({
                         type: 'authentication',
                         authenticated: true,
-                        user: this._user,
                         info: state.info,
                     });
                     this._onStatusUpdated.next({
@@ -282,25 +314,28 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             })
         );
         this._sub.add(
-            this._client.watchBranchDevices(this._branch).subscribe((event) => {
-                if (!this._synced) {
-                    this._updateSynced(true);
-                }
+            this._client
+                .watchBranchDevices(this._recordName, this._inst, this._branch)
+                .subscribe((event) => {
+                    if (!this._synced) {
+                        this._updateSynced(true);
+                    }
 
-                if (event.device.claims[SESSION_ID_CLAIM] === this._user.id) {
-                    return;
-                }
+                    if (
+                        event.connection.connectionId ===
+                        this._client.connection.info.connectionId
+                    ) {
+                        return;
+                    }
 
-                if (event.type === 'repo/device_connected_to_branch') {
-                    this._registerDevice(event.device);
-                    this._tryLoadBranchForDevice(event.device);
-                } else if (
-                    event.type === 'repo/device_disconnected_from_branch'
-                ) {
-                    this._unregisterDevice(event.device);
-                    this._tryUnloadBranchForDevice(event.device);
-                }
-            })
+                    if (event.type === 'repo/connected_to_branch') {
+                        this._registerDevice(event.connection);
+                        this._tryLoadBranchForDevice(event.connection);
+                    } else if (event.type === 'repo/disconnected_from_branch') {
+                        this._unregisterDevice(event.connection);
+                        this._tryUnloadBranchForDevice(event.connection);
+                    }
+                })
         );
     }
 
@@ -312,44 +347,44 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         });
     }
 
-    private _registerDevice(device: DeviceInfo) {
-        if (this._devices.has(device.claims[SESSION_ID_CLAIM])) {
-            let connected = this._devices.get(device.claims[SESSION_ID_CLAIM]);
+    private _registerDevice(device: ConnectionInfo) {
+        if (this._devices.has(device.connectionId)) {
+            let connected = this._devices.get(device.connectionId);
             connected.connectionCount += 1;
         } else {
             const connected = {
                 connectionCount: 1,
                 deviceInfo: device,
             } as ConnectedDevice;
-            this._devices.set(device.claims[SESSION_ID_CLAIM], connected);
+            this._devices.set(device.connectionId, connected);
 
             this._onEvents.next([
                 action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
-                    remoteId: device.claims[SESSION_ID_CLAIM],
+                    remoteId: device.connectionId,
                 }),
                 action(ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME, null, null, {
-                    playerId: device.claims[SESSION_ID_CLAIM],
+                    playerId: device.connectionId,
                 }),
             ]);
         }
     }
 
-    private _unregisterDevice(device: DeviceInfo) {
-        if (this._devices.has(device.claims[SESSION_ID_CLAIM])) {
-            let connected = this._devices.get(device.claims[SESSION_ID_CLAIM]);
+    private _unregisterDevice(device: ConnectionInfo) {
+        if (this._devices.has(device.connectionId)) {
+            let connected = this._devices.get(device.connectionId);
             connected.connectionCount -= 1;
             if (connected.connectionCount <= 0) {
-                this._devices.delete(device.claims[SESSION_ID_CLAIM]);
+                this._devices.delete(device.connectionId);
                 this._onEvents.next([
                     action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
-                        remoteId: device.claims[SESSION_ID_CLAIM],
+                        remoteId: device.connectionId,
                     }),
                     action(
                         ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
                         null,
                         null,
                         {
-                            playerId: device.claims[SESSION_ID_CLAIM],
+                            playerId: device.connectionId,
                         }
                     ),
                 ]);
@@ -361,7 +396,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
      * Attempts to load the player branch for the given device.
      * @param device The device.
      */
-    private async _tryLoadBranchForDevice(device: DeviceInfo) {
+    private async _tryLoadBranchForDevice(device: ConnectionInfo) {
         const branch = this._branchNameForDevice(device);
         if (!this._partitionPromises.has(branch)) {
             const promise = this._loadPartition(branch, device);
@@ -372,10 +407,10 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
     private async _loadPartition(
         branch: string,
-        device: DeviceInfo
+        device: ConnectionInfo
     ): Promise<AuxPartition> {
         console.log(
-            `[OtherPlayersPartitionImpl] Loading partition for ${device.claims[SESSION_ID_CLAIM]}`
+            `[OtherPlayersPartitionImpl] Loading partition for ${device.connectionId}`
         );
         const sub = new Subscription();
         const promise =
@@ -383,22 +418,26 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                 ? createRemoteClientYjsPartition(
                       {
                           type: 'yjs_client',
+                          recordName: this._recordName,
+                          inst: this._inst,
                           branch: branch,
                           client: this._client,
                           temporary: true,
                           readOnly: true,
                       },
-                      this._user
+                      this._authSource
                   )
-                : createCausalRepoClientPartition(
+                : createRemoteClientYjsPartition(
                       {
-                          type: 'causal_repo_client',
+                          type: 'yjs_client',
+                          recordName: this._recordName,
+                          inst: this._inst,
                           branch: branch,
                           client: this._client,
                           temporary: true,
                           readOnly: true,
                       },
-                      this._user
+                      this._authSource
                   );
         const partition = await promise;
         this._partitions.set(branch, partition);
@@ -456,11 +495,11 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
      * Attempts to unload the player branch for the given device.
      * @param device The device.
      */
-    private async _tryUnloadBranchForDevice(device: DeviceInfo) {
+    private async _tryUnloadBranchForDevice(device: ConnectionInfo) {
         const branch = this._branchNameForDevice(device);
         if (this._partitionPromises.has(branch)) {
             console.log(
-                `[OtherPlayersPartitionImpl] Unloading partition for ${device.claims[SESSION_ID_CLAIM]}`
+                `[OtherPlayersPartitionImpl] Unloading partition for ${device.connectionId}`
             );
             const partition = await this._partitionPromises.get(branch);
             this._partitions.delete(branch);
@@ -517,12 +556,12 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         }
     }
 
-    private _branchNameForDevice(device: DeviceInfo) {
-        return `${this._branch}-player-${device.claims[SESSION_ID_CLAIM]}`;
+    private _branchNameForDevice(device: ConnectionInfo) {
+        return `${this._branch}-player-${device.connectionId}`;
     }
 }
 
 interface ConnectedDevice {
     connectionCount: number;
-    deviceInfo: DeviceInfo;
+    deviceInfo: ConnectionInfo;
 }

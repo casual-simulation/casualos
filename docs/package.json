@@ -3,23 +3,43 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "docusaurus start -p 3001",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
-    "serve": "docusaurus serve -p 3001"
+    "start": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus start -p 3001",
+    "build": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus build",
+    "swizzle": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus swizzle",
+    "deploy": "npm run typedoc && cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus deploy",
+    "serve": "cross-env NODE_OPTIONS=--openssl-legacy-provider docusaurus serve -p 3001",
+    "typedoc": "npm run build:plugin && node ./typedoc-plugin/dist/index.js",
+    "build:plugin": "node ./script/build-typedoc.mjs"
   },
   "dependencies": {
-    "@docusaurus/core": "2.2.0",
-    "@docusaurus/preset-classic": "2.2.0",
-    "@docusaurus/plugin-client-redirects": "2.2.0",
+    "@algolia/client-search": "^4.20.0",
+    "@docusaurus/core": "3.0.1",
+    "@docusaurus/plugin-client-redirects": "3.0.1",
+    "@docusaurus/preset-classic": "3.0.1",
+    "@types/react": "^18.2.39",
     "clsx": "^1.1.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "mustache": "4.2.0",
     "rc-tooltip": "5.2.2",
-    "typedoc": "0.22.15",
-    "webpack-virtual-modules": "0.4.6",
-    "typescript": "^4.4.4"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-loadable": "^5.5.0",
+    "react-markdown": "9.0.1",
+    "rehype-raw": "6.1.1",
+    "search-insights": "^2.11.0",
+    "ts-morph": "20.0.0",
+    "typedoc": "0.25.4",
+    "typescript": "^5.3.2",
+    "unist-util-visit": "4.1.2",
+    "vue": "3.3.4",
+    "webpack-virtual-modules": "0.5.0",
+    "@mdx-js/react": "^3.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "7.0.3"
+  },
+  "engines": {
+    "node": ">=18.0",
+    "pnpm": ">=8"
   },
   "browserslist": {
     "production": [

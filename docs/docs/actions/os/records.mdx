@@ -1,0 +1,20 @@
+---
+id: records
+title: Records Actions
+sidebar_label: Records
+description: Records are a way to store permenent data in CasualOS.
+---
+
+import Doc from '../../api-info/actions/os/records.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

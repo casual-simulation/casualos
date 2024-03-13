@@ -416,7 +416,7 @@ export abstract class BaseInteractionManager {
             }
         }
 
-        if (input.currentInputType === InputType.Mouse) {
+        if (input.supportsHoverEvents) {
             if (input.isMouseFocusingOnElement(this._game.gameView.gameView)) {
                 const { gameObject, block } = this.findHoveredGameObject(
                     inputMethod,
@@ -513,17 +513,22 @@ export abstract class BaseInteractionManager {
                             finger,
                             position
                         );
-                        const key = getModalityKey(modality);
 
                         // Set bot as being hovered on.
                         this._setHoveredBot(gameObject, modality, block);
 
-                        const canStartClick = this._operations.every(
-                            (op) =>
-                                !(op instanceof BaseClickOperation) ||
-                                getModalityKey(op.modality) !== key
-                        );
-                        if (canStartClick) {
+                        const clickInProgress = this._operations.some((op) => {
+                            if (op instanceof BaseClickOperation) {
+                                if (
+                                    op.modality.type === 'controller' ||
+                                    op.modality.type === 'finger'
+                                ) {
+                                    return op.modality.hand === modality.hand;
+                                }
+                            }
+                        });
+
+                        if (!clickInProgress) {
                             this._startClickingGameObject(
                                 gameObject,
                                 hit,
@@ -1054,7 +1059,12 @@ export abstract class BaseInteractionManager {
         gameObjectFilter: (obj: GameObject) => boolean
     ) {
         const ray = objectForwardRay(controller.ray);
-        return this.findHoveredGameObjectFromRay(ray, gameObjectFilter);
+        const viewport = this._game.getMainCameraRig().viewport;
+        return this.findHoveredGameObjectFromRay(
+            ray,
+            gameObjectFilter,
+            viewport
+        );
     }
 
     /**

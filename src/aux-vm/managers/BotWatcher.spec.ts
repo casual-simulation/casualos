@@ -17,7 +17,7 @@ import {
     edit,
     insert,
     preserve,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 
 describe('BotWatcher', () => {
     let vm: TestAuxVM;
@@ -28,7 +28,7 @@ describe('BotWatcher', () => {
     let userId = 'user';
 
     beforeEach(async () => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('id');
         helper = new BotHelper(vm);
         helper.userId = userId;
 

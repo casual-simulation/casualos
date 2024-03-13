@@ -1,4 +1,6 @@
-import { TagEditOp } from '../aux-format-2';
+import { type } from 'os';
+import { TagEditOp } from './AuxStateHelpers';
+import { BotModule, BotModuleResult } from './BotModule';
 
 export type PartialBot = Partial<Bot>;
 
@@ -53,10 +55,30 @@ export const REPLACE_BOT_SYMBOL = Symbol('replace_bot');
  * are calculated values and raw is the original tag values.
  *
  * i.e. tags will evaluate formulas while raw will return the formula scripts themselves.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @doctitle Core Types
+ * @docsidebar Core
+ * @docdescription Documentation for core types that are used throughout CasualOS.
+ * @docid RuntimeBot
+ * @docname Bot
  */
 export interface RuntimeBot {
+    /**
+     * The ID of the bot.
+     */
     id: string;
+
+    /**
+     * The link to the bot.
+     */
     link: string;
+
+    /**
+     * The space that the bot is in.
+     * Defaults to `"shared"`
+     */
     space?: BotSpace;
 
     /**
@@ -97,6 +119,8 @@ export interface RuntimeBot {
 
     /**
      * The signatures that are on the bot.
+     *
+     * @hidden
      */
     signatures: BotSignatures;
 
@@ -108,32 +132,44 @@ export interface RuntimeBot {
 
     /**
      * A function that can clear all the changes from the runtime bot.
+     *
+     * @hidden
      */
     [CLEAR_CHANGES_SYMBOL]: () => void;
 
     /**
      * A function that can set a tag mask on the bot.
+     *
+     * @hidden
      */
     [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
 
     /**
      * A function that can be used to get the tag masks for a bot.
+     *
+     * @hidden
      */
     [GET_TAG_MASKS_SYMBOL]: () => BotTagMasks;
 
     /**
      * A function that can clear the tag masks from the bot.
      * @param space The space that the masks should be cleared from. If not specified then all tag masks in all spaces will be cleared.
+     *
+     * @hidden
      */
     [CLEAR_TAG_MASKS_SYMBOL]: (space?: string) => any;
 
     /**
      * A function that can manipulate a tag using the given edit operations.
+     *
+     * @hidden
      */
     [EDIT_TAG_SYMBOL]: (tag: string, ops: TagEditOp[]) => any;
 
     /**
      * A function that can manipulate a tag mask using the given edit operations.
+     *
+     * @hidden
      */
     [EDIT_TAG_MASK_SYMBOL]: (
         tag: string,
@@ -143,17 +179,39 @@ export interface RuntimeBot {
 
     /**
      * A function that can cause all tags to be fowarded to the given bot.
+     *
+     * @hidden
      */
     [REPLACE_BOT_SYMBOL]: (bot: RuntimeBot) => void;
 
     /**
-     * Gets the listener with the given name.
+     * Gets the listener or bot property with the given name.
+     *
+     * If given a property name, like `"tags"` or `"vars"`, then it will return the value of that property.
+     * Alternatively, if the name does not match an existing property on the bot, then it will return the listener with the given name.
+     *
+     * @example Get the tags of a bot
+     * let tags = bot.tags;
+     *
+     * @example Get the links of a bot
+     * let links = bot.links;
+     *
+     * @example Get the @onClick listener of a bot
+     * let onClick = bot.onClick;
+     *
+     * @example Get a property on a bot by a variable
+     * let propertyToGet = 'tags';
+     * let tags = bot[propertyToGet];
      */
-    [listener: string]: CompiledBotListener | any;
+    [listenerOrProperty: string]: ((arg?: any) => any) | any;
 }
 
 /**
  * Defines an interface that represents a bot link that was parsed from a tag.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname ParsedBotLink
  */
 export interface ParsedBotLink {
     /**
@@ -169,27 +227,107 @@ export interface ParsedBotLink {
 
 /**
  * Defines an interface that represents the bot links a bot can have.
+ *
+ * ```typescript
+ * interface Links {
+ *      [link: string]: Bot | Bot[];
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Links
+ * @docid RuntimeBotLinks
  */
 export interface RuntimeBotLinks {
+    /**
+     * Gets the bot or bots that are linked in the given tag.
+     *
+     * @example Get a bot that is linked in the #manager tag
+     * let managerBot = thisBot.links.manager;
+     *
+     * @example Link a bot to another bot in the #manager tag
+     * thisBot.links.manager = managerBot;
+     */
     [tag: string]: RuntimeBot | RuntimeBot[];
 }
 
 /**
  * Defines an interface that represents the variables a bot can have.
+ * Variables are useful for storing data that is not able to be saved to a tag.
+ *
+ * ```typescript
+ * interface Variables {
+ *      [variable: string]: any;
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Variables
+ * @docid RuntimeBotVars
  */
 export interface RuntimeBotVars {
+    /**
+     * Gets or sets a variable on the bot.
+     *
+     * @example Get a variable on thisBot
+     * let variable = thisBot.vars.variable;
+     *
+     * @example Save a variable on thisBot
+     * thisBot.vars.variable = variable;
+     */
     [variable: string]: any;
 }
 
 /**
  * An interface that maps tag names to compiled listener functions.
+ *
+ * ```typescript
+ * interface Listeners {
+ *      [tag: string]: (arg?: any) => any;
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listeners
+ * @docid CompiledBotListeners
  */
 export interface CompiledBotListeners {
-    [tag: string]: CompiledBotListener;
+    /**
+     * Gets the listener in the given tag.
+     */
+    [tag: string]: (arg?: any) => any;
 }
 
 /**
- * The type of a compiled bot listener.
+ * An interface that maps module names to compiled modules.
+ *
+ * ```typescript
+ * interface Modules {
+ *      [tag: string]: BotModule;
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listeners
+ * @docid CompiledBotModules
+ */
+export interface CompiledBotModules {
+    /**
+     * Gets the listener in the given tag.
+     */
+    [tag: string]: BotModule;
+}
+
+export interface CompiledBotExports {
+    [tag: string]: Promise<BotModuleResult>;
+}
+
+/**
+ * The function signature of a bot listener.
  */
 export type CompiledBotListener = (arg?: any) => any;
 
@@ -217,6 +355,9 @@ export interface PrecalculatedTags {
 
 /**
  * Defines an interface for a bot.
+ *
+ * @docid Bot
+ * @docrename RuntimeBot
  */
 export interface Bot {
     /**
@@ -246,52 +387,6 @@ export interface Bot {
 }
 
 /**
- * Defines an interface for a record.
- */
-export interface Record {
-    /**
-     * The address that the record was published at.
-     */
-    address: string;
-
-    /**
-     * The space that the record was published to.
-     */
-    space: RecordSpace;
-
-    /**
-     * The auth ID that published the record.
-     */
-    authID: string;
-
-    /**
-     * The data that was stored in the record.
-     */
-    data?: any;
-    dataURL?: string;
-}
-
-/**
- * Defines an interface for an object that represents a reference to a specific record.
- */
-export interface RecordReference {
-    /**
-     * The ID of the user that published the record.
-     */
-    authID: string;
-
-    /**
-     * The space that the record lives in.
-     */
-    space: RecordSpace;
-
-    /**
-     * The address that the record was published to.
-     */
-    address: string;
-}
-
-/**
  * Defines an interface that indicates a bot was updated.
  */
 export interface UpdatedBot {
@@ -312,16 +407,18 @@ export interface UpdatedBot {
 }
 
 /**
- * The possible bot types.
+ * The possible bot spaces.
  *
- * - "shared" means that the bot is a normal bot.
- * - "local" means that the bot is stored in the local storage partition.
- * - "tempLocal" means that the bot is stored in the temporary partition.
- * - "history" means that the bot represents a version of another space.
- * - "admin" means that the bot is shared across all instances.
- * - "tempShared" means that the bot is temporary and shared with other devices.
- * - "remoteTempShared" means that the bot is temporary and shared with this device from a remote device.
- * - "certified" means that the bot is a certificate.
+ * - `"shared"` means that the bot is a normal bot.
+ * - `"local"` means that the bot is stored in the [local storage](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Client-side_storage) partition.
+ * - `"tempLocal"` means that the bot is stored in the [temporary](https://en.wikipedia.org/wiki/In-memory_database) partition.
+ * - `"tempShared"` means that the bot is temporary and shared with other devices.
+ * - `"remoteTempShared"` means that the bot is temporary and shared with this device from a remote device.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Space
+ * @docid BotSpace
  */
 export type BotSpace =
     | 'shared'
@@ -354,6 +451,9 @@ export const DEFAULT_RECORD_SPACE: RecordSpace = 'tempRestricted';
 
 /**
  * The possible portal types.
+ *
+ * @dochash types/core
+ * @docname PortalType
  */
 export type PortalType =
     | 'grid'
@@ -364,6 +464,10 @@ export type PortalType =
     | 'system'
     | string;
 
+/**
+ * @docid ScriptTags
+ * @docrename BotTags
+ */
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
 }
@@ -390,135 +494,391 @@ export interface BotSignatures {
  * The actual data structure is similar to the bot tags structure except that tags are additionally
  * split by the space that they originated from. This makes it possible to identify which space a tag came from and also
  * prevents cross-space conflicts.
+ *
+ * ```typescript
+ * interface TagMasks {
+ *      [space: string]: Tags;
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname TagMasks
+ * @docid BotTagMasks
  */
 export interface BotTagMasks {
+    /**
+     * Gets or sets the tag masks that are specific to the given space.
+     */
     [space: string]: BotTags;
 }
 
+/**
+ * Defines an interface that represents a set of tags and their related values.
+ *
+ * ```typescript
+ * interface Tags {
+ *      [tag: string]: any
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Tags
+ * @docid BotTags
+ */
 export interface BotTags {
     // Normal bot tags
+    /**
+     * @hidden
+     */
     ['color']?: unknown;
+
+    /**
+     * @hidden
+     */
     ['draggable']?: unknown;
+    /**
+     * @hidden
+     */
     ['draggableMode']?: unknown;
+    /**
+     * @hidden
+     */
     ['destroyable']?: unknown;
+    /**
+     * @hidden
+     */
     ['editable']?: unknown;
+    /**
+     * @hidden
+     */
     ['strokeColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['strokeWidth']?: unknown;
+    /**
+     * @hidden
+     */
     ['scale']?: number;
+    /**
+     * @hidden
+     */
     ['scaleX']?: number;
+    /**
+     * @hidden
+     */
     ['scaleY']?: number;
+    /**
+     * @hidden
+     */
     ['scaleZ']?: number;
+    /**
+     * @hidden
+     */
     ['scaleMode']?: BotScaleMode | null | string;
+    /**
+     * @hidden
+     */
     ['lineTo']?: unknown;
+    /**
+     * @hidden
+     */
     ['lineWidth']?: number;
+    /**
+     * @hidden
+     */
     ['lineStyle']?: unknown;
+    /**
+     * @hidden
+     */
     ['lineColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['label']?: unknown;
+    /**
+     * @hidden
+     */
     ['labelColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['labelSize']?: unknown;
+    /**
+     * @hidden
+     */
     ['labelSizeMode']?: 'auto' | null;
+    /**
+     * @hidden
+     */
     ['labelPosition']?: BotLabelAnchor | null | string;
+    /**
+     * @hidden
+     */
     ['labelAlignment']?: BotLabelAlignment | null | string;
+    /**
+     * @hidden
+     */
     ['labelFontAddress']?: BotLabelFontAddress;
+    /**
+     * @hidden
+     */
     ['listening']?: unknown;
+    /**
+     * @hidden
+     */
     ['form']?: BotShape;
+    /**
+     * @hidden
+     */
     ['formAnimation']?: string;
+    /**
+     * @hidden
+     */
     ['formAddress']?: string;
+    /**
+     * @hidden
+     */
     ['formOpacity']?: unknown;
+    /**
+     * @hidden
+     */
     ['orientationMode']?: string;
+    /**
+     * @hidden
+     */
     ['anchorPoint']?: string;
+    /**
+     * @hidden
+     */
     ['creator']?: string;
+    /**
+     * @hidden
+     */
     ['progressBar']?: unknown;
+    /**
+     * @hidden
+     */
     ['progressBarColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['progressBarBackgroundColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['progressBarPosition']?: unknown;
+    /**
+     * @hidden
+     */
     ['pointable']?: unknown;
+    /**
+     * @hidden
+     */
     ['focusable']?: unknown;
 
     // User tags
+    /**
+     * @hidden
+     */
     ['auxPlayerActive']?: boolean;
+    /**
+     * @hidden
+     */
     ['gridPortal']?: string | boolean;
+    /**
+     * @hidden
+     */
     ['sheetPortal']?: string | boolean;
+    /**
+     * @hidden
+     */
     ['inst']?: string | string[];
+    /**
+     * @hidden
+     */
     ['miniGridPortal']?: string;
+    /**
+     * @hidden
+     */
     ['menuPortal']?: string;
+    /**
+     * @hidden
+     */
     ['leftWristPortal']?: string;
+    /**
+     * @hidden
+     */
     ['rightWristPortal']?: string;
+    /**
+     * @hidden
+     */
     ['editingBot']?: string;
+    /**
+     * @hidden
+     */
     cursorStartIndex?: number;
+    /**
+     * @hidden
+     */
     cursorEndIndex?: number;
+    /**
+     * @hidden
+     */
     ['pixelWidth']?: number;
+    /**
+     * @hidden
+     */
     ['pixelHeight']?: number;
 
-    // Admin channel task tags
-    ['auxRunningTasks']?: boolean;
-    ['auxFinishedTasks']?: boolean;
-    ['taskOutput']?: unknown;
-    ['taskError']?: unknown;
-    ['taskTime']?: unknown;
-    ['taskShell']?: string;
-    ['taskBackup']?: boolean;
-    ['taskBackupType']?: BackupType;
-    ['taskBackupUrl']?: string;
-
     // Context related tags
+    /**
+     * @hidden
+     */
     ['portalColor']?: string;
+    /**
+     * @hidden
+     */
     ['portalLocked']?: unknown;
+    /**
+     * @hidden
+     */
     ['portalGridScale']?: number;
+    /**
+     * @hidden
+     */
     ['portalSurfaceScale']?: number;
+    /**
+     * @hidden
+     */
     ['portalCameraRotationX']?: number;
+    /**
+     * @hidden
+     */
     ['portalCameraRotationY']?: number;
+    /**
+     * @hidden
+     */
     ['portalCameraZoom']?: number;
+    /**
+     * @hidden
+     */
     ['portalPannable']?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMinX`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMaxX`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMinY`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMaxY`]?: number | null;
+    /**
+     * @hidden
+     */
     ['portalZoomable']?: number | null;
+    /**
+     * @hidden
+     */
     [`portalZoomableMin`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalZoomableMax`]?: number | null;
+    /**
+     * @hidden
+     */
     ['portalRotatable']?: number | null;
+    /**
+     * @hidden
+     */
     ['portalShowFocusPoint']?: boolean | null;
+    /**
+     * @hidden
+     */
     ['portalDisableCanvasTransparency']?: boolean;
+    /**
+     * @hidden
+     */
     ['miniPortalHeight']?: unknown;
+    /**
+     * @hidden
+     */
     ['miniPortalResizable']?: boolean;
+    /**
+     * @hidden
+     */
     ['wristPortalHeight']?: number;
+    /**
+     * @hidden
+     */
     ['wristPortalWidth']?: number;
 
-    // Stripe tags
-    ['stripeCharges']?: boolean;
-    ['stripeSuccessfulCharges']?: boolean;
-    ['stripeFailedCharges']?: boolean;
-    ['stripeCharge']?: string;
-    ['stripeChargeReceiptUrl']?: string;
-    ['stripeChargeReceiptNumber']?: string;
-    ['stripeChargeDescription']?: string;
-    ['stripeOutcomeNetworkStatus']?: string;
-    ['stripeOutcomeReason']?: string;
-    ['stripeOutcomeRiskLevel']?: string;
-    ['stripeOutcomeRiskScore']?: number;
-    ['stripeOutcomeRule']?: string | string[];
-    ['stripeOutcomeSellerMessage']?: string;
-    ['stripeOutcomeType']?: string;
-    ['stripeErrors']?: boolean;
-    ['stripeError']?: string;
-    ['stripeErrorType']?: string;
-
-    [key: string]: any;
+    /**
+     * Gets or sets the given tag on the bot.
+     *
+     * @example Get the #color on this bot
+     * let color = thisBot.tags.color;
+     *
+     * @example Get a raw tag on this bot
+     * let rawTag = thisBot.raw.tag;
+     *
+     * @example Set the #color tag to "red" on this bot
+     * thisBot.tags.color = "red";
+     *
+     * @example Set a tempLocal tag mask for #color on this bot
+     * thisBot.masks.color = "red";
+     */
+    [tag: string]: any;
 }
 
 /**
- * Defines an interface for the state that an AUX bot can contain.
+ * Defines an interface that contains a set of bots that have been indexed by their IDs.
+ *
+ * Generally, this is only used when working with groups of bots.
+ * For example, the {@link diffSnapshots} function takes two bot states and produces the difference between them.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname BotState
+ *
+ * @example Create a bot state with two bots
+ * let state = {
+ *    [bot1.id]: bot1,
+ *    [bot2.id]: bot2
+ * };
+ *
+ * @example Get a bot by its ID from a bot state
+ * let bot = state[botId];
  */
 export interface BotsState {
+    /**
+     * Gets or sets the bot in the state with the given ID.
+     */
     [id: string]: Bot;
 }
 
 /**
- * Defines an interface for a partial bot state.
+ * Defines an interface that contains a set of partial bots that have been indexed by their IDs.
+ *
+ * Generally, this is only used when working with differences between groups of bots.
+ * For example, the {@link applyDiffToSnapshot} function takes a bot state and a partial bot state and produces a final state that contains the combined result.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname PartialBotState
  */
 export interface PartialBotsState {
-    [id: string]: PartialBot;
+    [id: string]: Partial<Bot>;
 }
 
 /**
@@ -548,6 +908,7 @@ export interface WorkspaceHex {
 export type BotShape =
     | 'cube'
     | 'circle'
+    | 'skybox'
     | 'sphere'
     | 'sprite'
     | 'mesh'
@@ -563,12 +924,18 @@ export type BotShape =
     | 'nothing'
     | 'keyboard'
     | 'codeButton'
-    | 'codeHint';
+    | 'codeHint'
+    | 'light';
 
 /**
  * Defines the possible forms that a menu bot can appear as.
  */
 export type MenuBotForm = 'button' | 'input';
+
+/**
+ * Defines the possible subtype forms that a menu bot can appear as.
+ */
+export type MenuBotSubtype = 'input' | 'password';
 
 /**
  * Defines the possible hover styles that can be used for a menu bot.
@@ -584,7 +951,18 @@ export type MenuBotResolvedHoverStyle = 'hover' | 'none';
 /**
  * Defines the possible subtypes for shapes that a bot can appear as.
  */
-export type BotSubShape = 'gltf' | 'src' | 'html' | null;
+export type BotSubShape =
+    | 'gltf'
+    | 'ldraw'
+    | 'ldrawText'
+    | 'src'
+    | 'html'
+    | 'pointLight'
+    | 'ambientLight'
+    | 'directionalLight'
+    | 'spotLight'
+    | 'hemisphereLight'
+    | null;
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -651,6 +1029,9 @@ export type BotOrientationMode =
 
 /**
  * Defines the possible bot anchor points.
+ *
+ * @dochash types/core
+ * @docname BotAnchorPoint
  */
 export type BotAnchorPoint =
     | 'top'
@@ -961,6 +1342,8 @@ export const DEFAULT_PORTAL_PANNABLE = true;
  * Whether portals are rotatable by default.
  */
 export const DEFAULT_PORTAL_ROTATABLE = true;
+
+export const DEFAULT_GRID_PORTAL_LIGHTING = true;
 
 /**
  * Whether portals are zoomable by default.
@@ -1301,6 +1684,21 @@ export const ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME: string =
  * The name of the event that is triggered when an image is classified.
  */
 export const ON_IMAGE_CLASSIFIED_ACTION_NAME: string = 'onImageClassified';
+
+/**
+ * The name of the event that is triggered when the photo camera is opened.
+ */
+export const ON_PHOTO_CAMERA_OPENED_ACTION_NAME: string = 'onPhotoCameraOpened';
+
+/**
+ * The name of the event that is triggered when the photo camera is closed.
+ */
+export const ON_PHOTO_CAMERA_CLOSED_ACTION_NAME: string = 'onPhotoCameraClosed';
+
+/**
+ * The name of the event that is triggered when a photo is captured from the photo camera.
+ */
+export const ON_PHOTO_CAPTURED_ACTION_NAME: string = 'onPhotoCaptured';
 
 /**
  * The name of the event that is triggered when the checkout process is completed.
@@ -1778,6 +2176,28 @@ export const ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME: string =
     'onSpaceRateLimitExceeded';
 
 /**
+ * The name of the event that is triggered once collaboration has been enabled.
+ */
+export const ON_COLLABORATION_ENABLED: string = 'onCollaborationEnabled';
+
+/**
+ * The name of the event that is triggered when collaboration upgrades begin to be allowed.
+ */
+export const ON_ALLOW_COLLABORATION_UPGRADE: string =
+    'onAllowCollaborationUpgrade';
+
+/**
+ * The name of the event that is triggered when collaboration upgrades are no longer allowed.
+ */
+export const ON_DISALLOW_COLLABORATION_UPGRADE: string =
+    'onDisallowCollaborationUpgrade';
+
+/**
+ * The name of the event that is triggered when a module needs to be resolved.
+ */
+export const ON_RESOLVE_MODULE: string = 'onResolveModule';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -1966,6 +2386,11 @@ export const ROTATION_TAG_PREFIX: string = '🔁';
 export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 
 /**
+ * The default script prefixes for library portals.
+ */
+export const LIBRARY_SCRIPT_PREFIX = '📄';
+
+/**
  * The list of known tag prefixes.
  */
 export const KNOWN_TAG_PREFIXES: string[] = [
@@ -1977,6 +2402,7 @@ export const KNOWN_TAG_PREFIXES: string[] = [
     NUMBER_TAG_PREFIX,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
+    LIBRARY_SCRIPT_PREFIX,
 ];
 
 /**
@@ -2067,6 +2493,12 @@ export const KNOWN_TAGS: string[] = [
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
 
     'inst',
+    'staticInst',
+    'record',
+    'owner',
+    'joinCode',
+    'url',
+    'sharableUrl',
     'theme',
     MINI_PORTAL,
     'menuPortal',
@@ -2121,6 +2553,7 @@ export const KNOWN_TAGS: string[] = [
     'pixelHeight',
     'pixelRatio',
     'defaultPixelRatio',
+    'defaultLighting',
     'pageTitle',
     'pointerPixelX',
     'pointerPixelY',
@@ -2164,6 +2597,7 @@ export const KNOWN_TAGS: string[] = [
     'rightPointer_primary',
     'rightPointer_squeeze',
     'forceSignedScripts',
+    'onSpaceRateLimitExceeded',
 
     EDITING_BOT,
     EDITING_TAG,
@@ -2177,6 +2611,7 @@ export const KNOWN_TAGS: string[] = [
     'portalCursorHotspotY',
     'portalCursorHotspot',
     'portalBackgroundAddress',
+    'portalHDRAddress',
     'portalLocked',
     'portalPannable',
     `portalPannableMinX`,
@@ -2274,6 +2709,17 @@ export const KNOWN_TAGS: string[] = [
     'formAnimationAddress',
     'formOpacity',
     'formRenderOrder',
+    'formDepthTest',
+    'formDepthWrite',
+    'formLightIntensity',
+    'formLightTarget',
+    'formLightDistance',
+    'formLightAngle',
+    'formLightPenumbra',
+    'formLightDecay',
+    'formLightGroundColor',
+    'formBuildStep',
+    'formLDrawPartsAddress',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
@@ -2311,7 +2757,6 @@ export const KNOWN_TAGS: string[] = [
     'name',
     'hasActiveSubscription',
     'subscriptionTier',
-    'openAiKey',
 
     CLICK_ACTION_NAME,
     'onAnyBotClicked',
@@ -2344,6 +2789,10 @@ export const KNOWN_TAGS: string[] = [
     ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME,
     ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
     ON_IMAGE_CLASSIFIED_ACTION_NAME,
+
+    ON_PHOTO_CAMERA_OPENED_ACTION_NAME,
+    ON_PHOTO_CAMERA_CLOSED_ACTION_NAME,
+    ON_PHOTO_CAPTURED_ACTION_NAME,
 
     ON_POINTER_ENTER,
     ON_POINTER_EXIT,
@@ -2445,6 +2894,10 @@ export const KNOWN_TAGS: string[] = [
     ON_FORM_ANIMATION_LOOPED,
     ON_ANY_FORM_ANIMATION_LOOPED,
     ON_SPACE_MAX_SIZE_REACHED,
+
+    ON_COLLABORATION_ENABLED,
+    ON_ALLOW_COLLABORATION_UPGRADE,
+    ON_DISALLOW_COLLABORATION_UPGRADE,
 ];
 
 export function onClickArg(

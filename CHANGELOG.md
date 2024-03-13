@@ -1,5 +1,581 @@
 # CasualOS Changelog
 
+## V3.2.18
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added support for ES Module-style `import` and `export` statements.
+    -   [ES Modules](https://javascript.info/modules-intro) are a way to organize code into separate listeners.
+    -   With this update, CasualOS now supports using [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) statements in scripts.
+    -   By default, modules can be imported from 3 different places:
+        -   Scripts based on system tag. You can import exported functions and variables from any script based on the system tag of its bot. For example, `import {abc} from "example.system.tag"` can be used to import the `abc` variable or function from the bot with the `example.system` system and the `tag` tag.
+        -   URLs. The URLs can be imported. For example, `import { sortBy } from 'https://esm.run/lodash-es';"` imports the [`sortBy` function](https://lodash.com/docs/4.17.15#sortBy) from the [`lodash-es` module](https://www.npmjs.com/package/lodash-es) provided by [https://esm.run](https://esm.run).
+        -   The `casualos` module. This module exports all of CasualOS's built-in functions. It is the only module that cannot be overriden with `@onResolveModule`. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+    -   In addition to the default ways, you can provide your own custom module resolution logic by using `@onResolveModule`.
+        -   See the documentation for `@onResolveModule` for more information.
+-   Added the `📄` prefix for "library" scripts.
+    -   Before, the only way to make a script was to use the `@` prefix. Using the `@` prefix makes what we call a "listener script" or "listener tag".
+    -   Now, you can use the `📄` prefix instead of `@`. Using `📄` makes what we call a "library script" or "library tag".
+    -   Library scripts work similarly to listener scripts, except with a couple key changes:
+        -   Library scripts cannot be shouted to. Instead, they have to be imported. This means you cannot use `shout()` or `whisper()` to communicate with a library script. Additionally, `thisBot.script()` does not work either.
+        -   Library scripts have to import all CasualOS functions. This means you cannot simply use `os.toast()`, you have to first import the `casualos` module. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+-   Updated CasualOS to support ECMAScript 14.
+
+## V3.2.17
+
+#### Date: 3/6/2024
+
+### :rocket: Features
+
+-   Support case-insensitive matching of email address when logging in.
+    -   Previous versions would create separate accounts for email addresses that differed only in case.
+    -   Now, if an exact match is not found, a case-insensitive search will be made for users when attempting to login by email.
+    -   This will prevent cases where a user gets a new account because they mistakenly changed the case of their email address.
+    -   Technically, email addresses are supposed to be case-sensitive, but pretty much every email server treats them as case-insensitive.
+-   Support configuring a custom file URL for public file records stored in S3.
+    -   This makes it easy to support setting a custom domain or CDN or public file records.
+    -   It does not support private file records at this moment.
+-   Support changing the bucket that S3 files are stored in.
+-   Added support for [passkeys](https://blog.google/technology/safety-security/the-beginning-of-the-end-of-the-password/).
+    -   Passkeys are new way to sign in to apps and websites without a password. Depending on your device and platform, passkeys can even be synced across your devices.
+    -   On CasualOS, passkeys offer a quicker way to login that doesn't require checking your email or phone number every time.
+    -   On supported devices, if you login using a traditional method, CasualOS will ask you if you want to register a passkey for the device.
+    -   Upon your next login, you can use the passkey to login instead of having to enter your email and wait for a code.
+-   Changed the date of birth input to handle manually-typed input better.
+-   Added the ability to track some load time metrics using SimpleAnalytics events.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.calculateRayFromCamera()` would return incorrect results for the ray origin.
+-   Improved CasualOS to delay installation of the service worker until either the inst is fully loaded or the BIOS is shown.
+-   Fixed an issue where the `miniMapPortal` and `miniGridPortal` were not able to be resized.
+
+## V3.2.16
+
+#### Date: 2/23/2024
+
+### :rocket: Features
+
+-   Added the `formLDrawPartsAddress` to set the address that LDraw parts should be loaded from.
+-   Updated the policies.
+-   Added the ability to configure CasualOS to support Google AI for `ai.chat()`.
+-   Added the ability to include image data in `ai.chat()` requests.
+    -   `ai.chat()` messages now support accepting an array of content which can either represent text or image data.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where percent-based sizing of custom apps was broken due to a change made in v3.2.14.
+-   Fixed an issue where bots stored in local insts might not receive the `@onInstJoined` shout.
+-   Fixed an issue where POV mode would start with the camera facing down when IMU support is disabled.
+-   Fixed an issue where `ai.chat()` would not actually honor any options.
+
+## V3.2.15
+
+#### Date: 2/20/2024
+
+### :rocket: Features
+
+-   Added the `ldraw` and `ldrawText` subforms.
+    -   When paired with `#form = "mesh"`, they both allow rendering a [LDraw](https://ldraw.org/) file as the bot's form.
+    -   `ldraw` - Renders the LDraw URL stored in `#formAddress`
+    -   `ldrawText` - Renders the LDraw text stored in `#formAddress`
+-   Added the `os.ldrawCountAddressBuildSteps(address)` and `os.ldrawCountTextBuildSteps(text)` functions.
+    -   `os.ldrawCountAddressBuildSteps(address)` counts and returns the number of build steps that are in the LDraw file at the given URL. Returns a promise that resolves with the number of build steps that the file has.
+    -   `os.ldrawCountTextBuildSteps(text)` counts and returns the number of build steps that are in the given LDraw text. Returns a promise that resolves with the number of build steps that the file has.
+-   Improved `os.showUploadFiles()` to return `.mpd` and `.ldr` files as text.
+    -   This makes it easier for users to work with LDraw files.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where public and local insts could not publish records.
+
+## V3.2.14
+
+#### Date: 2/19/2024
+
+### :boom: Breaking Changes
+
+-   Changed how `os.listData()` works to require `data.list` access for the `account` marker instead of for each item individually.
+    -   This means that `os.listData()` will continue to work for users that have a record key or are admins (record owner or member of a studio), but it will no longer be possible to list `publicRead` data items through this function.
+    -   Instead, use the new `os.listDataByMarker()` function to list data based on a marker.
+    -   The reason for this change is to make the API more predictable. Previously, it was possible for `os.listData()` to return no results even if there were items after the given address. This is because a fixed number of items would be retrieved from the database and then checked to see if the user has access to it. If the user did not have access to any items, then an empty list would be returned, even if there are items that the user _does_ have access to later in the database.
+-   Changed `os.listData()` to throw a `CausualOSError` if the user is not authorized to list items.
+    -   Previously, an empty list would be returned. Now, an empty list is only returned if there are no items.
+-   Removed `os.grantRecordMarkerPermission()` and `os.revokeRecordMarkerPermission()`.
+    -   These functions have been replaced by `os.grantPermission()` and `os.revokePermission()`.
+-   Changed `os.getCurrentInst()` to always return the name of the inst that the bot exists in, instead of the first inst that was loaded into the session.
+
+### :rocket: Features
+
+-   Added the ability to organize records within a given marker.
+    -   Markers can be formatted as `root:path`.
+        -   `root` is known as the "root marker" and is what determines the security of a resource.
+        -   `path` is known as the "path marker" and is used to organize the resource.
+    -   It is still possible to format markers regularly. In this case, the marker doesn't have a path and is just a root.
+        -   All existing markers are treated this way.
+    -   For example, the markers `secret` and `secret:documents` both have the same root marker: `secret`.
+        -   This means that users need access to the `secret` root marker in order to access resources with either of these markers.
+        -   `secret:documents` has a path marker of `documents`, which means that it is organized separately from other markers.
+    -   The `os.listDataByMarker()` function is able to take advantage of this feature.
+        -   Calling `os.listDataByMarker(recordName, "secret:photos")` will only return data records with `secret:photos`, while calling `os.listDataByMarker(recordName, "secret:documents")` will only return data records with `secret:documents`.
+-   Added `os.grantPermission(recordName, permission, options?)` and `os.revokePermission(recordName, permissionId, options?)`.
+    -   `os.grantPermission()` creates a permission that grants the ability to perform an action (or set of actions) on a marker or resource to a user, inst, or role.
+    -   `os.revokePermission()` deletes the permission with the given ID.
+-   Added the `os.listDataByMarker(recordName, marker, startingAddress?, options?)` function.
+    -   Useful for only listing data that has the given marker. Returns a promise that resolves with the total number of items that match the marker and up to 10 items.
+    -   Items are listed based on whether they exactly match one of the markers that are applied to the data items.
+        -   This means that `secret:documents` will match `secret:documents`, but listing by `secret` will not list `secret:documents`.
+-   Added WebXR support for Apple Vision Pro.
+    -   A dialog will appear on Safari asking if you want to enter XR when trying to enable AR/VR through CasualOS. This is an extra security measure enforced by Safari.
+    -   visionOS currently only supports `immersive-vr` mode of WebXR sessions.
+    -   Added pinch select gesture detection for. This allows for pointer-based bot interaction on the Vision Pro since Safari does not implement select events while hand tracking in WebXR.
+-   Categorized tags to seperate documentation pages.
+-   Added the ability to support domain-level isolation for insts.
+    -   The `VM_ORIGIN` environment variable can now be configured to tell CasualOS to load insts into a unique HTTP Origin so that insts are isolated from each other.
+    -   `VM_ORIGIN` is The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used.
+-   Added the ability to request access to private insts that the user does not have permissions for.
+-   Added the ability to customize the [MIME type](https://developer.mozilla.org/en-US/docs/Glossary/MIME_type) and bitrate of recordings made with `experiment.beginRecording()` and `experiment.endRecording()`.
+-   Added the ability to track rate limits for the WebSocket API separately from the HTTP API.
+    -   The `websocketRateLimit` property on the `SERVER_CONFIG` controls the websockets rate limits. If not specified, then the options from `rateLimit` will be used for websockets and HTTP.
+    -   Additionally, the `websocketRateLimitPrefix` in `redis` controls the namespace that values are stored at in Redis. If not specified, then the `rateLimitPrefix` will be used for both.
+-   Added the `os.getRecordsEndpoint()` function to get the default records endpoint.
+    -   Records actions, like `os.recordData()`, `os.getData()`, `os.recordFile()`, etc. can be passed an endpoint which specifies which backend should be used for the request.
+    -   If no endpoint is specified, then a default is used.
+    -   `os.getRecordsEndpoint()` returns a promise that resolves to the endpoint that is used by default.
+-   Added the `os.showAccountInfo()` function to show the "Account Information" dialog for users who are logged in.
+-   Implemented `ArrayBuffer` support for `bytes.toBase64String()` and `bytes.toBase64Url()` functions.
+
+### :bug: Bug Fixes
+
+-   Fixed an issuse where `os.showUploadFiles()` dialog cuts off the "Upload" button when a lot of files are added.
+-   Fixed an issue where fingers would trigger click interactions while dragging a bot with the same hand.
+-   Fixed an issue where `portalBackgroundAddress` would render over `miniMapPortalBot`.
+-   Fixed an issue where `.click()`, `.focus()`, and `.blur()` methods would not work on custom app HTML elements.
+-   Fixed an issue where `os.unregisterApp()` would not trigger Preact cleanup code.
+-   Fixed an issue where `os.unloadInst()` would not work when going from 2 instances to 1 instance.
+-   Fixed an issue where menuPortal items would remain even if their inst was unloaded.
+-   Fixed an issue where it was possible to have multiple login attempts at once by calling `os.requestAuthBot()` multiple times without waiting for one to complete.
+-   Fixed some issues with `experiment.beginRecording()` and `experiment.endRecording()` where recording the screen with audio might fail in some cases.
+
+## V3.2.13
+
+#### Date: 2/5/2024
+
+### :rocket: Features
+
+-   Improved diagnostics for VR and AR features.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.generateSkybox()` would fail if an instances array was provided.
+
+## V3.2.12
+
+#### Date: 2/2/2024
+
+### :boom: Breaking Changes
+
+-   Removed the ability to create avatars with ReadyPlayerMe.
+
+### :rocket: Features
+
+-   Added `POST /api/v2/ai/skybox` character limit prompt to match BlockadeLabs limit of 600 characters.
+-   Added comID
+    -   comID is a set of features that allows studios to customize CasualOS based on their comID.
+    -   Studios can get a comID by obtaining a subscription that grants the comId feature to them.
+    -   Once a Studio has the feature, they can request the comID that they want from the Studio settings page.
+    -   They can also provide the following additional settings:
+        -   `studio.name` - The name of the Studio.
+        -   `comID` - The comID for the Studio. Studio admins can request a new comID for their studio.
+        -   `comID.logoURL` - The URL of the logo that should be displayed for the Studio and comID.
+        -   `comID.allowedStudioCreators` - The kinds of users that are allowed to create Studios within the comID. Possible options are "anyone" and "only-members".
+        -   `comID.ab1BootstrapURL` - The URL that specifies where the custom ab1 bootstrapper should be loaded from. If none is specified, then the default ab1 is loaded.
+        -   `comID.allowedBiosOptions` - The list of allowed BIOS options that can be presented to users. If none are specified, then the default list is used.
+        -   `comID.defaultBiosOption` - The BIOS option that is selected in the BIOS by default. If none is specified, then the default is used.
+        -   `comID.automaticBiosOption` - The BIOS option that will be automatically executed instead of displaying the BIOS. If none is specified, then the default is used.
+        -   `comID.jitsiAppName` - The name of the Jitsi App that should be used for the meetPortal. If none is specified, then the default is used.
+        -   `comID.what3WordsApiKey` - The API Key that should be used for `os.convertGeolocationToWhat3Words()`. If none is specified, then the default is used.
+    -   Setting `comId` or `comID` in the query tells CasualOS to use the settings that were configured on the related Studio settings page. Additionally, the logo of the studio will be displayed on the loading screens and BIOS.
+-   Added some messaging to the sign up pages to inform users that valid emails are required in order to completely setup their accounts.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.startFormAnimation()` does not support starting paused animations with an initialTime greater than 0.
+
+## V3.2.11
+
+#### Date: 1/29/2024
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `join inst,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added `portalHDRAddress` tag.
+-   Added the `join inst` BIOS option as an alternative to `enter join code`.
+-   Added buttons for the `sign in`, `sign up`, and `sign out` BIOS options.
+-   Added the ability to automatically expire temporary inst data (tempShared space data) and websocket connections.
+    -   Configurable by the `redis.tempInstRecordsLifetimeSeconds`, `redis.tempInstRecordsLifetimeExpireMode`, `redis.connectionExpireSeconds`, and `redis.connectionExpireMode` options in SERVER_CONFIG.
+    -   Defaults:
+        -   `redis.tempInstRecordsLifetimeSeconds` defaults to `60 * 60 * 24` (24 hours)
+        -   `redis.tempInstRecordsLifetimeExpireMode` defaults to `null`
+        -   `redis.connectionExpireSeconds` defaults to `60 * 60 * 3` (3 hours)
+        -   `redis.connectionExpireMode` defaults to `null`
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where branch info was being duplicated for temporary branches.
+-   Fixed an issue where `onSpaceRateLimitExceeded` was missing from 'Add New Tag' autocomplete list.
+
+## V3.2.10
+
+#### Date: 1/17/2024
+
+### :boom: Breaking Changes
+
+-   Changed the `BIOS_OPTIONS` environment variable to default to `enter join code,local inst,studio inst,free inst,sign in,sign up,sign out`.
+
+### :rocket: Features
+
+-   Added new BIOS options.
+    -   `local inst` - Works exactly like `static inst`.
+    -   `local` - Shorthand `local inst`.
+    -   `free inst` - Works exactly like `public inst`.
+    -   `free` - Shorthand for `free inst`.
+    -   `studio inst` - Works exactly like `private inst`.
+    -   `studio` - Shorthand for `studio inst`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using the keyboard to select a tag in the sheetPortal would cause the page to refresh.
+-   Fixed an issue where loading a studio inst for the first time after creating an account could fail.
+-   Fixed an issue where gridPortal input did not work in the OculusBrowser.
+
+## V3.2.9
+
+#### Date: 1/3/2024
+
+### :bug: Bug Fixes
+
+-   Fixed some visual issues with studio subscriptions.
+-   Fixed an issue where it was possible for a studio to have default user features when subscribed.
+
+## V3.2.8
+
+#### Date: 12/29/2023
+
+### :bug: Bug Fixes
+
+-   Fix issues with Docker ARM32 and ARM64 builds.
+-   Fixed an issue where objects could not be stored as data if a max data size was set.
+
+## V3.2.7
+
+#### Date: 12/22/2023
+
+### :boom: Breaking Changes
+
+-   The `SessionSelector` parameter for `remote(action, selector?)` has changed.
+    -   Before, `session`, `username`, and `device` were valid properties.
+    -   Now they are `sessionId`, `userId`, and `connectionId`.
+-   The following obsolete functions have been removed:
+    -   `os.checkout()`
+    -   `os.finishCheckout()`
+    -   `os.instances()`
+    -   `os.instStatuses()`
+    -   `server.setupServer()`
+    -   `os.setupInst()`
+    -   `server.backupToGithub()`
+    -   `server.backupAsDownload()`
+    -   `server.finishCheckout()`
+    -   `server.markHistory()`
+    -   `server.browseHistory()`
+    -   `server.restoreHistoryMark()`
+    -   `server.restoreHistoryMarkToServer()`
+    -   `server.restoreHistoryMarkToInst()`
+    -   `server.serverStatuses()`
+    -   `server.servers()`
+    -   `server.stories()`
+    -   `server.loadFile()`
+    -   `server.saveFile()`
+    -   `crypto.createCertificate()`
+    -   `crypto.signTag()`
+    -   `crypto.verifyTag()`
+    -   `crypto.revokeCertificate()`
+    -   All the `server.rpioXYZ` functions.
+    -   All the `server.serialXYZ` functions.
+    -   All the `adminSpace` functions.
+-   `SHARED_PARTITIONS_VERSION` is now always `v2`.
+-   Removed all the `causal-tree` packages.
+    -   They are no longer needed since YJS does such a good job.
+-   Merged all the websocket and data synchronization code into `aux-common`, `aux-records`, and `aux-server`.
+-   Changed `SERVER_CONFIG.subscriptions.subscriptions.defaultSubscription` to be used to indicate that the subscription should be automatically given to users who do not have an active subscription.
+
+### :rocket: Improvements
+
+-   Added a "BIOS" screen at startup.
+    -   This screen only shows when no inst has been specified in the URL.
+    -   It allows the user to select what kind of inst they want to create and sign in.
+    -   The screen can be skippped by providing the `bios` query parameter. It accepts one of the following values:
+        -   `static inst` - Generates a static inst (device only). Static insts support local device storage, but do not sync across devices or browsers.
+        -   `private inst` - Generates a private inst that is synced to the cloud.
+        -   `public inst` - Generates a temporary public inst. This used to be the default.
+        -   `enter join code` - Show the BIOS screen box with the "enter join code" option already selected.
+        -   `sign in` - Show the BIOS screen with the "sign in" option already selected.
+        -   `sign up` - Show the BIOS screen with the "sign up" option already selected.
+        -   `sign out` - Show the BIOS screen with the "sign out" option already selected.
+-   Added private insts.
+    -   It is now possible to load a private inst using the `owner` query parameter. It supports the following values:
+        -   `player` - Use the currently logged in user as the owner.
+        -   `public` - Use the temporary public partition as the owner.
+        -   The name of a record.
+        -   The ID of a user.
+        -   The ID of a studio.
+    -   If the `owner` query parameter is specified but no inst is specified, then the BIOS screen will be shown.
+    -   If the `inst` query parameter is specified but no owner is specified, then a temporary public inst will be loaded.
+-   Added the `permalink` tag to the `configBot`.
+    -   This tag contains a permanent link to the current inst. That is, the `owner` query param is replaced with the actual record that the inst was loaded from.
+    -   This make it useful for sharing an exact link to the current inst.
+-   Added the `record` tag to the `configBot`.
+    -   This tag contains the name of the record that the inst was loaded from.
+    -   If the inst is a temporary public inst, then this tag is omitted from the configBot.
+-   Improved `os.listUserStudios()` to include the subscription tier of each studio.
+-   Added `light` form.
+    -   Added `pointLight`, `ambientLight`, `directionalLight`, `spotLight`, and `hemisphereLight` subtypes.
+    -   Added `formLightIntensity` tag.
+    -   Added `formLightTarget` tag.
+    -   Added `formLightDistance` tag.
+    -   Added `formLightAngle` tag.
+    -   Added `formLightPenumbra` tag.
+    -   Added `formLightDecay` tag.
+    -   Added `formLightGroundColor` tag.
+-   Added menu items `password` subtype.
+-   Added the `os.requestAuthBotInBackground()` function.
+    -   Works just like `os.requestAuthBot()` except that the user will not be prompted to login.
+    -   Returns the user's auth bot if they are signed in.
+    -   Returns `null` if the user is not signed in.
+-   Added the `REQUIRE_PRIVO_LOGIN` environment variable during build to control whether login with Privo is required.
+-   Added the `DEFAULT_BIOS_OPTION` environment variable during build to control which BIOS option is selected by default.
+-   Added the `AUTOMATIC_BIOS_OPTION` environment variable during build to specify the BIOS option that should be executed by default. Setting this to a valid BIOS value will skip the BIOS screen.
+-   Added the `AUTH_WEBSOCKET_ENDPOINT` environment variable during build to control the websocket endpoint that the auth site looks for.
+-   Added the ability to limit how large data records can be in `tiers.data.maxItemSizeInBytes`.
+    -   If no value is specified, then `500000` (500KB) is used.
+    -   `null` can be used to remove the limit.
+-   Added the `privacyFeatures` tag to the `authBot`. It is an object with the following properties:
+    -   `publishData` - A boolean that specifies whether the user is allowed to publish any data at all.
+    -   `allowPublicData` - A boolean that specifies whether the user is allowed to publish or access public data.
+    -   `allowAI` - A boolean that specifies whether the user is allowed to access AI features.
+    -   `allowPublicInsts` - A boolean that specifies whether the user is allowed to access public insts.
+-   Added the `os.reportInst()` function.
+    -   Opens the "Report Inst" dialog that gives the user an opportunity to describe what they are seeing and report it.
+    -   Returns a promise that resolves when the inst has been reported.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.getCurrentInst` would not work properly if multiple instances are loaded
+-   Fixed an issue where work state was not retained in systemPortal after switching to diff panel
+-   Fixed an issue where setting cube bots with scale 0 did not receive pointer events
+-   Fixed an issue where labels were broken when setting labelPosition and labelAlignment to left or right
+-   Attempted to fix an issue where the code editor could get desynced from the actual bot script state.
+-   Fixed an issue where using `os.enablePointOfView()` with IMU data would not produce correct rotations.
+
+## V3.2.6
+
+#### Date: 9/1/2023
+
+### :rocket: Improvements
+
+-   Updated to support Node.js 18.x.
+-   Improved the build process to inject the `SERVER_CONFIG` environment variable into the resulting JS bundle instead of requiring the CloudFormation inject it into the Lambda functions itself.
+
+## V3.2.5
+
+#### Date: 8/28/2023
+
+### :rocket: Improvements
+
+-   Added the `os.listUserStudios()` function.
+    -   Gets the list of studios that the current user has access to.
+-   Disabled the ability to create studios when subscriptions are not supported.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `portalBackgroundAddress` to a `null` value and then back to its original value would not restore the background image.
+
+## V3.2.4
+
+#### Date: 8/22/2023
+
+### :rocket: Improvements
+
+-   Added `formDepthWrite` tag.
+-   Added `formDepthTest` tag.
+-   Added the ability to use `Ctrl+B` to automatically focus the last visisted tag.
+-   Added a "Done" button to the `os.showInput()` modal.
+-   Added the ability to create Studios.
+    -   Studios are a way to manage records under a different subscription than a personal account.
+    -   Studios have their own subscriptions and can have multiple members.
+    -   Members can have two roles: `admin` and `member`.
+        -   `admin` members can manage the Studio subscription and can add/remove members and create records.
+        -   `member` members can read/write data in records, but cannot manage permissions in records.
+    -   Like users, studios have an automatically created record that matches their ID.
+
+### :rocket: Bug Fixes
+
+-   Fixed an issue where bots in the miniGridPortal were somehow pointable by controllers while in AR/VR.
+
+## V3.2.3
+
+#### Date: 7/31/2023
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where incorrect subscription features would be shown after a user subscribed.
+
+## V3.2.2
+
+#### Date: 7/31/2023
+
+### :rocket: Improvements
+
+-   Added the `ai.chat()` and `ai.generateSkybox()` functions as an easy way to interface with [OpenAI's Chat API](https://platform.openai.com/docs/guides/gpt/chat-completions-api) and [Blockade Lab's API](https://api-documentation.blockadelabs.com/api).
+    -   When configured on the server, users will have the ability to interface with an OpenAI GPT model without having to manage or store their own OpenAI API Key.
+    -   They will also be able to interface with Blockade Lab's API without having to manage their own API key.
+    -   `ai.chat()` accepts two parameters:
+        -   `message` - This is the message (string or object) or list of messages (objects) that the AI model should respond to.
+        -   `options` - Is optional and are the options that should be used for the operation.
+        -   Returns a promise that resolves when the AI has responded to the message(s). The resolved value will be a string if `message` was a string. Otherwise, it will be an object.
+        -   See the documentation for more info.
+    -   `ai.generateSkybox()` accepts three parameters:
+        -   `prompt` - This is the prompt that tells the AI what the generated skybox should look like.
+        -   `negativePrompt` - Is optional and tells the AI what the generated skybox should not look like.
+        -   `options` - Is optional and are the options that should be used for the operation.
+        -   Returns a promise that resolves when the AI has generated the skybox. The resolved value will be a string containing the URL that the generated image is stored at.
+        -   See the documentation for more info.
+    -   (DevOps Only) To configure AI Chat features, use the following `SERVER_CONFIG` properties:
+        -   `openai` - This should be an object with the following properties:
+            -   `apiKey` - The OpenAI API Key that should be used for requests.
+            -   `maxTokens` - The maximum number of tokens that can be used in a request. If omitted, then there is no limit.
+        -   `blockadeLabs` - This should be an object with the following properties:
+            -   `apiKey` - The Blockade Labs API Key that should be used for requests.
+        -   `ai` - This should be an object with the following properties:
+            -   `chat` - Optional. If omitted, then AI Chat features will be disabled. It should be an object with the following properties:
+                -   `provider` - Set this to `"openai"`. This tells the server to use OpenAI for `ai.chat()`.
+                -   `defaultModel` - Set this to the model that should be used by default. For OpenAI, see this [list of supported models](https://platform.openai.com/docs/models/model-endpoint-compatibility).
+                -   `allowedModels` - The array of model names that are allowed to be used by `ai.chat()`.
+                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.chat()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.chat()`. Set this to `true` to allow all users (even ones that are not subscribed).
+            -   `generateSkybox` - Optional. If omitted, then AI Skybox features will be disabled. It should be an object with the following properties:
+                -   `provider` - Set this to `"blockadeLabs"`. This tells the server to use Blockade Labs for `ai.generateSkybox()`.
+                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.generateSkybox()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.generateSkybox()`. Set this to `true` to allow all users (even ones that are not subscribed).
+-   Added the `bytes.toBase64Url(data, mimeType?)` and `bytes.fromBase64Url(url)` functions.
+    -   These functions are useful working with [Data URLs](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) from binary data or a Base 64 string.
+    -   `bytes.toBase64Url(data, mimeType?)` - Creates a Data URL using the given binary data or Base 64 string, and includes the given MIME Type in the output.
+        -   `data` - Is a `Uint8Array` or `string` and is the data that should be included in the URL.
+        -   `mimeType` - Is optional, and is the MIME Type that the data represents.
+    -   `bytes.fromBase64Url(url)` - Creates a `Blob` from the given data URL. The resulting blob will have a `type` matching the MIME Type stored in the Data URL, and binary data equal to the decoded base 64.
+        -   `url` - The string representing the data URL.
+
+## V3.2.1
+
+#### Date: 7/26/2023
+
+### :rocket: Improvements
+
+-   Added a "repeated error limit" for individual tags that prevents `@onError` from being called if a tag emits a large number errors.
+-   Added the `os.openPhotoCamera()`, `os.closePhotoCamera()`, and `os.capturePhoto()` functions.
+    -   When called, they open/close the photo camera modal that makes it easy for the user to take photos.
+    -   The `@onPhotoCaptured` shout is sent for every photo that the user captures.
+    -   See the documentation for more info.
+-   Added a basic admin panel to the auth site.
+    -   This lets you see the records you own and browse the information contained in them.
+    -   It is very limited, but right now it is useful for very basic administration.
+    -   It can list data items, files, events, policies, and roles.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting a portal to `null` in `@onPortalChanged` would cause an infinite loop.
+
+## V3.2.0
+
+#### Date: 7/17/2023
+
+### :rocket: Improvements
+
+-   Improved the API reference documentation to be generated from documentation comments in the source code.
+-   Added personal records.
+    -   Personal records are records that have the same name as your `authBot` ID (User ID).
+    -   By default, they are only able to be accessed by your user.
+    -   Additionally, they do not require the creation of a record key to use. It will be automatically created for you once you go to use it.
+
+## V3.1.36
+
+#### Date: 7/7/2023
+
+### :rocket: Improvements
+
+-   Added `os.getPublicFile()` and `os.getPrivateFile()` functions as a way to tell CasualOS whether the file is expected to be public or private.
+    -   Using `os.getPrivateFile()` is quicker than using `os.getFile()` for private files, but it is slower than using `os.getFile()` for public files.
+    -   `os.getFile()` is optimized for retrieving public files, but will fallback to trying to retrieve private files if the first fails.
+    -   `os.getPublicFile()` is optimized for retrieving public files and will fail if the file is not public.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to retrieve private data and file records using `os.getData()` and `os.getFile()`.
+-   Fixed an issue where it was impossible to manage an existing subscription.
+
+## V3.1.35
+
+#### Date: 6/30/2023
+
+### :rocket: Improvements
+
+-   Merged the serverless and server backends.
+    -   This means that we now ship one docker image for both the aux server and auth server instead of two.
+    -   The aux server still runs on port 3000, while the auth server runs on port 3002 (by default).
+    -   The auth serverless backend has also been merged with the serverless apiary backends, so only one AWS CloudFormation deployment is needed to have a fully functioning deployment.
+-   Added the `skybox` form.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where roles could not be granted because of a database configuration issue.
+-   Fixed an issue where auth sessions could not be renewed because of a database configuration issue.
+
+## V3.1.34
+
+#### Date: 6/19/2023
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some records could not be retrieved due to the database returning the data in an unexpected format.
+
+## V3.1.33
+
+#### Date: 6/19/2023
+
+### :rocket: Improvements
+
+-   Removed unused DynamoDB tables from the backend.
+
+## V3.1.32
+
+#### Date: 6/17/2023
+
+### :rocket: Improvements
+
+-   Improved the backend to use a SQL Database instead of DynamoDB tables.
+    -   This will make development quicker and easier in the future in addition to being more cost effective.
+
 ## V3.1.31
 
 #### Date: 5/26/2023

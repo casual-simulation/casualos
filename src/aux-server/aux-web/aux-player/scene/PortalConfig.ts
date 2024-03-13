@@ -19,6 +19,7 @@ import {
     getPortalCursor,
     getTagPosition,
     getTagRotation,
+    DEFAULT_GRID_PORTAL_LIGHTING,
 } from '@casual-simulation/aux-common';
 import { Color, Texture } from '@casual-simulation/three';
 import {
@@ -48,6 +49,7 @@ export class PortalConfig implements SubscriptionLike {
     private _zoomMin: number = null;
     private _zoomMax: number = null;
     private _rotatable: boolean = null;
+    private _gridPortalDefaultLighting: boolean = null;
     private _playerZoom: number = null;
     private _playerRotationX: number = null;
     private _playerRotationY: number = null;
@@ -59,6 +61,7 @@ export class PortalConfig implements SubscriptionLike {
     private _defaultGrid3D: BoundedGrid3D;
     private _cameraType: PortalCameraType;
     private _cursor: BotCursorType;
+    private _portalHDRAddress: string = null;
 
     private _onGridScaleUpdated: Subject<void>;
 
@@ -144,6 +147,14 @@ export class PortalConfig implements SubscriptionLike {
             return this._rotatable;
         } else {
             return DEFAULT_PORTAL_ROTATABLE;
+        }
+    }
+
+    get defaultLighting() {
+        if (this._gridPortalDefaultLighting != null) {
+            return this._gridPortalDefaultLighting;
+        } else {
+            return DEFAULT_GRID_PORTAL_LIGHTING;
         }
     }
 
@@ -273,6 +284,14 @@ export class PortalConfig implements SubscriptionLike {
         return this._cursor;
     }
 
+    get portalHDRAddress() {
+        if (this._portalHDRAddress) {
+            return this._portalHDRAddress;
+        } else {
+            return null;
+        }
+    }
+
     unsubscribe(): void {
         this._sub.unsubscribe();
     }
@@ -368,6 +387,12 @@ export class PortalConfig implements SubscriptionLike {
             `auxPortalPannable`,
             DEFAULT_PORTAL_PANNABLE
         );
+        this._portalHDRAddress = calculateStringTagValue(
+            calc,
+            bot,
+            'portalHDRAddress',
+            null
+        );
         const panMin = getTagPosition(bot, 'auxPortalPannableMin', null);
         const panMax = getTagPosition(bot, 'auxPortalPannableMax', null);
         this._panMinX = panMin.x;
@@ -431,6 +456,13 @@ export class PortalConfig implements SubscriptionLike {
         this._cameraType = getCameraType(calc, bot);
         this._cursor = getPortalCursor(calc, bot);
         this.gridScale = this._calculateGridScale(calc, bot);
+
+        this._gridPortalDefaultLighting = calculateBooleanTagValue(
+            calc,
+            bot,
+            `defaultLighting`,
+            DEFAULT_GRID_PORTAL_LIGHTING
+        );
 
         // TODO:
         // const dimensionLocked = isDimensionLocked(calc, bot);

@@ -1,8 +1,14 @@
 declare module '@casual-simulation/three' {
     export * from 'three';
-    import { MaterialParameters, Color, Texture, Material, NormalMapTypes, Vector2 } from 'three';
+    import {
+        MaterialParameters,
+        Color,
+        Texture,
+        Material,
+        NormalMapTypes,
+        Vector2,
+    } from 'three';
 
-    
     export interface MeshToonMaterialParameters extends MaterialParameters {
         /** geometry color in hexadecimal. Default is 0xffffff. */
         color?: Color | string | number;
@@ -38,8 +44,7 @@ declare module '@casual-simulation/three' {
     }
 
     export class MeshToonMaterial extends Material {
-
-        constructor( parameters?: MeshToonMaterialParameters );
+        constructor(parameters?: MeshToonMaterialParameters);
 
         /**
          * @default 'MeshToonMaterial'
@@ -179,8 +184,7 @@ declare module '@casual-simulation/three' {
          */
         morphNormals: boolean;
 
-        setValues( parameters: MeshToonMaterialParameters ): void;
-
+        setValues(parameters: MeshToonMaterialParameters): void;
     }
 }
 
@@ -206,4 +210,7 @@ declare module '@casual-simulation/three/examples/jsm/loaders/DRACOLoader' {
 
 declare module '@casual-simulation/three/examples/jsm/renderers/CSS3DRenderer' {
     export * from 'three/examples/jsm/renderers/CSS3DRenderer';
+}
+declare module '@casual-simulation/three/examples/jsm/loaders/EXRLoader' {
+    export * from 'three/examples/jsm/loaders/EXRLoader';
 }

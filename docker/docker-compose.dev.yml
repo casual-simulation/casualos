@@ -16,15 +16,6 @@ services:
         restart: always
         ports:
             - '6379:6379'
-    dynamodb:
-        command: '-jar DynamoDBLocal.jar -sharedDb -dbPath ./data'
-        image: 'amazon/dynamodb-local:latest'
-        restart: always
-        ports:
-            - '9125:8000'
-        volumes:
-            - './services/data/dynamodb:/home/dynamodblocal/data'
-        working_dir: /home/dynamodblocal
     s3:
         image: localstack/localstack:latest
         environment:

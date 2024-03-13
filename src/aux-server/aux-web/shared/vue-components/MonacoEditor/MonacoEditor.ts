@@ -2,11 +2,10 @@ import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { ResizeObserverEntry } from '@juggle/resize-observer/lib/ResizeObserverEntry';
-
+const states: Map<string, monaco.editor.ICodeEditorViewState> = new Map();
 @Component({})
 export default class MonacoEditor extends Vue {
     private _editor: monaco.editor.IStandaloneCodeEditor;
-    private _states: Map<string, monaco.editor.ICodeEditorViewState>;
     private _model: monaco.editor.ITextModel;
     private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
     private _modelChangeObserver: monaco.IDisposable;
@@ -30,7 +29,7 @@ export default class MonacoEditor extends Vue {
             this._model.uri.toString() !== model.uri.toString()
         ) {
             if (this._model) {
-                this._states.set(
+                states.set(
                     this._model.uri.toString(),
                     this._editor.saveViewState()
                 );
@@ -38,17 +37,12 @@ export default class MonacoEditor extends Vue {
             this._model = model;
             this._editor.setModel(model);
             this._applyViewZones();
-            let prevState = this._states.get(model.uri.toString());
+            let prevState = states.get(model.uri.toString());
             if (prevState) {
                 this._editor.restoreViewState(prevState);
             }
         }
     }
-
-    created() {
-        this._states = new Map();
-    }
-
     mounted() {
         if (this._model && !this._editor) {
             this._createEditor();

@@ -4,29 +4,24 @@ import {
     Bot,
     BotTags,
     BotSpace,
-    BotTagMasks,
     PortalType,
-    RecordSpace,
-    Record,
-    RecordReference,
 } from './Bot';
-import {
-    Action,
-    DeviceAction,
-    RemoteAction,
-    DeviceSelector,
-    RemoteActionResult,
-    RemoteActionError,
-    DeviceActionResult,
-    DeviceActionError,
-    remoteResult,
-    remoteError,
-} from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import type { RecordFileFailure } from '@casual-simulation/aux-records';
-import { AuxRuntime } from '../runtime/AuxRuntime';
 import { InstUpdate } from './StoredAux';
+import {
+    DeviceAction,
+    RemoteAction,
+    RemoteActionError,
+    RemoteActionResult,
+    DeviceActionResult,
+    DeviceActionError,
+    Action,
+    DeviceSelector,
+    remoteError,
+    remoteResult,
+    RemoteActions,
+} from '../common';
 
 /**
  * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.
@@ -36,7 +31,10 @@ export const UNMAPPABLE = Symbol('UNMAPPABLE');
 export type LocalActions = BotActions | ExtraActions | AsyncActions;
 
 /**
- * Defines a union type for all the possible events that can be emitted from a bots channel.
+ * Defines a union type for all the possible common events.
+ *
+ * @dochash types/os/event
+ * @docname BotAction
  */
 export type BotAction =
     | BotActions
@@ -55,9 +53,6 @@ export type BotActions =
     | AddBotAction
     | RemoveBotAction
     | UpdateBotAction
-    | CreateCertificateAction
-    | SignTagAction
-    | RevokeCertificateAction
     | ApplyStateAction;
 
 /**
@@ -85,19 +80,11 @@ export type ExtraActions =
     | ShellAction
     | OpenConsoleAction
     | DownloadAction
-    | BackupToGithubAction
-    | BackupAsDownloadAction
-    | StartCheckoutAction
-    | CheckoutSubmittedAction
-    | FinishCheckoutAction
     | PasteStateAction
     | ReplaceDragBotAction
     | SetClipboardAction
     | ShowChatBarAction
     | ShowUploadAuxFileAction
-    | MarkHistoryAction
-    | BrowseHistoryAction
-    | RestoreHistoryMarkAction
     | LoadSpaceAction
     | EnableARAction
     | EnableVRAction
@@ -130,62 +117,9 @@ export type AsyncActions =
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
     | RunScriptAction
-    | LoadBotsAction
     | ClearSpaceAction
     | SendWebhookAction
     | AnimateTagAction
-    | UnlockSpaceAction
-    | SetSpacePasswordAction
-    | LoadFileAction
-    | SaveFileAction
-    | SetupChannelAction
-    | RpioInitAction
-    | RpioExitAction
-    | RpioOpenAction
-    | RpioModeAction
-    | RpioReadAction
-    | RpioReadSequenceAction
-    | RpioWriteAction
-    | RpioWriteSequenceAction
-    | RpioReadpadAction
-    | RpioWritepadAction
-    | RpioPudAction
-    | RpioPollAction
-    | RpioCloseAction
-    | RpioI2CBeginAction
-    | RpioI2CSetSlaveAddressAction
-    | RpioI2CSetBaudRateAction
-    | RpioI2CSetClockDividerAction
-    | RpioI2CReadAction
-    | RpioI2CWriteAction
-    // | RpioI2CReadRegisterRestartAction
-    // | RpioI2CWriteReadRestartAction
-    | RpioI2CEndAction
-    | RpioPWMSetClockDividerAction
-    | RpioPWMSetRangeAction
-    | RpioPWMSetDataAction
-    | RpioSPIBeginAction
-    | RpioSPIChipSelectAction
-    | RpioSPISetCSPolarityAction
-    | RpioSPISetClockDividerAction
-    | RpioSPISetDataModeAction
-    | RpioSPITransferAction
-    | RpioSPIWriteAction
-    | RpioSPIEndAction
-    | SerialConnectAction
-    | SerialStreamAction
-    | SerialOpenAction
-    | SerialUpdateAction
-    | SerialWriteAction
-    | SerialReadAction
-    | SerialCloseAction
-    | SerialFlushAction
-    | SerialDrainAction
-    | SerialPauseAction
-    | SerialResumeAction
-    | CreateCertificateAction
-    | SignTagAction
-    | RevokeCertificateAction
     | RemoteAction
     | RemoteActionResult
     | RemoteActionError
@@ -212,23 +146,10 @@ export type AsyncActions =
     | RegisterCustomAppAction
     | UnregisterCustomAppAction
     | RegisterHtmlAppAction
+    | ReportInstAction
     | RequestAuthDataAction
     | DefineGlobalBotAction
     | ConvertGeolocationToWhat3WordsAction
-    | GetPublicRecordKeyAction
-    | GrantRecordMarkerPermissionAction
-    | RevokeRecordMarkerPermissionAction
-    | GrantInstAdminPermissionAction
-    | GrantRoleAction
-    | RevokeRoleAction
-    | RecordDataAction
-    | GetRecordDataAction
-    | ListRecordDataAction
-    | EraseRecordDataAction
-    | RecordFileAction
-    | EraseFileAction
-    | RecordEventAction
-    | GetEventCountAction
     | ARSupportedAction
     | VRSupportedAction
     | MediaPermissionAction
@@ -238,13 +159,6 @@ export type AsyncActions =
     | MeetFunctionAction
     | ShowTooltipAction
     | HideTooltipAction
-    | JoinRoomAction
-    | LeaveRoomAction
-    | SetRoomOptionsAction
-    | GetRoomOptionsAction
-    | GetRoomTrackOptionsAction
-    | SetRoomTrackOptionsAction
-    | GetRoomRemoteOptionsAction
     | RaycastFromCameraAction
     | RaycastInPortalAction
     | CalculateRayFromCameraAction
@@ -256,8 +170,19 @@ export type AsyncActions =
     | GetWakeLockConfigurationAction
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
-    | AttachRuntimeAction
-    | DetachRuntimeAction;
+    | OpenPhotoCameraAction
+    | EnableCollaborationAction
+    | GetRecordsEndpointAction
+    | ShowAccountInfoAction
+    | LDrawCountBuildStepsAction;
+
+export type RemoteBotActions =
+    | GetRemoteCountAction
+    | ListInstUpdatesAction
+    | GetInstStateFromUpdatesAction
+    | CreateInitializationUpdateAction
+    | ApplyUpdatesToInstAction
+    | GetCurrentInstUpdateAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -332,90 +257,8 @@ export interface UpdateBotAction extends Action {
 }
 
 /**
- * Defines the set of options required for creating a certificate.
- */
-export interface CreateCertificateOptions {
-    /**
-     * The keypair that should be used for the certificate.
-     */
-    keypair: string;
-
-    /**
-     * The ID of the certified bot that is signing the new certificate.
-     */
-    signingBotId?: string;
-
-    /**
-     * The password that should be used to sign the new certificate.
-     */
-    signingPassword: string;
-}
-
-/**
- * Defines a bot event that creates a new certificate from the given keypair.
- */
-export interface CreateCertificateAction
-    extends AsyncAction,
-        CreateCertificateOptions {
-    type: 'create_certificate';
-}
-
-/**
- * Defines a bot event that creates a signature for the given tag on the given bot using the given certified bot and password.
- */
-export interface SignTagAction extends AsyncAction {
-    type: 'sign_tag';
-
-    /**
-     * The ID of the certified bot that is signing the tag value.
-     */
-    signingBotId: string;
-
-    /**
-     * The password that should be used to sign the value.
-     */
-    signingPassword: string;
-
-    /**
-     * The ID of the bot whose tag is being signed.
-     */
-    botId: string;
-
-    /**
-     * The tag that should be signed.
-     */
-    tag: string;
-
-    /**
-     * The value that should be signed.
-     */
-    value: any;
-}
-
-/**
- * Defines a bot event that revokes a certificate.
- */
-export interface RevokeCertificateAction extends AsyncAction {
-    type: 'revoke_certificate';
-
-    /**
-     * The ID of the bot that should be used to sign the revocation.
-     */
-    signingBotId: string;
-
-    /**
-     * The password that should be used to sign the revocation.
-     */
-    signingPassword: string;
-
-    /**
-     * The ID of the certificate that should be revoked.
-     */
-    certificateBotId: string;
-}
-
-/**
  * A set of bot events in one.
+ * @docname TransactionAction
  */
 export interface TransactionAction extends Action {
     type: 'transaction';
@@ -434,6 +277,7 @@ export interface ApplyStateAction extends Action {
 
 /**
  * The options for pasting bots state into a channel.
+ * @docname PasteStateOptions
  */
 export interface PasteStateOptions {
     /**
@@ -465,6 +309,7 @@ export interface PasteStateOptions {
 
 /**
  * An event to paste the given bots state as a new worksurface at a position.
+ * @docname PasteStateAction
  */
 export interface PasteStateAction extends Action {
     type: 'paste_state';
@@ -478,6 +323,7 @@ export interface PasteStateAction extends Action {
 
 /**
  * An event that is used to override dragging a bot.
+ * @docname ReplaceDragBotAction
  */
 export interface ReplaceDragBotAction extends Action {
     type: 'replace_drag_bot';
@@ -489,186 +335,8 @@ export interface ReplaceDragBotAction extends Action {
 }
 
 /**
- * An event that is used to request that the instance be backed up to github.
- */
-export interface BackupToGithubAction extends Action {
-    type: 'backup_to_github';
-
-    /**
-     * The authentication key to use.
-     */
-    auth: string;
-
-    /**
-     * The options that should be used for backing up.
-     */
-    options?: BackupOptions;
-}
-
-/**
- * An event that is used to request that the instance be backed up to a zip bot and downloaded.
- */
-export interface BackupAsDownloadAction extends Action {
-    type: 'backup_as_download';
-
-    /**
-     * The options that should be used for backing up.
-     */
-    options?: BackupOptions;
-
-    /**
-     * The device(s) that the download should be sent to.
-     */
-    target: DeviceSelector;
-}
-
-/**
- * Defines the list of possible options for backing up a instance.
- */
-export interface BackupOptions {
-    /**
-     * Whether to include archived atoms.
-     */
-    includeArchived?: boolean;
-}
-
-export interface StartCheckoutOptions {
-    /**
-     * The publishable API key that should be used for interfacing with the Stripe API.
-     */
-    publishableKey: string;
-
-    /**
-     * The ID of the product that is being checked out.
-     */
-    productId: string;
-
-    /**
-     * The title of the product.
-     */
-    title: string;
-
-    /**
-     * The description of the product.
-     */
-    description: string;
-
-    /**
-     * The instance that the payment processing should occur in.
-     */
-    processingInst: string;
-
-    /**
-     * Whether to request the payer's billing address.
-     */
-    requestBillingAddress?: boolean;
-
-    /**
-     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
-     */
-    paymentRequest?: PaymentRequestOptions;
-}
-
-/**
- * Defines an interface of payment request options.
- */
-export interface PaymentRequestOptions {
-    /**
-     * The two letter country code of your payment processor account.
-     */
-    country: string;
-
-    /**
-     * The three character currency code.
-     */
-    currency: string;
-
-    /**
-     * The total that should be charged to the user.
-     */
-    total: {
-        /**
-         * The label that should be displayed for the total.
-         */
-        label: string;
-
-        /**
-         * The amount in the currency's smallest unit. (cents, etc.)
-         */
-        amount: number;
-    };
-}
-
-/**
- * An event that is used to initiate the checkout flow.
- */
-export interface StartCheckoutAction extends Action, StartCheckoutOptions {
-    type: 'start_checkout';
-}
-
-/**
- * An event that is used to indicate that the checkout was submitted.
- */
-export interface CheckoutSubmittedAction extends Action {
-    type: 'checkout_submitted';
-
-    /**
-     * The ID of the product that was checked out.
-     */
-    productId: string;
-
-    /**
-     * The token that allows payment.
-     */
-    token: string;
-
-    /**
-     * The inst that processing should happen in.
-     */
-    processingInst: string;
-}
-
-/**
- * An event that is used to finish the checkout process by charging the user's card/account.
- */
-export interface FinishCheckoutAction extends Action {
-    type: 'finish_checkout';
-
-    /**
-     * The Secret API Key that should be used to finish the checkout process.
-     */
-    secretKey: string;
-
-    /**
-     * The token that was created from the checkout process.
-     * You should have recieved this from the onCheckout() event.
-     */
-    token: string;
-
-    /**
-     * The amount to charge in the smallest currency unit.
-     * For USD, this is cents. So an amount of 100 equals $1.00.
-     */
-    amount: number;
-
-    /**
-     * The currency that the amount is in.
-     */
-    currency: string;
-
-    /**
-     * The description for the charge.
-     */
-    description: string;
-
-    /**
-     * The extra info that this event contains.
-     */
-    extra: any;
-}
-
-/**
  * An event that is used to run a shell script.
+ * @docname ShellAction
  */
 export interface ShellAction extends Action {
     type: 'shell';
@@ -681,6 +349,8 @@ export interface ShellAction extends Action {
 
 /**
  * An event that is used to show a toast message to the user.
+ * @dochash types/os/portals
+ * @docname ShowToastAction
  */
 export interface ShowToastAction extends Action {
     type: 'show_toast';
@@ -697,6 +367,8 @@ export interface ShowToastAction extends Action {
 
 /**
  * An event that is used to show a tooltip message to the user.
+ * @dochash types/os/portals
+ * @docname ShowTooltipAction
  */
 export interface ShowTooltipAction extends AsyncAction {
     type: 'show_tooltip';
@@ -726,6 +398,8 @@ export interface ShowTooltipAction extends AsyncAction {
 
 /**
  * An event that is used to hide tooltip messages.
+ * @dochash types/os/portals
+ * @docname HideTooltipAction
  */
 export interface HideTooltipAction extends AsyncAction {
     type: 'hide_tooltip';
@@ -739,6 +413,8 @@ export interface HideTooltipAction extends AsyncAction {
 
 /**
  * An event that is used to show some HTML to the user.
+ * @dochash types/os/portals
+ * @docname ShowHtmlAction
  */
 export interface ShowHtmlAction extends Action {
     type: 'show_html';
@@ -756,6 +432,8 @@ export interface ShowHtmlAction extends Action {
 
 /**
  * An event that is used to hide the HTML from the user.
+ * @dochash types/os/portals
+ * @docname HideHtmlAction
  */
 export interface HideHtmlAction extends Action {
     type: 'show_html';
@@ -763,78 +441,110 @@ export interface HideHtmlAction extends Action {
 }
 
 /**
- * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
+ * Options for {@link os.focusOn-bot}, and {@link os.focusOn-position} actions.
+ *
+ * @dochash types/os/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname FocusOnOptions
  */
 export interface FocusOnOptions {
     /*
      * The zoom value to use.
+     * For the bot and miniGridPortals, possible values are between `0` and `80`. `1` is the default.
+     * For the map portal, this is the scale that the focused point should appear at.
+     * For example, 24000 would indicate that the scale is 1:24,000.
+     * If no value is specified, then the zoom will remain at its current value.
      */
     zoom?: number;
 
     /*
-     * The rotation value to use. These are the spherical coordinates that determine where the camera should orbit around the target point.
+     * The rotation value to use in radians.
+     * These are the polar coordinates that determine where
+     * the camera should orbit around the target point.
      */
-    rotation?: {
-        x: number;
-        y: number;
-
-        /**
-         * Whether to normalize the rotation values to between 0 and 2*PI.
-         * Defaults to true. Setting this to false can be useful for rotating around a bot multiple times.
-         */
-        normalize?: boolean;
-    };
+    rotation?: FocusOnRotation;
 
     /**
-     * The duration in seconds that the tween should take.
+     * The duration in seconds that the animation should take.
+     * Defaults to 1.
      */
     duration?: number;
 
     /**
-     * The type of easing to use.
-     * If not specified then "linear" "inout" will be used.
+     * The options for easing.
+     * Can be an "easing type" or an object that specifies the type and mode.
+     * If an easing type is specified, then "inout" mode is used.
+     * If omitted, then "quadratic" "inout" is used.
      */
     easing?: EaseType | Easing;
 
     /**
      * The tag that should be focused.
+     * Only supported in the system portal.
      */
     tag?: string;
 
     /**
-     * The space of the tag that should be focused.
+     * The tag space that should be focused.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     space?: string;
 
     /**
-     * The line number that should be focued.
+     * The line number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     lineNumber?: number;
 
     /**
-     * The column number that should be focused.
+     * The column number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     columnNumber?: number;
 
     /**
      * The index of the first character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     startIndex?: number;
 
     /**
      * The index of the last character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     endIndex?: number;
 
     /**
-     * The portal that the bot is in.
-     * If not specified, then the bot will be focused in all portals.
+     * The portal that the bot should be focused in.
+     * If not specified, then the bot will be focused in all the portals it is in. (bot, mini and menu)
+     * Useful if a bot is in two portals but you only want to focus it in one portal.
      */
     portal?: PortalType;
 }
 
 /**
+ * Defines an interface that represents a rotation in polar coordinates for use with {@link os.focusOn-bot}.
+ *
+ * @dochash types/os/camera
+ * @docname FocusOnRotation
+ */
+export interface FocusOnRotation {
+    x: number;
+    y: number;
+
+    /**
+     * Whether to normalize the rotation. Normalized rotations are clamped to between 0 and Math.PI*2.
+     * You can set this to false to allow using angles more than Math.PI*2. This would allow the camera to rotate around an object multiple times.
+     * Defaults to true.
+     */
+    normalize?: boolean;
+}
+
+/**
  * An event that is used to focus on a given bot.
+ * @docname FocusOnBotAction
  */
 export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
     type: 'focus_on';
@@ -847,6 +557,7 @@ export interface FocusOnBotAction extends AsyncAction, FocusOnOptions {
 
 /**
  * An event that is used to focus on a given position.
+ * @docname FocusOnPositionAction
  */
 export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
     type: 'focus_on_position';
@@ -863,6 +574,7 @@ export interface FocusOnPositionAction extends AsyncAction, FocusOnOptions {
 
 /**
  * An event that is used to cancel the current camera animation.
+ * @docname CancelAnimationAction
  */
 export interface CancelAnimationAction extends AsyncAction {
     type: 'cancel_animation';
@@ -870,11 +582,15 @@ export interface CancelAnimationAction extends AsyncAction {
 
 /**
  * The possible camera types.
+ *
+ * @dochash types/os/camera
+ * @docname CameraType
  */
 export type CameraType = 'front' | 'rear';
 
 /**
  * An event that is used to show or hide the QR Code Scanner.
+ * @docname OpenQRCodeScannerAction
  */
 export interface OpenQRCodeScannerAction extends Action {
     type: 'show_qr_code_scanner';
@@ -897,6 +613,7 @@ export interface OpenQRCodeScannerAction extends Action {
 
 /**
  * An event that is used to show or hide the barcode scanner.
+ * @docname OpenBarcodeScannerAction
  */
 export interface OpenBarcodeScannerAction extends Action {
     type: 'show_barcode_scanner';
@@ -918,7 +635,131 @@ export interface OpenBarcodeScannerAction extends Action {
 }
 
 /**
+ * An event that is used to show or hide the photo camera.
+ * @docname OpenPhotoCameraAction
+ */
+export interface OpenPhotoCameraAction extends AsyncAction {
+    type: 'open_photo_camera';
+
+    /**
+     * Whether the photo camera should be visible.
+     */
+    open: boolean;
+
+    /**
+     * Whether only a single photo should be taken.
+     */
+    singlePhoto: boolean;
+
+    /**
+     * The options for the action.
+     */
+    options: OpenPhotoCameraOptions;
+}
+
+/**
+ * Defines a photo that was taken.
+ *
+ * @dochash types/camera
+ * @docname Photo
+ */
+export interface Photo {
+    /**
+     * The photo data.
+     */
+    data: Blob;
+
+    /**
+     * The width of the photo in pixels.
+     */
+    width: number;
+
+    /**
+     * The height of the photo in pixels.
+     */
+    height: number;
+}
+
+/**
+ * Options for {@link os.openPhotoCamera}.
+ *
+ * @dochash types/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname PhotoCameraOptions
+ */
+export interface OpenPhotoCameraOptions {
+    /**
+     * The camera that should be used.
+     */
+    cameraType?: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras?: boolean;
+
+    /**
+     * The image format that should be used.
+     *
+     * Defaults to "png".
+     */
+    imageFormat?: 'png' | 'jpeg';
+
+    /**
+     * A number between 0 and 1 indicating the image quality to be used.
+     *
+     * If not specified, then the browser will use its own default.
+     */
+    imageQuality?: number;
+
+    /**
+     * Whether to skip allowing the user to confirm their photo.
+     *
+     * Defaults to false.
+     */
+    skipConfirm?: boolean;
+
+    /**
+     * Whether to automatically take a photo after a number of seconds.
+     *
+     * If null, then there is no timer and the user is allowed to take the photo manually.
+     * If positive, then the timer will start counting down from the given number of seconds.
+     * The user can always cancel the operation manually.
+     */
+    takePhotoAfterSeconds?: number;
+
+    /**
+     * The ideal resolution for the photo to be taken at.
+     *
+     * If specified, then the web browser will be told to prefer this resolution, but will use a lower resolution if
+     * it is not possible to use the ideal resolution.
+     */
+    idealResolution?: {
+        /**
+         * The width of the photo in pixels.
+         */
+        width: number;
+
+        /**
+         * The height of the photo in pixels.
+         */
+        height: number;
+    };
+
+    /**
+     * Whether to mirror the photo after it is taken.
+     *
+     * Defaults to false.
+     */
+    mirrorPhoto?: boolean;
+}
+
+/**
  * An event that is used to toggle whether the console is open.
+ * @dochash types/os/system
+ * @docname OpenConsoleAction
  */
 export interface OpenConsoleAction extends Action {
     type: 'open_console';
@@ -931,6 +772,7 @@ export interface OpenConsoleAction extends Action {
 
 /**
  * An event that is used to show or hide a QR Code on screen.
+ * @docname ShowQRCodeAction
  */
 export interface ShowQRCodeAction extends Action {
     type: 'show_qr_code';
@@ -948,6 +790,12 @@ export interface ShowQRCodeAction extends Action {
 
 /**
  * The list of possible barcode formats.
+ *
+ * @dochash types/os/barcodes
+ * @doctitle Barcode Types
+ * @docsidebar Barcodes
+ * @docdescription Types that are used in barcode actions.
+ * @docname BarcodeFormat
  */
 export type BarcodeFormat =
     | 'code128'
@@ -962,6 +810,7 @@ export type BarcodeFormat =
 
 /**
  * An event that is used to show or hide a barcode on screen.
+ * @docname ShowBarcodeAction
  */
 export interface ShowBarcodeAction extends Action {
     type: 'show_barcode';
@@ -984,15 +833,29 @@ export interface ShowBarcodeAction extends Action {
 
 /**
  * An event that is used to show or hide an image classifier on screen.
+ * @docname OpenImageClassifierAction
  */
-export interface OpenImageClassifierAction extends AsyncAction {
+export interface OpenImageClassifierAction
+    extends AsyncAction,
+        ImageClassifierOptions {
     type: 'show_image_classifier';
 
     /**
      * Whether the image classifier should be visible.
      */
     open: boolean;
+}
 
+/**
+ * Defines an interface that represents a set of options for {@link os.openImageClassifier}.
+ *
+ * @dochash types/os/image-classification
+ * @doctitle Image Classifier Types
+ * @docsidebar Image Classifier
+ * @docdescription Types that are used in image classifier actions.
+ * @docname ImageClassifierOptions
+ */
+export interface ImageClassifierOptions {
     /**
      * The URL that the model should be loaded from.
      */
@@ -1016,13 +879,10 @@ export interface OpenImageClassifierAction extends AsyncAction {
     cameraType?: CameraType;
 }
 
-export type ImageClassifierOptions = Pick<
-    OpenImageClassifierAction,
-    'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'cameraType'
->;
-
 /**
  * An event that is used to load a simulation.
+ * @dochash types/os/spaces
+ * @docname LoadInstAction
  */
 export interface LoadServerAction extends Action {
     type: 'load_server';
@@ -1035,6 +895,8 @@ export interface LoadServerAction extends Action {
 
 /**
  * An event that is used to unload a simulation.
+ * @dochash types/os/spaces
+ * @docname UnloadInstAction
  */
 export interface UnloadServerAction extends Action {
     type: 'unload_server';
@@ -1047,6 +909,7 @@ export interface UnloadServerAction extends Action {
 
 /**
  * An event that is used to load an AUX from a remote location.
+ * @docname ImportAUXAction
  */
 export interface ImportAUXAction extends AsyncAction {
     type: 'import_aux';
@@ -1059,6 +922,7 @@ export interface ImportAUXAction extends AsyncAction {
 
 /**
  * Defines an event for actions that are shouted to every current loaded simulation.
+ * @docname SuperShoutAction
  */
 export interface SuperShoutAction extends Action {
     type: 'super_shout';
@@ -1076,6 +940,7 @@ export interface SuperShoutAction extends Action {
 
 /**
  * Defines an event that sends a web request to a instance.
+ * @docname SendWebhookAction
  */
 export interface SendWebhookAction extends AsyncAction {
     type: 'send_webhook';
@@ -1083,13 +948,13 @@ export interface SendWebhookAction extends AsyncAction {
     /**
      * The options for the webhook.
      */
-    options: WebhookOptions;
+    options: WebhookActionOptions;
 }
 
 /**
  * Defines a set of options for a webhook.
  */
-export interface WebhookOptions {
+export interface WebhookActionOptions {
     /**
      * The HTTP Method that the request should use.
      */
@@ -1120,6 +985,7 @@ export interface WebhookOptions {
 
 /**
  * Defines an event that animates a tag on a bot over some time.
+ * @docname AnimateTagAction
  */
 export interface AnimateTagAction extends AsyncAction {
     type: 'animate_tag';
@@ -1142,6 +1008,7 @@ export interface AnimateTagAction extends AsyncAction {
 
 /**
  * Defines the options that can be used to animate a tag.
+ * @docname AnimateTagOptions
  */
 export interface AnimateTagOptions {
     /**
@@ -1172,96 +1039,31 @@ export interface AnimateTagOptions {
 }
 
 /**
- * Defines an event that is used to load a file.
- */
-export interface LoadFileAction extends AsyncAction {
-    type: 'load_file';
-
-    /**
-     * The options for the action.
-     */
-    options: LoadFileOptions;
-}
-
-/**
- * Options for loading a file.
- */
-export interface LoadFileOptions {
-    /**
-     * The file path that should be loaded.
-     */
-    path?: string;
-
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-}
-
-/**
- * Defines an event that is used to save a file to a drive.
- */
-export interface SaveFileAction extends AsyncAction {
-    type: 'save_file';
-
-    /**
-     * The options for the action.
-     */
-    options: SaveFileOptions;
-}
-
-/**
- * Options for saving a file.
- */
-export interface SaveFileOptions {
-    /**
-     * The path that the mod should be saved.
-     */
-    path: string;
-
-    /**
-     * The data to save to the file.
-     */
-    data: string;
-
-    /**
-     * The shout that should be made when the request finishes.
-     */
-    callbackShout?: string;
-
-    /**
-     * Whether to overwrite existing files.
-     */
-    overwriteExistingFile?: boolean;
-}
-
-/**
  * Defines an event that is used to get the player count.
+ * @docname GetRemoteCountAction
  */
 export interface GetRemoteCountAction extends Action {
     type: 'get_remote_count';
+
+    /**
+     * The name of the record.
+     */
+    recordName?: string | null;
 
     /**
      * The instance that the device count should be retrieved for.
      * If omitted, then the total device count will be returned.
      */
     inst?: string;
-}
-
-/**
- * Defines an event that is used to get the list of instances from the server.
- */
-export interface GetServersAction extends Action {
-    type: 'get_servers';
 
     /**
-     * Whether to get the instance statuses.
+     * The name of the branch.
      */
-    includeStatuses?: boolean;
+    branch?: string;
 }
-
 /**
  * Defines an event that is used to get the list of remote devices on the instance.
+ * @docname GetRemotesAction
  */
 export interface GetRemotesAction extends Action {
     type: 'get_remotes';
@@ -1269,6 +1071,7 @@ export interface GetRemotesAction extends Action {
 
 /**
  * Defines an event that is used to get the list of bot updates on the instance.
+ * @docname ListInstUpdatesAction
  */
 export interface ListInstUpdatesAction extends Action {
     type: 'list_inst_updates';
@@ -1276,6 +1079,7 @@ export interface ListInstUpdatesAction extends Action {
 
 /**
  * Defines an event that is used to get the state of the inst with a particular set of updates.
+ * @docname GetInstStateFromUpdatesAction
  */
 export interface GetInstStateFromUpdatesAction extends Action {
     type: 'get_inst_state_from_updates';
@@ -1288,6 +1092,7 @@ export interface GetInstStateFromUpdatesAction extends Action {
 
 /**
  * Defines an event that is used to create an initialization update for a given list of bots.
+ * @docname CreateInitializationUpdateAction
  */
 export interface CreateInitializationUpdateAction extends Action {
     type: 'create_initialization_update';
@@ -1300,6 +1105,7 @@ export interface CreateInitializationUpdateAction extends Action {
 
 /**
  * Defines an event that applies the given updates to the inst.
+ * @docname ApplyUpdatesToInstAction
  */
 export interface ApplyUpdatesToInstAction extends Action {
     type: 'apply_updates_to_inst';
@@ -1312,6 +1118,7 @@ export interface ApplyUpdatesToInstAction extends Action {
 
 /**
  * Defines an event that is used to get the current inst update.
+ * @docname GetCurrentInstUpdateAction
  */
 export interface GetCurrentInstUpdateAction extends Action {
     type: 'get_current_inst_update';
@@ -1319,6 +1126,7 @@ export interface GetCurrentInstUpdateAction extends Action {
 
 /**
  * Defines an event that is used to send the player to a dimension.
+ * @docname GoToDimensionAction
  */
 export interface GoToDimensionAction extends Action {
     type: 'go_to_dimension';
@@ -1331,6 +1139,7 @@ export interface GoToDimensionAction extends Action {
 
 /**
  * Defines an event that is used to show an input box to edit a tag on a bot.
+ * @docname ShowInputForTagAction
  */
 export interface ShowInputForTagAction extends Action {
     type: 'show_input_for_tag';
@@ -1353,6 +1162,7 @@ export interface ShowInputForTagAction extends Action {
 
 /**
  * Defines an event that is used to show an input box.
+ * @docname ShowInputAction
  */
 export interface ShowInputAction extends AsyncAction {
     type: 'show_input';
@@ -1370,6 +1180,8 @@ export interface ShowInputAction extends AsyncAction {
 
 /**
  * Defines an event that is used to show a confirmation dialog.
+ * @dochash types/os/input
+ * @docname ShowConfirmAction
  */
 export interface ShowConfirmAction extends AsyncAction {
     type: 'show_confirm';
@@ -1382,6 +1194,9 @@ export interface ShowConfirmAction extends AsyncAction {
 
 /**
  * Defines an interface that represents the options that can be used for a confirmation dialog.
+ *
+ * @dochash types/os/input
+ * @docname ShowConfirmOptions
  */
 export interface ShowConfirmOptions {
     /**
@@ -1407,6 +1222,7 @@ export interface ShowConfirmOptions {
 
 /**
  * Defines an event that is used to set whether the connection is forced to be offline.
+ * @docname SetForcedOfflineAction
  */
 export interface SetForcedOfflineAction extends Action {
     type: 'set_offline_state';
@@ -1420,6 +1236,7 @@ export interface SetForcedOfflineAction extends Action {
 /**
  * Defines an event that is used to redirect the user to the given URL.
  * This should be equivalent to clicking a link with rel="noreferrer".
+ * @docname GoToURLAction
  */
 export interface GoToURLAction extends Action {
     type: 'go_to_url';
@@ -1433,6 +1250,12 @@ export interface GoToURLAction extends Action {
 /**
  * Defines an event that is used to open the given URL.
  * This should be equivalent to clicking a link with rel="noreferrer" and target="_blank".
+ *
+ * @dochash types/os/portals
+ * @doctitle Portal Types
+ * @docsidebar Portals
+ * @docdescription Types that are used in portal actions.
+ * @docname OpenURLAction
  */
 export interface OpenURLAction extends Action {
     type: 'open_url';
@@ -1445,6 +1268,11 @@ export interface OpenURLAction extends Action {
 
 /**
  * Defines an event that is used to play a sound from the given url.
+ * @dochash types/os/audio
+ * @doctitle Audio Actions
+ * @docsidebar Audio
+ * @docdescription Defines the types that are used by audio actions.
+ * @docname PlaySoundAction
  */
 export interface PlaySoundAction extends AsyncAction {
     type: 'play_sound';
@@ -1463,6 +1291,9 @@ export interface PlaySoundAction extends AsyncAction {
 
 /**
  * Defines an event that is used to pre-load a sound from the given URL.
+ *
+ * @dochash types/os/audio
+ * @docname BufferSoundAction
  */
 export interface BufferSoundAction extends AsyncAction {
     type: 'buffer_sound';
@@ -1475,6 +1306,9 @@ export interface BufferSoundAction extends AsyncAction {
 
 /**
  * Defines an event that is used to cancel a sound that is playing.
+ *
+ * @dochash types/os/audio
+ * @docname CancelSoundAction
  */
 export interface CancelSoundAction extends AsyncAction {
     type: 'cancel_sound';
@@ -1487,6 +1321,12 @@ export interface CancelSoundAction extends AsyncAction {
 
 /**
  * Defines an event that is used to download a file onto the device.
+ *
+ * @dochash types/os/files
+ * @doctitle File Actions
+ * @docsidebar Files
+ * @docdescription Types that are used in file actions.
+ * @docname DownloadAction
  */
 export interface DownloadAction extends Action {
     type: 'download';
@@ -1509,6 +1349,12 @@ export interface DownloadAction extends Action {
 
 /**
  * Defines an interface for options that a show input event can use.
+ *
+ * @dochash types/os/input
+ * @doctitle Input Types
+ * @docsidebar Input
+ * @docdescription Types that are used in actions that accept user input.
+ * @docname ShowInputOptions
  */
 export interface ShowInputOptions {
     /**
@@ -1552,6 +1398,12 @@ export interface ShowInputOptions {
     items?: ShowInputItem[];
 }
 
+/**
+ * Defines an interface that represents an item that can be displayed in a {@link os.showInput} list.
+ *
+ * @dochash types/os/input
+ * @docname ShowInputItem
+ */
 export interface ShowInputItem {
     label: string;
     value: any;
@@ -1559,11 +1411,15 @@ export interface ShowInputItem {
 
 /**
  * Defines the possible input types.
+ * @dochash types/os/input
+ * @docname ShowInputType
  */
 export type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 
 /**
  * Defines the possible input types.
+ * @dochash types/os/input
+ * @docname ShowInputSuptype
  */
 export type ShowInputSubtype =
     | 'basic'
@@ -1610,6 +1466,12 @@ export interface ShoutAction {
 
 /**
  * Defines an event that prevents the execution of an action.
+ *
+ * @dochash types/os/event
+ * @doctitle Event Types
+ * @docsidebar Events
+ * @docdescription Types that are used in event actions.
+ * @docname RejectAction
  */
 export interface RejectAction {
     type: 'reject';
@@ -1621,685 +1483,13 @@ export interface RejectAction {
 }
 
 /**
- * Defines an event that creates a channel if it doesn't exist.
- */
-export interface SetupChannelAction extends AsyncAction {
-    type: 'setup_server';
-
-    /**
-     * The channel that should be created.
-     */
-    channel: string;
-
-    /**
-     * The bot or mod that should be cloned into the new channel.
-     */
-    botOrMod?: Bot | BotTags;
-}
-
-/**
- * Initialize rpio with the provided settings.
- */
-export interface RpioInitAction extends AsyncAction {
-    type: 'rpio_init';
-
-    /**
-     * Defaults:
-     * gpiomem: true            Use /dev/gpiomem
-     *                          true | false
-     * mapping: 'physical'      Use the P1-P40 numbering scheme
-     *                          gpio | physical
-     * mock: undefined          Emulate specific hardware in mock mode
-     *                          raspi-b-r1 | raspi-a | raspi-b | raspi-a+ | raspi-b+ | raspi-2 | raspi-3 | raspi-zero | raspi-zero-w
-     * close_on_exit: true      On node process exit automatically close rpio
-     *                          true | false
-     */
-    options: object;
-}
-
-/**
- * Shuts down rpio, unmaps, and clears everything.
- */
-export interface RpioExitAction extends AsyncAction {
-    type: 'rpio_exit';
-}
-/**
- * Open a pin for use.
- */
-export interface RpioOpenAction extends AsyncAction {
-    type: 'rpio_open';
-
-    /**
-     * The pin that you want to configure.
-     */
-    pin: number;
-
-    /**
-     * The mode you want toconfigure your pin as.
-     */
-    mode: 'INPUT' | 'OUTPUT' | 'PWM';
-
-    /**
-     * The state you want to initialize your pin as.
-     */
-    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
-}
-
-/**
- * Set the mode of the provided pin.
- */
-export interface RpioModeAction extends AsyncAction {
-    type: 'rpio_mode';
-
-    /**
-     * The pin that you want to configure.
-     */
-    pin: number;
-
-    /**
-     * The mode you want to set your pin as.
-     */
-    mode: 'INPUT' | 'OUTPUT' | 'PWM';
-
-    /**
-     * The state you want to initialize your pin as.
-     */
-    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
-}
-
-/**
- * Read the value of the provided pin.
- */
-export interface RpioReadAction extends AsyncAction {
-    type: 'rpio_read';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-}
-
-/**
- * Read the buffer of the provided pin.
- */
-export interface RpioReadSequenceAction extends AsyncAction {
-    type: 'rpio_read_sequence';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-    /**
-     * The length of the buffer.
-     */
-    length: number;
-}
-
-/**
- * Write a new value for the provided pin.
- */
-export interface RpioWriteAction extends AsyncAction {
-    type: 'rpio_write';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-
-    /**
-     * The value of the pin. Either High (0) or Low (1)
-     */
-    value: 'HIGH' | 'LOW';
-}
-
-/**
- * Write the buffer to the provided pin.
- */
-export interface RpioWriteSequenceAction extends AsyncAction {
-    type: 'rpio_write_sequence';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-    /**
-     * The buffer that you want write.
-     */
-    buffer: number[];
-}
-
-/**
- * Read the current state of the GPIO pad control for the specified GPIO group.
- * On current models of Raspberry Pi there are three groups.
- */
-export interface RpioReadpadAction extends AsyncAction {
-    type: 'rpio_readpad';
-
-    /**
-     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
-     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
-     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
-     */
-    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53';
-    /**
-     * The bitmask you want to check.
-     */
-    bitmask: 'slew' | 'hysteresis' | 'current';
-}
-/**
- * Write `control` settings to the pad control for `group`.
- */
-export interface RpioWritepadAction extends AsyncAction {
-    type: 'rpio_writepad';
-
-    /**
-     * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
-     * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
-     * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
-     */
-    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53';
-
-    /**
-     * Slew rate unlimited if set to true.
-     */
-    slew?: boolean;
-    /**
-     * Hysteresis is enabled if set to true.
-     */
-    hysteresis?: boolean;
-    /**
-     * Drive current set in mA. Must be an even number 2-16.
-     */
-    current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16;
-}
-/**
- * Configure the pin's internal pullup or pulldown resistors.
- */
-export interface RpioPudAction extends AsyncAction {
-    type: 'rpio_pud';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-
-    /**
-     * Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
-     */
-    state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP';
-}
-/**
- * Watch `pin` for changes and execute the callback `cb()` on events.
- */
-export interface RpioPollAction extends AsyncAction {
-    type: 'rpio_poll';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-
-    /**
-     * The callback executed on events.
-     */
-    cb: any;
-
-    /**
-     * Optional. Used to watch for specific events.
-     */
-    options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH';
-}
-/**
- * Close a pin to remove it from use.
- */
-export interface RpioCloseAction extends AsyncAction {
-    type: 'rpio_close';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-
-    /**
-     * The state you want to leave the pin in. Either PIN_RESET or PIN_PRESERVE
-     */
-    options?: 'PIN_RESET' | 'PIN_PRESERVE';
-}
-/**
- *Initializes i2c for use.
- */
-export interface RpioI2CBeginAction extends AsyncAction {
-    type: 'rpio_i2c_begin';
-}
-/**
- * Configure the slave address.
- */
-export interface RpioI2CSetSlaveAddressAction extends AsyncAction {
-    type: 'rpio_i2c_setslaveaddress';
-
-    /**
-     * The slave address to set.
-     */
-    address: number;
-}
-/**
- * Set the baud rate. Directly set the speed in hertz.
- */
-export interface RpioI2CSetBaudRateAction extends AsyncAction {
-    type: 'rpio_i2c_setbaudrate';
-
-    /**
-     * The i2c refresh rate in hertz.
-     */
-    rate: number;
-}
-/**
- * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
- */
-export interface RpioI2CSetClockDividerAction extends AsyncAction {
-    type: 'rpio_i2c_setclockdivider';
-
-    /**
-     * The i2c refresh rate based on a divisor of the base 250MHz rate.
-     */
-    rate: number;
-}
-/**
- * Read from the i2c slave.
- */
-export interface RpioI2CReadAction extends AsyncAction {
-    type: 'rpio_i2c_read';
-
-    /**
-     * Buffer to read.
-     */
-    rx: number[];
-
-    /**
-     * Optional. Length of the buffer to read.
-     */
-    length?: number;
-}
-/**
- * Write to the i2c slave.
- */
-export interface RpioI2CWriteAction extends AsyncAction {
-    type: 'rpio_i2c_write';
-
-    /**
-     * Buffer to write.
-     */
-    tx: number[];
-
-    /**
-     * Optional. Length of the buffer to write.
-     */
-    length?: number;
-}
-/**
- *
- */
-// export interface RpioI2CReadRegisterRestartAction extends AsyncAction {
-//     type: 'rpio_i2c_readregisterrestart';
-// }
-/**
- *
- */
-// export interface RpioI2CWriteReadRestartAction extends AsyncAction {
-//     type: 'rpio_i2c_writereadrestart';
-// }
-/**
- * Turn off the i²c interface and return the pins to GPIO.
- */
-export interface RpioI2CEndAction extends AsyncAction {
-    type: 'rpio_i2c_end';
-}
-/**
- * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
- */
-export interface RpioPWMSetClockDividerAction extends AsyncAction {
-    type: 'rpio_pwm_setclockdivider';
-
-    /**
-     * The PWM refresh rate.
-     */
-    rate: number;
-}
-/**
- * This determines the maximum pulse width.
- */
-export interface RpioPWMSetRangeAction extends AsyncAction {
-    type: 'rpio_pwm_setrange';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-
-    /**
-     * The PWM range for a pin.
-     */
-    range: number;
-}
-/**
- * Set the width for a given pin.
- */
-export interface RpioPWMSetDataAction extends AsyncAction {
-    type: 'rpio_pwm_setdata';
-
-    /**
-     * The pin that you want to use.
-     */
-    pin: number;
-
-    /**
-     * The PWM width for a pin.
-     */
-    width: number;
-}
-/**
- * Initiate SPI mode.
- */
-export interface RpioSPIBeginAction extends AsyncAction {
-    type: 'rpio_spi_begin';
-}
-/**
- * Choose which of the chip select / chip enable pins to control.
- */
-export interface RpioSPIChipSelectAction extends AsyncAction {
-    type: 'rpio_spi_chipselect';
-
-    /*
-     *  Value | Pin
-     *  ------|---------------------
-     *    0   | SPI_CE0 (24 / GPIO8)
-     *    1   | SPI_CE1 (26 / GPIO7)
-     *    2   | Both
-     */
-    value: 0 | 1 | 2;
-}
-/**
- * If your device's CE pin is active high, use this to change the polarity.
- */
-export interface RpioSPISetCSPolarityAction extends AsyncAction {
-    type: 'rpio_spi_setcspolarity';
-
-    /*
-     *  Value | Pin
-     *  ------|---------------------
-     *    0   | SPI_CE0 (24 / GPIO8)
-     *    1   | SPI_CE1 (26 / GPIO7)
-     *    2   | Both
-     */
-    value: 0 | 1 | 2;
-
-    /**
-     * Set the polarity it activates on. HIGH or LOW
-     */
-    polarity: 'HIGH' | 'LOW';
-}
-/**
- * Set the SPI clock speed.
- */
-export interface RpioSPISetClockDividerAction extends AsyncAction {
-    type: 'rpio_spi_setclockdivider';
-
-    /**
-     * It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
-     */
-    rate: number;
-}
-/**
- * Set the SPI Data Mode.
- */
-export interface RpioSPISetDataModeAction extends AsyncAction {
-    type: 'rpio_spi_setdatamode';
-
-    /**
-     *  Mode | CPOL | CPHA
-     *  -----|------|-----
-     *    0  |  0   |  0
-     *    1  |  0   |  1
-     *    2  |  1   |  0
-     *    3  |  1   |  1
-     */
-    mode: 0 | 1 | 2 | 3;
-}
-/**
- *
- */
-export interface RpioSPITransferAction extends AsyncAction {
-    type: 'rpio_spi_transfer';
-
-    /**
-     *
-     */
-    tx: number[];
-}
-/**
- *
- */
-export interface RpioSPIWriteAction extends AsyncAction {
-    type: 'rpio_spi_write';
-
-    /**
-     *
-     */
-    tx: number[];
-}
-/**
- * Release the pins back to general purpose use.
- */
-export interface RpioSPIEndAction extends AsyncAction {
-    type: 'rpio_spi_end';
-}
-/**
- * Establish the connection to the bluetooth serial device
- */
-export interface SerialConnectAction extends AsyncAction {
-    type: 'serial_connect';
-
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-
-    /**
-     * The device path. Example: /dev/rfcomm0
-     */
-    device: string;
-
-    /**
-     * The device MAC address. Example: AA:BB:CC:DD:EE
-     */
-    mac: string;
-
-    /**
-     * The device channel. Example: 1
-     */
-    channel: number;
-
-    /**
-     * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
-     *
-     * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
-     *
-     * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
-     *
-     * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
-     *
-     * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
-     *
-     * {number} [stopBits=1] Must be one of these: 1 or 2.
-     *
-     * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
-     *
-     * {boolean} [rtscts=false] flow control setting
-     *
-     * {boolean} [xon=false] flow control setting
-     *
-     * {boolean} [xoff=false] flow control setting
-     *
-     * {boolean} [xany=false] flow control setting
-     *
-     * {object=} bindingOptions sets binding-specific options
-     *
-     * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
-     *
-     * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
-     *
-     * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
-     */
-    options?: object;
-}
-/**
- * Parses and returns the serial stream to the event tag 'onSerialData'.
- */
-export interface SerialStreamAction extends AsyncAction {
-    type: 'serial_stream';
-
-    /**
-     * The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
-     */
-    bot: string;
-
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-}
-/**
- * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
- */
-export interface SerialOpenAction extends AsyncAction {
-    type: 'serial_open';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-}
-/**
- * Updates the SerialPort object with a new baudRate.
- */
-export interface SerialUpdateAction extends AsyncAction {
-    type: 'serial_update';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-
-    /**
-     * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
-     */
-    options: object;
-
-    /**
-     *
-     */
-    cb?: any;
-}
-/**
- * Writes the provided data/command to the device
- */
-export interface SerialWriteAction extends AsyncAction {
-    type: 'serial_write';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-
-    /**
-     * The data/command to send.
-     */
-    data: string | number[];
-
-    /**
-     * The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
-     */
-    encoding?: string;
-
-    /**
-     *
-     */
-    cb?: any;
-}
-/**
- * Request a number of bytes from the SerialPort.
- */
-export interface SerialReadAction extends AsyncAction {
-    type: 'serial_read';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-
-    /**
-     * Specify how many bytes of data to return, if available
-     */
-    size?: number;
-}
-/**
- * Closes an open connection.
- */
-export interface SerialCloseAction extends AsyncAction {
-    type: 'serial_close';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-
-    /**
-     * The device path. Example: /dev/rfcomm0
-     */
-    device: string;
-
-    /**
-     *
-     */
-    cb?: any;
-}
-/**
- * Flush discards data that has been received but not read, or written but not transmitted by the operating system.
- */
-export interface SerialFlushAction extends AsyncAction {
-    type: 'serial_flush';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-}
-/**
- * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
- */
-export interface SerialDrainAction extends AsyncAction {
-    type: 'serial_drain';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-}
-/**
- * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
- */
-export interface SerialPauseAction extends AsyncAction {
-    type: 'serial_pause';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-}
-/**
- * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
- */
-export interface SerialResumeAction extends AsyncAction {
-    type: 'serial_resume';
-    /**
-     * A friendly device name. Example: Brush01
-     */
-    name: string;
-}
-/**
  * Defines an event that sets some text on the user's clipboard.
+ *
+ * @dochash types/os/clipboard
+ * @doctitle Clipboard Types
+ * @docsidebar Clipboard
+ * @docdescription Types that are used in clipboard actions.
+ * @docname SetClipboardAction
  */
 export interface SetClipboardAction {
     type: 'set_clipboard';
@@ -2312,6 +1502,9 @@ export interface SetClipboardAction {
 
 /**
  * Defines an event that shows the chat bar.
+ *
+ * @dochash types/os/input
+ * @docname ShowChatBarAction
  */
 export interface ShowChatBarAction {
     type: 'show_chat_bar';
@@ -2349,6 +1542,9 @@ export interface ShowChatBarAction {
 
 /**
  * Defines the possible options for showing the chat bar.
+ *
+ * @dochash types/os/input
+ * @docname ShowChatOptions
  */
 export interface ShowChatOptions {
     /**
@@ -2379,6 +1575,9 @@ export interface ShowChatOptions {
 
 /**
  * Defines an event that executes a script.
+ *
+ * @dochash types/os/system
+ * @docname RunScriptAction
  */
 export interface RunScriptAction extends AsyncAction {
     type: 'run_script';
@@ -2391,6 +1590,9 @@ export interface RunScriptAction extends AsyncAction {
 
 /**
  * Defines an event that shows the "upload AUX file" dialog.
+ *
+ * @dochash types/os/input
+ * @docname ShowUploadAuxFileAction
  */
 export interface ShowUploadAuxFileAction {
     type: 'show_upload_aux_file';
@@ -2398,50 +1600,22 @@ export interface ShowUploadAuxFileAction {
 
 /**
  * Defines an event that shows the "uplaod file" dialog.
+ *
+ * @dochash types/os/input
+ * @docname ShowUploadFilesAction
  */
 export interface ShowUploadFilesAction extends AsyncAction {
     type: 'show_upload_files';
 }
 
 /**
- * Defines an event that marks a specific point in history.
- */
-export interface MarkHistoryAction {
-    type: 'mark_history';
-
-    /**
-     * The message that the mark should contain.
-     */
-    message: string;
-}
-
-/**
- * Defines an event that loads the history into the instance.
- */
-export interface BrowseHistoryAction {
-    type: 'browse_history';
-}
-
-/**
- * Defines an event that restores the current state to a specific bookmark.
- */
-export interface RestoreHistoryMarkAction {
-    type: 'restore_history_mark';
-
-    /**
-     * The ID of the mark that should be restored.
-     */
-    mark: string;
-
-    /**
-     * The instance that the mark should be restored to.
-     * If not specified, then the current instance will be used.
-     */
-    inst?: string;
-}
-
-/**
  * Defines an event that loads a space into the instance.
+ *
+ * @dochash types/os/spaces
+ * @doctitle Space Types
+ * @docsidebar Spaces
+ * @docdescription Types that are used in actions that relate to spaces.
+ * @docname LoadSpaceAction
  */
 export interface LoadSpaceAction extends Partial<AsyncAction> {
     type: 'load_space';
@@ -2458,36 +1632,20 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
 }
 
 /**
- * Defines an event that loads bots from the given space that match the given tags and values.
+ * An event that is used to enable collaboration features.
+ *
+ * @dochash types/os/spaces
+ * @docname EnableCollaborationAction
  */
-export interface LoadBotsAction extends AsyncAction {
-    type: 'load_bots';
-
-    /**
-     * The space that should be searched.
-     */
-    space: string;
-
-    /**
-     * The tags that the loaded bots should have.
-     */
-    tags: TagFilter[];
+export interface EnableCollaborationAction extends AsyncAction {
+    type: 'enable_collaboration';
 }
 
 /**
- * Defines an interface for objects that specify a tag and value
- * that a bot should have to be loaded.
+ * An event that is used to show the account info dialog.
  */
-export interface TagFilter {
-    /**
-     * The tag that the bot should have.
-     */
-    tag: string;
-
-    /**
-     * The value that the bot should have.
-     */
-    value?: any;
+export interface ShowAccountInfoAction extends AsyncAction {
+    type: 'show_account_info';
 }
 
 /**
@@ -2506,51 +1664,14 @@ export interface ClearSpaceAction extends AsyncAction {
 }
 
 /**
- * Defines an event that unlocks the given space for editing.
- * Once a space is unlocked, it cannot be locked for the remainder of the session.
- *
- * Only supported for the following spaces:
- * - admin
- */
-export interface UnlockSpaceAction extends AsyncAction {
-    type: 'unlock_space';
-
-    /**
-     * The space to unlock.
-     */
-    space: BotSpace;
-
-    /**
-     * The password to use to unlock the space.
-     */
-    password: string;
-}
-
-/**
- * Defines an event that sets the password used to unlock the given space for editing.
- */
-export interface SetSpacePasswordAction extends AsyncAction {
-    type: 'set_space_password';
-
-    /**
-     * The space to set the password for.
-     */
-    space: BotSpace;
-
-    /**
-     * The old password for the space.
-     */
-    oldPassword: string;
-
-    /**
-     * The new password for the space.
-     */
-    newPassword: string;
-}
-
-/**
  * Defines an event that runs an animation locally over
  * whatever existing animations are playing.
+ *
+ * @dochash types/os/animations
+ * @doctitle Animation Types
+ * @docsidebar Animations
+ * @docdescription Types that are used in actions that relate to animations.
+ * @docname LocalFormAnimationAction
  */
 export interface LocalFormAnimationAction {
     type: 'local_form_animation';
@@ -2568,6 +1689,11 @@ export interface LocalFormAnimationAction {
 
 export type TweenType = 'position' | 'rotation';
 
+/**
+ * The possible easing types.
+ * @dochash types/animation
+ * @docname EaseType
+ */
 export type EaseType =
     | 'linear'
     | 'quadratic'
@@ -2579,10 +1705,34 @@ export type EaseType =
     | 'circular'
     | 'elastic';
 
+/**
+ * The possible easing modes.
+ * @dochash types/animation
+ * @docname EaseMode
+ */
 export type EaseMode = 'in' | 'out' | 'inout';
 
+/**
+ * Defines an interface that represents easing types.
+ *
+ * @example Create an object that represents "quadratic" "inout" easing
+ * let easing = {
+ *    type: "quadratic",
+ *    mode: "inout"
+ * };
+ *
+ * @dochash types/animation
+ * @docname Easing
+ */
 export interface Easing {
+    /**
+     * The type of easing to use.
+     */
     type: EaseType;
+
+    /**
+     * The mode of easing to use.
+     */
     mode: EaseMode;
 }
 
@@ -2593,6 +1743,9 @@ export const MAX_TWEEN_DURATION = 60 * 60 * 24;
 
 /**
  * Defines an event that runs a tween locally.
+ *
+ * @dochash types/os/animations
+ * @docname LocalTweenAction
  */
 export interface LocalTweenAction extends AsyncAction {
     type: 'local_tween';
@@ -2625,6 +1778,9 @@ export interface LocalTweenAction extends AsyncAction {
 
 /**
  * Defines an event that runs a position tween locally.
+ *
+ * @dochash types/os/animations
+ * @docname LocalPositionTweenAction
  */
 export interface LocalPositionTweenAction extends LocalTweenAction {
     tweenType: 'position';
@@ -2643,6 +1799,12 @@ export interface LocalRotationTweenAction extends LocalTweenAction {
 
 /**
  * Defines an interface that represents the options that an EnableARAction or EnableVRAction can have.
+ *
+ * @dochash types/os/xr
+ * @doctitle XR Actions
+ * @docsidebar XR
+ * @docdescription Types that are used in actions that relate to XR features (Augmented Reality or Virtual Reality).
+ * @docname EnableXROptions
  */
 export interface EnableXROptions {
     /**
@@ -2657,6 +1819,9 @@ export interface EnableXROptions {
 
 /**
  * Defines an event that enables AR on the device.
+ *
+ * @dochash types/os/xr
+ * @docname EnableARAction
  */
 export interface EnableARAction {
     type: 'enable_ar';
@@ -2674,6 +1839,9 @@ export interface EnableARAction {
 
 /**
  * Defines an event that checks for AR support on the device.
+ *
+ * @dochash types/os/xr
+ * @docname ARSupportedAction
  */
 export interface ARSupportedAction extends AsyncAction {
     type: 'ar_supported';
@@ -2681,6 +1849,9 @@ export interface ARSupportedAction extends AsyncAction {
 
 /**
  * Defines an event that checks for VR support on the device.
+ *
+ * @dochash types/os/xr
+ * @docname VRSupportedAction
  */
 export interface VRSupportedAction extends AsyncAction {
     type: 'vr_supported';
@@ -2688,6 +1859,9 @@ export interface VRSupportedAction extends AsyncAction {
 
 /**
  * Defines an event that enables VR on the device.
+ *
+ * @dochash types/os/xr
+ * @docname EnableVRAction
  */
 export interface EnableVRAction {
     type: 'enable_vr';
@@ -2705,6 +1879,9 @@ export interface EnableVRAction {
 
 /**
  * Defines an event that enables POV on the device.
+ *
+ * @dochash types/os/portals
+ * @docname EnablePOVAction
  */
 export interface EnablePOVAction {
     type: 'enable_pov';
@@ -2727,6 +1904,9 @@ export interface EnablePOVAction {
 
 /**
  * Defines an event that shows a QR code that is a link to a instance & dimension.
+ *
+ * @dochash types/os/barcodes
+ * @docname ShowJoinCodeAction
  */
 export interface ShowJoinCodeAction {
     type: 'show_join_code';
@@ -2745,6 +1925,9 @@ export interface ShowJoinCodeAction {
 /**
  * Defines an event that requests that AUX enter fullscreen mode.
  * This can be denied by the user.
+ *
+ * @dochash types/os/portals
+ * @docname RequestFullscreenAction
  */
 export interface RequestFullscreenAction {
     type: 'request_fullscreen_mode';
@@ -2752,6 +1935,9 @@ export interface RequestFullscreenAction {
 
 /**
  * Defines an event that exits fullscreen mode.
+ *
+ * @dochash types/os/portals
+ * @docname ExitFullscreenAction
  */
 export interface ExitFullscreenAction {
     type: 'exit_fullscreen_mode';
@@ -2759,6 +1945,9 @@ export interface ExitFullscreenAction {
 
 /**
  * Defines the options that a share action can have.
+ *
+ * @dochash types/os/input
+ * @docname ShareOptions
  */
 export interface ShareOptions {
     /**
@@ -2780,6 +1969,9 @@ export interface ShareOptions {
 /**
  * Defines an event that shares the given information using the
  * device's native social sharing capabilities.
+ *
+ * @dochash types/os/input
+ * @docname ShareAction
  */
 export interface ShareAction extends AsyncAction, ShareOptions {
     type: 'share';
@@ -2787,6 +1979,9 @@ export interface ShareAction extends AsyncAction, ShareOptions {
 
 /**
  * Defines an event that ensures a portal bot has been created for a portal.
+ *
+ * @dochash types/os/portals
+ * @docname RegisterBuiltinPortalAction
  */
 export interface RegisterBuiltinPortalAction {
     type: 'register_builtin_portal';
@@ -2798,16 +1993,6 @@ export interface RegisterBuiltinPortalAction {
 }
 
 /**
- * The list of types of output that custom portals support.
- */
-export type CustomAppOutputType = 'html';
-
-/**
- * the list of modes that custom portals support.
- */
-export type CustomPortalOutputMode = 'push' | 'pull';
-
-/**
  * Defines an event that registers a custom app container.
  */
 export interface CustomAppContainerAvailableAction extends Action {
@@ -2816,6 +2001,9 @@ export interface CustomAppContainerAvailableAction extends Action {
 
 /**
  * Defines an event that registers a custom portal.
+ *
+ * @dochash types/os/portals
+ * @docname RegisterCustomAppAction
  */
 export interface RegisterCustomAppAction extends AsyncAction {
     type: 'register_custom_app';
@@ -2833,6 +2021,9 @@ export interface RegisterCustomAppAction extends AsyncAction {
 
 /**
  * Defines an event that unregisters a custom app.
+ *
+ * @dochash types/os/portals
+ * @docname UnregisterCustomAppAction
  */
 export interface UnregisterCustomAppAction extends AsyncAction {
     type: 'unregister_custom_app';
@@ -2845,6 +2036,9 @@ export interface UnregisterCustomAppAction extends AsyncAction {
 
 /**
  * Defines an event that requests that a HTML app be created.
+ *
+ * @dochash types/os/portals
+ * @docname RegisterHtmlAppAction
  */
 export interface RegisterHtmlAppAction extends AsyncAction {
     type: 'register_html_app';
@@ -2863,6 +2057,9 @@ export interface RegisterHtmlAppAction extends AsyncAction {
 
 /**
  * Defines an event that requests that a HTML app be deleted.
+ *
+ * @dochash types/os/portals
+ * @docname UnregisterHtmlAppAction
  */
 export interface UnregisterHtmlAppAction extends Action {
     type: 'unregister_html_app';
@@ -2881,6 +2078,9 @@ export interface UnregisterHtmlAppAction extends Action {
 
 /**
  * Defines an event that notifies that the output of a app should be updated with the given data.
+ *
+ * @dochash types/os/portals
+ * @docname SetAppOutputAction
  */
 export interface SetAppOutputAction extends Action {
     type: 'set_app_output';
@@ -2900,6 +2100,9 @@ export interface SetAppOutputAction extends Action {
 
 /**
  * Defines an event that notifies that a custom app has recieved a HTML update.
+ *
+ * @dochash types/os/portals
+ * @docname UpdateHtmlAppAction
  */
 export interface UpdateHtmlAppAction extends Action {
     type: 'update_html_app';
@@ -2919,6 +2122,9 @@ export interface UpdateHtmlAppAction extends Action {
 
 /**
  * Defines an event that represents an event that was dispatched from HTML in a portal.
+ *
+ * @dochash types/os/portals
+ * @docname HtmlAppEventAction
  */
 export interface HtmlAppEventAction extends Action {
     type: 'html_app_event';
@@ -2936,6 +2142,9 @@ export interface HtmlAppEventAction extends Action {
 
 /**
  * Defines an event that represents a method call that was dispatched from HTML in a portal.
+ *
+ * @dochash types/os/portals
+ * @docname HtmlAppMethodCallAction
  */
 export interface HtmlAppMethodCallAction extends AsyncAction {
     type: 'html_app_method_call';
@@ -2963,6 +2172,9 @@ export interface HtmlAppMethodCallAction extends AsyncAction {
 
 /**
  * Defines a mutation record that can be serialized and sent over a web worker pipe.
+ *
+ * @dochash types/os/portals
+ * @docname SerializableMutationRecord
  */
 export interface SerializableMutationRecord {
     type: 'attributes' | 'characterData' | 'childList' | 'event_listener';
@@ -2988,6 +2200,12 @@ export interface SerializableMutationRecord {
     listenerDelta?: number;
 }
 
+/**
+ * Defines a reference to a HTML node. Internal to CasualOS.
+ *
+ * @dochash types/os/portals
+ * @docname NodeReference
+ */
 export interface NodeReference {
     __id: string;
 }
@@ -3011,6 +2229,9 @@ export interface RegisterPrefixAction extends AsyncAction {
 
 /**
  * Defines an interface that contains options for register prefix actions.
+ *
+ * @dochash types/core
+ * @docname RegisterPrefixOptions
  */
 export interface RegisterPrefixOptions {
     /**
@@ -3026,6 +2247,9 @@ export interface RegisterPrefixOptions {
 
 /**
  * An event that is used to show or hide the circle wipe.
+ *
+ * @dochash types/os/portals
+ * @docname OpenCircleWipeAction
  */
 export interface OpenCircleWipeAction extends AsyncAction {
     type: 'show_circle_wipe';
@@ -3043,6 +2267,9 @@ export interface OpenCircleWipeAction extends AsyncAction {
 
 /**
  * The options for the circle wipe.
+ *
+ * @dochash types/os/portals
+ * @docname OpenCircleWipeOptions
  */
 export interface OpenCircleWipeOptions {
     /**
@@ -3058,6 +2285,9 @@ export interface OpenCircleWipeOptions {
 
 /**
  * Defines a base interface for actions that can add drop snap points.
+ *
+ * @dochash types/os/portals
+ * @docname AddDropSnapAction
  */
 export interface AddDropSnapAction extends Action {
     /**
@@ -3069,6 +2299,9 @@ export interface AddDropSnapAction extends Action {
 
 /**
  * An event that is used to add some snap points for a drag operation.
+ *
+ * @dochash types/os/portals
+ * @docname AddDropSnapPointsAction
  */
 export interface AddDropSnapTargetsAction extends AddDropSnapAction {
     type: 'add_drop_snap_targets';
@@ -3082,10 +2315,17 @@ export interface AddDropSnapTargetsAction extends AddDropSnapAction {
 /**
  * Defines an interface that represents a snap point.
  * That is, a point in 3D space with an associated snap distance.
+ *
+ * @dochash types/os/portals
+ * @docgroup 10-snap
+ * @docorder 1
+ * @docname SnapPoint
  */
 export interface SnapPoint {
     /**
      * The 3D position for the point.
+     *
+     * @docsource Vector3
      */
     position: { x: number; y: number; z: number };
 
@@ -3098,15 +2338,24 @@ export interface SnapPoint {
 /**
  * Defines an interface that represents a snap axis.
  * That is, a ray in 3D space with an associated snap distance.
+ *
+ * @dochash types/os/portals
+ * @docgroup 10-snap
+ * @docorder 2
+ * @docname SnapAxis
  */
 export interface SnapAxis {
     /**
      * The 3D direction that the axis ray travels along.
+     *
+     * @docsource Vector3
      */
     direction: { x: number; y: number; z: number };
 
     /**
      * The 3D position that the ray starts at.
+     *
+     * @docsource Vector3
      */
     origin: { x: number; y: number; z: number };
 
@@ -3118,10 +2367,15 @@ export interface SnapAxis {
 
 /**
  * The list of possible snap targets.
- * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
- * - "grid" means that the dragged bot should snap to grid tiles.
- * - "face" means that the dragged bot should snap to other bot faces.
- * - "bots" means that the dragged bot will snap to other bots.
+ * - `"ground"` means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
+ * - `"grid"` means that the dragged bot should snap to grid tiles.
+ * - `"face"` means that the dragged bot should snap to other bot faces.
+ * - `"bots"` means that the dragged bot will snap to other bots.
+ *
+ * @dochash types/os/portals
+ * @docgroup 10-snap
+ * @docorder 0
+ * @docname SnapTarget
  */
 export type SnapTarget =
     | 'ground'
@@ -3146,6 +2400,9 @@ export interface AddDropGridTargetsAction extends AddDropSnapAction {
 /**
  * Defines an interface that represents a snap grid.
  * That is, a 2D plane that is segmented into discrete sections.
+ *
+ * @dochash types/os/portals
+ * @docname SnapGrid
  */
 export interface SnapGrid {
     /**
@@ -3204,6 +2461,9 @@ export interface SnapGrid {
 /**
  * An event that is used to disable the default dragging logic (moving the bot) and enable
  * "onDragging" shouts and whispers.
+ *
+ * @dochash types/os/portals
+ * @docname EnableCustomDraggingAction
  */
 export interface EnableCustomDraggingAction extends Action {
     type: 'enable_custom_dragging';
@@ -3244,27 +2504,83 @@ export interface EndAudioRecordingAction extends AsyncAction {
 
 /**
  * An interface that represents the options that can be used for making recordings.
+ *
+ * @dochash types/experimental
+ * @doctitle Experimental Types
+ * @docsidebar Experimental
+ * @docdescription Defines the types that are used by experimental actions.
+ * @docname RecordingOptions
  */
 export interface RecordingOptions {
     /**
      * Whether to record audio.
+     *
+     * If the computer does not have an audio device attached, then setting this to true
+     * will cause an error.
+     *
      * If an array is specified, only the specified audio sources will be recorded.
+     *
+     * Defaults to true.
      */
     audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether to record video.
+     *
+     * If the computer does not have a video device attached (like a web cam),
+     * then setting this to true will cause an error.
+     *
+     * Defaults to true.
      */
     video: boolean;
 
     /**
      * Whether to record the screen.
+     *
+     * Defaults to false.
      */
     screen: boolean;
+
+    /**
+     * The MIME type that should be produced.
+     * If supported, then the recorded file(s) will be in this format.
+     * If not supported, then the recording will fail.
+     * If not provided, then a default will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_codecs for more information.
+     */
+    mimeType?: string;
+
+    /**
+     * The ideal number of bits per second that the recording should use.
+     * If omitted, then the videoBitsPerSecond and audioBitsPerSecond  settings will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#bitspersecond for more information.
+     */
+    bitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the video portion of the recording should use.
+     * If omitted, then a bitrate of 1mbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#videobitspersecond for more information.
+     */
+    videoBitsPerSecond?: number;
+
+    /**
+     * The ideal number of bits per second that the audio portion of the recording should use.
+     * If omitted then a bitrake of 48kbps will be used.
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/MediaRecorder#audiobitspersecond for more information.
+     */
+    audioBitsPerSecond?: number;
 }
 
 /**
  * An event that is used to start audio recording.
+ *
+ * @dochash types/os/audio
+ * @docname BeginRecordingAction
  */
 export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
     type: 'begin_recording';
@@ -3272,6 +2588,9 @@ export interface BeginRecordingAction extends AsyncAction, RecordingOptions {
 
 /**
  * An event that is used to finish audio recording.
+ *
+ * @dochash types/os/audio
+ * @docname EndRecordingAction
  */
 export interface EndRecordingAction extends AsyncAction {
     type: 'end_recording';
@@ -3279,6 +2598,12 @@ export interface EndRecordingAction extends AsyncAction {
 
 /**
  * An event that is used to send a command to the Jitsi Meet API.
+ *
+ * @dochash types/os/meets
+ * @doctitle Meet Types
+ * @docsidebar Meets
+ * @docdescription Types that are used in actions that relate to the meetPortal.
+ * @docname MeetCommandAction
  */
 export interface MeetCommandAction extends AsyncAction {
     type: 'meet_command';
@@ -3296,6 +2621,9 @@ export interface MeetCommandAction extends AsyncAction {
 
 /**
  * An event that is used to call Jitsi Meet functions.
+ *
+ * @dochash types/os/meets
+ * @docname MeetFunctionAction
  */
 export interface MeetFunctionAction extends AsyncAction {
     type: 'meet_function';
@@ -3330,6 +2658,9 @@ export interface SpeakTextOptions {
 
 /**
  * An event that is used to speak some text using the builtin text to speech engine.
+ *
+ * @dochash types/os/audio
+ * @docname SpeakTextAction
  */
 export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
     type: 'speak_text';
@@ -3342,6 +2673,9 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
 
 /**
  * An event that is used to retrieve the synthetic voices that are supported by the current system.
+ *
+ * @dochash types/os/audio
+ * @docname GetVoicesAction
  */
 export interface GetVoicesAction extends AsyncAction {
     type: 'get_voices';
@@ -3349,6 +2683,9 @@ export interface GetVoicesAction extends AsyncAction {
 
 /**
  * Defines an interface that represents a synthetic voice.
+ *
+ * @dochash types/experimental
+ * @docname SyntheticVoice
  */
 export interface SyntheticVoice {
     /**
@@ -3369,11 +2706,35 @@ export interface SyntheticVoice {
 
 /**
  * An event that is used to retrieve the current geolocation of the device.
+ *
+ * @dochash types/os/geolocation
+ * @docname GetGeolocationAction
  */
 export interface GetGeolocationAction extends AsyncAction {
     type: 'get_geolocation';
 }
 
+/**
+ * Defines the possible geolocation results.
+ *
+ * @dochash types/os/geolocation
+ * @doctitle Geolocation Types
+ * @docsidebar Geolocation
+ * @docdescription Defines the types that are used by Location actions.
+ * @docgroup 01-geo
+ * @docorder 0
+ * @docname Geolocation
+ */
+export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
+
+/**
+ * Defines an interface that represents a successful geolocation result.
+ *
+ * @dochash types/os/geolocation
+ * @docgroup 01-geo
+ * @docorder 1
+ * @docname SuccessfulGeolocation
+ */
 export interface SuccessfulGeolocation {
     success: true;
 
@@ -3423,6 +2784,14 @@ export interface SuccessfulGeolocation {
     timestamp: number;
 }
 
+/**
+ * Defines an interface that represents an unsuccessful geolocation result.
+ *
+ * @dochash types/os/geolocation
+ * @docgroup 01-geo
+ * @docorder 2
+ * @docname UnsuccessfulGeolocation
+ */
 export interface UnsuccessfulGeolocation {
     success: false;
 
@@ -3442,12 +2811,10 @@ export interface UnsuccessfulGeolocation {
 }
 
 /**
- * Defines an interface that represents a geolocation result.
- */
-export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
-
-/**
  * Defines an interface that contains recorded data.
+ *
+ * @dochash types/experimental
+ * @docname Recording
  */
 export interface Recording {
     /**
@@ -3456,6 +2823,12 @@ export interface Recording {
     files: RecordedFile[];
 }
 
+/**
+ * Defines an interface that represents a recorded file.
+ *
+ * @dochash types/experimental
+ * @docname RecordedFile
+ */
 export interface RecordedFile {
     /**
      * Whether the file contains the recorded audio.
@@ -3480,6 +2853,9 @@ export interface RecordedFile {
 
 /**
  * Defines an event that tells the IDE portal to open the given bot and tag.
+ *
+ * @dochash types/os/portals
+ * @docname GoToTagAction
  */
 export interface GoToTagAction {
     type: 'go_to_tag';
@@ -3501,14 +2877,42 @@ export interface GoToTagAction {
 }
 
 /**
+ * Defines an event that requests to report the current inst.
+ *
+ * @dochash types/os/moderation
+ * @doctitle Moderation Types
+ * @docsidebar Moderation
+ * @docdescription Types that are used in actions that relate to moderation.
+ * @docname ReportInstAction
+ */
+export interface ReportInstAction extends AsyncAction {
+    type: 'report_inst';
+}
+
+/**
  * Defines an event that requests a Auth data from the OS.
+ *
+ * @dochash types/os/records
+ * @doctitle Records Types
+ * @docsidebar Records
+ * @docdescription Defines the types that are used by Record actions.
+ * @docname RequestAuthDataAction
  */
 export interface RequestAuthDataAction extends AsyncAction {
     type: 'request_auth_data';
+
+    /**
+     * Whether the request should be limited to the background.
+     * Defaults to false.
+     */
+    requestInBackground?: boolean;
 }
 
 /**
  * Defines an interface that represents a authenticated user.
+ *
+ * @dochash types/os/records
+ * @docname AuthData
  */
 export interface AuthData {
     /**
@@ -3523,6 +2927,11 @@ export interface AuthData {
     name: string;
 
     /**
+     * The display name of the user.
+     */
+    displayName: string;
+
+    /**
      * The URL of the user's avatar.
      * Null if the user does not have an avatar.
      */
@@ -3535,23 +2944,49 @@ export interface AuthData {
     avatarPortraitUrl: string;
 
     /**
-     * The OpenAI API Key that is configured for use.
-     */
-    openAiKey: string | null;
-
-    /**
-     * Whether the user has an active subscription to the beta program.
+     * Whether the user has an active subscription that they are paying for.
+     * If false, then the user either has no subscription or has a default subscription.
      */
     hasActiveSubscription: boolean;
 
     /**
      * The subscription tier that is currently active for the user.
+     * If null, then the user has no subscription tier.
+     * Otherwise, then the user is paying for a subscription for has a default subscription.
      */
     subscriptionTier: string | null;
+
+    /**
+     * The privacy features that the user has enabled.
+     */
+    privacyFeatures: {
+        /**
+         * Whether the user is allowed to publish any data.
+         */
+        publishData: boolean;
+
+        /**
+         * Whether the user is allowed to access or publish public data.
+         */
+        allowPublicData: boolean;
+
+        /**
+         * Whether AI is allowed.
+         */
+        allowAI: boolean;
+
+        /**
+         * Whether public insts are allowed.
+         */
+        allowPublicInsts: boolean;
+    };
 }
 
 /**
  * Defines an event that defines a global variable that points to the given bot.
+ *
+ * @dochash types/os/portals
+ * @docname DefineGlobalBotAction
  */
 export interface DefineGlobalBotAction extends AsyncAction {
     type: 'define_global_bot';
@@ -3570,261 +3005,12 @@ export interface DefineGlobalBotAction extends AsyncAction {
 export const APPROVED_SYMBOL = Symbol('approved');
 
 /**
- * Defines an interface that represents the base for options for a records action.
- */
-export interface RecordActionOptions {
-    /**
-     * The HTTP endpoint that the request should interface with.
-     */
-    endpoint?: string;
-}
-
-/**
- * Defines an interface that represents the base for actions that deal with records.
- */
-export interface RecordsAction extends AsyncAction {
-    /**
-     * The options that the action should use.
-     */
-    options: RecordActionOptions;
-}
-
-/**
- * Defines a type that represents a policy that indicates which users are allowed to affect a record.
- *
- * True indicates that any user can edit the record.
- * An array of strings indicates the list of users that are allowed to edit the record.
- */
-export type RecordUserPolicyType = true | string[];
-
-/**
- * The options for data record actions.
- */
-export interface DataRecordOptions extends RecordActionOptions {
-    /**
-     * The policy that should be used for updating the record.
-     */
-    updatePolicy?: RecordUserPolicyType;
-
-    /**
-     * The policy that should be used for deleting the record.
-     */
-    deletePolicy?: RecordUserPolicyType;
-
-    /**
-     * The markers that should be applied to the record.
-     */
-    markers?: string[];
-}
-
-/**
- * Defines an interface that represents the base for actions that deal with data records.
- */
-export interface DataRecordAction extends RecordsAction {
-    /**
-     * Whether this action is trying to publish data that requires manual approval.
-     */
-    requiresApproval: boolean;
-
-    /**
-     * Whether this action has been manually approved.
-     *
-     * Uses a symbol to ensure that it cannot be copied across security boundaries.
-     * As a result, it should be impossible to generate actions that are pre-approved.
-     */
-    [APPROVED_SYMBOL]?: boolean;
-}
-
-/**
- * Defines an event that publishes data to a record.
- */
-export interface RecordDataAction extends DataRecordAction {
-    type: 'record_data';
-
-    /**
-     * The record key that should be used to publish the data.
-     */
-    recordKey: string;
-
-    /**
-     * The address that the data should be recorded to.
-     */
-    address: string;
-
-    /**
-     * The data that should be recorded.
-     */
-    data: any;
-
-    options: DataRecordOptions;
-}
-
-/**
- * Defines an event that requests some data in a record.
- */
-export interface GetRecordDataAction extends DataRecordAction {
-    type: 'get_record_data';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The address of the data that should be retrieved.
-     */
-    address: string;
-}
-
-export interface ListRecordDataAction extends DataRecordAction {
-    type: 'list_record_data';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The address that the list should start with.
-     */
-    startingAddress?: string;
-}
-
-/**
- * Defines an event that erases some data in a record.
- */
-export interface EraseRecordDataAction extends DataRecordAction {
-    type: 'erase_record_data';
-
-    /**
-     * The record key that should be used to erase the data.
-     */
-    recordKey: string;
-
-    /**
-     * The address that the data from.
-     */
-    address: string;
-}
-
-export interface RecordFileActionOptions extends RecordActionOptions {
-    /**
-     * The markers that should be applied to the record.
-     */
-    markers?: string[];
-}
-
-/**
- * Defines an event that publishes a file to a record.
- */
-export interface RecordFileAction extends RecordsAction {
-    type: 'record_file';
-
-    /**
-     * The record key that should be used to publish the file.
-     */
-    recordKey: string;
-
-    /**
-     * The data that should be recorded.
-     */
-    data: any;
-
-    /**
-     * The description of the file.
-     */
-    description: string;
-
-    /**
-     * The MIME type of the uploaded file.
-     */
-    mimeType?: string;
-
-    /**
-     * The options for the action.
-     */
-    options: RecordFileActionOptions;
-}
-
-/**
- * Defines an event that erases a file from a record.
- */
-export interface EraseFileAction extends RecordsAction {
-    type: 'erase_file';
-
-    /**
-     * The record key that should be used to erase the file.
-     */
-    recordKey: string;
-
-    /**
-     * The URL that the file is stored at.
-     */
-    fileUrl: string;
-}
-
-export type FileRecordedResult = FileRecordedSuccess | FileRecordedFailure;
-
-export interface FileRecordedSuccess {
-    success: true;
-    url: string;
-    sha256Hash: string;
-}
-
-export interface FileRecordedFailure {
-    success: false;
-    errorCode: RecordFileFailure['errorCode'] | 'upload_failed';
-    errorMessage: string;
-}
-
-/**
- * Defines an action that records that an event happened.
- */
-export interface RecordEventAction extends RecordsAction {
-    type: 'record_event';
-
-    /**
-     * The key that should be used to access the record.
-     */
-    recordKey: string;
-
-    /**
-     * The name of the event.
-     */
-    eventName: string;
-
-    /**
-     * The number of events to record.
-     */
-    count: number;
-}
-
-/**
- * Defines an action that retrieves the number of times an event has happened.
- */
-export interface GetEventCountAction extends RecordsAction {
-    type: 'get_event_count';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The name of the event.
-     */
-    eventName: string;
-}
-
-export interface GetRecordsActionResult {
-    records: Record[];
-    hasMoreRecords: boolean;
-    totalCount: number;
-    cursor?: string;
-}
-
-/**
  * Defines an interface that represents options for converting a geolocation to a what3words address.
+ *
+ * @dochash types/os/geolocation
+ * @docgroup 01-geo
+ * @docorder 3
+ * @docname ConvertGeolocationToWhat3WordsOptions
  */
 export interface ConvertGeolocationToWhat3WordsOptions {
     /**
@@ -3845,6 +3031,9 @@ export interface ConvertGeolocationToWhat3WordsOptions {
 
 /**
  * Defines an interface that represents an action that converts a geolocation (latitude and longitude) to a what3words address (see https://what3words.com/).
+ *
+ * @dochash types/os/geolocation
+ * @docname ConvertGeolocationToWhat3WordsAction
  */
 export interface ConvertGeolocationToWhat3WordsAction
     extends AsyncAction,
@@ -3853,153 +3042,14 @@ export interface ConvertGeolocationToWhat3WordsAction
 }
 
 /**
- * Defines a type that represents the different kinds of policies that a record key can have.
+ * Defines an interface that represents options for requesting media permissions.
  *
- * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
- * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
+ * @dochash types/os/media
+ * @doctitle Media Types
+ * @docsidebar Media
+ * @docdescription Defines the types that are used by Media actions.
+ * @docname MediaPermissionOptions
  */
-export type PublicRecordKeyPolicy = null | 'subjectfull' | 'subjectless';
-
-/**
- * Defines an interface that represents an action that requests a key to a public record.
- */
-export interface GetPublicRecordKeyAction extends AsyncAction {
-    type: 'get_public_record_key';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The policy that the record key should have.
-     */
-    policy?: PublicRecordKeyPolicy;
-}
-
-/**
- * Defines an interface that represents an action that grants a permission to a record marker.
- */
-export interface GrantRecordMarkerPermissionAction extends RecordsAction {
-    type: 'grant_record_marker_permission';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The marker that should be granted permission.
-     */
-    marker: string;
-
-    /**
-     * The permission that should be granted.
-     */
-    permission: object;
-}
-
-/**
- * Defines an interface that represents an action that revokes a permission from a record marker.
- */
-export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
-    type: 'revoke_record_marker_permission';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The marker that should be revoked permission.
-     */
-    marker: string;
-
-    /**
-     * The permission that should be revoked.
-     */
-    permission: object;
-}
-
-/**
- * Defines an action that represents an action that grants admin permissions to the inst for the day.
- */
-export interface GrantInstAdminPermissionAction extends RecordsAction {
-    type: 'grant_inst_admin_permission';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * Whether this action has been manually approved.
-     *
-     * Uses a symbol to ensure that it cannot be copied across security boundaries.
-     * As a result, it should be impossible to generate actions that are pre-approved.
-     */
-    [APPROVED_SYMBOL]?: boolean;
-}
-
-/**
- * Defines an action that grants a role to a user or inst.
- */
-export interface GrantRoleAction extends RecordsAction {
-    type: 'grant_role';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The role that should be granted.
-     */
-    role: string;
-
-    /**
-     * The ID of the user that should be granted the role.
-     */
-    userId?: string;
-
-    /**
-     * The ID of the inst that should be granted the role.
-     */
-    inst?: string;
-
-    /**
-     * The Unix time (in miliseconds) that the role grant expires.
-     */
-    expireTimeMs: number | null;
-}
-
-/**
- * Defines an action that revokes a role from a user or inst.
- */
-export interface RevokeRoleAction extends RecordsAction {
-    type: 'revoke_role';
-
-    /**
-     * The name of the record.
-     */
-    recordName: string;
-
-    /**
-     * The role that should be revoked.
-     */
-    role: string;
-
-    /**
-     * The ID of the user that should be revoked the role.
-     */
-    userId?: string;
-
-    /**
-     * The ID of the inst that should be revoked the role.
-     */
-    inst?: string;
-}
-
 export interface MediaPermssionOptions {
     /**
      * Should include audio permission.
@@ -4014,6 +3064,9 @@ export interface MediaPermssionOptions {
 
 /**
  * Defines an event that gets permission for audio and/or video.
+ *
+ * @dochash types/os/media
+ * @docname MediaPermissionAction
  */
 export interface MediaPermissionAction
     extends AsyncAction,
@@ -4023,276 +3076,19 @@ export interface MediaPermissionAction
 
 /**
  * Defines an event that retrieves the current average frame rate.
+ *
+ * @dochash types/os/portals
+ * @docname GetAverageFrameRateAction
  */
 export interface GetAverageFrameRateAction extends AsyncAction {
     type: 'get_average_frame_rate';
 }
 
-export type JoinRoomActionOptions = RecordActionOptions &
-    Partial<RoomJoinOptions>;
-
-/**
- * Defines an event that attempts to join a meeting room.
- */
-export interface JoinRoomAction extends RecordsAction {
-    type: 'join_room';
-
-    /**
-     * The name of the room that should be joined.
-     */
-    roomName: string;
-
-    /**
-     * The options that should be used to join the room.
-     */
-    options: JoinRoomActionOptions;
-}
-
-/**
- * Defines an event that attempts to leave a meeting room.
- */
-export interface LeaveRoomAction extends RecordsAction {
-    type: 'leave_room';
-
-    /**
-     * The name of the room that should be exited.
-     */
-    roomName: string;
-}
-
-/**
- * Defines an event that attempts to set some options on a meeting room.
- */
-export interface SetRoomOptionsAction extends AsyncAction {
-    type: 'set_room_options';
-
-    /**
-     * The name of the room whose options should be changed.
-     */
-    roomName: string;
-
-    /**
-     * The options that should be set.
-     */
-    options: Partial<RoomOptions>;
-}
-
-/**
- * Defines a set of options that the local user can have for a room.
- */
-export interface RoomOptions {
-    /**
-     * Whether to stream video.
-     */
-    video: boolean;
-
-    /**
-     * Whether to stream audio.
-     */
-    audio: boolean;
-
-    /**
-     * Whether to stream the screen.
-     */
-    screen: boolean;
-}
-
-/**
- * Defines a set of options that the local usr can specify when joining a room.
- */
-export interface RoomJoinOptions extends RoomOptions {
-    /**
-     * The defaults that should be used for recording audio.
-     * Should be an object.
-     * See https://docs.livekit.io/client-sdk-js/interfaces/AudioCaptureOptions.html for a full list of properties.
-     */
-    audioCaptureDefaults: object;
-
-    /**
-     * The defaults that should be used for recording video. Should be an object.
-     * See https://docs.livekit.io/client-sdk-js/interfaces/VideoCaptureOptions.html for a full list of properties.
-     */
-    videoCaptureDefaults: object;
-
-    /**
-     * The defaults that should be used for uploading audio/video content.
-     * See https://docs.livekit.io/client-sdk-js/interfaces/TrackPublishDefaults.html for a full list of properties.
-     */
-    publishDefaults: object;
-
-    /**
-     * Whether to enable dynacast.
-     * See https://docs.livekit.io/client-sdk-js/interfaces/RoomOptions.html#dynacast for more info.
-     */
-    dynacast: boolean;
-
-    /**
-     * Whether to enable adaptive streaming. Alternatively accepts an object with properties from this page: https://docs.livekit.io/client-sdk-js/modules.html#AdaptiveStreamSettings
-     */
-    adaptiveStream: boolean | object;
-}
-
-/**
- * Defines an event that retrieves the set of options that the local user has for a room.
- */
-export interface GetRoomOptionsAction extends AsyncAction {
-    type: 'get_room_options';
-
-    /**
-     * The name of the room.
-     */
-    roomName: string;
-}
-
-/**
- * Defines an event that retrieves the set of options that the local user has for a track.
- */
-export interface GetRoomTrackOptionsAction extends AsyncAction {
-    type: 'get_room_track_options';
-
-    /**
-     * The name of the room.
-     */
-    roomName: string;
-
-    /**
-     * The address of the track.
-     */
-    address: string;
-}
-
-export interface SetRoomTrackOptionsAction extends AsyncAction {
-    type: 'set_room_track_options';
-
-    /**
-     * The name of the room.
-     */
-    roomName: string;
-
-    /**
-     * The address of the track.
-     */
-    address: string;
-
-    /**
-     * The options that should be set for the track.
-     */
-    options: SetRoomTrackOptions;
-}
-
-export interface SetRoomTrackOptions {
-    /**
-     * Whether to mute the track locally.
-     * This will prevent the track from streaming from the server to this device.
-     */
-    muted?: boolean;
-
-    /**
-     * The video quality that the track should stream at.
-     */
-    videoQuality?: TrackVideoQuality;
-}
-
-export interface RoomTrackOptions {
-    /**
-     * Whether the track is being sourced from a remote user.
-     */
-    isRemote: boolean;
-
-    /**
-     * The ID of the remote that is publishing this track.
-     */
-    remoteId: string;
-
-    /**
-     * Whether the track is muted locally.
-     */
-    muted: boolean;
-
-    /**
-     * The type of the track.
-     */
-    kind: TrackKind;
-
-    /**
-     * The source of the track.
-     */
-    source: TrackSource;
-
-    /**
-     * The video quality of the track if the track represents video.
-     */
-    videoQuality?: TrackVideoQuality;
-
-    /**
-     * The dimensions of the video if the track represents a video.
-     */
-    dimensions?: { width: number; height: number };
-
-    /**
-     * The aspect ratio of the video if the track represents a video.
-     */
-    aspectRatio?: number;
-}
-
-export type TrackKind = 'video' | 'audio';
-export type TrackSource =
-    | 'camera'
-    | 'microphone'
-    | 'screen_share'
-    | 'screen_share_audio';
-export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
-
-/**
- * Defines an event that retrieves the options for a remote multimedia chat room user.
- */
-export interface GetRoomRemoteOptionsAction extends AsyncAction {
-    type: 'get_room_remote_options';
-
-    /**
-     * The name of the room.
-     */
-    roomName: string;
-
-    /**
-     * The ID of the remote user.
-     */
-    remoteId: string;
-}
-
-/**
- * Defines an interface that contains options for a remote room user.
- */
-export interface RoomRemoteOptions {
-    /**
-     * Gets the connection quality of the remote user.
-     */
-    connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown';
-
-    /**
-     * Whether the remote user has enabled their camera video.
-     */
-    video: boolean;
-
-    /**
-     * Whether the remote user has enabled their microphone audio.
-     */
-    audio: boolean;
-
-    /**
-     * Whether the remote user has enabled their screen share.
-     */
-    screen: boolean;
-
-    /**
-     * The audio level that is being transmitted by the user.
-     * Between 0 and 1 with 1 being the loudest and 0 being the quietest.
-     */
-    audioLevel: number;
-}
-
 /**
  * Defines an event that performs a raycast from the camera in the given portal.
+ *
+ * @dochash types/os/portals
+ * @docname RaycastFromCameraAction
  */
 export interface RaycastFromCameraAction extends AsyncAction {
     type: 'raycast_from_camera';
@@ -4310,6 +3106,9 @@ export interface RaycastFromCameraAction extends AsyncAction {
 
 /**
  * Defines an event that performs a raycast for the given ray in the given portal.
+ *
+ * @dochash types/os/portals
+ * @docname RaycastInPortalAction
  */
 export interface RaycastInPortalAction extends AsyncAction {
     type: 'raycast_in_portal';
@@ -4332,6 +3131,9 @@ export interface RaycastInPortalAction extends AsyncAction {
 
 /**
  * Defines an event that calculates a ray for the given portal from the given viewport coordinates.
+ *
+ * @dochash types/os/portals
+ * @docname CalculateRayFromCameraAction
  */
 export interface CalculateRayFromCameraAction extends AsyncAction {
     type: 'calculate_camera_ray';
@@ -4349,6 +3151,9 @@ export interface CalculateRayFromCameraAction extends AsyncAction {
 
 /**
  * Defines an event that requests the pre-caching of a GLTF mesh.
+ *
+ * @dochash types/os/portals
+ * @docname BufferFormAddressGLTFAction
  */
 export interface BufferFormAddressGLTFAction extends AsyncAction {
     type: 'buffer_form_address_gltf';
@@ -4361,6 +3166,9 @@ export interface BufferFormAddressGLTFAction extends AsyncAction {
 
 /**
  * Defines an interface that contains a bunch of options for starting an animation.
+ *
+ * @dochash types/os/animations
+ * @docname StartFormAnimationOptions
  */
 export interface StartFormAnimationOptions {
     /**
@@ -4427,6 +3235,9 @@ export interface StartFormAnimationOptions {
 
 /**
  * Defines an event that starts a given animation on a bot/bots.
+ *
+ * @dochash types/os/animations
+ * @docname StartFormAnimationAction
  */
 export interface StartFormAnimationAction
     extends AsyncAction,
@@ -4446,6 +3257,9 @@ export interface StartFormAnimationAction
 
 /**
  * Defines an interface that contains a bunch of options for stopping an animation.
+ *
+ * @dochash types/os/animations
+ * @docname StopFormAnimationOptions
  */
 export interface StopFormAnimationOptions {
     /**
@@ -4462,6 +3276,9 @@ export interface StopFormAnimationOptions {
 
 /**
  * Defines an event that stops an animation on a bot/bots.
+ *
+ * @dochash types/os/animations
+ * @docname StopFormAnimationAction
  */
 export interface StopFormAnimationAction
     extends AsyncAction,
@@ -4476,6 +3293,9 @@ export interface StopFormAnimationAction
 
 /**
  * Defines an event that retrieves a list of animations for a given form or bot.
+ *
+ * @dochash types/os/animations
+ * @docname ListFormAnimationsAction
  */
 export interface ListFormAnimationsAction extends AsyncAction {
     type: 'list_form_animations';
@@ -4488,6 +3308,9 @@ export interface ListFormAnimationsAction extends AsyncAction {
 
 /**
  * Defines an interface that contains animation information.
+ *
+ * @dochash types/os/animations
+ * @docname FormAnimationData
  */
 export interface FormAnimationData {
     /**
@@ -4506,13 +3329,48 @@ export interface FormAnimationData {
     duration: number;
 }
 
+/**
+ * Defines an event that retrieves the build steps for a given LDraw model.
+ */
+export interface LDrawCountBuildStepsAction extends AsyncAction {
+    type: 'ldraw_count_build_steps';
+
+    /**
+     * The address that the build steps should be retrieved from.
+     */
+    address?: string;
+
+    /**
+     * The text that contains the LDraw model.
+     */
+    text?: string;
+}
+
+/**
+ * The portals that contain a camera that can be raycasted from.
+ *
+ * @dochash types/os/portals
+ * @docname CameraPortal
+ */
 export type CameraPortal = 'grid' | 'miniGrid' | 'map' | 'miniMap';
 
+/**
+ * Defines an event that represents a 2D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point2D
+ */
 export interface Point2D {
     x: number;
     y: number;
 }
 
+/**
+ * Defines an interface that represents a 3D point.
+ *
+ * @dochash types/os/portals
+ * @docname Point3D
+ */
 export interface Point3D {
     x: number;
     y: number;
@@ -4521,6 +3379,9 @@ export interface Point3D {
 
 /**
  * An event that is used to enable/disable wake lock.
+ *
+ * @dochash types/os/portals
+ * @docname ConfigureWakeLockAction
  */
 export interface ConfigureWakeLockAction extends AsyncAction {
     type: 'configure_wake_lock';
@@ -4533,6 +3394,9 @@ export interface ConfigureWakeLockAction extends AsyncAction {
 
 /**
  * An event that is used to retrieve the current wake lock configuration.
+ *
+ * @dochash types/os/portals
+ * @docname GetWakeLockConfigurationAction
  */
 export interface GetWakeLockConfigurationAction extends AsyncAction {
     type: 'get_wake_lock_configuration';
@@ -4540,6 +3404,9 @@ export interface GetWakeLockConfigurationAction extends AsyncAction {
 
 /**
  * Defines an interface that represents a wake lock configuration.
+ *
+ * @dochash types/os/portals
+ * @docname WakeLockConfiguration
  */
 export interface WakeLockConfiguration {
     /**
@@ -4550,6 +3417,9 @@ export interface WakeLockConfiguration {
 
 /**
  * An action that is used to record an event for analytics.
+ *
+ * @dochash types/os/portals
+ * @docname AnalyticsRecordEventAction
  */
 export interface AnalyticsRecordEventAction extends AsyncAction {
     type: 'analytics_record_event';
@@ -4566,130 +3436,10 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
 }
 
 /**
- * Defines an interface for a tag mapper.
+ * An action that is used to retrieve the default records endpoint.
  */
-export interface TagMapper {
-    /**
-     * Maps a tag name from its internal name to the name that should be used by the frontend.
-     */
-    forward?: (name: string) => string;
-
-    /**
-     * Maps a tag name from its frontend name to the name that is used internally.
-     */
-    reverse?: (name: string) => string;
-}
-
-/**
- * An action that is used to attach a runtime to the CasualOS frontend.
- */
-export interface AttachRuntimeAction extends AsyncAction {
-    type: 'attach_runtime';
-
-    /**
-     * The runtime that should be attached.
-     */
-    runtime: AuxRuntime;
-
-    /**
-     * The tag mapper that should be used.
-     */
-    tagNameMapper?: TagMapper;
-
-    uncopiable: true;
-}
-
-/**
- * An action that is used to detach a runtime from the CasualOS frontend.
- */
-export interface DetachRuntimeAction extends AsyncAction {
-    type: 'detach_runtime';
-
-    /**
-     * The runtime that should be detached.
-     */
-    runtime: AuxRuntime;
-
-    uncopiable: true;
-}
-
-/**
- * Defines an interface for a debugger trace that represents when a tag was updated.
- */
-export interface DebuggerTagUpdate {
-    /**
-     * The ID of the bot that was updated.
-     */
-    botId: string;
-
-    /**
-     * The tag that was updated.
-     */
-    tag: string;
-
-    /**
-     * The old value of the tag.
-     */
-    oldValue: any;
-
-    /**
-     * The new value for the tag.
-     */
-    newValue: any;
-}
-
-/**
- * Defines an interface for a debugger trace that represents when a tag mask was updated.
- */
-export interface DebuggerTagMaskUpdate extends DebuggerTagUpdate {
-    /**
-     * The space of the tag mask.
-     */
-    space: string;
-}
-
-/**
- * Defines an interface for a debugger trace that is sent right before when the debugger starts executing a script.
- */
-export interface DebuggerScriptEnterTrace {
-    /**
-     * The ID of the bot that the debugger started executing.
-     */
-    botId: string;
-
-    /**
-     * The tag of the bot that the debugger started executing.
-     */
-    tag: string;
-
-    /**
-     * The type of entry into the script.
-     * - "call" means that the script was started by a function call.
-     * - "task" means that execution in the script was started by the resumption of a task (setTimeout(), setInterval(), async/await, etc).
-     */
-    enterType: 'call' | 'task';
-}
-
-/**
- * Defines an interface for a debugger trace that is sent right after when the debugger stops executing a script.
- */
-export interface DebuggerScriptExitTrace {
-    /**
-     * The ID of the bot.
-     */
-    botId: string;
-
-    /**
-     * The ID of the tag that the debugger stopped executing.
-     */
-    tag: string;
-
-    /**
-     * The type of exit from the script.
-     * - "return" means the script stopped because it returned a value.
-     * - "throw" means the script stopped because it
-     */
-    exitType: 'return' | 'throw';
+export interface GetRecordsEndpointAction extends AsyncAction {
+    type: 'get_records_endpoint';
 }
 
 /**z
@@ -4749,8 +3499,8 @@ export function transaction(events: BotAction[]): TransactionAction {
  */
 export function action(
     eventName: string,
-    botIds: string[] = null,
-    userId: string = null,
+    botIds: string[] | null = null,
+    userId: string | null = null,
     arg?: any,
     sortIds: boolean = true
 ): ShoutAction {
@@ -4985,6 +3735,27 @@ export function openBarcodeScanner(
         open: open,
         cameraType: cameraType,
         disallowSwitchingCameras: false,
+    };
+}
+
+/**
+ * Creates a new OpenPhotoCameraAction.
+ * @param open Whether the barcode scanner should be open or closed.
+ * @param singlePhoto Whether only a single photo should be taken.
+ * @param cameraType The camera type that should be used.
+ */
+export function openPhotoCamera(
+    open: boolean,
+    singlePhoto: boolean,
+    options?: OpenPhotoCameraOptions,
+    taskId?: string | number
+): OpenPhotoCameraAction {
+    return {
+        type: 'open_photo_camera',
+        open: open,
+        singlePhoto,
+        options: options ?? {},
+        taskId,
     };
 }
 
@@ -5269,36 +4040,6 @@ export function openConsole(): OpenConsoleAction {
 }
 
 /**
- * Creates a new BackupToGithub event.
- * @param auth The authentication key that should be used.
- * @param options The options that should be used.
- */
-export function backupToGithub(
-    auth: string,
-    options?: BackupOptions
-): BackupToGithubAction {
-    return {
-        type: 'backup_to_github',
-        auth,
-        options,
-    };
-}
-
-/**
- * Creates a new BackupAsDownload event.
- */
-export function backupAsDownload(
-    target: DeviceSelector,
-    options?: BackupOptions
-): BackupAsDownloadAction {
-    return {
-        type: 'backup_as_download',
-        target,
-        options,
-    };
-}
-
-/**
  * Creates a new DownloadAction.
  * @param data The data that should be downloaded.
  * @param filename The name of the file.
@@ -5318,67 +4059,12 @@ export function download(
 }
 
 /**
- * Creates a new StartCheckoutAction.
- * @param options The options.
- */
-export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
-    return {
-        type: 'start_checkout',
-        ...options,
-    };
-}
-
-/**
- * Creates a new CheckoutSubmittedAction.
- */
-export function checkoutSubmitted(
-    productId: string,
-    token: string,
-    processingInst: string
-): CheckoutSubmittedAction {
-    return {
-        type: 'checkout_submitted',
-        productId: productId,
-        token: token,
-        processingInst: processingInst,
-    };
-}
-
-/**
- * Creates a new FinishCheckoutAction.
- * @param secretKey The secret stripe API Key.
- * @param token The token.
- * @param amount The amount.
- * @param currency The currency.
- * @param description The description.
- * @param extra Any extra info to send.
- */
-export function finishCheckout(
-    secretKey: string,
-    token: string,
-    amount: number,
-    currency: string,
-    description: string,
-    extra?: any
-): FinishCheckoutAction {
-    return {
-        type: 'finish_checkout',
-        secretKey: secretKey,
-        amount: amount,
-        currency: currency,
-        description: description,
-        token: token,
-        extra: extra,
-    };
-}
-
-/**
  * Creates a new SendWebhookAction.
  * @param options The options for the webhook.
  * @param taskId The ID of the task.
  */
 export function webhook(
-    options: WebhookOptions,
+    options: WebhookActionOptions,
     taskId?: number | string
 ): SendWebhookAction {
     return {
@@ -5411,46 +4097,20 @@ export function animateTag(
 }
 
 /**
- * Creates a new LoadFileAction.
- * @param options The options.
- * @param taskId The ID of the async task.
- */
-export function loadFile(
-    options: LoadFileOptions,
-    taskId?: number | string
-): LoadFileAction {
-    return {
-        type: 'load_file',
-        options: options,
-        taskId,
-    };
-}
-
-/**
- * Creates a new SaveFileAction.
- * @param options The options.
- * @param taskId The ID of the async task.
- */
-export function saveFile(
-    options: SaveFileOptions,
-    taskId?: number | string
-): SaveFileAction {
-    return {
-        type: 'save_file',
-        options: options,
-        taskId,
-    };
-}
-
-/**
  * Creates a new GetRemoteCountAction.
  * @param inst The instance that the device count should be retrieved for.
  */
-export function getRemoteCount(inst?: string): GetRemoteCountAction {
+export function getRemoteCount(
+    recordName?: string | null,
+    inst?: string | null,
+    branch?: string | null
+): GetRemoteCountAction {
     if (hasValue(inst)) {
         return {
             type: 'get_remote_count',
+            recordName,
             inst,
+            branch,
         };
     } else {
         return {
@@ -5458,26 +4118,6 @@ export function getRemoteCount(inst?: string): GetRemoteCountAction {
         };
     }
 }
-
-/**
- * Creates a new GetServersAction.
- */
-export function getServers(): GetServersAction {
-    return {
-        type: 'get_servers',
-    };
-}
-
-/**
- * Creates a new GetServersAction that includes statuses.
- */
-export function getServerStatuses(): GetServersAction {
-    return {
-        type: 'get_servers',
-        includeStatuses: true,
-    };
-}
-
 /**
  * Creates a new GetRemotesAction.
  */
@@ -5558,959 +4198,6 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
 }
 
 /**
- * Creates a channel if it doesn't exist and places the given bot in it.
- * @param channel The ID of the channel to setup.
- * @param botOrMod The bot that should be cloned into the new channel.
- * @param taskId The ID of the async task.
- */
-export function setupServer(
-    channel: string,
-    botOrMod?: Bot | BotTags,
-    taskId?: string | number,
-    playerId?: string
-): SetupChannelAction {
-    return {
-        type: 'setup_server',
-        channel,
-        botOrMod,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Sends an event to the server to initialize rpio with provided settings
- * @param options An object containing values to initilize with.
- * @param taskId The ID of the async task.
- *
- * @example
- * // Initialize with default settings
- * server.rpioInit({
- *   gpiomem: true,
- *   mapping: 'physical',
- *   mock: undefined,
- *   close_on_exit: false
- * });
- */
-export function rpioInitPin(
-    options: object,
-    taskId?: string | number,
-    playerId?: string
-): RpioInitAction {
-    return {
-        type: 'rpio_init',
-        options,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Shuts down rpio, unmaps, and clears everything.
- * @param taskId The ID of the async task.
- */
-export function rpioExitPin(
-    taskId?: string | number,
-    playerId?: string
-): RpioExitAction {
-    return {
-        type: 'rpio_exit',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Opens a pin up for use and sets its initial mode/state.
- * @param pin The physical pin on the server.
- * @param mode The mode of the pin.
- * @param taskId The ID of the async task.
- */
-export function rpioOpenPin(
-    pin: number,
-    mode: 'INPUT' | 'OUTPUT' | 'PWM',
-    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
-    taskId?: string | number,
-    playerId?: string
-): RpioOpenAction {
-    return {
-        type: 'rpio_open',
-        pin,
-        mode,
-        options,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Changes a pin's mode/value.
- * @param pin The physical pin on the server.
- * @param mode The mode of the pin.
- * @param taskId The ID of the async task.
- */
-export function rpioModePin(
-    pin: number,
-    mode: 'INPUT' | 'OUTPUT' | 'PWM',
-    options?: 'HIGH' | 'LOW' | 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
-    taskId?: string | number,
-    playerId?: string
-): RpioModeAction {
-    return {
-        type: 'rpio_mode',
-        pin,
-        mode,
-        options,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Reads a pin's current value.
- * @param pin The physical BCM Pin on the server.
- * @param taskId The ID of the async task.
- */
-export function rpioReadPin(
-    pin: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioReadAction {
-    return {
-        type: 'rpio_read',
-        pin,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Reads a pin's current buffer.
- * @param pin The physical BCM Pin on the server.
- * @param length The length of the buffer.
- * @param taskId The ID of the async task.
- */
-export function rpioReadSequencePin(
-    pin: number,
-    length: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioReadSequenceAction {
-    return {
-        type: 'rpio_read_sequence',
-        pin,
-        length,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Sets a pin's value.
- * @param pin The physical BCM Pin on the server.
- * @param value The value of the BCM pin whether it's HIGH or LOW.
- * @param taskId The ID of the async task.
- */
-export function rpioWritePin(
-    pin: number,
-    value: 'HIGH' | 'LOW',
-    taskId?: string | number,
-    playerId?: string
-): RpioWriteAction {
-    return {
-        type: 'rpio_write',
-        pin,
-        value,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Writes to a pin's buffer.
- * @param pin The physical BCM Pin on the server.
- * @param buffer The buffer to write to the pin.
- * @param taskId The ID of the async task.
- */
-export function rpioWriteSequencePin(
-    pin: number,
-    buffer: number[],
-    taskId?: string | number,
-    playerId?: string
-): RpioWriteSequenceAction {
-    return {
-        type: 'rpio_write_sequence',
-        pin,
-        buffer,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Read the current state of the GPIO pad control for the specified GPIO group.
- * On current models of Raspberry Pi there are three groups.
- *
- * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
- * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
- * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
- *
- * @param group The GPIO group to be read.
- * @param bitmask The bitmask you want to check.
- * @param taskId The ID of the async task.
- */
-export function rpioReadpadPin(
-    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
-    bitmask: 'slew' | 'hysteresis' | 'current',
-    taskId?: string | number,
-    playerId?: string
-): RpioReadpadAction {
-    return {
-        group,
-        bitmask,
-        type: 'rpio_readpad',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Write `control` settings to the pad control for `group`.
- *
- * 'PAD_GROUP_0_27' is GPIO0 - GPIO27. Use this for the main GPIO header.
- * 'PAD_GROUP_28_45' is GPIO28 - GPIO45. Use this to configure the P5 header.
- * 'PAD_GROUP_46_53' is GPIO46 - GPIO53. Internal, you probably won't need this.
- *
- * @param group The GPIO group to be read.
- * @param slew Slew rate unlimited if set to true.
- * @param hysteresis Hysteresis is enabled if set to true.
- * @param current Drive current set in mA. Must be an even number 2-16.
- * @param taskId The ID of the async task.
- */
-export function rpioWritepadPin(
-    group: 'PAD_GROUP_0_27' | 'PAD_GROUP_28_45' | 'PAD_GROUP_46_53',
-    slew?: boolean,
-    hysteresis?: boolean,
-    current?: 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16,
-    taskId?: string | number,
-    playerId?: string
-): RpioWritepadAction {
-    return {
-        group,
-        slew,
-        hysteresis,
-        current,
-        type: 'rpio_writepad',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Configure the pin's internal pullup or pulldown resistors.
- * @param pin The pin that you want to use.
- * @param state Configure the pin's resistors as: 'PULL_OFF', 'PULL_DOWN' or 'PULL_UP'
- * @param taskId The ID of the async task.
- */
-export function rpioPudPin(
-    pin: number,
-    state: 'PULL_OFF' | 'PULL_DOWN' | 'PULL_UP',
-    taskId?: string | number,
-    playerId?: string
-): RpioPudAction {
-    return {
-        pin,
-        state,
-        type: 'rpio_pud',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Watch `pin` for changes and execute the callback `cb()` on events.
- * @param pin The pin that you want to use.
- * @param cb The callback executed on events.
- * @param options Optional. Used to watch for specific events.
- * @param taskId The ID of the async task.
- */
-export function rpioPollPin(
-    pin: number,
-    cb: any,
-    options?: 'POLL_LOW' | 'POLL_HIGH' | 'POLL_BOTH',
-    taskId?: string | number,
-    playerId?: string
-): RpioPollAction {
-    return {
-        pin,
-        cb,
-        options,
-        type: 'rpio_poll',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Sends an event to the server to close a pin and what state to leave it in.
- * @param pin The physical pin number.
- * @param options The state to leave the pin in upon closing.
- * @param taskId The ID of the async task.
- */
-export function rpioClosePin(
-    pin: number,
-    options?: 'PIN_RESET' | 'PIN_PRESERVE',
-    taskId?: string | number,
-    playerId?: string
-): RpioCloseAction {
-    return {
-        type: 'rpio_close',
-        pin,
-        options,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Initializes i2c for use.
- * @param taskId The ID of the async task.
- */
-export function rpioI2CBeginPin(
-    taskId?: string | number,
-    playerId?: string
-): RpioI2CBeginAction {
-    return {
-        type: 'rpio_i2c_begin',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Configure the slave address.
- * @param address The slave address to set.
- * @param taskId The ID of the async task.
- */
-export function rpioI2CSetSlaveAddressPin(
-    address: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioI2CSetSlaveAddressAction {
-    return {
-        address,
-        type: 'rpio_i2c_setslaveaddress',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Set the baud rate. Directly set the speed in hertz.
- * @param rate The i2c refresh rate in hertz.
- * @param taskId The ID of the async task.
- */
-export function rpioI2CSetBaudRatePin(
-    rate: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioI2CSetBaudRateAction {
-    return {
-        rate,
-        type: 'rpio_i2c_setbaudrate',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Set the baud rate. Set it based on a divisor of the base 250MHz rate.
- * @param rate The i2c refresh rate based on a divisor of the base 250MHz rate.
- * @param taskId The ID of the async task.
- */
-export function rpioI2CSetClockDividerPin(
-    rate: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioI2CSetClockDividerAction {
-    return {
-        rate,
-        type: 'rpio_i2c_setclockdivider',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Read from the i2c slave.
- * @param rx Buffer to read.
- * @param length Optional. Length of the buffer to read.
- * @param taskId The ID of the async task.
- */
-export function rpioI2CReadPin(
-    rx: number[],
-    length?: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioI2CReadAction {
-    return {
-        rx,
-        length,
-        type: 'rpio_i2c_read',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Write to the i2c slave.
- * @param tx Buffer to write.
- * @param length Optional. Length of the buffer to write.
- * @param taskId The ID of the async task.
- */
-export function rpioI2CWritePin(
-    tx: number[],
-    length?: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioI2CWriteAction {
-    return {
-        tx,
-        length,
-        type: 'rpio_i2c_write',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-// export function rpioI2CReadRegisterRestartPin(
-//     taskId?: string | number,
-//     playerId?: string
-// ): RpioI2CReadRegisterRestartAction {
-//     return {
-//         type: 'rpio_i2c_readregisterrestart',
-//         taskId,
-//         playerId,
-//     };
-// }
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-// export function rpioI2CWriteReadRestartPin(
-//     taskId?: string | number,
-//     playerId?: string
-// ): RpioI2CWriteReadRestartAction {
-//     return {
-//         type: 'rpio_i2c_writereadrestart',
-//         taskId,
-//         playerId,
-//     };
-// }
-
-/**
- * Turn off the i²c interface and return the pins to GPIO.
- * @param taskId The ID of the async task.
- */
-export function rpioI2CEndPin(
-    taskId?: string | number,
-    playerId?: string
-): RpioI2CEndAction {
-    return {
-        type: 'rpio_i2c_end',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * This is a power-of-two divisor of the base 19.2MHz rate, with a maximum value of 4096 (4.6875kHz).
- * @param rate The PWM refresh rate.
- * @param taskId The ID of the async task.
- */
-export function rpioPWMSetClockDividerPin(
-    rate: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioPWMSetClockDividerAction {
-    return {
-        type: 'rpio_pwm_setclockdivider',
-        rate,
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * This determines the maximum pulse width.
- * @param pin The physical pin number.
- * @param range The PWM range for a pin.
- * @param taskId The ID of the async task.
- */
-export function rpioPWMSetRangePin(
-    pin: number,
-    range: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioPWMSetRangeAction {
-    return {
-        pin,
-        range,
-        type: 'rpio_pwm_setrange',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Set the width for a given pin.
- * @param pin The physical pin number.
- * @param width The PWM width for a pin.
- * @param taskId The ID of the async task.
- */
-export function rpioPWMSetDataPin(
-    pin: number,
-    width: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioPWMSetDataAction {
-    return {
-        pin,
-        width,
-        type: 'rpio_pwm_setdata',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Initiate SPI mode.
- * @param taskId The ID of the async task.
- */
-export function rpioSPIBeginPin(
-    taskId?: string | number,
-    playerId?: string
-): RpioSPIBeginAction {
-    return {
-        type: 'rpio_spi_begin',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Choose which of the chip select / chip enable pins to control.
- *  Value | Pin
- *  ------|---------------------
- *    0   | SPI_CE0 (24 / GPIO8)
- *    1   | SPI_CE1 (26 / GPIO7)
- *    2   | Both
- * @param value The value correlating to pin(s) to control.
- * @param taskId The ID of the async task.
- */
-export function rpioSPIChipSelectPin(
-    value: 0 | 1 | 2,
-    taskId?: string | number,
-    playerId?: string
-): RpioSPIChipSelectAction {
-    return {
-        value,
-        type: 'rpio_spi_chipselect',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * If your device's CE pin is active high, use this to change the polarity.
- *  Value | Pin
- *  ------|---------------------
- *    0   | SPI_CE0 (24 / GPIO8)
- *    1   | SPI_CE1 (26 / GPIO7)
- *    2   | Both
- * @param value The value correlating to pin(s) to control.
- * @param polarity Set the polarity it activates on. HIGH or LOW
- * @param taskId The ID of the async task.
- */
-export function rpioSPISetCSPolarityPin(
-    value: 0 | 1 | 2,
-    polarity: 'HIGH' | 'LOW',
-    taskId?: string | number,
-    playerId?: string
-): RpioSPISetCSPolarityAction {
-    return {
-        value,
-        polarity,
-        type: 'rpio_spi_setcspolarity',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Set the SPI clock speed.
- * @param rate It is an even divisor of the base 250MHz rate ranging between 0 and 65536.
- * @param taskId The ID of the async task.
- */
-export function rpioSPISetClockDividerPin(
-    rate: number,
-    taskId?: string | number,
-    playerId?: string
-): RpioSPISetClockDividerAction {
-    return {
-        rate,
-        type: 'rpio_spi_setclockdivider',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Set the SPI Data Mode.
- *  Mode | CPOL | CPHA
- *  -----|------|-----
- *    0  |  0   |  0
- *    1  |  0   |  1
- *    2  |  1   |  0
- *    3  |  1   |  1
- * @param mode The SPI Data Mode.
- * @param taskId The ID of the async task.
- */
-export function rpioSPISetDataModePin(
-    mode: 0 | 1 | 2 | 3,
-    taskId?: string | number,
-    playerId?: string
-): RpioSPISetDataModeAction {
-    return {
-        mode,
-        type: 'rpio_spi_setdatamode',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-export function rpioSPITransferPin(
-    tx: number[],
-    taskId?: string | number,
-    playerId?: string
-): RpioSPITransferAction {
-    return {
-        tx,
-        type: 'rpio_spi_transfer',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- *
- * @param taskId The ID of the async task.
- */
-export function rpioSPIWritePin(
-    tx: number[],
-    taskId?: string | number,
-    playerId?: string
-): RpioSPIWriteAction {
-    return {
-        tx,
-        type: 'rpio_spi_write',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Release the pins back to general purpose use.
- * @param taskId The ID of the async task.
- */
-export function rpioSPIEndPin(
-    taskId?: string | number,
-    playerId?: string
-): RpioSPIEndAction {
-    return {
-        type: 'rpio_spi_end',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- */
-
-/**
- * Establish the connection to the bluetooth serial device
- * @param name A friendly device name. Example: Brush01
- * @param path The device path. Example: /dev/rfcomm0
- * @param options
- * {boolean} [autoOpen=true] Automatically opens the port on `nextTick`.
- *
- * {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
- *
- * {number} [dataBits=8] Must be one of these: 8, 7, 6, or 5.
- *
- * {number} [highWaterMark=65536] The size of the read and write buffers defaults to 64k.
- *
- * {boolean} [lock=true] Prevent other processes from opening the port. Windows does not currently support `false`.
- *
- * {number} [stopBits=1] Must be one of these: 1 or 2.
- *
- * {string} [parity=none] Must be one of these: 'none', 'even', 'mark', 'odd', 'space'.
- *
- * {boolean} [rtscts=false] flow control setting
- *
- * {boolean} [xon=false] flow control setting
- *
- * {boolean} [xoff=false] flow control setting
- *
- * {boolean} [xany=false] flow control setting
- *
- * {object=} bindingOptions sets binding-specific options
- *
- * {Binding=} Binding The hardware access binding. `Bindings` are how Node-Serialport talks to the underlying system. Will default to the static property `Serialport.Binding`.
- *
- * {number} [bindingOptions.vmin=1] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
- *
- * {number} [bindingOptions.vtime=0] see [`man termios`](http://linux.die.net/man/3/termios) LinuxBinding and DarwinBinding
- * @param taskId The ID of the async task.
- */
-export function serialConnectPin(
-    name: string,
-    device: string,
-    mac: string,
-    channel: number,
-    options?: object,
-    taskId?: string | number,
-    playerId?: string
-): SerialConnectAction {
-    return {
-        name,
-        device,
-        mac,
-        channel,
-        options,
-        type: 'serial_connect',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Parses and returns the serial stream to the event tag 'onSerialData'.
- * @param bot The id of the bot you want data streamed to. The bot needs the 'onSerialData' tag.
- * @param name A friendly device name. Example: Brush01
- * @param taskId The ID of the async task.
- */
-export function serialStreamPin(
-    bot: string,
-    name: string,
-    taskId?: string | number,
-    playerId?: string
-): SerialStreamAction {
-    return {
-        bot,
-        name,
-        type: 'serial_stream',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Opens the serial connection if you set the option in serialConnect to {autoOpen: false}
- * @param name A friendly device name. Example: Brush01
- * @param taskId The ID of the async task.
- */
-export function serialOpenPin(
-    name: string,
-    taskId?: string | number,
-    playerId?: string
-): SerialOpenAction {
-    return {
-        name,
-        type: 'serial_open',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Updates the SerialPort object with a new baudRate.
- * @param name A friendly device name. Example: Brush01
- * @param options {number=} [baudRate=9600] The baud rate of the port to be opened. This should match one of the commonly available baud rates, such as 110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, or 115200. Custom rates are supported best effort per platform. The device connected to the serial port is not guaranteed to support the requested baud rate, even if the port itself supports that baud rate.
- * @param cb
- * @param taskId The ID of the async task.
- */
-export function serialUpdatePin(
-    name: string,
-    options: object,
-    cb?: any,
-    taskId?: string | number,
-    playerId?: string
-): SerialUpdateAction {
-    return {
-        name,
-        options,
-        cb,
-        type: 'serial_update',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Writes the provided data/command to the device
- * @param name A friendly device name. Example: Brush01
- * @param data The data/command to send
- * @param encoding The encoding, if chunk is a string. Defaults to 'utf8'. Also accepts 'utf16le', 'latin1', 'ascii', 'base64', 'binary', 'ucs2', and 'hex'
- * @param cb
- * @param taskId The ID of the async task.
- */
-export function serialWritePin(
-    name: string,
-    data: string | number[],
-    encoding?: string,
-    cb?: any,
-    taskId?: string | number,
-    playerId?: string
-): SerialWriteAction {
-    return {
-        name,
-        data,
-        encoding,
-        cb,
-        type: 'serial_write',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Request a number of bytes from the SerialPort.
- * @param name A friendly device name. Example: Brush01
- * @param size Specify how many bytes of data to return, if available.
- * @param taskId The ID of the async task.
- */
-export function serialReadPin(
-    name: string,
-    size?: number,
-    taskId?: string | number,
-    playerId?: string
-): SerialReadAction {
-    return {
-        name,
-        size,
-        type: 'serial_read',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Closes an open connection.
- * @param name A friendly device name. Example: Brush01
- * @param cb
- * @param device The device path. Example: /dev/rfcomm0
- * @param taskId The ID of the async task.
- */
-export function serialClosePin(
-    name: string,
-    device: string,
-    cb?: any,
-    taskId?: string | number,
-    playerId?: string
-): SerialCloseAction {
-    return {
-        name,
-        device,
-        cb,
-        type: 'serial_close',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Flush discards data that has been received but not read, or written but not transmitted by the operating system.
- * @param name A friendly device name. Example: Brush01
- * @param taskId The ID of the async task.
- */
-export function serialFlushPin(
-    name: string,
-    taskId?: string | number,
-    playerId?: string
-): SerialFlushAction {
-    return {
-        name,
-        type: 'serial_flush',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Waits until all output data is transmitted to the serial port. After any pending write has completed, it calls `tcdrain()` or `FlushFileBuffers()` to ensure it has been written to the device.
- * @param name A friendly device name. Example: Brush01
- * @param taskId The ID of the async task.
- */
-export function serialDrainPin(
-    name: string,
-    taskId?: string | number,
-    playerId?: string
-): SerialDrainAction {
-    return {
-        name,
-        type: 'serial_drain',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Causes a stream in flowing mode to stop emitting 'data' events, switching out of flowing mode. Any data that becomes available remains in the internal buffer.
- * @param name A friendly device name. Example: Brush01
- * @param taskId The ID of the async task.
- */
-export function serialPausePin(
-    name: string,
-    taskId?: string | number,
-    playerId?: string
-): SerialPauseAction {
-    return {
-        name,
-        type: 'serial_pause',
-        taskId,
-        playerId,
-    };
-}
-
-/**
- * Causes an explicitly paused, Readable stream to resume emitting 'data' events, switching the stream into flowing mode.
- * @param name A friendly device name. Example: Brush01
- * @param taskId The ID of the async task.
- */
-export function serialResumePin(
-    name: string,
-    taskId?: string | number,
-    playerId?: string
-): SerialResumeAction {
-    return {
-        name,
-        type: 'serial_resume',
-        taskId,
-        playerId,
-    };
-}
-
-/**
  * Creates a SetClipboardAction.
  * @param text The text that should be set to the clipboard.
  */
@@ -6559,53 +4246,6 @@ export function showUploadFiles(
 }
 
 /**
- * Creates a MarkHistoryAction.
- * @param options The options to use.
- */
-export function markHistory(options: MarkHistoryOptions): MarkHistoryAction {
-    return {
-        type: 'mark_history',
-        ...options,
-    };
-}
-
-export interface MarkHistoryOptions {
-    message: string;
-}
-
-/**
- * Creates a BrowseHistoryAction.
- */
-export function browseHistory(): BrowseHistoryAction {
-    return {
-        type: 'browse_history',
-    };
-}
-
-/**
- * Creates a RestoreHistoryMarkAction.
- * @param mark The ID of the mark that history should be restored to.
- * @param inst The instance that the mark should be restored to. If not specified, then the current instance will be used.
- */
-export function restoreHistoryMark(
-    mark: string,
-    inst?: string
-): RestoreHistoryMarkAction {
-    if (!inst) {
-        return {
-            type: 'restore_history_mark',
-            mark,
-        };
-    } else {
-        return {
-            type: 'restore_history_mark',
-            mark,
-            inst,
-        };
-    }
-}
-
-/**
  * Loads a space into the instance.
  * @param space The space to load.
  * @param config The config which specifies how the space should be loaded.
@@ -6620,6 +4260,32 @@ export function loadSpace(
         type: 'load_space',
         space,
         config,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EnableCollaborationAction.
+ * @param taskId The ID of the async task.
+ */
+export function enableCollaboration(
+    taskId?: number | string
+): EnableCollaborationAction {
+    return {
+        type: 'enable_collaboration',
+        taskId,
+    };
+}
+
+/**
+ * Creates a ShowAccountInfoAction.
+ * @param taskId The ID of the async task.
+ */
+export function showAccountInfo(
+    taskId?: number | string
+): ShowAccountInfoAction {
+    return {
+        type: 'show_account_info',
         taskId,
     };
 }
@@ -6756,25 +4422,6 @@ export function exitFullscreen(): ExitFullscreenAction {
 }
 
 /**
- * Requests that bots matching the given tags be loaded from the given space.
- * @param space The space that the bots should be loaded from.
- * @param tags The tags that should be on the loaded bots.
- * @param taskId The ID of the async task for this action.
- */
-export function loadBots(
-    space: string,
-    tags: TagFilter[],
-    taskId?: number | string
-): LoadBotsAction {
-    return {
-        type: 'load_bots',
-        space: space,
-        tags: tags,
-        taskId,
-    };
-}
-
-/**
  * Requests that all the bots in the given space be cleared.
  *
  * Only supported for the following spaces:
@@ -6790,55 +4437,6 @@ export function clearSpace(
     return {
         type: 'clear_space',
         space: space,
-        taskId,
-    };
-}
-
-/**
- * Requests that the given space be unlocked for editing.
- *
- * Only supported for the following spaces:
- * - admin
- *
- * @param space The space to unlock.
- * @param password The password to use to unlock the space.
- * @param taskId The ID of the task that this event represents.
- */
-export function unlockSpace(
-    space: BotSpace,
-    password: string,
-    taskId?: number | string
-): UnlockSpaceAction {
-    return {
-        type: 'unlock_space',
-        space,
-        password,
-        taskId,
-    };
-}
-
-/**
- * Requests that the given new password be used to unlock the space for editing.
- *
- * Only supported for the following spaces:
- * - admin
- *
- * @param space The space to unlock.
- * @param oldPassword The old password.
- * @param newPassword The new password to use to unlock the space.
- * @param taskId The ID of the task that this event represents.
- */
-export function setSpacePassword(
-    space: BotSpace,
-    oldPassword: string,
-    newPassword: string,
-    taskId?: number | string
-): SetSpacePasswordAction {
-    return {
-        type: 'set_space_password',
-        space,
-        oldPassword,
-        newPassword,
         taskId,
     };
 }
@@ -7113,71 +4711,6 @@ export function registerPrefix(
         type: 'register_prefix',
         prefix,
         options,
-        taskId,
-    };
-}
-
-/**
- * Creates an action that requests a new certificate be created.
- * @param options The options.
- * @param taskId The ID of the task.
- */
-export function createCertificate(
-    options: CreateCertificateOptions,
-    taskId?: number | string
-): CreateCertificateAction {
-    return {
-        type: 'create_certificate',
-        ...options,
-        taskId,
-    };
-}
-
-/**
- * Creates an action that requests a tag on a bot be signed.
- * @param signingBotId The ID of the certificate bot that is creating the signature.
- * @param signingPassword The password used to decrypt the certificate's private key.
- * @param botId The ID of the bot whose tag is being signed.
- * @param tag The tag that is being signed.
- * @param value The value that is being signed.
- */
-export function signTag(
-    signingBotId: string,
-    signingPassword: string,
-    botId: string,
-    tag: string,
-    value: any,
-    taskId?: number | string
-): SignTagAction {
-    return {
-        type: 'sign_tag',
-        signingBotId,
-        signingPassword,
-        botId,
-        tag,
-        value,
-        taskId,
-    };
-}
-
-/**
- * Creates an action that requests that a certificate be revoked.
- * @param signingBotId The ID of the certificate that is signing the revocation.
- * @param signingPassword The password used to decrypt the signing certificate's private key.
- * @param certificateBotId The ID of the bot whose tag is being signed.
- * @param taskId The task ID.
- */
-export function revokeCertificate(
-    signingBotId: string,
-    signingPassword: string,
-    certificateBotId: string,
-    taskId?: number | string
-): RevokeCertificateAction {
-    return {
-        type: 'revoke_certificate',
-        signingBotId,
-        signingPassword,
-        certificateBotId,
         taskId,
     };
 }
@@ -7472,13 +5005,27 @@ export function htmlAppMethod(
 }
 
 /**
+ * Creates a ReportInstAction.
+ * @param taskId The ID of the async task.
+ */
+export function reportInst(taskId?: string | number): ReportInstAction {
+    return {
+        type: 'report_inst',
+        taskId,
+    };
+}
+
+/**
  * Creates a RequestAuthDataAction.
+ * @param requestInBackground Whether the request should be made in the background.
  */
 export function requestAuthData(
+    requestInBackground?: boolean,
     taskId?: string | number
 ): RequestAuthDataAction {
     return {
         type: 'request_auth_data',
+        requestInBackground,
         taskId,
     };
 }
@@ -7515,301 +5062,6 @@ export function convertGeolocationToWhat3Words(
     };
 }
 
-/**
- * Creates a GetPublicRecordKeyAction.
- * @param recordName The name of the record.
- * @param policy The policy that the requested record key should have.
- * @param taskId The ID of the task.
- */
-export function getPublicRecordKey(
-    recordName: string,
-    policy: PublicRecordKeyPolicy,
-    taskId: number | string
-): GetPublicRecordKeyAction {
-    return {
-        type: 'get_public_record_key',
-        recordName,
-        policy,
-        taskId,
-    };
-}
-
-/**
- * Creates a GrantRecordMarkerPermissionAction.
- * @param recordName The name of the record.
- * @param marker The marker.
- * @param permission The permission that should be granted.
- * @param options The options for the action.
- * @param taskId The ID of the task.
- */
-export function grantRecordMarkerPermission(
-    recordName: string,
-    marker: string,
-    permission: object,
-    options: RecordActionOptions,
-    taskId: number | string
-): GrantRecordMarkerPermissionAction {
-    return {
-        type: 'grant_record_marker_permission',
-        recordName,
-        marker,
-        permission,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a RevokeRecordMarkerPermissionAction.
- * @param recordName The name of the record.
- * @param marker The marker.
- * @param permission The permission that should be granted.
- * @param options The options for the action.
- * @param taskId The ID of the task.
- */
-export function revokeRecordMarkerPermission(
-    recordName: string,
-    marker: string,
-    permission: object,
-    options: RecordActionOptions,
-    taskId: number | string
-): RevokeRecordMarkerPermissionAction {
-    return {
-        type: 'revoke_record_marker_permission',
-        recordName,
-        marker,
-        permission,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a GrantRoleAction for a user.
- * @param recordName The name of the record.
- * @param role The role that should be granted.
- * @param userId The ID of the user.
- * @param expireTimeMs The Unix time (in miliseconds) that the role grant expires.
- * @param options The options for the action.
- * @param taskId The ID of the task.
- */
-export function grantUserRole(
-    recordName: string,
-    role: string,
-    userId: string,
-    expireTimeMs: number | null,
-    options: RecordActionOptions,
-    taskId: number | string
-): GrantRoleAction {
-    return {
-        type: 'grant_role',
-        recordName,
-        role,
-        userId,
-        expireTimeMs,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a GrantRoleAction for an inst.
- * @param recordName The name of the record.
- * @param role The role that should be granted.
- * @param inst The ID of the inst.
- * @param expireTimeMs The Unix time (in miliseconds) that the role grant expires.
- * @param options The options for the action.
- * @param taskId The ID of the task.
- */
-export function grantInstRole(
-    recordName: string,
-    role: string,
-    inst: string,
-    expireTimeMs: number | null,
-    options: RecordActionOptions,
-    taskId: number | string
-): GrantRoleAction {
-    return {
-        type: 'grant_role',
-        recordName,
-        role,
-        inst,
-        expireTimeMs,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a GrantRoleAction for a user.
- * @param recordName The name of the record.
- * @param role The role that should be granted.
- * @param userId The ID of the user.
- * @param options The options for the action.
- * @param taskId The ID of the task.
- */
-export function revokeUserRole(
-    recordName: string,
-    role: string,
-    userId: string,
-    options: RecordActionOptions,
-    taskId: number | string
-): RevokeRoleAction {
-    return {
-        type: 'revoke_role',
-        recordName,
-        role,
-        userId,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a revokeRoleAction for an inst.
- * @param recordName The name of the record.
- * @param role The role that should be revokeed.
- * @param inst The ID of the inst.
- * @param options The options for the action.
- * @param taskId The ID of the task.
- */
-export function revokeInstRole(
-    recordName: string,
-    role: string,
-    inst: string,
-    options: RecordActionOptions,
-    taskId: number | string
-): RevokeRoleAction {
-    return {
-        type: 'revoke_role',
-        recordName,
-        role,
-        inst,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a GrantInstAdminPermissionAction.
- * @param recordName The name of the record.
- * @param options The options for the action.
- * @param taskId The ID of the task.
- */
-export function grantInstAdminPermission(
-    recordName: string,
-    options: RecordActionOptions,
-    taskId: number | string
-): GrantInstAdminPermissionAction {
-    return {
-        type: 'grant_inst_admin_permission',
-        recordName,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a RecordDataAction.
- * @param recordKey The key that should be used to access the record.
- * @param address The address that the data should be stored at in the record.
- * @param data The data to store.
- * @param requiresApproval Whether to try to record data that requires approval.
- * @param options The options that should be used for the action.
- * @param taskId The ID of the task.
- */
-export function recordData(
-    recordKey: string,
-    address: string,
-    data: any,
-    requiresApproval: boolean,
-    options: DataRecordOptions,
-    taskId: number | string
-): RecordDataAction {
-    return {
-        type: 'record_data',
-        recordKey,
-        address,
-        data,
-        requiresApproval,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a GetRecordDataAction.
- * @param recordName The name of the record to retrieve.
- * @param address The address of the data to retrieve.
- * @param requiresApproval Whether to try to get a record that requires manual approval.
- * @param options The options that should be used for the action.
- * @param taskId The ID of the task.
- */
-export function getRecordData(
-    recordName: string,
-    address: string,
-    requiresApproval: boolean,
-    options: RecordActionOptions,
-    taskId?: number | string
-): GetRecordDataAction {
-    return {
-        type: 'get_record_data',
-        recordName,
-        address,
-        requiresApproval,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a ListRecordDataAction.
- * @param recordName The name of the record.
- * @param startingAddress The address that the list should start with.
- * @param options The options that should be used for the action.
- * @param taskId The ID of the task.
- */
-export function listDataRecord(
-    recordName: string,
-    startingAddress: string,
-    options: RecordActionOptions,
-    taskId?: number | string
-): ListRecordDataAction {
-    return {
-        type: 'list_record_data',
-        recordName,
-        startingAddress,
-        requiresApproval: false,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a EraseRecordDataAction.
- * @param recordKey The key that should be used to access the record.
- * @param address The address of the data to erase.
- * @param requiresApproval Whether to try to erase a record that requires manual approval.
- * @param options The options that should be used for the action.
- * @param taskId The ID of the task.
- */
-export function eraseRecordData(
-    recordKey: string,
-    address: string,
-    requiresApproval: boolean,
-    options: RecordActionOptions,
-    taskId?: number | string
-): EraseRecordDataAction {
-    return {
-        type: 'erase_record_data',
-        recordKey,
-        address,
-        requiresApproval,
-        options,
-        taskId,
-    };
-}
-
 export interface ApprovableAction {
     /**
      * Whether this action has been manually approved.
@@ -7828,103 +5080,6 @@ export function approveAction<T extends ApprovableAction>(action: T): T {
     return {
         ...action,
         [APPROVED_SYMBOL]: true,
-    };
-}
-
-/**
- * Creates a RecordFileAction.
- * @param recordKey The key that should be used to access the record.
- * @param data The data to store.
- * @param description The description of the file.
- * @param mimeType The MIME type of the file.
- * @param markers The markers to associate with the file.
- * @param options The options that should be used for the action.
- */
-export function recordFile(
-    recordKey: string,
-    data: any,
-    description: string,
-    mimeType: string,
-    options: RecordFileActionOptions,
-    taskId?: number | string
-): RecordFileAction {
-    return {
-        type: 'record_file',
-        recordKey,
-        data,
-        description,
-        mimeType,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a EraseFileAction.
- * @param recordKey The key that should be used to access the record.
- * @param fileUrl The URL that the file was stored at.
- * @param options The options that should be used for the action.
- * @param taskId The ID of the task.
- */
-export function eraseFile(
-    recordKey: string,
-    fileUrl: string,
-    options: RecordActionOptions,
-    taskId?: number | string
-): EraseFileAction {
-    return {
-        type: 'erase_file',
-        recordKey,
-        fileUrl,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a RecordEventAction.
- * @param recordKey The key that should be used to access the record.
- * @param eventName The name of the event.
- * @param count The number of times that the event occurred.
- * @param options The options that should be used for the action.
- * @param taskId The Id of the task.
- */
-export function recordEvent(
-    recordKey: string,
-    eventName: string,
-    count: number,
-    options: RecordActionOptions,
-    taskId?: number | string
-): RecordEventAction {
-    return {
-        type: 'record_event',
-        recordKey,
-        eventName,
-        count,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a GetEventCountAction.
- * @param recordName The name of the record.
- * @param eventName The name of the events.
- * @param options The options that should be used for the action.
- * @param taskId The ID.
- */
-export function getEventCount(
-    recordName: string,
-    eventName: string,
-    options: RecordActionOptions,
-    taskId?: number | string
-): GetEventCountAction {
-    return {
-        type: 'get_event_count',
-        recordName,
-        eventName,
-        options,
-        taskId,
     };
 }
 
@@ -7953,139 +5108,6 @@ export function getAverageFrameRate(
 ): GetAverageFrameRateAction {
     return {
         type: 'get_average_frame_rate',
-        taskId,
-    };
-}
-
-/**
- * Creates a new JoinRoomAction.
- * @param roomName The name of the room.
- * @param options The options to use for the event.
- * @param taskId The ID of the async task.
- */
-export function joinRoom(
-    roomName: string,
-    options: JoinRoomActionOptions,
-    taskId?: number | string
-): JoinRoomAction {
-    return {
-        type: 'join_room',
-        roomName,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a new LeaveRoomAction.
- * @param roomName The name of the room.
- * @param options The options to use for the event.
- * @param taskId The ID of the async task.
- */
-export function leaveRoom(
-    roomName: string,
-    options: RecordActionOptions,
-    taskId?: number | string
-): LeaveRoomAction {
-    return {
-        type: 'leave_room',
-        roomName,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a new SetRoomOptionsAction.
- * @param roomName The name of the room.
- * @param options The options to use for the event.
- * @param taskId The ID of the async task.
- */
-export function setRoomOptions(
-    roomName: string,
-    options: Partial<RoomOptions>,
-    taskId?: number | string
-): SetRoomOptionsAction {
-    return {
-        type: 'set_room_options',
-        roomName,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a new GetRoomOptionsAction.
- * @param roomName The name of the room.
- * @param taskId The ID of the async task.
- */
-export function getRoomOptions(
-    roomName: string,
-    taskId?: number | string
-): GetRoomOptionsAction {
-    return {
-        type: 'get_room_options',
-        roomName,
-        taskId,
-    };
-}
-
-/**
- * Creates a new GetRoomTrackOptionsAction.
- * @param roomName The name of the room.
- * @param address The address of the track.
- * @param taskId The ID of the task.
- */
-export function getRoomTrackOptions(
-    roomName: string,
-    address: string,
-    taskId?: number | string
-): GetRoomTrackOptionsAction {
-    return {
-        type: 'get_room_track_options',
-        roomName,
-        address,
-        taskId,
-    };
-}
-
-/**
- * Creates a new SetRoomTrackOptionsAction.
- * @param roomName The name of the room.
- * @param address The address of the track.
- * @param options The options that should be set.
- * @param taskId The ID of the task.
- */
-export function setRoomTrackOptions(
-    roomName: string,
-    address: string,
-    options: SetRoomTrackOptions,
-    taskId?: number | string
-): SetRoomTrackOptionsAction {
-    return {
-        type: 'set_room_track_options',
-        roomName,
-        address,
-        options,
-        taskId,
-    };
-}
-
-/**
- * Creates a new GetRoomRemoteOptionsAction.
- * @param roomName The name of the room.
- * @param remoteId The ID of the remote user.
- * @param taskId The ID of the task.
- */
-export function getRoomRemoteOptions(
-    roomName: string,
-    remoteId: string,
-    taskId?: number | string
-): GetRoomRemoteOptionsAction {
-    return {
-        type: 'get_room_remote_options',
-        roomName,
-        remoteId,
         taskId,
     };
 }
@@ -8219,6 +5241,38 @@ export function listFormAnimations(
 }
 
 /**
+ * Creates a new LDrawCountBuildStepsAction.
+ * @param address The address of the LDraw file that should be used.
+ * @param taskId The ID of the async task.
+ */
+export function ldrawCountAddressBuildSteps(
+    address: string,
+    taskId?: number | string
+): LDrawCountBuildStepsAction {
+    return {
+        type: 'ldraw_count_build_steps',
+        address,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new LDrawCountBuildStepsAction.
+ * @param text The text content of the LDraw file that should be used.
+ * @param taskId The ID of the async task.
+ */
+export function ldrawCountTextBuildSteps(
+    text: string,
+    taskId?: number | string
+): LDrawCountBuildStepsAction {
+    return {
+        type: 'ldraw_count_build_steps',
+        text,
+        taskId,
+    };
+}
+
+/**
  * Creates a new ConfigureWakeLockAction.
  * @param enabled Whether the wake lock should be enabled.
  * @param taskId The ID of the async task.
@@ -8267,38 +5321,14 @@ export function analyticsRecordEvent(
 }
 
 /**
- * Creates a AttachRuntimeAction.
- * @param runtime The runtime that should be attached.
- * @param tagNameMapper The function that should be used to map tag names.
+ * Creates a GetRecordsEndpointAction.
  * @param taskId The ID of the async task.
  */
-export function attachRuntime(
-    runtime: AuxRuntime,
-    tagNameMapper?: AttachRuntimeAction['tagNameMapper'],
+export function getRecordsEndpoint(
     taskId?: number | string
-): AttachRuntimeAction {
+): GetRecordsEndpointAction {
     return {
-        type: 'attach_runtime',
-        uncopiable: true,
-        runtime,
-        tagNameMapper,
-        taskId,
-    };
-}
-
-/**
- * Creates a DetachRuntimeAction.
- * @param runtime The runtime that should be attached.
- * @param taskId The ID of the async task.
- */
-export function detachRuntime(
-    runtime: AuxRuntime,
-    taskId?: number | string
-): DetachRuntimeAction {
-    return {
-        type: 'detach_runtime',
-        uncopiable: true,
-        runtime,
+        type: 'get_records_endpoint',
         taskId,
     };
 }

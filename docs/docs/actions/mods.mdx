@@ -1,0 +1,20 @@
+---
+id: mods
+title: Mod Actions
+sidebar_label: Mods
+description: API Docs for mods
+---
+
+import Doc from '../api-info/actions/mods.json'
+import {
+    ApiContents,
+    apiTableOfContents
+} from '../util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

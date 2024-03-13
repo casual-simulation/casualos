@@ -1,18 +1,13 @@
-import {
-    Store,
-    IncrementResponse,
-    Options as RateLimitConfiguration,
-} from 'express-rate-limit';
-
+import { Options as RateLimitConfiguration } from 'express-rate-limit';
 import { Options, RedisReply, SendCommandFn } from './types';
 
-import { RateLimiter } from './RateLimiter';
+import { RateLimiter, RateLimiterIncrementResult } from './RateLimiter';
 
 /**
  * A `Store` for the `express-rate-limit` package that stores hit counts in
  * Redis.
  */
-class RedisStore implements Store, RateLimiter {
+class RedisStore implements RateLimiter {
     /**
      * The function used to send raw commands to Redis.
      */
@@ -48,7 +43,13 @@ class RedisStore implements Store, RateLimiter {
         this.sendCommand = options.sendCommand;
         this.prefix = options.prefix ?? 'rl:';
         this.resetExpiryOnChange = options.resetExpiryOnChange ?? false;
+    }
 
+    /**
+     * Setup the RedisRateLimitStore.
+     * Must be called before first use.
+     */
+    async setup() {
         // So that the script loading can occur non-blocking, this will send
         // the script to be loaded, and will capture the value within the
         // promise return. This way, if increments start being called before
@@ -110,13 +111,11 @@ class RedisStore implements Store, RateLimiter {
      * Method to increment a client's hit counter.
      *
      * @param key {string} - The identifier for a client
-     *
-     * @returns {IncrementResponse} - The number of hits and reset time for that client
      */
     async increment(
         key: string,
         amount: number = 1
-    ): Promise<IncrementResponse> {
+    ): Promise<RateLimiterIncrementResult> {
         const results = await this._runScript(this.prefixKey(key), amount);
 
         if (!Array.isArray(results)) {
@@ -137,10 +136,10 @@ class RedisStore implements Store, RateLimiter {
             throw new TypeError('Expected value to be a number');
         }
 
-        const resetTime = new Date(Date.now() + timeToExpire);
+        const resetTimeMs = Date.now() + timeToExpire;
         return {
             totalHits,
-            resetTime,
+            resetTimeMs,
         };
     }
 
@@ -150,7 +149,11 @@ class RedisStore implements Store, RateLimiter {
      * @param key {string} - The identifier for a client
      */
     async decrement(key: string, amount: number = 1): Promise<void> {
-        await this.sendCommand('DECRBY', this.prefixKey(key), amount);
+        await this.sendCommand(
+            'DECRBY',
+            this.prefixKey(key),
+            amount.toString()
+        );
     }
 
     /**
@@ -174,7 +177,7 @@ class RedisStore implements Store, RateLimiter {
                 key,
                 this.resetExpiryOnChange ? '1' : '0',
                 this.windowMs.toString(),
-                amount
+                amount.toString()
             );
         } catch (e) {
             const errString = e.toString();

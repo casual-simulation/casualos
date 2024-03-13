@@ -29,12 +29,22 @@ import Bowser from 'bowser';
 
 export const MIN_FINGER_TIP_RADIUS = 0.019;
 
+/**
+ * The distance that the index finger tip and thumb tip need to be in order to register as a pinch select gesture in the down state.
+ */
+const PINCH_SELECT_DOWN_DISTANCE = 0.015;
+
+/**
+ * The distance that the index finger tip and thumb tip need to be in order to register as a pinch select gesture in the up state.
+ */
+const PINCH_SELECT_UP_DISTANCE = 0.025;
+
 export const TRACKED_FINGER_JOINTS: XRHandJoint[] = [
     'index-finger-tip',
     // 'middle-finger-tip',
     // 'ring-finger-tip',
     // 'pinky-finger-tip',
-    // 'thumb-tip',
+    'thumb-tip',
 ];
 
 /**
@@ -92,6 +102,7 @@ export class Input {
     private _controllerAdded = new Subject<ControllerData>();
     private _controllerRemoved = new Subject<ControllerData>();
     private _usePointerEvents = false;
+    private _usePinchSelectGesture = false;
 
     /**
      * The events that have occurred during this frame.
@@ -100,6 +111,8 @@ export class Input {
 
     private _htmlElements: () => HTMLElement[];
     private _zoomElements: () => HTMLElement[];
+    private _isOculusBrowser: boolean;
+    private _isSafariBrowser: boolean;
 
     get time() {
         return this._game.getTime();
@@ -125,6 +138,15 @@ export class Input {
      */
     set currentInputType(inputType: InputType) {
         this._inputType = inputType;
+    }
+
+    /**
+     * Whether or not the input system supports updating the current target based on mouse/pointer move events.
+     */
+    get supportsHoverEvents(): boolean {
+        return (
+            this.currentInputType === InputType.Mouse || this._usePointerEvents
+        );
     }
 
     /**
@@ -358,10 +380,20 @@ export class Input {
         // See https://developer.oculus.com/documentation/web/browser-specs/#user-agent-string
         const isOculusBrowser = browser.test(/OculusBrowser\/[\d\.]+/);
         const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
+        const isSafariBrowser = browser.getBrowserName(true) === 'safari';
 
+        this._isOculusBrowser = isOculusBrowser;
         this._usePointerEvents = isOculusBrowser && isOculusVR;
         if (this.debugLevel > 0) {
             console.log(`[input] usePointerEvents: ${this._usePointerEvents}`);
+        }
+
+        this._isSafariBrowser = isSafariBrowser;
+        this._usePinchSelectGesture = isSafariBrowser;
+        if (this.debugLevel > 0) {
+            console.log(
+                `[input] usePinchSelectGesture: ${this._usePinchSelectGesture}`
+            );
         }
 
         this._mouseData = {
@@ -820,7 +852,7 @@ export class Input {
      * If on mobile device, will return the page position of the first finger touching the screen.
      */
     public getMousePagePos(): Vector2 {
-        if (this._inputType == InputType.Mouse) {
+        if (this._usePointerEvents || this._inputType == InputType.Mouse) {
             return this._mouseData.pagePos;
         } else if (this._inputType == InputType.Touch) {
             return this._lastPrimaryTouchData.pagePos;
@@ -991,6 +1023,7 @@ export class Input {
             if (controller.mesh) {
                 controller.mesh.update(xrFrame, this._xrReferenceSpace);
             }
+            this._updateControllerGestures(xrFrame, controller);
         }
     }
 
@@ -1194,6 +1227,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
+        return this._handleMouseDownCore(event);
+    }
+
+    private _handleMouseDownCore(event: MouseEvent) {
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1232,6 +1269,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
+        return this._handleMouseUpCore(event);
+    }
+
+    private _handleMouseUpCore(event: MouseEvent) {
         if (!this._updateInputType(InputType.Mouse)) {
             return;
         }
@@ -1306,10 +1347,10 @@ export class Input {
         if (this._usePointerEvents) {
             return;
         }
-        if (!this._updateInputType(InputType.Mouse)) {
-            return;
-        }
+        return this._handleMouseMoveCore(event);
+    }
 
+    private _handleMouseMoveCore(event: MouseEvent) {
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
         }
@@ -1755,7 +1796,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerCancel(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerCancel(event);
         }
 
@@ -1814,7 +1855,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerDown(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerDown(event);
         }
 
@@ -1830,7 +1871,7 @@ export class Input {
             return;
         }
 
-        this._handleMouseDown(event);
+        this._handleMouseDownCore(event);
     }
 
     private _handleTouchPointerDown(event: PointerEvent) {
@@ -1886,7 +1927,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerEnter(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerEnter(event);
         }
 
@@ -1916,7 +1957,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerLeave(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerLeave(event);
         }
 
@@ -1958,18 +1999,10 @@ export class Input {
     }
 
     private _handleMousePointerMove(event: PointerEvent) {
-        if (!this._updateInputType(InputType.Mouse)) {
-            return;
-        }
-
-        this._handleMouseMove(event);
+        this._handleMouseMoveCore(event);
     }
 
     private _handlerTouchPointerMove(event: PointerEvent) {
-        if (!this._updateInputType(InputType.Touch)) {
-            return;
-        }
-
         event.stopImmediatePropagation();
         if (Input.isEventForAnyElement(event, this.htmlElements)) {
             event.preventDefault();
@@ -2017,7 +2050,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerUp(event);
-        } else if (event.pointerType === 'mouse') {
+        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
             this._handleMousePointerUp(event);
         }
 
@@ -2033,7 +2066,7 @@ export class Input {
             return;
         }
 
-        this._handleMouseUp(event);
+        this._handleMouseUpCore(event);
     }
 
     private _handlerTouchPointerUp(event: PointerEvent) {
@@ -2134,6 +2167,10 @@ export class Input {
             return;
         }
 
+        if (this._usePinchSelectGesture) {
+            return;
+        }
+
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
@@ -2159,6 +2196,10 @@ export class Input {
 
     private _handleXRSelectEnd(event: XRInputSourceEvent) {
         if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
+        if (this._usePinchSelectGesture) {
             return;
         }
 
@@ -2302,6 +2343,69 @@ export class Input {
         }
     }
 
+    private _updateControllerGestures(
+        frame: XRFrame,
+        controller: ControllerData
+    ) {
+        if (!this._updateInputType(InputType.Controller)) {
+            return;
+        }
+
+        if (this._usePinchSelectGesture) {
+            const indexFingerTip =
+                controller.fingerTips.get('index-finger-tip');
+            const thumbTip = controller.fingerTips.get('thumb-tip');
+            const distance = indexFingerTip.center.distanceTo(thumbTip.center);
+
+            if (controller.primaryInputState.isUp()) {
+                // Check pinch select down.
+                if (distance <= PINCH_SELECT_DOWN_DISTANCE) {
+                    controller.primaryInputState.setDownFrame(
+                        this.time.frameCount
+                    );
+
+                    if (
+                        this._lastPrimaryControllerData.primaryInputState.isUp()
+                    ) {
+                        this._copyToPrimaryControllerData(controller);
+                    }
+
+                    if (this.debugLevel >= 1) {
+                        console.log(
+                            'XR pinch select ' +
+                                controller.identifier +
+                                ' start. fireInputOnFrame: ' +
+                                this.time.frameCount
+                        );
+                    }
+                }
+            } else {
+                // Check pinch select up.
+                if (distance >= PINCH_SELECT_UP_DISTANCE) {
+                    controller.primaryInputState.setUpFrame(
+                        this.time.frameCount
+                    );
+
+                    if (
+                        controller.inputSource ===
+                        this._lastPrimaryControllerData.inputSource
+                    ) {
+                        this._copyToPrimaryControllerData(controller);
+                    }
+
+                    if (this.debugLevel >= 1) {
+                        console.log(
+                            'XR pinch select ' +
+                                controller.identifier +
+                                ' end. fireInputOnFrame: ' +
+                                this.time.frameCount
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     private _disposeController(controller: ControllerData) {
         if (controller.mesh) {
             if (controller.mesh.group.parent) {
@@ -2418,6 +2522,14 @@ export class InputState {
      */
     isUpOnFrame(frame: number): boolean {
         return frame === this._upFrame;
+    }
+
+    /**
+     * Is the input up on or after the requested frame.
+     * @param frame The frame to compare against.
+     */
+    isUpByFrame(frame: number): boolean {
+        return frame >= this._upFrame;
     }
 
     /**

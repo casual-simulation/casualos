@@ -5,25 +5,30 @@ import {
     AuxSubVM,
     AuxChannel,
     AuxSubChannel,
+    SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     StoredAux,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
     StatusUpdate,
     DeviceAction,
-} from '@casual-simulation/causal-trees';
-import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-common';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+    AuxDevice,
+} from '@casual-simulation/aux-runtime';
 
 export class AuxVMNode implements AuxVM {
     private _channel: AuxChannel;
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
@@ -37,10 +42,24 @@ export class AuxVMNode implements AuxVM {
             channel: AuxChannel;
         }
     >;
+    private _onAuthMessage: Subject<PartitionAuthMessage>;
+    private _id: string;
+    private _configBotId: string;
+    private _origin: SimulationOrigin;
 
-    id: string;
+    get id(): string {
+        return this._id;
+    }
 
-    get localEvents(): Observable<LocalActions[]> {
+    get configBotId(): string {
+        return this._configBotId;
+    }
+
+    get origin() {
+        return this._origin;
+    }
+
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 
@@ -64,6 +83,10 @@ export class AuxVMNode implements AuxVM {
         return this._onError;
     }
 
+    get onAuthMessage(): Observable<PartitionAuthMessage> {
+        return this._onAuthMessage;
+    }
+
     get subVMAdded(): Observable<AuxSubVM> {
         return this._subVMAdded;
     }
@@ -76,25 +99,27 @@ export class AuxVMNode implements AuxVM {
         return this._channel;
     }
 
-    constructor(channel: AuxChannel) {
+    constructor(
+        id: string,
+        origin: SimulationOrigin,
+        configBotId: string,
+        channel: AuxChannel
+    ) {
+        this._id = id;
+        this._origin = origin;
+        this._configBotId = configBotId;
         this._channel = channel;
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
+        this._onAuthMessage = new Subject();
         this._onError = new Subject<AuxChannelErrorType>();
         this._subVMAdded = new Subject();
         this._subVMRemoved = new Subject();
         this._subVMMap = new Map();
-    }
-
-    setUser(user: AuxUser): Promise<void> {
-        return this._channel.setUser(user);
-    }
-
-    setGrant(grant: string): Promise<void> {
-        return this._channel.setGrant(grant);
+        this._onAuthMessage = new Subject();
     }
 
     sendEvents(events: BotAction[]): Promise<void> {
@@ -129,6 +154,14 @@ export class AuxVMNode implements AuxVM {
         return this._channel.getTags();
     }
 
+    async updateDevice(device: AuxDevice): Promise<void> {
+        return await this._channel.updateDevice(device);
+    }
+
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void> {
+        return this._channel.sendAuthMessage(message);
+    }
+
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
         return await this._channel.initAndWait(
             (e) => this._localEvents.next(e),
@@ -138,7 +171,8 @@ export class AuxVMNode implements AuxVM {
             (connection) => this._connectionStateChanged.next(connection),
             (err) => this._onError.next(err),
             (channel) => this._handleAddedSubChannel(channel),
-            (id) => this._handleRemovedSubChannel(id)
+            (id) => this._handleRemovedSubChannel(id),
+            (message) => this._onAuthMessage.next(message)
         );
     }
 
@@ -148,18 +182,22 @@ export class AuxVMNode implements AuxVM {
     }
     closed: boolean;
 
-    protected _createSubVM(channel: AuxChannel): AuxVM {
-        return new AuxVMNode(channel);
+    protected _createSubVM(
+        id: string,
+        origin: SimulationOrigin,
+        configBotId: string,
+        channel: AuxChannel
+    ): AuxVM {
+        return new AuxVMNode(id, origin, configBotId, channel);
     }
 
     private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
-        const { id, user } = await subChannel.getInfo();
+        const { id, configBotId } = await subChannel.getInfo();
         const channel = await subChannel.getChannel();
 
         const subVM = {
             id,
-            user,
-            vm: this._createSubVM(channel),
+            vm: this._createSubVM(id, this.origin, configBotId, channel),
             channel,
         };
 

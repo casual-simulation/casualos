@@ -18,9 +18,8 @@ describe('BotHelper', () => {
     let vm: TestAuxVM;
 
     beforeEach(() => {
-        vm = new TestAuxVM();
+        vm = new TestAuxVM('id');
         helper = new BotHelper(vm);
-        helper.userId = userId;
     });
 
     describe('userBot', () => {

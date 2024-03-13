@@ -1,40 +1,92 @@
 import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { MemoryAuthStore } from './MemoryAuthStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
 import { PublicRecordKeyPolicy } from './RecordsStore';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
+import { parseSessionKey } from './AuthUtils';
+import { PrivoConfiguration } from './PrivoConfiguration';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
-export function createTestControllers(config?: SubscriptionConfiguration) {
-    const subConfig = config ?? {
+export function createTestSubConfiguration(): SubscriptionConfiguration {
+    return {
         cancelUrl: 'cancel-url',
         returnUrl: 'return-url',
         successUrl: 'success-url',
         webhookSecret: 'webhook-secret',
         subscriptions: [],
+        tiers: {},
+        defaultFeatures: {
+            studio: allowAllFeatures(),
+            user: allowAllFeatures(),
+        },
     };
+}
 
-    const authStore = new MemoryAuthStore();
+export function createTestPrivoConfiguration(): PrivoConfiguration {
+    return {
+        gatewayEndpoint: 'endpoint',
+        featureIds: {
+            adultPrivoSSO: 'adultAccount',
+            childPrivoSSO: 'childAccount',
+            joinAndCollaborate: 'joinAndCollaborate',
+            publishProjects: 'publish',
+            projectDevelopment: 'dev',
+            buildAIEggs: 'buildaieggs',
+        },
+        clientId: 'clientId',
+        clientSecret: 'clientSecret',
+        publicEndpoint: 'publicEndpoint',
+        roleIds: {
+            child: 'childRole',
+            adult: 'adultRole',
+            parent: 'parentRole',
+        },
+        clientTokenScopes: 'scope1 scope2',
+        userTokenScopes: 'scope1 scope2',
+        // verificationIntegration: 'verificationIntegration',
+        // verificationServiceId: 'verificationServiceId',
+        // verificationSiteId: 'verificationSiteId',
+        redirectUri: 'redirectUri',
+        ageOfConsent: 18,
+    };
+}
+
+export function createTestControllers(
+    config?: SubscriptionConfiguration | null
+) {
+    const subConfig: SubscriptionConfiguration | null =
+        typeof config === 'undefined' ? createTestSubConfiguration() : null;
+
+    const store = new MemoryStore({
+        subscriptions: subConfig,
+    });
     const authMessenger = new MemoryAuthMessenger();
-    const auth = new AuthController(authStore, authMessenger, subConfig, true);
-    const recordsStore = new MemoryRecordsStore();
-    const records = new RecordsController(recordsStore);
-    const policyStore = new MemoryPolicyStore();
-    const policies = new PolicyController(auth, records, policyStore);
+    const auth = new AuthController(store, authMessenger, store, true);
+    const records = new RecordsController({
+        store: store,
+        auth: store,
+        config: store,
+        metrics: store,
+        messenger: store,
+    });
+    const policies = new PolicyController(auth, records, store);
 
     return {
-        authStore,
+        store,
+        authStore: store,
         authMessenger,
         auth,
-        recordsStore,
+        recordsStore: store,
         records,
-        policyStore,
+        policyStore: store,
         policies,
+        configStore: store,
     };
 }
 
@@ -65,22 +117,27 @@ export async function createTestUser(
         ipAddress: '123.456.789',
     });
 
-    if (!loginResult.success) {
-        throw new Error('Unable to login!');
+    if (loginResult.success === false) {
+        throw new Error('Unable to login: ' + loginResult.errorMessage);
     }
 
     const userId = loginResult.userId;
     const sessionKey = loginResult.sessionKey;
+    const connectionKey = loginResult.connectionKey;
+
+    const [_, sessionId] = parseSessionKey(sessionKey);
 
     return {
         emailAddress,
         userId,
         sessionKey,
+        connectionKey,
+        sessionId,
     };
 }
 
 export async function createTestRecordKey(
-    { records }: TestServices,
+    { records }: Pick<TestServices, 'records'>,
     userId: string,
     recordName: string = 'testRecord',
     policy: PublicRecordKeyPolicy = 'subjectfull'

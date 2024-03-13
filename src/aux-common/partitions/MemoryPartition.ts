@@ -21,26 +21,16 @@ import {
     BotSpace,
 } from '../bots';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import {
-    StatusUpdate,
-    Action,
-    CurrentVersion,
-} from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import {
-    applyTagEdit,
-    edits,
-    isTagEdit,
-    TagEdit,
-    TagEditOp,
-} from '../aux-format-2';
+import { applyTagEdit, edits, isTagEdit, TagEdit, TagEditOp } from '../bots';
 import { v4 as uuid } from 'uuid';
 import {
     ensureBotIsSerializable,
     ensureTagIsSerializable,
-} from '../runtime/Utils';
+} from './PartitionUtils';
+import { Action, CurrentVersion, StatusUpdate } from '../common';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -243,7 +233,11 @@ export class MemoryPartitionImpl implements MemoryPartition {
                         );
                         const oldVal = newBot.tags[tag];
 
-                        if (newVal !== oldVal || Array.isArray(newVal)) {
+                        if (
+                            (newVal !== oldVal &&
+                                (hasValue(newVal) || hasValue(oldVal))) ||
+                            Array.isArray(newVal)
+                        ) {
                             changedTags.push(tag);
                         }
 
@@ -279,9 +273,12 @@ export class MemoryPartitionImpl implements MemoryPartition {
                             if (!hasValue(newBot.tags[tag])) {
                                 delete newBot.tags[tag];
                             }
-                        } else {
+                        } else if (hasValue(oldVal)) {
                             delete newBot.tags[tag];
                             updatedBot.tags[tag] = null;
+                        } else {
+                            delete newBot.tags[tag];
+                            delete updatedBot.tags[tag];
                         }
                     }
 
@@ -296,6 +293,8 @@ export class MemoryPartitionImpl implements MemoryPartition {
                             bot: newBot,
                             tags: changedTags,
                         });
+                    } else {
+                        delete updatedState[event.id];
                     }
                 }
 

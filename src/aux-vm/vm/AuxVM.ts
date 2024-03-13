@@ -2,15 +2,21 @@ import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     StoredAux,
+    ConnectionIndicator,
+    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
+import { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { AuxUser } from '../AuxUser';
 import { ChannelActionResult } from './AuxChannel';
+import {
+    AuxDevice,
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
+import { SimulationOrigin } from '../managers/Simulation';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -19,12 +25,22 @@ export interface AuxVM extends Initable {
     /**
      * The ID of the simulation that the VM is running.
      */
-    id: string;
+    get id(): string;
+
+    /**
+     * Gets the origin of the simulation.
+     */
+    get origin(): SimulationOrigin;
+
+    /**
+     * The ID of the config bot that the VM will create.
+     */
+    get configBotId(): string;
 
     /**
      * Gets the observable list of local events from the simulation.
      */
-    localEvents: Observable<LocalActions[]>;
+    localEvents: Observable<RuntimeActions[]>;
 
     /**
      * Gets the observable list of device events from the simulation.
@@ -52,6 +68,11 @@ export interface AuxVM extends Initable {
     onError: Observable<AuxChannelErrorType>;
 
     /**
+     * Gets an observable that resolves whenever an auth message is sent from a partition.
+     */
+    onAuthMessage: Observable<PartitionAuthMessage>;
+
+    /**
      * Gets an observable that resolves whenever a VM is added.
      */
     subVMAdded: Observable<AuxSubVM>;
@@ -60,18 +81,6 @@ export interface AuxVM extends Initable {
      * Gets an observable that resolves whenever a VM is removed.
      */
     subVMRemoved: Observable<AuxSubVM>;
-
-    /**
-     * Sets the user that the VM should be using.
-     * @param user The user.
-     */
-    setUser(user: AuxUser): Promise<void>;
-
-    /**
-     * Sets the authentication grant that should be used for the user.
-     * @param grant The grant to use.
-     */
-    setGrant(grant: string): Promise<void>;
 
     /**
      * Sends the given list of events to the simulation.
@@ -122,9 +131,21 @@ export interface AuxVM extends Initable {
     getTags(): Promise<string[]>;
 
     /**
+     * Updates information about the device that is running the simulation.
+     * @param device The device info.
+     */
+    updateDevice(device: AuxDevice): Promise<void>;
+
+    /**
      * Creates a new MessagePort that can be used to connect to the internal aux channel.
      */
     createEndpoint?(): Promise<MessagePort>;
+
+    /**
+     * Sends the given auth message.
+     * @param message The message to send.
+     */
+    sendAuthMessage(message: PartitionAuthMessage): Promise<void>;
 }
 
 /**
@@ -140,9 +161,4 @@ export interface AuxSubVM {
      * The ID of the sub vm.
      */
     id: string;
-
-    /**
-     * The user for the sub VM.
-     */
-    user: AuxUser;
 }

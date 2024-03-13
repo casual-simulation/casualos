@@ -1,0 +1,7 @@
+.allowed {
+    color: green !important;
+}
+
+.denied {
+    color: red !important;
+}

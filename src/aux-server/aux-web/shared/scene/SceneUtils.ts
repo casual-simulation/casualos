@@ -40,6 +40,15 @@ import {
     MeshNormalMaterial,
     Texture,
     Cache,
+    PointLight,
+    WebGLRenderer,
+    PCFSoftShadowMap,
+    PlaneGeometry,
+    SphereGeometry,
+    CameraHelper,
+    Light,
+    SpotLight,
+    HemisphereLight,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -53,11 +62,19 @@ import {
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { BackSide, PCFShadowMap } from 'three';
 
 /**
  * Gets the direction of the up vector for 3D portals.
  */
 export const WORLD_UP = new Vector3(0, 0, 1);
+
+/**
+ * Create copy of material that skybox sphere mesh should use.
+ */
+export function baseAuxSkyboxMeshMaterial() {
+    return new MeshBasicMaterial({ side: BackSide });
+}
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
@@ -86,6 +103,66 @@ export function baseAuxDirectionalLight() {
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
     return dirLight;
+}
+
+//Todo
+export function baseAuxPointLight() {
+    let pointLight = new PointLight(0xffffff, 1, 100);
+    pointLight.position.set(50, 50, 50);
+    pointLight.castShadow = false; //default
+
+    //Set up shadow properties for the light
+    pointLight.shadow.mapSize.width = 512; // default
+    pointLight.shadow.mapSize.height = 512; // default
+    pointLight.shadow.camera.near = 0.5; // default
+    pointLight.shadow.camera.far = 500; // default
+    return pointLight;
+}
+
+export function baseAuxPointLightShadow() {
+    let pointLightShadow = new WebGLRenderer();
+    pointLightShadow.shadowMap.enabled = true;
+    pointLightShadow.shadowMap.type = PCFSoftShadowMap;
+    return pointLightShadow;
+}
+
+//Create a sphere that cast shadows (but does not receive them)
+export function baseSphereGeometry() {
+    const sphereGeometry = new SphereGeometry(5, 32, 32);
+    const sphereMaterial = new MeshStandardMaterial({ color: 0xff0000 });
+    const sphere = new Mesh(sphereGeometry, sphereMaterial);
+    sphere.castShadow = true; //default is false
+    sphere.receiveShadow = false; //default
+    return sphere;
+}
+
+export function baseShadowPlane() {
+    //Create a plane that receives shadows (but does not cast them)
+    const planeGeometry = new PlaneGeometry(20, 20, 32, 32);
+    const planeMaterial = new MeshStandardMaterial({ color: 0x00ff00 });
+    const plane = new Mesh(planeGeometry, planeMaterial);
+    plane.receiveShadow = true;
+    return plane;
+}
+
+/**
+ * Creates a new hybrid sphere mesh optimal for Skybox implementations.
+ * @param position The position of the sphere.
+ * @param color The color of the sphere in linear space.
+ * @param size The radius of the sphere in meters.
+ */
+export function createSkybox(
+    position: Vector3,
+    color: number,
+    size: number = 0.1
+) {
+    const geometry = new SphereBufferGeometry(size, 20, 18);
+    let material = baseAuxSkyboxMeshMaterial();
+    material.color = new Color(color);
+
+    const sphere = new Mesh(geometry, material.clone());
+    sphere.position.copy(position);
+    return sphere;
 }
 
 /**
@@ -699,8 +776,38 @@ export const DEFAULT_TRANSPARENT = Symbol('default_transparent');
  * @param color The color in sRGB space.
  */
 export function setColor(
-    mesh: Mesh | Sprite | ThreeLineSegments,
+    mesh: Mesh | Sprite | ThreeLineSegments | Light,
     color: string
+) {
+    if (!mesh) {
+        return;
+    }
+    if (mesh instanceof Light) {
+        mesh.color = buildSRGBColor(color);
+    } else {
+        const shapeMat = <
+            MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+        >mesh.material;
+        if (color) {
+            shapeMat.visible = !isTransparent(color);
+            if (shapeMat.visible) {
+                shapeMat.color = buildSRGBColor(color);
+            }
+        } else {
+            shapeMat.visible = true;
+            shapeMat.color =
+                (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
+        }
+    }
+}
+/**
+ * Changes the mesh's Depth Test Property.
+ * @param mesh The mesh.
+ * @param depthTest The depth test value.
+ */
+export function setDepthTest(
+    mesh: Mesh | Sprite | ThreeLineSegments,
+    depthTest: boolean
 ) {
     if (!mesh) {
         return;
@@ -708,17 +815,70 @@ export function setColor(
     const shapeMat = <
         MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
     >mesh.material;
-    if (color) {
-        shapeMat.visible = !isTransparent(color);
-        if (shapeMat.visible) {
-            shapeMat.color = buildSRGBColor(color);
-        }
-    } else {
-        shapeMat.visible = true;
-        shapeMat.color = (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
+    shapeMat.depthTest = depthTest;
+}
+/**
+ * Changes the mesh's Depth Write Property.
+ * @param mesh The mesh.
+ * @param depthWrite The depth test value.
+ */
+export function setDepthWrite(
+    mesh: Mesh | Sprite | ThreeLineSegments,
+    depthWrite: boolean
+) {
+    if (!mesh) {
+        return;
+    }
+    const shapeMat = <
+        MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+    >mesh.material;
+    shapeMat.depthWrite = depthWrite;
+}
+//Light Property functions
+//Changes the light's Intensity Property
+export function setLightIntensity(light: Light, intensity: number) {
+    if (!light) {
+        return;
+    }
+    light.intensity = intensity;
+}
+//Changes the SpotLight Distance Property
+export function setLightDistance(light: SpotLight, distance: number) {
+    if (!light) {
+        return;
+    }
+    light.distance = distance;
+}
+//Changes the SpotLight Angle Property
+export function setLightAngle(light: SpotLight, angle: number) {
+    if (!light) {
+        return;
+    }
+    light.angle = angle * 0.5;
+}
+//Changes the SpotLight Penumbra Property
+export function setLightPenumbra(light: SpotLight, penumbra: number) {
+    if (!light) {
+        return;
+    }
+    light.penumbra = penumbra;
+}
+//Changes the SpotLight Decay Property
+export function setLightDecay(light: SpotLight, decay: number) {
+    if (!light) {
+        return;
+    }
+    light.decay = decay;
+}
+//Changes the HemisphereLight Ground Color
+export function setLightGroundColor(light: HemisphereLight, color: string) {
+    if (!light) {
+        return;
+    }
+    if (light instanceof HemisphereLight) {
+        light.groundColor = buildSRGBColor(color);
     }
 }
-
 /**
  * Changes the mesh's opacity level.
  * @param mesh The mesh.

@@ -2548,6 +2548,27 @@ describe('Interpreter', () => {
             expect(getRegularObject(converted.Value) === func).toBe(true);
         });
 
+        // Jest functions are weird because they don't actually have the Function
+        // prototype as their prototype
+        it('should support Jest functions', async () => {
+            const func = jest.fn().mockReturnValue(123);
+
+            const converted = interpreter.copyToValue(func);
+            expect(converted.Type).toBe('normal');
+            expect(IsCallable(converted.Value) == Value.true).toBe(true);
+
+            const result = unwind(
+                Call(converted.Value as ObjectValue, Value.null, [])
+            );
+            expect(result).toEqual(NormalCompletion(new Value(123)));
+
+            expect(REGULAR_OBJECT in converted.Value).toBe(true);
+            expect((converted.Value as any)[REGULAR_OBJECT] === func).toBe(
+                true
+            );
+            expect(getRegularObject(converted.Value) === func).toBe(true);
+        });
+
         it('should support binding this to functions', async () => {
             const func = function () {
                 return this + 2;

@@ -3,17 +3,9 @@ import {
     AuxPartitionBase,
     AuxPartitionRealtimeStrategy,
 } from './AuxPartition';
-import {
-    User,
-    DeviceAction,
-    RemoteAction,
-    StatusUpdate,
-    Action,
-    RemoteActions,
-    CurrentVersion,
-} from '@casual-simulation/causal-trees';
 import { Bot, UpdatedBot, BotAction, StateUpdatedEvent } from '../bots';
 import { Observable, Subscription } from 'rxjs';
+import { Action, CurrentVersion, RemoteActions, StatusUpdate } from '../common';
 
 export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
     get private(): boolean {
@@ -42,6 +34,7 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
     get onEvents(): Observable<Action[]> {
         return this._partition.onEvents;
     }
+
     get onStatusUpdated(): Observable<StatusUpdate> {
         return this._partition.onStatusUpdated;
     }
@@ -73,18 +66,6 @@ export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
     async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
         if (this._partition.sendRemoteEvents) {
             await this._partition.sendRemoteEvents(events);
-        }
-    }
-
-    async setUser(user: User): Promise<void> {
-        if (this._partition.setUser) {
-            await this._partition.setUser(user);
-        }
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        if (this._partition.setGrant) {
-            await this._partition.setGrant(grant);
         }
     }
 

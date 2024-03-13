@@ -1,4 +1,4 @@
-import { AddressType } from 'AuthStore';
+import { AddressType } from './AuthStore';
 import { AuthMessenger, SendCodeResult } from './AuthMessenger';
 
 /**

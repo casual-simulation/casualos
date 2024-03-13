@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`allowAllFeatures() should match the snapshot 1`] = `
+Object {
+  "ai": Object {
+    "chat": Object {
+      "allowed": true,
+    },
+    "images": Object {
+      "allowed": true,
+    },
+    "skyboxes": Object {
+      "allowed": true,
+    },
+  },
+  "data": Object {
+    "allowed": true,
+  },
+  "events": Object {
+    "allowed": true,
+  },
+  "files": Object {
+    "allowed": true,
+  },
+  "insts": Object {
+    "allowed": true,
+  },
+  "records": Object {
+    "allowed": true,
+  },
+}
+`;

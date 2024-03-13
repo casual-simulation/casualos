@@ -1,11 +1,5 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
 import {
-    USERNAME_CLAIM,
-    DEVICE_ID_CLAIM,
-    SESSION_ID_CLAIM,
-    SERVER_ROLE,
-} from '@casual-simulation/causal-trees';
-import {
     MemoryPartition,
     createMemoryPartition,
 } from '@casual-simulation/aux-common';
@@ -25,31 +19,16 @@ describe('NodeAuxChannel', () => {
     });
 
     function createChannel(id: string) {
-        return (channel = new NodeAuxChannel(
-            {
-                id: 'server',
-                name: 'Server',
-                token: 'token',
-                username: 'server',
+        return (channel = new NodeAuxChannel({
+            configBotId: 'connectionId',
+            config: {
+                versionHash: 'abc',
+                version: 'v1.0.0',
             },
-            {
-                claims: {
-                    [USERNAME_CLAIM]: 'server',
-                    [DEVICE_ID_CLAIM]: 'deviceId',
-                    [SESSION_ID_CLAIM]: 'sessionId',
-                },
-                roles: [SERVER_ROLE],
+            partitions: {
+                shared: partition,
             },
-            {
-                config: {
-                    versionHash: 'abc',
-                    version: 'v1.0.0',
-                },
-                partitions: {
-                    shared: partition,
-                },
-            }
-        ));
+        }));
     }
 
     it.skip('is a placeholder test', () => {});

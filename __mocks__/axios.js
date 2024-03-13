@@ -6,6 +6,7 @@ let shouldFail = false;
 let lastPost;
 let lastPut;
 let lastGet;
+let lastDelete;
 let requests = [];
 let response;
 let responses = [];
@@ -16,6 +17,17 @@ axios.request = (config) => {
     }
     let { method, url, data, ...rest } = config;
     let lastRequest = [method, url, data, rest];
+
+    if (method.toLowerCase() === 'post') {
+        lastPost = [url, data, rest].filter((val) => !!val);
+    } else if (method.toLowerCase() === 'put') {
+        lastPut = [url, data, rest].filter((val) => !!val);
+    } else if (method.toLowerCase() === 'get') {
+        lastGet = [url];
+    } else if (method.toLowerCase() === 'delete') {
+        lastDelete = [url, data, rest].filter((val) => !!val);
+    }
+
     requests.push(lastRequest);
     return returnResponse();
 };
@@ -46,6 +58,14 @@ axios.get = (url, config) => {
     requests.push(['get', ...lastGet]);
     return returnResponse();
 };
+axios.delete = (url, data, config) => {
+    if (shouldFail) {
+        throw new Error('Delete failed.');
+    }
+    lastDelete = [url, data, config].filter((val) => !!val);
+    requests.push(['delete', ...lastDelete]);
+    return returnResponse();
+};
 axios.mockImplementation((options) => {
     return returnResponse();
 });
@@ -63,11 +83,13 @@ axios.__setNextResponse = (resp) => {
 axios.__getLastPost = () => lastPost;
 axios.__getLastPut = () => lastPut;
 axios.__getLastGet = () => lastGet || [];
+axios.__getLastDelete = () => lastDelete;
 axios.__getRequests = () => requests || [];
 axios.__reset = () => {
     lastPost = undefined;
     lastPut = undefined;
     lastGet = undefined;
+    lastDelete = undefined;
     shouldFail = false;
     response = undefined;
     responses = [];

@@ -28,7 +28,7 @@ import {
     StatusUpdate,
     Action,
     CurrentVersion,
-} from '@casual-simulation/causal-trees';
+} from '@casual-simulation/aux-common';
 import { flatMap, union } from 'lodash';
 import {
     Subject,
@@ -43,11 +43,11 @@ import {
     edits,
     isTagEdit,
     TagEditOp,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import {
     ensureBotIsSerializable,
     ensureTagIsSerializable,
-} from '@casual-simulation/aux-common/runtime/Utils';
+} from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import { v4 as uuid } from 'uuid';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
@@ -281,7 +281,11 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                         );
                         const oldVal = newBot.tags[tag];
 
-                        if (newVal !== oldVal || Array.isArray(newVal)) {
+                        if (
+                            (newVal !== oldVal &&
+                                (hasValue(newVal) || hasValue(oldVal))) ||
+                            Array.isArray(newVal)
+                        ) {
                             changedTags.push(tag);
                         }
 
@@ -330,9 +334,14 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                             if (!hasValue(newBot.tags[tag])) {
                                 delete newBot.tags[tag];
                             }
-                        } else {
+                        } else if (hasValue(oldVal)) {
                             delete newBot.tags[tag];
                             updatedBot.tags[tag] = null;
+                        } else {
+                            // The tag was already deleted and set to null/undefined,
+                            // so no change should be recorded.
+                            delete newBot.tags[tag];
+                            delete updatedBot.tags[tag];
                         }
                     }
 
@@ -347,6 +356,9 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                             bot: newBot,
                             tags: changedTags,
                         });
+                    } else {
+                        // No tags were changed, so the update should not be included in the updated state
+                        delete updatedState[event.id];
                     }
                 }
 

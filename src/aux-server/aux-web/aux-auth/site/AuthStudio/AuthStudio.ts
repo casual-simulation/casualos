@@ -1,0 +1,488 @@
+import { EventBus } from '@casual-simulation/aux-components';
+import Vue from 'vue';
+import Component from 'vue-class-component';
+import { Prop, Provide, Watch } from 'vue-property-decorator';
+import { authManager } from '../../shared/index';
+import { SvgIcon } from '@casual-simulation/aux-components';
+import AuthSubscription from '../AuthSubscription/AuthSubscription';
+import {
+    AllowedStudioCreators,
+    FormError,
+    ListedStudioMember,
+    StudioAssignmentRole,
+    StudioComIdFeaturesConfiguration,
+    UpdateStudioRequest,
+    getFormErrors,
+} from '@casual-simulation/aux-records';
+import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
+import { BiosOption } from '@casual-simulation/aux-common';
+import { isEqual } from 'lodash';
+
+// TODO: Support uploading logos
+// import vueBotPond from 'vue-filepond';
+// import 'filepond/dist/filepond.min.css';
+// const FilePond = vueBotPond();
+
+@Component({
+    components: {
+        'svg-icon': SvgIcon,
+        'auth-subscription': AuthSubscription,
+        'field-errors': FieldErrors,
+        // 'file-pond': FilePond,
+    },
+})
+export default class AuthStudio extends Vue {
+    @Prop({ required: true })
+    studioId: string;
+
+    @Prop({ required: true })
+    studioName: string;
+
+    isAdmin: boolean = false;
+    members: ListedStudioMember[] = [];
+    loadingMembers: boolean = false;
+    showAddMember: boolean = false;
+    addMemberEmail: string = '';
+    addMemberRole: string = 'member';
+    addingMember: boolean = false;
+    addMemberErrorCode: string = null;
+
+    originalDisplayName: string = null;
+    displayName: string = null;
+
+    // originalComId: string = null;
+    comId: string = null;
+    requestedComId: string = null;
+
+    originalOwnerStudioComId: string = null;
+    ownerStudioComId: string = null;
+
+    originalLogoUrl: string = null;
+    logoUrl: string = null;
+    comIdFeatures: StudioComIdFeaturesConfiguration = {
+        allowed: false,
+    };
+
+    originalAllowedStudioCreators: AllowedStudioCreators = 'anyone';
+    allowedStudioCreators: AllowedStudioCreators = 'anyone';
+
+    originalAb1BootstrapUrl: string = null;
+    ab1BootstrapUrl: string = null;
+
+    originalArcGisApiKey: string = null;
+    arcGisApiKey: string = null;
+
+    originalAllowedBiosOptions: BiosOption[] = null;
+    allowedBiosOptions: BiosOption[] = null;
+
+    originalDefaultBiosOption: BiosOption | 0 = null;
+    defaultBiosOption: BiosOption = null;
+
+    originalAutomaticBiosOption: BiosOption | 0 = null;
+    automaticBiosOption: BiosOption = null;
+
+    originalJitsiAppName: string = null;
+    jitsiAppName: string = null;
+
+    originalWhat3WordsApiKey: string = null;
+    what3WordsApiKey: string = null;
+
+    isLoadingInfo: boolean = false;
+    isSavingStudio: boolean = false;
+
+    showUpdatePlayerConfig: boolean = false;
+    showUpdateComIdConfig: boolean = false;
+    showUpdateStudioInfo: boolean = false;
+    showRequestComId: boolean = false;
+
+    errors: FormError[] = [];
+
+    // TODO: Support uploading logos
+    // logoFile: File = null;
+
+    get addressFieldClass() {
+        return this.addMemberErrorCode ? 'md-invalid' : '';
+    }
+
+    get displayNameFieldClass() {
+        return this.errors.some((e) => e.for === 'displayName')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get logoUrlFieldClass() {
+        return this.errors.some((e) => e.for === 'logoUrl') ? 'md-invalid' : '';
+    }
+
+    get comIdFieldClass() {
+        return this.errors.some((e) => e.for === 'comId') ? 'md-invalid' : '';
+    }
+
+    get ab1BootstrapUrlFieldClass() {
+        return this.errors.some((e) => e.for === 'playerConfig.ab1BootstrapUrl')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get arcGisApiKeyFieldClass() {
+        return this.errors.some((e) => e.for === 'playerConfig.arcGisApiKey')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get allowedBiosOptionsFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.allowedBiosOptions'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get defaultBiosOptionFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.defaultBiosOption'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get automaticBiosOptionFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.automaticBiosOption'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get jitsiAppNameFieldClass() {
+        return this.errors.some((e) => e.for === 'playerConfig.jitsiAppName')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get what3WordsApiKeyFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'playerConfig.what3WordsApiKey'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get allowedStudioCreatorsFieldClass() {
+        return this.errors.some(
+            (e) => e.for === 'comIdConfig.allowedStudioCreators'
+        )
+            ? 'md-invalid'
+            : '';
+    }
+
+    get allowComId() {
+        return this.comIdFeatures?.allowed;
+    }
+
+    get hasStudioChange() {
+        return (
+            this.displayName !== this.originalDisplayName ||
+            this.logoUrl !== this.originalLogoUrl ||
+            this.allowedStudioCreators !== this.originalAllowedStudioCreators ||
+            this.ab1BootstrapUrl !== this.originalAb1BootstrapUrl
+        );
+    }
+
+    @Watch('studioId')
+    studioIdChanged() {
+        this._loadPageInfo();
+    }
+
+    created() {}
+
+    mounted() {
+        this.loadingMembers = false;
+        this.showAddMember = false;
+        this.addingMember = false;
+        this.isAdmin = false;
+        this.addMemberEmail = '';
+        this.addMemberRole = 'member';
+        this.addMemberErrorCode = null;
+        this.members = [];
+        this.errors = [];
+
+        this._loadPageInfo();
+    }
+
+    async saveStudio() {
+        try {
+            this.isSavingStudio = true;
+            let hasUpdate = false;
+            let update: UpdateStudioRequest['studio'] = {
+                id: this.studioId,
+            };
+
+            if (this.displayName !== this.originalDisplayName) {
+                update.displayName = this.displayName;
+                hasUpdate = true;
+            }
+
+            if (this.logoUrl !== this.originalLogoUrl) {
+                update.logoUrl = this.logoUrl || null;
+                hasUpdate = true;
+            }
+
+            if (
+                this.allowedStudioCreators !==
+                this.originalAllowedStudioCreators
+            ) {
+                update.comIdConfig = {
+                    allowedStudioCreators: this.allowedStudioCreators,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.ab1BootstrapUrl !== this.originalAb1BootstrapUrl) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    ab1BootstrapURL: this.ab1BootstrapUrl || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.arcGisApiKey !== this.originalArcGisApiKey) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    arcGisApiKey: this.arcGisApiKey || null,
+                };
+                hasUpdate = true;
+            }
+            let allowedBiosOptions = this.allowedBiosOptions;
+            if (allowedBiosOptions?.length <= 0) {
+                allowedBiosOptions = null;
+            }
+            if (!isEqual(allowedBiosOptions, this.originalAllowedBiosOptions)) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    allowedBiosOptions: allowedBiosOptions || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.defaultBiosOption !== this.originalDefaultBiosOption) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    defaultBiosOption: this.defaultBiosOption || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.automaticBiosOption !== this.originalAutomaticBiosOption) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    automaticBiosOption: this.automaticBiosOption || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.jitsiAppName !== this.originalJitsiAppName) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    jitsiAppName: this.jitsiAppName || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (this.what3WordsApiKey !== this.originalWhat3WordsApiKey) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    what3WordsApiKey: this.what3WordsApiKey || null,
+                };
+                hasUpdate = true;
+            }
+
+            if (!hasUpdate) {
+                this.showUpdateComIdConfig = false;
+                this.showUpdatePlayerConfig = false;
+                this.showUpdateStudioInfo = false;
+                return;
+            }
+            const result = await authManager.updateStudio(update);
+
+            this.errors = getFormErrors(result);
+            if (result.success) {
+                this.originalDisplayName = this.displayName;
+                this.originalLogoUrl = this.logoUrl;
+                this.originalAllowedStudioCreators = this.allowedStudioCreators;
+                this.originalAb1BootstrapUrl = this.ab1BootstrapUrl;
+                this.originalArcGisApiKey = this.arcGisApiKey;
+                if (allowedBiosOptions) {
+                    this.originalAllowedBiosOptions =
+                        this.allowedBiosOptions.slice();
+                } else {
+                    this.originalAllowedBiosOptions = this.allowedBiosOptions =
+                        null;
+                }
+                this.originalDefaultBiosOption = this.defaultBiosOption =
+                    this.defaultBiosOption || null;
+                this.originalAutomaticBiosOption = this.automaticBiosOption =
+                    this.automaticBiosOption || null;
+                this.originalJitsiAppName = this.jitsiAppName;
+                this.originalWhat3WordsApiKey = this.what3WordsApiKey;
+
+                this.showUpdateComIdConfig = false;
+                this.showUpdatePlayerConfig = false;
+                this.showUpdateStudioInfo = false;
+            }
+        } finally {
+            this.isSavingStudio = false;
+        }
+    }
+
+    async cancelUpdateStudio() {
+        this.displayName = this.originalDisplayName;
+        this.logoUrl = this.originalLogoUrl;
+        this.allowedStudioCreators = this.originalAllowedStudioCreators;
+        this.ab1BootstrapUrl = this.originalAb1BootstrapUrl;
+        this.showUpdateComIdConfig = false;
+        this.showUpdatePlayerConfig = false;
+        this.showUpdateStudioInfo = false;
+    }
+
+    private async _loadPageInfo() {
+        this._loadStudioInfo();
+        this._loadMembers();
+    }
+
+    private async _loadStudioInfo() {
+        try {
+            const studioId = this.studioId;
+            this.isLoadingInfo = true;
+            const result = await authManager.getStudio(this.studioId);
+            if (studioId === this.studioId && result.success === true) {
+                this.originalDisplayName = this.displayName =
+                    result.studio.displayName;
+                this.originalLogoUrl = this.logoUrl = result.studio.logoUrl;
+                this.requestedComId = this.comId = result.studio.comId;
+                this.ownerStudioComId = result.studio.ownerStudioComId;
+                this.comIdFeatures = result.studio.comIdFeatures;
+                this.originalAllowedStudioCreators =
+                    this.allowedStudioCreators =
+                        result.studio.comIdConfig?.allowedStudioCreators ??
+                        'anyone';
+                this.originalAb1BootstrapUrl = this.ab1BootstrapUrl =
+                    result.studio.playerConfig?.ab1BootstrapURL ?? null;
+                this.originalArcGisApiKey = this.arcGisApiKey =
+                    result.studio.playerConfig?.arcGisApiKey ?? null;
+                this.originalAllowedBiosOptions = this.allowedBiosOptions =
+                    result.studio.playerConfig?.allowedBiosOptions ?? null;
+                this.originalDefaultBiosOption = this.defaultBiosOption =
+                    result.studio.playerConfig?.defaultBiosOption ?? null;
+                this.originalAutomaticBiosOption = this.automaticBiosOption =
+                    result.studio.playerConfig?.automaticBiosOption ?? null;
+                this.originalJitsiAppName = this.jitsiAppName =
+                    result.studio.playerConfig?.jitsiAppName ?? null;
+                this.originalWhat3WordsApiKey = this.what3WordsApiKey =
+                    result.studio.playerConfig?.what3WordsApiKey ?? null;
+            }
+        } finally {
+            this.isLoadingInfo = false;
+        }
+    }
+
+    private async _loadMembers() {
+        try {
+            const studioId = this.studioId;
+            this.loadingMembers = true;
+            const members = await authManager.listStudioMembers(this.studioId);
+            if (studioId === this.studioId) {
+                this.members = members;
+                const userId = authManager.userId;
+                const user = this.members.find((m) => m.userId === userId);
+                this.isAdmin = user?.role === 'admin';
+            }
+        } finally {
+            this.loadingMembers = false;
+        }
+    }
+
+    openAddMember() {
+        this.showAddMember = true;
+        this.addMemberEmail = '';
+        this.addMemberRole = 'member';
+        this.addMemberErrorCode = null;
+    }
+
+    closeAddMember() {
+        this.showAddMember = false;
+    }
+
+    async addMember() {
+        try {
+            this.addingMember = true;
+            const result = await authManager.addStudioMember({
+                studioId: this.studioId,
+                addedEmail: this.addMemberEmail,
+                role: this.addMemberRole as StudioAssignmentRole,
+            });
+
+            if (result.success === true) {
+                this.showAddMember = false;
+                this._loadMembers();
+            } else {
+                this.addMemberErrorCode = result.errorCode;
+            }
+        } finally {
+            this.addingMember = false;
+        }
+    }
+
+    async revokeMembership(member: ListedStudioMember) {
+        const result = await authManager.removeStudioMember({
+            studioId: this.studioId,
+            removedUserId: member.userId,
+        });
+        if (result.success === true) {
+            this._loadMembers();
+        }
+    }
+
+    startRequestComId() {
+        this.showRequestComId = true;
+    }
+
+    async requestComId() {
+        try {
+            this.isSavingStudio = true;
+
+            const comId = this.requestedComId;
+            const result = await authManager.requestComId(this.studioId, comId);
+            this.errors = getFormErrors(result);
+            if (result.success === true) {
+                this.showRequestComId = false;
+                this.comId = this.requestedComId = comId;
+            }
+        } finally {
+            this.isSavingStudio = false;
+        }
+    }
+
+    updatePlayerConfig() {
+        this.showUpdatePlayerConfig = true;
+    }
+
+    updateComIdConfig() {
+        this.showUpdateComIdConfig = true;
+    }
+
+    updateStudioInfo() {
+        this.showUpdateStudioInfo = true;
+    }
+
+    // TODO: Support uploading logos
+    // onLogoFileAdded(file: File) {
+    //     this.logoFile = file;
+    // }
+
+    // onLogoFileRemoved(file: File) {
+    //     if (this.logoFile === file) {
+    //         this.logoFile = null;
+    //     }
+    // }
+}

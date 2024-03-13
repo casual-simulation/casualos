@@ -2,7 +2,6 @@ import {
     action,
     asyncResult,
     AuxPartitions,
-    AuxRuntime,
     BotAction,
     botAdded,
     createBot,
@@ -16,6 +15,7 @@ import {
     toast,
     unregisterCustomApp,
 } from '@casual-simulation/aux-common';
+import { AuxRuntime, RuntimeActions } from '@casual-simulation/aux-runtime';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -25,7 +25,7 @@ import { HtmlAppBackend, HtmlPortalSetupResult } from './HtmlAppBackend';
 
 describe('CustomAppHelper', () => {
     let runtime: AuxRuntime;
-    let actions: BotAction[];
+    let actions: RuntimeActions[];
     let memory: MemoryPartition;
     let userId: string = 'user';
     let helper: AuxHelper;
@@ -49,6 +49,7 @@ describe('CustomAppHelper', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
@@ -82,10 +83,11 @@ describe('CustomAppHelper', () => {
                 supportsAR: false,
                 supportsVR: false,
                 isCollaborative: true,
+                allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
             }
         );
-        const helper = new AuxHelper(partitions, runtime);
+        const helper = new AuxHelper('user', partitions, runtime);
 
         for (let [, partition] of iteratePartitions(partitions)) {
             sub.add(

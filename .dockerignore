@@ -1,5 +1,10 @@
 node_modules
 docker
-docs
 coverage
 npm-debug.log
+cockroach-data
+
+docs/build
+docs/.docusaurus
+src/*/node_modules
+*/node_modules

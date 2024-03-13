@@ -7,21 +7,40 @@ import {
     PresignFileReadFailure,
     GetFileRecordFailure,
 } from './FileRecordsStore';
-import { NotLoggedInError, ServerError } from './Errors';
+import {
+    NotLoggedInError,
+    NotSupportedError,
+    ServerError,
+    SubscriptionLimitReached,
+} from '@casual-simulation/aux-common/Errors';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
 import { getExtension, getType } from 'mime';
 import {
-    AuthorizeDenied,
-    AuthorizeUpdateFileRequest,
+    AuthorizeSubjectFailure,
     PolicyController,
-    returnAuthorizationResult,
+    getMarkerResourcesForCreation,
+    getMarkerResourcesForUpdate,
 } from './PolicyController';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
-import { getMarkersOrDefault } from './Utils';
+import {
+    ACCOUNT_MARKER,
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
+import { getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+
+export interface FileRecordsConfiguration {
+    policies: PolicyController;
+    store: FileRecordsStore;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that can manage file records.
@@ -29,10 +48,14 @@ import { without } from 'lodash';
 export class FileRecordsController {
     private _policies: PolicyController;
     private _store: FileRecordsStore;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
-    constructor(policies: PolicyController, store: FileRecordsStore) {
-        this._policies = policies;
-        this._store = store;
+    constructor(config: FileRecordsConfiguration) {
+        this._policies = config.policies;
+        this._store = config.store;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -48,34 +71,91 @@ export class FileRecordsController {
         request: RecordFileRequest
     ): Promise<RecordFileResult> {
         try {
-            const markers = getMarkersOrDefault(request.markers);
+            const markers = getRootMarkersOrDefault(request.markers);
 
-            const result = await this._policies.authorizeRequest({
-                action: 'file.create',
-                recordKeyOrRecordName: recordKeyOrRecordName,
-                userId,
-                resourceMarkers: markers,
-                fileSizeInBytes: request.fileByteLength,
-                fileMimeType: request.fileMimeType,
-                instances: request.instances,
-            });
+            const contextResult =
+                await this._policies.constructAuthorizationContext({
+                    recordKeyOrRecordName,
+                    userId,
+                });
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            if (contextResult.success === false) {
+                return contextResult;
             }
 
-            // const keyResult = await this._controller.validatePublicRecordKey(
-            //     recordNameOrKey
-            // );
+            const extension = getExtension(request.fileMimeType);
+            const fileName = extension
+                ? `${request.fileSha256Hex}.${extension}`
+                : request.fileSha256Hex;
 
-            // if (keyResult.success === false) {
-            //     return keyResult;
-            // }
+            const authorization =
+                await this._policies.authorizeUserAndInstancesForResources(
+                    contextResult.context,
+                    {
+                        userId,
+                        instances: request.instances,
+                        resources: [
+                            {
+                                resourceKind: 'file',
+                                resourceId: fileName,
+                                action: 'create',
+                                markers: markers,
+                            },
+                            ...getMarkerResourcesForCreation(markers),
+                        ],
+                    }
+                );
 
-            const policy = result.subject.subjectPolicy;
-            userId = result.subject.userId;
+            // const result = await this._policies.authorizeRequest({
+            //     action: 'file.create',
+            //     recordKeyOrRecordName: recordKeyOrRecordName,
+            //     userId,
+            //     resourceMarkers: markers,
+            //     fileSizeInBytes: request.fileByteLength,
+            //     fileMimeType: request.fileMimeType,
+            //     instances: request.instances,
+            // });
 
-            if (!result.subject.userId && policy !== 'subjectless') {
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const createAuthorization = authorization.results[0];
+
+            for (let result of createAuthorization.results) {
+                const options = result.permission.options;
+
+                if (
+                    'maxFileSizeInBytes' in options &&
+                    options.maxFileSizeInBytes > 0
+                ) {
+                    if (request.fileByteLength > options.maxFileSizeInBytes) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage: 'The file is too large.',
+                        };
+                    }
+                } else if (
+                    'allowedMimeTypes' in options &&
+                    Array.isArray(options.allowedMimeTypes)
+                ) {
+                    if (
+                        !options.allowedMimeTypes.includes(request.fileMimeType)
+                    ) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage: 'The file type is not allowed.',
+                        };
+                    }
+                }
+            }
+
+            const policy = contextResult.context.subjectPolicy;
+            userId = contextResult.context.userId;
+
+            if (!userId && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -88,14 +168,67 @@ export class FileRecordsController {
                 userId = null;
             }
 
-            const publisherId = result.authorizerId;
-            const recordName = result.recordName;
+            const publisherId =
+                contextResult.context.recordKeyCreatorId ??
+                userId ??
+                contextResult.context.recordOwnerId;
+            const recordName = authorization.recordName;
             const subjectId = userId;
 
-            const extension = getExtension(request.fileMimeType);
-            const fileName = extension
-                ? `${request.fileSha256Hex}.${extension}`
-                : request.fileSha256Hex;
+            const metricsResult =
+                await this._metrics.getSubscriptionFileMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.files.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of files.',
+                };
+            }
+
+            if (features.files.maxBytesPerFile > 0) {
+                if (request.fileByteLength > features.files.maxBytesPerFile) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage: 'The file is too large.',
+                    };
+                }
+            }
+            if (features.files.maxBytesTotal > 0) {
+                const newSize =
+                    metricsResult.totalFileBytesReserved +
+                    request.fileByteLength;
+                if (newSize > features.files.maxBytesTotal) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The file storage limit has been reached for the subscription.',
+                    };
+                }
+            }
+            if (features.files.maxFiles > 0) {
+                const newCount = metricsResult.totalFiles + 1;
+                if (newCount > features.files.maxFiles) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The file count limit has been reached for the subscription.',
+                    };
+                }
+            }
 
             const presignResult = await this._store.presignFileUpload({
                 recordName,
@@ -220,25 +353,38 @@ export class FileRecordsController {
                 return fileResult;
             }
 
-            const markers = getMarkersOrDefault(fileResult.markers);
+            const markers = getRootMarkersOrDefault(fileResult.markers);
 
-            const result = await this._policies.authorizeRequestUsingContext(
-                context.context,
-                {
-                    action: 'file.delete',
-                    ...baseRequest,
-                    fileSizeInBytes: fileResult.sizeInBytes,
-                    fileMimeType: getType(fileResult.fileName),
-                    resourceMarkers: markers,
-                }
-            );
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: subjectId,
+                        instances: instances,
+                        resourceKind: 'file',
+                        resourceId: fileName,
+                        action: 'delete',
+                        markers: markers,
+                    }
+                );
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            // const result = await this._policies.authorizeRequestUsingContext(
+            //     context.context,
+            //     {
+            //         action: 'file.delete',
+            //         ...baseRequest,
+            //         fileSizeInBytes: fileResult.sizeInBytes,
+            //         fileMimeType: getType(fileResult.fileName),
+            //         resourceMarkers: markers,
+            //     }
+            // );
+
+            if (authorization.success === false) {
+                return authorization;
             }
 
-            const policy = result.subject.subjectPolicy;
-            subjectId = result.subject.userId;
+            const policy = context.context.subjectPolicy;
+            subjectId = authorization.user.subjectId;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -249,8 +395,7 @@ export class FileRecordsController {
                 };
             }
 
-            const publisherId = result.authorizerId;
-            const recordName = result.recordName;
+            const recordName = authorization.recordName;
 
             const eraseResult = await this._store.eraseFileRecord(
                 recordName,
@@ -319,25 +464,37 @@ export class FileRecordsController {
                 return fileResult;
             }
 
-            const markers = getMarkersOrDefault(fileResult.markers);
+            const markers = getRootMarkersOrDefault(fileResult.markers);
 
-            const result = await this._policies.authorizeRequestUsingContext(
+            const result = await this._policies.authorizeUserAndInstances(
                 context.context,
                 {
-                    action: 'file.read',
-                    ...baseRequest,
-                    fileSizeInBytes: fileResult.sizeInBytes,
-                    fileMimeType: getType(fileResult.fileName),
-                    resourceMarkers: markers,
+                    userId: subjectId,
+                    instances: instances,
+                    resourceKind: 'file',
+                    resourceId: fileName,
+                    action: 'read',
+                    markers: markers,
                 }
             );
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            // const result = await this._policies.authorizeRequestUsingContext(
+            //     context.context,
+            //     {
+            //         action: 'file.read',
+            //         ...baseRequest,
+            //         fileSizeInBytes: fileResult.sizeInBytes,
+            //         fileMimeType: getType(fileResult.fileName),
+            //         resourceMarkers: markers,
+            //     }
+            // );
+
+            if (result.success === false) {
+                return result;
             }
 
-            const policy = result.subject.subjectPolicy;
-            subjectId = result.subject.userId;
+            const policy = context.context.subjectPolicy;
+            subjectId = result.user.subjectId;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -383,6 +540,89 @@ export class FileRecordsController {
         }
     }
 
+    /**
+     * Attempts to list the files that are available in the given record.
+     * @param recordKeyOrRecordName The name of the record or the record key of the record.
+     * @param fileName The file name that the listing should start at. If null, then the listing will start with the first file in the record.
+     * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
+     * @param instances The instances that are loaded.
+     */
+    async listFiles(
+        recordKeyOrRecordName: string,
+        fileName: string | null,
+        userId?: string,
+        instances?: string[]
+    ): Promise<ListFilesResult> {
+        try {
+            if (!this._store.listUploadedFiles) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const baseRequest = {
+                recordKeyOrRecordName,
+                userId: userId,
+                instances,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorizeResult =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: userId,
+                        instances,
+                        resourceKind: 'file',
+                        action: 'list',
+                        markers: [ACCOUNT_MARKER],
+                    }
+                );
+
+            if (authorizeResult.success === false) {
+                return authorizeResult;
+            }
+
+            const result2 = await this._store.listUploadedFiles(
+                context.context.recordName,
+                fileName
+            );
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            return {
+                success: true,
+                recordName: context.context.recordName,
+                files: result2.files,
+                totalCount: result2.totalCount,
+            };
+        } catch (err) {
+            console.error(
+                '[FileRecordsController] An error occurred while listing files:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     async updateFile(
         recordKeyOrRecordName: string,
         fileName: string,
@@ -413,44 +653,35 @@ export class FileRecordsController {
                 return fileResult;
             }
 
-            const existingMarkers = getMarkersOrDefault(fileResult.markers);
-            const addedMarkers = markers
-                ? without(markers, ...existingMarkers)
-                : [];
-            const removedMarkers = markers
-                ? without(existingMarkers, ...markers)
-                : [];
-
+            const existingMarkers = getRootMarkersOrDefault(fileResult.markers);
             const resourceMarkers = markers ?? existingMarkers;
 
-            const result = await this._policies.authorizeRequestUsingContext(
-                context.context,
-                {
-                    action: 'file.update',
-                    ...baseRequest,
-                    existingMarkers,
-                    addedMarkers,
-                    removedMarkers,
-                    fileSizeInBytes: fileResult.sizeInBytes,
-                    fileMimeType: getType(fileResult.fileName),
-                }
-            );
+            const result =
+                await this._policies.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        userId: subjectId,
+                        instances: instances,
+                        resources: [
+                            {
+                                resourceKind: 'file',
+                                resourceId: fileName,
+                                action: 'update',
+                                markers: resourceMarkers,
+                            },
+                            ...getMarkerResourcesForUpdate(
+                                existingMarkers,
+                                markers
+                            ),
+                        ],
+                    }
+                );
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            if (result.success === false) {
+                return result;
             }
 
-            const policy = result.subject.subjectPolicy;
-            subjectId = result.subject.userId;
-
-            if (!subjectId && policy !== 'subjectless') {
-                return {
-                    success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user must be logged in in order to update files.',
-                };
-            }
+            subjectId = context.context.userId;
 
             const updateResult = await this._store.updateFileRecord(
                 result.recordName,
@@ -533,6 +764,14 @@ export class FileRecordsController {
 
 /**
  * Defines an interface that is used for requests to record a file.
+ *
+ * @dochash types/records/files
+ * @doctitle File Types
+ * @docsidebar Files
+ * @docdescription File records are used to store large blobs of data.
+ * @docgroup 01-create
+ * @docorder 0
+ * @docname RecordFileRequest
  */
 export interface RecordFileRequest {
     /**
@@ -573,8 +812,14 @@ export interface RecordFileRequest {
     instances?: string[];
 }
 
+/**
+ * Defines the possible results of a request to record a file.
+ */
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;
 
+/**
+ * Defines an interface that represents a successful request to record a file.
+ */
 export interface RecordFileSuccess {
     success: true;
 
@@ -606,16 +851,28 @@ export interface RecordFileSuccess {
     markers: string[];
 }
 
+/**
+ * Defines an interface that represents a failed request to record a file.
+ */
 export interface RecordFileFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | SubscriptionLimitReached
         | 'invalid_file_data'
         | 'not_supported';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 
     /**
@@ -624,24 +881,66 @@ export interface RecordFileFailure {
     existingFileUrl?: string;
 }
 
+/**
+ * Defines the possible results of a request to erase a file record.
+ *
+ * @dochash types/records/files
+ * @docgroup 02-erase
+ * @docorder 0
+ * @docname EraseFileResult
+ */
 export type EraseFileResult = EraseFileSuccess | EraseFileFailure;
+
+/**
+ * Defines an interface that represents a successful request to erase a file record.
+ *
+ * @dochash types/records/files
+ * @docgroup 02-erase
+ * @docorder 1
+ * @docname EraseFileSuccess
+ */
 export interface EraseFileSuccess {
     success: true;
+    /**
+     * The name of the record that the file was erased from.
+     */
     recordName: string;
+
+    /**
+     * The name of the file that was erased.
+     */
     fileName: string;
 }
 
+/**
+ * Defines an interface that represents a failed request to erase a file record.
+ *
+ * @dochash types/records/files
+ * @docgroup 02-erase
+ * @docorder 2
+ * @docname EraseFileFailure
+ */
 export interface EraseFileFailure {
     success: false;
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | EraseFileStoreResult['errorCode']
         | NotLoggedInError
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * Defines the possible results of a request to mark a file record as uploaded.
+ */
 export type FileUploadedResult = FileUploadedSuccess | FileUploadedFailure;
 
 export interface FileUploadedSuccess {
@@ -654,6 +953,9 @@ export interface FileUploadedFailure {
     errorMessage: string;
 }
 
+/**
+ * Defines the possible results of a request to read a file record.
+ */
 export type ReadFileResult = ReadFileSuccess | ReadFileFailure;
 
 export interface ReadFileSuccess {
@@ -683,7 +985,41 @@ export interface ReadFileFailure {
         | ValidatePublicRecordKeyFailure['errorCode']
         | PresignFileReadFailure['errorCode']
         | GetFileRecordFailure['errorCode']
-        | AuthorizeDenied['errorCode'];
+        | AuthorizeSubjectFailure['errorCode'];
+    errorMessage: string;
+}
+
+export type ListFilesResult = ListFilesSuccess | ListFilesFailure;
+
+export interface ListFilesSuccess {
+    success: true;
+    recordName: string;
+    files: ListedFile[];
+
+    /**
+     * The total number of files in the record.
+     */
+    totalCount: number;
+}
+
+export interface ListedFile {
+    fileName: string;
+    url: string;
+    sizeInBytes: number;
+    description: string;
+    markers: string[];
+    uploaded: boolean;
+}
+
+export interface ListFilesFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | PresignFileReadFailure['errorCode']
+        | GetFileRecordFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | NotSupportedError;
     errorMessage: string;
 }
 
@@ -702,6 +1038,6 @@ export interface UpdateFileRecordFailure {
         | ValidatePublicRecordKeyFailure['errorCode']
         | PresignFileReadFailure['errorCode']
         | GetFileRecordFailure['errorCode']
-        | AuthorizeDenied['errorCode'];
+        | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }

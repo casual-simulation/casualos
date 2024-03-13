@@ -1,0 +1,846 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+  output   = "../prisma/generated"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+// Auth
+model User {
+    id String @id
+    name String? @db.String(128)
+    email String? @unique @db.String(128)
+    phoneNumber String? @unique @db.String(64)
+    avatarPortraitUrl String?
+    avatarUrl String?
+    allSessionRevokeTime DateTime?
+    currentLoginRequestId String? @unique
+    currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
+    currentWebAuthnChallenge String?
+    banTime DateTime?
+    banReason String? @db.String(128)
+
+    privoServiceId String? @unique
+    privoParentServiceId String?
+
+    // oidLoginProvider String?
+
+    subscriptionInfoId String? @unique @db.Uuid
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
+
+    allowPublishData Boolean?
+    allowPublicData Boolean?
+    allowAI Boolean?
+    allowPublicInsts Boolean?
+
+    loginRequests LoginRequest[]
+    webauthnLoginRequests WebAuthnLoginRequest[]
+    sessions AuthSession[]
+    records Record[]
+    recordKeys RecordKey[]
+    roleAssignments RoleAssignment[]
+    // TODO: Support global permissions
+    // globalPermissionAssignments GlobalPermissionAssignment[]
+    resourcePermissionAssignments ResourcePermissionAssignment[]
+    markerPermissionAssignments MarkerPermissionAssignment[]
+
+    publishedDataRecords DataRecord[] @relation("PublishedDataRecords")
+    subjectDataRecords DataRecord[] @relation("SubjectDataRecords")
+
+    publishedManualDataRecords ManualDataRecord[] @relation("PublishedManualDataRecords")
+    subjectManualDataRecords ManualDataRecord[] @relation("SubjectManualDataRecords")
+
+    publishedFileRecords FileRecord[] @relation("PublishedFileRecords")
+    subjectFileRecords FileRecord[] @relation("SubjectFileRecords")
+
+    studios StudioAssignment[]
+    aiChatMetrics AiChatMetrics[]
+    aiImageMetrics AiImageMetrics[]
+    aiSkyboxMetrics AiSkyboxMetrics[]
+
+    instReports UserInstReport[]
+    comIdRequests StudioComIdRequest[]
+    authenticators UserAuthenticator[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model UserAuthenticator {
+    id String @id @db.Uuid
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserAuthenticator_userId_fkey1")
+
+    credentialId String @db.String(512) @unique
+    credentialPublicKey Bytes @db.Bytes()
+
+    counter Int
+    credentialDeviceType String @db.String(32)
+    credentialBackedUp Boolean
+
+    aaguid String @db.Uuid
+    registeringUserAgent String? @db.String(512)
+
+    transports String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model LoginRequest {
+    requestId String @id
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "LoginRequest_userId_fkey1")
+    
+    secretHash String?
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    
+    attemptCount Int
+    address String
+    addressType String
+    ipAddress String
+
+    // oidCodeVerifier String?
+    // oidCodeMethod String?
+    // oidProvider String?
+    // oidRedirectUrl String?
+    // oidScope String?
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sessions AuthSession[]
+    activeUser User? @relation("CurrentLoginRequest")
+}
+
+model AuthSession {
+    sessionId String @id
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AuthSession_userId_fkey1")
+
+    secretHash String
+    connectionSecret String?
+
+    oidProvider String?
+    oidAccessToken String?
+    oidTokenType String?
+    oidIdToken String?
+    oidRefreshToken String?
+    oidScope String?
+    oidExpiresAtMs Int?
+
+    grantedTime DateTime
+    expireTime DateTime
+    revokeTime DateTime?
+
+    requestId String?
+    request LoginRequest? @relation(fields: [requestId], references: [requestId])
+
+    oidRequestId String? @db.Uuid
+    oidRequest OpenIDLoginRequest? @relation(fields: [oidRequestId], references: [requestId], map: "AuthSession_oidRequestId_fkey1")
+
+    webauthnRequestId String? @db.Uuid
+    webauthnRequest WebAuthnLoginRequest? @relation(fields: [webauthnRequestId], references: [requestId], map: "AuthSession_webauthnRequestId_fkey1")
+
+    previousSessionId String? @unique
+    previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [sessionId])
+    previousSession1 AuthSession? @relation("PreviousSession")
+
+    nextSessionId String? @unique
+    nextSession AuthSession? @relation("NextSession", fields: [nextSessionId], references: [sessionId])
+    nextSession1 AuthSession? @relation("NextSession")
+
+    ipAddress String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model OpenIDLoginRequest {
+    requestId String @id @db.Uuid
+    state String? @unique @db.Uuid
+
+    provider String
+    codeVerifier String
+    codeMethod String
+    authorizationUrl String
+    redirectUrl String
+    scope String
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    ipAddress String
+
+    authorizationCode String?
+    authorizationTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    authSessions AuthSession[]
+}
+
+model WebAuthnLoginRequest {
+    requestId String @id @db.Uuid
+    challenge String
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "WebAuthnLoginRequest_userId_fkey1")
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    ipAddress String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    authSessions AuthSession[]
+}
+
+model EmailRule {
+    id BigInt @id @default(autoincrement())
+    type String
+    pattern String
+}
+
+model SmsRule {
+    id BigInt @id @default(autoincrement())
+    type String
+    pattern String
+}
+
+// Records
+model Studio {
+    id String @id
+    displayName String @db.String(128)
+
+    // The comId for this studio. (i.e. a name/uuid that can be used to access this studio as a comId)
+    comId String? @unique
+
+    logoUrl String? @db.String(512)
+
+    // The comId that this studio belongs to. (i.e. The comId of the studio that this studio belongs to)
+    ownerStudioComId String?
+    ownerStudio Studio? @relation(fields: [ownerStudioComId], references: [comId], onUpdate: Cascade, onDelete: SetNull, map: "Studio_ownerStudioComId_fkey1", name: "OwnerStudio")
+
+    // The player web config for this studio.
+    playerConfig Json?
+
+    // The comId config for this studio.
+    comIdConfig Json?
+
+    records Record[]
+    assignments StudioAssignment[]
+
+    subscriptionInfoId String? @unique @db.Uuid
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
+
+    aiChatMetrics AiChatMetrics[]
+    aiImageMetrics AiImageMetrics[]
+    aiSkyboxMetrics AiSkyboxMetrics[]
+
+    childStudios Studio[] @relation("OwnerStudio")
+    comIdRequests StudioComIdRequest[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model StudioAssignment {
+    @@id([studioId, userId])
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id])
+
+    userId String
+    user User @relation(fields: [userId], references: [id])
+
+    isPrimaryContact Boolean
+    role String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Record {
+    name String @id @db.String(128)
+    ownerId String?
+    owner User? @relation(fields: [ownerId], references: [id], map: "Record_ownerId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id])
+
+    secretHashes String[]
+    secretSalt String
+
+    recordKeys RecordKey[]
+    policies Policy[]
+    roles Role[]
+    roleAssignments RoleAssignment[]
+
+    dataRecords DataRecord[]
+    manualDataRecords ManualDataRecord[]
+    fileRecords FileRecord[]
+    eventRecords EventRecord[]
+    instRecords InstRecord[]
+    instBranches InstBranch[]
+    branchUpdates BranchUpdate[]
+
+    resourceAssignments ResourcePermissionAssignment[]
+    markerAssignments MarkerPermissionAssignment[]
+
+    userInstReports UserInstReport[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model RecordKey {
+    @@id([recordName, secretHash])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "RecordKey_recordName_fkey1")
+
+    secretHash String
+    policy String
+    creatorId String
+    creator User @relation(fields: [creatorId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Policies
+model Policy {
+    @@id([recordName, marker])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "Policy_recordName_fkey1")
+    marker String @db.String(128)
+    document Json
+    markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Role {
+    @@id([recordName, name])
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "Role_recordName_fkey1")
+
+    name String @db.String(128)
+    markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model RoleAssignment {
+    @@id([recordName, roleId, subjectId])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "RoleAssignment_recordName_fkey1")
+    roleId String @db.String(128)
+
+    subjectId String
+    type String
+    expireTime DateTime?
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([recordName, subjectId])
+    @@index([recordName, roleId])
+}
+
+// TODO: Support global permissions
+// model GlobalPermissionAssignment {
+//     // The ID of the assignment
+//     id String @db.Uuid @id
+
+//     // The kind of the resource.
+//     // If null, then permission for all resource kinds is granted.
+//     resourceKind String?
+
+//     // The action that the assignment grants.
+//     // If null, then the assignment grants every action to the resource.
+//     action String?
+
+//     // The options that the assignment grants.
+//     options Json?
+
+//     // The ID of the subject that the assignment grants permission to.
+//     // This can be the ID of the user or the ID of the inst that permission is granted to.
+//     subjectId String
+
+//     // The type of the subject that the assignment grants permission to.
+//     // This can be "user", "inst" or "role"
+//     // If "role", then all users/insts that have the role in the record are granted permission.
+//     // If "inst" or "user", then the given user/inst is granted permission across all records.
+//     subjectType String
+
+//     // The ID of the user that the assignment grants permission to.
+//     // Null if the subjectType is "role" or "inst"
+//     userId String?
+//     user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GlobalPermissionAssignment_userId_fkey1")
+
+//     // The time that the assignment expires.
+//     // Null means that the assignment never expires.
+//     expireTime DateTime?
+
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+
+//     @@index([subjectType, subjectId])
+//     @@index([resourceKind, action, subjectType, subjectId])
+// }
+
+model ResourcePermissionAssignment {
+    // The ID of the assignment
+    id String @db.Uuid @id
+
+    // The name of the record.
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "ResourcePermissionAssignment_recordName_fkey1")
+
+    // The kind of the resource.
+    resourceKind String
+
+    // The ID of the resource.
+    resourceId String
+
+    // The action that the assignment grants.
+    // If null, then the assignment grants every action to the resource.
+    action String?
+
+    // The options that the assignment grants.
+    options Json?
+
+    // The ID of the subject that the assignment grants permission to.
+    // This can be the ID of the user or the ID of the inst that permission is granted to.
+    subjectId String
+
+    // The type of the subject that the assignment grants permission to.
+    // This can be "user", "inst" or "role"
+    subjectType String
+
+    // The ID of the user that the assignment grants permission to.
+    // Null if the subjectType is "role" or "inst"
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "ResourcePermissionAssignment_userId_fkey1")
+
+    // The time that the assignment expires.
+    // Null means that the assignment never expires.
+    expireTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([subjectType, subjectId, recordName])
+    @@index([recordName, resourceKind, resourceId, action, subjectType, subjectId])
+}
+
+// Example query:
+// SELECT * FROM "ResourcePermissionAssignment"
+// WHERE "recordName" = recordName AND "resourceKind" = resourceKind
+// AND "resourceId" = resourceId AND "action" = action
+// AND (
+//    ("subjectId" = subjectId AND "subjectType" = subjectType) OR 
+//    ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = recordName AND "subjectId" = subjectId AND "subjectType" = subjectType)))
+
+model MarkerPermissionAssignment {
+    // The ID of the assignment
+    id String @db.Uuid @id
+
+    // The name of the record.
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "MarkerPermissionAssignment_recordName_fkey1")
+
+    // The marker of the resources that the assignment grants.
+    // If null, then the assignment grants permission for a resource instead.
+    marker String @db.String(128)
+
+    // The resource kind that this assignment is for.
+    // If null, then the assignment is for all resource kinds.
+    resourceKind String?
+
+    // The action that the assignment grants.
+    // If null, then the assignment grants every action to the resource.
+    action String?
+
+    // The options that the assignment grants.
+    options Json?
+
+    // The ID of the subject that the assignment grants permission to.
+    // This can be the ID of the user or the ID of the inst that permission is granted to.
+    subjectId String
+
+    // The type of the subject that the assignment grants permission to.
+    // This can be "user", "inst" or "role"
+    subjectType String
+
+    // The ID of the user that the assignment grants permission to.
+    // Null if the subjectType is "role" or "inst"
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "MarkerPermissionAssignment_userId_fkey1")
+
+    // The time that the assignment expires.
+    // Null means that the assignment never expires.
+    expireTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([subjectType, subjectId, recordName])
+    @@index([recordName, marker, action, subjectType, subjectId])
+}
+
+// Example query:
+// SELECT * FROM "ResourcePermissionAssignment"
+// WHERE "recordName" = recordName AND "marker" = marker AND "action" = action
+// AND (
+//    ("subjectId" = subjectId AND "subjectType" = subjectType) OR 
+//    ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = recordName AND "subjectId" = subjectId AND "subjectType" = subjectType)))
+
+// Data
+model DataRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "DataRecord_recordName_fkey1")
+    
+    address String @db.String(512)
+    data Json
+    
+    publisherId String
+    publisher User @relation("PublishedDataRecords", fields: [publisherId], references: [id])
+
+    subjectId String?
+    subject User? @relation("SubjectDataRecords", fields: [subjectId], references: [id])
+
+    updatePolicy Json
+    deletePolicy Json
+
+    markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// ManualData
+model ManualDataRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "ManualDataRecord_recordName_fkey1")
+    
+    address String @db.String(512)
+    data Json
+    
+    publisherId String
+    publisher User @relation("PublishedManualDataRecords", fields: [publisherId], references: [id])
+
+    subjectId String?
+    subject User? @relation("SubjectManualDataRecords", fields: [subjectId], references: [id])
+
+    updatePolicy Json
+    deletePolicy Json
+
+    markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model FileRecord {
+    @@id([recordName, fileName])
+
+    recordName String @db.String(128)
+
+    // Don't cascade FileRecord deletes because they have storage in other places besides the database
+    record Record @relation(fields: [recordName], references: [name])
+    fileName String @db.String(512)
+
+    publisherId String
+    publisher User @relation("PublishedFileRecords", fields: [publisherId], references: [id])
+
+    subjectId String?
+    subject User? @relation("SubjectFileRecords", fields: [subjectId], references: [id])
+
+    sizeInBytes BigInt
+    description String? @db.String(128)
+
+    bucket String?
+
+    uploadedAt DateTime?
+
+    markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model EventRecord {
+    @@id([recordName, name])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "EventRecord_recordName_fkey1")
+    name String @db.String(128)
+
+    count BigInt
+    markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model InstRecord {
+    @@id([recordName, name])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "InstRecord_recordName_fkey1")
+
+    name String @db.String(128)
+
+    markers String[]
+
+    branches InstBranch[]
+    updates BranchUpdate[]
+    userInstReports UserInstReport[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model InstBranch {
+    @@id([recordName, instName, name])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "InstBranch_recordName_fkey1")
+
+    instName String @db.String(128)
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade, map: "InstBranch_instName_fkey1")
+
+    name String @db.String(512)
+    temporary Boolean
+
+    updates BranchUpdate[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model BranchUpdate {
+    id String @id @db.Uuid()
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "BranchUpdate_recordName_fkey1")
+
+    instName String @db.String(128)
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade, map: "BranchUpdate_instName_fkey1")
+
+    branchName String @db.String(512)
+    branch InstBranch @relation(fields: [recordName, instName, branchName], references: [recordName, instName, name], onDelete: Cascade, map: "BranchUpdate_branchName_fkey1")
+
+    sizeInBytes Int
+    updateData String
+
+    createdAt DateTime @default(now())
+    updated DateTime @updatedAt
+
+    @@index([recordName, instName, branchName, id])
+}
+
+model Configuration {
+    key String @id
+    data Json
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+    id String @id @db.Uuid
+    stripeSubscriptionId String @unique
+
+    userId String? @unique
+    user User? @relation()
+
+    studioId String? @unique
+    studio Studio? @relation()
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+
+    currentPeriodStart DateTime?
+    currentPeriodEnd DateTime?
+
+    periods SubscriptionPeriod[]
+    invoices Invoice[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SubscriptionPeriod {
+    id String @id @db.Uuid
+
+    subscriptionId String @db.Uuid
+    subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, map: "SubscriptionPeriod_subscriptionId_fkey1")
+
+    invoiceId String @unique @db.Uuid
+    invoice Invoice?
+
+    periodStart DateTime
+    periodEnd DateTime
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+    id String @id @db.Uuid
+    stripeInvoiceId String @unique
+
+    subscriptionId String @db.Uuid
+    subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, map: "Invoice_subscriptionId_fkey1")
+
+    periodId String @unique @db.Uuid
+    period SubscriptionPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade, map: "Invoice_periodId_fkey1")
+
+    description String?
+    status String
+    paid Boolean
+    currency String
+    total Int
+    subtotal Int
+    tax Int?
+
+    stripeHostedInvoiceUrl String
+    stripeInvoicePdfUrl String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model AiChatMetrics {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+
+    tokens Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiChatMetrics_userId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiChatMetrics_studioId_fkey1")
+}
+
+model AiImageMetrics {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+    squarePixelsGenerated Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiImageMetrics_userId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiImageMetrics_studioId_fkey1")
+}
+
+model AiSkyboxMetrics {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+    skyboxesGenerated Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_userId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_studioId_fkey1")
+}
+
+model PrivoClientCredentials {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+    expiresAt DateTime
+
+    accessToken String
+    refreshToken String
+    expiresAtSeconds Int
+    scope String
+
+    @@index([expiresAt])
+}
+
+model UserInstReport {
+    id String @id @db.Uuid
+
+    recordName String? @db.String(128)
+    record Record? @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "UserInstReport_recordName_fkey1")
+
+    inst String @db.String(128)
+    instRecord InstRecord? @relation(fields: [recordName, inst], references: [recordName, name], onDelete: Cascade, map: "UserInstReport_inst_fkey1")
+    
+    reportingUserId String?
+    reportingUser User? @relation(fields: [reportingUserId], references: [id], onDelete: Cascade, map: "UserInstReport_reportingUserId_fkey1")
+
+    reportingIpAddress String?
+    automaticReport Boolean
+    reportReasonText String @db.String(2048)
+    reportReason String @db.String(128)
+    reportedUrl String @db.String(4096)
+    reportedPermalink String @db.String(4096)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([automaticReport, createdAt(sort: Desc), recordName, inst])
+    @@index([reportReason, createdAt(sort: Desc), recordName, inst])
+}
+
+model StudioComIdRequest {
+    id String @id @db.Uuid
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "StudioComIdRequest_studioId_fkey1")
+
+    requestedComId String @db.String(128)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "StudioComIdRequest_userId_fkey1")
+
+    requestingIpAddress String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

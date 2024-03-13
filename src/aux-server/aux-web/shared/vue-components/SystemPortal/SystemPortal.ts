@@ -41,7 +41,6 @@ import {
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     SYSTEM_PORTAL_DIFF,
     getPortalTag,
-    calculateIndexFromLocation,
     getTag,
     getTagValueForSpace,
     SystemPortalPane,
@@ -83,7 +82,6 @@ import {
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import SystemPortalDiffTag from '../SystemPortalDiffTag/SystemPortalDiffTag';
-import MonacoTagDiffEditor from '../MonacoTagDiffEditor/MonacoTagDiffEditor';
 import TagEditor from '../TagEditor/TagEditor';
 import { EventBus, SvgIcon } from '@casual-simulation/aux-components';
 import ConfirmDialogOptions from '../../ConfirmDialogOptions';
@@ -91,14 +89,16 @@ import BotID from '../BotID/BotID';
 import DiffStatus from '../DiffStatus/DiffStatus';
 import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
-import type monaco from 'monaco-editor';
+import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
 import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
+import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
+import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
-        'tag-diff-editor': MonacoTagDiffEditor,
+        'tag-diff-editor': TagDiffEditor,
         'bot-tag': BotTag,
         'bot-id': BotID,
         // hotkey: Hotkey,

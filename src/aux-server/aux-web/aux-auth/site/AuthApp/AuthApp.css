@@ -1,0 +1,51 @@
+.title-link:hover {
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.md-app {
+    height: 100%;
+}
+
+#app {
+    height: 100%;
+}
+
+.record-item .md-list-item-content {
+    justify-content: flex-start;
+}
+
+.app-container {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.app {
+    flex: 1;
+}
+
+footer {
+    padding: 16px;
+    background-color: #fefefe;
+    border-top: 1px solid
+        var(--md-theme-default-divider-on-background, rgba(0, 0, 0, 0.12));
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.md-theme-default .footer-links li a {
+    color: var(
+        --md-theme-default-text-primary-on-background,
+        rgba(0, 0, 0, 0.87)
+    );
+    text-decoration: none;
+}

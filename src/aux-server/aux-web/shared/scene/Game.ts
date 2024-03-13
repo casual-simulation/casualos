@@ -8,6 +8,10 @@ import {
     sRGBEncoding,
     VideoTexture,
     Object3D,
+    AmbientLight,
+    DirectionalLight,
+    PMREMGenerator,
+    EquirectangularReflectionMapping,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -64,7 +68,7 @@ import {
     TweenCameraPosition,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import { merge, union } from 'lodash';
+import { add, merge, union } from 'lodash';
 import { EventBus } from '@casual-simulation/aux-components';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
@@ -79,6 +83,9 @@ import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
 import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
 import { update as updateMeshUI } from 'three-mesh-ui';
+import { EXRLoader } from '@casual-simulation/three/examples/jsm/loaders/EXRLoader';
+import Bowser from 'bowser';
+import { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -98,6 +105,8 @@ export abstract class Game {
 
     protected mainScene: Scene;
     protected renderer: WebGLRenderer;
+    protected pmremGenerator: PMREMGenerator;
+    protected exrLoader: EXRLoader;
     protected time: Time;
     protected input: Input;
     protected interaction: BaseInteractionManager;
@@ -108,8 +117,11 @@ export abstract class Game {
     protected disposed: boolean = false;
     private _pixelRatio: number = window.devicePixelRatio || 1;
     private _currentBackgroundAddress: string;
+    private _currentHDRAddress: string;
     private _backgroundVideoElement: HTMLVideoElement;
     private _backgroundVideoSubscription: Subscription;
+    private _ambientLight: AmbientLight;
+    private _directionalLight: DirectionalLight;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -218,6 +230,24 @@ export abstract class Game {
         this.startRenderAnimationLoop();
     }
 
+    loadEXRTextureIntoScene(portalHDRAddress: string, scene: Scene) {
+        if (!hasValue(this.exrLoader)) {
+            this.exrLoader = new EXRLoader();
+            this.exrLoader.setCrossOrigin('anonymous');
+        }
+
+        this.exrLoader.load(portalHDRAddress, (texture) => {
+            if (!hasValue(this.pmremGenerator)) {
+                this.pmremGenerator = new PMREMGenerator(this.renderer);
+                this.pmremGenerator.compileEquirectangularShader();
+            }
+            texture.mapping = EquirectangularReflectionMapping;
+            let renderTarget = this.pmremGenerator.fromEquirectangular(texture);
+            scene.environment = renderTarget.texture;
+            console.log('[Game] EXR texture loaded into scene.');
+        });
+    }
+
     protected startRenderAnimationLoop() {
         this.renderer.setAnimationLoop(this.frameUpdate as any);
     }
@@ -280,7 +310,11 @@ export abstract class Game {
 
     abstract getBackground(): Color | Texture;
 
+    abstract getDefaultLighting(): boolean;
+
     abstract getBackgroundAddress(): string;
+
+    abstract getPortalHDRAddress(): string;
 
     /**
      * Get all of the current viewports.
@@ -649,14 +683,15 @@ export abstract class Game {
         if (address && !this.xrSession) {
             this._setBackgroundAddress(address);
         } else {
+            this._currentBackgroundAddress = null;
             if (this._backgroundVideoSubscription) {
                 this._backgroundVideoSubscription.unsubscribe();
                 this._backgroundVideoSubscription = null;
             }
 
             const background = this.getBackground();
-            delete this.gameView.gameView.style.background;
-            delete this.gameView.gameView.style.backgroundSize;
+            delete this.gameView.gameBackground.style.background;
+            delete this.gameView.gameBackground.style.backgroundSize;
             this.renderer.autoClear = false;
             if (background) {
                 this.mainScene.background = background;
@@ -665,6 +700,20 @@ export abstract class Game {
                     DEFAULT_SCENE_BACKGROUND_COLOR
                 );
             }
+        }
+    }
+
+    protected mainScenePortalHDRAddressUpdate() {
+        const address = this.getPortalHDRAddress();
+        if (this._currentHDRAddress === address) {
+            return;
+        }
+        this._currentHDRAddress = address;
+
+        if (address) {
+            this.loadEXRTextureIntoScene(address, this.mainScene);
+        } else {
+            this.mainScene.environment = null;
         }
     }
 
@@ -702,10 +751,10 @@ export abstract class Game {
         }
 
         if (isImage) {
-            this.gameView.gameView.style.background = `url(${address}) no-repeat center center`;
-            this.gameView.gameView.style.backgroundSize = 'cover';
+            this.gameView.gameBackground.style.background = `url(${address}) no-repeat center center`;
+            this.gameView.gameBackground.style.backgroundSize = 'cover';
             if (this._backgroundVideoElement) {
-                this.gameView.gameView.removeChild(
+                this.gameView.gameBackground.removeChild(
                     this._backgroundVideoElement
                 );
                 this._backgroundVideoElement.pause();
@@ -713,8 +762,8 @@ export abstract class Game {
                 this._backgroundVideoElement.srcObject = null;
             }
         } else {
-            delete this.gameView.gameView.style.background;
-            delete this.gameView.gameView.style.backgroundSize;
+            delete this.gameView.gameBackground.style.background;
+            delete this.gameView.gameBackground.style.backgroundSize;
 
             if (!this._backgroundVideoElement) {
                 this._backgroundVideoElement = document.createElement('video');
@@ -722,6 +771,7 @@ export abstract class Game {
                 this._backgroundVideoElement.loop = true;
                 this._backgroundVideoElement.muted = true;
                 this._backgroundVideoElement.playsInline = true;
+                this._backgroundVideoElement.setAttribute('playsinline', '');
                 this._backgroundVideoElement.style.pointerEvents = 'none';
                 this._backgroundVideoElement.style.position = 'absolute';
                 this._backgroundVideoElement.style.left = '50%';
@@ -746,7 +796,7 @@ export abstract class Game {
                 this.subs.push(sub);
             }
 
-            this.gameView.gameView.prepend(this._backgroundVideoElement);
+            this.gameView.gameBackground.prepend(this._backgroundVideoElement);
             const media = await this._getMediaForCasualOSUrl(casualOSUrl);
             if (media) {
                 this._backgroundVideoElement.srcObject = media;
@@ -865,10 +915,12 @@ export abstract class Game {
         // Main scene ambient light.
         const ambient = baseAuxAmbientLight();
         this.mainScene.add(ambient);
+        this._ambientLight = ambient;
 
         // Main scene directional light.
         const directional = baseAuxDirectionalLight();
         this.mainScene.add(directional);
+        this._directionalLight = directional;
 
         //
         // [Html Mixer Context]
@@ -892,8 +944,8 @@ export abstract class Game {
             if (bot) {
                 this.mainCameraRig.mainCamera.quaternion.set(
                     bot.values.deviceRotationX,
-                    bot.values.deviceRotationZ,
                     bot.values.deviceRotationY,
+                    bot.values.deviceRotationZ,
                     bot.values.deviceRotationW
                 );
             }
@@ -980,6 +1032,13 @@ export abstract class Game {
         if (renderBackground) {
             this.mainSceneBackgroundUpdate();
         }
+        this.mainScenePortalHDRAddressUpdate();
+
+        const defaultLighting = this.getDefaultLighting();
+
+        this._ambientLight.visible = defaultLighting;
+        this._directionalLight.visible = defaultLighting;
+
         this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
 
         // Render debug object manager if it's enabled.
@@ -1048,11 +1107,32 @@ export abstract class Game {
         mode: 'immersive-ar' | 'immersive-vr'
     ): Promise<boolean> {
         try {
-            return await (navigator as any).xr.isSessionSupported(mode);
+            const nav = navigator as any;
+            if (nav.xr) {
+                return await nav.xr.isSessionSupported(mode);
+            } else {
+                return false;
+            }
         } catch (e) {
             console.error(`[Game] Failed to check for XR Mode Support.`, e);
             return false;
         }
+    }
+
+    protected async requestXR(mode: 'immersive-ar' | 'immersive-vr') {
+        return new Promise<void>((resolve, reject) => {
+            const parameters: EnableXRModalRequestParameters = {
+                mode,
+                onConfirm: () => {
+                    resolve();
+                },
+                onCancel: () => {
+                    reject('User cancelled');
+                },
+            };
+
+            EventBus.$emit('requestXR', parameters);
+        });
     }
 
     protected async stopXR() {
@@ -1109,7 +1189,26 @@ export abstract class Game {
             return;
         }
 
-        console.log('[Game] Start XR');
+        const bowserParser = Bowser.getParser(navigator.userAgent);
+        const browserName = bowserParser.getBrowserName(true);
+
+        // Safari is much stricter on validating user permission.
+        // Must present the user an HTML dialog that they can confirm in order for Safari's security check to pass.
+        if (browserName === 'safari') {
+            try {
+                await this.requestXR(mode);
+            } catch (e) {
+                if (e === 'User cancelled') {
+                    console.log('[Game] User cancelled XR request.');
+                } else {
+                    console.error('[Game] Failed to request XR:', e);
+                }
+
+                return;
+            }
+        }
+
+        console.log(`[Game] Start XR: ${mode}`);
         this.xrState = 'starting';
         this.renderer.xr.enabled = true;
 
@@ -1119,7 +1218,14 @@ export abstract class Game {
                 requiredFeatures: [PREFERRED_XR_REFERENCE_SPACE],
                 optionalFeatures: ['hand-tracking'],
             })
-            .catch(() => {
+            .catch((err: any) => {
+                console.error(
+                    '[Game] Failed to start XR session with preferred reference space.',
+                    err
+                );
+                console.log(
+                    '[Game] Starting XR session without preferred reference space.'
+                );
                 supportsPreferredReferenceSpace = false;
                 return (navigator as any).xr.requestSession(mode);
             });
@@ -1228,7 +1334,11 @@ export abstract class Game {
                 )
             );
             this.mainCameraRig.mainCamera.position.set(0, 0, 0);
-            this.mainCameraRig.mainCamera.rotation.set(Math.PI / 2, 0, 0);
+            if (this._povImu) {
+                this.mainCameraRig.mainCamera.rotation.set(0, 0, 0);
+            } else {
+                this.mainCameraRig.mainCamera.rotation.set(Math.PI / 2, 0, 0);
+            }
             this.mainCameraRig.cameraParent.updateMatrixWorld(true);
             this.mainCameraRig.mainCamera.updateMatrixWorld(true);
         }

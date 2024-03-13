@@ -6,7 +6,7 @@ import {
     registerBuiltinPortal,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
-import { never, Observable, of } from 'rxjs';
+import { NEVER, never, Observable, of } from 'rxjs';
 import {
     switchMap,
     first,
@@ -31,9 +31,10 @@ import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 export function userBotChanged(
     simulation: BrowserSimulation
 ): Observable<PrecalculatedBot> {
-    return userBotChangedCore(simulation.login, simulation.watcher).pipe(
-        map((u) => u.bot)
-    );
+    return userBotChangedCore(
+        simulation.helper.userId,
+        simulation.watcher
+    ).pipe(map((u) => u.bot));
 }
 
 /**
@@ -43,19 +44,15 @@ export function userBotChanged(
 export function userBotTagsChanged(
     simulation: BrowserSimulation
 ): Observable<UpdatedBotInfo> {
-    return userBotChangedCore(simulation.login, simulation.watcher);
+    return userBotChangedCore(simulation.helper.userId, simulation.watcher);
 }
 
-export function userBotChangedCore(login: LoginManager, watcher: BotWatcher) {
-    return login.userChanged.pipe(
-        switchMap((user) => {
-            if (user) {
-                return watcher.botTagsChanged(user.id);
-            } else {
-                return never();
-            }
-        })
-    );
+export function userBotChangedCore(botId: string, watcher: BotWatcher) {
+    if (botId) {
+        return watcher.botTagsChanged(botId);
+    } else {
+        return NEVER;
+    }
 }
 
 /**

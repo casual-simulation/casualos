@@ -1,0 +1,125 @@
+---
+id: info
+title: Info Tags
+sidebar_label: Info
+description: Tags related to a bot's information.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  ActionLink,
+  TagLink,
+  NormalCode,
+  ConfigBotBadge,
+  HistoryBotBadge,
+  AutomaticBadge,
+  GridPortalBadge,
+  MiniGridPortalBadge,
+  MiniMapPortalBadge,
+  MenuPortalBadge,
+  MeetPortalBadge,
+  LeftWristPortalBadge,
+  RightWristPortalBadge,
+  SheetPortalBadge,
+  BotPortalBadge,
+  TagPortalBadge,
+  Example,
+  AnyCursorValues,
+  TypeLink,
+  ImuPortalBadge,
+  MapPortalBadge,
+  tagMap,
+} from '../components.jsx';
+
+import { GlossaryRef } from '../glossary/index';
+
+## Info Tags
+
+### `id`
+
+<Badges>
+  <ReadOnlyBadge/>
+  <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
+</Badges>
+
+The ID of the bot.
+
+Every bot has an automatically generated unique ID that cannot be changed.
+
+### `space`
+
+<Badges>
+  <ReadOnlyBadge/>
+  <Example code='space'/>
+</Badges>
+
+The space the bot lives in.
+
+Every bot is stored in a space that specifies how long the bot lives and if it is shared with other people.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='shared'>
+    The bot is saved in the inst and is shared with everyone else. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='local'>
+    The bot is saved on the device it was created from and is not shared with other devices.
+  </PossibleValueCode>
+  <PossibleValueCode value='tempLocal'>
+    The bot is not saved (it is temporary) and is not shared with other sessions.
+    When the current session is closed (by refreshing or closing the tab), the bot is destroyed.
+  </PossibleValueCode>
+  <PossibleValueCode value='tempShared'>
+    The bot is not saved (it is temporary) and is shared with everyone else.
+    Bots in this space show up in the `remoteTempShared` space to other devices.
+    Only the current session can create, edit, and destroy bots in this space.
+    When the current session is closed, the bot is destroyed.
+  </PossibleValueCode>
+  <PossibleValueCode value='remoteTempShared'>
+    The bot is not saved (it is temporary) and is shared with everyone else.
+    Bots appear in this space when another remote puts a bot in their `tempShared` space.
+    Only the other remote's session can create, edit, and destroy bots in this space.
+    When the other remote's session is closed, the bot is destroyed.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+
+#### Record Spaces
+
+Records can be stored in spaces as well. Like bot spaces, record spaces determine how long the record lives and if it is shared with other people.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='tempRestricted'>
+    The record is saved but will be deleted at the end of the day and is only retrievable by the user and appBundle that created them. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='tempGlobal'>
+    The record is saved but will be deleted at the end of the day and it is shared with everyone.
+  </PossibleValueCode>
+  <PossibleValueCode value='permanentRestricted'>
+    The record is saved and is only retrievable by the user and appBundle that created them.
+  </PossibleValueCode>
+  <PossibleValueCode value='permanentGlobal'>
+    The record is saved and is shared with everyone.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `creator`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
+</Badges>
+
+The ID of the bot that created this bot.
+The creator bot must be in the same space as this bot.

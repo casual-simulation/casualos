@@ -1,5 +1,7 @@
 <template>
     <div id="app">
+        <auth-ui></auth-ui>
+        <login-ui @visible="onLoginUIVisible()" @hidden="onLoginUIHidden()"></login-ui>
         <load-app>
             <custom-portals :vmOrigin="vmOrigin()"></custom-portals>
             <bot-portal>
@@ -27,10 +29,9 @@
             </bot-portal>
 
             <html-portals v-show="showCustomApps"></html-portals>
-            <records-ui @visible="hideCustomApps()" @hidden="displayCustomApps()"></records-ui>
+            <records-ui @visible="onRecordsUIVisible()" @hidden="onRecordsUIHidden()"></records-ui>
 
             <upload-files></upload-files>
-            <checkout></checkout>
             <show-input></show-input>
             <show-confirm></show-confirm>
 
@@ -131,7 +132,21 @@
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
 
-            <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
+            <!-- <md-dialog
+                :md-active.sync="showNotAuthorized"
+                class="not-authorized-dialog"
+                @md-closed="onBarcodeScannerClosed()"
+            >
+                <md-dialog-title>Not Authorized</md-dialog-title>
+                <md-dialog-content>
+                    <p>You are not authorized to view this inst.</p>
+                </md-dialog-content>
+                <md-dialog-actions>
+                    <md-button v-if="showChangeLogin" @click="logout()">Change Login</md-button>
+                    <md-button v-else @click="login()">Login</md-button>
+                    <md-button @click="newInst()">New Inst</md-button>
+                </md-dialog-actions>
+            </md-dialog> -->
 
             <md-snackbar
                 md-position="center"
@@ -158,8 +173,11 @@
             <upload-server-modal></upload-server-modal>
             <imu-portal :streamImu="streamImu"></imu-portal>
             <image-classifier></image-classifier>
+            <photo-camera></photo-camera>
             <bot-tooltips></bot-tooltips>
+            <report-inst-dialog></report-inst-dialog>
             <wake-lock></wake-lock>
+            <enable-xr-modal></enable-xr-modal>
 
             <div ref="livekitTracks" class="hidden-livekit-tracks"></div>
         </load-app>

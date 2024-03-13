@@ -23,6 +23,7 @@ import {
     Plane,
     SphereGeometry,
     MeshBasicMaterial,
+    Group,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -78,6 +79,7 @@ import {
     getBotsStateFromStoredAux,
     isStoredVersion2,
     ImportAUXAction,
+    LDrawCountBuildStepsAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -108,6 +110,7 @@ import { Physics } from '../../shared/scene/Physics';
 import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
 import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
 import { EARTH_RADIUS } from './MapPortalGrid3D';
+import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -154,6 +157,9 @@ export class PlayerGame extends Game {
     private miniScene: Scene;
     private mapScene: Scene;
     private miniMapScene: Scene;
+    private _miniAmbientLight: AmbientLight;
+    private _miniDirectionalLight: DirectionalLight;
+    private _miniHDRAddress: string;
 
     // /**
     //  * A scene that is used to allow the main scene to render
@@ -180,6 +186,7 @@ export class PlayerGame extends Game {
     private _startResizeClientPos: Vector2 = null;
     private _currentResizeClientPos: Vector2 = null;
     private _startMiniPortalHeight: number;
+    private _currentMiniHDRAddress: string;
 
     private get slider() {
         if (!this._slider) {
@@ -254,6 +261,20 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.playerSimulations,
             'backgroundAddress'
+        );
+    }
+
+    getDefaultLighting(): boolean {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'defaultLighting'
+        );
+    }
+
+    getPortalHDRAddress() {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'portalHDRAddress'
         );
     }
 
@@ -419,6 +440,20 @@ export class PlayerGame extends Game {
         return this._getSimulationValue(
             this.miniSimulations,
             'playerRotationY'
+        );
+    }
+
+    getMiniDefaultLighting(): boolean {
+        return this._getSimulationValue(
+            this.miniSimulations,
+            'defaultLighting'
+        );
+    }
+
+    getMiniPortalHDRAddress() {
+        return this._getSimulationValue(
+            this.miniSimulations,
+            'portalHDRAddress'
         );
     }
 
@@ -832,6 +867,8 @@ export class PlayerGame extends Game {
                     this._stopFormAnimation(sim, e);
                 } else if (e.type === 'list_form_animations') {
                     this._listFormAnimations(sim, e);
+                } else if (e.type === 'ldraw_count_build_steps') {
+                    this._countLDrawBuildSteps(sim, e);
                 }
             })
         );
@@ -911,7 +948,7 @@ export class PlayerGame extends Game {
                 rig.mainCamera
             );
 
-            const origin = convertVector3(ray.origin, gridScale);
+            const origin = convertVector3(ray.origin, 1 / gridScale);
             const direction = convertVector3(ray.direction, 1);
 
             sim.helper.transaction(
@@ -1008,6 +1045,30 @@ export class PlayerGame extends Game {
             }
 
             sim.helper.transaction(asyncResult(e.taskId, []));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private async _countLDrawBuildSteps(
+        sim: Simulation,
+        e: LDrawCountBuildStepsAction
+    ) {
+        try {
+            const loader = new LDrawLoader();
+            const ldraw: Group = e.address
+                ? await loader.loadAsync(e.address)
+                : await new Promise<Group>((resolve, reject) => {
+                      try {
+                          (loader.parse as any)(e.text, (group: Group) =>
+                              resolve(group)
+                          );
+                      } catch (err) {
+                          reject(err);
+                      }
+                  });
+            const steps = ldraw.userData.numBuildingSteps;
+            sim.helper.transaction(asyncResult(e.taskId, steps));
         } catch (err) {
             sim.helper.transaction(asyncError(e.taskId, err.toString()));
         }
@@ -1235,6 +1296,11 @@ export class PlayerGame extends Game {
         this.renderer.clearDepth(); // Clear depth buffer so that miniGridPortal scene always appears above the main scene.
         // }
         this.miniSceneBackgroundUpdate();
+        this.miniSceneHDRBackgroundUpdate();
+
+        const defaultLighting = this.getMiniDefaultLighting();
+        this._miniAmbientLight.visible = defaultLighting;
+        this._miniDirectionalLight.visible = defaultLighting;
 
         this.renderer.setViewport(
             this.miniViewport.x,
@@ -1343,6 +1409,19 @@ export class PlayerGame extends Game {
         }
     }
 
+    private miniSceneHDRBackgroundUpdate() {
+        const miniAddress = this.getMiniPortalHDRAddress();
+        if (this._currentMiniHDRAddress === miniAddress) {
+            return;
+        }
+        this._currentMiniHDRAddress = miniAddress;
+        if (miniAddress) {
+            this.loadEXRTextureIntoScene(miniAddress, this.miniScene);
+        } else {
+            this.miniScene.environment = null;
+        }
+    }
+
     protected setupRendering() {
         super.setupRendering();
 
@@ -1392,10 +1471,12 @@ export class PlayerGame extends Game {
         // miniGridPortal ambient light.
         const invAmbient = baseAuxAmbientLight();
         this.miniScene.add(invAmbient);
+        this._miniAmbientLight = invAmbient;
 
         // miniGridPortal direction light.
         const invDirectional = baseAuxDirectionalLight();
         this.miniScene.add(invDirectional);
+        this._miniDirectionalLight = invDirectional;
     }
 
     private _createGlobeMask() {

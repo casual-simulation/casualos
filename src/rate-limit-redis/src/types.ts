@@ -8,7 +8,7 @@ export type RedisReply = number | string;
  * 'raw-command-sending' functions for each redis client.
  */
 export type SendCommandFn = (
-    ...args: (string | number)[]
+    ...args: string[]
 ) => Promise<RedisReply | RedisReply[]>;
 
 /**

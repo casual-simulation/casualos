@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": ".",
+        "declaration": true,
+        "declarationMap": true,
+        "composite": true,
+        "incremental": true
+    },
+    "include": ["**/*.ts", "../aux-server/typings/**/*"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts", "partitions/test/**/*"],
+    "references": [
+        { "path": "../aux-common" },
+        { "path": "../aux-records" },
+        { "path": "../crypto" },
+        { "path": "../fast-json-stable-stringify" },
+        { "path": "../expect" }
+    ]
+}

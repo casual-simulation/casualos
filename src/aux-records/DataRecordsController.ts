@@ -1,4 +1,9 @@
-import { NotAuthorizedError, NotLoggedInError, ServerError } from './Errors';
+import {
+    NotAuthorizedError,
+    NotLoggedInError,
+    ServerError,
+    SubscriptionLimitReached,
+} from '@casual-simulation/aux-common/Errors';
 import {
     DataRecordsStore,
     EraseDataStoreResult,
@@ -8,40 +13,59 @@ import {
     UserPolicy,
     doesSubjectMatchPolicy,
     isValidUserPolicy,
+    ListDataStoreFailure,
 } from './DataRecordsStore';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
 import {
-    AuthorizeDataCreateRequest,
-    AuthorizeDeleteDataRequest,
-    AuthorizeDenied,
-    AuthorizeRequestBase,
-    AuthorizeResult,
-    AuthorizeUpdateDataRequest,
+    AuthorizeSubjectFailure,
     PolicyController,
-    returnAuthorizationResult,
+    ResourceInfo,
+    getMarkerResourcesForCreation,
+    getMarkerResourcesForUpdate,
 } from './PolicyController';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import {
+    ACCOUNT_MARKER,
+    DenialReason,
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+    hasValue,
+} from '@casual-simulation/aux-common';
 import { without } from 'lodash';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import { byteLengthOfString } from './Utils';
+import { ZodIssue, z } from 'zod';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
+
+export interface DataRecordsConfiguration {
+    store: DataRecordsStore;
+    policies: PolicyController;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that is able to manage data (key/value) records.
  */
 export class DataRecordsController {
-    private _manager: RecordsController;
     private _store: DataRecordsStore;
     private _policies: PolicyController;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
     /**
      * Creates a DataRecordsController.
-     * @param manager The records manager that should be used to validate record keys.
-     * @param store The store that should be used to save data.
+     * @param config The configuration that should be used for the data records controller.
      */
-    constructor(policies: PolicyController, store: DataRecordsStore) {
-        this._store = store;
-        this._policies = policies;
+    constructor(config: DataRecordsConfiguration) {
+        this._store = config.store;
+        this._policies = config.policies;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -59,7 +83,7 @@ export class DataRecordsController {
     async recordData(
         recordKeyOrRecordName: string,
         address: string,
-        data: string,
+        data: object | string | boolean | number,
         subjectId: string,
         updatePolicy: UserPolicy,
         deletePolicy: UserPolicy,
@@ -67,29 +91,17 @@ export class DataRecordsController {
         instances: string[] = null
     ): Promise<RecordDataResult> {
         try {
-            const baseRequest: Omit<AuthorizeRequestBase, 'action'> = {
-                recordKeyOrRecordName,
-                userId: subjectId,
-                instances,
-            };
+            const contextResult =
+                await this._policies.constructAuthorizationContext({
+                    recordKeyOrRecordName,
+                    userId: subjectId,
+                });
 
-            const result = await this._policies.constructAuthorizationContext(
-                baseRequest
-            );
-
-            // const result = await this._policies.authorizeRequest({
-            //     action: 'data.create',
-            //     recordKeyOrRecordName,
-            //     address: address,
-            //     userId: subjectId,
-            //     resourceMarkers,
-            // });
-
-            if (result.success === false) {
-                return result;
+            if (contextResult.success === false) {
+                return contextResult;
             }
 
-            const policy = result.context.subjectPolicy;
+            const policy = contextResult.context.subjectPolicy;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -149,7 +161,7 @@ export class DataRecordsController {
                 }
             }
 
-            const recordName = result.context.recordName;
+            const recordName = contextResult.context.recordName;
             const existingRecord = await this._store.getData(
                 recordName,
                 address
@@ -168,54 +180,130 @@ export class DataRecordsController {
                 }
             }
 
-            let request:
-                | AuthorizeDataCreateRequest
-                | AuthorizeUpdateDataRequest;
             let resourceMarkers: string[];
             if (existingRecord.success) {
                 const existingMarkers = existingRecord.markers ?? [
                     PUBLIC_READ_MARKER,
                 ];
-                const addedMarkers = markers
-                    ? without(markers, ...existingMarkers)
-                    : [];
-                const removedMarkers = markers
-                    ? without(existingMarkers, ...markers)
-                    : [];
                 resourceMarkers = markers ?? existingMarkers;
-                request = {
-                    action: 'data.update',
-                    ...baseRequest,
-                    address: address,
-                    existingMarkers,
-                    addedMarkers,
-                    removedMarkers,
-                };
+
+                const authorization =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        contextResult.context,
+                        {
+                            userId: subjectId,
+                            instances,
+                            resources: [
+                                {
+                                    resourceKind: 'data',
+                                    resourceId: address,
+                                    action: 'update',
+                                    markers: resourceMarkers,
+                                },
+                                ...getMarkerResourcesForUpdate(
+                                    existingMarkers,
+                                    markers
+                                ),
+                            ],
+                        }
+                    );
+
+                if (authorization.success === false) {
+                    return authorization;
+                }
             } else {
                 resourceMarkers = markers ?? [PUBLIC_READ_MARKER];
-                request = {
-                    action: 'data.create',
-                    ...baseRequest,
-                    address: address,
-                    resourceMarkers: resourceMarkers,
+
+                const authorization =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        contextResult.context,
+                        {
+                            userId: subjectId,
+                            instances,
+                            resources: [
+                                {
+                                    resourceKind: 'data',
+                                    resourceId: address,
+                                    action: 'create',
+                                    markers: resourceMarkers,
+                                },
+                                ...getMarkerResourcesForCreation(
+                                    resourceMarkers
+                                ),
+                            ],
+                        }
+                    );
+
+                if (authorization.success === false) {
+                    return authorization;
+                }
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionDataMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.data.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of data.',
+                    errorReason: 'data_not_allowed',
                 };
             }
 
-            const authorization =
-                await this._policies.authorizeRequestUsingContext(
-                    result.context,
-                    request
-                );
+            if (hasValue(features.data.maxItemSizeInBytes)) {
+                const dataString =
+                    typeof data === 'string' ? data : stringify(data);
+                const size = byteLengthOfString(dataString);
+                const schema = z.number().max(features.data.maxItemSizeInBytes);
+                const result = schema.safeParse(size, {
+                    path: ['data', 'sizeInBytes'],
+                });
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+                if (result.success === false) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The size of the item is larger than the subscription allows.',
+                        errorReason: 'data_too_large',
+                        issues: result.error.issues,
+                    };
+                }
+            }
+
+            if (!existingRecord.success) {
+                // Check metrics
+                if (features.data.maxItems > 0) {
+                    if (metricsResult.totalItems >= features.data.maxItems) {
+                        return {
+                            success: false,
+                            errorCode: 'subscription_limit_reached',
+                            errorMessage:
+                                'The maximum number of items has been reached for your subscription.',
+                            errorReason: 'too_many_items',
+                        };
+                    }
+                }
             }
 
             const result2 = await this._store.setData(
                 recordName,
                 address,
                 data,
-                authorization.authorizerId,
+                contextResult.context.recordKeyCreatorId ??
+                    subjectId ??
+                    contextResult.context.recordOwnerId,
                 subjectId,
                 updatePolicy,
                 deletePolicy,
@@ -236,10 +324,14 @@ export class DataRecordsController {
                 address: address,
             };
         } catch (err) {
+            console.error(
+                `[DataRecordsController] A server error occurred while recording data:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -285,18 +377,20 @@ export class DataRecordsController {
 
             const markers = result.markers ?? [PUBLIC_READ_MARKER];
             const authorization =
-                await this._policies.authorizeRequestUsingContext(
+                await this._policies.authorizeUserAndInstances(
                     context.context,
                     {
-                        action: 'data.read',
-                        ...baseRequest,
-                        address,
-                        resourceMarkers: markers,
+                        userId: userId,
+                        instances,
+                        resourceKind: 'data',
+                        resourceId: address,
+                        action: 'read',
+                        markers: markers,
                     }
                 );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            if (authorization.success === false) {
+                return authorization;
             }
 
             return {
@@ -349,6 +443,18 @@ export class DataRecordsController {
                 return context;
             }
 
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId,
+                        instances,
+                        resourceKind: 'data',
+                        action: 'list',
+                        markers: [ACCOUNT_MARKER],
+                    }
+                );
+
             const result2 = await this._store.listData(
                 context.context.recordName,
                 address
@@ -362,35 +468,90 @@ export class DataRecordsController {
                 };
             }
 
-            const authorizeResult =
-                await this._policies.authorizeRequestUsingContext(
-                    context.context,
-                    {
-                        action: 'data.list',
-                        ...baseRequest,
-                        dataItems: result2.items.map((i) => ({
-                            ...i,
-                            markers: i.markers ?? [PUBLIC_READ_MARKER],
-                        })),
-                    }
-                );
-
-            if (authorizeResult.allowed === false) {
-                return returnAuthorizationResult(authorizeResult);
-            }
-
-            if (!authorizeResult.allowedDataItems) {
-                throw new Error('allowedDataItems is null!');
+            if (authorization.success === false) {
+                return authorization;
             }
 
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: authorizeResult.allowedDataItems as ListDataSuccess['items'],
+                items: result2.items as ListedData[],
+                totalCount: result2.totalCount,
             };
         } catch (err) {
             console.error(
                 '[DataRecordsController] An error occurred while listing data:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists some data from the given record, filtered by the given marker and starting at the given address.
+     * @param request The request that should be used to list the data.
+     */
+    async listDataByMarker(
+        request: ListDataByMarkerRequest
+    ): Promise<ListDataResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordKeyOrName,
+                userId: request.userId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: context.context.userId,
+                        instances: request.instances,
+                        resourceKind: 'data',
+                        action: 'list',
+                        markers: [request.marker],
+                    }
+                );
+
+            const result2 = await this._store.listDataByMarker({
+                recordName: context.context.recordName,
+                marker: request.marker,
+                startingAddress: request.startingAddress,
+                sort: request.sort,
+            });
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            return {
+                success: true,
+                recordName: context.context.recordName,
+                items: result2.items as ListedData[],
+                totalCount: result2.totalCount,
+                marker: result2.marker,
+            };
+        } catch (err) {
+            console.error(
+                '[DataRecordsController] An error occurred while listing data by marker:',
                 err
             );
             return {
@@ -416,38 +577,10 @@ export class DataRecordsController {
         instances?: string[]
     ): Promise<EraseDataResult> {
         try {
-            // const result = await this._manager.validatePublicRecordKey(
-            //     recordKey
-            // );
-            // if (result.success === false) {
-            //     return {
-            //         success: false,
-            //         errorCode: result.errorCode,
-            //         errorMessage: result.errorMessage,
-            //     };
-            // }
-
-            // if (!subjectId && result.policy !== 'subjectless') {
-            //     return {
-            //         success: false,
-            //         errorCode: 'not_logged_in',
-            //         errorMessage:
-            //             'The user must be logged in in order to erase data using the provided record key.',
-            //     };
-            // }
-
-            // if (result.policy === 'subjectless') {
-            //     subjectId = null;
-            // }
-
-            const baseRequest: Omit<AuthorizeRequestBase, 'action'> = {
+            const context = await this._policies.constructAuthorizationContext({
                 recordKeyOrRecordName: recordKeyOrName,
                 userId: subjectId,
-                instances,
-            };
-            const context = await this._policies.constructAuthorizationContext(
-                baseRequest
-            );
+            });
 
             if (context.success === false) {
                 return context;
@@ -478,26 +611,40 @@ export class DataRecordsController {
             const markers = (existingRecord.success
                 ? existingRecord.markers
                 : null) ?? [PUBLIC_READ_MARKER];
+
             const authorization =
-                await this._policies.authorizeRequestUsingContext(
+                await this._policies.authorizeUserAndInstances(
                     context.context,
                     {
-                        action: 'data.delete',
-                        ...baseRequest,
-                        address,
-                        resourceMarkers: markers,
+                        userId: subjectId,
+                        instances,
+                        resourceKind: 'data',
+                        resourceId: address,
+                        action: 'delete',
+                        markers: markers,
                     }
                 );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+            // const authorization =
+            //     await this._policies.authorizeRequestUsingContext(
+            //         context.context,
+            //         {
+            //             action: 'data.delete',
+            //             ...baseRequest,
+            //             address,
+            //             resourceMarkers: markers,
+            //         }
+            //     );
+
+            if (authorization.success === false) {
+                return authorization;
             }
 
             if (existingRecord.success) {
                 const existingDeletePolicy =
                     existingRecord.deletePolicy ?? true;
                 if (
-                    subjectId !== authorization.recordKeyOwnerId &&
+                    subjectId !== context.context.recordOwnerId &&
                     !doesSubjectMatchPolicy(existingDeletePolicy, subjectId)
                 ) {
                     return {
@@ -525,42 +672,118 @@ export class DataRecordsController {
                 address,
             };
         } catch (err) {
+            console.error(
+                `[DataRecordsController] A server error occurred while erasing data:`,
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
 }
 
+/**
+ * The possible results of a record data request.
+ *
+ * @dochash types/records/data
+ * @doctitle Data Types
+ * @docsidebar Data
+ * @docdescription Data records are used to store key/value pairs of data.
+ * @docgroup 01-create
+ * @order 0
+ * @docname RecordDataResult
+ */
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 
+/**
+ * Defines an interface that represents a successful "record data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 1
+ * @docname RecordDataSuccess
+ */
 export interface RecordDataSuccess {
     success: true;
+    /**
+     * The name of the record that the data was recorded to.
+     */
     recordName: string;
+
+    /**
+     * The address that the data is stored at.
+     */
     address: string;
 }
 
+/**
+ * Defines an interface that represents a failed "record data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 2
+ * @docname RecordDataFailure
+ */
 export interface RecordDataFailure {
     success: false;
+
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
         | NotAuthorizedError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode']
+        | SubscriptionLimitReached
         | 'unacceptable_request'
         | 'not_supported'
         | 'invalid_update_policy'
-        | 'invalid_delete_policy';
+        | 'invalid_delete_policy'
+        | AuthorizeSubjectFailure['errorCode'];
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
+
+    /**
+     * The reason for the error.
+     */
+    errorReason?: 'data_not_allowed' | 'too_many_items' | 'data_too_large';
+
+    /**
+     * The reason why the request was denied authorization.
+     */
+    reason?: DenialReason;
+
+    /**
+     * The issues with the request.
+     */
+    issues?: ZodIssue[];
 }
 
+/**
+ * The possible results of a get data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 0
+ * @docname GetDataResult
+ */
 export type GetDataResult = GetDataSuccess | GetDataFailure;
 
 /**
  * Defines an interface that represents a successful "get data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 1
+ * @docname GetDataSuccess
  */
 export interface GetDataSuccess {
     success: true;
@@ -601,54 +824,209 @@ export interface GetDataSuccess {
     markers: string[];
 }
 
+/**
+ * Defines an interface that repeesents a failed "get data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 3
+ * @docname GetDataFailure
+ */
 export interface GetDataFailure {
     success: false;
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | GetDataStoreResult['errorCode']
-        | AuthorizeDenied['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | 'not_supported';
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results of an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 0
+ * @docname EraseDataResult
+ */
 export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
 
+/**
+ * Defines an interface that represents a successful result for an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 1
+ * @docname EraseDataSuccess
+ */
 export interface EraseDataSuccess {
     success: true;
+
+    /**
+     * The name of the record that the data was erased from.
+     */
     recordName: string;
+
+    /**
+     * The address of the data that was erased.
+     */
     address: string;
 }
 
+/**
+ * Defines an interface that represents a failed result for an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 2
+ * @docname EraseDataFailure
+ */
 export interface EraseDataFailure {
     success: false;
+
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
         | NotAuthorizedError
         | EraseDataStoreResult['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode']
-        | AuthorizeDenied['errorCode'];
+        | AuthorizeSubjectFailure['errorCode'];
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
 }
 
-export type ListDataResult = ListDataSuccess | ListDataFailure;
+/**
+ * Defines an interface that represents the possible options in a list data request.
+ */
+export interface ListDataByMarkerRequest {
+    /**
+     * The record key or name that should be used to list the data.
+     */
+    recordKeyOrName: string;
 
-export interface ListDataSuccess {
-    success: true;
-    recordName: string;
-    items: {
-        data: any;
-        address: string;
-        markers: string[];
-    }[];
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The list of instances that are currently loaded.
+     */
+    instances?: string[];
+
+    /**
+     * The marker that the data should be filtered by.
+     */
+    marker: string;
+
+    /**
+     * The address that the listing should start after.
+     */
+    startingAddress: string | null;
+
+    /**
+     * The order that the data should be sorted in.
+     * Defaults to "ascending".
+     */
+    sort?: 'ascending' | 'descending';
 }
 
+/**
+ * The possible results of a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 0
+ * @docname ListDataResult
+ */
+export type ListDataResult = ListDataSuccess | ListDataFailure;
+
+/**
+ * Defines an interface that represents a successful result for a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 1
+ * @docname ListDataSuccess
+ */
+export interface ListDataSuccess {
+    success: true;
+
+    /**
+     * The name of the record that the data was listed from.
+     */
+    recordName: string;
+
+    /**
+     * The items that were listed.
+     */
+    items: ListedData[];
+
+    /**
+     * The total number of items in the record.
+     */
+    totalCount: number;
+
+    /**
+     * The marker that was listed.
+     * If null, then all markers are listed.
+     */
+    marker?: string;
+}
+
+/**
+ * Defines an interface that represents a single item in a list data result.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 2
+ * @docname ListedData
+ */
+export interface ListedData {
+    /**
+     * The data contained in the item.
+     */
+    data: any;
+
+    /**
+     * The address that the data is stored at.
+     */
+    address: string;
+
+    /**
+     * The markers that have been applied to the data.
+     */
+    markers: string[];
+}
+
+/**
+ * Defines an interface that represents a failed result for a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 2
+ * @docname ListDataFailure
+ */
 export interface ListDataFailure {
     success: false;
     errorCode:
         | ServerError
-        | ListDataStoreResult['errorCode']
-        | AuthorizeDenied['errorCode']
+        | ListDataStoreFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
         | 'not_supported';
     errorMessage: string;
 }

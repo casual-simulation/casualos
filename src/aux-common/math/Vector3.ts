@@ -4,6 +4,12 @@ import { Vector2 } from './Vector2';
 
 /**
  * Defines a class that represents a 3D point in space.
+ * @dochash types/math/vectors
+ * @docorder 1
+ * @doctitle Vectors
+ * @docsidebar Vectors
+ * @docdescription Vectors help represent positions and directions.
+ * @docname Vector3
  */
 export class Vector3 {
     /**

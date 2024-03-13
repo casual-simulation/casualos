@@ -5,27 +5,35 @@ services:
         restart: always
         ports:
             - '80:3000'
+            - '3002:3002'
             - '4567:4567'
         depends_on:
             - mongo
             - redis
-        environment:
-            NODE_ENV: production
-            MONGO_URL: 'mongodb://mongo:27017'
-            REDIS_HOST: 'redis'
-            REDIS_PORT: '6379'
-            SANDBOX_TYPE: 'deno'
+            - cockroach
+        env_file:
+            - ./docker-compose.env
     mongo:
-        image: 'mongo:latest'
+        image: 'mongo:7.0.4'
         restart: always
-        ports:
-            - '27017:27017'
         volumes:
-            - '/data/db:/data/db'
+            - mongo-data:/data/db
     redis:
-        image: 'redis:latest'
+        image: 'redis:7.2'
         restart: always
         ports:
             - '6379:6379'
         volumes:
-            - '/data/cache:/data'
+            - redis-data:/data
+    cockroach:
+        image: 'cockroachdb/cockroach:v23.1.13'
+        restart: always
+        command: start-single-node --insecure
+        ports:
+            - '8080:8080'
+        volumes:
+            - cockroach-single:/cockroach/cockroach-data
+volumes:
+    cockroach-single:
+    mongo-data:
+    redis-data:

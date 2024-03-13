@@ -12,8 +12,7 @@ import {
     BotSpace,
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
-import { CurrentVersion, StatusUpdate } from '@casual-simulation/causal-trees';
-import { waitAsync } from '../../test/TestHelpers';
+import { waitAsync, allDataTypeCases } from '../../test/TestHelpers';
 import {
     first,
     buffer,
@@ -32,14 +31,15 @@ import {
     TAG_EDIT_NAME,
     TagEdit,
     isTagEdit,
-} from '../../aux-format-2';
+} from '../../bots';
 import faker from 'faker';
 import {
     generateRandomEditCases,
     generateRandomEditParagraphCases,
 } from '../../test/FuzzingHelpers';
-import { allDataTypeCases } from '../../runtime/test/RuntimeTestHelpers';
+import '../../BlobPolyfill';
 import '../../../../jest/jest-matchers';
+import { CurrentVersion, StatusUpdate } from '../../common';
 
 expect.extend({
     toBeEditMatching: (received: TagEdit, expected: TagEdit) => {
@@ -604,6 +604,30 @@ export function testPartitionImplementation(
             await waitAsync();
 
             expect(updated).toEqual([]);
+        });
+
+        it('should ignore updates that set tag values to null if the value is undefined', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        example: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([]);
+            expect(updates.slice(1)).toEqual([]);
         });
 
         it('should support updates to arrays that keep the same array instance', async () => {
@@ -1220,13 +1244,15 @@ export function testPartitionImplementation(
                     }),
                 });
 
-                const partitionEdit = updates[1].state.test.tags.abc;
+                const partitionEdit = updates?.[1]?.state?.test?.tags?.abc;
 
+                const currentSite = version?.currentSite ?? '';
+                const remoteSite = version?.remoteSite ?? '';
                 expect(partitionEdit.version).not.toEqual({
-                    [version.currentSite]: expect.any(Number),
+                    [currentSite]: expect.any(Number),
                 });
                 expect(partitionEdit.version).toEqual({
-                    [version.remoteSite]: expect.any(Number),
+                    [remoteSite]: expect.any(Number),
                 });
 
                 expect(Object.keys(version.vector).length).toBeGreaterThan(0);

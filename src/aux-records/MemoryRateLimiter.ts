@@ -25,7 +25,7 @@ export class MemoryRateLimiter implements RateLimiter {
 
         return {
             totalHits: state.count,
-            resetTime: new Date(state.resetTimeMs),
+            resetTimeMs: state.resetTimeMs,
         };
     }
 
@@ -36,6 +36,11 @@ export class MemoryRateLimiter implements RateLimiter {
 
     async resetKey(key: string): Promise<void> {
         this._states.delete(key);
+    }
+
+    getHits(key: string): number {
+        const state = this._getState(key);
+        return state.count;
     }
 
     private _getState(key: string): MemoryState {

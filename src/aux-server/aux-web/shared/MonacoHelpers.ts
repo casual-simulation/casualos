@@ -3,8 +3,6 @@ import {
     Bot,
     tagsOnBot,
     isFormula,
-    Transpiler,
-    replaceMacros,
     KNOWN_TAGS,
     isScript,
     hasValue,
@@ -65,7 +63,12 @@ import {
     distinctUntilChanged,
     finalize,
 } from 'rxjs/operators';
-import { Simulation } from '@casual-simulation/aux-vm';
+import {
+    BotTagChange,
+    BotTagEdit,
+    BotTagUpdate,
+    Simulation,
+} from '@casual-simulation/aux-vm';
 import {
     BrowserSimulation,
     userBotTagsChanged,
@@ -73,7 +76,6 @@ import {
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
-    bot,
     del,
     edit,
     edits,
@@ -81,7 +83,7 @@ import {
     mergeVersions,
     preserve,
     TagEditOp,
-} from '@casual-simulation/aux-common/aux-format-2';
+} from '@casual-simulation/aux-common/bots';
 import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';
 import {
@@ -97,6 +99,10 @@ import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
 import './public/monaco-editor/quick-search-all/quick-search-all';
 import { getModelUriFromId } from './MonacoUtils';
+import {
+    Transpiler,
+    replaceMacros,
+} from '@casual-simulation/aux-runtime/runtime/Transpiler';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -1342,147 +1348,152 @@ function watchModel(
     let lastVersion = simulation.watcher.latestVersion;
     let applyingEdits: boolean = false;
 
-    sub.add(
-        simulation.watcher
-            .botTagChanged(bot.id, tag, space)
-            .pipe(
-                takeWhile((update) => update !== null),
-                tap((update) => {
-                    lastVersion.vector = mergeVersions(
-                        lastVersion.vector,
-                        update.version
-                    );
-                }),
-                filter((update) => {
-                    // Only allow updates that are not edits
-                    // or are not from the current site.
-                    // TODO: Improve to allow edits from the current site to be mixed with
-                    // edits from other sites.
-                    return (
-                        update.type !== 'edit' ||
-                        Object.keys(simulation.watcher.localSites).every(
-                            (site) => !hasValue(update.version[site])
-                        )
-                    );
-                }),
-                skip(1)
-            )
-            .subscribe((update) => {
-                bot = update.bot;
-                if (update.type === 'edit') {
-                    const userSelections = getEditor()?.getSelections() || [];
-                    const selectionPositions = userSelections.map(
-                        (s) =>
-                            [
-                                new monaco.Position(
-                                    s.startLineNumber,
-                                    s.startColumn
-                                ),
-                                new monaco.Position(
-                                    s.endLineNumber,
-                                    s.endColumn
-                                ),
-                            ] as [monaco.Position, monaco.Position]
+    const applyEdit = (update: BotTagEdit) => {
+        const userSelections = getEditor()?.getSelections() || [];
+        const selectionPositions = userSelections.map(
+            (s) =>
+                [
+                    new monaco.Position(s.startLineNumber, s.startColumn),
+                    new monaco.Position(s.endLineNumber, s.endColumn),
+                ] as [monaco.Position, monaco.Position]
+        );
+
+        for (let ops of update.operations) {
+            let index = -info.editOffset;
+            for (let op of ops) {
+                if (op.type === 'preserve') {
+                    index += op.count;
+                } else if (op.type === 'insert') {
+                    const pos = model.getPositionAt(index);
+                    const selection = new monaco.Selection(
+                        pos.lineNumber,
+                        pos.column,
+                        pos.lineNumber,
+                        pos.column
                     );
 
-                    for (let ops of update.operations) {
-                        let index = -info.editOffset;
-                        for (let op of ops) {
-                            if (op.type === 'preserve') {
-                                index += op.count;
-                            } else if (op.type === 'insert') {
-                                const pos = model.getPositionAt(index);
-                                const selection = new monaco.Selection(
-                                    pos.lineNumber,
-                                    pos.column,
-                                    pos.lineNumber,
-                                    pos.column
-                                );
-
-                                try {
-                                    applyingEdits = true;
-                                    model.pushEditOperations(
-                                        [],
-                                        [{ range: selection, text: op.text }],
-                                        () => null
-                                    );
-                                } finally {
-                                    applyingEdits = false;
-                                }
-
-                                index += op.text.length;
-
-                                const endPos = model.getPositionAt(index);
-
-                                offsetSelections(
-                                    pos,
-                                    endPos,
-                                    selectionPositions
-                                );
-                            } else if (op.type === 'delete') {
-                                const startPos = model.getPositionAt(index);
-                                const endPos = model.getPositionAt(
-                                    index + op.count
-                                );
-                                const selection = new monaco.Selection(
-                                    startPos.lineNumber,
-                                    startPos.column,
-                                    endPos.lineNumber,
-                                    endPos.column
-                                );
-                                try {
-                                    applyingEdits = true;
-                                    model.pushEditOperations(
-                                        [],
-                                        [{ range: selection, text: '' }],
-                                        () => null
-                                    );
-                                } finally {
-                                    applyingEdits = false;
-                                }
-
-                                // Start and end positions are switched
-                                // so that deltas are negative
-                                offsetSelections(
-                                    endPos,
-                                    startPos,
-                                    selectionPositions
-                                );
-                            }
-                        }
-                    }
-
-                    const finalSelections = selectionPositions.map(
-                        ([start, end]) =>
-                            new monaco.Selection(
-                                start.lineNumber,
-                                start.column,
-                                end.lineNumber,
-                                end.column
-                            )
-                    );
-                    getEditor()?.setSelections(finalSelections);
-                } else {
-                    if (model === activeModel) {
-                        return;
-                    }
-                    let script = getScript(bot, tag, space);
-                    let value = model.getValue();
                     try {
                         applyingEdits = true;
-                        if (script !== value) {
-                            model.setValue(script);
-                        }
-                        updateLanguage(
-                            simulation,
-                            model,
-                            tag,
-                            getTagValueForSpace(bot, tag, space),
-                            true
+                        model.pushEditOperations(
+                            [],
+                            [{ range: selection, text: op.text }],
+                            () => null
                         );
                     } finally {
                         applyingEdits = false;
                     }
+
+                    index += op.text.length;
+
+                    const endPos = model.getPositionAt(index);
+
+                    offsetSelections(pos, endPos, selectionPositions);
+                } else if (op.type === 'delete') {
+                    const startPos = model.getPositionAt(index);
+                    const endPos = model.getPositionAt(index + op.count);
+                    const selection = new monaco.Selection(
+                        startPos.lineNumber,
+                        startPos.column,
+                        endPos.lineNumber,
+                        endPos.column
+                    );
+                    try {
+                        applyingEdits = true;
+                        model.pushEditOperations(
+                            [],
+                            [{ range: selection, text: '' }],
+                            () => null
+                        );
+                    } finally {
+                        applyingEdits = false;
+                    }
+
+                    // Start and end positions are switched
+                    // so that deltas are negative
+                    offsetSelections(endPos, startPos, selectionPositions);
+                }
+            }
+        }
+
+        const finalSelections = selectionPositions.map(
+            ([start, end]) =>
+                new monaco.Selection(
+                    start.lineNumber,
+                    start.column,
+                    end.lineNumber,
+                    end.column
+                )
+        );
+        getEditor()?.setSelections(finalSelections);
+    };
+
+    const applyUpdate = (update: BotTagUpdate) => {
+        if (model === activeModel) {
+            return;
+        }
+        let script = getScript(bot, tag, space);
+        let value = model.getValue();
+        try {
+            applyingEdits = true;
+            if (script !== value) {
+                model.setValue(script);
+            }
+            updateLanguage(
+                simulation,
+                model,
+                tag,
+                getTagValueForSpace(bot, tag, space),
+                true
+            );
+        } finally {
+            applyingEdits = false;
+        }
+    };
+
+    const isApplyableChange = (update: BotTagChange) => {
+        // Only allow updates that are not edits
+        // or are not from the current site.
+        // TODO: Improve to allow edits from the current site to be mixed with
+        // edits from other sites.
+        return (
+            update.type !== 'edit' ||
+            Object.keys(simulation.watcher.localSites).every(
+                (site) => !hasValue(update.version[site])
+            )
+        );
+    };
+
+    sub.add(
+        simulation.watcher
+            .botTagChanged(bot.id, tag, space)
+            .pipe(
+                skip(1),
+                takeWhile((update) => update !== null)
+            )
+            .subscribe((update) => {
+                // Ensure that the version vector is updated in the same browser tick
+                // as applying the update to the editor.
+                // If we update the version vector and apply the update in separate browser ticks,
+                // then it is possible for a user edit to get in between the version vector update and the
+                // update to the editor, which might cause the applied updates to be incorrect.
+
+                // Update the version vector
+                lastVersion.vector = mergeVersions(
+                    lastVersion.vector,
+                    update.version
+                );
+
+                // Check if we can apply the change to the editor
+                if (!isApplyableChange(update)) {
+                    return;
+                }
+
+                // Apply the change.
+                bot = update.bot;
+                if (update.type === 'edit') {
+                    applyEdit(update);
+                } else {
+                    applyUpdate(update);
                 }
             })
     );

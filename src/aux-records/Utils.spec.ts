@@ -1,7 +1,5 @@
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import {
-    toBase64String,
-    fromBase64String,
     createCanonicalRequest,
     encodeHexUtf8,
     canonicalUriEncode,
@@ -14,23 +12,12 @@ import {
     tryParseJson,
     isStringValid,
     isActiveSubscription,
-    getMarkersOrDefault,
+    getRootMarkersOrDefault,
     parseInstancesList,
+    byteLengthOfString,
+    getRootMarker,
+    getPathMarker,
 } from './Utils';
-
-const cases = [['abc', 'YWJj']];
-
-it.each(cases)('toBase64String(%s) -> %s', (input, output) => {
-    const result = toBase64String(input);
-
-    expect(result).toBe(output);
-});
-
-it.each(cases)('%s <- fromBase64String(%s)', (input, output) => {
-    const result = fromBase64String(output);
-
-    expect(result).toBe(input);
-});
 
 describe('signRequest()', () => {
     it('should return an object containing the information for the request', () => {
@@ -473,7 +460,7 @@ describe('getStatusCode()', () => {
         ['session_already_revoked', 200] as const,
         ['invalid_code', 403] as const,
         ['invalid_key', 403] as const,
-        ['invalid_record_key', 400] as const,
+        ['invalid_record_key', 403] as const,
         ['invalid_request', 403] as const,
         ['session_expired', 401] as const,
         ['unacceptable_address', 400] as const,
@@ -495,13 +482,50 @@ describe('getStatusCode()', () => {
         ['user_is_banned', 403] as const,
         ['rate_limit_exceeded', 429] as const,
         ['not_authorized', 403] as const,
+        ['not_subscribed', 403] as const,
+        ['invalid_subscription_tier', 403] as const,
+        ['studio_not_found', 404] as const,
+        ['user_not_found', 404] as const,
+        ['record_already_exists', 403] as const,
+        ['subscription_limit_reached', 403] as const,
+        ['unacceptable_update', 400] as const,
+        ['inst_not_found', 404] as const,
+        ['no_session_key', 400] as const,
+        ['action_not_supported', 500] as const,
+        ['unacceptable_studio_id', 400] as const,
+        ['email_already_exists', 400] as const,
+        ['parent_email_already_exists', 400] as const,
+        ['parent_email_required', 400] as const,
+        ['invalid_room_name', 400] as const,
+        ['invalid_username', 400] as const,
+        ['invalid_update_policy', 400] as const,
+        ['invalid_delete_policy', 400] as const,
+        ['unacceptable_url', 400] as const,
+        ['file_already_exists', 400] as const,
+        ['invalid_file_data', 400] as const,
+        ['invalid_model', 400] as const,
+        ['roles_too_large', 400] as const,
+        ['policy_not_found', 404] as const,
+        ['policy_too_large', 400] as const,
+        ['invalid_policy', 400] as const,
+        ['not_completed', 400] as const,
+        ['invalid_display_name', 400] as const,
+        ['permission_already_exists', 400] as const,
+        ['comId_not_found', 404] as const,
+        ['comId_already_taken', 409] as const,
+        ['permission_not_found', 404] as const,
+        ['unacceptable_connection_token', 400] as const,
+        ['invalid_token', 400] as const,
+        ['unacceptable_connection_id', 400] as const,
+        ['message_not_found', 404] as const,
+        ['not_found', 404] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
         expect(
             getStatusCode({
                 success: false,
-                errorCode: code,
+                errorCode: code as any,
             })
         ).toBe(expectedStatus);
     });
@@ -630,16 +654,75 @@ describe('isActiveSubscription()', () => {
     });
 });
 
-describe('getMarkersOrDefault()', () => {
+describe('getRootMarkersOrDefault()', () => {
     it('should return the given list of markers', () => {
-        expect(getMarkersOrDefault(['abc', 'def'])).toEqual(['abc', 'def']);
+        expect(getRootMarkersOrDefault(['abc', 'def'])).toEqual(['abc', 'def']);
     });
 
     it('should return the default markers if the given list is empty', () => {
-        expect(getMarkersOrDefault([])).toEqual([PUBLIC_READ_MARKER]);
+        expect(getRootMarkersOrDefault([])).toEqual([PUBLIC_READ_MARKER]);
     });
 
     it('should return the default markers if the given list is null', () => {
-        expect(getMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
+        expect(getRootMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
+    });
+
+    it('should get the root markers from the list', () => {
+        expect(
+            getRootMarkersOrDefault([PUBLIC_READ_MARKER, 'marker:tag'])
+        ).toEqual([PUBLIC_READ_MARKER, 'marker']);
+    });
+});
+
+describe('getRootMarker()', () => {
+    it('should return the marker if it is a root marker', () => {
+        expect(getRootMarker('marker')).toBe('marker');
+    });
+
+    it('should return the root marker if it has a colon', () => {
+        expect(getRootMarker('marker:tag')).toBe('marker');
+    });
+
+    it('should do nothing if given null', () => {
+        expect(getRootMarker(null)).toBe(null);
+    });
+
+    it('should do nothing if given an empty string', () => {
+        expect(getRootMarker('')).toBe('');
+    });
+
+    it('should return the root if given a string with no path', () => {
+        expect(getRootMarker('marker:')).toBe('marker');
+    });
+});
+
+describe('getPathMarker()', () => {
+    it('should return an empty string if given a marker without a path', () => {
+        expect(getPathMarker('marker')).toBe('');
+        expect(getPathMarker('marker:')).toBe('');
+    });
+
+    it('should return the path marker if it has a colon', () => {
+        expect(getPathMarker('marker:tag')).toBe('tag');
+    });
+
+    it('should return an empty string if given null', () => {
+        expect(getPathMarker(null)).toBe('');
+    });
+
+    it('should do nothing if given an empty string', () => {
+        expect(getPathMarker('')).toBe('');
+    });
+
+    it('should return the full path if given a marker with multiple colons', () => {
+        expect(getPathMarker('marker:tag:abc')).toBe('tag:abc');
+    });
+});
+
+describe('byteLengthOfString()', () => {
+    it('should return the byte length of the given string', () => {
+        expect(byteLengthOfString('abc')).toBe(3);
+        expect(byteLengthOfString('')).toBe(0);
+        expect(byteLengthOfString('😀')).toBe(4);
     });
 });

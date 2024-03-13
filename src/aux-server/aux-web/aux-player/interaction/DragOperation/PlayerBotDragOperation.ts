@@ -64,7 +64,7 @@ import { ExternalRenderers, SpatialReference } from '../../MapUtils';
 import { PriorityGrid3D } from '../../../shared/scene/PriorityGrid3D';
 import { BoundedGrid3D } from '../../../shared/scene/BoundedGrid3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
-import { first } from '@casual-simulation/causal-trees';
+import { first } from '@casual-simulation/aux-common';
 import { convertCasualOSPositionToThreePosition } from '../../../shared/scene/grid/Grid';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { SphereGrid3D } from '../../../shared/scene/SphereGrid3D';
