@@ -8621,6 +8621,29 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('def')]]);
                 });
 
+                it('should be able to resolve imports when called directly', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(that + abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    const b = runtime.context.bots.find(
+                        (b) => b.id === 'test1'
+                    );
+                    await b.hello('111');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('111def')]]);
+                });
+
                 it('should be able to import listeners by system tag', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -11155,6 +11178,49 @@ describe('AuxRuntime', () => {
                 expect(Object.keys(bot.values)).toEqual([]);
                 expect(tagsOnBot(bot)).toEqual([]);
                 expect(runtime.getValue(bot, 'missing')).toBeUndefined();
+            });
+
+            it('should return the listener for the bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            hello: '@os.toast("def");',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const listener = runtime.getListener(bot, 'hello');
+
+                expect(!!listener).toBe(true);
+
+                listener!();
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('def')]]);
+            });
+
+            it('should listeners should be able to import modules', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            hello: '@import { abc } from ".mod"; os.toast(abc);',
+                            mod: '@export const abc = "def";',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const listener = runtime.getListener(bot, 'hello');
+
+                expect(!!listener).toBe(true);
+
+                listener!();
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('def')]]);
             });
         });
 

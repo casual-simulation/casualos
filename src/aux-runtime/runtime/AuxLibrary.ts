@@ -863,7 +863,7 @@ export interface TagSpecificApiOptions {
     /**
      * The bot that is set as the config of the current bot.
      */
-    config: RuntimeBot;
+    config?: RuntimeBot;
 }
 
 export const GET_RUNTIME = Symbol('get_runtime');
@@ -15019,13 +15019,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     if (INTERPRETABLE_FUNCTION in listener) {
                         result = yield* (listener as any)[
                             INTERPRETABLE_FUNCTION
-                        ](arg, context.importModule, context.exportModule);
+                        ](arg);
                     } else {
-                        result = (listener as any)(
-                            arg,
-                            context.importModule,
-                            context.exportModule
-                        );
+                        result = listener(arg);
                     }
 
                     if (isGenerator(result)) {
