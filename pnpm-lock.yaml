@@ -446,8 +446,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -832,8 +832,8 @@ importers:
         specifier: 2.4.6
         version: 2.4.6
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -1275,8 +1275,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -18085,8 +18085,8 @@ packages:
       posthtml-render: 1.4.0
     dev: true
 
-  /preact@10.10.1:
-    resolution: {integrity: sha512-cXljG59ylGtSLismoLojXPAGvnh2ipQr3BYz9KZQr+1sdASCT+sR/v8dSMDS96xGCdtln2wHfAHCnLJK+XcBNg==}
+  /preact@10.19.6:
+    resolution: {integrity: sha512-gympg+T2Z1fG1unB8NH29yHJwnEaCH37Z32diPDku316OTnRPeMbiRV9kTrfZpocXjdfnWuFUl/Mj4BHaf6gnw==}
     dev: false
 
   /precise-commits@1.0.2(prettier@2.8.8):
