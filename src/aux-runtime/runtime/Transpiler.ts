@@ -505,7 +505,7 @@ export class Transpiler {
                 } else if (n.type === 'Identifier' && n.optional === true) {
                     this._removeOptionalFromIdentifier(n, doc, text);
                 } else if (n.type.startsWith('TS')) {
-                    this._removeNode(n, doc, text);
+                    this._removeNodeOrReplaceWithUndefined(n, doc, text);
                 }
             }),
 
@@ -1257,9 +1257,88 @@ export class Transpiler {
         );
     }
 
-    private _removeNode(node: any, doc: Doc, text: Text): any {
+    private _removeNodeOrReplaceWithUndefined(
+        node: any,
+        doc: Doc,
+        text: Text
+    ): any {
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
+
+        if (
+            node.type === 'TSInterfaceDeclaration' ||
+            node.type === 'TSCallSignatureDeclaration' ||
+            node.type === 'TSEnumDeclaration' ||
+            node.type === 'TSTypeAliasDeclaration'
+        ) {
+            // replace with const Identifier = void 0; instead of deleting
+            // This is because these declarations might be referenced in a later export {} declaration,
+            // so we need to keep the identifier around.
+            // In the future, we might optimize this to also delete TypeScript-sepecific declarations from those exports.
+
+            const absoluteStart = createAbsolutePositionFromStateVector(
+                doc,
+                text,
+                version,
+                node.start,
+                undefined,
+                true
+            );
+
+            const identifierStart = createRelativePositionFromStateVector(
+                text,
+                version,
+                node.id.start,
+                undefined,
+                true
+            );
+
+            const identifierEnd = createRelativePositionFromStateVector(
+                text,
+                version,
+                node.id.end,
+                -1,
+                true
+            );
+
+            const end = createRelativePositionFromStateVector(
+                text,
+                version,
+                node.end,
+                -1,
+                true
+            );
+
+            const absoluteIdentifierStart =
+                createAbsolutePositionFromRelativePosition(
+                    identifierStart,
+                    doc
+                );
+
+            text.insert(absoluteIdentifierStart.index, 'const ');
+            text.delete(
+                absoluteStart.index,
+                absoluteIdentifierStart.index - absoluteStart.index
+            );
+
+            const absoluteIdentifierEnd =
+                createAbsolutePositionFromRelativePosition(identifierEnd, doc);
+
+            let str = ` = void 0;`;
+            text.insert(absoluteIdentifierEnd.index, str);
+
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                end,
+                doc
+            );
+
+            text.delete(
+                absoluteIdentifierEnd.index + str.length,
+                absoluteEnd.index - absoluteIdentifierEnd.index - str.length
+            );
+
+            return;
+        }
 
         const absoluteStart = createAbsolutePositionFromStateVector(
             doc,

@@ -1461,51 +1461,81 @@ describe('Transpiler', () => {
                     transpiler.transpile(
                         `interface ABC { hello: number; name: string; }`
                     )
-                ).toBe(``);
+                ).toBe(`const ABC = void 0;`);
 
                 // With extends
                 expect(
                     transpiler.transpile(
                         `interface First {} interface ABC extends First { hello: number; name: string; }`
                     )
-                ).toBe(` `);
+                ).toBe(`const First = void 0; const ABC = void 0;`);
 
                 // With new()
                 expect(
                     transpiler.transpile(`interface ABC { new(val: any); }`)
-                ).toBe(``);
+                ).toBe(`const ABC = void 0;`);
 
                 // With call()
                 expect(
                     transpiler.transpile(`interface ABC { (val: any): void; }`)
-                ).toBe(``);
+                ).toBe(`const ABC = void 0;`);
 
                 // With generics
                 expect(
                     transpiler.transpile(`interface ABC<T> { val: T }`)
-                ).toBe(``);
+                ).toBe(`const ABC = void 0;`);
+
+                // With export
+                expect(
+                    transpiler.transpile(`export interface ABC<T> { val: T }`)
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
+
+                // With separate export
+                expect(
+                    transpiler.transpile(
+                        `interface ABC<T> { val: T }\nexport { ABC };`
+                    )
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
             });
 
             it('should remove type declarations', () => {
                 const transpiler = new Transpiler();
-                expect(transpiler.transpile(`type ABC = number;`)).toBe(``);
+                expect(transpiler.transpile(`type ABC = number;`)).toBe(
+                    `const ABC = void 0;`
+                );
+                expect(transpiler.transpile(`export type ABC = number;`)).toBe(
+                    `const ABC = void 0;\nawait exports({ ABC, });`
+                );
 
                 // With generics
                 expect(transpiler.transpile(`type ABC<T> = { val: T }`)).toBe(
-                    ``
+                    `const ABC = void 0;`
                 );
+            });
+
+            it('should remove module declarations', () => {
+                const transpiler = new Transpiler();
+                expect(transpiler.transpile(`module ABC {}`)).toBe(``);
             });
 
             it('should remove union type declarations', () => {
                 const transpiler = new Transpiler();
                 expect(
                     transpiler.transpile(`type ABC = number | string;`)
-                ).toBe(``);
+                ).toBe(`const ABC = void 0;`);
+                expect(
+                    transpiler.transpile(`export type ABC = number | string;`)
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
             });
 
             it('should remove enum type declarations', () => {
                 const transpiler = new Transpiler();
-                expect(transpiler.transpile(`enum ABC { One, Two }`)).toBe(``);
+                expect(transpiler.transpile(`enum ABC { One, Two }`)).toBe(
+                    `const ABC = void 0;`
+                );
+                expect(
+                    transpiler.transpile(`export enum ABC { One, Two }`)
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
             });
 
             it('should remove type casts', () => {
@@ -1523,36 +1553,44 @@ describe('Transpiler', () => {
                     transpiler.transpile(
                         `interface ABC { name: string}; class Test implements ABC {}`
                     )
-                ).toBe(`; class Test  {}`);
+                ).toBe(`const ABC = void 0;; class Test  {}`);
                 expect(
                     transpiler.transpile(
                         `interface ABC { name: string}; let c = class Test implements ABC {}`
                     )
-                ).toBe(`; let c = class Test  {}`);
+                ).toBe(`const ABC = void 0;; let c = class Test  {}`);
 
                 // Two
                 expect(
                     transpiler.transpile(
                         `interface ABC { name: string } interface DEF {} class Test implements ABC, DEF {}`
                     )
-                ).toBe(`  class Test  {}`);
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; class Test  {}`
+                );
                 expect(
                     transpiler.transpile(
                         `interface ABC { name: string } interface DEF {} let c = class Test implements ABC, DEF {}`
                     )
-                ).toBe(`  let c = class Test  {}`);
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; let c = class Test  {}`
+                );
 
                 // Two with extends
                 expect(
                     transpiler.transpile(
                         `interface ABC { name: string } interface DEF {} class Base {} class Test extends Base implements ABC, DEF {}`
                     )
-                ).toBe(`  class Base {} class Test extends Base  {}`);
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; class Base {} class Test extends Base  {}`
+                );
                 expect(
                     transpiler.transpile(
                         `interface ABC { name: string } interface DEF {} class Base {} let c = class Test extends Base implements ABC, DEF {}`
                     )
-                ).toBe(`  class Base {} let c = class Test extends Base  {}`);
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; class Base {} let c = class Test extends Base  {}`
+                );
             });
 
             it('should remove generic type arguments from class declarations and expressions', () => {
@@ -1565,6 +1603,9 @@ describe('Transpiler', () => {
                 expect(transpiler.transpile(`let c = class Test<T> {}`)).toBe(
                     `let c = class Test {}`
                 );
+                expect(transpiler.transpile(`export class Test<T> {}`)).toBe(
+                    `class Test {}\nawait exports({ Test, });`
+                );
 
                 // Two
                 expect(transpiler.transpile(`class Test<T, B> {}`)).toBe(
@@ -1573,6 +1614,9 @@ describe('Transpiler', () => {
                 expect(
                     transpiler.transpile(`let c = class Test<T, B> {}`)
                 ).toBe(`let c = class Test {}`);
+                expect(transpiler.transpile(`export class Test<T, B> {}`)).toBe(
+                    `class Test {}\nawait exports({ Test, });`
+                );
             });
 
             it('should remove the abstract keyword from classes', () => {
@@ -1580,6 +1624,10 @@ describe('Transpiler', () => {
                 expect(transpiler.transpile(`abstract class Test {}`)).toBe(
                     `class Test {}`
                 );
+
+                expect(
+                    transpiler.transpile(`export abstract class Test {}`)
+                ).toBe(`class Test {}\nawait exports({ Test, });`);
             });
         });
     });
