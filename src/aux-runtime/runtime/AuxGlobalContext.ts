@@ -149,16 +149,6 @@ export interface AuxGlobalContext {
     forceUnguessableTaskIds: boolean;
 
     /**
-     * The function that can be used to import modules.
-     */
-    importModule: ImportFunc;
-
-    /**
-     * The function that can be used to export values from a module.
-     */
-    exportModule: ExportFunc;
-
-    /**
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
@@ -695,39 +685,6 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     private _loadTimes: {
         [key: string]: number;
     } = {};
-
-    private _importModule: ImportFunc;
-    private _exportModule: ExportFunc;
-
-    get importModule() {
-        if (!this._importModule) {
-            return (module: string) => {
-                throw new Error(
-                    `No import module function was provided to the global context. Cannot import module: ${module}`
-                );
-            };
-        }
-        return this._importModule;
-    }
-
-    set importModule(value: ImportFunc) {
-        this._importModule = value;
-    }
-
-    get exportModule() {
-        if (!this._exportModule) {
-            return (module: string, value: any) => {
-                throw new Error(
-                    `No export module function was provided to the global context. Cannot export module: ${module}`
-                );
-            };
-        }
-        return this._exportModule;
-    }
-
-    set exportModule(value: ExportFunc) {
-        this._exportModule = value;
-    }
 
     /**
      * Creates a new global context.
