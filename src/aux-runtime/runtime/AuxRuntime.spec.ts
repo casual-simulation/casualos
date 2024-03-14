@@ -9092,6 +9092,66 @@ describe('AuxRuntime', () => {
                     expect(events[0].length).toBe(0);
                 });
             });
+
+            describe('typescript', () => {
+                it('should support basic typescript syntax', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                hello: `@
+                                    const abc: string = 'def';
+                                    const num: number = 123;
+                                    const b: boolean = true;
+                                    const a: any = 123;
+                                    const obj: { a: number } = { a: 123 };
+
+                                    os.toast(abc);
+                                    os.toast(num);
+                                    os.toast(b);
+                                    os.toast(a);
+                                    os.toast(obj);
+                                `,
+                            }),
+                        })
+                    );
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            toast('def'),
+                            toast(123),
+                            toast(true),
+                            toast(123),
+                            toast({ a: 123 }),
+                        ],
+                    ]);
+                });
+
+                it('should support TypeScript interfaces', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                hello: `@
+                                    interface MyObj {
+                                        a: number;
+                                    }
+                                    const obj: MyObj = { a: 123 };
+                                    os.toast(obj);
+                                `,
+                            }),
+                        })
+                    );
+
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast({ a: 123 })]]);
+                });
+            });
         });
 
         describe('resolveModule()', () => {
