@@ -89,14 +89,6 @@ const MACROS: TranspilerMacro[] = [
         test: /^(?:\🧬)/g,
         replacement: (val) => '',
     },
-    {
-        test: /(?:[“”])/g,
-        replacement: (val) => '"',
-    },
-    {
-        test: /(?:[‘’])/g,
-        replacement: (val) => "'",
-    },
 ];
 
 /**

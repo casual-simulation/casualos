@@ -6238,22 +6238,6 @@ describe('AuxRuntime', () => {
                 expect(events).toEqual([[toast('hello')]]);
             });
 
-            const quoteCases = [
-                ['“', '”'],
-                ['‘', '’'],
-            ];
-
-            it.each(quoteCases)(
-                'should replace special quotes (%s%s) in scripts',
-                async (open, close) => {
-                    await runtime.execute(`os.toast(${open}hello${close})`);
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast('hello')]]);
-                }
-            );
-
             it('should emit an error if the script has a syntax error', async () => {
                 await runtime.execute('os.toast(');
 
@@ -9937,38 +9921,6 @@ describe('AuxRuntime', () => {
                     version: null,
                 });
             });
-
-            const quoteCases = [['“', '”']];
-
-            it.each(quoteCases)(
-                'should support curly quotes by converting them to normal quotes',
-                (openQuote: string, closeQuote: string) => {
-                    const bot1 = createBot('test');
-                    bot1.tags.formula = `${DNA_TAG_PREFIX}${openQuote}Hello, World${closeQuote}`;
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: bot1,
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    formula: 'Hello, World',
-                                },
-                                bot1.tags
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                }
-            );
         });
 
         describe('listeners', () => {
