@@ -106,23 +106,17 @@ import {
 } from '@casual-simulation/aux-runtime/runtime/Transpiler';
 // import WorkerUrl from './monaco/tsWorker.ts?url';
 import TypescriptWorker from './monaco/ts.worker?worker';
-import type { CustomTypeScriptWorker } from './monaco/tsWorker';
 
-let workerPromiseResolve: (worker: CustomTypeScriptWorker) => void;
-let workerPromiseReject: (err: any) => void;
-let workerPromise: Promise<CustomTypeScriptWorker> = new Promise(
-    (resolve, reject) => {
-        workerPromiseResolve = resolve;
-        workerPromiseReject = reject;
-    }
-);
+let worker: Worker;
 
 export function setup() {
+    worker = new TypescriptWorker();
+
     // Tell monaco how to create the web workers
     (<any>self).MonacoEnvironment = {
         getWorker: function (moduleId: string, label: string) {
             if (label === 'typescript' || label === 'javascript') {
-                return new TypescriptWorker();
+                return worker;
             } else if (label === 'html') {
                 return new HtmlWorker();
             } else if (label === 'css') {
@@ -185,24 +179,6 @@ export function setup() {
         calculateFormulaDefinitions(),
         'file:///AuxDefinitions.d.ts'
     );
-
-    monaco.languages.onLanguage('typescript', () => {
-        setTimeout(() => {
-            monaco.languages.typescript
-                .getTypeScriptWorker()
-                .then((worker) => {
-                    return worker();
-                })
-                .then(
-                    (worker) => {
-                        workerPromiseResolve(
-                            worker as unknown as CustomTypeScriptWorker
-                        );
-                    },
-                    (err) => workerPromiseReject(err)
-                );
-        }, 100);
-    });
 
     triggerMonacoLoaded();
 }
@@ -439,8 +415,11 @@ export function watchSimulation(
 
     sub.add(
         simulation.watcher.stateUpdated.subscribe(async (update) => {
-            const worker = await workerPromise;
-            await worker.onStateUpdated(simulation.id, update);
+            worker.postMessage({
+                __type: 'state',
+                simId: simulation.id,
+                update,
+            });
         })
     );
 

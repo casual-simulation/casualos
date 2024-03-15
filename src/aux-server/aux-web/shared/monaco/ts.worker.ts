@@ -9,13 +9,14 @@ import {
     TypeScriptWorker,
 } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
 import type { worker } from '@casual-simulation/monaco-editor';
-import { CustomTypeScriptWorker } from './tsWorker';
-// import * as ts from './lib/typescriptServices';
-// import { ICreateData, ITypeScriptWorkerHost, TypeScriptWorker, create } from './tsWorker';
-// import { worker } from '../../fillers/monaco-editor-core';
-// import { libFileMap } from './lib/lib';
+import { CustomTypeScriptWorker, onStateUpdated } from './tsWorker';
 
-self.onmessage = () => {
+self.onmessage = (m) => {
+    if (typeof m.data === 'object' && m.data.__type === 'state') {
+        onStateUpdated(m.data.simId, m.data.update);
+        return;
+    }
+
     // ignore the first message
     initialize((ctx: worker.IWorkerContext, createData: any) => {
         return new CustomTypeScriptWorker(ctx, createData);

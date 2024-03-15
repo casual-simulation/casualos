@@ -12,36 +12,29 @@ import {
     libFileMap,
 } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
 import type { worker, languages, Uri } from '@casual-simulation/monaco-editor';
-import { file } from 'mock-fs/lib/filesystem';
 import { getIdFromModelUri, getModelUriFromId } from '../MonacoUtils';
 
-/**
- * Loading a default lib as a source file will mess up TS completely.
- * So our strategy is to hide such a text model from TS.
- * See https://github.com/microsoft/monaco-editor/issues/2182
- */
-function fileNameIsLib(resource: string): string {
-    if (typeof resource === 'string') {
-        if (/^file:\/\/\//.test(resource)) {
-            const path = resource.substr(8);
-            if (!!libFileMap[path]) {
-                return `file://${path}`;
-            }
-        } else if (!!libFileMap[resource]) {
-            return resource;
+const botStates: {
+    [id: string]: PrecalculatedBotsState;
+} = {};
+
+export function onStateUpdated(simId: string, update: StateUpdatedEvent) {
+    let botsState = botStates[simId] ?? {};
+    botsState = applyUpdates(botsState, update);
+    botStates[simId] = botsState;
+}
+
+function findBotsFromSim(botId: string): PrecalculatedBotsState {
+    for (let state of Object.values(botStates)) {
+        if (state[botId]) {
+            return state;
         }
     }
-    return null;
 }
 
 export class CustomTypeScriptWorker extends TypeScriptWorker {
-    private _botStates: {
-        [id: string]: PrecalculatedBotsState;
-    };
-
     constructor(ctx: worker.IWorkerContext, createData: any) {
         super(ctx, createData);
-        this._botStates = {};
     }
 
     resolveModuleNames(
@@ -74,7 +67,7 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
                 const botInfo = getIdFromModelUri(containingFile);
 
                 if (botInfo) {
-                    const botsState = this._findBotsFromSim(botInfo.id);
+                    const botsState = findBotsFromSim(botInfo.id);
 
                     if (!botsState) {
                         console.log('Could not find bot state for', botInfo.id);
@@ -185,35 +178,4 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
         // console.log('Resolve Module Names', moduleNames, containingFile, reusedNames, redirectedReference, options, containingSourceFile);
         return resolutions;
     }
-
-    onStateUpdated(simId: string, update: StateUpdatedEvent) {
-        let botsState = this._botStates[simId] ?? {};
-        botsState = applyUpdates(botsState, update);
-
-        this._botStates[simId] = botsState;
-    }
-
-    private _findBotsFromSim(botId: string): PrecalculatedBotsState {
-        for (let state of Object.values(this._botStates)) {
-            if (state[botId]) {
-                return state;
-            }
-        }
-    }
 }
-
-// export function customTSWorkerFactory(TypeScriptWorker: any, ts: any, libFileMap: any) {
-//     console.log('Create custom TS Worker');
-//     return class CustomTypeScriptWorker extends TypeScriptWorker {
-
-//         resolveModuleNames?(moduleNames: string[], containingFile: string, reusedNames: string[] | undefined, redirectedReference: ResolvedProjectReference | undefined, options: CompilerOptions, containingSourceFile?: SourceFile): (ResolvedModule | undefined)[] {
-//             console.log('Resolve Module Names', moduleNames, containingFile, reusedNames, redirectedReference, options, containingSourceFile);
-//             return [];
-//         }
-
-//         addBotIndexEvents(events: BotIndexEvent[]) {
-//             console.log('Update Bot State', events);
-//         }
-
-//     }
-// }
