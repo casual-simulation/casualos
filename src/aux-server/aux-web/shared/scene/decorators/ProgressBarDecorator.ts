@@ -30,7 +30,7 @@ import {
     buildSRGBColor,
 } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { ArgEvent } from '@casual-simulation/aux-common/Event';
 
 export class ProgressBarDecorator
     extends AuxBot3DDecoratorBase

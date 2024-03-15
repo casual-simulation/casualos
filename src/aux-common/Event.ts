@@ -25,7 +25,7 @@ export class Event {
     }
 
     public invoke() {
-        this._listeners.forEach(l => {
+        this._listeners.forEach((l) => {
             l();
         });
     }
@@ -58,7 +58,7 @@ export class ArgEvent<T> {
     }
 
     public invoke(arg: T) {
-        this._listeners.forEach(l => {
+        this._listeners.forEach((l) => {
             l(arg);
         });
     }

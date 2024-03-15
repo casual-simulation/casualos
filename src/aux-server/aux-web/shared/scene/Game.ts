@@ -14,7 +14,7 @@ import {
     EquirectangularReflectionMapping,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import {
     Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
