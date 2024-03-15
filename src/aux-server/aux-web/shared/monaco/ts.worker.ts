@@ -11,12 +11,17 @@ import {
 import type { worker } from '@casual-simulation/monaco-editor';
 import { CustomTypeScriptWorker, onStateUpdated } from './tsWorker';
 
-self.onmessage = (m) => {
+self.addEventListener('message', (m) => {
     if (typeof m.data === 'object' && m.data.__type === 'state') {
         onStateUpdated(m.data.simId, m.data.update);
         return;
     }
+});
 
+self.onmessage = (m) => {
+    if (typeof m.data === 'object' && m.data.__type === 'state') {
+        return;
+    }
     // ignore the first message
     initialize((ctx: worker.IWorkerContext, createData: any) => {
         return new CustomTypeScriptWorker(ctx, createData);
