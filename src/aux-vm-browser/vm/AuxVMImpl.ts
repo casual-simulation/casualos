@@ -239,11 +239,9 @@ export class AuxVMImpl implements AuxVM {
     async sendEvents(events: BotAction[]): Promise<void> {
         if (!this._proxy) return null;
         if (events && events.length) {
-            const transferables = [];
+            const transferables: Transferable[] = [];
             for (let event of events) {
-                if ((event as any).result) {
-                    event = <AsyncResultAction>event;
-
+                if (event.type === 'async_result') {
                     if (event.result instanceof OffscreenCanvas) {
                         console.log(
                             `[AuxVMImpl] marked OffscreenCanvas as transferable in AsyncResultAction`,
@@ -260,7 +258,7 @@ export class AuxVMImpl implements AuxVM {
                     events,
                     transferables
                 );
-                transfer(events, transferables);
+                events = transfer(events, transferables);
             }
         }
 
