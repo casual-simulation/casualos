@@ -60,12 +60,12 @@ export interface ScriptPrefix {
 export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
     {
         prefix: '@',
-        language: 'javascript',
+        language: 'typescript',
         isDefault: true,
     },
     {
         prefix: LIBRARY_SCRIPT_PREFIX,
-        language: 'javascript',
+        language: 'typescript',
         isDefault: true,
     },
     {

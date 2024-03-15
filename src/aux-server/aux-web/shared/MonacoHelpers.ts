@@ -35,7 +35,7 @@ import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import TypescriptWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+// import TypescriptWorker from './monaco/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import {
     SubscriptionLike,
@@ -80,6 +80,7 @@ import {
     edit,
     edits,
     insert,
+    isModule,
     mergeVersions,
     preserve,
     TagEditOp,
@@ -103,6 +104,18 @@ import {
     Transpiler,
     replaceMacros,
 } from '@casual-simulation/aux-runtime/runtime/Transpiler';
+// import WorkerUrl from './monaco/tsWorker.ts?url';
+import TypescriptWorker from './monaco/ts.worker?worker';
+import type { CustomTypeScriptWorker } from './monaco/tsWorker';
+
+let workerPromiseResolve: (worker: CustomTypeScriptWorker) => void;
+let workerPromiseReject: (err: any) => void;
+let workerPromise: Promise<CustomTypeScriptWorker> = new Promise(
+    (resolve, reject) => {
+        workerPromiseResolve = resolve;
+        workerPromiseReject = reject;
+    }
+);
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -164,6 +177,33 @@ export function setup() {
         'file:///AuxDefinitions.d.ts'
     );
 
+    // Eagerly sync models to get intellisense for all models
+    monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
+
+    // Register the formula library
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+        calculateFormulaDefinitions(),
+        'file:///AuxDefinitions.d.ts'
+    );
+
+    monaco.languages.onLanguage('typescript', () => {
+        setTimeout(() => {
+            monaco.languages.typescript
+                .getTypeScriptWorker()
+                .then((worker) => {
+                    return worker();
+                })
+                .then(
+                    (worker) => {
+                        workerPromiseResolve(
+                            worker as unknown as CustomTypeScriptWorker
+                        );
+                    },
+                    (err) => workerPromiseReject(err)
+                );
+        }, 100);
+    });
+
     triggerMonacoLoaded();
 }
 
@@ -173,6 +213,7 @@ interface ModelInfo {
     decorators: string[];
     isFormula: boolean;
     isScript: boolean;
+    isModule: boolean;
     isCustomPortalScript: boolean;
     prefix: string;
     editOffset: number;
@@ -211,7 +252,8 @@ export function watchSimulation(
                     isCustomPortalScript(
                         simulation,
                         calculateBotValue(null, f, tag)
-                    )
+                    ) ||
+                    isModule(f.tags[tag])
                 ) {
                     loadModel(simulation, f, tag, null, () => {
                         if (getEditor) {
@@ -254,7 +296,7 @@ export function watchSimulation(
     }
 
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
-        'javascript',
+        'typescript',
         {
             triggerCharacters: ['#', '.'],
             async provideCompletionItems(
@@ -393,6 +435,13 @@ export function watchSimulation(
         'auth',
         'botId',
         monaco.languages.typescript.javascriptDefaults
+    );
+
+    sub.add(
+        simulation.watcher.stateUpdated.subscribe(async (update) => {
+            const worker = await workerPromise;
+            await worker.onStateUpdated(simulation.id, update);
+        })
     );
 
     return sub;
@@ -1264,7 +1313,7 @@ function tagScriptLanguage(
     script: any
 ): string {
     if (isScript(script)) {
-        return 'javascript';
+        return 'typescript';
     } else if (
         (typeof script === 'object' && hasValue(script)) ||
         isFormula(script)
@@ -1315,7 +1364,12 @@ export function shouldKeepModelLoaded(
 ): boolean {
     let info = models.get(model.uri.toString());
     if (info) {
-        return info.isScript || info.isFormula || info.isCustomPortalScript;
+        return (
+            info.isScript ||
+            info.isFormula ||
+            info.isCustomPortalScript ||
+            info.isModule
+        );
     } else {
         return true;
     }
@@ -1337,6 +1391,7 @@ function watchModel(
         decorators: [],
         isFormula: false,
         isScript: false,
+        isModule: false,
         isCustomPortalScript: false,
         editOffset: 0,
         prefix: '',
@@ -1672,6 +1727,7 @@ function updateDecorators(
     const prefix = calcGetScriptPrefix(KNOWN_TAG_PREFIXES, value);
     info.isFormula = isFormula(value);
     info.isScript = isScript(value);
+    info.isModule = isModule(value);
     info.isCustomPortalScript = false;
     info.prefix = prefix ?? '';
     if (hasValue(prefix)) {
@@ -1706,6 +1762,7 @@ function updateDecorators(
         const wasPortalScript = info.isCustomPortalScript;
         info.isFormula = false;
         info.isScript = false;
+        info.isModule = false;
         info.isCustomPortalScript = true;
         info.editOffset = prefix.prefix.length;
 
@@ -1724,6 +1781,7 @@ function updateDecorators(
         info.decorators = model.deltaDecorations(info.decorators, []);
         info.isFormula = typeof value === 'object' && hasValue(value);
         info.isScript = false;
+        info.isModule = false;
         info.isCustomPortalScript = false;
         info.editOffset = 0;
     }
