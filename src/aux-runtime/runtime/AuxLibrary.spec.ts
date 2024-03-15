@@ -12370,13 +12370,9 @@ describe('AuxLibrary', () => {
                     })
                 );
 
-                expect(onAnyCreate1).toHaveBeenCalledWith(
-                    {
-                        bot: bot,
-                    },
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(onAnyCreate1).toHaveBeenCalledWith({
+                    bot: bot,
+                });
             });
             it('should support arrays of diffs as arguments', () => {
                 uuidMock
@@ -13923,26 +13919,10 @@ describe('AuxLibrary', () => {
 
                 let arg = {};
                 handleResult(priorityShout(['abc', 'def'], arg));
-                expect(abc1).toHaveBeenCalledWith(
-                    arg,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(abc2).toHaveBeenCalledWith(
-                    arg,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(def1).toHaveBeenCalledWith(
-                    arg,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(def2).toHaveBeenCalledWith(
-                    arg,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(abc1).toHaveBeenCalledWith(arg);
+                expect(abc2).toHaveBeenCalledWith(arg);
+                expect(def1).toHaveBeenCalledWith(arg);
+                expect(def2).toHaveBeenCalledWith(arg);
             });
         });
 
@@ -14024,16 +14004,8 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', { hi: 'test' }));
-                expect(sayHello1).toHaveBeenCalledWith(
-                    { hi: 'test' },
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(sayHello2).toHaveBeenCalledWith(
-                    { hi: 'test' },
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(sayHello1).toHaveBeenCalledWith({ hi: 'test' });
+                expect(sayHello2).toHaveBeenCalledWith({ hi: 'test' });
             });
 
             it('should handle passing bots as arguments', () => {
@@ -14043,16 +14015,8 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', bot3));
-                expect(sayHello1).toHaveBeenCalledWith(
-                    bot3,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(sayHello2).toHaveBeenCalledWith(
-                    bot3,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(sayHello1).toHaveBeenCalledWith(bot3);
+                expect(sayHello2).toHaveBeenCalledWith(bot3);
             });
 
             it('should be able to modify bots that are arguments', () => {
@@ -14081,16 +14045,8 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', { bot: bot3 }));
-                expect(sayHello1).toHaveBeenCalledWith(
-                    { bot: bot3 },
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(sayHello2).toHaveBeenCalledWith(
-                    { bot: bot3 },
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(sayHello1).toHaveBeenCalledWith({ bot: bot3 });
+                expect(sayHello2).toHaveBeenCalledWith({ bot: bot3 });
                 expect(bot3.tags.hit1).toEqual(true);
                 expect(bot3.tags.hit2).toEqual(true);
             });
@@ -14101,16 +14057,8 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', true));
-                expect(sayHello1).toHaveBeenCalledWith(
-                    true,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(sayHello2).toHaveBeenCalledWith(
-                    true,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(sayHello1).toHaveBeenCalledWith(true);
+                expect(sayHello2).toHaveBeenCalledWith(true);
             });
 
             it('should return an array of results from the other formulas', () => {
@@ -14293,26 +14241,10 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3],
                     listeners: [bot1, bot2, bot3], // should exclude erroring listeners
                 };
-                expect(onListen1).toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(onListen2).toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(onListen3).toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(onListen4).not.toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(onListen1).toHaveBeenCalledWith(expected);
+                expect(onListen2).toHaveBeenCalledWith(expected);
+                expect(onListen3).toHaveBeenCalledWith(expected);
+                expect(onListen4).not.toHaveBeenCalledWith(expected);
             });
 
             it('should send a onAnyListen shout', () => {
@@ -14338,11 +14270,7 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3, bot4],
                     listeners: [bot1, bot2, bot3, bot4], // should exclude erroring listeners
                 };
-                expect(onAnyListen4).toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(onAnyListen4).toHaveBeenCalledWith(expected);
             });
 
             it('should perform an energy check', () => {
@@ -14447,20 +14375,12 @@ describe('AuxLibrary', () => {
                         abc: 'def',
                     })
                 );
-                expect(sayHello1).toHaveBeenCalledWith(
-                    {
-                        abc: 'def',
-                    },
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(sayHello2).toHaveBeenCalledWith(
-                    {
-                        abc: 'def',
-                    },
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(sayHello1).toHaveBeenCalledWith({
+                    abc: 'def',
+                });
+                expect(sayHello2).toHaveBeenCalledWith({
+                    abc: 'def',
+                });
             });
 
             it('should throw a reasonable error if given a null listener name', () => {
@@ -14681,21 +14601,9 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3],
                     listeners: [bot1, bot2], // should exclude erroring listeners
                 };
-                expect(onListen1).toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(onListen2).toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
-                expect(onListen3).not.toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(onListen1).toHaveBeenCalledWith(expected);
+                expect(onListen2).toHaveBeenCalledWith(expected);
+                expect(onListen3).not.toHaveBeenCalledWith(expected);
                 expect(onListen4).not.toHaveBeenCalled();
             });
 
@@ -14717,11 +14625,7 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3],
                     listeners: [bot1, bot2, bot3], // should exclude erroring listeners
                 };
-                expect(onAnyListen4).toHaveBeenCalledWith(
-                    expected,
-                    expect.any(Function),
-                    expect.any(Function)
-                );
+                expect(onAnyListen4).toHaveBeenCalledWith(expected);
             });
 
             it('should ignore null bots', () => {

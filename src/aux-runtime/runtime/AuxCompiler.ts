@@ -885,7 +885,14 @@ export class AuxCompiler {
                             ? ([v, i] as const)
                             : ([[v] as string[], i] as const)
                     ),
-                ([v, i]) => v.map((name) => `const ${name} = args[${i}];`)
+                ([v, i]) =>
+                    v.map((name) => {
+                        const defaultName = `_${name}`;
+                        if (options.variables?.[defaultName]) {
+                            return `const ${name} = typeof args[${i}] === 'undefined' ? variables?.["_${name}"]?.(context) : args[${i}];`;
+                        }
+                        return `const ${name} = args[${i}];`;
+                    })
             );
             argumentsCode = '\n' + lines.join('\n');
             transpilerLineOffset += 1 + Math.max(lines.length - 1, 0);

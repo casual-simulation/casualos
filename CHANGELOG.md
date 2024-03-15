@@ -30,6 +30,7 @@
             os.toast('Hello from my module!');
             ```
 -   Updated CasualOS to support ECMAScript 14.
+-   Updated Preact to v10.19.6
 
 ## V3.2.17
 

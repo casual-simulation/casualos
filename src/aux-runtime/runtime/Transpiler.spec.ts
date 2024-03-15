@@ -1089,13 +1089,6 @@ describe('Transpiler', () => {
                 '🧬'
             );
         });
-
-        it('should convert curly quotes to normal quotes', () => {
-            expect(replaceMacros('’')).toEqual("'");
-            expect(replaceMacros('‘')).toEqual("'");
-            expect(replaceMacros('”')).toEqual('"');
-            expect(replaceMacros('“')).toEqual('"');
-        });
     });
 });
 

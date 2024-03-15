@@ -398,8 +398,6 @@ export class AuxRuntime
         );
         this._forceSyncScripts = forceSyncScripts;
         this._globalContext.mockAsyncActions = forceSyncScripts;
-        this._globalContext.importModule = (module, meta) =>
-            this._importModule(module, meta);
         this._library = merge(libraryFactory(this._globalContext), {
             api: {
                 os: {
@@ -3524,7 +3522,7 @@ export class AuxRuntime
             },
             constants: constants,
             variables: {
-                ...specifics,
+                ...(specifics as any),
                 this: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 thisBot: (ctx) => (ctx.bot ? ctx.bot.script : null),
                 bot: (ctx) => (ctx.bot ? ctx.bot.script : null),
@@ -3534,6 +3532,11 @@ export class AuxRuntime
                 creatorBot: (ctx) => ctx.creator,
                 configBot: () => this.context.playerBot,
                 links: (ctx) => (ctx.bot ? ctx.bot.script.links : null),
+
+                // Default import function
+                [`_${IMPORT_FACTORY}`]:
+                    () => (module: string, meta: ImportMetadata) =>
+                        this._importModule(module, meta),
             },
             arguments: [['that', 'data'], IMPORT_FACTORY, EXPORT_FACTORY],
         }) as CompiledBotModule;
