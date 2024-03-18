@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/multi-streams-mixer",
-    "version": "3.2.17-alpha.8117520706",
+    "version": "3.2.18-alpha.8331994431",
     "author": "Casual Simulation, Inc.",
     "description": "Pass multiple streams (e.g. screen+camera or multiple-cameras) and get single stream.",
     "scripts": {

@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-client",
-    "version": "3.2.17",
+    "version": "3.2.18-alpha.8331994431",
     "description": "A set of utilities required to securely run an AUX as a client.",
     "keywords": [
         "aux"
@@ -40,8 +40,8 @@
     },
     "dependencies": {
         "@casual-simulation/aux-common": "^3.2.16",
-        "@casual-simulation/aux-runtime": "^3.2.17",
-        "@casual-simulation/aux-vm": "^3.2.17",
+        "@casual-simulation/aux-runtime": "^3.2.18-alpha.8331994431",
+        "@casual-simulation/aux-vm": "^3.2.18-alpha.8331994431",
         "@casual-simulation/aux-websocket": "^3.2.16",
         "@casual-simulation/aux-websocket-aws": "^3.2.16",
         "@casual-simulation/crypto": "^3.2.7",
