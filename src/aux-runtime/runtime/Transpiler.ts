@@ -577,10 +577,8 @@ export class Transpiler {
             (s: any) => s.type === 'ImportDefaultSpecifier'
         );
 
-        let hasFactory = false;
         if (namespaceImport) {
-            hasFactory = true;
-            importCall += `${namespaceImport.local.name} = await ${this._importFactory}(`;
+            importCall += `${namespaceImport.local.name} = `;
         } else {
             let addedBraces = false;
             for (let specifier of node.specifiers) {
@@ -609,37 +607,45 @@ export class Transpiler {
             if (node.specifiers.length > 0) {
                 importCall += ` = `;
             }
-
-            importCall += `await ${this._importFactory}(`;
         }
 
+        if (node.importKind === 'type') {
+            importCall += `{}`;
+        } else {
+            importCall += `await ${this._importFactory}(`;
+        }
         text.insert(currentIndex, importCall);
 
         currentIndex += importCall.length;
 
-        const absoluteSourceEnd = createAbsolutePositionFromRelativePosition(
-            sourceEnd,
-            doc
-        );
+        if (node.importKind !== 'type') {
+            const absoluteSourceEnd =
+                createAbsolutePositionFromRelativePosition(sourceEnd, doc);
 
-        text.insert(absoluteSourceEnd.index, `, ${this._importMetaFactory})`);
-
-        if (namespaceImport && defaultImport) {
-            const absoluteEnd = createAbsolutePositionFromRelativePosition(
-                statementEnd,
-                doc
+            text.insert(
+                absoluteSourceEnd.index,
+                `, ${this._importMetaFactory})`
             );
+            if (namespaceImport && defaultImport) {
+                const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                    statementEnd,
+                    doc
+                );
 
-            let defaultImportSource = `\nconst { default: ${defaultImport.local.name} } = ${namespaceImport.local.name};`;
-            text.insert(absoluteEnd.index + 1, defaultImportSource);
+                let defaultImportSource = `\nconst { default: ${defaultImport.local.name} } = ${namespaceImport.local.name};`;
+                text.insert(absoluteEnd.index + 1, defaultImportSource);
+            }
+
+            const absoluteSourceStart =
+                createAbsolutePositionFromRelativePosition(sourceStart, doc);
+
+            text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
+        } else {
+            const absoluteSourceEnd =
+                createAbsolutePositionFromRelativePosition(sourceEnd, doc);
+
+            text.delete(currentIndex, absoluteSourceEnd.index - currentIndex);
         }
-
-        const absoluteSourceStart = createAbsolutePositionFromRelativePosition(
-            sourceStart,
-            doc
-        );
-
-        text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
     }
 
     private _replaceImportExpression(

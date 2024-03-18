@@ -1513,6 +1513,19 @@ describe('Transpiler', () => {
                 );
             });
 
+            it('should remove import type declarations', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`import type { ABC } from "module";`)
+                ).toBe(`const { ABC, } = {};`);
+
+                expect(
+                    transpiler.transpile(
+                        `import type { ABC, DEF, GHI as other } from "module";`
+                    )
+                ).toBe(`const { ABC, DEF, GHI: other, } = {};`);
+            });
+
             it('should remove module declarations', () => {
                 const transpiler = new Transpiler();
                 expect(transpiler.transpile(`module ABC {}`)).toBe(``);
