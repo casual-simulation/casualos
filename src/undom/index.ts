@@ -89,7 +89,15 @@ function callMethodHandler(
     return undefined;
 }
 
-export const BUILTIN_HTML_ELEMENT_FUNCTIONS = ['click', 'focus', 'blur'];
+export const BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS = [
+    'click',
+    'focus',
+    'blur',
+    'setPointerCapture',
+    'releasePointerCapture',
+];
+
+export const BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS = ['getBoundingClientRect'];
 
 export const BUILTIN_HTML_INPUT_ELEMENT_FUNCTIONS = [
     'checkValidity',
@@ -121,6 +129,11 @@ export const BUILTIN_HTML_MEDIA_ELEMENT_FUNCTIONS = [
 export const BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS = [
     'getVideoPlaybackQuality',
     'requestPictureInPicture',
+];
+
+export const BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS = [
+    'transferControlToOffscreen',
+    'getContext',
 ];
 
 export interface UndomOptions {
@@ -542,7 +555,13 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
     registerBuiltinMethods(
         HTMLElement,
         'HTMLElement',
-        BUILTIN_HTML_ELEMENT_FUNCTIONS
+        BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS
+    );
+
+    registerBuiltinMethods(
+        HTMLElement,
+        'HTMLElement',
+        BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS
     );
 
     function registerBuiltinMethods(
@@ -625,6 +644,18 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         HTMLVideoElement,
         'HTMLVideoElement',
         BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS
+    );
+
+    class HTMLCanvasElement extends HTMLElement {
+        constructor() {
+            super(null, 'CANVAS');
+        }
+    }
+
+    registerBuiltinMethods(
+        HTMLCanvasElement,
+        'HTMLCanvasElement',
+        BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS
     );
 
     class SVGElement extends Element {}
@@ -868,6 +899,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             element = new HTMLFormElement();
         } else if (typeUpper === 'VIDEO') {
             element = new HTMLVideoElement();
+        } else if (typeUpper === 'CANVAS') {
+            element = new HTMLCanvasElement();
         } else {
             element = new HTMLElement(null, typeUpper);
         }
@@ -896,6 +929,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                 Node,
                 Text,
                 Element,
+                HTMLCanvasElement,
                 HTMLInputElement,
                 HTMLFormElement,
                 HTMLMediaElement,

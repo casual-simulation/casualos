@@ -15,7 +15,7 @@ export default class AuthRegisterWebAuthn extends Vue {
     processing: boolean = false;
 
     @Prop({ default: null }) after: string;
-    
+
     errors: FormError[] = [];
 
     async created() {
@@ -38,7 +38,9 @@ export default class AuthRegisterWebAuthn extends Vue {
             this.processing = true;
             const result = await authManager.addPasskeyWithWebAuthn();
             if (result.success) {
-                console.log('[AuthRegisterWebAuthn] Successfully added passkey with WebAuthn.');
+                console.log(
+                    '[AuthRegisterWebAuthn] Successfully added passkey with WebAuthn.'
+                );
                 await this._loadInfoAndNavigate();
             } else {
                 this.errors = getFormErrors(result);
