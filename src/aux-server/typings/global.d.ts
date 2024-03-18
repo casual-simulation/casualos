@@ -125,6 +125,7 @@ declare module '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.w
 
     export class TypeScriptWorker {
         constructor(ctx: any, createData: any);
+        getLanguageService(): ts.LanguageService;
     }
 
     export const initialize: any;

@@ -182,8 +182,10 @@ export function setup() {
 }
 
 interface ModelInfo {
+    simId: string;
     botId: string;
     tag: string;
+    space: string;
     decorators: string[];
     isFormula: boolean;
     isScript: boolean;
@@ -199,6 +201,10 @@ interface ModelInfo {
 let subs: SubscriptionLike[] = [];
 let activeModel: monaco.editor.ITextModel = null;
 let models: Map<string, ModelInfo> = new Map();
+
+export function getModelInfoFromUri(uri: monaco.Uri) {
+    return models.get(uri.toString());
+}
 
 /**
  * The model that should be marked as active.
@@ -1363,8 +1369,10 @@ function watchModel(
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
+        simId: simulation.id,
         botId: bot.id,
         tag: tag,
+        space,
         decorators: [],
         isFormula: false,
         isScript: false,
