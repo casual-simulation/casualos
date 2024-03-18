@@ -60,7 +60,7 @@
         "lru-cache": "^5.1.1",
         "luxon": "3.4.4",
         "mime": "2.4.6",
-        "preact": "10.10.1",
+        "preact": "10.19.6",
         "rxjs": "7.5.7",
         "seedrandom": "3.0.5",
         "stackframe": "^1.2.0",

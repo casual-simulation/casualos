@@ -6238,22 +6238,6 @@ describe('AuxRuntime', () => {
                 expect(events).toEqual([[toast('hello')]]);
             });
 
-            const quoteCases = [
-                ['“', '”'],
-                ['‘', '’'],
-            ];
-
-            it.each(quoteCases)(
-                'should replace special quotes (%s%s) in scripts',
-                async (open, close) => {
-                    await runtime.execute(`os.toast(${open}hello${close})`);
-
-                    await waitAsync();
-
-                    expect(events).toEqual([[toast('hello')]]);
-                }
-            );
-
             it('should emit an error if the script has a syntax error', async () => {
                 await runtime.execute('os.toast(');
 
@@ -8637,6 +8621,29 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('def')]]);
                 });
 
+                it('should be able to resolve imports when called directly', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; os.toast(that + abc);`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄export const abc = 'def';`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    const b = runtime.context.bots.find(
+                        (b) => b.id === 'test1'
+                    );
+                    await b.hello('111');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('111def')]]);
+                });
+
                 it('should be able to import listeners by system tag', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
@@ -9997,38 +10004,6 @@ describe('AuxRuntime', () => {
                     version: null,
                 });
             });
-
-            const quoteCases = [['“', '”']];
-
-            it.each(quoteCases)(
-                'should support curly quotes by converting them to normal quotes',
-                (openQuote: string, closeQuote: string) => {
-                    const bot1 = createBot('test');
-                    bot1.tags.formula = `${DNA_TAG_PREFIX}${openQuote}Hello, World${closeQuote}`;
-
-                    const update = runtime.stateUpdated(
-                        stateUpdatedEvent({
-                            test: bot1,
-                        })
-                    );
-
-                    expect(update).toEqual({
-                        state: {
-                            test: createPrecalculatedBot(
-                                'test',
-                                {
-                                    formula: 'Hello, World',
-                                },
-                                bot1.tags
-                            ),
-                        },
-                        addedBots: ['test'],
-                        removedBots: [],
-                        updatedBots: [],
-                        version: null,
-                    });
-                }
-            );
         });
 
         describe('listeners', () => {
@@ -11263,6 +11238,49 @@ describe('AuxRuntime', () => {
                 expect(Object.keys(bot.values)).toEqual([]);
                 expect(tagsOnBot(bot)).toEqual([]);
                 expect(runtime.getValue(bot, 'missing')).toBeUndefined();
+            });
+
+            it('should return the listener for the bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            hello: '@os.toast("def");',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const listener = runtime.getListener(bot, 'hello');
+
+                expect(!!listener).toBe(true);
+
+                listener!();
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('def')]]);
+            });
+
+            it('should listeners should be able to import modules', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            hello: '@import { abc } from ".mod"; os.toast(abc);',
+                            mod: '@export const abc = "def";',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const listener = runtime.getListener(bot, 'hello');
+
+                expect(!!listener).toBe(true);
+
+                listener!();
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('def')]]);
             });
         });
 

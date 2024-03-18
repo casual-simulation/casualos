@@ -65,6 +65,18 @@ describe('AuxCompiler', () => {
             expect(await func(async () => ({}))).toEqual(undefined);
         });
 
+        it('should be able to provide default values for arguments by variables that have the same name but with an underscore', async () => {
+            const func = compiler.compile('@return abc + def;', {
+                arguments: ['missing', 'abc', 'def'],
+                variables: {
+                    _abc: () => 1,
+                    _def: () => 2,
+                },
+            });
+
+            expect(func()).toEqual(3);
+        });
+
         it('should be able to compile import.meta statements', async () => {
             const func = compiler.compile('📄return import.meta;', {
                 arguments: [IMPORT_META_FACTORY],
