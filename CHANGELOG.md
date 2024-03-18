@@ -19,6 +19,13 @@
             ```
     -   In addition to the default ways, you can provide your own custom module resolution logic by using `@onResolveModule`.
         -   See the documentation for `@onResolveModule` for more information.
+-   Added support for TypeScript syntax.
+    -   [TypeScript](https://www.typescriptlang.org/) is an extension of JavaScript that enables you to add type information to your code.
+    -   Combined with ES Modules, this means it is much easier to catch simple bugs because the editor will tell you when something doesn't match up.
+    -   For now, errors are only surfaced in each script, but in the future it will be possible to check for errors in any script.
+    -   There are a couple limitations:
+        -   Generally, any TypeScript feature that requires a significant amount of code generation (e.g. [enums](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#enums)) are not supported.
+        -   Additionally, the `let casted = <any>value;` syntax for casting types is not supported since all scripts support JSX.
 -   Added the `📄` prefix for "library" scripts.
     -   Before, the only way to make a script was to use the `@` prefix. Using the `@` prefix makes what we call a "listener script" or "listener tag".
     -   Now, you can use the `📄` prefix instead of `@`. Using `📄` makes what we call a "library script" or "library tag".
