@@ -88,7 +88,7 @@ describe('AuthCoordinator', () => {
         vms = new Map();
         responses = [];
         loginStatus = null;
-        authMock = auth = {
+        auth = {
             isAuthenticated: jest.fn(),
             authenticate: jest.fn(),
             getAuthToken: jest.fn(),
@@ -130,6 +130,7 @@ describe('AuthCoordinator', () => {
                 return loginStatus;
             },
         };
+        authMock = auth as any;
         authHelper = new AuthHelper(origin, origin, (authOrigin) => {
             if (authOrigin === 'http://localhost:3002') {
                 return auth;
