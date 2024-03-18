@@ -12,6 +12,9 @@ patchedDependencies:
   '@mdx-js/mdx@3.0.0':
     hash: lqdilpwhfhkxjukceppb4twwum
     path: patches/@mdx-js/mdx@3.0.0.patch
+  acorn-typescript@1.4.13:
+    hash: 6c2dd2yvtei2d4lpomumi2s22q
+    path: patches/acorn-typescript@1.4.13.patch
   fake-indexeddb@5.0.1:
     hash: 32aodcxqlam32klerymhxuwzha
     path: patches/fake-indexeddb@5.0.1.patch
@@ -403,9 +406,6 @@ importers:
       '@tweenjs/tween.js':
         specifier: 18.6.0
         version: 18.6.0
-      '@types/acorn':
-        specifier: ^4.0.6
-        version: 4.0.6
       '@types/estraverse':
         specifier: ^5.1.1
         version: 5.1.7
@@ -771,9 +771,6 @@ importers:
       '@tweenjs/tween.js':
         specifier: 18.6.0
         version: 18.6.0
-      '@types/acorn':
-        specifier: ^4.0.6
-        version: 4.0.6
       '@types/estraverse':
         specifier: ^5.1.1
         version: 5.1.7
@@ -791,7 +788,7 @@ importers:
         version: 5.3.2(acorn@8.11.3)
       acorn-typescript:
         specifier: 1.4.13
-        version: 1.4.13(acorn@8.11.3)
+        version: 1.4.13(patch_hash=6c2dd2yvtei2d4lpomumi2s22q)(acorn@8.11.3)
       astring:
         specifier: 1.7.5
         version: 1.7.5
@@ -1540,9 +1537,6 @@ importers:
       '@casual-simulation/error-stack-parser':
         specifier: ^2.0.7
         version: 2.0.7
-      '@types/acorn':
-        specifier: ^4.0.6
-        version: 4.0.6
       '@types/estree':
         specifier: 1.0.0
         version: 1.0.0
@@ -8386,13 +8380,14 @@ packages:
       xtend: 4.0.2
     dev: true
 
-  /acorn-typescript@1.4.13(acorn@8.11.3):
+  /acorn-typescript@1.4.13(patch_hash=6c2dd2yvtei2d4lpomumi2s22q)(acorn@8.11.3):
     resolution: {integrity: sha512-xsc9Xv0xlVfwp2o7sQ+GCQ1PgbkdcpWdTzrwXxO3xDMTAywVS3oXVOcOHuRjAPkS4P9b+yc/qNF15460v+jp4Q==}
     peerDependencies:
       acorn: '>=8.9.0'
     dependencies:
       acorn: 8.11.3
     dev: false
+    patched: true
 
   /acorn-walk@7.2.0:
     resolution: {integrity: sha512-OPdCF6GsMIP+Az+aWfAAOEt2/+iVDKE7oy6lJ098aoe59oAmK76qV6Gw60SbZ8jHuG2wH058GF4pLFbYamYrVA==}
