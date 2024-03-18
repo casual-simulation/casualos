@@ -5,11 +5,13 @@ import {
     anyArgument,
     replaceMacros,
     calculateOriginalLineLocation,
-    calculateIndexFromLocation,
-    calculateLocationFromIndex,
     TranspilerResult,
     calculateFinalLineLocation,
 } from './Transpiler';
+import {
+    calculateIndexFromLocation,
+    calculateLocationFromIndex,
+} from './TranspilerUtils';
 
 describe('Transpiler', () => {
     describe('transpile()', () => {
@@ -631,10 +633,24 @@ describe('Transpiler', () => {
         it('should support dynamic import statements', () => {
             const transpiler = new Transpiler();
             const result = transpiler.transpile('import("test");');
-            expect(result.trim()).toEqual('import("test");');
+            expect(result.trim()).toEqual('importModule("test", importMeta);');
         });
 
         describe('async', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler();
+            });
+
+            it('should be able to compile await statements', () => {
+                const result = transpiler.transpile(`await test();`);
+
+                expect(result).toBe(`await test();`);
+            });
+        });
+
+        describe('force sync', () => {
             let transpiler: Transpiler;
 
             beforeEach(() => {
@@ -742,6 +758,329 @@ describe('Transpiler', () => {
                 );
             });
         });
+
+        describe('imports', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({});
+            });
+
+            it('should be able to compile simple import statements', () => {
+                const result = transpiler.transpile(`import "test";`);
+
+                expect(result).toBe(`await importModule("test", importMeta);`);
+            });
+
+            it('should be able to compile dynamic import statements', () => {
+                const result = transpiler.transpile(`await import("test");`);
+
+                expect(result).toBe(`await importModule("test", importMeta);`);
+            });
+
+            it('should mark the script as a module', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`import "test";`);
+
+                expect(result.metadata.isModule).toBe(true);
+            });
+
+            it('should be able to compile default import statements', () => {
+                const result = transpiler.transpile(
+                    `import testModule from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { default: testModule, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should be able to compile named import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support named import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support default and named import statements', () => {
+                const result = transpiler.transpile(
+                    `import defaultImport, { myImport, myImport2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { default: defaultImport, myImport, myImport2, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support namespace import statements', () => {
+                const result = transpiler.transpile(
+                    `import * as everything from "test";`
+                );
+
+                expect(result).toBe(
+                    `const everything = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support named import statements with renaming', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support the default import and namespace import', () => {
+                const result = transpiler.transpile(
+                    `import MyImport, * as Everything from "test";`
+                );
+
+                expect(result).toBe(
+                    `const Everything = await importModule("test", importMeta);\nconst { default: MyImport } = Everything;`
+                );
+            });
+
+            it('should support when the statement doesnt end with a semi-colon', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test"`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta)`
+                );
+            });
+
+            it('should support multiple import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";
+                     import Module from "test2";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);
+                     const { default: Module, } = await importModule("test2", importMeta);`
+                );
+            });
+
+            it('should support other statements after import statments', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";
+                     console.log('abc');`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);
+                     console.log('abc');`
+                );
+            });
+
+            it('should support other statements before import statments', () => {
+                const result = transpiler.transpile(
+                    `console.log('abc');
+                     import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `console.log('abc');
+                     const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support using a custom import factory', () => {
+                transpiler = new Transpiler({
+                    importFactory: 'myImportModule',
+                });
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await myImportModule("test", importMeta);`
+                );
+            });
+
+            it('should convert import.meta statements', () => {
+                const result = transpiler.transpile(
+                    `console.log(import.meta);`
+                );
+
+                expect(result).toBe(`console.log(importMeta);`);
+            });
+        });
+
+        describe('exports', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({});
+            });
+
+            it('should be able to compile object export statements', () => {
+                const result = transpiler.transpile(
+                    `const value = "test"; export { value };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test"; await exports({ value, });`
+                );
+            });
+
+            it('should mark the script as a module', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `const value = "test"; export { value };`
+                );
+                expect(result.metadata.isModule).toBe(true);
+            });
+
+            it('should be able to compile empty export statements', () => {
+                const result = transpiler.transpile(`export { };`);
+
+                expect(result).toBe(`await exports({});`);
+            });
+
+            it('should work if the semi-colon is omitted', () => {
+                const result = transpiler.transpile(
+                    `const value = "test";\nexport { value }`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should work if the space after "export" is omitted', () => {
+                const result = transpiler.transpile(
+                    `const value = "test";\nexport{ value };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should be able to compile object export statements with aliases', () => {
+                const result = transpiler.transpile(
+                    `const value = "test"; export { value as otherValue };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test"; await exports({ otherValue: value, });`
+                );
+            });
+
+            it('should be able to compile variable export statements', () => {
+                const result = transpiler.transpile(
+                    `export const value = "test";`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should be able to compile multiple variable export statements', () => {
+                const result = transpiler.transpile(
+                    `export const value = "test", value2 = 123;`
+                );
+
+                expect(result).toBe(
+                    `const value = "test", value2 = 123;\nawait exports({ value, value2, });`
+                );
+            });
+
+            it('should be able to compile mutable variable statements', () => {
+                const result = transpiler.transpile(
+                    `export let value = "test";`
+                );
+
+                expect(result).toBe(
+                    `let value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should be able to compile function export statements', () => {
+                const result = transpiler.transpile(
+                    `export function myFunc() { return "test"; }`
+                );
+
+                expect(result).toBe(
+                    `function myFunc() { return "test"; }\nawait exports({ myFunc, });`
+                );
+            });
+
+            it('should be able to compile default export statements', () => {
+                const result = transpiler.transpile(`export default "test";`);
+
+                expect(result).toBe(`await exports({ default: "test" });`);
+            });
+
+            it('should be able to compile empty export from source statements', () => {
+                const result = transpiler.transpile(`export {} from "test";`);
+
+                expect(result).toBe(`await exports({});`);
+            });
+
+            it('should be able to compile export all statements', () => {
+                const result = transpiler.transpile(`export * from "test";`);
+
+                expect(result).toBe(`await exports("test");`);
+            });
+
+            it('should be able to compile export object from source statements', () => {
+                const result = transpiler.transpile(
+                    `export { value, value2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `await exports("test", ['value', 'value2', ]);`
+                );
+            });
+
+            it('should be able to compile export object statements from source with aliases', () => {
+                const result = transpiler.transpile(
+                    `export { value as example, value2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `await exports("test", [['value', 'example'], 'value2', ]);`
+                );
+            });
+
+            it('should use the given exportFactory', () => {
+                transpiler = new Transpiler({
+                    exportFactory: 'myExport',
+                });
+                const result = transpiler.transpile(
+                    `export { value as example, value2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `await myExport("test", [['value', 'example'], 'value2', ]);`
+                );
+            });
+        });
+
+        it('should support return statements outside of functions', () => {
+            const transpiler = new Transpiler();
+            const result = transpiler.transpile('return 123;');
+
+            expect(result).toBe('return 123;');
+        });
     });
 
     describe('replaceMacros()', () => {
@@ -749,13 +1088,6 @@ describe('Transpiler', () => {
             expect(replaceMacros(`${DNA_TAG_PREFIX}${DNA_TAG_PREFIX}`)).toEqual(
                 '🧬'
             );
-        });
-
-        it('should convert curly quotes to normal quotes', () => {
-            expect(replaceMacros('’')).toEqual("'");
-            expect(replaceMacros('‘')).toEqual("'");
-            expect(replaceMacros('”')).toEqual('"');
-            expect(replaceMacros('“')).toEqual('"');
         });
     });
 });

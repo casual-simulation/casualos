@@ -1,8 +1,42 @@
 # CasualOS Changelog
 
+## V3.2.18
+
+#### Date: 3/18/2024
+
+### :rocket: Features
+
+-   Added support for ES Module-style `import` and `export` statements.
+    -   [ES Modules](https://javascript.info/modules-intro) are a way to organize code into separate listeners.
+    -   With this update, CasualOS now supports using [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) statements in scripts.
+    -   By default, modules can be imported from 3 different places:
+        -   Scripts based on system tag. You can import exported functions and variables from any script based on the system tag of its bot. For example, `import {abc} from "example.system.tag"` can be used to import the `abc` variable or function from the bot with the `example.system` system and the `tag` tag.
+        -   URLs. The URLs can be imported. For example, `import { sortBy } from 'https://esm.run/lodash-es';"` imports the [`sortBy` function](https://lodash.com/docs/4.17.15#sortBy) from the [`lodash-es` module](https://www.npmjs.com/package/lodash-es) provided by [https://esm.run](https://esm.run).
+        -   The `casualos` module. This module exports all of CasualOS's built-in functions. It is the only module that cannot be overriden with `@onResolveModule`. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+    -   In addition to the default ways, you can provide your own custom module resolution logic by using `@onResolveModule`.
+        -   See the documentation for `@onResolveModule` for more information.
+-   Added the `📄` prefix for "library" scripts.
+    -   Before, the only way to make a script was to use the `@` prefix. Using the `@` prefix makes what we call a "listener script" or "listener tag".
+    -   Now, you can use the `📄` prefix instead of `@`. Using `📄` makes what we call a "library script" or "library tag".
+    -   Library scripts work similarly to listener scripts, except with a couple key changes:
+        -   Library scripts cannot be shouted to. Instead, they have to be imported. This means you cannot use `shout()` or `whisper()` to communicate with a library script. Additionally, `thisBot.script()` does not work either.
+        -   Library scripts have to import all CasualOS functions. This means you cannot simply use `os.toast()`, you have to first import the `casualos` module. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+-   Updated CasualOS to support ECMAScript 14.
+-   Updated Preact to v10.19.6
+-   Added the ability to use `.transferControlToOffscreen()` and `.getContext()` functions on `<canvas>` HTML elements.
+-   Added the ability to use `.setPointerCapture()` and `.releasePointerCapture()` functions on HTML elements.
+
 ## V3.2.17
 
-#### Date: 3/1/2024
+#### Date: 3/6/2024
 
 ### :rocket: Features
 
@@ -22,6 +56,12 @@
     -   Upon your next login, you can use the passkey to login instead of having to enter your email and wait for a code.
 -   Changed the date of birth input to handle manually-typed input better.
 -   Added the ability to track some load time metrics using SimpleAnalytics events.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.calculateRayFromCamera()` would return incorrect results for the ray origin.
+-   Improved CasualOS to delay installation of the service worker until either the inst is fully loaded or the BIOS is shown.
+-   Fixed an issue where the `miniMapPortal` and `miniGridPortal` were not able to be resized.
 
 ## V3.2.16
 

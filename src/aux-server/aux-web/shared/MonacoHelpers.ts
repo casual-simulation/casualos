@@ -99,7 +99,10 @@ import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
 import './public/monaco-editor/quick-search-all/quick-search-all';
 import { getModelUriFromId } from './MonacoUtils';
-import { Transpiler, replaceMacros } from '@casual-simulation/aux-runtime';
+import {
+    Transpiler,
+    replaceMacros,
+} from '@casual-simulation/aux-runtime/runtime/Transpiler';
 
 export function setup() {
     // Tell monaco how to create the web workers

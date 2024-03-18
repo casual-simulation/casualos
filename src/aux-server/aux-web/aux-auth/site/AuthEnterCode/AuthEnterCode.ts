@@ -87,7 +87,10 @@ export default class AuthLogin extends Vue {
         await authManager.loadUserInfo();
 
         if (browserSupportsWebAuthn()) {
-            this.$router.push({ name: 'webauthn-register', query: { after: this.after } });
+            this.$router.push({
+                name: 'webauthn-register',
+                query: { after: this.after },
+            });
             return;
         }
 

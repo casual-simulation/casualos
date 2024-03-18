@@ -92,6 +92,8 @@ declare function sa_event(name: string, callback: Function): void;
 
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 
+const INIT_OFFLINE_TIMEOUT_MILISECONDS = 5000;
+
 const STATIC_INSTS_STORE = 'staticInsts';
 const INSTS_STORE = 'publicInsts';
 
@@ -643,8 +645,8 @@ export class AppManager {
         }
     }
 
-    private _initOffline() {
-        if ('serviceWorker' in navigator) {
+    initOffline() {
+        if ('serviceWorker' in navigator && !this._updateServiceWorker) {
             console.log('[AppManager] Registering Service Worker');
             this._updateServiceWorker = registerSW({
                 onNeedRefresh: () => {
@@ -745,8 +747,6 @@ export class AppManager {
             inst,
             isStatic,
         });
-
-        this._initOffline();
         this._primarySimulationAvailableSubject.next(true);
 
         const sim = this.simulationManager.primary;
@@ -766,7 +766,14 @@ export class AppManager {
                     progress: 1,
                     done: true,
                 });
+                console.log('[AppManager] Primary simulation is done.');
                 this._progress.complete();
+
+                if (!this._updateServiceWorker) {
+                    setTimeout(() => {
+                        this.initOffline();
+                    }, INIT_OFFLINE_TIMEOUT_MILISECONDS);
+                }
             }
         );
 

@@ -948,7 +948,7 @@ export class PlayerGame extends Game {
                 rig.mainCamera
             );
 
-            const origin = convertVector3(ray.origin, gridScale);
+            const origin = convertVector3(ray.origin, 1 / gridScale);
             const direction = convertVector3(ray.direction, 1);
 
             sim.helper.transaction(

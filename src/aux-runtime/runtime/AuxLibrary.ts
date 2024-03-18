@@ -863,7 +863,7 @@ export interface TagSpecificApiOptions {
     /**
      * The bot that is set as the config of the current bot.
      */
-    config: RuntimeBot;
+    config?: RuntimeBot;
 }
 
 export const GET_RUNTIME = Symbol('get_runtime');

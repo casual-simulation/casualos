@@ -35,7 +35,7 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 import type monaco from '@casual-simulation/monaco-editor';
 import { getModelUriFromId } from '../../MonacoUtils';
-import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime';
+import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 
 @Component({
     components: {

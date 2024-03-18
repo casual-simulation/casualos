@@ -364,6 +364,10 @@ export default class PlayerHome extends Vue {
         this.showBios = true;
         const options = await this._getBiosOptions();
         this.biosOptions = options;
+
+        // If we show the BIOS options, then
+        // we should have time to initialize the service worker
+        appManager.initOffline();
     }
 
     async signIn() {

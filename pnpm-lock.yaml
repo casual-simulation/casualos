@@ -246,8 +246,8 @@ importers:
         specifier: 9.0.0
         version: 9.0.0
       rollup-plugin-visualizer:
-        specifier: 5.10.0
-        version: 5.10.0
+        specifier: 5.12.0
+        version: 5.12.0
       sass:
         specifier: 1.56.1
         version: 1.56.1
@@ -446,8 +446,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -474,19 +474,19 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -730,7 +730,7 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-records
       axios:
         specifier: 1.6.2
@@ -751,7 +751,7 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -832,8 +832,8 @@ importers:
         specifier: 2.4.6
         version: 2.4.6
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -890,28 +890,28 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1164,7 +1164,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1239,10 +1239,10 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1275,8 +1275,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -1290,16 +1290,16 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
         specifier: ^3.2.17-alpha.8117520706
@@ -1344,10 +1344,10 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
         specifier: ^3.2.17-alpha.8117520706
@@ -1386,13 +1386,13 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1422,13 +1422,13 @@ importers:
         specifier: ^3.2.17-alpha.8117520706
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.17-alpha.8117520706
+        specifier: ^3.2.17
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -18085,8 +18085,8 @@ packages:
       posthtml-render: 1.4.0
     dev: true
 
-  /preact@10.10.1:
-    resolution: {integrity: sha512-cXljG59ylGtSLismoLojXPAGvnh2ipQr3BYz9KZQr+1sdASCT+sR/v8dSMDS96xGCdtln2wHfAHCnLJK+XcBNg==}
+  /preact@10.19.6:
+    resolution: {integrity: sha512-gympg+T2Z1fG1unB8NH29yHJwnEaCH37Z32diPDku316OTnRPeMbiRV9kTrfZpocXjdfnWuFUl/Mj4BHaf6gnw==}
     dev: false
 
   /precise-commits@1.0.2(prettier@2.8.8):
@@ -19323,8 +19323,8 @@ packages:
       terser: 5.26.0
     dev: true
 
-  /rollup-plugin-visualizer@5.10.0:
-    resolution: {integrity: sha512-N4AkNL0qFvipegbDJ0kupS+8eKGjL0q+lYwV46NflLX/B8Rh73wz3kCIdg50bR6XVhNcaMA4Eb519xtm90Ckfg==}
+  /rollup-plugin-visualizer@5.12.0:
+    resolution: {integrity: sha512-8/NU9jXcHRs7Nnj07PF2o4gjxmm9lXIrZ8r175bT9dK8qoLlvKTwRMArRCMgpMGlq8CTLugRvEmyMeMXIU2pNQ==}
     engines: {node: '>=14'}
     hasBin: true
     peerDependencies:
