@@ -35,7 +35,7 @@ import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-// import TypescriptWorker from './monaco/ts.worker?worker';
+import TypescriptWorker from './monaco/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import {
     SubscriptionLike,
@@ -104,8 +104,6 @@ import {
     Transpiler,
     replaceMacros,
 } from '@casual-simulation/aux-runtime/runtime/Transpiler';
-// import WorkerUrl from './monaco/tsWorker.ts?url';
-import TypescriptWorker from './monaco/ts.worker?worker';
 
 let worker: Worker;
 

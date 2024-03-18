@@ -9,7 +9,10 @@ import {
     TypeScriptWorker,
 } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
 import type { worker } from '@casual-simulation/monaco-editor';
-import { CustomTypeScriptWorker, onStateUpdated } from './tsWorker';
+import {
+    CustomTypeScriptWorker,
+    onStateUpdated,
+} from './CustomTypeScriptWorker';
 
 self.addEventListener('message', (m) => {
     if (typeof m.data === 'object' && m.data.__type === 'state') {
