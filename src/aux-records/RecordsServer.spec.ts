@@ -130,6 +130,7 @@ import {
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import { fromByteArray } from 'base64-js';
+import { z } from 'zod';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -179,6 +180,7 @@ verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
 });
 
 console.log = jest.fn();
+console.error = jest.fn();
 
 describe('RecordsServer', () => {
     let savedMemoryStore: MemoryStore;
@@ -13531,9 +13533,279 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                 },
+                headers: corsHeaders(defaultHeaders['origin']),
             });
 
             expect(handler).toHaveBeenCalledWith(request);
+        });
+
+        it('should use the given schema', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+
+            expect(handler).toHaveBeenCalledWith(request, { type: 'custom' });
+        });
+
+        it('should be able to use schemas for GET requests', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'GET',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpGet(
+                `/api/custom-route?value=${encodeURIComponent(
+                    123
+                )}&type=${'custom'}`,
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+
+            expect(handler).toHaveBeenCalledWith(request, { type: 'custom' });
+        });
+
+        it('should be able to use the account origins', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+                allowedOrigins: 'account',
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                { type: 'custom', value: 123 },
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                },
+                headers: {},
+            });
+
+            expect(handler).not.toHaveBeenCalled();
+
+            const request2 = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                authenticatedHeaders
+            );
+            const result2 = await server.handleHttpRequest(request2);
+
+            expectResponseBodyToEqual(result2, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to use the API origins', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+                allowedOrigins: 'api',
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                },
+                headers: {},
+            });
+
+            expect(handler).not.toHaveBeenCalled();
+
+            const request2 = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                apiHeaders
+            );
+            const result2 = await server.handleHttpRequest(request2);
+
+            expectResponseBodyToEqual(result2, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return a 500 server error if the route throws an error', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+            });
+
+            handler.mockImplementation(() => {
+                throw new Error('test error');
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 500,
+                body: {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        describe('schema', () => {
+            let handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+            beforeEach(() => {
+                handler = jest.fn<
+                    Promise<GenericHttpResponse>,
+                    [GenericHttpRequest]
+                >();
+
+                server.addRoute({
+                    method: 'POST',
+                    path: '/api/custom-route',
+                    schema: z.object({
+                        type: z.literal('custom'),
+                    }),
+                    handler,
+                });
+
+                handler.mockResolvedValueOnce({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                    }),
+                });
+            });
+
+            testBodyIsJson((body) =>
+                httpPost('/api/custom-route', body, defaultHeaders)
+            );
         });
     });
 

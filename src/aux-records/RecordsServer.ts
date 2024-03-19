@@ -253,11 +253,18 @@ export const INSTANCES_QUERY_VALIDATION = z
 /**
  * Defines a basic interface for an HTTP route.
  */
-export interface Route {
+export interface Route<T = unknown> {
     /**
      * The path that the route must match.
      */
     path: string;
+
+    /**
+     * The schema that should be used for the route.
+     * If the method can contain a request body, then the schema applies to the body.
+     * Otherwise, it will apply to the query parameters.
+     */
+    schema?: z.ZodType<T>;
 
     /**
      * The method for the route.
@@ -267,8 +274,21 @@ export interface Route {
     /**
      * The handler that should be called when the route is matched.
      * @param request The request.
+     * @param data The data that was parsed from the request.
      */
-    handler: (request: GenericHttpRequest) => Promise<GenericHttpResponse>;
+    handler: (
+        request: GenericHttpRequest,
+        data?: T
+    ) => Promise<GenericHttpResponse>;
+
+    /**
+     * The set of origins that are allowed for the route.
+     * If true, then all origins are allowed.
+     * If 'account', then only the configured account origins are allowed.
+     * If 'api', then only the configured API origins are allowed.
+     * If omitted, then it is up to the handler to determine if the origin is allowed.
+     */
+    allowedOrigins?: Set<string> | true | 'account' | 'api';
 }
 
 /**
@@ -1046,7 +1066,110 @@ export class RecordsServer {
 
         const route = this._routes.get(request.path);
         if (route) {
-            return route.handler(request);
+            const origins =
+                route.allowedOrigins === 'account'
+                    ? this._allowedAccountOrigins
+                    : route.allowedOrigins === 'api'
+                    ? this._allowedApiOrigins
+                    : route.allowedOrigins ?? true;
+
+            if (origins !== true && !validateOrigin(request, origins)) {
+                return formatResponse(
+                    request,
+                    returnResult(INVALID_ORIGIN_RESULT),
+                    origins
+                );
+            }
+
+            try {
+                let response: GenericHttpResponse;
+                if (route.schema) {
+                    let data: any;
+                    if (
+                        request.method === 'GET' ||
+                        request.method === 'HEAD' ||
+                        request.method === 'DELETE'
+                    ) {
+                        const parseResult = route.schema.safeParse(
+                            request.query
+                        );
+                        if (parseResult.success === false) {
+                            return formatResponse(
+                                request,
+                                returnZodError(parseResult.error),
+                                origins
+                            );
+                        }
+                        data = parseResult.data;
+                    } else {
+                        if (typeof request.body !== 'string') {
+                            return formatResponse(
+                                request,
+                                returnResult(
+                                    UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON
+                                ),
+                                origins
+                            );
+                        }
+
+                        const jsonResult = tryParseJson(request.body);
+
+                        if (
+                            !jsonResult.success ||
+                            typeof jsonResult.value !== 'object'
+                        ) {
+                            return formatResponse(
+                                request,
+                                returnResult(
+                                    UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON
+                                ),
+                                origins
+                            );
+                        }
+
+                        const parseResult = route.schema.safeParse(
+                            jsonResult.value
+                        );
+                        if (parseResult.success === false) {
+                            return formatResponse(
+                                request,
+                                returnZodError(parseResult.error),
+                                origins
+                            );
+                        }
+                        data = parseResult.data;
+                    }
+
+                    response = await route.handler(request, data);
+                } else {
+                    response = await route.handler(request);
+                }
+
+                if (response) {
+                    return formatResponse(request, response, origins);
+                } else {
+                    return formatResponse(
+                        request,
+                        returnResult({ success: true }),
+                        origins
+                    );
+                }
+            } catch (err) {
+                console.error(
+                    '[RecordsServer] Error while handling request: ',
+                    err,
+                    request
+                );
+                return formatResponse(
+                    request,
+                    returnResult({
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    }),
+                    origins
+                );
+            }
         }
 
         return formatResponse(
