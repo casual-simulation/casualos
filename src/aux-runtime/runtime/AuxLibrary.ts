@@ -6771,7 +6771,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentServer(): string {
         const user = context.playerBot;
         if (user) {
-            let inst = getTag(user, 'inst');
+            let inst = getTag(user, 'inst') ?? getTag(user, 'staticInst');
             if (hasValue(inst)) {
                 if (Array.isArray(inst)) {
                     return inst[0].toString();
