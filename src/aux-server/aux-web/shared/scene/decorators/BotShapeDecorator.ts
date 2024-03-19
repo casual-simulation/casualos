@@ -16,7 +16,7 @@ import {
     hasValue,
     isBotPointable,
 } from '@casual-simulation/aux-common';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import {
     AnimationAction,
     AnimationMixer,

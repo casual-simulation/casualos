@@ -73,7 +73,7 @@
         "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "@casual-simulation/js-interpreter": "^3.2.7",
-        "@casual-simulation/monaco-editor": "0.35.3",
+        "@casual-simulation/monaco-editor": "0.47.1",
         "@casual-simulation/multi-streams-mixer": "^3.2.14",
         "@casual-simulation/rate-limit-redis": "^3.2.7",
         "@casual-simulation/three": "^0.140.3",
@@ -93,7 +93,6 @@
         "@uriopass/nosleep.js": "0.12.2",
         "@webxr-input-profiles/assets": "1.0.9",
         "@webxr-input-profiles/motion-controllers": "1.0.0",
-        "acorn": "^8.0.1",
         "astring": "1.7.5",
         "aws-sdk": "^2.968.0",
         "axios": "1.6.2",
@@ -149,7 +148,8 @@
         "vue-property-decorator": "9.1.2",
         "vue-router": "3.5.4",
         "ws": "7.4.6",
-        "zod": "3.22.4"
+        "zod": "3.22.4",
+        "typescript": "^5.0.2"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.2.17",
