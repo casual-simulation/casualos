@@ -64,7 +64,7 @@
                 <md-button class="md-primary" @click="openAccountDashboard()"
                     >Manage Account</md-button
                 >
-                <md-button @click="logout()">Logout</md-button>
+                <md-button @click="logout()">Sign Out</md-button>
             </md-dialog-actions>
         </md-dialog>
 
