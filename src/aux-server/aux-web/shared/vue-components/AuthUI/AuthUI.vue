@@ -27,7 +27,9 @@
                     >
                     <span v-else>Request Access</span>
                 </md-button>
-                <md-button @click="changeLogin()">Change Login</md-button>
+                <md-button @click="changeLogin()">{{
+                    isLoggedIn ? 'Change Login' : 'Sign In'
+                }}</md-button>
                 <md-button @click="newInst()">New Inst</md-button>
             </md-dialog-actions>
         </md-dialog>
