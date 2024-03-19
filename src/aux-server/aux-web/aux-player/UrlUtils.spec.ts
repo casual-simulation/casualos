@@ -14,6 +14,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: 'test',
             recordName: 'testRecord',
+            owner: 'testRecord',
             isStatic: false,
         });
     });
@@ -26,6 +27,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: 'test',
             recordName: 'testRecord',
+            owner: null,
             isStatic: false,
         });
     });
@@ -38,6 +40,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: ['test', 'abc'],
             recordName: 'testRecord',
+            owner: null,
             isStatic: false,
         });
     });
@@ -47,6 +50,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: 'test',
             recordName: null,
+            owner: null,
             isStatic: false,
         });
     });
@@ -56,6 +60,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: 'test',
             recordName: null,
+            owner: null,
             isStatic: false,
             story: true,
         });
@@ -66,6 +71,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: 'test',
             recordName: null,
+            owner: null,
             isStatic: false,
             server: true,
         });
@@ -76,6 +82,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: 'test',
             recordName: null,
+            owner: null,
             isStatic: true,
         });
     });
@@ -85,6 +92,7 @@ describe('getInstParameters()', () => {
         expect(params).toEqual({
             inst: 'test',
             recordName: null,
+            owner: null,
             isStatic: true,
         });
     });

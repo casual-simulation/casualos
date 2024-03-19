@@ -13,6 +13,11 @@ export interface InstParameters {
     recordName: string | null;
 
     /**
+     * The owner that was specified.
+     */
+    owner: string | null;
+
+    /**
      * Whether the inst should be static.
      */
     isStatic: boolean;
@@ -35,6 +40,7 @@ export function getInstParameters(query: any): InstParameters {
     const inst =
         query.staticInst ?? query.inst ?? query.story ?? query.server ?? null;
     const recordName = query.owner ?? query.record ?? query.player ?? null;
+    const owner = query.owner ?? null;
 
     if (!hasValue(inst)) {
         return null;
@@ -43,6 +49,7 @@ export function getInstParameters(query: any): InstParameters {
     const ret: InstParameters = {
         inst: inst,
         recordName: recordName,
+        owner,
         isStatic: inst === query.staticInst,
     };
 

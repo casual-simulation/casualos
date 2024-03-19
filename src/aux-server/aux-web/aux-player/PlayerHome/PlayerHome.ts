@@ -721,7 +721,14 @@ export default class PlayerHome extends Vue {
     ) {
         this._loadedStaticInst = isStatic;
         const owner = getFirst(recordName);
-        const record = appManager.getRecordName(owner);
+        let recordInfo = appManager.getRecordName(owner);
+
+        while (recordInfo.owner === PLAYER_OWNER && !recordInfo.recordName) {
+            await appManager.auth.primary.authenticate();
+            recordInfo = appManager.getRecordName(owner);
+        }
+
+        const record = recordInfo.recordName;
         if (typeof newServer === 'string') {
             await this._loadPrimarySimulation(record, newServer, isStatic);
 

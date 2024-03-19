@@ -36,6 +36,7 @@
 
 ### :bug: Bug Fixes
 
+-   Fixed an issue where setting `?owner=player` in the URL while not being logged in would cause a public inst to be loaded instead of prompting the user to login.
 -   Fixed an issue where custom apps would not reappear after logging in with a code.
 -   Fixed an issue where `os.getCurrentInst()` would return `undefined` if the inst is a static inst.
 
