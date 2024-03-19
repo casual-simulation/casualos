@@ -119,3 +119,18 @@ declare module '*.md' {
     const content: string;
     export default content;
 }
+
+declare module '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker' {
+    import ts from 'typescript';
+
+    export class TypeScriptWorker {
+        constructor(ctx: any, createData: any);
+        getLanguageService(): ts.LanguageService;
+    }
+
+    export const initialize: any;
+    export const create: any;
+    export const libFileMap: any;
+
+    export { ts };
+}

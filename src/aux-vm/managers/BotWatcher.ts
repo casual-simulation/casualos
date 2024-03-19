@@ -26,7 +26,11 @@ import {
 } from 'rxjs/operators';
 import { values } from 'lodash';
 import { BotHelper } from './BotHelper';
-import { isTagEdit, TagEditOp } from '@casual-simulation/aux-common/bots';
+import {
+    isTagEdit,
+    stateUpdatedEvent,
+    TagEditOp,
+} from '@casual-simulation/aux-common/bots';
 import { VersionVector } from '@casual-simulation/aux-common';
 import {
     RuntimeStateVersion,
@@ -64,8 +68,15 @@ export class BotWatcher implements SubscriptionLike {
         { tag: string; space: string; subject: Subject<BotTagChange> }[]
     >;
     private _lastVersion: RuntimeStateVersion;
+    private _stateUpdated: Observable<StateUpdatedEvent>;
 
     closed: boolean = false;
+
+    get stateUpdated(): Observable<StateUpdatedEvent> {
+        return this._stateUpdated.pipe(
+            startWith(stateUpdatedEvent(this._helper.botsState))
+        );
+    }
 
     /**
      * Gets an observable that resolves whenever a new bot is discovered.
@@ -123,6 +134,7 @@ export class BotWatcher implements SubscriptionLike {
         stateUpdated: Observable<StateUpdatedEvent>,
         versionUpdated: Observable<RuntimeStateVersion>
     ) {
+        this._stateUpdated = stateUpdated;
         this._helper = helper;
         this._index = index;
         this._botsDiscoveredObservable = new Subject<PrecalculatedBot[]>();

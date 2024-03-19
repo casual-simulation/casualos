@@ -1,6 +1,6 @@
 import { Mesh, Group, Sprite, LineSegments } from '@casual-simulation/three';
 import { AuxBot3D } from '../AuxBot3D';
-import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
+import { Event, ArgEvent } from '@casual-simulation/aux-common/Event';
 
 export interface IMeshDecorator {
     bot3D: AuxBot3D;

@@ -2,7 +2,7 @@ import * as Acorn from 'acorn';
 import AcornJSX from 'acorn-jsx';
 import { generate, GENERATOR } from 'astring';
 import LRUCache from 'lru-cache';
-import { traverse } from 'estraverse';
+import { traverse, VisitorKeys } from 'estraverse';
 import {
     createAbsolutePositionFromRelativePosition,
     createRelativePositionFromTypeIndex,
@@ -21,6 +21,7 @@ import {
     calculateLocationFromIndex,
     CodeLocation,
 } from './TranspilerUtils';
+import { tsPlugin } from 'acorn-typescript';
 
 /**
  * The symbol that is used in script dependencies to represent any argument.
@@ -80,6 +81,91 @@ export interface TranspilerMacro {
     test: RegExp;
     replacement: (val: string) => string;
 }
+
+const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
+    TSTypeParameterDeclaration: [],
+    TSCallSignatureDeclaration: [],
+    TSConstructSignatureDeclaration: [],
+    TSInterfaceDeclaration: [],
+    TSModuleDeclaration: [],
+    TSEnumDeclaration: [],
+    TSTypeAliasDeclaration: [],
+    TSDeclareFunction: [],
+
+    TSExternalModuleReference: [],
+    TSQualifiedName: [],
+    TSEnumMember: [],
+
+    TSModuleBlock: [],
+    TSTypePredicate: [],
+    TSThisType: [],
+    TSTypeAnnotation: [],
+    TSLiteralType: [],
+    TSVoidKeyword: [],
+    TSNeverKeyword: [],
+    TSNumberKeyword: [],
+    TSAnyKeyword: [],
+    TSBooleanKeyword: [],
+    TSBigIntKeyword: [],
+    TSObjectKeyword: [],
+    TSStringKeyword: [],
+    TSSymbolKeyword: [],
+    TSUndefinedKeyword: [],
+    TSUnknownKeyword: [],
+    TSFunctionType: [],
+    TSConstructorType: [],
+    TSUnionType: [],
+    TSIntersectionType: [],
+    TSInferType: [],
+    TSImportType: [],
+    TSTypeQuery: [],
+    TSTypeParameter: [],
+    TSMappedType: [],
+    TSTypeLiteral: [],
+    TSTupleType: [],
+    TSNamedTupleMember: [],
+    TSRestType: [],
+    TSOptionalType: [],
+    TSTypeReference: [],
+    TSParenthesizedType: [],
+    TSArrayType: [],
+    TSIndexedAccessType: [],
+    TSConditionalType: [],
+    TSIndexSignature: [],
+    TSTypeParameterInstantiation: [],
+    TSExpressionWithTypeArguments: [],
+    TSInterfaceBody: [],
+    TSIntrinsicKeyword: [],
+    TSImportEqualsDeclaration: [],
+    TSNonNullExpression: [],
+    TSTypeOperator: [],
+    TSMethodSignature: [],
+    TSPropertySignature: [],
+    TSAsExpression: [],
+
+    ClassDeclaration: [
+        ...VisitorKeys.ClassDeclaration,
+        'implements',
+        'typeParameters',
+    ],
+    ClassExpression: [
+        ...VisitorKeys.ClassExpression,
+        'implements',
+        'typeParameters',
+    ],
+    VariableDeclarator: [...VisitorKeys.VariableDeclarator, 'typeAnnotation'],
+    FunctionDeclaration: [
+        ...VisitorKeys.FunctionDeclaration,
+        'returnType',
+        'typeParameters',
+    ],
+    FunctionExpression: [
+        ...VisitorKeys.FunctionExpression,
+        'returnType',
+        'typeParameters',
+    ],
+    Identifier: [...VisitorKeys.Identifier, 'typeAnnotation'],
+};
 
 /**
  * The list of macros that the sandbox uses on the input code before transpiling it.
@@ -156,7 +242,7 @@ export class Transpiler {
         this._cache = new LRUCache<string, TranspilerResult>({
             max: 1000,
         });
-        this._parser = Acorn.Parser.extend(AcornJSX());
+        this._parser = Acorn.Parser.extend(tsPlugin() as any);
 
         (this._parser.prototype as any).parseReturnStatement = function (
             node: any
@@ -395,6 +481,23 @@ export class Transpiler {
                     }
                 } else if (this._forceSync && n.type === 'AwaitExpression') {
                     this._replaceAwaitExpression(n, doc, text);
+                } else if (
+                    n.type === 'ClassDeclaration' ||
+                    n.type === 'ClassExpression'
+                ) {
+                    if (n.implements?.length > 0) {
+                        this._removeClassImplements(n, doc, text);
+                    }
+
+                    if (n.abstract === true) {
+                        this._removeClassAbstract(n, doc, text);
+                    }
+                } else if (n.type === 'TSAsExpression') {
+                    this._removeAsExpression(n, doc, text);
+                } else if (n.type === 'Identifier' && n.optional === true) {
+                    this._removeOptionalFromIdentifier(n, doc, text);
+                } else if (n.type.startsWith('TS')) {
+                    this._removeNodeOrReplaceWithUndefined(n, doc, text);
                 }
             }),
 
@@ -406,6 +509,8 @@ export class Transpiler {
                 JSXText: [],
                 JSXExpressionContainer: ['expression'],
                 JSXEmptyExpression: [],
+
+                ...TypeScriptVisistorKeys,
             },
         });
     }
@@ -464,10 +569,8 @@ export class Transpiler {
             (s: any) => s.type === 'ImportDefaultSpecifier'
         );
 
-        let hasFactory = false;
         if (namespaceImport) {
-            hasFactory = true;
-            importCall += `${namespaceImport.local.name} = await ${this._importFactory}(`;
+            importCall += `${namespaceImport.local.name} = `;
         } else {
             let addedBraces = false;
             for (let specifier of node.specifiers) {
@@ -496,37 +599,45 @@ export class Transpiler {
             if (node.specifiers.length > 0) {
                 importCall += ` = `;
             }
-
-            importCall += `await ${this._importFactory}(`;
         }
 
+        if (node.importKind === 'type') {
+            importCall += `{}`;
+        } else {
+            importCall += `await ${this._importFactory}(`;
+        }
         text.insert(currentIndex, importCall);
 
         currentIndex += importCall.length;
 
-        const absoluteSourceEnd = createAbsolutePositionFromRelativePosition(
-            sourceEnd,
-            doc
-        );
+        if (node.importKind !== 'type') {
+            const absoluteSourceEnd =
+                createAbsolutePositionFromRelativePosition(sourceEnd, doc);
 
-        text.insert(absoluteSourceEnd.index, `, ${this._importMetaFactory})`);
-
-        if (namespaceImport && defaultImport) {
-            const absoluteEnd = createAbsolutePositionFromRelativePosition(
-                statementEnd,
-                doc
+            text.insert(
+                absoluteSourceEnd.index,
+                `, ${this._importMetaFactory})`
             );
+            if (namespaceImport && defaultImport) {
+                const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                    statementEnd,
+                    doc
+                );
 
-            let defaultImportSource = `\nconst { default: ${defaultImport.local.name} } = ${namespaceImport.local.name};`;
-            text.insert(absoluteEnd.index + 1, defaultImportSource);
+                let defaultImportSource = `\nconst { default: ${defaultImport.local.name} } = ${namespaceImport.local.name};`;
+                text.insert(absoluteEnd.index + 1, defaultImportSource);
+            }
+
+            const absoluteSourceStart =
+                createAbsolutePositionFromRelativePosition(sourceStart, doc);
+
+            text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
+        } else {
+            const absoluteSourceEnd =
+                createAbsolutePositionFromRelativePosition(sourceEnd, doc);
+
+            text.delete(currentIndex, absoluteSourceEnd.index - currentIndex);
         }
-
-        const absoluteSourceStart = createAbsolutePositionFromRelativePosition(
-            sourceStart,
-            doc
-        );
-
-        text.delete(currentIndex, absoluteSourceStart.index - currentIndex);
     }
 
     private _replaceImportExpression(
@@ -1055,6 +1166,219 @@ export class Transpiler {
 
     private _replaceForOfStatement(node: any, doc: Doc, text: Text): any {
         this._insertEnergyCheckIntoStatement(doc, text, node.body);
+    }
+
+    private _removeClassImplements(node: any, doc: Doc, text: Text): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const firstImplemented = node.implements[0];
+        const lastImplemented = node.implements[node.implements.length - 1];
+
+        const implementedStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            firstImplemented.start - 'implements '.length,
+            undefined,
+            true
+        );
+
+        const implementedEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            lastImplemented.end,
+            -1,
+            true
+        );
+
+        text.delete(
+            implementedStart.index,
+            implementedEnd.index - implementedStart.index
+        );
+    }
+
+    private _removeClassAbstract(node: any, doc: Doc, text: Text): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const abstractStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+
+        const abstractEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start + 'abstract '.length,
+            -1,
+            true
+        );
+
+        text.delete(
+            abstractStart.index,
+            abstractEnd.index - abstractStart.index
+        );
+    }
+
+    private _removeAsExpression(node: any, doc: Doc, text: Text): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const expressionEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.expression.end,
+            -1,
+            true
+        );
+
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        text.delete(
+            expressionEnd.index,
+            absoluteEnd.index - expressionEnd.index
+        );
+    }
+
+    private _removeNodeOrReplaceWithUndefined(
+        node: any,
+        doc: Doc,
+        text: Text
+    ): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        if (
+            node.type === 'TSInterfaceDeclaration' ||
+            node.type === 'TSCallSignatureDeclaration' ||
+            node.type === 'TSEnumDeclaration' ||
+            node.type === 'TSTypeAliasDeclaration'
+        ) {
+            // replace with const Identifier = void 0; instead of deleting
+            // This is because these declarations might be referenced in a later export {} declaration,
+            // so we need to keep the identifier around.
+            // In the future, we might optimize this to also delete TypeScript-sepecific declarations from those exports.
+
+            const absoluteStart = createAbsolutePositionFromStateVector(
+                doc,
+                text,
+                version,
+                node.start,
+                undefined,
+                true
+            );
+
+            const identifierStart = createRelativePositionFromStateVector(
+                text,
+                version,
+                node.id.start,
+                undefined,
+                true
+            );
+
+            const identifierEnd = createRelativePositionFromStateVector(
+                text,
+                version,
+                node.id.end,
+                -1,
+                true
+            );
+
+            const end = createRelativePositionFromStateVector(
+                text,
+                version,
+                node.end,
+                -1,
+                true
+            );
+
+            const absoluteIdentifierStart =
+                createAbsolutePositionFromRelativePosition(
+                    identifierStart,
+                    doc
+                );
+
+            text.insert(absoluteIdentifierStart.index, 'const ');
+            text.delete(
+                absoluteStart.index,
+                absoluteIdentifierStart.index - absoluteStart.index
+            );
+
+            const absoluteIdentifierEnd =
+                createAbsolutePositionFromRelativePosition(identifierEnd, doc);
+
+            let str = ` = void 0;`;
+            text.insert(absoluteIdentifierEnd.index, str);
+
+            const absoluteEnd = createAbsolutePositionFromRelativePosition(
+                end,
+                doc
+            );
+
+            text.delete(
+                absoluteIdentifierEnd.index + str.length,
+                absoluteEnd.index - absoluteIdentifierEnd.index - str.length
+            );
+
+            return;
+        }
+
+        const absoluteStart = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.end,
+            -1,
+            true
+        );
+
+        text.delete(
+            absoluteStart.index,
+            absoluteEnd.index - absoluteStart.index
+        );
+    }
+
+    private _removeOptionalFromIdentifier(
+        node: any,
+        doc: Doc,
+        text: Text
+    ): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const absoluteEnd = createAbsolutePositionFromStateVector(
+            doc,
+            text,
+            version,
+            node.typeAnnotation?.start ?? node.end,
+            -1,
+            true
+        );
+
+        text.delete(absoluteEnd.index - 1, 1);
     }
 
     private _replaceJSXElement(

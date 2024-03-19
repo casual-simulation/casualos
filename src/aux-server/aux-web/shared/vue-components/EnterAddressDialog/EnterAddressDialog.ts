@@ -163,6 +163,7 @@ export default class EnterAddressDialog extends Vue {
             this._endpoint.cancelLogin();
         }
         this.showEnterAddress = false;
+        this.$emit('close');
     }
 
     async login() {

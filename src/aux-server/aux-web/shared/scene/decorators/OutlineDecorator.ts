@@ -15,7 +15,7 @@ import { disposeMesh, isTransparent, buildSRGBColor } from '../SceneUtils';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { ArgEvent } from '@casual-simulation/aux-common/Event';
 
 const BASE_SCALAR = 0.25;
 const DEFAULT_OUTLINE_COLOR: string = '#000000';
@@ -31,7 +31,8 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 //       that is currently in BotShapeDecorator sometime in the future.
 export class OutlineDecorator
     extends AuxBot3DDecoratorBase
-    implements IMeshDecorator {
+    implements IMeshDecorator
+{
     /**
      * The mesh for the outline.
      */
@@ -71,9 +72,8 @@ export class OutlineDecorator
         this._rebuildOutlineMesh();
         this._updateOutlineMesh();
 
-        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(
-            this
-        );
+        this._handleTargetMeshUpdated =
+            this._handleTargetMeshUpdated.bind(this);
 
         this._targetMeshDecorator.onMeshUpdated.addListener(
             this._handleTargetMeshUpdated

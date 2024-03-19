@@ -98,7 +98,7 @@ describe('RecordsManager', () => {
         actions = [];
         sub = new Subscription();
         helper = createHelper();
-        authMock = auth = {
+        auth = {
             isAuthenticated: jest.fn(),
             authenticate: jest.fn(),
             getAuthToken: jest.fn(),
@@ -144,8 +144,9 @@ describe('RecordsManager', () => {
                 return null;
             },
         };
+        authMock = auth as any;
 
-        customAuthMock = customAuth = {
+        customAuth = {
             isAuthenticated: jest.fn(),
             authenticate: jest.fn(),
             getAuthToken: jest.fn(),
@@ -191,6 +192,7 @@ describe('RecordsManager', () => {
                 return null;
             },
         };
+        customAuthMock = customAuth as any;
 
         authFactory = (endpoint: string) =>
             endpoint === 'http://localhost:9999' ? customAuth : auth;
