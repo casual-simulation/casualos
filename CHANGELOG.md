@@ -34,6 +34,10 @@
 -   Added the ability to use `.transferControlToOffscreen()` and `.getContext()` functions on `<canvas>` HTML elements.
 -   Added the ability to use `.setPointerCapture()` and `.releasePointerCapture()` functions on HTML elements.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `?owner=player` in the URL while not being logged in would cause a public inst to be loaded instead of prompting the user to login.
+
 ## V3.2.17
 
 #### Date: 3/6/2024
