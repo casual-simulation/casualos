@@ -256,6 +256,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     async cancelRegistration() {
         await this._endpoint.cancelLogin();
+        this.$emit('close');
     }
 
     async provideDateOfBirth() {

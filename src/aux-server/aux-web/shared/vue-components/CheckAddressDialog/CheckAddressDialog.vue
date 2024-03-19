@@ -4,7 +4,7 @@
         :md-close-on-esc="false"
         :md-click-outside-to-close="true"
         :md-fullscreen="true"
-        @md-closed="hideCheckAddress(true)"
+        @md-closed="cancelCheckAddress()"
         class="input-dialog"
     >
         <md-dialog-title>{{ checkAddressTitle }}</md-dialog-title>
@@ -28,7 +28,7 @@
             <field-errors :field="null" :errors="formErrors" />
         </md-dialog-content>
         <md-dialog-actions>
-            <md-button @click="hideCheckAddress()">Cancel</md-button>
+            <md-button @click="cancelCheckAddress()">Cancel</md-button>
             <md-button
                 v-if="showCode"
                 class="md-primary"

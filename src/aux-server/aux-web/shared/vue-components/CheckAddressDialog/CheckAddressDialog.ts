@@ -98,6 +98,7 @@ export default class CheckAddressDialog extends Vue {
             this._endpoint.cancelLogin();
         }
         this.showCheckAddress = false;
+        this.$emit('close');
     }
 
     sendCode() {

@@ -58,6 +58,7 @@ export default class LoginEndpointUI extends Vue {
 
     closeDialog() {
         this.loginUIStatus = null;
+        this.$emit('close');
     }
 
     private _registerSubs() {

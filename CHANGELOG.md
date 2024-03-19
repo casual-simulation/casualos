@@ -36,6 +36,7 @@
 
 ### :bug: Bug Fixes
 
+-   Fixed an issue where custom apps would not reappear after logging in with a code.
 -   Fixed an issue where `os.getCurrentInst()` would return `undefined` if the inst is a static inst.
 
 ## V3.2.17
