@@ -45,15 +45,6 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
         options: ts.CompilerOptions,
         containingSourceFile?: ts.SourceFile
     ): (ts.ResolvedModule | undefined)[] {
-        console.log(
-            'Resolve Module Names',
-            moduleNames,
-            containingFile,
-            reusedNames,
-            redirectedReference,
-            options,
-            containingSourceFile
-        );
         let resolutions: (ts.ResolvedModule | undefined)[] = [];
         for (let moduleName of moduleNames) {
             if (
@@ -75,15 +66,12 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
                         continue;
                     }
 
-                    console.log('Resolve for bot', botInfo);
                     const isRelativeImport =
                         moduleName.startsWith('.') ||
                         moduleName.startsWith(':');
                     if (isRelativeImport) {
-                        console.log('relative import');
                         const bot = botsState[botInfo.id];
                         if (!bot) {
-                            console.log('could not find bot');
                             resolutions.push(undefined);
                             continue;
                         }
@@ -105,7 +93,6 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
                                     split.join('.') +
                                     '.' +
                                     moduleName.substring(i);
-                                console.log('absolute module name', moduleName);
                                 break;
                             }
                         }
@@ -145,11 +132,6 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
                                 );
 
                                 if (botSystem === system) {
-                                    console.log(
-                                        'found module',
-                                        system,
-                                        getModelUriFromId(botId, tag, null)
-                                    );
                                     foundBot = true;
                                     resolutions.push({
                                         resolvedFileName: getModelUriFromId(
@@ -169,7 +151,6 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
                     }
                 }
 
-                console.log('not found');
                 resolutions.push(undefined);
             }
         }
