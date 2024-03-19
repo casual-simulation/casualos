@@ -349,7 +349,7 @@ importers:
   src/aux-benchmarks:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       benchmark:
         specifier: 2.1.4
@@ -392,7 +392,7 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../js-interpreter
       '@casual-simulation/stacktrace':
         specifier: ^3.1.11
@@ -465,22 +465,22 @@ importers:
   src/aux-components:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -643,7 +643,7 @@ importers:
   src/aux-records:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -718,10 +718,10 @@ importers:
         specifier: ^3.359.0
         version: 3.468.0
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-records
       axios:
         specifier: 1.6.2
@@ -739,10 +739,10 @@ importers:
   src/aux-runtime:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -760,7 +760,7 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../js-interpreter
       '@casual-simulation/stacktrace':
         specifier: ^3.1.11
@@ -878,31 +878,31 @@ importers:
         specifier: ^3.359.0
         version: 3.468.0
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -920,8 +920,8 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.18-alpha.8332065024
-        version: link:../js-interpreter
+        specifier: ^3.2.7
+        version: 3.2.7
       '@casual-simulation/monaco-editor':
         specifier: 0.47.1
         version: 0.47.1
@@ -1155,7 +1155,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1227,13 +1227,13 @@ importers:
   src/aux-vm:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1245,7 +1245,7 @@ importers:
         specifier: ^3.2.7
         version: link:../timesync
       '@casual-simulation/undom':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../undom
       axios:
         specifier: 1.6.2
@@ -1278,25 +1278,25 @@ importers:
   src/aux-vm-browser:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1332,19 +1332,19 @@ importers:
   src/aux-vm-client:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1374,16 +1374,16 @@ importers:
   src/aux-vm-deno:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1410,16 +1410,16 @@ importers:
   src/aux-vm-node:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1440,7 +1440,7 @@ importers:
   src/aux-websocket:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^3.2.7
@@ -1452,7 +1452,7 @@ importers:
   src/aux-websocket-aws:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.18-alpha.8332065024
+        specifier: ^3.2.18-alpha.8349491134
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^3.2.7
@@ -1613,30 +1613,6 @@ importers:
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
-
-  xpexchange:
-    devDependencies:
-      prettier:
-        specifier: ^2.1.1
-        version: 2.8.8
-      pretty-quick:
-        specifier: ^3.0.2
-        version: 3.1.3(prettier@2.8.8)
-
-  xpexchange/xp-api:
-    dependencies:
-      '@casual-simulation/aux-common':
-        specifier: ^3.2.12
-        version: link:../../src/aux-common
-      '@casual-simulation/aux-records':
-        specifier: ^3.2.13
-        version: link:../../src/aux-records
-      '@casual-simulation/aux-server':
-        specifier: ^3.2.13
-        version: link:../../src/aux-server
-      '@casual-simulation/rate-limit-redis':
-        specifier: 3.2.7
-        version: link:../../src/rate-limit-redis
 
 packages:
 
@@ -4034,6 +4010,17 @@ packages:
   /@casual-simulation/error-stack-parser@2.0.7:
     resolution: {integrity: sha512-an69t0bPOLl1mlxrHH/bDOEYEj75yaARfmzNhuzfM+klAzwUk2I5Y/INZ5iRE8ZHIH2/gieAVsLyFzzkygPMGg==}
     dependencies:
+      stackframe: 1.3.4
+    dev: false
+
+  /@casual-simulation/js-interpreter@3.2.7:
+    resolution: {integrity: sha512-+KpnoVvDBOXDEnXzLAcUcjQBQwl5FpD07JlBhW4Tn652Y7pG+HT4VFtp2wMlkiONfDUxNNPDeOr84Fp71toqvw==}
+    dependencies:
+      '@casual-simulation/engine262': 0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f
+      '@casual-simulation/error-stack-parser': 2.0.7
+      '@types/acorn': 4.0.6
+      '@types/estree': 1.0.0
+      acorn: 8.11.3
       stackframe: 1.3.4
     dev: false
 
@@ -7271,7 +7258,7 @@ packages:
   /@types/acorn@4.0.6:
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.0
     dev: false
 
   /@types/arcgis-js-api@4.24.0:
@@ -7601,10 +7588,6 @@ packages:
 
   /@types/estree@1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
-
-  /@types/estree@1.0.5:
-    resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
-    dev: false
 
   /@types/express-serve-static-core@4.17.41:
     resolution: {integrity: sha512-OaJ7XLaelTgrvlZD8/aa0vvvxZdUmlCn6MtWeB7TkiKW70BQLc9XEPpDLPdbo52ZhXUCrznlWdCHWxJWtdyajA==}
