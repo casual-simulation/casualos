@@ -4608,6 +4608,25 @@ describe('AuxLibrary', () => {
                 expect(result).toBeUndefined();
             });
 
+            it('should return the staticInst when inst is not set', () => {
+                player.tags.staticInst = 'staticInst';
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('staticInst');
+            });
+
+            it('should return the first staticInst when set to an array', () => {
+                player.tags.staticInst = ['staticInst', 'otherInst'];
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('staticInst');
+            });
+
+            it('should return prefer inst over staticInst', () => {
+                player.tags.inst = ['inst', 'randomInst'];
+                player.tags.staticInst = ['staticInst', 'otherInst'];
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('inst');
+            });
+
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
