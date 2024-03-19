@@ -1,6 +1,11 @@
 <template>
     <div>
-        <login-endpoint v-for="endpoint in endpoints" :key="endpoint" :endpoint="endpoint">
+        <login-endpoint
+            v-for="endpoint in endpoints"
+            :key="endpoint"
+            :endpoint="endpoint"
+            @close="onClose(endpoint)"
+        >
         </login-endpoint>
     </div>
 </template>
