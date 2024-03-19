@@ -34,6 +34,10 @@
 -   Added the ability to use `.transferControlToOffscreen()` and `.getContext()` functions on `<canvas>` HTML elements.
 -   Added the ability to use `.setPointerCapture()` and `.releasePointerCapture()` functions on HTML elements.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.getCurrentInst()` would return `undefined` if the inst is a static inst.
+
 ## V3.2.17
 
 #### Date: 3/6/2024
