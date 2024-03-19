@@ -72,7 +72,7 @@
         "@casual-simulation/crypto-node": "^3.2.7",
         "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
-        "@casual-simulation/js-interpreter": "^3.2.7",
+        "@casual-simulation/js-interpreter": "^3.2.18-alpha.8349491134",
         "@casual-simulation/monaco-editor": "0.47.1",
         "@casual-simulation/multi-streams-mixer": "^3.2.14",
         "@casual-simulation/rate-limit-redis": "^3.2.7",
