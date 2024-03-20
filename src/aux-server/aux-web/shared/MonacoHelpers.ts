@@ -131,10 +131,15 @@ export function setup() {
         noSemanticValidation: true,
         noSyntaxValidation: false,
     });
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: false,
+    });
 
     // Set compiler options
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ES2015,
+        target: monaco.languages.typescript.ScriptTarget.ESNext,
+        module: monaco.languages.typescript.ModuleKind.ESNext,
 
         // Auto-import the given libraries
         lib: ['lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
@@ -147,7 +152,8 @@ export function setup() {
         jsx: monaco.languages.typescript.JsxEmit.Preserve,
     });
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ES2015,
+        target: monaco.languages.typescript.ScriptTarget.ESNext,
+        module: monaco.languages.typescript.ModuleKind.ESNext,
 
         // Auto-import the given libraries
         lib: ['lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
