@@ -253,7 +253,7 @@ export const INSTANCES_QUERY_VALIDATION = z
 /**
  * Defines a basic interface for an HTTP route.
  */
-export interface Route<T = unknown> {
+export interface Route<T> {
     /**
      * The path that the route must match.
      */
@@ -323,7 +323,7 @@ export class RecordsServer {
     /**
      * The map of paths to routes that they match.
      */
-    private _routes: Map<string, Route> = new Map();
+    private _routes: Map<string, Route<any>> = new Map();
 
     /**
      * The set of origins that are allowed for account management requests.
@@ -374,13 +374,483 @@ export class RecordsServer {
         this._aiController = aiController;
         this._websocketController = websocketController;
         this._moderationController = moderationController;
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/stripeWebhook',
+            allowedOrigins: true,
+            handler: (request) => this._stripeWebhook(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/email/valid',
+            allowedOrigins: 'account',
+            schema: z.object({
+                email: z.string(),
+            }),
+            handler: async (request, { email }) => {
+                const result = await this._auth.isValidEmailAddress(email);
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/displayName/valid',
+            allowedOrigins: 'account',
+            schema: z.object({
+                displayName: z.string(),
+                name: NAME_VALIDATION.optional(),
+            }),
+            handler: async (request, { displayName, name }) => {
+                const result = await this._auth.isValidDisplayName(
+                    displayName,
+                    name
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/sessions',
+            allowedOrigins: 'account',
+            handler: (request) => this._getSessions(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/replaceSession',
+            allowedOrigins: 'account',
+            handler: (request) => this._postReplaceSession(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/revokeAllSessions',
+            allowedOrigins: 'account',
+            handler: (request) => this._postRevokeAllSessions(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/revokeSession',
+            allowedOrigins: 'account',
+            handler: (request) => this._postRevokeSession(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/completeLogin',
+            allowedOrigins: 'account',
+            handler: (request) => this._postCompleteLogin(request),
+        });
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/login',
+            allowedOrigins: 'account',
+            handler: (request) => this._postLogin(request),
+        });
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/login/privo',
+            allowedOrigins: 'account',
+            handler: (request) => this._privoLogin(request),
+        });
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/oauth/code',
+            allowedOrigins: 'account',
+            handler: (request) => this._oauthProvideCode(request),
+        });
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/oauth/complete',
+            allowedOrigins: 'account',
+            handler: (request) => this._oauthCompleteLogin(request),
+        });
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/register/privo',
+            allowedOrigins: 'account',
+            handler: (request) => this._registerPrivo(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/webauthn/register/options',
+            allowedOrigins: true,
+            handler: (request) => this._webAuthnRegisterOptions(request),
+        });
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/webauthn/register',
+            allowedOrigins: true,
+            handler: (request) => this._webAuthnRegister(request),
+        });
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/webauthn/login/options',
+            allowedOrigins: true,
+            handler: (request) => this._webAuthnLoginOptions(request),
+        });
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/webauthn/login',
+            allowedOrigins: true,
+            handler: (request) => this._webAuthnLogin(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/webauthn/authenticators',
+            allowedOrigins: 'account',
+            handler: (request) => this._listWebAuthnAuthenticators(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/webauthn/authenticators/delete',
+            allowedOrigins: 'account',
+            handler: (request) => this._deleteWebAuthnAuthenticator(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/meet/token',
+            allowedOrigins: 'api',
+            handler: (request) => this._postMeetToken(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records',
+            allowedOrigins: 'account',
+            handler: (request) => this._createRecord(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/events/count',
+            allowedOrigins: 'api',
+            handler: (request) => this._postRecordsEventsCount(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/events/count',
+            allowedOrigins: 'api',
+            handler: (request) => this._getRecordsEventsCount(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/events/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._listEvents(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/events',
+            allowedOrigins: 'api',
+            handler: (request) => this._postRecordsEvents(request),
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/manual/data',
+            allowedOrigins: 'api',
+            handler: (request) => this._eraseManualRecordData(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/manual/data',
+            handler: (request) => this._getManualRecordData(request),
+            allowedOrigins: true,
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/manual/data',
+            allowedOrigins: 'api',
+            handler: (request) => this._manualRecordData(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            handler: (request) => this._readFile(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/file/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._listFiles(request),
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            handler: (request) => this._eraseFile(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            handler: (request) => this._recordFile(request),
+        });
+
+        this.addRoute({
+            method: 'PUT',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            handler: (request) => this._updateFile(request),
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/data',
+            allowedOrigins: 'api',
+            handler: (request) => this._eraseData(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/data',
+            allowedOrigins: true,
+            handler: (request) => this._getData(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/data/list',
+            allowedOrigins: true,
+            handler: (request) => this._listData(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/data',
+            allowedOrigins: 'api',
+            handler: (request) => this._recordData(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._listRecords(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/key',
+            allowedOrigins: 'api',
+            handler: (request) => this._createRecordKey(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/permissions',
+            allowedOrigins: 'api',
+            handler: (request) => this._grantPermission(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/permissions/revoke',
+            allowedOrigins: 'api',
+            handler: (request) => this._revokePermission(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/permissions/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._listPermissions(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/role/user/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._roleUserList(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/role/inst/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._roleInstList(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/role/assignments/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._roleAssignmentsList(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/role/grant',
+            allowedOrigins: 'api',
+            handler: (request) => this._roleGrant(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/role/revoke',
+            allowedOrigins: 'api',
+            handler: (request) => this._roleRevoke(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/ai/chat',
+            allowedOrigins: 'api',
+            handler: (request) => this._aiChat(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/ai/skybox',
+            allowedOrigins: 'api',
+            handler: (request) => this._aiSkybox(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/ai/skybox',
+            allowedOrigins: 'api',
+            handler: (request) => this._aiGetSkybox(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/ai/image',
+            allowedOrigins: 'api',
+            handler: (request) => this._aiGenerateImage(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/studios',
+            allowedOrigins: 'account',
+            handler: (request) => this._getStudio(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/studios',
+            allowedOrigins: 'account',
+            handler: (request) => this._postStudio(request),
+        });
+
+        this.addRoute({
+            method: 'PUT',
+            path: '/api/v2/studios',
+            allowedOrigins: 'account',
+            handler: (request) => this._updateStudio(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/studios/requestComId',
+            allowedOrigins: 'account',
+            handler: (request) => this._requestComId(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/studios/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._listStudios(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/studios/members/list',
+            allowedOrigins: 'account',
+            handler: (request) => this._listStudioMembers(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/studios/members',
+            allowedOrigins: 'account',
+            handler: (request) => this._addStudioMember(request),
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/studios/members',
+            allowedOrigins: 'account',
+            handler: (request) => this._removeStudioMember(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/player/config',
+            allowedOrigins: 'api',
+            handler: (request) => this._getPlayerConfig(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/subscriptions',
+            allowedOrigins: 'account',
+            handler: (request) => this._getSubscriptionInfoV2(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/subscriptions/manage',
+            allowedOrigins: 'account',
+            handler: (request) => this._manageSubscriptionV2(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/insts/list',
+            allowedOrigins: 'api',
+            handler: (request) => this._listInsts(request),
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/insts',
+            allowedOrigins: 'account',
+            handler: (request) => this._deleteInst(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/insts/report',
+            allowedOrigins: 'api',
+            handler: (request) => this._reportInst(request),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/instData',
+            allowedOrigins: true,
+            handler: (request) => this._getInstData(request),
+        });
     }
 
     /**
      * Adds the given route to the server.
      */
-    addRoute(route: Route) {
-        this._routes.set(route.path, route);
+    addRoute<T>(route: Route<T>) {
+        this._routes.set(`${route.method}:${route.path}`, route);
     }
 
     /**
@@ -465,303 +935,6 @@ export class RecordsServer {
                 this._allowedAccountOrigins
             );
         } else if (
-            request.method === 'POST' &&
-            request.path === '/api/stripeWebhook'
-        ) {
-            return formatResponse(
-                request,
-                await this._stripeWebhook(request),
-                true
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/email/valid'
-        ) {
-            return formatResponse(
-                request,
-                await this._isEmailValid(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/displayName/valid'
-        ) {
-            return formatResponse(
-                request,
-                await this._isDisplayNameValid(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/sessions'
-        ) {
-            return formatResponse(
-                request,
-                await this._getSessions(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/replaceSession'
-        ) {
-            return formatResponse(
-                request,
-                await this._postReplaceSession(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/revokeAllSessions'
-        ) {
-            return formatResponse(
-                request,
-                await this._postRevokeAllSessions(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/revokeSession'
-        ) {
-            return formatResponse(
-                request,
-                await this._postRevokeSession(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/completeLogin'
-        ) {
-            return formatResponse(
-                request,
-                await this._postCompleteLogin(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/login'
-        ) {
-            return formatResponse(
-                request,
-                await this._postLogin(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/login/privo'
-        ) {
-            return formatResponse(
-                request,
-                await this._privoLogin(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/oauth/code'
-        ) {
-            return formatResponse(
-                request,
-                await this._oauthProvideCode(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/oauth/complete'
-        ) {
-            return formatResponse(
-                request,
-                await this._oauthCompleteLogin(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/register/privo'
-        ) {
-            return formatResponse(
-                request,
-                await this._registerPrivo(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/webauthn/register/options'
-        ) {
-            return formatResponse(
-                request,
-                await this._webAuthnRegisterOptions(request),
-                true
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/webauthn/register'
-        ) {
-            return formatResponse(
-                request,
-                await this._webAuthnRegister(request),
-                true
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/webauthn/login/options'
-        ) {
-            return formatResponse(
-                request,
-                await this._webAuthnLoginOptions(request),
-                true
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/webauthn/login'
-        ) {
-            return formatResponse(
-                request,
-                await this._webAuthnLogin(request),
-                true
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/webauthn/authenticators'
-        ) {
-            return formatResponse(
-                request,
-                await this._listWebAuthnAuthenticators(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/webauthn/authenticators/delete'
-        ) {
-            return formatResponse(
-                request,
-                await this._deleteWebAuthnAuthenticator(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/meet/token'
-        ) {
-            return formatResponse(
-                request,
-                await this._postMeetToken(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records'
-        ) {
-            return formatResponse(
-                request,
-                await this._createRecord(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/events/count'
-        ) {
-            return formatResponse(
-                request,
-                await this._postRecordsEventsCount(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/events/count'
-        ) {
-            return formatResponse(
-                request,
-                await this._getRecordsEventsCount(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/events/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._listEvents(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/events'
-        ) {
-            return formatResponse(
-                request,
-                await this._postRecordsEvents(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'DELETE' &&
-            request.path === '/api/v2/records/manual/data'
-        ) {
-            return formatResponse(
-                request,
-                await this._eraseManualRecordData(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/manual/data'
-        ) {
-            return formatResponse(
-                request,
-                await this._getManualRecordData(request),
-                true
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/manual/data'
-        ) {
-            return formatResponse(
-                request,
-                await this._manualRecordData(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/file'
-        ) {
-            return formatResponse(
-                request,
-                await this._readFile(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/file/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._listFiles(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'DELETE' &&
-            request.path === '/api/v2/records/file'
-        ) {
-            return formatResponse(
-                request,
-                await this._eraseFile(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/file'
-        ) {
-            return formatResponse(
-                request,
-                await this._recordFile(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'PUT' &&
-            request.path === '/api/v2/records/file'
-        ) {
-            return formatResponse(
-                request,
-                await this._updateFile(request),
-                this._allowedApiOrigins
-            );
-        } else if (
             request.method === 'OPTIONS' &&
             request.path.startsWith('/api/v2/records/file/')
         ) {
@@ -769,292 +942,6 @@ export class RecordsServer {
                 request,
                 await this._handleRecordFileOptions(request),
                 this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'DELETE' &&
-            request.path === '/api/v2/records/data'
-        ) {
-            return formatResponse(
-                request,
-                await this._eraseData(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/data'
-        ) {
-            return formatResponse(request, await this._getData(request), true);
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/data/list'
-        ) {
-            return formatResponse(request, await this._listData(request), true);
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/data'
-        ) {
-            return formatResponse(
-                request,
-                await this._recordData(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._listRecords(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/key'
-        ) {
-            return formatResponse(
-                request,
-                await this._createRecordKey(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/permissions'
-        ) {
-            return formatResponse(
-                request,
-                await this._grantPermission(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/permissions/revoke'
-        ) {
-            return formatResponse(
-                request,
-                await this._revokePermission(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/permissions/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._listPermissions(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/role/user/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._roleUserList(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/role/inst/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._roleInstList(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/role/assignments/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._roleAssignmentsList(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/role/grant'
-        ) {
-            return formatResponse(
-                request,
-                await this._roleGrant(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/role/revoke'
-        ) {
-            return formatResponse(
-                request,
-                await this._roleRevoke(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/ai/chat'
-        ) {
-            return formatResponse(
-                request,
-                await this._aiChat(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/ai/skybox'
-        ) {
-            return formatResponse(
-                request,
-                await this._aiSkybox(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/ai/skybox'
-        ) {
-            return formatResponse(
-                request,
-                await this._aiGetSkybox(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/ai/image'
-        ) {
-            return formatResponse(
-                request,
-                await this._aiGenerateImage(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/studios'
-        ) {
-            return formatResponse(
-                request,
-                await this._getStudio(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/studios'
-        ) {
-            return formatResponse(
-                request,
-                await this._postStudio(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'PUT' &&
-            request.path === '/api/v2/studios'
-        ) {
-            return formatResponse(
-                request,
-                await this._updateStudio(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/studios/requestComId'
-        ) {
-            return formatResponse(
-                request,
-                await this._requestComId(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/studios/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._listStudios(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/studios/members/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._listStudioMembers(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/studios/members'
-        ) {
-            return formatResponse(
-                request,
-                await this._addStudioMember(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'DELETE' &&
-            request.path === '/api/v2/studios/members'
-        ) {
-            return formatResponse(
-                request,
-                await this._removeStudioMember(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/player/config'
-        ) {
-            return formatResponse(
-                request,
-                await this._getPlayerConfig(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/subscriptions'
-        ) {
-            return formatResponse(
-                request,
-                await this._getSubscriptionInfoV2(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/subscriptions/manage'
-        ) {
-            return formatResponse(
-                request,
-                await this._manageSubscriptionV2(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/v2/records/insts/list'
-        ) {
-            return formatResponse(
-                request,
-                await this._listInsts(request),
-                this._allowedApiOrigins
-            );
-        } else if (
-            request.method === 'DELETE' &&
-            request.path === '/api/v2/records/insts'
-        ) {
-            return formatResponse(
-                request,
-                await this._deleteInst(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'POST' &&
-            request.path === '/api/v2/records/insts/report'
-        ) {
-            return formatResponse(
-                request,
-                await this._reportInst(request),
-                this._allowedApiOrigins
-            );
-        } else if (request.method === 'GET' && request.path === '/instData') {
-            return formatResponse(
-                request,
-                await this._getInstData(request),
-                true
             );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
@@ -1064,7 +951,7 @@ export class RecordsServer {
             );
         }
 
-        const route = this._routes.get(request.path);
+        const route = this._routes.get(`${request.method}:${request.path}`);
         if (route) {
             const origins =
                 route.allowedOrigins === 'account'
@@ -1503,71 +1390,6 @@ export class RecordsServer {
             signature,
         });
 
-        return returnResult(result);
-    }
-
-    private async _isEmailValid(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            email: z.string(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { email } = parseResult.data;
-        const result = await this._auth.isValidEmailAddress(email);
-        return returnResult(result);
-    }
-
-    private async _isDisplayNameValid(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            displayName: DISPLAY_NAME_VALIDATION,
-            name: NAME_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { displayName, name } = parseResult.data;
-        const result = await this._auth.isValidDisplayName(displayName, name);
         return returnResult(result);
     }
 
@@ -4610,10 +4432,6 @@ export class RecordsServer {
     private async _getSessions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
         const expireTime = request.query.expireTimeMs;
         const expireTimeMs = !!expireTime ? parseInt(expireTime) : null;
         const sessionKey = getSessionKey(request);
