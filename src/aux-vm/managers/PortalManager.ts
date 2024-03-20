@@ -18,6 +18,7 @@ import {
     hasValue,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,
+    LIBRARY_SCRIPT_PREFIX,
 } from '@casual-simulation/aux-common';
 import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
@@ -59,7 +60,12 @@ export interface ScriptPrefix {
 export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
     {
         prefix: '@',
-        language: 'javascript',
+        language: 'typescript',
+        isDefault: true,
+    },
+    {
+        prefix: LIBRARY_SCRIPT_PREFIX,
+        language: 'typescript',
         isDefault: true,
     },
     {

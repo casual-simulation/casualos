@@ -14,7 +14,7 @@ export interface Action {
 
     /**
      * Whether the action can be structure cloned.
-     * If true, then the action should not be passed across message ports.
+     * If true, then the action should not be passed across message ports without special handling.
      */
     uncopiable?: boolean;
 }

@@ -240,7 +240,7 @@ const routes: RouteConfig[] = [
         props: (route) => ({
             after: route.query['after'],
         }),
-    }
+    },
 ];
 
 const router = new VueRouter({

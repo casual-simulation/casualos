@@ -76,5 +76,6 @@ export default class HasAccountDialog extends Vue {
             this._endpoint.cancelLogin();
         }
         this.showHasAccount = false;
+        this.$emit('close');
     }
 }

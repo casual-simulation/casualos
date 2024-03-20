@@ -3,8 +3,11 @@ import {
     AuxCompileOptions,
     AuxCompiler,
     createInterpretableFunction,
+    EXPORT_FACTORY,
     FUNCTION_METADATA,
     getInterpretableFunction,
+    IMPORT_FACTORY,
+    IMPORT_META_FACTORY,
     INTERPRETABLE_FUNCTION,
     isInterpretableFunction,
     replaceSyntaxErrorLineNumber,
@@ -38,6 +41,67 @@ describe('AuxCompiler', () => {
             const func = compiler.compile('return 1 + 2');
 
             expect(func()).toEqual(3);
+        });
+
+        it('should support compiling scripts', () => {
+            const func = compiler.compile('@return 1 + 2');
+
+            expect(func()).toEqual(3);
+        });
+
+        it('should always compile modules as async', async () => {
+            const func = compiler.compile('📄', {
+                arguments: [IMPORT_FACTORY],
+            });
+
+            expect(await func()).toBeUndefined();
+        });
+
+        it('should be able to compile import statements', async () => {
+            const func = compiler.compile('📄import abc from "test";', {
+                arguments: [IMPORT_FACTORY, IMPORT_META_FACTORY],
+            });
+
+            expect(await func(async () => ({}))).toEqual(undefined);
+        });
+
+        it('should be able to provide default values for arguments by variables that have the same name but with an underscore', async () => {
+            const func = compiler.compile('@return abc + def;', {
+                arguments: ['missing', 'abc', 'def'],
+                variables: {
+                    _abc: () => 1,
+                    _def: () => 2,
+                },
+            });
+
+            expect(func()).toEqual(3);
+        });
+
+        it('should be able to compile import.meta statements', async () => {
+            const func = compiler.compile('📄return import.meta;', {
+                arguments: [IMPORT_META_FACTORY],
+            });
+
+            expect(await func('abc')).toBe('abc');
+        });
+
+        it('should be able to compile export statements', async () => {
+            const func = compiler.compile('export const abc = "def";', {
+                arguments: [EXPORT_FACTORY],
+            });
+
+            const exportFunc = jest.fn();
+
+            expect(await func(exportFunc)).toEqual(undefined);
+            expect(exportFunc).toHaveBeenCalledWith({ abc: 'def' });
+        });
+
+        it('should be able to compile scripts with import statements', async () => {
+            const func = compiler.compile('@import abc from "test";', {
+                arguments: [IMPORT_FACTORY, IMPORT_META_FACTORY],
+            });
+
+            expect(await func(async () => ({}))).toEqual(undefined);
         });
 
         it('should support compiling with an interpreter', () => {

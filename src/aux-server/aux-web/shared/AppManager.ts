@@ -670,15 +670,24 @@ export class AppManager {
      * Gets the name of the record that the given owner should be loaded from.
      * @param owner The owner of the record.
      */
-    getRecordName(owner: string): string {
+    getRecordName(owner: string): { recordName: string; owner: string } {
         if (owner === PLAYER_OWNER) {
-            return (
-                this.auth.primary.currentLoginStatus.authData?.userId ?? null
-            );
+            return {
+                owner,
+                recordName:
+                    this.auth?.primary?.currentLoginStatus?.authData?.userId ??
+                    null,
+            };
         } else if (owner === PUBLIC_OWNER) {
-            return null;
+            return {
+                owner,
+                recordName: null,
+            };
         } else {
-            return owner;
+            return {
+                owner: null,
+                recordName: owner,
+            };
         }
     }
 

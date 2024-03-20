@@ -41,6 +41,16 @@ export default class LoginUI extends Vue {
         this._sub.unsubscribe();
     }
 
+    onClose(endpoint: string) {
+        const helper = appManager.authCoordinator.authEndpoints.get(endpoint);
+        if (helper) {
+            this._endpointUIs.set(helper, {
+                page: false,
+            });
+            this._calculateVisibility();
+        }
+    }
+
     private _addEndpoint(endpoint: string, helper: AuthHelperInterface) {
         const sub = new Subscription();
         this._endpointSubs.set(helper, sub);

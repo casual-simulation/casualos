@@ -633,10 +633,24 @@ describe('Transpiler', () => {
         it('should support dynamic import statements', () => {
             const transpiler = new Transpiler();
             const result = transpiler.transpile('import("test");');
-            expect(result.trim()).toEqual('import("test");');
+            expect(result.trim()).toEqual('importModule("test", importMeta);');
         });
 
         describe('async', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler();
+            });
+
+            it('should be able to compile await statements', () => {
+                const result = transpiler.transpile(`await test();`);
+
+                expect(result).toBe(`await test();`);
+            });
+        });
+
+        describe('force sync', () => {
             let transpiler: Transpiler;
 
             beforeEach(() => {
@@ -744,6 +758,891 @@ describe('Transpiler', () => {
                 );
             });
         });
+
+        describe('imports', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({});
+            });
+
+            it('should be able to compile simple import statements', () => {
+                const result = transpiler.transpile(`import "test";`);
+
+                expect(result).toBe(`await importModule("test", importMeta);`);
+            });
+
+            it('should be able to compile dynamic import statements', () => {
+                const result = transpiler.transpile(`await import("test");`);
+
+                expect(result).toBe(`await importModule("test", importMeta);`);
+            });
+
+            it('should mark the script as a module', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`import "test";`);
+
+                expect(result.metadata.isModule).toBe(true);
+            });
+
+            it('should be able to compile default import statements', () => {
+                const result = transpiler.transpile(
+                    `import testModule from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { default: testModule, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should be able to compile named import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support named import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support default and named import statements', () => {
+                const result = transpiler.transpile(
+                    `import defaultImport, { myImport, myImport2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { default: defaultImport, myImport, myImport2, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support namespace import statements', () => {
+                const result = transpiler.transpile(
+                    `import * as everything from "test";`
+                );
+
+                expect(result).toBe(
+                    `const everything = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support named import statements with renaming', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support the default import and namespace import', () => {
+                const result = transpiler.transpile(
+                    `import MyImport, * as Everything from "test";`
+                );
+
+                expect(result).toBe(
+                    `const Everything = await importModule("test", importMeta);\nconst { default: MyImport } = Everything;`
+                );
+            });
+
+            it('should support when the statement doesnt end with a semi-colon', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test"`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta)`
+                );
+            });
+
+            it('should support multiple import statements', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";
+                     import Module from "test2";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);
+                     const { default: Module, } = await importModule("test2", importMeta);`
+                );
+            });
+
+            it('should support other statements after import statments', () => {
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";
+                     console.log('abc');`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);
+                     console.log('abc');`
+                );
+            });
+
+            it('should support other statements before import statments', () => {
+                const result = transpiler.transpile(
+                    `console.log('abc');
+                     import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `console.log('abc');
+                     const { myImport, myImport2: otherImport, } = await importModule("test", importMeta);`
+                );
+            });
+
+            it('should support using a custom import factory', () => {
+                transpiler = new Transpiler({
+                    importFactory: 'myImportModule',
+                });
+                const result = transpiler.transpile(
+                    `import { myImport, myImport2 as otherImport } from "test";`
+                );
+
+                expect(result).toBe(
+                    `const { myImport, myImport2: otherImport, } = await myImportModule("test", importMeta);`
+                );
+            });
+
+            it('should convert import.meta statements', () => {
+                const result = transpiler.transpile(
+                    `console.log(import.meta);`
+                );
+
+                expect(result).toBe(`console.log(importMeta);`);
+            });
+        });
+
+        describe('exports', () => {
+            let transpiler: Transpiler;
+
+            beforeEach(() => {
+                transpiler = new Transpiler({});
+            });
+
+            it('should be able to compile object export statements', () => {
+                const result = transpiler.transpile(
+                    `const value = "test"; export { value };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test"; await exports({ value, });`
+                );
+            });
+
+            it('should mark the script as a module', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `const value = "test"; export { value };`
+                );
+                expect(result.metadata.isModule).toBe(true);
+            });
+
+            it('should be able to compile empty export statements', () => {
+                const result = transpiler.transpile(`export { };`);
+
+                expect(result).toBe(`await exports({});`);
+            });
+
+            it('should work if the semi-colon is omitted', () => {
+                const result = transpiler.transpile(
+                    `const value = "test";\nexport { value }`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should work if the space after "export" is omitted', () => {
+                const result = transpiler.transpile(
+                    `const value = "test";\nexport{ value };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should be able to compile object export statements with aliases', () => {
+                const result = transpiler.transpile(
+                    `const value = "test"; export { value as otherValue };`
+                );
+
+                expect(result).toBe(
+                    `const value = "test"; await exports({ otherValue: value, });`
+                );
+            });
+
+            it('should be able to compile variable export statements', () => {
+                const result = transpiler.transpile(
+                    `export const value = "test";`
+                );
+
+                expect(result).toBe(
+                    `const value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should be able to compile multiple variable export statements', () => {
+                const result = transpiler.transpile(
+                    `export const value = "test", value2 = 123;`
+                );
+
+                expect(result).toBe(
+                    `const value = "test", value2 = 123;\nawait exports({ value, value2, });`
+                );
+            });
+
+            it('should be able to compile mutable variable statements', () => {
+                const result = transpiler.transpile(
+                    `export let value = "test";`
+                );
+
+                expect(result).toBe(
+                    `let value = "test";\nawait exports({ value, });`
+                );
+            });
+
+            it('should be able to compile function export statements', () => {
+                const result = transpiler.transpile(
+                    `export function myFunc() { return "test"; }`
+                );
+
+                expect(result).toBe(
+                    `function myFunc() { return "test"; }\nawait exports({ myFunc, });`
+                );
+            });
+
+            it('should be able to compile default export statements', () => {
+                const result = transpiler.transpile(`export default "test";`);
+
+                expect(result).toBe(`await exports({ default: "test" });`);
+            });
+
+            it('should be able to compile empty export from source statements', () => {
+                const result = transpiler.transpile(`export {} from "test";`);
+
+                expect(result).toBe(`await exports({});`);
+            });
+
+            it('should be able to compile export all statements', () => {
+                const result = transpiler.transpile(`export * from "test";`);
+
+                expect(result).toBe(`await exports("test");`);
+            });
+
+            it('should be able to compile export object from source statements', () => {
+                const result = transpiler.transpile(
+                    `export { value, value2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `await exports("test", ['value', 'value2', ]);`
+                );
+            });
+
+            it('should be able to compile export object statements from source with aliases', () => {
+                const result = transpiler.transpile(
+                    `export { value as example, value2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `await exports("test", [['value', 'example'], 'value2', ]);`
+                );
+            });
+
+            it('should use the given exportFactory', () => {
+                transpiler = new Transpiler({
+                    exportFactory: 'myExport',
+                });
+                const result = transpiler.transpile(
+                    `export { value as example, value2 } from "test";`
+                );
+
+                expect(result).toBe(
+                    `await myExport("test", [['value', 'example'], 'value2', ]);`
+                );
+            });
+        });
+
+        it('should support return statements outside of functions', () => {
+            const transpiler = new Transpiler();
+            const result = transpiler.transpile('return 123;');
+
+            expect(result).toBe('return 123;');
+        });
+
+        describe('typescript', () => {
+            it('should remove type annotations from variable declarations', () => {
+                const transpiler = new Transpiler();
+
+                // number
+                expect(transpiler.transpile(`let abc = 123;`)).toBe(
+                    `let abc = 123;`
+                );
+                expect(transpiler.transpile(`let abc: number = 123;`)).toBe(
+                    `let abc = 123;`
+                );
+                expect(transpiler.transpile(`var abc = 123;`)).toBe(
+                    `var abc = 123;`
+                );
+                expect(transpiler.transpile(`var abc: number = 123;`)).toBe(
+                    `var abc = 123;`
+                );
+                expect(transpiler.transpile(`const abc = 123;`)).toBe(
+                    `const abc = 123;`
+                );
+                expect(transpiler.transpile(`const abc: number = 123;`)).toBe(
+                    `const abc = 123;`
+                );
+
+                // string
+                expect(transpiler.transpile(`let abc = "def";`)).toBe(
+                    `let abc = "def";`
+                );
+                expect(transpiler.transpile(`let abc: string = "def";`)).toBe(
+                    `let abc = "def";`
+                );
+                expect(transpiler.transpile(`var abc = "def";`)).toBe(
+                    `var abc = "def";`
+                );
+                expect(transpiler.transpile(`var abc: string = "def";`)).toBe(
+                    `var abc = "def";`
+                );
+                expect(transpiler.transpile(`const abc = "def";`)).toBe(
+                    `const abc = "def";`
+                );
+                expect(transpiler.transpile(`const abc: string = "def";`)).toBe(
+                    `const abc = "def";`
+                );
+
+                // boolean
+                expect(transpiler.transpile(`let abc = true;`)).toBe(
+                    `let abc = true;`
+                );
+                expect(transpiler.transpile(`let abc: boolean = true;`)).toBe(
+                    `let abc = true;`
+                );
+                expect(transpiler.transpile(`var abc = true;`)).toBe(
+                    `var abc = true;`
+                );
+                expect(transpiler.transpile(`var abc: boolean = true;`)).toBe(
+                    `var abc = true;`
+                );
+                expect(transpiler.transpile(`const abc = true;`)).toBe(
+                    `const abc = true;`
+                );
+                expect(transpiler.transpile(`const abc: boolean = true;`)).toBe(
+                    `const abc = true;`
+                );
+
+                // any
+                expect(transpiler.transpile(`let abc = 123;`)).toBe(
+                    `let abc = 123;`
+                );
+                expect(transpiler.transpile(`let abc: any = 123;`)).toBe(
+                    `let abc = 123;`
+                );
+                expect(transpiler.transpile(`var abc = 123;`)).toBe(
+                    `var abc = 123;`
+                );
+                expect(transpiler.transpile(`var abc: any = 123;`)).toBe(
+                    `var abc = 123;`
+                );
+                expect(transpiler.transpile(`const abc = 123;`)).toBe(
+                    `const abc = 123;`
+                );
+                expect(transpiler.transpile(`const abc: any = 123;`)).toBe(
+                    `const abc = 123;`
+                );
+
+                // object
+                expect(transpiler.transpile(`let abc = {};`)).toBe(
+                    `let abc = {};`
+                );
+                expect(transpiler.transpile(`let abc: object = {};`)).toBe(
+                    `let abc = {};`
+                );
+                expect(transpiler.transpile(`var abc = {};`)).toBe(
+                    `var abc = {};`
+                );
+                expect(transpiler.transpile(`var abc: object = {};`)).toBe(
+                    `var abc = {};`
+                );
+                expect(transpiler.transpile(`const abc = {};`)).toBe(
+                    `const abc = {};`
+                );
+                expect(transpiler.transpile(`const abc: object = {};`)).toBe(
+                    `const abc = {};`
+                );
+
+                // arrow function
+                expect(transpiler.transpile(`let abc = () => 123;`)).toBe(
+                    `let abc = () => 123;`
+                );
+                expect(
+                    transpiler.transpile(`let abc: () => number = () => 123;`)
+                ).toBe(`let abc = () => 123;`);
+                expect(transpiler.transpile(`var abc = () => 123;`)).toBe(
+                    `var abc = () => 123;`
+                );
+                expect(
+                    transpiler.transpile(`var abc: () => number = () => 123;`)
+                ).toBe(`var abc = () => 123;`);
+                expect(transpiler.transpile(`const abc = () => 123;`)).toBe(
+                    `const abc = () => 123;`
+                );
+                expect(
+                    transpiler.transpile(`const abc: () => number = () => 123;`)
+                ).toBe(`const abc = () => 123;`);
+
+                // as const
+                expect(
+                    transpiler.transpile(`let abc = { one: 1, two: 2 };`)
+                ).toBe(`let abc = { one: 1, two: 2 };`);
+                expect(
+                    transpiler.transpile(
+                        `let abc = { one: 1, two: 2 } as const;`
+                    )
+                ).toBe(`let abc = { one: 1, two: 2 };`);
+                expect(
+                    transpiler.transpile(
+                        `var abc = { one: 1, two: 2 } as const;`
+                    )
+                ).toBe(`var abc = { one: 1, two: 2 };`);
+                expect(
+                    transpiler.transpile(
+                        `var abc = { one: 1, two: 2 } as const;`
+                    )
+                ).toBe(`var abc = { one: 1, two: 2 };`);
+                expect(
+                    transpiler.transpile(
+                        `const abc = { one: 1, two: 2 } as const;`
+                    )
+                ).toBe(`const abc = { one: 1, two: 2 };`);
+                expect(
+                    transpiler.transpile(
+                        `const abc = { one: 1, two: 2 } as const;`
+                    )
+                ).toBe(`const abc = { one: 1, two: 2 };`);
+            });
+
+            describe('function', () => {
+                it('should remove type annotations from simple function declarations', () => {
+                    const transpiler = new Transpiler();
+
+                    // simple number
+                    expect(
+                        transpiler.transpile(`function abc() {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc() {
+                        return 123;
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(): number {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc() {
+                        return 123;
+                    }`);
+
+                    // string
+                    expect(
+                        transpiler.transpile(`function abc() {
+                        return "def";
+                    }`)
+                    ).toBe(`function abc() {
+                        return "def";
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(): string {
+                        return "def";
+                    }`)
+                    ).toBe(`function abc() {
+                        return "def";
+                    }`);
+
+                    // boolean
+                    expect(
+                        transpiler.transpile(`function abc() {
+                        return true;
+                    }`)
+                    ).toBe(`function abc() {
+                        return true;
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(): boolean {
+                        return true;
+                    }`)
+                    ).toBe(`function abc() {
+                        return true;
+                    }`);
+
+                    // any
+                    expect(
+                        transpiler.transpile(`function abc() {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc() {
+                        return 123;
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(): any {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc() {
+                        return 123;
+                    }`);
+
+                    // object
+                    expect(
+                        transpiler.transpile(`function abc() {
+                        return {};
+                    }`)
+                    ).toBe(`function abc() {
+                        return {};
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(): object {
+                        return {};
+                    }`)
+                    ).toBe(`function abc() {
+                        return {};
+                    }`);
+                });
+
+                it('should remove type annotations from single parameter function declarations', () => {
+                    const transpiler = new Transpiler();
+
+                    // simple number
+                    expect(
+                        transpiler.transpile(`function abc(n) {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return 123;
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(n: number): number {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return 123;
+                    }`);
+
+                    // string
+                    expect(
+                        transpiler.transpile(`function abc(n) {
+                        return "def";
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return "def";
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(n: number): string {
+                        return "def";
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return "def";
+                    }`);
+
+                    // boolean
+                    expect(
+                        transpiler.transpile(`function abc(n) {
+                        return true;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return true;
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(n: number): boolean {
+                        return true;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return true;
+                    }`);
+
+                    // any
+                    expect(
+                        transpiler.transpile(`function abc(n) {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return 123;
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(n: number): any {
+                        return 123;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return 123;
+                    }`);
+
+                    // object
+                    expect(
+                        transpiler.transpile(`function abc(n) {
+                        return {};
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return {};
+                    }`);
+                    expect(
+                        transpiler.transpile(`function abc(n: number): object {
+                        return {};
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return {};
+                    }`);
+                });
+
+                it('should remove type guard annotations', () => {
+                    const transpiler = new Transpiler();
+
+                    expect(
+                        transpiler.transpile(`function abc(n: unknown): n is number {
+                        return typeof n === "number";
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return typeof n === "number";
+                    }`);
+                });
+
+                it('should remove assert annotations', () => {
+                    const transpiler = new Transpiler();
+
+                    expect(
+                        transpiler.transpile(`function abc(n: unknown): asserts n is number {
+                        return typeof n === "number";
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return typeof n === "number";
+                    }`);
+                });
+
+                it('should remove generic type arguments', () => {
+                    const transpiler = new Transpiler();
+
+                    expect(
+                        transpiler.transpile(`function abc<T>(n: T): T {
+                        return n;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return n;
+                    }`);
+                });
+
+                it('should remove optional indicators', () => {
+                    const transpiler = new Transpiler();
+
+                    expect(
+                        transpiler.transpile(`function abc(n?: number): number {
+                        return n;
+                    }`)
+                    ).toBe(`function abc(n) {
+                        return n;
+                    }`);
+                });
+            });
+
+            it('should remove interface declarations', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `interface ABC { hello: number; name: string; }`
+                    )
+                ).toBe(`const ABC = void 0;`);
+
+                // With extends
+                expect(
+                    transpiler.transpile(
+                        `interface First {} interface ABC extends First { hello: number; name: string; }`
+                    )
+                ).toBe(`const First = void 0; const ABC = void 0;`);
+
+                // With new()
+                expect(
+                    transpiler.transpile(`interface ABC { new(val: any); }`)
+                ).toBe(`const ABC = void 0;`);
+
+                // With call()
+                expect(
+                    transpiler.transpile(`interface ABC { (val: any): void; }`)
+                ).toBe(`const ABC = void 0;`);
+
+                // With generics
+                expect(
+                    transpiler.transpile(`interface ABC<T> { val: T }`)
+                ).toBe(`const ABC = void 0;`);
+
+                // With export
+                expect(
+                    transpiler.transpile(`export interface ABC<T> { val: T }`)
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
+
+                // With separate export
+                expect(
+                    transpiler.transpile(
+                        `interface ABC<T> { val: T }\nexport { ABC };`
+                    )
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
+            });
+
+            it('should remove type declarations', () => {
+                const transpiler = new Transpiler();
+                expect(transpiler.transpile(`type ABC = number;`)).toBe(
+                    `const ABC = void 0;`
+                );
+                expect(transpiler.transpile(`export type ABC = number;`)).toBe(
+                    `const ABC = void 0;\nawait exports({ ABC, });`
+                );
+
+                // With generics
+                expect(transpiler.transpile(`type ABC<T> = { val: T }`)).toBe(
+                    `const ABC = void 0;`
+                );
+            });
+
+            it('should remove import type declarations', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`import type { ABC } from "module";`)
+                ).toBe(`const { ABC, } = {};`);
+
+                expect(
+                    transpiler.transpile(
+                        `import type { ABC, DEF, GHI as other } from "module";`
+                    )
+                ).toBe(`const { ABC, DEF, GHI: other, } = {};`);
+            });
+
+            it('should remove module declarations', () => {
+                const transpiler = new Transpiler();
+                expect(transpiler.transpile(`module ABC {}`)).toBe(``);
+            });
+
+            it('should remove union type declarations', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`type ABC = number | string;`)
+                ).toBe(`const ABC = void 0;`);
+                expect(
+                    transpiler.transpile(`export type ABC = number | string;`)
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
+            });
+
+            it('should remove enum type declarations', () => {
+                const transpiler = new Transpiler();
+                expect(transpiler.transpile(`enum ABC { One, Two }`)).toBe(
+                    `const ABC = void 0;`
+                );
+                expect(
+                    transpiler.transpile(`export enum ABC { One, Two }`)
+                ).toBe(`const ABC = void 0;\nawait exports({ ABC, });`);
+            });
+
+            it('should remove type casts', () => {
+                const transpiler = new Transpiler();
+                expect(transpiler.transpile(`let abc = 123 as any;`)).toBe(
+                    `let abc = 123;`
+                );
+            });
+
+            it('should remove implements expressions from class declarations and expressions', () => {
+                const transpiler = new Transpiler();
+
+                // Single
+                expect(
+                    transpiler.transpile(
+                        `interface ABC { name: string}; class Test implements ABC {}`
+                    )
+                ).toBe(`const ABC = void 0;; class Test  {}`);
+                expect(
+                    transpiler.transpile(
+                        `interface ABC { name: string}; let c = class Test implements ABC {}`
+                    )
+                ).toBe(`const ABC = void 0;; let c = class Test  {}`);
+
+                // Two
+                expect(
+                    transpiler.transpile(
+                        `interface ABC { name: string } interface DEF {} class Test implements ABC, DEF {}`
+                    )
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; class Test  {}`
+                );
+                expect(
+                    transpiler.transpile(
+                        `interface ABC { name: string } interface DEF {} let c = class Test implements ABC, DEF {}`
+                    )
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; let c = class Test  {}`
+                );
+
+                // Two with extends
+                expect(
+                    transpiler.transpile(
+                        `interface ABC { name: string } interface DEF {} class Base {} class Test extends Base implements ABC, DEF {}`
+                    )
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; class Base {} class Test extends Base  {}`
+                );
+                expect(
+                    transpiler.transpile(
+                        `interface ABC { name: string } interface DEF {} class Base {} let c = class Test extends Base implements ABC, DEF {}`
+                    )
+                ).toBe(
+                    `const ABC = void 0; const DEF = void 0; class Base {} let c = class Test extends Base  {}`
+                );
+            });
+
+            it('should remove generic type arguments from class declarations and expressions', () => {
+                const transpiler = new Transpiler();
+
+                // Single
+                expect(transpiler.transpile(`class Test<T> {}`)).toBe(
+                    `class Test {}`
+                );
+                expect(transpiler.transpile(`let c = class Test<T> {}`)).toBe(
+                    `let c = class Test {}`
+                );
+                expect(transpiler.transpile(`export class Test<T> {}`)).toBe(
+                    `class Test {}\nawait exports({ Test, });`
+                );
+
+                // Two
+                expect(transpiler.transpile(`class Test<T, B> {}`)).toBe(
+                    `class Test {}`
+                );
+                expect(
+                    transpiler.transpile(`let c = class Test<T, B> {}`)
+                ).toBe(`let c = class Test {}`);
+                expect(transpiler.transpile(`export class Test<T, B> {}`)).toBe(
+                    `class Test {}\nawait exports({ Test, });`
+                );
+            });
+
+            it('should remove the abstract keyword from classes', () => {
+                const transpiler = new Transpiler();
+                expect(transpiler.transpile(`abstract class Test {}`)).toBe(
+                    `class Test {}`
+                );
+
+                expect(
+                    transpiler.transpile(`export abstract class Test {}`)
+                ).toBe(`class Test {}\nawait exports({ Test, });`);
+            });
+        });
     });
 
     describe('replaceMacros()', () => {
@@ -751,13 +1650,6 @@ describe('Transpiler', () => {
             expect(replaceMacros(`${DNA_TAG_PREFIX}${DNA_TAG_PREFIX}`)).toEqual(
                 '🧬'
             );
-        });
-
-        it('should convert curly quotes to normal quotes', () => {
-            expect(replaceMacros('’')).toEqual("'");
-            expect(replaceMacros('‘')).toEqual("'");
-            expect(replaceMacros('”')).toEqual('"');
-            expect(replaceMacros('“')).toEqual('"');
         });
     });
 });

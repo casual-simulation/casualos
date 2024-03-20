@@ -10,6 +10,8 @@ import {
     RuntimeBot,
     getOriginalObject,
     ORIGINAL_OBJECT,
+    ImportFunc,
+    ExportFunc,
 } from '@casual-simulation/aux-common/bots';
 import {
     RuntimeBotFactory,

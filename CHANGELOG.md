@@ -1,5 +1,53 @@
 # CasualOS Changelog
 
+## V3.2.18
+
+#### Date: 3/20/2024
+
+### :rocket: Features
+
+-   Added support for ES Module-style `import` and `export` statements.
+    -   [ES Modules](https://javascript.info/modules-intro) are a way to organize code into separate listeners.
+    -   With this update, CasualOS now supports using [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) statements in scripts.
+    -   By default, modules can be imported from 3 different places:
+        -   Scripts based on system tag. You can import exported functions and variables from any script based on the system tag of its bot. For example, `import {abc} from "example.system.tag"` can be used to import the `abc` variable or function from the bot with the `example.system` system and the `tag` tag.
+        -   URLs. The URLs can be imported. For example, `import { sortBy } from 'https://esm.run/lodash-es';"` imports the [`sortBy` function](https://lodash.com/docs/4.17.15#sortBy) from the [`lodash-es` module](https://www.npmjs.com/package/lodash-es) provided by [https://esm.run](https://esm.run).
+        -   The `casualos` module. This module exports all of CasualOS's built-in functions. It is the only module that cannot be overriden with `@onResolveModule`. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+    -   In addition to the default ways, you can provide your own custom module resolution logic by using `@onResolveModule`.
+        -   See the documentation for `@onResolveModule` for more information.
+-   Added support for TypeScript syntax.
+    -   [TypeScript](https://www.typescriptlang.org/) is an extension of JavaScript that enables you to add type information to your code.
+    -   Combined with ES Modules, this means it is much easier to catch simple bugs because the editor will tell you when something doesn't match up.
+    -   For now, errors are only surfaced in each script, but in the future it will be possible to check for errors in any script.
+    -   There are a couple limitations:
+        -   Generally, any TypeScript feature that requires a significant amount of code generation (e.g. [enums](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#enums)) are not supported.
+        -   Additionally, the `let casted = <any>value;` syntax for casting types is not supported since all scripts support JSX.
+-   Added the `📄` prefix for "library" scripts.
+    -   Before, the only way to make a script was to use the `@` prefix. Using the `@` prefix makes what we call a "listener script" or "listener tag".
+    -   Now, you can use the `📄` prefix instead of `@`. Using `📄` makes what we call a "library script" or "library tag".
+    -   Library scripts work similarly to listener scripts, except with a couple key changes:
+        -   Library scripts cannot be shouted to. Instead, they have to be imported. This means you cannot use `shout()` or `whisper()` to communicate with a library script. Additionally, `thisBot.script()` does not work either.
+        -   Library scripts have to import all CasualOS functions. This means you cannot simply use `os.toast()`, you have to first import the `casualos` module. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+-   Updated CasualOS to support ECMAScript 14.
+-   Updated Preact to v10.19.6
+-   Added the ability to use `.transferControlToOffscreen()` and `.getContext()` functions on `<canvas>` HTML elements.
+-   Added the ability to use `.setPointerCapture()` and `.releasePointerCapture()` functions on HTML elements.
+-   Updated the privacy policies.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `?owner=player` in the URL while not being logged in would cause a public inst to be loaded instead of prompting the user to login.
+-   Fixed an issue where custom apps would not reappear after logging in with a code.
+-   Fixed an issue where `os.getCurrentInst()` would return `undefined` if the inst is a static inst.
+
 ## V3.2.17
 
 #### Date: 3/6/2024

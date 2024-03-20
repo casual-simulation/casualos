@@ -18,6 +18,9 @@ import {
     calculateBotValue,
     isBotLink,
     KNOWN_TAG_PREFIXES,
+    isModule,
+    parseModuleSafe,
+    tweenTo,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
@@ -33,6 +36,7 @@ import {
     setActiveModel,
     toSubscription,
     watchEditor,
+    getModelInfoFromUri,
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
 import { filter, flatMap, tap } from 'rxjs/operators';
@@ -110,6 +114,18 @@ export default class MonacoTagEditor extends Vue {
                 this.space
             );
             return isScript(currentValue);
+        }
+        return false;
+    }
+
+    get isLibrary() {
+        if (this.bot && this.tag) {
+            const currentValue = getTagValueForSpace(
+                this.bot,
+                this.tag,
+                this.space
+            );
+            return isModule(currentValue);
         }
         return false;
     }
@@ -225,6 +241,57 @@ export default class MonacoTagEditor extends Vue {
     }
 
     mounted() {
+        const disposable = monaco.editor.registerEditorOpener({
+            openCodeEditor: (source, resource, selectionOrPosition) => {
+                if (source === this.editor) {
+                    const modelInfo = getModelInfoFromUri(resource);
+                    const model = monaco.editor.getModel(resource);
+                    if (modelInfo) {
+                        const sim = this._simulations.get(modelInfo.simId);
+                        if (sim) {
+                            if ('lineNumber' in selectionOrPosition) {
+                                sim.helper.transaction(
+                                    tweenTo(modelInfo.botId, {
+                                        tag: modelInfo.tag,
+                                        space: modelInfo.space,
+                                        lineNumber:
+                                            selectionOrPosition.lineNumber,
+                                        columnNumber:
+                                            selectionOrPosition.column,
+                                    })
+                                );
+                            } else {
+                                const startIndex = model.getOffsetAt({
+                                    column: selectionOrPosition.startColumn,
+                                    lineNumber:
+                                        selectionOrPosition.startLineNumber,
+                                });
+                                const endIndex = model.getOffsetAt({
+                                    column: selectionOrPosition.endColumn,
+                                    lineNumber:
+                                        selectionOrPosition.endLineNumber,
+                                });
+
+                                sim.helper.transaction(
+                                    tweenTo(modelInfo.botId, {
+                                        tag: modelInfo.tag,
+                                        space: modelInfo.space,
+                                        startIndex: startIndex,
+                                        endIndex: endIndex,
+                                    })
+                                );
+                            }
+
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            },
+        });
+        this._sub.add(toSubscription(disposable));
+
         this._updateModel();
     }
 
@@ -272,6 +339,10 @@ export default class MonacoTagEditor extends Vue {
         this._replacePrefix('@');
     }
 
+    makeLibraryTag() {
+        this._replacePrefix('📄');
+    }
+
     makePrefixTag(prefix: ScriptPrefix) {
         this._replacePrefix(prefix.prefix);
     }
@@ -294,6 +365,8 @@ export default class MonacoTagEditor extends Vue {
             final = prefix + parseFormulaSafe(currentValue);
         } else if (this.isScript) {
             final = prefix + parseScriptSafe(currentValue);
+        } else if (this.isLibrary) {
+            final = prefix + parseModuleSafe(currentValue);
         } else {
             const script = trimPortalScript(
                 this.scriptPrefixes.map((p) => p.prefix),

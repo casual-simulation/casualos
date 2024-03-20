@@ -11,3 +11,4 @@ export * from './BotLookupTableHelper';
 export * from './StateUpdatedEvent';
 export * from './StoredAux';
 export * from './AuxStateHelpers';
+export * from './BotModule';
