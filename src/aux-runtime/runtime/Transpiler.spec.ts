@@ -778,6 +778,12 @@ describe('Transpiler', () => {
                 expect(result).toBe(`await importModule("test", importMeta);`);
             });
 
+            it('should not mark dynamic import expressions as modules', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`import("test");`);
+                expect(result.metadata.isModule).toBe(false);
+            });
+
             it('should mark the script as a module', () => {
                 const result =
                     transpiler.transpileWithMetadata(`import "test";`);
