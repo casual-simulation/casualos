@@ -40,6 +40,7 @@
 -   Updated Preact to v10.19.6
 -   Added the ability to use `.transferControlToOffscreen()` and `.getContext()` functions on `<canvas>` HTML elements.
 -   Added the ability to use `.setPointerCapture()` and `.releasePointerCapture()` functions on HTML elements.
+-   Updated the privacy policies.
 
 ### :bug: Bug Fixes
 
