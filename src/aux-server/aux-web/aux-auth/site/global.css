@@ -6,3 +6,17 @@
     top: auto;
     overflow: hidden;
 }
+
+.policy-container {
+    counter-reset: h2;
+}
+
+.policy-container h1 {
+    counter-reset: h2;
+}
+
+/** put counter result into headings */
+.policy-container h2:before {
+    counter-increment: h2;
+    content: counter(h2) '. ';
+}

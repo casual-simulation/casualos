@@ -1,11 +1,11 @@
 <template>
-    <div class="privacy-policy-container">
+    <div class="privacy-policy-container policy-container">
         <md-card>
             <md-card-header>
                 <h1 class="md-title">{{ hostname }} Privacy Policy</h1>
             </md-card-header>
             <md-card-content>
-                <p>
+                <!-- <p>
                     <strong
                         >If you are a kid and you want an explaination of how we use your data, you
                         can find it <a href="/children-privacy-policy">here</a>.</strong
@@ -22,7 +22,7 @@
                     our
                     <router-link to="/acceptable-use-policy">Acceptable Use Policy</router-link> and
                     <router-link to="/terms">Terms of Service</router-link>.
-                </p>
+                </p> -->
 
                 <div v-html="privacyPolicyHtml"></div>
             </md-card-content>

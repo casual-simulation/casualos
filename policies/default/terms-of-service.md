@@ -4,9 +4,24 @@ Casual Simulation offers tools for authoring open source experiences.
 
 Please review the entirety of these terms carefully as they apply how Your data is used, the rights You have to the content You create or share, and more.
 
-## Contents
+<h2 id="table-of-contents">Table of Contents</h2>
 
-## About These Terms
+1. [Table of Contents](#table-of-contents)
+2. [About These Terms](#about-these-terms)
+3. [Personal Use Only](#personal-use-only)
+4. [About Accessing And Using Our Services](#about-accessing-and-using-our-services)
+5. [Content Permissions, Restrictions, and Licensing](#content-permissions-restrictions-and-licensing)
+6. [Your Risk In Accessing Licensed User Content](#your-risk-in-accessing-licensed-user-content)
+7. [OLX Services](#olx-services)
+8. [Warranty Disclaimer](#warranty-disclaimer)
+9. [Limitation of Liability](#limitation-of-liability)
+10. [Indemnity](#indemnity)
+11. [Intellectual Property](#intellectual-property)
+12. [Privacy](#privacy)
+13. [Mandatory Arbitration](#mandatory-arbitration)
+14. [General Terms](#general-terms)
+
+<h2 id="about-these-terms">About These Terms</h2>
 
 These Terms of Service pertain to the legal obligations You assume when You access the following websites:
 
@@ -32,7 +47,7 @@ These Terms of Service, and any rights and licenses granted hereunder, may not b
 
 You can access these Terms of Service at any time at <https://ab1.bot/terms-of-service.txt>. We can make changes to these Terms of Service at any time and Your continued use of Our Services shall confirm Your acceptance of the updated Terms of Service whether You have read them or not. To reiterate, and for clarity, these Terms of Service apply to all who access or use the Services, including without limitation users who contribute or author content, information, and other materials or services, registered or otherwise, in any way.
 
-## Personal Use Only
+<h2 id="personal-use-only">Personal Use Only</h2>
 
 The Services are made available for Your personal use only so that individuals may practice, learn, and experiment with the Services unless You have a separate written agreement with Us. You may not "scrape" the Services without written permission by us. ab1.bot is an implementation of CasualOS (<https://github.com/casual-simulation/casualos>) and We grant You permission to use the Services to create, display, copy, and download content for personal, non-commercial, and commercial use provided that You not remove or alter any copyright or other proprietary notices contained in the content. If You have any questions or would like an exception please email Us at <hello@casualsimulation.org>, and We will respond promptly. Speaking broadly, Our desire to maximize the impact and use of the Services without restriction provided it does not adversely impact Our ability to provide Services to the general public or burden Us with additional liability.
 
@@ -42,7 +57,7 @@ Our Services are intended to be free of charge to the general public, government
 
 Any organization that would like to make commercial use of Our Services must enter into a separate agreement with Us in advance to ensure general quality of service is not adversely impacted. Please contact Us at <hello@casualsimulation.com> and We will promptly follow up with You.
 
-## About Accessing And Using Our Services
+<h2 id="about-accessing-and-using-our-services">About Accessing And Using Our Services</h2>
 
 You are responsible for the internet connection and/or mobile charges that You may incur for accessing Our Services. You should ask Your mobile operator if You are unsure what these charges will be before You access Our Services.
 
@@ -66,7 +81,7 @@ We have the right to withdraw or modify Our Services (in whole or in part) witho
 
 There may also be times when Our Services or any part of it is not available for technical or maintenance related reasons, whether on a scheduled or unscheduled basis.
 
-## Content Permissions, Restrictions, and Licensing
+<h2 id="content-permissions-restrictions-and-licensing">Content Permissions, Restrictions, and Licensing</h2>
 
 You irrevocably grant Us a license as defined in this Article 4 to any and all Content or forms of media, including without limitation any and all text, software or source code, procedurally, manually, or artificially generated data, graphics, logos, tools, photographs, images, illustrations, audio and video, meshes, animations, modifications, derivatives, and any related product or service feedback, that You create with or You provide to the Services that You possess the rights to (collectively, "User Content") to the fullest extent provided by law.
 
@@ -128,11 +143,11 @@ You agree that You will not:
 
 -   use Our Services in any other way not permitted by these Terms of Service, Our Acceptable Use Policy, or Our Privacy Policy.
 
-## Your Risk In Accessing Licensed User Content
+<h2 id="your-risk-in-accessing-licensed-user-content">Your Risk In Accessing Licensed User Content</h2>
 
 ANY USER CONTENT OR LICENSED USER CONTENT YOU ACCESS IS AT YOUR OWN RISK. WE DO NOT HAVE THE CAPABILITY TO TEST OR INSPECT ALL LICENSED USER CONTENT AND WE LICENSED USER CONTENT IN AUX BUNDLES "AS IS." YOU ACKNOWLEDGE THAT ACCESSING LICENSED USER CONTENT THAT CONTAINS MALWARE OR OTHER MALICIOUS CODE IS POSSIBLE AND INHERENTLY RISKY. YOU SHOULD ONLY ACCESS LICENSED USER CONTENT CREATED BY SOURCES YOU TRUST AND SHOULD PROCEED WITH EXTREME CAUTION.
 
-## OLX Services
+<h2 id="olx-services">OLX Services</h2>
 
 The terms in this Article apply to paid or unpaid practice work offered by Casual Simulation or an OLX Partner (defined and listed below) who has already agreed to the terms in this Article ("OLX Services").
 
@@ -180,19 +195,19 @@ We have the right to withdraw or modify OLX Services (in whole or in part) witho
 
 There may also be times when OLX Services or any part of it is not available for technical or maintenance related reasons, whether on a scheduled or unscheduled basis.
 
-## Warranty Disclaimer
+<h2 id="warranty-disclaimer">Warranty Disclaimer</h2>
 
 THE SERVICES AND THE CONTENT ON THE SERVICES THAT IS MADE AVAILABLE TO YOU ARE PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT. WE DO NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE AVAILABILITY, USE, TIMELINESS, SECURITY, VALIDITY, ACCURACY, OR RELIABILITY OF, OR THE RESULTS OF THE USE OF, OR OTHERWISE RESPECTING, THE SERVICES. ANY MATERIAL, CONTENT, USER CONTENT, OR LICENSED USER CONTENT DOWNLOADED OR OTHERWISE OBTAINED THROUGH THE USE OF THE SERVICES IS DONE AT YOUR OWN DISCRETION AND RISK AND YOU ARE SOLELY RESPONSIBLE FOR ANY DAMAGE TO YOUR COMPUTER SYSTEM OR LOSS OF DATA THAT RESULTS FROM THE DOWNLOAD OF ANY SUCH MATERIAL, OR USE OF THE SERVICES INCLUDING ANY LEGAL LIABILITY YOU MAY ASSUME BY CREATING, DOWNLOADING, OR OTHERWISE INTERACTING WITH USER CONTENT OR LICENSED USER CONTENT TO THE FULLEST EXTENT BY LAW. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSIONS OR LIMITATIONS ON HOW LONG AN IMPLIED WARRANTY LASTS, SO THE ABOVE LIMITATIONS OR EXCLUSIONS MAY NOT APPLY. NO ADVICE OR INFORMATION, WHETHER ORAL OR WRITTEN, OBTAINED BY YOU FROM US SHALL BE DEEMED TO ALTER THIS DISCLAIMER OF WARRANTY, OR TO CREATE ANY WARRANTY.
 
-## Limitation of Liability
+<h2 id="limitation-of-liability">Limitation of Liability</h2>
 
 IN NO EVENT SHALL WE, OUR OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS, BE LIABLE TO YOU FOR ANY (I) INDIRECT, INCIDENTAL, SPECIAL, PUNITIVE, OR CONSEQUENTIAL DAMAGES WHATSOEVER RESULTING FROM ANY (A) ERRORS, MISTAKES, OR INACCURACIES OF CONTENT, (B) PERSONAL INJURY OR PROPERTY DAMAGE, OF ANY NATURE WHATSOEVER, RESULTING FROM YOUR ACCESS TO AND USE OF OUR SERVICES; (II) UNAUTHORIZED ACCESS TO OR USE OF OUR SECURE SERVERS AND/OR ANY AND ALL PERSONAL INFORMATION AND/OR FINANCIAL INFORMATION STORED THEREIN, (III) INTERRUPTION OR CESSATION OF TRANSMISSION TO OR FROM OUR SERVICES, (IV) BUGS, VIRUSES, TROJAN HORSES, OR THE LIKE, WHICH MAY BE TRANSMITTED TO OR THROUGH OUR SERVICES BY ANY THIRD PARTY, (V) ERRORS OR OMISSIONS IN ANY CONTENT OR FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF YOUR USE OF ANY CONTENT POSTED, EMAILED, TRANSMITTED, OR OTHERWISE MADE AVAILABLE VIA THE SERVICES, WHETHER BASED ON WARRANTY, CONTRACT, TORT, OR ANY OTHER LEGAL THEORY, OR (VI) DIRECT DAMAGES IN EXCESS OF $100; WHETHER OR NOT WE ARE ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. SOME STATES DO NOT ALLOW THE EXCLUSION OR LIMITATION OF INCIDENTAL OR CONSEQUENTIAL DAMAGES; THE FOREGOING LIMITATION OF LIABILITY SHALL APPLY TO THE FULLEST EXTENT PERMITTED BY LAW IN THE APPLICABLE JURISDICTION.
 
-## Indemnity
+<h2 id="indemnity">Indemnity</h2>
 
 You agree to defend, indemnify, and hold harmless us, Our officers, directors, employees, agents, affiliates, parents and subsidiaries from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses (including but not limited to attorney's fees) arising from: (i) Your use of and access to the Services; or (ii) Your violation of any term of these Terms of Service. This defense and indemnification obligation will survive these Terms of Service and Your use of the Services. For clarification, You agree to compensate us, according to law, for all losses, harm, claims and expenses that may arise from any breach of these terms by You.
 
-## Intellectual Property
+<h2 id="intellectual-property">Intellectual Property</h2>
 
 EXCEPT AS PERTAINING TO LICENSED USER CONTENT, YOU ACKNOWLEDGE THAT ALL COPYRIGHT, TRADEMARKS, AND OTHER INTELLECTUAL PROPERTY RIGHTS IN AND RELATING TO OUR SERVICES ARE OWNED BY OR LICENSED TO US UNLESS YOU HAVE A SEPARATE AGREEMENT WITH US IN WRITING STATING OTHERWISE. YOU SHALL NOT TAKE ANY ACTION TO JEOPARDIZE, LIMIT, OR INTERFERE WITH ANY OF OUR INTELLECTUAL PROPERTY RIGHTS NOW OR IN THE FUTURE, INCLUDING WITHOUT LIMITATION TRADEMARKING, PATENTING, OR CREATING ANY WORK OR INTELLECTUAL PROPERTY THAT WOULD PRECLUDE US OR OTHERS FROM FULLY UTILIZING THE SERVICES. BY USING THE SERVICES YOU ACKNOWLEDGE AND AGREE THESE TERMS.
 
@@ -202,13 +217,13 @@ While You are in compliance with these terms, Our Acceptable Use Policy, and Our
 
 We appreciate Your feedback and suggestions. Our goal is to provide high quality products and services. Our ability to freely evaluate and, if appropriate, implement ideas and information improves the online experience for all users. Therefore, any information, feedback, data, questions, comments, suggestions, or any other material or proposals, submitted to us, whether solicited or unsolicited, regarding its services or web site shall be deemed non-confidential unless mutually agreed between Us and You in writing. By providing any such material, You hereby grant Us an unrestricted, irrevocable, royalty-free and perpetual right to freely, reproduce, use, disclose, modify, perform, publish, translate, create derivative works from, distribute and display any such information You send us, without limitation, for any and all commercial and non-commercial purposes. We are free to use any ideas, concepts or techniques contained in this response for any purpose whatsoever including, but not limited to, developing, manufacturing, and marketing products incorporating such ideas, concepts or techniques.
 
-## Privacy
+<h2 id="privacy">Privacy</h2>
 
 We will only collect, process, use, and share Your personal information in accordance with Our Privacy Policy and as set out in these Terms of Service. IF YOU DO NOT AGREE TO Our PRIVACY POLICY, YOU SHOULD NOT CONTINUE TO ACCESS Our SERVICES.
 
 We may use cookies to store certain types of information each time You use Our Services. They may for example be used to help Us recognize what kind of device You are using. You can find out more about how We use cookies by reading Our Privacy Policy.
 
-## Mandatory Arbitration
+<h2 id="mandatory-arbitration">Mandatory Arbitration</h2>
 
 YOU AGREE THAT WITH RESPECT TO ALL DISPUTES BETWEEN YOU AND US OR OUR AFFILIATES, OFFICERS, DIRECTORS, OR EMPLOYEES (WHETHER OR NOT SUCH DISPUTE INVOLVES A THIRD PARTY) WITH REGARD TO YOUR RELATIONSHIP WITH US, INCLUDING WITHOUT LIMITATION DISPUTES RELATING TO THESE TERMS OF SERVICE, YOUR USE OF THE SERVICES, AND/OR RIGHTS OF PRIVACY AND/OR PUBLICITY, YOU AND US SHALL FIRST CONSULT WITH EACH OTHER TO ATTEMPT TO RESOLVE SUCH DISPUTE IN A MANNER SATISFACTORY TO BOTH PARTIES, AND THAT IF A RESOLUTION IS NOT REACHED WITHIN ONE HUNDRED EIGHTY (180) DAYS, THEN THE DISPUTE SHALL BE REFERRED TO AND RESOLVED BY BINDING ARBITRATION UNDER JAMS, INC.'S RULES FOR ARBITRATION OF CONSUMER-RELATED DISPUTES AND YOU AND WE HEREBY EXPRESSLY WAIVE TRIAL BY JURY; PROVIDED, HOWEVER, THAT TO THE EXTENT THAT YOU HAVE IN ANY MANNER VIOLATED OR THREATENED TO VIOLATE OUR INTELLECTUAL PROPERTY RIGHTS, WE MAY SEEK INJUNCTIVE OR OTHER APPROPRIATE RELIEF IN ANY STATE OR FEDERAL COURT IN THE STATE OF MICHIGAN. DISCOVERY AND RIGHTS TO APPEAL IN ARBITRATION ARE GENERALLY MORE LIMITED THAN IN A LAWSUIT, AND OTHER RIGHTS THAT YOU AND WE WOULD HAVE IN COURT MAY NOT BE AVAILABLE IN ARBITRATION.
 
@@ -224,7 +239,7 @@ If You don't want to be bound by the arbitration and class-action waiver provisi
 
 Your written notification must be mailed to Us at Casual Simulation Inc., Attn: Legal Department, 1740 44th ST SW STE 5 Wyoming, MI 49519 or by email notification at <hello@casualsimulation.org>. If You do not notify Us in accordance with this paragraph, You agree to be bound by the terms of this section, including, without limitation, the arbitration and class-action waiver provisions, and also including such provisions in any modifications We make to these Terms of Service after the date of Your first acceptance. Such notification must include: (i) Your name; (ii) Your email address and mailing address; and (iii) a statement that You do not wish to resolve disputes with Us through arbitration or waive Your ability to participate in a class action. If We make any changes to this section (other than a change to the address at which We will receive notices or rejections of future changes to this section), You may reject any such change by sending Us written notice, within thirty (30) days of the change, to the address set out in the "Notices" section. It is not necessary to send Us a rejection of a future change to this section if You had properly opted out within the first thirty (30) days after You first accepted the provisions in this section. If You have not properly opted out, then by rejecting a future change, You are agreeing that You will arbitrate any dispute between Us in accordance with the language of this section, as modified by any changes You did not reject. A notification sent pursuant to this paragraph solely affects these Terms of Service; if You previously entered into other arbitration or dispute resolution agreements with Us or enter into other such agreements in the future, Your notification that You are opting out of the provisions in this section shall not affect the other arbitration agreements between You and us.
 
-## General Terms
+<h2 id="general-terms">General Terms</h2>
 
 If any part of these terms is held to be invalid or unenforceable under any applicable local laws or by an applicable court, that part shall be interpreted in a manner consistent with applicable law to reflect as nearly as possible Our original intentions and the remainder of these terms shall remain valid and enforceable.
 
