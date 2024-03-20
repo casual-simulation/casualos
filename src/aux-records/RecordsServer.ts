@@ -250,6 +250,132 @@ export const INSTANCES_QUERY_VALIDATION = z
     .max(128 * 3)
     .transform((value) => parseInstancesList(value));
 
+const RECORD_FILE_SCHEMA = z.object({
+    recordKey: RECORD_KEY_VALIDATION,
+    fileSha256Hex: z
+        .string({
+            invalid_type_error: 'fileSha256Hex must be a string.',
+            required_error: 'fileSha256Hex is required.',
+        })
+        .min(1)
+        .max(128)
+        .nonempty('fileSha256Hex must be non-empty.'),
+    fileByteLength: z
+        .number({
+            invalid_type_error:
+                'fileByteLength must be a positive integer number.',
+            required_error: 'fileByteLength is required.',
+        })
+        .positive('fileByteLength must be a positive integer number.')
+        .int('fileByteLength must be a positive integer number.'),
+    fileMimeType: z
+        .string({
+            invalid_type_error: 'fileMimeType must be a string.',
+            required_error: 'fileMimeType is required.',
+        })
+        .min(1)
+        .max(128),
+    fileDescription: z
+        .string({
+            invalid_type_error: 'fileDescription must be a string.',
+            required_error: 'fileDescription is required.',
+        })
+        .min(1)
+        .max(128)
+        .optional(),
+    markers: MARKERS_VALIDATION.optional(),
+    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+});
+
+const UPDATE_FILE_SCHEMA = z.object({
+    recordKey: RECORD_KEY_VALIDATION,
+    fileUrl: z
+        .string({
+            invalid_type_error: 'fileUrl must be a string.',
+            required_error: 'fileUrl is required.',
+        })
+        .nonempty('fileUrl must be non-empty.'),
+    markers: MARKERS_VALIDATION,
+    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+});
+
+const READ_FILE_SCHEMA = z.object({
+    recordName: RECORD_NAME_VALIDATION.optional(),
+    fileName: z
+        .string({
+            invalid_type_error: 'fileName must be a string.',
+            required_error: 'fileName is required.',
+        })
+        .nonempty('fileName must be non-empty.')
+        .optional(),
+    fileUrl: z
+        .string({
+            invalid_type_error: 'fileUrl must be a string.',
+            required_error: 'fileUrl is required.',
+        })
+        .nonempty('fileUrl must be non-empty.')
+        .optional(),
+    instances: INSTANCES_QUERY_VALIDATION.optional(),
+});
+
+const LIST_FILES_SCHEMA = z.object({
+    recordName: RECORD_NAME_VALIDATION,
+    fileName: z
+        .string({
+            invalid_type_error: 'fileName must be a string.',
+            required_error: 'fileName is required.',
+        })
+        .nonempty('fileName must be non-empty.')
+        .optional(),
+    instances: INSTANCES_QUERY_VALIDATION.optional(),
+});
+
+const ERASE_FILE_SCHEMA = z.object({
+    recordKey: RECORD_KEY_VALIDATION,
+    fileUrl: z.string({
+        invalid_type_error: 'fileUrl must be a string.',
+        required_error: 'fileUrl is required.',
+    }),
+    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+});
+
+const RECORD_DATA_SCHEMA = z.object({
+    recordKey: RECORD_KEY_VALIDATION,
+    address: ADDRESS_VALIDATION,
+    data: z.any(),
+    updatePolicy: z
+        .union([z.literal(true), z.array(z.string())], {
+            invalid_type_error:
+                'updatePolicy must be a boolean or an array of strings.',
+        })
+        .optional(),
+    deletePolicy: z
+        .union([z.literal(true), z.array(z.string())], {
+            invalid_type_error:
+                'deletePolicy must be a boolean or an array of strings.',
+        })
+        .optional(),
+    markers: MARKERS_VALIDATION.optional(),
+    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+});
+
+const GET_DATA_SCHEMA = z.object({
+    recordName: RECORD_NAME_VALIDATION,
+    address: z
+        .string({
+            required_error: 'address is required.',
+            invalid_type_error: 'address must be a string.',
+        })
+        .nonempty('address must not be empty'),
+    instances: INSTANCES_QUERY_VALIDATION.optional(),
+});
+
+const ERASE_DATA_SCHEMA = z.object({
+    recordKey: RECORD_KEY_VALIDATION,
+    address: ADDRESS_VALIDATION,
+    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+});
+
 /**
  * Defines a basic interface for an HTTP route.
  */
@@ -264,7 +390,7 @@ export interface Route<T> {
      * If the method can contain a request body, then the schema applies to the body.
      * Otherwise, it will apply to the query parameters.
      */
-    schema?: z.ZodType<T>;
+    schema?: z.ZodType<T, z.ZodTypeDef, any>;
 
     /**
      * The method for the route.
@@ -375,482 +501,29 @@ export class RecordsServer {
         this._websocketController = websocketController;
         this._moderationController = moderationController;
 
-        this.addRoute({
-            method: 'POST',
-            path: '/api/stripeWebhook',
-            allowedOrigins: true,
-            handler: (request) => this._stripeWebhook(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/email/valid',
-            allowedOrigins: 'account',
-            schema: z.object({
-                email: z.string(),
-            }),
-            handler: async (request, { email }) => {
-                const result = await this._auth.isValidEmailAddress(email);
-                return returnResult(result);
-            },
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/displayName/valid',
-            allowedOrigins: 'account',
-            schema: z.object({
-                displayName: z.string(),
-                name: NAME_VALIDATION.optional(),
-            }),
-            handler: async (request, { displayName, name }) => {
-                const result = await this._auth.isValidDisplayName(
-                    displayName,
-                    name
-                );
-                return returnResult(result);
-            },
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/sessions',
-            allowedOrigins: 'account',
-            handler: (request) => this._getSessions(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/replaceSession',
-            allowedOrigins: 'account',
-            handler: (request) => this._postReplaceSession(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/revokeAllSessions',
-            allowedOrigins: 'account',
-            handler: (request) => this._postRevokeAllSessions(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/revokeSession',
-            allowedOrigins: 'account',
-            handler: (request) => this._postRevokeSession(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/completeLogin',
-            allowedOrigins: 'account',
-            handler: (request) => this._postCompleteLogin(request),
-        });
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/login',
-            allowedOrigins: 'account',
-            handler: (request) => this._postLogin(request),
-        });
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/login/privo',
-            allowedOrigins: 'account',
-            handler: (request) => this._privoLogin(request),
-        });
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/oauth/code',
-            allowedOrigins: 'account',
-            handler: (request) => this._oauthProvideCode(request),
-        });
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/oauth/complete',
-            allowedOrigins: 'account',
-            handler: (request) => this._oauthCompleteLogin(request),
-        });
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/register/privo',
-            allowedOrigins: 'account',
-            handler: (request) => this._registerPrivo(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/webauthn/register/options',
-            allowedOrigins: true,
-            handler: (request) => this._webAuthnRegisterOptions(request),
-        });
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/webauthn/register',
-            allowedOrigins: true,
-            handler: (request) => this._webAuthnRegister(request),
-        });
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/webauthn/login/options',
-            allowedOrigins: true,
-            handler: (request) => this._webAuthnLoginOptions(request),
-        });
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/webauthn/login',
-            allowedOrigins: true,
-            handler: (request) => this._webAuthnLogin(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/webauthn/authenticators',
-            allowedOrigins: 'account',
-            handler: (request) => this._listWebAuthnAuthenticators(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/webauthn/authenticators/delete',
-            allowedOrigins: 'account',
-            handler: (request) => this._deleteWebAuthnAuthenticator(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/meet/token',
-            allowedOrigins: 'api',
-            handler: (request) => this._postMeetToken(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records',
-            allowedOrigins: 'account',
-            handler: (request) => this._createRecord(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/events/count',
-            allowedOrigins: 'api',
-            handler: (request) => this._postRecordsEventsCount(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/events/count',
-            allowedOrigins: 'api',
-            handler: (request) => this._getRecordsEventsCount(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/events/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._listEvents(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/events',
-            allowedOrigins: 'api',
-            handler: (request) => this._postRecordsEvents(request),
-        });
-
-        this.addRoute({
-            method: 'DELETE',
-            path: '/api/v2/records/manual/data',
-            allowedOrigins: 'api',
-            handler: (request) => this._eraseManualRecordData(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/manual/data',
-            handler: (request) => this._getManualRecordData(request),
-            allowedOrigins: true,
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/manual/data',
-            allowedOrigins: 'api',
-            handler: (request) => this._manualRecordData(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/file',
-            allowedOrigins: 'api',
-            handler: (request) => this._readFile(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/file/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._listFiles(request),
-        });
-
-        this.addRoute({
-            method: 'DELETE',
-            path: '/api/v2/records/file',
-            allowedOrigins: 'api',
-            handler: (request) => this._eraseFile(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/file',
-            allowedOrigins: 'api',
-            handler: (request) => this._recordFile(request),
-        });
-
-        this.addRoute({
-            method: 'PUT',
-            path: '/api/v2/records/file',
-            allowedOrigins: 'api',
-            handler: (request) => this._updateFile(request),
-        });
-
-        this.addRoute({
-            method: 'DELETE',
-            path: '/api/v2/records/data',
-            allowedOrigins: 'api',
-            handler: (request) => this._eraseData(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/data',
-            allowedOrigins: true,
-            handler: (request) => this._getData(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/data/list',
-            allowedOrigins: true,
-            handler: (request) => this._listData(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/data',
-            allowedOrigins: 'api',
-            handler: (request) => this._recordData(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._listRecords(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/key',
-            allowedOrigins: 'api',
-            handler: (request) => this._createRecordKey(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/permissions',
-            allowedOrigins: 'api',
-            handler: (request) => this._grantPermission(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/permissions/revoke',
-            allowedOrigins: 'api',
-            handler: (request) => this._revokePermission(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/permissions/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._listPermissions(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/role/user/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._roleUserList(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/role/inst/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._roleInstList(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/role/assignments/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._roleAssignmentsList(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/role/grant',
-            allowedOrigins: 'api',
-            handler: (request) => this._roleGrant(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/role/revoke',
-            allowedOrigins: 'api',
-            handler: (request) => this._roleRevoke(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/ai/chat',
-            allowedOrigins: 'api',
-            handler: (request) => this._aiChat(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/ai/skybox',
-            allowedOrigins: 'api',
-            handler: (request) => this._aiSkybox(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/ai/skybox',
-            allowedOrigins: 'api',
-            handler: (request) => this._aiGetSkybox(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/ai/image',
-            allowedOrigins: 'api',
-            handler: (request) => this._aiGenerateImage(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/studios',
-            allowedOrigins: 'account',
-            handler: (request) => this._getStudio(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/studios',
-            allowedOrigins: 'account',
-            handler: (request) => this._postStudio(request),
-        });
-
-        this.addRoute({
-            method: 'PUT',
-            path: '/api/v2/studios',
-            allowedOrigins: 'account',
-            handler: (request) => this._updateStudio(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/studios/requestComId',
-            allowedOrigins: 'account',
-            handler: (request) => this._requestComId(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/studios/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._listStudios(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/studios/members/list',
-            allowedOrigins: 'account',
-            handler: (request) => this._listStudioMembers(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/studios/members',
-            allowedOrigins: 'account',
-            handler: (request) => this._addStudioMember(request),
-        });
-
-        this.addRoute({
-            method: 'DELETE',
-            path: '/api/v2/studios/members',
-            allowedOrigins: 'account',
-            handler: (request) => this._removeStudioMember(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/player/config',
-            allowedOrigins: 'api',
-            handler: (request) => this._getPlayerConfig(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/subscriptions',
-            allowedOrigins: 'account',
-            handler: (request) => this._getSubscriptionInfoV2(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/subscriptions/manage',
-            allowedOrigins: 'account',
-            handler: (request) => this._manageSubscriptionV2(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/api/v2/records/insts/list',
-            allowedOrigins: 'api',
-            handler: (request) => this._listInsts(request),
-        });
-
-        this.addRoute({
-            method: 'DELETE',
-            path: '/api/v2/records/insts',
-            allowedOrigins: 'account',
-            handler: (request) => this._deleteInst(request),
-        });
-
-        this.addRoute({
-            method: 'POST',
-            path: '/api/v2/records/insts/report',
-            allowedOrigins: 'api',
-            handler: (request) => this._reportInst(request),
-        });
-
-        this.addRoute({
-            method: 'GET',
-            path: '/instData',
-            allowedOrigins: true,
-            handler: (request) => this._getInstData(request),
-        });
+        this._setupRoutes();
     }
 
     /**
      * Adds the given route to the server.
      */
     addRoute<T>(route: Route<T>) {
-        this._routes.set(`${route.method}:${route.path}`, route);
+        const routeKey = `${route.method}:${route.path}`;
+        if (this._routes.has(routeKey)) {
+            throw new Error(
+                `A route already exists for the given method and path: ${routeKey}`
+            );
+        }
+        this._routes.set(routeKey, route);
+    }
+
+    /**
+     * Forcefully adds the given route to the server, overwriting any routes that already exist.
+     * @param route The route that should be added.
+     */
+    overrideRoute<T>(route: Route<T>) {
+        const routeKey = `${route.method}:${route.path}`;
+        this._routes.set(routeKey, route);
     }
 
     /**
@@ -972,11 +645,7 @@ export class RecordsServer {
                 let response: GenericHttpResponse;
                 if (route.schema) {
                     let data: any;
-                    if (
-                        request.method === 'GET' ||
-                        request.method === 'HEAD' ||
-                        request.method === 'DELETE'
-                    ) {
+                    if (request.method === 'GET' || request.method === 'HEAD') {
                         const parseResult = route.schema.safeParse(
                             request.query
                         );
@@ -1356,6 +1025,2116 @@ export class RecordsServer {
         await this._websocketController.uploadRequest(connectionId, requestId);
     }
 
+    private _setupRoutes() {
+        this.addRoute({
+            method: 'POST',
+            path: '/api/stripeWebhook',
+            allowedOrigins: true,
+            handler: (request) => this._stripeWebhook(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/email/valid',
+            allowedOrigins: 'account',
+            schema: z.object({
+                email: z.string(),
+            }),
+            handler: async (request, { email }) => {
+                const result = await this._auth.isValidEmailAddress(email);
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/displayName/valid',
+            allowedOrigins: 'account',
+            schema: z.object({
+                displayName: z.string(),
+                name: NAME_VALIDATION.optional(),
+            }),
+            handler: async (request, { displayName, name }) => {
+                const result = await this._auth.isValidDisplayName(
+                    displayName,
+                    name
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/sessions',
+            allowedOrigins: 'account',
+            handler: async (request) => this._getSessions(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/replaceSession',
+            allowedOrigins: 'account',
+            handler: (request) => this._postReplaceSession(request),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/revokeAllSessions',
+            allowedOrigins: 'account',
+            schema: z.object({
+                userId: z.string(),
+            }),
+            handler: async (request, { userId }) => {
+                const authorization = getSessionKey(request);
+
+                if (!authorization) {
+                    return returnResult(NOT_LOGGED_IN_RESULT);
+                }
+
+                const result = await this._auth.revokeAllSessions({
+                    userId: userId,
+                    sessionKey: authorization,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/revokeSession',
+            allowedOrigins: 'account',
+            schema: z.object({
+                userId: z.string().optional(),
+                sessionId: z.string().optional(),
+                sessionKey: z.string().optional(),
+            }),
+            handler: async (
+                request,
+                { userId, sessionId, sessionKey: sessionKeyToRevoke }
+            ) => {
+                // Parse the User ID and Session ID from the sessionKey that is provided in
+                // session key that should be revoked
+                if (!!sessionKeyToRevoke) {
+                    const parsed = parseSessionKey(sessionKeyToRevoke);
+                    if (parsed) {
+                        userId = parsed[0];
+                        sessionId = parsed[1];
+                    }
+                }
+
+                const authorization = getSessionKey(request);
+
+                if (!authorization) {
+                    return returnResult(NOT_LOGGED_IN_RESULT);
+                }
+
+                const result = await this._auth.revokeSession({
+                    userId,
+                    sessionId,
+                    sessionKey: authorization,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/completeLogin',
+            allowedOrigins: 'account',
+            schema: z.object({
+                userId: z.string(),
+                requestId: z.string(),
+                code: z.string(),
+            }),
+            handler: async (request, { userId, requestId, code }) => {
+                const result = await this._auth.completeLogin({
+                    userId,
+                    requestId,
+                    code,
+                    ipAddress: request.ipAddress,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/login',
+            allowedOrigins: 'account',
+            schema: z.object({
+                address: z.string(),
+                addressType: z.enum(['email', 'phone']),
+            }),
+            handler: async (request, { address, addressType }) => {
+                const result = await this._auth.requestLogin({
+                    address,
+                    addressType,
+                    ipAddress: request.ipAddress,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/login/privo',
+            allowedOrigins: 'account',
+            schema: z.object({}),
+            handler: async (request) => {
+                const result = await this._auth.requestOpenIDLogin({
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    ipAddress: request.ipAddress,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/oauth/code',
+            allowedOrigins: 'account',
+            schema: z.object({
+                code: z.string().nonempty(),
+                state: z.string().nonempty(),
+            }),
+            handler: async (request, { code, state }) => {
+                const result = await this._auth.processOpenIDAuthorizationCode({
+                    ipAddress: request.ipAddress,
+                    authorizationCode: code,
+                    state,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/oauth/complete',
+            allowedOrigins: 'account',
+            schema: z.object({
+                requestId: z.string().nonempty(),
+            }),
+            handler: async (request, { requestId }) => {
+                const result = await this._auth.completeOpenIDLogin({
+                    ipAddress: request.ipAddress,
+                    requestId,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/register/privo',
+            allowedOrigins: 'account',
+            schema: z.object({
+                email: z.string().min(1).email().optional(),
+                parentEmail: z.string().min(1).email().optional(),
+                name: NAME_VALIDATION,
+                dateOfBirth: z.coerce.date(),
+                displayName: DISPLAY_NAME_VALIDATION,
+            }),
+            handler: async (
+                request,
+                { email, parentEmail, name, dateOfBirth, displayName }
+            ) => {
+                const result = await this._auth.requestPrivoSignUp({
+                    email,
+                    parentEmail,
+                    name,
+                    dateOfBirth,
+                    displayName,
+                    ipAddress: request.ipAddress,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/webauthn/register/options',
+            allowedOrigins: true,
+            handler: async (request) => {
+                // We don't validate origin because the AuthController will validate it based on the allowed
+                // relying parties.
+
+                const validation = await this._validateSessionKey(request);
+
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(validation);
+                }
+
+                const result = await this._auth.requestWebAuthnRegistration({
+                    userId: validation.userId,
+                    originOrHost:
+                        request.headers.origin ??
+                        request.headers['x-dev-proxy-host'] ??
+                        request.headers.host,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/webauthn/register',
+            allowedOrigins: true,
+            schema: z.object({
+                response: z.object({
+                    id: z.string().nonempty(),
+                    rawId: z.string().nonempty(),
+                    response: z.object({
+                        clientDataJSON: z.string().nonempty(),
+                        attestationObject: z.string().nonempty(),
+                        authenticatorData: z.string().nonempty().optional(),
+                        transports: z
+                            .array(z.string().min(1).max(64))
+                            .optional(),
+                        publicKeyAlgorithm: z.number().optional(),
+                        publicKey: z.string().nonempty().optional(),
+                    }),
+                    authenticatorAttachment: z
+                        .enum(['cross-platform', 'platform'])
+                        .optional(),
+                    clientExtensionResults: z.object({
+                        appid: z.boolean().optional(),
+                        credProps: z
+                            .object({
+                                rk: z.boolean().optional(),
+                            })
+                            .optional(),
+                        hmacCreateSecret: z.boolean().optional(),
+                    }),
+                    type: z.literal('public-key'),
+                }),
+            }),
+            handler: async (request, { response }) => {
+                // We don't validate origin because the AuthController will validate it based on the allowed
+                // relying parties.
+                const validation = await this._validateSessionKey(request);
+
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(validation);
+                }
+
+                const result = await this._auth.completeWebAuthnRegistration({
+                    userId: validation.userId,
+                    response: response as any,
+                    originOrHost:
+                        request.headers.origin ??
+                        request.headers['x-dev-proxy-host'] ??
+                        request.headers.host,
+                    userAgent: request.headers['user-agent'],
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/webauthn/login/options',
+            allowedOrigins: true,
+            handler: async (request) => {
+                // We don't validate origin because the AuthController will validate it based on the allowed
+                // relying parties.
+
+                const result = await this._auth.requestWebAuthnLogin({
+                    ipAddress: request.ipAddress,
+                    originOrHost:
+                        request.headers.origin ??
+                        request.headers['x-dev-proxy-host'] ??
+                        request.headers.host,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/webauthn/login',
+            allowedOrigins: true,
+            schema: z.object({
+                requestId: z.string().nonempty(),
+                response: z.object({
+                    id: z.string().nonempty(),
+                    rawId: z.string().nonempty(),
+                    response: z.object({
+                        clientDataJSON: z.string().nonempty(),
+                        authenticatorData: z.string().nonempty(),
+                        signature: z.string().nonempty(),
+                        userHandle: z.string().nonempty().optional(),
+                    }),
+                    authenticatorAttachment: z
+                        .enum(['cross-platform', 'platform'])
+                        .optional(),
+                    clientExtensionResults: z.object({
+                        appid: z.boolean().optional(),
+                        credProps: z
+                            .object({
+                                rk: z.boolean().optional(),
+                            })
+                            .optional(),
+                        hmacCreateSecret: z.boolean().optional(),
+                    }),
+                    type: z.literal('public-key'),
+                }),
+            }),
+            handler: async (request, { response, requestId }) => {
+                // We don't validate origin because the AuthController will validate it based on the allowed
+                // relying parties.
+
+                const result = await this._auth.completeWebAuthnLogin({
+                    requestId: requestId,
+                    ipAddress: request.ipAddress,
+                    response: response as any,
+                    originOrHost:
+                        request.headers.origin ??
+                        request.headers['x-dev-proxy-host'] ??
+                        request.headers.host,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/webauthn/authenticators',
+            allowedOrigins: 'account',
+            handler: async (request) => {
+                const validation = await this._validateSessionKey(request);
+
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(validation);
+                }
+
+                const result = await this._auth.listUserAuthenticators(
+                    validation.userId
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/webauthn/authenticators/delete',
+            allowedOrigins: 'account',
+            schema: z.object({
+                authenticatorId: z.string().nonempty(),
+            }),
+            handler: async (request, { authenticatorId }) => {
+                const validation = await this._validateSessionKey(request);
+
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(validation);
+                }
+
+                const result = await this._auth.deleteUserAuthenticator(
+                    validation.userId,
+                    authenticatorId
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/meet/token',
+            allowedOrigins: 'api',
+            schema: z.object({
+                roomName: z.string(),
+                userName: z.string(),
+            }),
+            handler: async (request, { roomName, userName }) => {
+                const result = await this._livekit.issueToken(
+                    roomName,
+                    userName
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records',
+            allowedOrigins: 'account',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                ownerId: z
+                    .string({
+                        invalid_type_error: 'ownerId must be a string.',
+                        required_error: 'ownerId is required.',
+                    })
+                    .nonempty('ownerId must not be empty.')
+                    .optional(),
+                studioId: z
+                    .string({
+                        invalid_type_error: 'studioId must be a string.',
+                        required_error: 'studioId is required.',
+                    })
+                    .nonempty('studioId must not be empty.')
+                    .optional(),
+            }),
+            handler: async (request, { recordName, ownerId, studioId }) => {
+                if (!recordName || typeof recordName !== 'string') {
+                    return returnResult({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'recordName is required and must be a string.',
+                    });
+                }
+
+                const validation = await this._validateSessionKey(request);
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(validation);
+                }
+
+                const result = await this._records.createRecord({
+                    recordName,
+                    ownerId,
+                    studioId,
+                    userId: validation.userId,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/events/count',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordKey: RECORD_KEY_VALIDATION,
+                eventName: EVENT_NAME_VALIDATION,
+                count: z.number({
+                    invalid_type_error: 'count must be a number.',
+                    required_error: 'count is required.',
+                }),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                { recordKey, eventName, count, instances }
+            ) => {
+                const validation = await this._validateSessionKey(request);
+
+                if (
+                    validation.success === false &&
+                    validation.errorCode !== 'no_session_key'
+                ) {
+                    return returnResult(validation);
+                }
+
+                const userId = validation.userId;
+
+                const result = await this._events.addCount(
+                    recordKey,
+                    eventName,
+                    count,
+                    userId,
+                    instances
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/events/count',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                eventName: z
+                    .string({
+                        required_error: 'eventName is required.',
+                        invalid_type_error: 'eventName must be a string.',
+                    })
+                    .nonempty('eventName must not be empty'),
+                instances: INSTANCES_QUERY_VALIDATION.optional(),
+            }),
+            handler: async (request, { recordName, eventName, instances }) => {
+                const validation = await this._validateSessionKey(request);
+
+                if (
+                    validation.success === false &&
+                    validation.errorCode !== 'no_session_key'
+                ) {
+                    return returnResult(validation);
+                }
+
+                const userId = validation.userId;
+                const result = await this._events.getCount(
+                    recordName,
+                    eventName,
+                    userId,
+                    instances
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/events/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                eventName: z
+                    .string({
+                        invalid_type_error: 'eventName must be a string.',
+                        required_error: 'eventName is required.',
+                    })
+                    .nonempty('eventName must be non-empty.')
+                    .optional(),
+                instances: INSTANCES_QUERY_VALIDATION.optional(),
+            }),
+            handler: async (request, { recordName, eventName, instances }) => {
+                const validation = await this._validateSessionKey(request);
+                if (
+                    validation.success === false &&
+                    validation.errorCode !== 'no_session_key'
+                ) {
+                    return returnResult(validation);
+                }
+                const userId = validation.userId;
+
+                const result = await this._events.listEvents(
+                    recordName,
+                    eventName,
+                    userId,
+                    instances
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/events',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordKey: RECORD_KEY_VALIDATION,
+                eventName: EVENT_NAME_VALIDATION,
+                count: z.number().optional(),
+                markers: MARKERS_VALIDATION.optional(),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                { recordKey, eventName, count, markers, instances }
+            ) => {
+                const validation = await this._validateSessionKey(request);
+
+                if (
+                    validation.success === false &&
+                    validation.errorCode !== 'no_session_key'
+                ) {
+                    return returnResult(validation);
+                }
+
+                const userId = validation.userId;
+
+                const result = await this._events.updateEvent({
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    eventName,
+                    count,
+                    markers,
+                    instances,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/manual/data',
+            allowedOrigins: 'api',
+            schema: ERASE_DATA_SCHEMA,
+            handler: (request, data) =>
+                this._baseEraseRecordData(request, this._manualData, data),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/manual/data',
+            allowedOrigins: true,
+            schema: GET_DATA_SCHEMA,
+            handler: (request, data) =>
+                this._baseGetRecordData(request, this._manualData, data),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/manual/data',
+            allowedOrigins: 'api',
+            schema: RECORD_DATA_SCHEMA,
+            handler: (request, data) =>
+                this._baseRecordData(request, this._manualData, data),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            schema: READ_FILE_SCHEMA,
+            handler: (request, data) => this._readFile(request, data),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/file/list',
+            allowedOrigins: 'api',
+            schema: LIST_FILES_SCHEMA,
+            handler: (request, data) => this._listFiles(request, data),
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            schema: ERASE_FILE_SCHEMA,
+            handler: (request, data) => this._eraseFile(request, data),
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            schema: RECORD_FILE_SCHEMA,
+            handler: (request, data) => this._recordFile(request, data),
+        });
+
+        this.addRoute({
+            method: 'PUT',
+            path: '/api/v2/records/file',
+            allowedOrigins: 'api',
+            schema: UPDATE_FILE_SCHEMA,
+            handler: (request, data) => this._updateFile(request, data),
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/data',
+            allowedOrigins: 'api',
+            schema: ERASE_DATA_SCHEMA,
+            handler: (request, data) =>
+                this._baseEraseRecordData(request, this._data, data),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/data',
+            allowedOrigins: true,
+            schema: GET_DATA_SCHEMA,
+            handler: (request, data) =>
+                this._baseGetRecordData(request, this._data, data),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/data/list',
+            allowedOrigins: true,
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                address: ADDRESS_VALIDATION.nullable().optional(),
+                marker: MARKER_VALIDATION.optional(),
+                sort: z
+                    .union([z.literal('ascending'), z.literal('descending')])
+                    .optional(),
+                instances: INSTANCES_QUERY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                { recordName, address, instances, marker, sort }
+            ) => {
+                if (!recordName || typeof recordName !== 'string') {
+                    return returnResult({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'recordName is required and must be a string.',
+                    });
+                }
+                if (
+                    address !== null &&
+                    typeof address !== 'undefined' &&
+                    typeof address !== 'string'
+                ) {
+                    return returnResult({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage: 'address must be null or a string.',
+                    });
+                }
+
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (
+                    sessionKeyValidation.success === false &&
+                    sessionKeyValidation.errorCode !== 'no_session_key'
+                ) {
+                    return returnResult(sessionKeyValidation);
+                }
+
+                if (!marker) {
+                    const result = await this._data.listData(
+                        recordName,
+                        address || null,
+                        sessionKeyValidation.userId,
+                        instances
+                    );
+                    return returnResult(result);
+                } else {
+                    const result = await this._data.listDataByMarker({
+                        recordKeyOrName: recordName,
+                        marker: marker,
+                        startingAddress: address,
+                        sort: sort,
+                        userId: sessionKeyValidation.userId,
+                        instances,
+                    });
+
+                    return returnResult(result);
+                }
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/data',
+            allowedOrigins: 'api',
+            schema: RECORD_DATA_SCHEMA,
+            handler: (request, data) =>
+                this._baseRecordData(request, this._data, data),
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                studioId: z.string().nonempty().optional(),
+            }),
+            handler: async (request, { studioId }) => {
+                const validation = await this._validateSessionKey(request);
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(validation);
+                }
+
+                if (studioId) {
+                    const result = await this._records.listStudioRecords(
+                        studioId,
+                        validation.userId
+                    );
+                    return returnResult(result);
+                } else {
+                    const result = await this._records.listRecords(
+                        validation.userId
+                    );
+                    return returnResult(result);
+                }
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/key',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                policy: z.string({
+                    invalid_type_error: 'policy must be a string.',
+                    required_error: 'policy is required.',
+                }),
+            }),
+            handler: async (request, { recordName, policy }) => {
+                if (!recordName || typeof recordName !== 'string') {
+                    return returnResult({
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'recordName is required and must be a string.',
+                    });
+                }
+
+                const validation = await this._validateSessionKey(request);
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(validation);
+                }
+
+                const result = await this._records.createPublicRecordKey(
+                    recordName,
+                    policy as PublicRecordKeyPolicy,
+                    validation.userId
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/permissions',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                permission: AVAILABLE_PERMISSIONS_VALIDATION,
+                instances: INSTANCES_ARRAY_VALIDATION.nonempty().optional(),
+            }),
+            handler: async (request, { recordName, permission, instances }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                if (permission.marker) {
+                    const result =
+                        await this._policyController.grantMarkerPermission({
+                            recordKeyOrRecordName: recordName,
+                            marker: permission.marker,
+                            userId: sessionKeyValidation.userId,
+                            permission: permission as any,
+                            instances,
+                        });
+
+                    return returnResult(result);
+                } else if (permission.resourceKind && permission.resourceId) {
+                    const result =
+                        await this._policyController.grantResourcePermission({
+                            recordKeyOrRecordName: recordName,
+                            permission: permission as any,
+                            userId: sessionKeyValidation.userId,
+                            instances,
+                        });
+
+                    return returnResult(result);
+                }
+
+                return returnResult({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given permission must have either a marker or a resourceId.',
+                });
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/permissions/revoke',
+            allowedOrigins: 'api',
+            schema: z.object({
+                permissionId: z
+                    .string({
+                        invalid_type_error: 'permissionId must be a string.',
+                        required_error: 'permissionId is required.',
+                    })
+                    .nonempty('permissionId must not be empty'),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+            }),
+            handler: async (request, { permissionId, instances }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._policyController.revokePermission({
+                    permissionId,
+                    userId: sessionKeyValidation.userId,
+                    instances,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/permissions/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                marker: MARKER_VALIDATION.optional(),
+                resourceKind: RESOURCE_KIND_VALIDATION.optional(),
+                resourceId: z
+                    .string({
+                        invalid_type_error: 'resourceId must be a string.',
+                        required_error: 'resourceId is required.',
+                    })
+                    .optional(),
+            }),
+            handler: async (
+                request,
+                { recordName, marker, resourceKind, resourceId }
+            ) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                if (resourceKind && resourceId) {
+                    const result =
+                        await this._policyController.listPermissionsForResource(
+                            recordName,
+                            resourceKind,
+                            resourceId,
+                            sessionKeyValidation.userId
+                        );
+                    return returnResult(result);
+                } else if (marker) {
+                    const result =
+                        await this._policyController.listPermissionsForMarker(
+                            recordName,
+                            marker,
+                            sessionKeyValidation.userId
+                        );
+                    return returnResult(result);
+                } else {
+                    const result = await this._policyController.listPermissions(
+                        recordName,
+                        sessionKeyValidation.userId
+                    );
+                    return returnResult(result);
+                }
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/role/user/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                userId: z
+                    .string({
+                        invalid_type_error: 'userId must be a string.',
+                        required_error: 'userId is required.',
+                    })
+                    .nonempty('userId must not be empty'),
+                instances: INSTANCES_QUERY_VALIDATION.optional(),
+            }),
+            handler: async (request, { recordName, userId, instances }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._policyController.listUserRoles(
+                    recordName,
+                    sessionKeyValidation.userId,
+                    userId,
+                    instances
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/role/inst/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                inst: z
+                    .string({
+                        invalid_type_error: 'inst must be a string.',
+                        required_error: 'inst is required.',
+                    })
+                    .nonempty('inst must not be empty'),
+                instances: INSTANCES_QUERY_VALIDATION.optional(),
+            }),
+            handler: async (request, { recordName, inst, instances }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._policyController.listInstRoles(
+                    recordName,
+                    sessionKeyValidation.userId,
+                    inst,
+                    instances
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/role/assignments/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                startingRole: z
+                    .string({
+                        invalid_type_error: 'startingRole must be a string.',
+                        required_error: 'startingRole is required.',
+                    })
+                    .nonempty('startingRole must not be empty')
+                    .optional(),
+                role: z
+                    .string({
+                        invalid_type_error: 'role must be a string.',
+                        required_error: 'role is required.',
+                    })
+                    .nonempty('role must not be empty')
+                    .optional(),
+                instances: INSTANCES_QUERY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                { recordName, role, startingRole, instances }
+            ) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                if (role) {
+                    const result =
+                        await this._policyController.listAssignedRoles(
+                            recordName,
+                            sessionKeyValidation.userId,
+                            role,
+                            instances
+                        );
+
+                    return returnResult(result);
+                } else {
+                    const result =
+                        await this._policyController.listRoleAssignments(
+                            recordName,
+                            sessionKeyValidation.userId,
+                            startingRole,
+                            instances
+                        );
+
+                    return returnResult(result);
+                }
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/role/grant',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                userId: z
+                    .string({
+                        invalid_type_error: 'userId must be a string.',
+                        required_error: 'userId is required.',
+                    })
+                    .nonempty('userId must not be empty')
+                    .optional(),
+                inst: z
+                    .string({
+                        invalid_type_error: 'inst must be a string.',
+                        required_error: 'inst is required.',
+                    })
+                    .nonempty('inst must not be empty')
+                    .optional(),
+                role: z
+                    .string({
+                        invalid_type_error: 'role must be a string.',
+                        required_error: 'role is required.',
+                    })
+                    .nonempty('role must not be empty'),
+                expireTimeMs: z
+                    .number({
+                        invalid_type_error: 'expireTimeMs must be a number.',
+                        required_error: 'expireTimeMs is required.',
+                    })
+                    .positive('expireTimeMs must be positive')
+                    .optional(),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                { recordName, userId, inst, expireTimeMs, role, instances }
+            ) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._policyController.grantRole(
+                    recordName,
+                    sessionKeyValidation.userId,
+                    {
+                        instance: inst,
+                        userId: userId,
+                        role,
+                        expireTimeMs,
+                    },
+                    instances
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/role/revoke',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION,
+                userId: z
+                    .string({
+                        invalid_type_error: 'userId must be a string.',
+                        required_error: 'userId is required.',
+                    })
+                    .nonempty('userId must not be empty')
+                    .optional(),
+                inst: z
+                    .string({
+                        invalid_type_error: 'inst must be a string.',
+                        required_error: 'inst is required.',
+                    })
+                    .nonempty('inst must not be empty')
+                    .optional(),
+                role: z
+                    .string({
+                        invalid_type_error: 'role must be a string.',
+                        required_error: 'role is required.',
+                    })
+                    .nonempty('role must not be empty'),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                { recordName, userId, inst, role, instances }
+            ) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._policyController.revokeRole(
+                    recordName,
+                    sessionKeyValidation.userId,
+                    {
+                        instance: inst,
+                        userId: userId,
+                        role,
+                    },
+                    instances
+                );
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/ai/chat',
+            allowedOrigins: 'api',
+            schema: z.object({
+                model: z.string().nonempty().optional(),
+                messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                temperature: z.number().min(0).max(2).optional(),
+                topP: z.number().optional(),
+                presencePenalty: z.number().min(-2).max(2).optional(),
+                frequencyPenalty: z.number().min(-2).max(2).optional(),
+                stopWords: z.array(z.string()).max(4).optional(),
+            }),
+            handler: async (
+                request,
+                { model, messages, instances, ...options }
+            ) => {
+                if (!this._aiController) {
+                    return returnResult(AI_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._aiController.chat({
+                    ...options,
+                    model,
+                    messages: messages as AIChatMessage[],
+                    userId: sessionKeyValidation.userId,
+                    userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/ai/skybox',
+            allowedOrigins: 'api',
+            schema: z.object({
+                prompt: z.string().nonempty().max(600),
+                negativePrompt: z.string().nonempty().max(600).optional(),
+                blockadeLabs: z
+                    .object({
+                        skyboxStyleId: z.number().optional(),
+                        remixImagineId: z.number().optional(),
+                        seed: z.number().optional(),
+                    })
+                    .optional(),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                { prompt, negativePrompt, instances, blockadeLabs }
+            ) => {
+                if (!this._aiController) {
+                    return returnResult(AI_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._aiController.generateSkybox({
+                    prompt,
+                    negativePrompt,
+                    blockadeLabs,
+                    userId: sessionKeyValidation.userId,
+                    userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/ai/skybox',
+            allowedOrigins: 'api',
+            schema: z.object({
+                skyboxId: z
+                    .string({
+                        invalid_type_error: 'skyboxId must be a string.',
+                        required_error: 'skyboxId is required.',
+                    })
+                    .nonempty('skyboxId must not be empty'),
+                instances: INSTANCES_QUERY_VALIDATION.optional(),
+            }),
+            handler: async (request, { skyboxId, instances }) => {
+                if (!this._aiController) {
+                    return returnResult(AI_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._aiController.getSkybox({
+                    skyboxId,
+                    userId: sessionKeyValidation.userId,
+                    userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/ai/image',
+            allowedOrigins: 'api',
+            schema: z.object({
+                prompt: z
+                    .string({
+                        invalid_type_error: 'prompt must be a string.',
+                        required_error: 'prompt is required.',
+                    })
+                    .nonempty('prompt must not be empty'),
+                model: z
+                    .string({
+                        invalid_type_error: 'model must be a string.',
+                        required_error: 'model is required.',
+                    })
+                    .nonempty('model must not be empty')
+                    .optional(),
+                negativePrompt: z.string().nonempty().optional(),
+                width: z.number().positive().int().optional(),
+                height: z.number().positive().int().optional(),
+                seed: z.number().positive().int().optional(),
+                numberOfImages: z.number().positive().int().optional(),
+                steps: z.number().positive().int().optional(),
+                sampler: z.string().nonempty().optional(),
+                cfgScale: z.number().min(0).int().optional(),
+                clipGuidancePreset: z.string().nonempty().optional(),
+                stylePreset: z.string().nonempty().optional(),
+                instances: INSTANCES_ARRAY_VALIDATION.optional(),
+            }),
+            handler: async (
+                request,
+                {
+                    prompt,
+                    model,
+                    negativePrompt,
+                    width,
+                    height,
+                    seed,
+                    numberOfImages,
+                    steps,
+                    sampler,
+                    cfgScale,
+                    clipGuidancePreset,
+                    stylePreset,
+                    instances,
+                }
+            ) => {
+                if (!this._aiController) {
+                    return returnResult(AI_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._aiController.generateImage({
+                    model,
+                    prompt,
+                    negativePrompt,
+                    width,
+                    height,
+                    seed,
+                    numberOfImages,
+                    steps,
+                    sampler,
+                    cfgScale,
+                    clipGuidancePreset,
+                    stylePreset,
+                    userId: sessionKeyValidation.userId,
+                    userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/studios',
+            allowedOrigins: 'account',
+            schema: z.object({
+                studioId: STUDIO_ID_VALIDATION,
+            }),
+            handler: async (request, { studioId }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._records.getStudio(
+                    studioId,
+                    sessionKeyValidation.userId
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/studios',
+            allowedOrigins: 'account',
+            schema: z.object({
+                displayName: STUDIO_DISPLAY_NAME_VALIDATION,
+                ownerStudioComId: z
+                    .string({
+                        invalid_type_error:
+                            'ownerStudioComId must be a string.',
+                        required_error: 'ownerStudioComId is required.',
+                    })
+                    .nonempty('ownerStudioComId must not be empty')
+                    .nullable()
+                    .optional(),
+            }),
+            handler: async (request, { displayName, ownerStudioComId }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                if (!ownerStudioComId) {
+                    const result = await this._records.createStudio(
+                        displayName,
+                        sessionKeyValidation.userId
+                    );
+                    return returnResult(result);
+                } else {
+                    const result = await this._records.createStudioInComId(
+                        displayName,
+                        sessionKeyValidation.userId,
+                        ownerStudioComId
+                    );
+                    return returnResult(result);
+                }
+            },
+        });
+
+        this.addRoute({
+            method: 'PUT',
+            path: '/api/v2/studios',
+            allowedOrigins: 'account',
+            schema: z.object({
+                id: STUDIO_ID_VALIDATION,
+                displayName: STUDIO_DISPLAY_NAME_VALIDATION.optional(),
+                logoUrl: z
+                    .string({
+                        invalid_type_error: 'logoUrl must be a string.',
+                        required_error: 'logoUrl is required.',
+                    })
+                    .url()
+                    .min(1)
+                    .max(512)
+                    .nullable()
+                    .optional(),
+                comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
+                playerConfig: COM_ID_PLAYER_CONFIG.optional(),
+            }),
+            handler: async (
+                request,
+                { id, displayName, logoUrl, comIdConfig, playerConfig }
+            ) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._records.updateStudio({
+                    userId: sessionKeyValidation.userId,
+                    studio: {
+                        id,
+                        displayName,
+                        logoUrl,
+                        comIdConfig,
+                        playerConfig,
+                    },
+                });
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/studios/requestComId',
+            allowedOrigins: 'account',
+            schema: z.object({
+                studioId: STUDIO_ID_VALIDATION,
+                comId: COM_ID_VALIDATION,
+            }),
+            handler: async (request, { studioId, comId }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._records.requestComId({
+                    studioId,
+                    userId: sessionKeyValidation.userId,
+                    requestedComId: comId,
+                    ipAddress: request.ipAddress,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/studios/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                comId: z.string().nonempty().optional(),
+            }),
+            handler: async (request, { comId }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                if (comId) {
+                    const result = await this._records.listStudiosByComId(
+                        sessionKeyValidation.userId,
+                        comId
+                    );
+                    return returnResult(result);
+                } else {
+                    const result = await this._records.listStudios(
+                        sessionKeyValidation.userId
+                    );
+                    return returnResult(result);
+                }
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/studios/members/list',
+            allowedOrigins: 'account',
+            schema: z.object({
+                studioId: STUDIO_ID_VALIDATION,
+            }),
+            handler: async (request, { studioId }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._records.listStudioMembers(
+                    studioId,
+                    sessionKeyValidation.userId
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/studios/members',
+            allowedOrigins: 'account',
+            schema: z.object({
+                studioId: STUDIO_ID_VALIDATION,
+                addedUserId: z
+                    .string({
+                        invalid_type_error: 'addedUserId must be a string.',
+                        required_error: 'addedUserId is required.',
+                    })
+                    .nonempty('addedUserId must not be empty')
+                    .optional(),
+                addedEmail: z
+                    .string({
+                        invalid_type_error: 'addedEmail must be a string.',
+                        required_error: 'addedEmail is required.',
+                    })
+                    .nonempty('addedEmail must not be empty')
+                    .optional(),
+                addedPhoneNumber: z
+                    .string({
+                        invalid_type_error:
+                            'addedPhoneNumber must be a string.',
+                        required_error: 'addedPhoneNumber is required.',
+                    })
+                    .nonempty('addedPhoneNumber must not be empty')
+                    .optional(),
+                role: z.union([z.literal('admin'), z.literal('member')]),
+            }),
+            handler: async (
+                request,
+                { studioId, addedUserId, addedEmail, addedPhoneNumber, role }
+            ) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._records.addStudioMember({
+                    studioId,
+                    userId: sessionKeyValidation.userId,
+                    role,
+                    addedUserId,
+                    addedEmail,
+                    addedPhoneNumber,
+                });
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/studios/members',
+            allowedOrigins: 'account',
+            schema: z.object({
+                studioId: STUDIO_ID_VALIDATION,
+                removedUserId: z
+                    .string({
+                        invalid_type_error: 'removedUserId must be a string.',
+                        required_error: 'removedUserId is required.',
+                    })
+                    .nonempty('removedUserId must not be empty')
+                    .optional(),
+            }),
+            handler: async (request, { studioId, removedUserId }) => {
+                const sessionKeyValidation = await this._validateSessionKey(
+                    request
+                );
+                if (sessionKeyValidation.success === false) {
+                    if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        return returnResult(NOT_LOGGED_IN_RESULT);
+                    }
+                    return returnResult(sessionKeyValidation);
+                }
+
+                const result = await this._records.removeStudioMember({
+                    studioId,
+                    userId: sessionKeyValidation.userId,
+                    removedUserId,
+                });
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/player/config',
+            allowedOrigins: 'api',
+            schema: z.object({
+                comId: z.string().nonempty(),
+            }),
+            handler: async (request, { comId }) => {
+                const result = await this._records.getPlayerConfig(comId);
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/subscriptions',
+            allowedOrigins: 'account',
+            schema: z.object({
+                studioId: z
+                    .string({
+                        invalid_type_error: 'studioId must be a string.',
+                        required_error: 'studioId is required.',
+                    })
+                    .nonempty('studioId must be non-empty.')
+                    .optional(),
+                userId: z
+                    .string({
+                        invalid_type_error: 'userId must be a string.',
+                        required_error: 'userId is required.',
+                    })
+                    .nonempty('userId must be non-empty.')
+                    .optional(),
+            }),
+            handler: async (request, { studioId, userId }) => {
+                if (!this._subscriptions) {
+                    return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKey = getSessionKey(request);
+
+                if (!sessionKey) {
+                    return returnResult(NOT_LOGGED_IN_RESULT);
+                }
+
+                const result = await this._subscriptions.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                    studioId,
+                });
+
+                if (!result.success) {
+                    return returnResult(result);
+                }
+
+                return returnResult({
+                    success: true,
+                    publishableKey: result.publishableKey,
+                    subscriptions: result.subscriptions.map((s) => ({
+                        active: s.active,
+                        statusCode: s.statusCode,
+                        productName: s.productName,
+                        startDate: s.startDate,
+                        endedDate: s.endedDate,
+                        cancelDate: s.cancelDate,
+                        canceledDate: s.canceledDate,
+                        currentPeriodStart: s.currentPeriodStart,
+                        currentPeriodEnd: s.currentPeriodEnd,
+                        renewalInterval: s.renewalInterval,
+                        intervalLength: s.intervalLength,
+                        intervalCost: s.intervalCost,
+                        currency: s.currency,
+                        featureList: s.featureList,
+                    })),
+                    purchasableSubscriptions:
+                        result.purchasableSubscriptions.map((s) => ({
+                            id: s.id,
+                            name: s.name,
+                            description: s.description,
+                            featureList: s.featureList,
+                            prices: s.prices,
+                            defaultSubscription: s.defaultSubscription,
+                        })),
+                });
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/subscriptions/manage',
+            allowedOrigins: 'account',
+            schema: z.object({
+                userId: z
+                    .string({
+                        invalid_type_error: 'userId must be a string.',
+                        required_error: 'userId is required.',
+                    })
+                    .nonempty('userId must not be empty.')
+                    .optional(),
+                studioId: z
+                    .string({
+                        invalid_type_error: 'studioId must be a string.',
+                        required_error: 'studioId is required.',
+                    })
+                    .nonempty('studioId must not be empty.')
+                    .optional(),
+                subscriptionId: z.string().optional(),
+                expectedPrice: z
+                    .object({
+                        currency: z.string(),
+                        cost: z.number(),
+                        interval: z.enum(['month', 'year', 'week', 'day']),
+                        intervalLength: z.number(),
+                    })
+                    .optional(),
+            }),
+            handler: async (
+                request,
+                { userId, studioId, subscriptionId, expectedPrice }
+            ) => {
+                if (!this._subscriptions) {
+                    return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKey = getSessionKey(request);
+
+                if (!sessionKey) {
+                    return returnResult(NOT_LOGGED_IN_RESULT);
+                }
+
+                const result =
+                    await this._subscriptions.createManageSubscriptionLink({
+                        sessionKey,
+                        userId,
+                        studioId,
+                        subscriptionId,
+                        expectedPrice:
+                            expectedPrice as CreateManageSubscriptionRequest['expectedPrice'],
+                    });
+
+                if (!result.success) {
+                    return returnResult(result);
+                }
+
+                return returnResult({
+                    success: true,
+                    url: result.url,
+                });
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/api/v2/records/insts/list',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION.optional(),
+                inst: z.string().optional(),
+            }),
+            handler: async (request, { recordName, inst }) => {
+                if (!this._websocketController) {
+                    return returnResult(INSTS_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKey = getSessionKey(request);
+
+                if (!sessionKey) {
+                    return returnResult(NOT_LOGGED_IN_RESULT);
+                }
+
+                const validation = await this._validateSessionKey(request);
+
+                if (validation.success === false) {
+                    return returnResult(validation);
+                }
+
+                const userId = validation.userId;
+
+                const result = await this._websocketController.listInsts(
+                    recordName,
+                    userId,
+                    inst
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'DELETE',
+            path: '/api/v2/records/insts',
+            allowedOrigins: 'account',
+            schema: z.object({
+                recordKey: RECORD_KEY_VALIDATION.optional(),
+                recordName: RECORD_NAME_VALIDATION.optional(),
+                inst: z.string().optional(),
+            }),
+            handler: async (request, { recordKey, recordName, inst }) => {
+                if (!this._websocketController) {
+                    return returnResult(INSTS_NOT_SUPPORTED_RESULT);
+                }
+
+                const sessionKey = getSessionKey(request);
+
+                if (!sessionKey) {
+                    return returnResult(NOT_LOGGED_IN_RESULT);
+                }
+
+                const validation = await this._validateSessionKey(request);
+
+                if (validation.success === false) {
+                    return returnResult(validation);
+                }
+
+                const result = await this._websocketController.eraseInst(
+                    recordKey ?? recordName,
+                    inst,
+                    validation.userId
+                );
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'POST',
+            path: '/api/v2/records/insts/report',
+            allowedOrigins: 'api',
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION.nullable(),
+                inst: z.string().nonempty(),
+                automaticReport: z.boolean(),
+                reportReason: z.union([
+                    z.literal('poor-performance'),
+                    z.literal('spam'),
+                    z.literal('harassment'),
+                    z.literal('copyright-infringement'),
+                    z.literal('obscene'),
+                    z.literal('illegal'),
+                    z.literal('other'),
+                ]),
+                reportReasonText: z.string().nonempty().trim(),
+                reportedUrl: z.string().url(),
+                reportedPermalink: z.string().url(),
+            }),
+            handler: async (
+                request,
+                {
+                    recordName,
+                    inst,
+                    automaticReport,
+                    reportReason,
+                    reportReasonText,
+                    reportedUrl,
+                    reportedPermalink,
+                }
+            ) => {
+                if (!this._moderationController) {
+                    return returnResult(MODERATION_NOT_SUPPORTED_RESULT);
+                }
+
+                const validation = await this._validateSessionKey(request);
+
+                if (validation.success === false) {
+                    if (validation.errorCode !== 'no_session_key') {
+                        return returnResult(validation);
+                    }
+                }
+
+                const result = await this._moderationController.reportInst({
+                    recordName,
+                    inst,
+                    automaticReport,
+                    reportReason,
+                    reportReasonText,
+                    reportedUrl,
+                    reportedPermalink,
+                    reportingIpAddress: request.ipAddress,
+                    reportingUserId: validation.userId,
+                });
+
+                return returnResult(result);
+            },
+        });
+
+        this.addRoute({
+            method: 'GET',
+            path: '/instData',
+            allowedOrigins: true,
+            schema: z.object({
+                recordName: RECORD_NAME_VALIDATION.nullable().optional(),
+                inst: z.string().nonempty(),
+                branch: z.string().nonempty().default(DEFAULT_BRANCH_NAME),
+            }),
+            handler: async (request, { recordName, inst, branch }) => {
+                let userId: string = null;
+                const validation = await this._validateSessionKey(request);
+                if (validation.success === false) {
+                    if (validation.errorCode === 'no_session_key') {
+                        userId = null;
+                    } else {
+                        return returnResult(validation);
+                    }
+                } else {
+                    userId = validation.userId;
+                }
+
+                const data = await this._websocketController.getBranchData(
+                    userId,
+                    recordName ?? null,
+                    inst,
+                    branch
+                );
+
+                return returnResult({
+                    success: true,
+                    ...data,
+                });
+            },
+        });
+    }
+
     private async _stripeWebhook(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -1409,1425 +3188,6 @@ export class RecordsServer {
         };
     }
 
-    private async _listRecords(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const validation = await this._validateSessionKey(request);
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(validation);
-        }
-
-        const schema = z.object({
-            studioId: z.string().nonempty().optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { studioId } = parseResult.data;
-
-        if (studioId) {
-            const result = await this._records.listStudioRecords(
-                studioId,
-                validation.userId
-            );
-            return returnResult(result);
-        } else {
-            const result = await this._records.listRecords(validation.userId);
-            return returnResult(result);
-        }
-    }
-
-    private async _createRecord(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            ownerId: z
-                .string({
-                    invalid_type_error: 'ownerId must be a string.',
-                    required_error: 'ownerId is required.',
-                })
-                .nonempty('ownerId must not be empty.')
-                .optional(),
-            studioId: z
-                .string({
-                    invalid_type_error: 'studioId must be a string.',
-                    required_error: 'studioId is required.',
-                })
-                .nonempty('studioId must not be empty.')
-                .optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, ownerId, studioId } = parseResult.data;
-
-        if (!recordName || typeof recordName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'recordName is required and must be a string.',
-            });
-        }
-
-        const validation = await this._validateSessionKey(request);
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(validation);
-        }
-
-        const result = await this._records.createRecord({
-            recordName,
-            ownerId,
-            studioId,
-            userId: validation.userId,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _createRecordKey(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            policy: z.string({
-                invalid_type_error: 'policy must be a string.',
-                required_error: 'policy is required.',
-            }),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, policy } = parseResult.data;
-
-        if (!recordName || typeof recordName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'recordName is required and must be a string.',
-            });
-        }
-
-        const validation = await this._validateSessionKey(request);
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(validation);
-        }
-
-        const result = await this._records.createPublicRecordKey(
-            recordName,
-            policy as PublicRecordKeyPolicy,
-            validation.userId
-        );
-
-        return returnResult(result);
-    }
-
-    private async _grantPermission(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            permission: AVAILABLE_PERMISSIONS_VALIDATION,
-            instances: INSTANCES_ARRAY_VALIDATION.nonempty().optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, permission, instances } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        if (permission.marker) {
-            const result = await this._policyController.grantMarkerPermission({
-                recordKeyOrRecordName: recordName,
-                marker: permission.marker,
-                userId: sessionKeyValidation.userId,
-                permission: permission as any,
-                instances,
-            });
-
-            return returnResult(result);
-        } else if (permission.resourceKind && permission.resourceId) {
-            const result = await this._policyController.grantResourcePermission(
-                {
-                    recordKeyOrRecordName: recordName,
-                    permission: permission as any,
-                    userId: sessionKeyValidation.userId,
-                    instances,
-                }
-            );
-
-            return returnResult(result);
-        }
-
-        return returnResult({
-            success: false,
-            errorCode: 'unacceptable_request',
-            errorMessage:
-                'The given permission must have either a marker or a resourceId.',
-        });
-    }
-
-    private async _revokePermission(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            permissionId: z
-                .string({
-                    invalid_type_error: 'permissionId must be a string.',
-                    required_error: 'permissionId is required.',
-                })
-                .nonempty('permissionId must not be empty'),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { permissionId, instances } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._policyController.revokePermission({
-            permissionId,
-            userId: sessionKeyValidation.userId,
-            instances,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _listPermissions(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            marker: MARKER_VALIDATION.optional(),
-            resourceKind: RESOURCE_KIND_VALIDATION.optional(),
-            resourceId: z
-                .string({
-                    invalid_type_error: 'resourceId must be a string.',
-                    required_error: 'resourceId is required.',
-                })
-                .optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, marker, resourceKind, resourceId } =
-            parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        if (resourceKind && resourceId) {
-            const result =
-                await this._policyController.listPermissionsForResource(
-                    recordName,
-                    resourceKind,
-                    resourceId,
-                    sessionKeyValidation.userId
-                );
-            return returnResult(result);
-        } else if (marker) {
-            const result =
-                await this._policyController.listPermissionsForMarker(
-                    recordName,
-                    marker,
-                    sessionKeyValidation.userId
-                );
-            return returnResult(result);
-        } else {
-            const result = await this._policyController.listPermissions(
-                recordName,
-                sessionKeyValidation.userId
-            );
-            return returnResult(result);
-        }
-    }
-
-    private async _roleUserList(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            userId: z
-                .string({
-                    invalid_type_error: 'userId must be a string.',
-                    required_error: 'userId is required.',
-                })
-                .nonempty('userId must not be empty'),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, userId, instances } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._policyController.listUserRoles(
-            recordName,
-            sessionKeyValidation.userId,
-            userId,
-            instances
-        );
-
-        return returnResult(result);
-    }
-
-    private async _roleInstList(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            inst: z
-                .string({
-                    invalid_type_error: 'inst must be a string.',
-                    required_error: 'inst is required.',
-                })
-                .nonempty('inst must not be empty'),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, inst, instances } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._policyController.listInstRoles(
-            recordName,
-            sessionKeyValidation.userId,
-            inst,
-            instances
-        );
-
-        return returnResult(result);
-    }
-
-    private async _roleAssignmentsList(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            startingRole: z
-                .string({
-                    invalid_type_error: 'startingRole must be a string.',
-                    required_error: 'startingRole is required.',
-                })
-                .nonempty('startingRole must not be empty')
-                .optional(),
-            role: z
-                .string({
-                    invalid_type_error: 'role must be a string.',
-                    required_error: 'role is required.',
-                })
-                .nonempty('role must not be empty')
-                .optional(),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, role, startingRole, instances } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        if (role) {
-            const result = await this._policyController.listAssignedRoles(
-                recordName,
-                sessionKeyValidation.userId,
-                role,
-                instances
-            );
-
-            return returnResult(result);
-        } else {
-            const result = await this._policyController.listRoleAssignments(
-                recordName,
-                sessionKeyValidation.userId,
-                startingRole,
-                instances
-            );
-
-            return returnResult(result);
-        }
-    }
-
-    private async _roleGrant(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            userId: z
-                .string({
-                    invalid_type_error: 'userId must be a string.',
-                    required_error: 'userId is required.',
-                })
-                .nonempty('userId must not be empty')
-                .optional(),
-            inst: z
-                .string({
-                    invalid_type_error: 'inst must be a string.',
-                    required_error: 'inst is required.',
-                })
-                .nonempty('inst must not be empty')
-                .optional(),
-            role: z
-                .string({
-                    invalid_type_error: 'role must be a string.',
-                    required_error: 'role is required.',
-                })
-                .nonempty('role must not be empty'),
-            expireTimeMs: z
-                .number({
-                    invalid_type_error: 'expireTimeMs must be a number.',
-                    required_error: 'expireTimeMs is required.',
-                })
-                .positive('expireTimeMs must be positive')
-                .optional(),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, userId, inst, expireTimeMs, role, instances } =
-            parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._policyController.grantRole(
-            recordName,
-            sessionKeyValidation.userId,
-            {
-                instance: inst,
-                userId: userId,
-                role,
-                expireTimeMs,
-            },
-            instances
-        );
-
-        return returnResult(result);
-    }
-
-    private async _roleRevoke(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            userId: z
-                .string({
-                    invalid_type_error: 'userId must be a string.',
-                    required_error: 'userId is required.',
-                })
-                .nonempty('userId must not be empty')
-                .optional(),
-            inst: z
-                .string({
-                    invalid_type_error: 'inst must be a string.',
-                    required_error: 'inst is required.',
-                })
-                .nonempty('inst must not be empty')
-                .optional(),
-            role: z
-                .string({
-                    invalid_type_error: 'role must be a string.',
-                    required_error: 'role is required.',
-                })
-                .nonempty('role must not be empty'),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, userId, inst, role, instances } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._policyController.revokeRole(
-            recordName,
-            sessionKeyValidation.userId,
-            {
-                instance: inst,
-                userId: userId,
-                role,
-            },
-            instances
-        );
-
-        return returnResult(result);
-    }
-
-    private async _aiChat(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            model: z.string().nonempty().optional(),
-            messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-            temperature: z.number().min(0).max(2).optional(),
-            topP: z.number().optional(),
-            presencePenalty: z.number().min(-2).max(2).optional(),
-            frequencyPenalty: z.number().min(-2).max(2).optional(),
-            stopWords: z.array(z.string()).max(4).optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { model, messages, instances, ...options } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._aiController.chat({
-            ...options,
-            model,
-            messages: messages as AIChatMessage[],
-            userId: sessionKeyValidation.userId,
-            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _aiSkybox(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            prompt: z.string().nonempty().max(600),
-            negativePrompt: z.string().nonempty().max(600).optional(),
-            blockadeLabs: z
-                .object({
-                    skyboxStyleId: z.number().optional(),
-                    remixImagineId: z.number().optional(),
-                    seed: z.number().optional(),
-                })
-                .optional(),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { prompt, negativePrompt, instances, blockadeLabs } =
-            parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._aiController.generateSkybox({
-            prompt,
-            negativePrompt,
-            blockadeLabs,
-            userId: sessionKeyValidation.userId,
-            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _aiGetSkybox(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
-        }
-
-        const schema = z.object({
-            skyboxId: z
-                .string({
-                    invalid_type_error: 'skyboxId must be a string.',
-                    required_error: 'skyboxId is required.',
-                })
-                .nonempty('skyboxId must not be empty'),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { skyboxId, instances } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._aiController.getSkybox({
-            skyboxId,
-            userId: sessionKeyValidation.userId,
-            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _aiGenerateImage(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            prompt: z
-                .string({
-                    invalid_type_error: 'prompt must be a string.',
-                    required_error: 'prompt is required.',
-                })
-                .nonempty('prompt must not be empty'),
-            model: z
-                .string({
-                    invalid_type_error: 'model must be a string.',
-                    required_error: 'model is required.',
-                })
-                .nonempty('model must not be empty')
-                .optional(),
-            negativePrompt: z.string().nonempty().optional(),
-            width: z.number().positive().int().optional(),
-            height: z.number().positive().int().optional(),
-            seed: z.number().positive().int().optional(),
-            numberOfImages: z.number().positive().int().optional(),
-            steps: z.number().positive().int().optional(),
-            sampler: z.string().nonempty().optional(),
-            cfgScale: z.number().min(0).int().optional(),
-            clipGuidancePreset: z.string().nonempty().optional(),
-            stylePreset: z.string().nonempty().optional(),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const {
-            prompt,
-            model,
-            negativePrompt,
-            width,
-            height,
-            seed,
-            numberOfImages,
-            steps,
-            sampler,
-            cfgScale,
-            clipGuidancePreset,
-            stylePreset,
-            instances,
-        } = parseResult.data;
-
-        console.log('got request', request);
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._aiController.generateImage({
-            model,
-            prompt,
-            negativePrompt,
-            width,
-            height,
-            seed,
-            numberOfImages,
-            steps,
-            sampler,
-            cfgScale,
-            clipGuidancePreset,
-            stylePreset,
-            userId: sessionKeyValidation.userId,
-            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _getStudio(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            studioId: STUDIO_ID_VALIDATION,
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { studioId } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._records.getStudio(
-            studioId,
-            sessionKeyValidation.userId
-        );
-        return returnResult(result);
-    }
-
-    private async _postStudio(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            displayName: STUDIO_DISPLAY_NAME_VALIDATION,
-            ownerStudioComId: z
-                .string({
-                    invalid_type_error: 'ownerStudioComId must be a string.',
-                    required_error: 'ownerStudioComId is required.',
-                })
-                .nonempty('ownerStudioComId must not be empty')
-                .nullable()
-                .optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { displayName, ownerStudioComId } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        if (!ownerStudioComId) {
-            const result = await this._records.createStudio(
-                displayName,
-                sessionKeyValidation.userId
-            );
-            return returnResult(result);
-        } else {
-            const result = await this._records.createStudioInComId(
-                displayName,
-                sessionKeyValidation.userId,
-                ownerStudioComId
-            );
-            return returnResult(result);
-        }
-    }
-
-    private async _updateStudio(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            id: STUDIO_ID_VALIDATION,
-            displayName: STUDIO_DISPLAY_NAME_VALIDATION.optional(),
-            logoUrl: z
-                .string({
-                    invalid_type_error: 'logoUrl must be a string.',
-                    required_error: 'logoUrl is required.',
-                })
-                .url()
-                .min(1)
-                .max(512)
-                .nullable()
-                .optional(),
-            comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
-            playerConfig: COM_ID_PLAYER_CONFIG.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { id, displayName, logoUrl, comIdConfig, playerConfig } =
-            parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._records.updateStudio({
-            userId: sessionKeyValidation.userId,
-            studio: {
-                id,
-                displayName,
-                logoUrl,
-                comIdConfig,
-                playerConfig,
-            },
-        });
-        return returnResult(result);
-    }
-
-    private async _requestComId(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            studioId: STUDIO_ID_VALIDATION,
-            comId: COM_ID_VALIDATION,
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { studioId, comId } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._records.requestComId({
-            studioId,
-            userId: sessionKeyValidation.userId,
-            requestedComId: comId,
-            ipAddress: request.ipAddress,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _listStudios(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            comId: z.string().nonempty().optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { comId } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        if (comId) {
-            const result = await this._records.listStudiosByComId(
-                sessionKeyValidation.userId,
-                comId
-            );
-            return returnResult(result);
-        } else {
-            const result = await this._records.listStudios(
-                sessionKeyValidation.userId
-            );
-            return returnResult(result);
-        }
-    }
-
-    private async _listStudioMembers(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            studioId: STUDIO_ID_VALIDATION,
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { studioId } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._records.listStudioMembers(
-            studioId,
-            sessionKeyValidation.userId
-        );
-        return returnResult(result);
-    }
-
-    private async _addStudioMember(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            studioId: STUDIO_ID_VALIDATION,
-            addedUserId: z
-                .string({
-                    invalid_type_error: 'addedUserId must be a string.',
-                    required_error: 'addedUserId is required.',
-                })
-                .nonempty('addedUserId must not be empty')
-                .optional(),
-            addedEmail: z
-                .string({
-                    invalid_type_error: 'addedEmail must be a string.',
-                    required_error: 'addedEmail is required.',
-                })
-                .nonempty('addedEmail must not be empty')
-                .optional(),
-            addedPhoneNumber: z
-                .string({
-                    invalid_type_error: 'addedPhoneNumber must be a string.',
-                    required_error: 'addedPhoneNumber is required.',
-                })
-                .nonempty('addedPhoneNumber must not be empty')
-                .optional(),
-            role: z.union([z.literal('admin'), z.literal('member')]),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { studioId, addedUserId, addedEmail, addedPhoneNumber, role } =
-            parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._records.addStudioMember({
-            studioId,
-            userId: sessionKeyValidation.userId,
-            role,
-            addedUserId,
-            addedEmail,
-            addedPhoneNumber,
-        });
-        return returnResult(result);
-    }
-
-    private async _removeStudioMember(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            studioId: STUDIO_ID_VALIDATION,
-            removedUserId: z
-                .string({
-                    invalid_type_error: 'removedUserId must be a string.',
-                    required_error: 'removedUserId is required.',
-                })
-                .nonempty('removedUserId must not be empty')
-                .optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { studioId, removedUserId } = parseResult.data;
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (sessionKeyValidation.success === false) {
-            if (sessionKeyValidation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(sessionKeyValidation);
-        }
-
-        const result = await this._records.removeStudioMember({
-            studioId,
-            userId: sessionKeyValidation.userId,
-            removedUserId,
-        });
-        return returnResult(result);
-    }
-
-    private async _getPlayerConfig(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            comId: z.string().nonempty(),
-        });
-
-        const parseResult = schema.safeParse(request.query);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { comId } = parseResult.data;
-
-        const result = await this._records.getPlayerConfig(comId);
-        return returnResult(result);
-    }
-
-    private async _listData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            address: ADDRESS_VALIDATION.nullable().optional(),
-            marker: MARKER_VALIDATION.optional(),
-            sort: z
-                .union([z.literal('ascending'), z.literal('descending')])
-                .optional(),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, address, instances, marker, sort } =
-            parseResult.data;
-
-        if (!recordName || typeof recordName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'recordName is required and must be a string.',
-            });
-        }
-        if (
-            address !== null &&
-            typeof address !== 'undefined' &&
-            typeof address !== 'string'
-        ) {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'address must be null or a string.',
-            });
-        }
-
-        const sessionKeyValidation = await this._validateSessionKey(request);
-        if (
-            sessionKeyValidation.success === false &&
-            sessionKeyValidation.errorCode !== 'no_session_key'
-        ) {
-            return returnResult(sessionKeyValidation);
-        }
-
-        if (!marker) {
-            const result = await this._data.listData(
-                recordName,
-                address || null,
-                sessionKeyValidation.userId,
-                instances
-            );
-            return returnResult(result);
-        } else {
-            const result = await this._data.listDataByMarker({
-                recordKeyOrName: recordName,
-                marker: marker,
-                startingAddress: address,
-                sort: sort,
-                userId: sessionKeyValidation.userId,
-                instances,
-            });
-
-            return returnResult(result);
-        }
-    }
-
     private async _handleRecordFileOptions(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -2856,66 +3216,8 @@ export class RecordsServer {
     }
 
     private async _recordFile(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION,
-            fileSha256Hex: z
-                .string({
-                    invalid_type_error: 'fileSha256Hex must be a string.',
-                    required_error: 'fileSha256Hex is required.',
-                })
-                .min(1)
-                .max(128)
-                .nonempty('fileSha256Hex must be non-empty.'),
-            fileByteLength: z
-                .number({
-                    invalid_type_error:
-                        'fileByteLength must be a positive integer number.',
-                    required_error: 'fileByteLength is required.',
-                })
-                .positive('fileByteLength must be a positive integer number.')
-                .int('fileByteLength must be a positive integer number.'),
-            fileMimeType: z
-                .string({
-                    invalid_type_error: 'fileMimeType must be a string.',
-                    required_error: 'fileMimeType is required.',
-                })
-                .min(1)
-                .max(128),
-            fileDescription: z
-                .string({
-                    invalid_type_error: 'fileDescription must be a string.',
-                    required_error: 'fileDescription is required.',
-                })
-                .min(1)
-                .max(128)
-                .optional(),
-            markers: MARKERS_VALIDATION.optional(),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const {
+        request: GenericHttpRequest,
+        {
             recordKey,
             fileSha256Hex,
             fileByteLength,
@@ -2923,8 +3225,8 @@ export class RecordsServer {
             fileDescription,
             markers,
             instances,
-        } = parseResult.data;
-
+        }: z.infer<typeof RECORD_FILE_SCHEMA>
+    ): Promise<GenericHttpResponse> {
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
                 success: false,
@@ -2985,40 +3287,9 @@ export class RecordsServer {
     }
 
     private async _updateFile(
-        request: GenericHttpRequest
+        request: GenericHttpRequest,
+        data: z.infer<typeof UPDATE_FILE_SCHEMA>
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION,
-            fileUrl: z
-                .string({
-                    invalid_type_error: 'fileUrl must be a string.',
-                    required_error: 'fileUrl is required.',
-                })
-                .nonempty('fileUrl must be non-empty.'),
-            markers: MARKERS_VALIDATION,
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
         const validation = await this._validateSessionKey(request);
         if (
             validation.success === false &&
@@ -3029,7 +3300,7 @@ export class RecordsServer {
         const userId = validation.userId;
 
         const fileNameResult = await this._files.getFileNameFromUrl(
-            parseResult.data.fileUrl
+            data.fileUrl
         );
 
         if (!fileNameResult.success) {
@@ -3037,45 +3308,24 @@ export class RecordsServer {
         }
 
         const result = await this._files.updateFile(
-            parseResult.data.recordKey,
+            data.recordKey,
             fileNameResult.fileName,
             userId,
-            parseResult.data.markers,
-            parseResult.data.instances
+            data.markers,
+            data.instances
         );
         return returnResult(result);
     }
 
     private async _readFile(
-        request: GenericHttpRequest
+        request: GenericHttpRequest,
+        {
+            fileUrl,
+            recordName,
+            fileName,
+            instances,
+        }: z.infer<typeof READ_FILE_SCHEMA>
     ): Promise<GenericHttpResponse> {
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION.optional(),
-            fileName: z
-                .string({
-                    invalid_type_error: 'fileName must be a string.',
-                    required_error: 'fileName is required.',
-                })
-                .nonempty('fileName must be non-empty.')
-                .optional(),
-            fileUrl: z
-                .string({
-                    invalid_type_error: 'fileUrl must be a string.',
-                    required_error: 'fileUrl is required.',
-                })
-                .nonempty('fileUrl must be non-empty.')
-                .optional(),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        let { fileUrl, recordName, fileName, instances } = parseResult.data;
-
         if (!!fileUrl && typeof fileUrl !== 'string') {
             return returnResult({
                 success: false,
@@ -3147,28 +3397,9 @@ export class RecordsServer {
     }
 
     private async _listFiles(
-        request: GenericHttpRequest
+        request: GenericHttpRequest,
+        { recordName, fileName, instances }: z.infer<typeof LIST_FILES_SCHEMA>
     ): Promise<GenericHttpResponse> {
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            fileName: z
-                .string({
-                    invalid_type_error: 'fileName must be a string.',
-                    required_error: 'fileName is required.',
-                })
-                .nonempty('fileName must be non-empty.')
-                .optional(),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        let { recordName, fileName, instances } = parseResult.data;
-
         if (!!recordName && typeof recordName !== 'string') {
             return returnResult({
                 success: false,
@@ -3203,39 +3434,9 @@ export class RecordsServer {
     }
 
     private async _eraseFile(
-        request: GenericHttpRequest
+        request: GenericHttpRequest,
+        { recordKey, fileUrl, instances }: z.infer<typeof ERASE_FILE_SCHEMA>
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION,
-            fileUrl: z.string({
-                invalid_type_error: 'fileUrl must be a string.',
-                required_error: 'fileUrl is required.',
-            }),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordKey, fileUrl, instances } = parseResult.data;
-
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
                 success: false,
@@ -3278,49 +3479,8 @@ export class RecordsServer {
 
     private async _baseRecordData(
         request: GenericHttpRequest,
-        controller: DataRecordsController
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION,
-            address: ADDRESS_VALIDATION,
-            data: z.any(),
-            updatePolicy: z
-                .union([z.literal(true), z.array(z.string())], {
-                    invalid_type_error:
-                        'updatePolicy must be a boolean or an array of strings.',
-                })
-                .optional(),
-            deletePolicy: z
-                .union([z.literal(true), z.array(z.string())], {
-                    invalid_type_error:
-                        'deletePolicy must be a boolean or an array of strings.',
-                })
-                .optional(),
-            markers: MARKERS_VALIDATION.optional(),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const {
+        controller: DataRecordsController,
+        {
             recordKey,
             address,
             data,
@@ -3328,8 +3488,8 @@ export class RecordsServer {
             deletePolicy,
             markers,
             instances,
-        } = parseResult.data;
-
+        }: z.infer<typeof RECORD_DATA_SCHEMA>
+    ): Promise<GenericHttpResponse> {
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
                 success: false,
@@ -3374,41 +3534,11 @@ export class RecordsServer {
         return returnResult(result);
     }
 
-    private async _recordData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        return this._baseRecordData(request, this._data);
-    }
-
-    private _manualRecordData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        return this._baseRecordData(request, this._manualData);
-    }
-
     private async _baseGetRecordData(
         request: GenericHttpRequest,
-        controller: DataRecordsController
+        controller: DataRecordsController,
+        { recordName, address, instances }: z.infer<typeof GET_DATA_SCHEMA>
     ): Promise<GenericHttpResponse> {
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            address: z
-                .string({
-                    required_error: 'address is required.',
-                    invalid_type_error: 'address must be a string.',
-                })
-                .nonempty('address must not be empty'),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, address, instances } = parseResult.data;
-
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
                 success: false,
@@ -3441,50 +3571,11 @@ export class RecordsServer {
         return returnResult(result);
     }
 
-    private _getData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        return this._baseGetRecordData(request, this._data);
-    }
-
-    private _getManualRecordData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        return this._baseGetRecordData(request, this._manualData);
-    }
-
     private async _baseEraseRecordData(
         request: GenericHttpRequest,
-        controller: DataRecordsController
+        controller: DataRecordsController,
+        { recordKey, address, instances }: z.infer<typeof ERASE_DATA_SCHEMA>
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION,
-            address: ADDRESS_VALIDATION,
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordKey, address, instances } = parseResult.data;
-
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
                 success: false,
@@ -3518,904 +3609,9 @@ export class RecordsServer {
         return returnResult(result);
     }
 
-    private _eraseData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        return this._baseEraseRecordData(request, this._data);
-    }
-
-    private _eraseManualRecordData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        return this._baseEraseRecordData(request, this._manualData);
-    }
-
-    private async _getRecordsEventsCount(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            eventName: z
-                .string({
-                    required_error: 'eventName is required.',
-                    invalid_type_error: 'eventName must be a string.',
-                })
-                .nonempty('eventName must not be empty'),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, eventName, instances } = parseResult.data;
-
-        if (!recordName || typeof recordName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'recordName is required and must be a string.',
-            });
-        }
-        if (!eventName || typeof eventName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'eventName is required and must be a string.',
-            });
-        }
-
-        const validation = await this._validateSessionKey(request);
-
-        if (
-            validation.success === false &&
-            validation.errorCode !== 'no_session_key'
-        ) {
-            return returnResult(validation);
-        }
-
-        const userId = validation.userId;
-        const result = await this._events.getCount(
-            recordName,
-            eventName,
-            userId,
-            instances
-        );
-        return returnResult(result);
-    }
-
-    private async _postRecordsEventsCount(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION,
-            eventName: EVENT_NAME_VALIDATION,
-            count: z.number({
-                invalid_type_error: 'count must be a number.',
-                required_error: 'count is required.',
-            }),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordKey, eventName, count, instances } = parseResult.data;
-
-        if (!recordKey || typeof recordKey !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'recordKey is required and must be a string.',
-            });
-        }
-        if (!eventName || typeof eventName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'eventName is required and must be a string.',
-            });
-        }
-        if (typeof count !== 'number') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'count is required and must be a number.',
-            });
-        }
-
-        const validation = await this._validateSessionKey(request);
-
-        if (
-            validation.success === false &&
-            validation.errorCode !== 'no_session_key'
-        ) {
-            return returnResult(validation);
-        }
-
-        const userId = validation.userId;
-
-        const result = await this._events.addCount(
-            recordKey,
-            eventName,
-            count,
-            userId,
-            instances
-        );
-
-        return returnResult(result);
-    }
-
-    private async _listEvents(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION,
-            eventName: z
-                .string({
-                    invalid_type_error: 'eventName must be a string.',
-                    required_error: 'eventName is required.',
-                })
-                .nonempty('eventName must be non-empty.')
-                .optional(),
-            instances: INSTANCES_QUERY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        let { recordName, eventName, instances } = parseResult.data;
-
-        if (!!recordName && typeof recordName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'recordName must be a string.',
-            });
-        }
-        if (!!eventName && typeof eventName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'fileName must be a string.',
-            });
-        }
-
-        const validation = await this._validateSessionKey(request);
-        if (
-            validation.success === false &&
-            validation.errorCode !== 'no_session_key'
-        ) {
-            return returnResult(validation);
-        }
-        const userId = validation.userId;
-
-        const result = await this._events.listEvents(
-            recordName,
-            eventName,
-            userId,
-            instances
-        );
-        return returnResult(result);
-    }
-
-    private async _postRecordsEvents(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION,
-            eventName: EVENT_NAME_VALIDATION,
-            count: z.number().optional(),
-            markers: MARKERS_VALIDATION.optional(),
-            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordKey, eventName, count, markers, instances } =
-            parseResult.data;
-
-        if (!recordKey || typeof recordKey !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'recordKey is required and must be a string.',
-            });
-        }
-        if (!eventName || typeof eventName !== 'string') {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'eventName is required and must be a string.',
-            });
-        }
-        if (
-            count !== null &&
-            typeof count !== 'undefined' &&
-            typeof count !== 'number'
-        ) {
-            return returnResult({
-                success: false,
-                errorCode: 'unacceptable_request',
-                errorMessage: 'count must be a number.',
-            });
-        }
-
-        const validation = await this._validateSessionKey(request);
-
-        if (
-            validation.success === false &&
-            validation.errorCode !== 'no_session_key'
-        ) {
-            return returnResult(validation);
-        }
-
-        const userId = validation.userId;
-
-        const result = await this._events.updateEvent({
-            recordKeyOrRecordName: recordKey,
-            userId,
-            eventName,
-            count,
-            markers,
-            instances,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _postMeetToken(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            roomName: z.string(),
-            userName: z.string(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { roomName, userName } = parseResult.data;
-        const result = await this._livekit.issueToken(roomName, userName);
-
-        return returnResult(result);
-    }
-
-    private async _postLogin(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const { address, addressType } = jsonResult.value;
-
-        const result = await this._auth.requestLogin({
-            address,
-            addressType,
-            ipAddress: request.ipAddress,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _privoLogin(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const result = await this._auth.requestOpenIDLogin({
-            provider: PRIVO_OPEN_ID_PROVIDER,
-            ipAddress: request.ipAddress,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _oauthProvideCode(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            code: z.string().nonempty(),
-            state: z.string().nonempty(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { code, state } = parseResult.data;
-
-        const result = await this._auth.processOpenIDAuthorizationCode({
-            ipAddress: request.ipAddress,
-            authorizationCode: code,
-            state,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _oauthCompleteLogin(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            requestId: z.string().nonempty(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { requestId } = parseResult.data;
-
-        const result = await this._auth.completeOpenIDLogin({
-            ipAddress: request.ipAddress,
-            requestId,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _registerPrivo(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            email: z.string().min(1).email().optional(),
-            parentEmail: z.string().min(1).email().optional(),
-            name: NAME_VALIDATION,
-            dateOfBirth: z.coerce.date(),
-            displayName: DISPLAY_NAME_VALIDATION,
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { email, parentEmail, name, dateOfBirth, displayName } =
-            parseResult.data;
-
-        const result = await this._auth.requestPrivoSignUp({
-            email,
-            parentEmail,
-            name,
-            dateOfBirth,
-            displayName,
-            ipAddress: request.ipAddress,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _webAuthnRegisterOptions(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        // We don't validate origin because the AuthController will validate it based on the allowed
-        // relying parties.
-
-        const validation = await this._validateSessionKey(request);
-
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(validation);
-        }
-
-        const result = await this._auth.requestWebAuthnRegistration({
-            userId: validation.userId,
-            originOrHost:
-                request.headers.origin ??
-                request.headers['x-dev-proxy-host'] ??
-                request.headers.host,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _webAuthnRegister(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        // We don't validate origin because the AuthController will validate it based on the allowed
-        // relying parties.
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            response: z.object({
-                id: z.string().nonempty(),
-                rawId: z.string().nonempty(),
-                response: z.object({
-                    clientDataJSON: z.string().nonempty(),
-                    attestationObject: z.string().nonempty(),
-                    authenticatorData: z.string().nonempty().optional(),
-                    transports: z.array(z.string().min(1).max(64)).optional(),
-                    publicKeyAlgorithm: z.number().optional(),
-                    publicKey: z.string().nonempty().optional(),
-                }),
-                authenticatorAttachment: z
-                    .enum(['cross-platform', 'platform'])
-                    .optional(),
-                clientExtensionResults: z.object({
-                    appid: z.boolean().optional(),
-                    credProps: z
-                        .object({
-                            rk: z.boolean().optional(),
-                        })
-                        .optional(),
-                    hmacCreateSecret: z.boolean().optional(),
-                }),
-                type: z.literal('public-key'),
-            }),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { response } = parseResult.data;
-
-        const validation = await this._validateSessionKey(request);
-
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(validation);
-        }
-
-        const result = await this._auth.completeWebAuthnRegistration({
-            userId: validation.userId,
-            response: response as any,
-            originOrHost:
-                request.headers.origin ??
-                request.headers['x-dev-proxy-host'] ??
-                request.headers.host,
-            userAgent: request.headers['user-agent'],
-        });
-
-        return returnResult(result);
-    }
-
-    private async _webAuthnLoginOptions(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        // We don't validate origin because the AuthController will validate it based on the allowed
-        // relying parties.
-
-        const result = await this._auth.requestWebAuthnLogin({
-            ipAddress: request.ipAddress,
-            originOrHost:
-                request.headers.origin ??
-                request.headers['x-dev-proxy-host'] ??
-                request.headers.host,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _webAuthnLogin(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        // We don't validate origin because the AuthController will validate it based on the allowed
-        // relying parties.
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            requestId: z.string().nonempty(),
-            response: z.object({
-                id: z.string().nonempty(),
-                rawId: z.string().nonempty(),
-                response: z.object({
-                    clientDataJSON: z.string().nonempty(),
-                    authenticatorData: z.string().nonempty(),
-                    signature: z.string().nonempty(),
-                    userHandle: z.string().nonempty().optional(),
-                }),
-                authenticatorAttachment: z
-                    .enum(['cross-platform', 'platform'])
-                    .optional(),
-                clientExtensionResults: z.object({
-                    appid: z.boolean().optional(),
-                    credProps: z
-                        .object({
-                            rk: z.boolean().optional(),
-                        })
-                        .optional(),
-                    hmacCreateSecret: z.boolean().optional(),
-                }),
-                type: z.literal('public-key'),
-            }),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { response, requestId } = parseResult.data;
-
-        const result = await this._auth.completeWebAuthnLogin({
-            requestId: requestId,
-            ipAddress: request.ipAddress,
-            response: response as any,
-            originOrHost:
-                request.headers.origin ??
-                request.headers['x-dev-proxy-host'] ??
-                request.headers.host,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _listWebAuthnAuthenticators(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const validation = await this._validateSessionKey(request);
-
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(validation);
-        }
-
-        const result = await this._auth.listUserAuthenticators(
-            validation.userId
-        );
-
-        return returnResult(result);
-    }
-
-    private async _deleteWebAuthnAuthenticator(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            authenticatorId: z.string().nonempty(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { authenticatorId } = parseResult.data;
-
-        const validation = await this._validateSessionKey(request);
-
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                return returnResult(NOT_LOGGED_IN_RESULT);
-            }
-            return returnResult(validation);
-        }
-
-        const result = await this._auth.deleteUserAuthenticator(
-            validation.userId,
-            authenticatorId
-        );
-
-        return returnResult(result);
-    }
-
-    private async _postCompleteLogin(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            userId: z.string(),
-            requestId: z.string(),
-            code: z.string(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { userId, requestId, code } = parseResult.data;
-
-        const result = await this._auth.completeLogin({
-            userId,
-            requestId,
-            code,
-            ipAddress: request.ipAddress,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _postRevokeSession(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            userId: z.string().optional(),
-            sessionId: z.string().optional(),
-            sessionKey: z.string().optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        let {
-            userId,
-            sessionId,
-            sessionKey: sessionKeyToRevoke,
-        } = parseResult.data;
-
-        // Parse the User ID and Session ID from the sessionKey that is provided in
-        // session key that should be revoked
-        if (!!sessionKeyToRevoke) {
-            const parsed = parseSessionKey(sessionKeyToRevoke);
-            if (parsed) {
-                userId = parsed[0];
-                sessionId = parsed[1];
-            }
-        }
-
-        const authorization = getSessionKey(request);
-
-        if (!authorization) {
-            return returnResult(NOT_LOGGED_IN_RESULT);
-        }
-
-        const result = await this._auth.revokeSession({
-            userId,
-            sessionId,
-            sessionKey: authorization,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _postRevokeAllSessions(request: GenericHttpRequest) {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            userId: z.string(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { userId } = parseResult.data;
-
-        const authorization = getSessionKey(request);
-
-        if (!authorization) {
-            return returnResult(NOT_LOGGED_IN_RESULT);
-        }
-
-        const result = await this._auth.revokeAllSessions({
-            userId: userId,
-            sessionKey: authorization,
-        });
-
-        return returnResult(result);
-    }
-
     private async _postReplaceSession(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
         const sessionKey = getSessionKey(request);
         if (!sessionKey) {
             return returnResult(NOT_LOGGED_IN_RESULT);
@@ -4483,90 +3679,6 @@ export class RecordsServer {
         const result = await this._subscriptions.getSubscriptionStatus({
             sessionKey,
             userId,
-        });
-
-        if (!result.success) {
-            return returnResult(result);
-        }
-
-        return returnResult({
-            success: true,
-            publishableKey: result.publishableKey,
-            subscriptions: result.subscriptions.map((s) => ({
-                active: s.active,
-                statusCode: s.statusCode,
-                productName: s.productName,
-                startDate: s.startDate,
-                endedDate: s.endedDate,
-                cancelDate: s.cancelDate,
-                canceledDate: s.canceledDate,
-                currentPeriodStart: s.currentPeriodStart,
-                currentPeriodEnd: s.currentPeriodEnd,
-                renewalInterval: s.renewalInterval,
-                intervalLength: s.intervalLength,
-                intervalCost: s.intervalCost,
-                currency: s.currency,
-                featureList: s.featureList,
-            })),
-            purchasableSubscriptions: result.purchasableSubscriptions.map(
-                (s) => ({
-                    id: s.id,
-                    name: s.name,
-                    description: s.description,
-                    featureList: s.featureList,
-                    prices: s.prices,
-                    defaultSubscription: s.defaultSubscription,
-                })
-            ),
-        });
-    }
-
-    private async _getSubscriptionInfoV2(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!this._subscriptions) {
-            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
-        }
-
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const sessionKey = getSessionKey(request);
-
-        if (!sessionKey) {
-            return returnResult(NOT_LOGGED_IN_RESULT);
-        }
-
-        const schema = z.object({
-            studioId: z
-                .string({
-                    invalid_type_error: 'studioId must be a string.',
-                    required_error: 'studioId is required.',
-                })
-                .nonempty('studioId must be non-empty.')
-                .optional(),
-            userId: z
-                .string({
-                    invalid_type_error: 'userId must be a string.',
-                    required_error: 'userId is required.',
-                })
-                .nonempty('userId must be non-empty.')
-                .optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { studioId, userId } = parseResult.data;
-
-        const result = await this._subscriptions.getSubscriptionStatus({
-            sessionKey,
-            userId,
-            studioId,
         });
 
         if (!result.success) {
@@ -4676,308 +3788,6 @@ export class RecordsServer {
         return returnResult({
             success: true,
             url: result.url,
-        });
-    }
-
-    private async _manageSubscriptionV2(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!this._subscriptions) {
-            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
-        }
-
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        const sessionKey = getSessionKey(request);
-
-        if (!sessionKey) {
-            return returnResult(NOT_LOGGED_IN_RESULT);
-        }
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const schema = z.object({
-            userId: z
-                .string({
-                    invalid_type_error: 'userId must be a string.',
-                    required_error: 'userId is required.',
-                })
-                .nonempty('userId must not be empty.')
-                .optional(),
-            studioId: z
-                .string({
-                    invalid_type_error: 'studioId must be a string.',
-                    required_error: 'studioId is required.',
-                })
-                .nonempty('studioId must not be empty.')
-                .optional(),
-            subscriptionId: z.string().optional(),
-            expectedPrice: z
-                .object({
-                    currency: z.string(),
-                    cost: z.number(),
-                    interval: z.enum(['month', 'year', 'week', 'day']),
-                    intervalLength: z.number(),
-                })
-                .optional(),
-        });
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { userId, studioId, subscriptionId, expectedPrice } =
-            parseResult.data;
-
-        const result = await this._subscriptions.createManageSubscriptionLink({
-            sessionKey,
-            userId,
-            studioId,
-            subscriptionId,
-            expectedPrice:
-                expectedPrice as CreateManageSubscriptionRequest['expectedPrice'],
-        });
-
-        if (!result.success) {
-            return returnResult(result);
-        }
-
-        return returnResult({
-            success: true,
-            url: result.url,
-        });
-    }
-
-    private async _listInsts(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._websocketController) {
-            return returnResult(INSTS_NOT_SUPPORTED_RESULT);
-        }
-
-        const sessionKey = getSessionKey(request);
-
-        if (!sessionKey) {
-            return returnResult(NOT_LOGGED_IN_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION.optional(),
-            inst: z.string().optional(),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, inst } = parseResult.data;
-
-        const validation = await this._validateSessionKey(request);
-
-        if (validation.success === false) {
-            return returnResult(validation);
-        }
-
-        const userId = validation.userId;
-
-        const result = await this._websocketController.listInsts(
-            recordName,
-            userId,
-            inst
-        );
-        return returnResult(result);
-    }
-
-    private async _deleteInst(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._websocketController) {
-            return returnResult(INSTS_NOT_SUPPORTED_RESULT);
-        }
-
-        const sessionKey = getSessionKey(request);
-
-        if (!sessionKey) {
-            return returnResult(NOT_LOGGED_IN_RESULT);
-        }
-
-        const schema = z.object({
-            recordKey: RECORD_KEY_VALIDATION.optional(),
-            recordName: RECORD_NAME_VALIDATION.optional(),
-            inst: z.string().optional(),
-        });
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordKey, recordName, inst } = parseResult.data;
-
-        const validation = await this._validateSessionKey(request);
-
-        if (validation.success === false) {
-            return returnResult(validation);
-        }
-
-        const result = await this._websocketController.eraseInst(
-            recordKey ?? recordName,
-            inst,
-            validation.userId
-        );
-        return returnResult(result);
-    }
-
-    private async _reportInst(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedApiOrigins)) {
-            return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._moderationController) {
-            return returnResult(MODERATION_NOT_SUPPORTED_RESULT);
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION.nullable(),
-            inst: z.string().nonempty(),
-            automaticReport: z.boolean(),
-            reportReason: z.union([
-                z.literal('poor-performance'),
-                z.literal('spam'),
-                z.literal('harassment'),
-                z.literal('copyright-infringement'),
-                z.literal('obscene'),
-                z.literal('illegal'),
-                z.literal('other'),
-            ]),
-            reportReasonText: z.string().nonempty().trim(),
-            reportedUrl: z.string().url(),
-            reportedPermalink: z.string().url(),
-        });
-
-        if (typeof request.body !== 'string') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const jsonResult = tryParseJson(request.body);
-
-        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
-            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
-        }
-
-        const parseResult = schema.safeParse(jsonResult.value);
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const validation = await this._validateSessionKey(request);
-
-        if (validation.success === false) {
-            if (validation.errorCode !== 'no_session_key') {
-                return returnResult(validation);
-            }
-        }
-
-        const {
-            recordName,
-            inst,
-            automaticReport,
-            reportReason,
-            reportReasonText,
-            reportedUrl,
-            reportedPermalink,
-        } = parseResult.data;
-
-        const result = await this._moderationController.reportInst({
-            recordName,
-            inst,
-            automaticReport,
-            reportReason,
-            reportReasonText,
-            reportedUrl,
-            reportedPermalink,
-            reportingIpAddress: request.ipAddress,
-            reportingUserId: validation.userId,
-        });
-
-        return returnResult(result);
-    }
-
-    private async _getInstData(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
-        let userId: string = null;
-        const validation = await this._validateSessionKey(request);
-        if (validation.success === false) {
-            if (validation.errorCode === 'no_session_key') {
-                userId = null;
-            } else {
-                return returnResult(validation);
-            }
-        } else {
-            userId = validation.userId;
-        }
-
-        const schema = z.object({
-            recordName: RECORD_NAME_VALIDATION.nullable().optional(),
-            inst: z.string().nonempty(),
-            branch: z.string().nonempty().default(DEFAULT_BRANCH_NAME),
-        });
-
-        const parseResult = schema.safeParse(request.query || {});
-
-        if (parseResult.success === false) {
-            return returnZodError(parseResult.error);
-        }
-
-        const { recordName, inst, branch } = parseResult.data;
-
-        const data = await this._websocketController.getBranchData(
-            userId,
-            recordName ?? null,
-            inst,
-            branch
-        );
-
-        return returnResult({
-            success: true,
-            ...data,
         });
     }
 

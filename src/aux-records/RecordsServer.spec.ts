@@ -11141,7 +11141,7 @@ describe('RecordsServer', () => {
             );
 
             const result = await server.handleHttpRequest(
-                httpGet(`/api/v2/ai/skybox`, apiHeaders)
+                httpGet(`/api/v2/ai/skybox?skyboxId=id`, apiHeaders)
             );
 
             expectResponseBodyToEqual(result, {
