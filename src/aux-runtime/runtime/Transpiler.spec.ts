@@ -636,6 +636,15 @@ describe('Transpiler', () => {
             expect(result.trim()).toEqual('importModule("test", importMeta);');
         });
 
+        it('should compile in strict mode for keywords', () => {
+            const transpiler = new Transpiler();
+
+            // "public" is a strict mode keyword
+            expect(() => {
+                transpiler.transpile('let public = "abc";');
+            }).toThrow();
+        });
+
         describe('async', () => {
             let transpiler: Transpiler;
 
@@ -776,6 +785,12 @@ describe('Transpiler', () => {
                 const result = transpiler.transpile(`await import("test");`);
 
                 expect(result).toBe(`await importModule("test", importMeta);`);
+            });
+
+            it('should not mark dynamic import expressions as modules', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`import("test");`);
+                expect(result.metadata.isModule).toBe(false);
             });
 
             it('should mark the script as a module', () => {

@@ -966,7 +966,7 @@ export class AuxCompiler {
                     constructedFunction: func,
                 };
             } else {
-                const finalCode = `${withCodeStart}return function(constants, variables, context) { ${constantsCode}return ${functionCode}; }${withCodeEnd}`;
+                const finalCode = `${withCodeStart}return function(constants, variables, context) { "use strict"; ${constantsCode}return ${functionCode}; }${withCodeEnd}`;
 
                 let func = this._buildFunction(finalCode, options);
                 (<any>func)[COMPILED_SCRIPT_SYMBOL] = true;

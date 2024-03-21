@@ -9098,6 +9098,23 @@ describe('AuxRuntime', () => {
                     expect(events.length).toBe(1);
                     expect(events[0].length).toBe(0);
                 });
+
+                it('should compile scripts with dynamic imports as non-async scripts', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import(".test"); os.toast("def"); return 123;`,
+                                test: '📄export default 999;',
+                            }),
+                        })
+                    );
+                    const result = await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(result.results).toEqual([123]);
+                    expect(events).toEqual([[toast('def')]]);
+                });
             });
 
             describe('typescript', () => {
