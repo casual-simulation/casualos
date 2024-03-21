@@ -49,6 +49,14 @@ describe('AuxCompiler', () => {
             expect(func()).toEqual(3);
         });
 
+        it('should compile in strict mode', () => {
+            const func = compiler.compile('NaN = 5;');
+
+            expect(() => {
+                func();
+            }).toThrow();
+        });
+
         it('should always compile modules as async', async () => {
             const func = compiler.compile('📄', {
                 arguments: [IMPORT_FACTORY],

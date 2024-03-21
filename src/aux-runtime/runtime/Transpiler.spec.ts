@@ -636,6 +636,15 @@ describe('Transpiler', () => {
             expect(result.trim()).toEqual('importModule("test", importMeta);');
         });
 
+        it('should compile in strict mode for keywords', () => {
+            const transpiler = new Transpiler();
+
+            // "public" is a strict mode keyword
+            expect(() => {
+                transpiler.transpile('let public = "abc";');
+            }).toThrow();
+        });
+
         describe('async', () => {
             let transpiler: Transpiler;
 
