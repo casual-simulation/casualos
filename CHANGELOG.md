@@ -6,7 +6,7 @@
 
 ### :boom: Breaking Changes
 
--   Forced all scripts to compile in [`strict mode`](https://stackoverflow.com/a/27114400/1832856).
+-   Forced all scripts to compile in [Strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode).
     -   Strict mode restricts some functions and features of JavaScript to help catch common mistakes.
     -   Some examples:
         -   The `implements`, `interface`, `let`, `package`, `private`, `protected`, `public`, `static`, `yield` keywords are no longer allowed to be used as identifiers.
