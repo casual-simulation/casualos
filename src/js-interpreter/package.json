@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/js-interpreter",
-    "version": "3.2.18",
+    "version": "3.2.19-alpha.8378538218",
     "description": "A JavaScript interpreter",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
