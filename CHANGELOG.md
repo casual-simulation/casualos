@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.19
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where attached debuggers would automatically get detached once a portal is opened or closed.
+
 ## V3.2.18
 
 #### Date: 3/20/2024
