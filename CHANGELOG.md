@@ -4,6 +4,24 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Forced all scripts to compile in [`strict mode`](https://stackoverflow.com/a/27114400/1832856).
+    -   Strict mode restricts some functions and features of JavaScript to help catch common mistakes.
+    -   Some examples:
+        -   The `implements`, `interface`, `let`, `package`, `private`, `protected`, `public`, `static`, `yield` keywords are no longer allowed to be used as identifiers.
+        -   Assignments to non-writable globals (`Infinity`, `undefined`, etc.) are no longer allowed.
+        -   Assignments to non-writable properties now throws a TypeError.
+        -   It is no longer allowed to set properties on a primitive value.
+        -   Attempts to delete a non-configurable or otherwise undeletable property now throws a TypeError.
+        -   Duplicate parameter names are no longer allowed.
+        -   Numbers literals are no longer allowed to start with `0`.
+            -   This is because sloppy mode allowed otcal literals to be any number starting with `0` and having every digit less than `8`
+            -   If you weren't careful, it was easy to accidentally write an octal number. e.g.
+            ```typescript
+            let num = 0123; // This does not equal 123, but is actually 83 in decimal
+            ```
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where attached debuggers would automatically get detached once a portal is opened or closed.
