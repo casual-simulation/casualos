@@ -647,8 +647,6 @@ export class Transpiler {
         text: Text,
         metadata: TranspilerResult['metadata']
     ): any {
-        metadata.isModule = true;
-
         doc.clientID += 1;
         const version = { '0': getClock(doc, 0) };
 

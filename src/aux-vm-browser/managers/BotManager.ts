@@ -412,7 +412,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     }
 
     protected _createSubSimulation(vm: AuxVM) {
-        return new BotManager(
+        const sim = new BotManager(
             {
                 recordName: null,
                 inst: null,
@@ -424,6 +424,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             },
             vm
         );
+        sim._isSubSimulation = true;
+        return sim;
     }
 
     private _getAuthEndpointHelper(endpoint: string): AuthHelperInterface {
