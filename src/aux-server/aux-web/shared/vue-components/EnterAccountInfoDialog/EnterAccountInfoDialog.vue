@@ -33,7 +33,7 @@
             <form v-else @submit.prevent="register()">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
-                        <md-field :class="displayNameFieldClass">
+                        <md-field :class="displayNameFieldClass" class="display-name-field">
                             <label for="name">Display Name</label>
                             <md-input
                                 name="displayName"

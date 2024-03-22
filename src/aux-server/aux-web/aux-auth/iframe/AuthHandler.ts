@@ -533,7 +533,10 @@ export class AuthHandler implements AuxAuth {
         }
 
         if (info.displayName && info.name) {
-            const validDisplayName = await authManager.isValidDisplayName(info.displayName, info.name);
+            const validDisplayName = await authManager.isValidDisplayName(
+                info.displayName,
+                info.name
+            );
             if (validDisplayName.success === false) {
                 errors.push(...getFormErrors(validDisplayName));
             } else if (!validDisplayName.allowed) {
@@ -548,7 +551,8 @@ export class AuthHandler implements AuxAuth {
                     errors.push({
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
-                        errorMessage: 'This display name is either not allowed or already taken.',
+                        errorMessage:
+                            'This display name is either not allowed or already taken.',
                     });
                 }
             }
@@ -559,7 +563,7 @@ export class AuthHandler implements AuxAuth {
                 errors.push({
                     for: EMAIL_FIELD,
                     errorCode: 'invalid_email',
-                    errorMessage: 'The provided email is not accepted.',
+                    errorMessage: 'This email is already taken.',
                 });
             }
         }
