@@ -937,29 +937,53 @@ export class AuthHandler implements AuxAuth {
                 )
             );
 
-            const result = await authManager.signUpWithPrivo({
-                acceptedTermsOfService: info.acceptedTermsOfService,
-                displayName: info.displayName,
-                email: info.email,
-                name: info.name,
-                dateOfBirth: info.dateOfBirth,
-                parentEmail: info.parentEmail,
-            });
+            let updatePasswordUrl: string;
+            try {
+                const result = await authManager.signUpWithPrivo({
+                    acceptedTermsOfService: info.acceptedTermsOfService,
+                    displayName: info.displayName,
+                    email: info.email,
+                    name: info.name,
+                    dateOfBirth: info.dateOfBirth,
+                    parentEmail: info.parentEmail,
+                });
 
-            if (result.success === false) {
-                console.log(
-                    '[AuthHandler] Failed to sign up with Privo.',
-                    result
+                if (result.success === false) {
+                    console.log(
+                        '[AuthHandler] Failed to sign up with Privo.',
+                        result
+                    );
+
+                    const errors = getFormErrors(result);
+
+                    this._loginUIStatus.next({
+                        page: 'enter_privo_account_info',
+                        termsOfServiceUrl: this.termsOfServiceUrl,
+                        privacyPolicyUrl: this.privacyPolicyUrl,
+                        siteName: this.siteName,
+                        errors: errors,
+                    });
+                    continue;
+                }
+                updatePasswordUrl = result.updatePasswordUrl;
+            } catch (err) {
+                console.error(
+                    '[AuthHandler] Error signing up with Privo.',
+                    err
                 );
-
-                const errors = getFormErrors(result);
-
                 this._loginUIStatus.next({
                     page: 'enter_privo_account_info',
                     termsOfServiceUrl: this.termsOfServiceUrl,
                     privacyPolicyUrl: this.privacyPolicyUrl,
                     siteName: this.siteName,
-                    errors: errors,
+                    errors: [
+                        {
+                            for: null,
+                            errorCode: 'server_error',
+                            errorMessage:
+                                'An error occurred. Please try again later.',
+                        },
+                    ],
                 });
                 continue;
             }
@@ -969,7 +993,7 @@ export class AuthHandler implements AuxAuth {
 
             this._loginUIStatus.next({
                 page: 'show_update_password_link',
-                updatePasswordUrl: result.updatePasswordUrl,
+                updatePasswordUrl: updatePasswordUrl,
                 providedParentEmail: !!info.parentEmail,
             });
 
