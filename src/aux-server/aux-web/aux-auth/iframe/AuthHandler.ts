@@ -532,6 +532,28 @@ export class AuthHandler implements AuxAuth {
             }
         }
 
+        if (info.displayName && info.name) {
+            const validDisplayName = await authManager.isValidDisplayName(info.displayName, info.name);
+            if (validDisplayName.success === false) {
+                errors.push(...getFormErrors(validDisplayName));
+            } else if (!validDisplayName.allowed) {
+                if (validDisplayName.containsName) {
+                    errors.push({
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage:
+                            'The display name cannot contain your name.',
+                    });
+                } else {
+                    errors.push({
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage: 'This display name is either not allowed or already taken.',
+                    });
+                }
+            }
+        }
+
         if (info.email) {
             if (!(await authManager.validateEmail(info.email))) {
                 errors.push({
