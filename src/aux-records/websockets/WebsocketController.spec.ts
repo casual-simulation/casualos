@@ -700,6 +700,34 @@ describe('WebsocketController', () => {
                     ).toEqual([]);
                 });
 
+                it('should return a invalid_connection_state error if the connection cannot be found in Redis', async () => {
+                    await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
+                        branch: 'testBranch',
+                    });
+
+                    expect(
+                        messenger.getEvents(device1Info.serverConnectionId)
+                    ).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'invalid_connection_state',
+                                errorMessage: `A server error occurred. (namespace: null/${inst}/${'testBranch'}, connectionId: ${
+                                    device1Info.serverConnectionId
+                                })`,
+                                recordName: null,
+                                inst: inst,
+                                branch: 'testBranch',
+                            },
+                        ],
+                    ]);
+                });
+
                 describe('temp', () => {
                     it('should load the branch like normal if the branch is temporary', async () => {
                         await connectionStore.saveConnection(device1Info);
@@ -1341,6 +1369,40 @@ describe('WebsocketController', () => {
                                 expect(
                                     messenger.getEvents(serverConnectionId)
                                 ).toEqual([]);
+                            });
+
+                            it('should return a invalid_connection_state error if the connection cannot be found in Redis', async () => {
+                                await server.watchBranch(
+                                    device1Info.serverConnectionId,
+                                    {
+                                        type: 'repo/watch_branch',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
+                                    }
+                                );
+
+                                expect(
+                                    messenger.getEvents(
+                                        device1Info.serverConnectionId
+                                    )
+                                ).toEqual([
+                                    [
+                                        WebsocketEventTypes.Error,
+                                        -1,
+                                        {
+                                            success: false,
+                                            errorCode:
+                                                'invalid_connection_state',
+                                            errorMessage: `A server error occurred. (namespace: ${recordName}/${inst}/${'testBranch'}, connectionId: ${
+                                                device1Info.serverConnectionId
+                                            })`,
+                                            recordName,
+                                            inst: inst,
+                                            branch: 'testBranch',
+                                        },
+                                    ],
+                                ]);
                             });
                         });
 
@@ -2772,6 +2834,36 @@ describe('WebsocketController', () => {
                                 recordName,
                                 inst,
                                 branch: 'doesNotExist',
+                            },
+                        ],
+                    ]);
+                });
+
+                it('should return a invalid_connection_state error if the connection is not stored in the connection store', async () => {
+                    await server.addUpdates(device1Info.serverConnectionId, {
+                        type: 'repo/add_updates',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                        updateId: 0,
+                    });
+
+                    expect(
+                        messenger.getEvents(device1Info.serverConnectionId)
+                    ).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'invalid_connection_state',
+                                errorMessage: `A server error occurred. (namespace: ${recordName}/${inst}/${'testBranch'}, connectionId: ${
+                                    device1Info.serverConnectionId
+                                })`,
+                                recordName: recordName,
+                                inst: inst,
+                                branch: 'testBranch',
                             },
                         ],
                     ]);
