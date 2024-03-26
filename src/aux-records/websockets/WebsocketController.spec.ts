@@ -726,6 +726,9 @@ describe('WebsocketController', () => {
                             },
                         ],
                     ]);
+                    expect(
+                        messenger.isDisconnected(device1Info.serverConnectionId)
+                    ).toBe(true);
                 });
 
                 describe('temp', () => {
@@ -1371,7 +1374,7 @@ describe('WebsocketController', () => {
                                 ).toEqual([]);
                             });
 
-                            it('should return a invalid_connection_state error if the connection cannot be found in Redis', async () => {
+                            it('should return a invalid_connection_state error if the connection cannot be found', async () => {
                                 await server.watchBranch(
                                     device1Info.serverConnectionId,
                                     {
@@ -1403,6 +1406,12 @@ describe('WebsocketController', () => {
                                         },
                                     ],
                                 ]);
+                                // Should disconnect the connection
+                                expect(
+                                    messenger.isDisconnected(
+                                        device1Info.serverConnectionId
+                                    )
+                                ).toBe(true);
                             });
                         });
 
@@ -2867,6 +2876,9 @@ describe('WebsocketController', () => {
                             },
                         ],
                     ]);
+                    expect(
+                        messenger.isDisconnected(device1Info.serverConnectionId)
+                    ).toBe(true);
                 });
             });
 

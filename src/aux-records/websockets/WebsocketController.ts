@@ -320,6 +320,7 @@ export class WebsocketController {
                 inst: event.inst,
                 branch: event.branch,
             });
+            await this.messenger.disconnect(connectionId);
             return;
         }
 
@@ -626,6 +627,7 @@ export class WebsocketController {
                 inst: event.inst,
                 branch: event.branch,
             });
+            await this.messenger.disconnect(connectionId);
             return;
         }
 
