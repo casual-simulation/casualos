@@ -27,6 +27,7 @@
 -   Fixed an issue where attached debuggers would automatically get detached once a portal is opened or closed.
 -   Fixed an issue where the registration flow would not always check display names properly.
 -   Improved wording for some registration errors.
+-   Fixed an issue where it was possible for a session to not be synced while the session itself believes that it is connected.
 
 ## V3.2.18
 
