@@ -138,7 +138,6 @@ import {
 
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
-import { RedisClient } from 'redis';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1371,7 +1370,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private _createRedisClient(
-        redis: RedisClient,
+        redis: RedisClientType,
         options: RedisServerOptions
     ) {
         if (!redis) {
