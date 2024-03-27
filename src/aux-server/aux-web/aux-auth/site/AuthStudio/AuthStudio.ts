@@ -303,7 +303,7 @@ export default class AuthStudio extends Vue {
                 this.showUpdateStudioInfo = false;
                 return;
             }
-            const result = await authManager.updateStudio(update);
+            const result = await authManager.client.updateStudio(update);
 
             this.errors = getFormErrors(result);
             if (result.success) {
@@ -354,7 +354,9 @@ export default class AuthStudio extends Vue {
         try {
             const studioId = this.studioId;
             this.isLoadingInfo = true;
-            const result = await authManager.getStudio(this.studioId);
+            const result = await authManager.client.getStudio({
+                studioId: this.studioId,
+            });
             if (studioId === this.studioId && result.success === true) {
                 this.originalDisplayName = this.displayName =
                     result.studio.displayName;
@@ -390,7 +392,16 @@ export default class AuthStudio extends Vue {
         try {
             const studioId = this.studioId;
             this.loadingMembers = true;
-            const members = await authManager.listStudioMembers(this.studioId);
+            const result = await authManager.client.listStudioMembers({
+                studioId: this.studioId,
+            });
+
+            if (result.success === false) {
+                this.members = [];
+                return;
+            }
+
+            const members = result.members ?? [];
             if (studioId === this.studioId) {
                 this.members = members;
                 const userId = authManager.userId;
@@ -416,7 +427,7 @@ export default class AuthStudio extends Vue {
     async addMember() {
         try {
             this.addingMember = true;
-            const result = await authManager.addStudioMember({
+            const result = await authManager.client.addStudioMember({
                 studioId: this.studioId,
                 addedEmail: this.addMemberEmail,
                 role: this.addMemberRole as StudioAssignmentRole,
@@ -434,7 +445,7 @@ export default class AuthStudio extends Vue {
     }
 
     async revokeMembership(member: ListedStudioMember) {
-        const result = await authManager.removeStudioMember({
+        const result = await authManager.client.removeStudioMember({
             studioId: this.studioId,
             removedUserId: member.userId,
         });
@@ -452,7 +463,10 @@ export default class AuthStudio extends Vue {
             this.isSavingStudio = true;
 
             const comId = this.requestedComId;
-            const result = await authManager.requestComId(this.studioId, comId);
+            const result = await authManager.client.requestStudioComId({
+                studioId: this.studioId,
+                comId,
+            });
             this.errors = getFormErrors(result);
             if (result.success === true) {
                 this.showRequestComId = false;

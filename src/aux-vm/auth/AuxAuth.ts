@@ -14,6 +14,7 @@ import {
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 
@@ -432,7 +433,11 @@ export interface AuxAuth {
     grantPermission(
         recordName: string,
         permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult>;
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    >;
 
     /**
      * Provides the given login result to be used for the login process.

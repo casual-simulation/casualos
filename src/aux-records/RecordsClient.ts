@@ -1,4 +1,7 @@
-import type { RemoteProcedures } from '@casual-simulation/aux-common';
+import type {
+    CallProcedureOptions,
+    RemoteProcedures,
+} from '@casual-simulation/aux-common';
 import type { RecordsServer } from './RecordsServer';
 import axios from 'axios';
 
@@ -28,13 +31,18 @@ export class RecordsClient {
      * Calls the procedure with the given name, using the given argument.
      * @param name The name of the procedure to call.
      * @param input The input to the procedure.
+     * @param options The options to use for the procedure.
      */
-    async callProcedure(name: string, input: any): Promise<any> {
+    async callProcedure(
+        name: string,
+        input: any,
+        options?: CallProcedureOptions
+    ): Promise<any> {
         const response = await axios.post(
             `${this._endpoint}/api/v3/callProcedure`,
             { procedure: name, input },
             {
-                headers: this._authenticationHeaders(),
+                headers: this._authenticationHeaders(options),
                 validateStatus: () => true,
             }
         );
@@ -42,10 +50,13 @@ export class RecordsClient {
         return response.data;
     }
 
-    private _authenticationHeaders(): Record<string, string> {
-        if (this._sessionKey) {
+    private _authenticationHeaders(
+        options: CallProcedureOptions | undefined | null
+    ): Record<string, string> {
+        const key = options?.sessionKey ?? this._sessionKey;
+        if (key) {
             return {
-                Authorization: `Bearer ${this._sessionKey}`,
+                Authorization: `Bearer ${key}`,
             };
         } else {
             return {};
@@ -67,8 +78,11 @@ export function createRecordsClient(
             if (prop in reciever || Object.hasOwn(reciever, prop)) {
                 return Reflect.get(target, prop, reciever);
             } else if (typeof prop === 'string') {
-                return async function (arg: any) {
-                    return target.callProcedure(prop as string, arg);
+                return async function (
+                    arg: any,
+                    options?: CallProcedureOptions
+                ) {
+                    return target.callProcedure(prop as string, arg, options);
                 };
             }
             return Reflect.get(target, prop, reciever);

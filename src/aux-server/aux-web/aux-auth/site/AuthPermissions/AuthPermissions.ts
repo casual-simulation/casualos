@@ -89,11 +89,15 @@ export default class AuthPermissions extends Vue {
     }
 
     private async _loadMarkerData() {
-        const permissions = await authManager.listPermissions(this.recordName, {
+        const permissions = await authManager.client.listPermissions({
+            recordName: this.recordName,
             marker: this.marker,
         });
 
-        if (permissions.success === true) {
+        if (
+            permissions.success === true &&
+            'markerPermissions' in permissions
+        ) {
             if (this.marker === PUBLIC_READ_MARKER) {
                 const publicPermissions: [ResourceKinds, ActionKinds[]][] = [
                     ['data', ['read', 'list']],
@@ -183,12 +187,16 @@ export default class AuthPermissions extends Vue {
     }
 
     private async _loadResourceData() {
-        const permissions = await authManager.listPermissions(this.recordName, {
+        const permissions = await authManager.client.listPermissions({
+            recordName: this.recordName,
             resourceKind: this.resourceKind,
             resourceId: this.resourceId,
         });
 
-        if (permissions.success === true) {
+        if (
+            permissions.success === true &&
+            'resourcePermissions' in permissions
+        ) {
             this.resourceItems = {
                 mdCount: permissions.resourcePermissions.length,
                 mdPage: 0,

@@ -61,8 +61,16 @@ export default class AuthApp extends Vue {
         console.log('[AuthApp] Loading records for studio...');
         studio.loading = true;
         try {
-            const records =
-                (await authManager.listStudioRecords(studio.studioId)) ?? [];
+            const result = await authManager.client.listRecords({
+                studioId: studio.studioId,
+            });
+
+            if (result.success === false) {
+                studio.records = [];
+                return;
+            }
+
+            const records = result.records ?? [];
             studio.records = records.map((r) => ({
                 name: r.name,
                 label: r.name,
@@ -102,13 +110,17 @@ export default class AuthApp extends Vue {
 
         this.comId = authManager.getComIdFromUrl();
         if (this.comId) {
-            authManager.getComIdWebConfig(this.comId).then((config) => {
-                if (config.success === true) {
-                    this.logoUrl = config.logoUrl;
-                    this.displayName = config.displayName ?? this.comId;
-                    document.title = this.displayName;
-                }
-            });
+            authManager.client
+                .getPlayerConfig({
+                    comId: this.comId,
+                })
+                .then((config) => {
+                    if (config.success === true) {
+                        this.logoUrl = config.logoUrl;
+                        this.displayName = config.displayName ?? this.comId;
+                        document.title = this.displayName;
+                    }
+                });
         }
     }
 
@@ -126,7 +138,10 @@ export default class AuthApp extends Vue {
     async createStudio() {
         this.showCreateStudio = false;
         const comId = authManager.getComIdFromUrl();
-        const studioId = await authManager.createStudio(this.studioName, comId);
+        const result = await authManager.client.createStudio({
+            displayName: this.studioName,
+            ownerStudioComId: comId,
+        });
         await this.loadStudios();
     }
 
@@ -142,7 +157,7 @@ export default class AuthApp extends Vue {
             request['ownerId'] = authManager.userId;
         }
 
-        await authManager.createRecord(request);
+        await authManager.client.createRecord(request);
 
         if (this.createRecordStudioId) {
             const studio = this.studios.find(
@@ -165,7 +180,15 @@ export default class AuthApp extends Vue {
         console.log('[AuthApp] Loading records...');
         this.loadingRecords = true;
         try {
-            const records = (await authManager.listRecords()) ?? [];
+            const result = await authManager.client.listRecords({});
+
+            if (result.success === false) {
+                this.records = [];
+                console.error('[AuthApp] Unable to load records:', result);
+                return;
+            }
+
+            const records = result.records ?? [];
             this.records = records.map((r) => ({
                 name: r.name,
                 label: r.name,
@@ -181,7 +204,16 @@ export default class AuthApp extends Vue {
         this.loadingStudios = true;
         try {
             const comId = authManager.getComIdFromUrl();
-            const studios = (await authManager.listStudios(comId)) ?? [];
+            const result = await authManager.client.listStudios({
+                comId,
+            });
+
+            if (result.success === false) {
+                this.studios = [];
+                return;
+            }
+
+            const studios = result.studios;
             this.studios = studios.map((s) => ({
                 ...s,
                 records: [],

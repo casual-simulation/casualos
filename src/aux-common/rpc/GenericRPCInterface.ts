@@ -83,8 +83,15 @@ export interface Procedures {
     [key: string]: Procedure<any, any>;
 }
 
+export interface CallProcedureOptions {
+    /**
+     * The session key that should be used instead of the one that is currently set on the client.
+     */
+    sessionKey?: string;
+}
+
 export type OnlyFirstArg<T> = T extends (input: infer U, ...args: any[]) => any
-    ? (input: U) => ReturnType<T>
+    ? (input: U, options?: CallProcedureOptions) => ReturnType<T>
     : never;
 
 export type RemoteProcedures<T extends Procedures> = {
@@ -119,9 +126,9 @@ export interface InputlessProcedureBuilder extends ProcedureBuilder {
      * Because this is an inputless procedure, the input is void.
      * @param handler The handler.
      */
-    handler(
-        handler: (input: void, context: RPCContext) => Promise<ProcedureOutput>
-    ): Procedure<void, ProcedureOutput>;
+    handler<TOutput extends ProcedureOutput>(
+        handler: (input: void, context: RPCContext) => Promise<TOutput>
+    ): Procedure<void, TOutput>;
 }
 
 export interface OutputlessProcedureBuilder<TInput> extends ProcedureBuilder {
@@ -168,6 +175,12 @@ class ProcBuilder
         return this;
     }
 
+    handler<TOutput extends ProcedureOutput>(
+        handler: (input: any, context: RPCContext) => Promise<TOutput>
+    ): Procedure<any, TOutput>;
+    handler<TOutput extends ProcedureOutput>(
+        handler: (input: void, context: RPCContext) => Promise<ProcedureOutput>
+    ): Procedure<void, TOutput>;
     handler<TOutput extends ProcedureOutput>(
         handler: (input: any, context: RPCContext) => Promise<TOutput>
     ): Procedure<any, TOutput> {

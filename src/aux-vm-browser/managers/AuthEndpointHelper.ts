@@ -28,6 +28,7 @@ import {
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
@@ -636,7 +637,11 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     async grantPermission(
         recordName: string,
         permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    > {
         if (!hasValue(this._origin)) {
             return null;
         }

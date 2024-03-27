@@ -71,8 +71,11 @@ describe('AuthManager', () => {
                 expireTimeMs: 1234,
             });
             expect(getLastPost()).toEqual([
-                'http://myendpoint.localhost/api/v2/login',
-                { address: 'myAddress', addressType: 'email' },
+                'http://myendpoint.localhost/api/v3/callProcedure',
+                {
+                    procedure: 'requestLogin',
+                    input: { address: 'myAddress', addressType: 'email' },
+                },
                 expect.any(Object),
             ]);
         });
@@ -102,8 +105,11 @@ describe('AuthManager', () => {
                 expireTimeMs: 1234,
             });
             expect(getLastPost()).toEqual([
-                'http://myendpoint.localhost/api/v2/login',
-                { address: 'myAddress', addressType: 'phone' },
+                'http://myendpoint.localhost/api/v3/callProcedure',
+                {
+                    procedure: 'requestLogin',
+                    input: { address: 'myAddress', addressType: 'phone' },
+                },
                 expect.any(Object),
             ]);
         });
@@ -137,11 +143,14 @@ describe('AuthManager', () => {
                 connectionKey: 'connectionKey',
             });
             expect(getLastPost()).toEqual([
-                'http://myendpoint.localhost/api/v2/completeLogin',
+                'http://myendpoint.localhost/api/v3/callProcedure',
                 {
-                    userId: 'myuserid',
-                    requestId: 'myrequestid',
-                    code: 'mycode',
+                    procedure: 'completeLogin',
+                    input: {
+                        userId: 'myuserid',
+                        requestId: 'myrequestid',
+                        code: 'mycode',
+                    },
                 },
                 expect.any(Object),
             ]);
@@ -162,14 +171,18 @@ describe('AuthManager', () => {
             await manager.logout();
 
             expect(getLastPost()).toEqual([
-                'http://myendpoint.localhost/api/v2/revokeSession',
+                'http://myendpoint.localhost/api/v3/callProcedure',
                 {
-                    sessionKey: 'mysessionkey',
+                    procedure: 'revokeSession',
+                    input: {
+                        sessionKey: 'mysessionkey',
+                    },
                 },
                 {
                     headers: {
                         Authorization: 'Bearer mysessionkey',
                     },
+                    validateStatus: expect.any(Function),
                 },
             ]);
 

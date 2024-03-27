@@ -188,6 +188,35 @@ describe('createRecordsClient()', () => {
             ]);
         });
 
+        it('should support custom options', async () => {
+            setResponse({
+                statusCode: 200,
+                data: {
+                    success: true,
+                    test: true,
+                },
+            });
+            client.sessionKey = 'sessionKey';
+
+            const response = await client.callProcedure(
+                'test',
+                { test: true },
+                { sessionKey: 'customSessionKey' }
+            );
+            expect(response).toEqual({ success: true, test: true });
+
+            expect(getLastPost()).toEqual([
+                'http://localhost:3000/api/v3/callProcedure',
+                { procedure: 'test', input: { test: true } },
+                {
+                    headers: {
+                        Authorization: 'Bearer customSessionKey',
+                    },
+                    validateStatus: expect.any(Function),
+                },
+            ]);
+        });
+
         const statusCodes = [[400], [401], [402], [403], [404], [500]];
 
         it.each(statusCodes)(
@@ -285,6 +314,40 @@ describe('createRecordsClient()', () => {
                 {
                     headers: {
                         Authorization: 'Bearer sessionKey',
+                    },
+                    validateStatus: expect.any(Function),
+                },
+            ]);
+        });
+
+        it('should support custom options', async () => {
+            setResponse({
+                statusCode: 200,
+                data: {
+                    success: true,
+                    test: true,
+                },
+            });
+            client.sessionKey = 'sessionKey';
+
+            const response = await client.getData(
+                {
+                    recordName: 'test',
+                    address: 'address',
+                },
+                { sessionKey: 'customSessionKey' }
+            );
+            expect(response).toEqual({ success: true, test: true });
+
+            expect(getLastPost()).toEqual([
+                'http://localhost:3000/api/v3/callProcedure',
+                {
+                    procedure: 'getData',
+                    input: { recordName: 'test', address: 'address' },
+                },
+                {
+                    headers: {
+                        Authorization: 'Bearer customSessionKey',
                     },
                     validateStatus: expect.any(Function),
                 },

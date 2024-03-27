@@ -41,6 +41,7 @@ import {
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -150,7 +151,9 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
-        return authManager.getComIdWebConfig(comId);
+        return authManager.client.getPlayerConfig({
+            comId,
+        });
     }
 
     async provideOAuthLoginComplete(): Promise<void> {
@@ -274,7 +277,10 @@ export class AuthHandler implements AuxAuth {
             };
         }
 
-        const key = await authManager.createPublicRecordKey(recordName, policy);
+        const key = await authManager.client.createRecordKey({
+            recordName,
+            policy,
+        });
         console.log('[AuthHandler] Record key created.');
 
         if (key.success === false) {
@@ -453,14 +459,19 @@ export class AuthHandler implements AuxAuth {
     async isValidEmailAddress(
         email: string
     ): Promise<IsValidEmailAddressResult> {
-        return await authManager.isValidEmailAddress(email);
+        return await authManager.client.isEmailValid({
+            email,
+        });
     }
 
     async isValidDisplayName(
         displayName: string,
         name: string
     ): Promise<IsValidDisplayNameResult> {
-        return await authManager.isValidDisplayName(displayName, name);
+        return await authManager.client.isDisplayNameValid({
+            displayName,
+            name,
+        });
     }
 
     async provideCode(code: string): Promise<void> {
@@ -533,10 +544,11 @@ export class AuthHandler implements AuxAuth {
         }
 
         if (info.displayName && info.name) {
-            const validDisplayName = await authManager.isValidDisplayName(
-                info.displayName,
-                info.name
-            );
+            const validDisplayName =
+                await authManager.client.isDisplayNameValid({
+                    displayName: info.displayName,
+                    name: info.name,
+                });
             if (validDisplayName.success === false) {
                 errors.push(...getFormErrors(validDisplayName));
             } else if (!validDisplayName.allowed) {
@@ -604,8 +616,15 @@ export class AuthHandler implements AuxAuth {
     async grantPermission(
         recordName: string,
         permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
-        return await authManager.grantPermission(recordName, permission);
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    > {
+        return await authManager.client.grantPermission({
+            recordName,
+            permission,
+        });
     }
 
     private _getTokenExpirationTime(token: string): number {
