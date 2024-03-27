@@ -475,6 +475,13 @@ export class RecordsServer {
         return this._allowedApiOrigins;
     }
 
+    /**
+     * The set of procedures that the server has.
+     */
+    get procedures() {
+        return this._procedures;
+    }
+
     constructor(
         allowedAccountOrigins: Set<string>,
         allowedApiOrigins: Set<string>,
