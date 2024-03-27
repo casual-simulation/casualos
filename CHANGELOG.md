@@ -22,6 +22,10 @@
             let num = 0123; // This does not equal 123, but is actually 83 in decimal
             ```
 
+### :rocket: Features
+
+-   Added the ability to specify separate Redis servers for websocket connections, inst data, caches, and rate limits.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where attached debuggers would automatically get detached once a portal is opened or closed.
