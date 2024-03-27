@@ -8,6 +8,7 @@ import { WebsocketMessenger } from './WebsocketMessenger';
 export class MemoryWebsocketMessenger implements WebsocketMessenger {
     private _messages = new Map<string, any[]>();
     private _events = new Map<string, WebsocketEvent[]>();
+    private _disconnections = new Map<string, boolean>();
     private _messageUploadUrl: string = null;
 
     uploadedMessages: Map<string, string> = null;
@@ -28,9 +29,14 @@ export class MemoryWebsocketMessenger implements WebsocketMessenger {
         return this._getEvents(connectionId);
     }
 
+    isDisconnected(connectionId: string) {
+        return this._disconnections.get(connectionId) || false;
+    }
+
     reset() {
         this._messages = new Map();
         this._events = new Map();
+        this._disconnections = new Map();
         this.uploadedMessages = null;
     }
 
@@ -96,5 +102,9 @@ export class MemoryWebsocketMessenger implements WebsocketMessenger {
             this._events.set(connectionId, list);
         }
         return list;
+    }
+
+    async disconnect(connectionId: string): Promise<void> {
+        this._disconnections.set(connectionId, true);
     }
 }

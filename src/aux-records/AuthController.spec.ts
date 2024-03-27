@@ -1496,8 +1496,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
@@ -1603,7 +1603,7 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
+                name: null,
                 email: null,
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
@@ -1702,8 +1702,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
@@ -1842,8 +1842,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
                 currentLoginRequestId: null,
@@ -1938,8 +1938,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
                 currentLoginRequestId: null,
@@ -6859,9 +6859,9 @@ describe('AuthController', () => {
 
                 await store.saveUser({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,
@@ -6874,7 +6874,7 @@ describe('AuthController', () => {
                 privoClientMock.getUserInfo.mockResolvedValue({
                     serviceId: 'serviceId',
                     emailVerified: true,
-                    email: 'email',
+                    email: 'privoemail',
                     givenName: 'name',
                     locale: 'en-US',
                     roleIdentifier: 'ab1Child',
@@ -6912,9 +6912,9 @@ describe('AuthController', () => {
                 expect(result).toEqual({
                     success: true,
                     userId: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: 'privoemail',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -6983,8 +6983,8 @@ describe('AuthController', () => {
                     success: true,
                     userId: userId,
                     email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -7004,9 +7004,9 @@ describe('AuthController', () => {
 
                 expect(await store.findUser(userId)).toEqual({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,
@@ -7081,8 +7081,8 @@ describe('AuthController', () => {
                     success: true,
                     userId: userId,
                     email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -7102,9 +7102,9 @@ describe('AuthController', () => {
 
                 expect(await store.findUser(userId)).toEqual({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,
@@ -7179,8 +7179,8 @@ describe('AuthController', () => {
                     success: true,
                     userId: userId,
                     email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -7200,9 +7200,9 @@ describe('AuthController', () => {
 
                 expect(await store.findUser(userId)).toEqual({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,

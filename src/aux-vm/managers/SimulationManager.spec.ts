@@ -339,6 +339,10 @@ class TestSubSimulation extends TestInitable implements SubSimEmitter {
         this.onSubSimulationRemoved = new Subject();
     }
 
+    get isSubSimulation(): boolean {
+        return true;
+    }
+
     onSubSimulationAdded: Subject<Simulation>;
     onSubSimulationRemoved: Subject<Simulation>;
 }

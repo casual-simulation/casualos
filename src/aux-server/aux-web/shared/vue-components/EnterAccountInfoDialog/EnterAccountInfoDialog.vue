@@ -3,7 +3,7 @@
         :md-active.sync="showEnterAccountInfo"
         @md-closed="cancelRegistration()"
         :md-close-on-esc="true"
-        :md-click-outside-to-close="true"
+        :md-click-outside-to-close="false"
         :md-fullscreen="true"
         class="input-dialog"
     >
@@ -33,7 +33,7 @@
             <form v-else @submit.prevent="register()">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
-                        <md-field :class="displayNameFieldClass">
+                        <md-field :class="displayNameFieldClass" class="display-name-field">
                             <label for="name">Display Name</label>
                             <md-input
                                 name="displayName"
@@ -118,6 +118,10 @@
             </form>
         </md-dialog-content>
         <md-dialog-actions>
+            <md-button type="button" @click="cancelRegistration()" :disabled="processing">
+                <span>Cancel</span>
+            </md-button>
+            <span class="spacer"></span>
             <md-button
                 v-if="enterDateOfBirth"
                 type="button"
