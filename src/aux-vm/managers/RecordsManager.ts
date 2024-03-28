@@ -63,6 +63,8 @@ import {
     GrantResourcePermissionResult,
     RevokePermissionResult,
     formatInstId,
+    AIChatMessage,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -76,6 +78,10 @@ import {
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
 import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import {
+    RecordsClientInputs,
+    createRecordsClient,
+} from '@casual-simulation/aux-records/RecordsClient';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -117,6 +123,7 @@ export class RecordsManager {
     private _axiosOptions: AxiosRequestConfig<any>;
     private _skipTimers: boolean = false;
     private _httpRequestId: number = 0;
+    private _client: ReturnType<typeof createRecordsClient>;
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -174,6 +181,7 @@ export class RecordsManager {
         };
         this._skipTimers = skipTimers;
         this._connectionClientFactory = connectionClientFactory;
+        this._client = createRecordsClient(config.recordsOrigin);
     }
 
     handleEvents(events: RuntimeActions[]): void {
@@ -247,27 +255,18 @@ export class RecordsManager {
             ReportInstRequest,
             'reportingUserId' | 'reportingIpAddress'
         >
-    ): Promise<ReportInstResult> {
+    ): Promise<ReportInstResult | ValidateSessionKeyFailure> {
         const auth = this._getAuth(null);
         const token = await this._getAuthToken(auth, false);
 
-        let headers: { [key: string]: string } = {};
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const result: AxiosResponse<ReportInstResult> = await axios.post(
-            await this._publishUrl(auth, '/api/v2/records/insts/report'),
+        const result = this._client.reportInst(
             {
                 ...request,
             },
-            {
-                ...this._axiosOptions,
-                headers,
-            }
+            { sessionKey: token, endpoint: await auth.getRecordsOrigin() }
         );
 
-        return result.data;
+        return result;
     }
 
     private async _recordData(event: RecordDataAction) {
@@ -282,7 +281,7 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Recording data...', event);
-            let requestData: any = {
+            let requestData: RecordsClientInputs['recordData'] = {
                 recordKey: event.recordKey,
                 address: event.address,
                 data: event.data,
@@ -298,7 +297,10 @@ export class RecordsManager {
             }
 
             if (hasValue(event.options.markers)) {
-                requestData.markers = event.options.markers;
+                requestData.markers = event.options.markers as [
+                    string,
+                    ...string[]
+                ];
             }
 
             if (hasValue(event.options.updatePolicy)) {
@@ -309,27 +311,21 @@ export class RecordsManager {
                 requestData.deletePolicy = event.options.deletePolicy;
             }
 
-            const result: AxiosResponse<RecordDataResult> = await axios.post(
-                await this._publishUrl(
-                    info.auth,
-                    !event.requiresApproval
-                        ? '/api/v2/records/data'
-                        : '/api/v2/records/manual/data'
-                ),
-                requestData,
-                {
-                    ...this._axiosOptions,
-                    headers: info.headers,
-                }
-            );
+            const result = event.requiresApproval
+                ? await this._client.recordManualData(requestData, {
+                      sessionKey: info.token,
+                      endpoint: await info.auth.getRecordsOrigin(),
+                  })
+                : await this._client.recordData(requestData, {
+                      sessionKey: info.token,
+                      endpoint: await info.auth.getRecordsOrigin(),
+                  });
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Data recorded!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error publishing record:', e);
@@ -363,27 +359,31 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
-                const result: AxiosResponse<GetDataResult> = await axios.get(
-                    await this._publishUrl(
-                        info.auth,
-                        !event.requiresApproval
-                            ? '/api/v2/records/data'
-                            : '/api/v2/records/manual/data',
-                        {
-                            recordName: event.recordName,
-                            address: event.address,
-                            instances,
-                        }
-                    ),
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
-                );
+                const result = event.requiresApproval
+                    ? await this._client.getManualData(
+                          {
+                              recordName: event.recordName,
+                              address: event.address,
+                              instances,
+                          },
+                          {
+                              sessionKey: info.token,
+                              endpoint: await info.auth.getRecordsOrigin(),
+                          }
+                      )
+                    : await this._client.getData(
+                          {
+                              recordName: event.recordName,
+                              address: event.address,
+                              instances,
+                          },
+                          {
+                              sessionKey: info.token,
+                              endpoint: await info.auth.getRecordsOrigin(),
+                          }
+                      );
 
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error getting record:', e);
@@ -433,7 +433,7 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
-                let query: any = {
+                const query: RecordsClientInputs['listData'] = {
                     recordName: event.recordName,
                 };
 
@@ -441,24 +441,15 @@ export class RecordsManager {
                     query.marker = event.marker;
                 }
 
-                query.address = event.startingAddress || null;
+                query.address = event.startingAddress || undefined;
                 query.instances = instances;
 
-                const result: AxiosResponse<ListDataResult> = await axios.get(
-                    await this._publishUrl(
-                        auth,
-                        '/api/v2/records/data/list',
-                        query
-                    ),
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
-                );
+                const result = await this._client.listData(query, {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
+                });
 
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error listing record:', e);
@@ -492,32 +483,35 @@ export class RecordsManager {
                 ];
             }
 
-            const result: AxiosResponse<RecordDataResult> = await axios.request(
-                {
-                    ...this._axiosOptions,
-                    method: 'DELETE',
-                    url: await this._publishUrl(
-                        info.auth,
-                        !event.requiresApproval
-                            ? '/api/v2/records/data'
-                            : '/api/v2/records/manual/data'
-                    ),
-                    data: {
-                        recordKey: event.recordKey,
-                        address: event.address,
-                        instances,
-                    },
-                    headers: info.headers,
-                }
-            );
+            const result = event.requiresApproval
+                ? await this._client.deleteManualData(
+                      {
+                          recordKey: event.recordKey,
+                          address: event.address,
+                          instances,
+                      },
+                      {
+                          sessionKey: info.token,
+                          endpoint: await info.auth.getRecordsOrigin(),
+                      }
+                  )
+                : await this._client.eraseData(
+                      {
+                          recordKey: event.recordKey,
+                          address: event.address,
+                          instances,
+                      },
+                      {
+                          sessionKey: info.token,
+                          endpoint: await info.auth.getRecordsOrigin(),
+                      }
+                  );
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Data deleted!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error deleting record:', e);
@@ -643,27 +637,26 @@ export class RecordsManager {
                 ];
             }
 
-            const result: AxiosResponse<RecordFileResult> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/records/file'),
+            const result = await this._client.recordFile(
                 {
                     recordKey: event.recordKey,
                     fileSha256Hex: hash,
                     fileMimeType: mimeType,
                     fileByteLength: byteLength,
                     fileDescription: event.description,
-                    markers: event.options?.markers,
+                    markers: event.options?.markers as [string, ...string[]],
                     instances,
                 },
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
 
-            if (result.data.success === true) {
-                const method = result.data.uploadMethod;
-                const url = result.data.uploadUrl;
-                const headers = { ...result.data.uploadHeaders };
+            if (result.success === true) {
+                const method = result.uploadMethod;
+                const url = result.uploadUrl;
+                const headers = { ...result.uploadHeaders };
 
                 for (let name of UNSAFE_HEADERS) {
                     delete headers[name];
@@ -706,9 +699,7 @@ export class RecordsManager {
                 }
             } else {
                 if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, result.data)
-                    );
+                    this._helper.transaction(asyncResult(event.taskId, result));
                 }
             }
         } catch (e) {
@@ -738,24 +729,24 @@ export class RecordsManager {
                 ];
             }
 
-            const result: AxiosResponse<ReadFileResult> = await axios.get(
-                await this._publishUrl(info.auth, '/api/v2/records/file', {
+            const result = await this._client.getFile(
+                {
                     fileUrl: event.fileUrl,
                     instances,
-                }),
+                },
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
 
             if (hasValue(event.taskId)) {
-                if (result.data.success) {
+                if (result.success === true) {
                     const getResult = await axios.request({
                         ...this._axiosOptions,
-                        method: result.data.requestMethod as any,
-                        url: result.data.requestUrl,
-                        headers: result.data.requestHeaders,
+                        method: result.requestMethod as any,
+                        url: result.requestUrl,
+                        headers: result.requestHeaders,
                     });
 
                     if (getResult.status >= 200 && getResult.status < 300) {
@@ -777,9 +768,7 @@ export class RecordsManager {
                         );
                     }
                 } else {
-                    this._helper.transaction(
-                        asyncError(event.taskId, result.data)
-                    );
+                    this._helper.transaction(asyncError(event.taskId, result));
                 }
             }
         } catch (e) {
@@ -811,25 +800,23 @@ export class RecordsManager {
                 ];
             }
 
-            const result: AxiosResponse<EraseFileResult> = await axios.request({
-                ...this._axiosOptions,
-                method: 'DELETE',
-                url: await this._publishUrl(info.auth, '/api/v2/records/file'),
-                data: {
+            const result = await this._client.eraseFile(
+                {
                     recordKey: event.recordKey,
                     fileUrl: event.fileUrl,
                     instances,
                 },
-                headers: info.headers,
-            });
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
+                }
+            );
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] File deleted!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error deleting file:', e);
@@ -860,11 +847,7 @@ export class RecordsManager {
                 ];
             }
 
-            const result: AxiosResponse<RecordDataResult> = await axios.post(
-                await this._publishUrl(
-                    info.auth,
-                    '/api/v2/records/events/count'
-                ),
+            const result = await this._client.addEventCount(
                 {
                     recordKey: event.recordKey,
                     eventName: event.eventName,
@@ -872,18 +855,16 @@ export class RecordsManager {
                     instances,
                 },
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Event recorded!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error recording event:', e);
@@ -902,8 +883,6 @@ export class RecordsManager {
                 return;
             }
 
-            const auth = info.auth;
-
             if (hasValue(event.taskId)) {
                 let instances: string[] = undefined;
                 if (hasValue(this._helper.origin)) {
@@ -914,22 +893,20 @@ export class RecordsManager {
                         ),
                     ];
                 }
-                const result: AxiosResponse<GetDataResult> = await axios.get(
-                    await this._publishUrl(
-                        auth,
-                        '/api/v2/records/events/count',
-                        {
-                            recordName: event.recordName,
-                            eventName: event.eventName,
-                            instances,
-                        }
-                    ),
-                    { ...this._axiosOptions, headers: info.headers }
+
+                const result = await this._client.getEventCount(
+                    {
+                        recordName: event.recordName,
+                        eventName: event.eventName,
+                        instances,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: await info.auth.getRecordsOrigin(),
+                    }
                 );
 
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error getting event count:', e);
@@ -961,28 +938,26 @@ export class RecordsManager {
 
             if (hasValue(event.taskId)) {
                 const userId = this._helper.userId;
-                const result: AxiosResponse<IssueMeetTokenResult> =
-                    await axios.post(
-                        await this._publishUrl(auth, '/api/v2/meet/token'),
-                        {
-                            roomName: event.roomName,
-                            userName: userId,
-                        },
-                        { ...this._axiosOptions }
-                    );
 
-                const data = result.data;
-                if (data.success) {
+                const result = await this._client.createMeetToken(
+                    {
+                        roomName: event.roomName,
+                        userName: userId,
+                    },
+                    { endpoint: await auth.getRecordsOrigin() }
+                );
+
+                if (result.success) {
                     const join: RoomJoin = {
-                        roomName: data.roomName,
-                        token: data.token,
-                        url: data.url,
+                        roomName: result.roomName,
+                        token: result.token,
+                        url: result.url,
                         options: event.options,
                         resolve: (options) => {
                             this._helper.transaction(
                                 asyncResult(event.taskId, {
                                     success: true,
-                                    roomName: data.roomName,
+                                    roomName: result.roomName,
                                     options,
                                 })
                             );
@@ -991,7 +966,7 @@ export class RecordsManager {
                             this._helper.transaction(
                                 asyncResult(event.taskId, {
                                     success: false,
-                                    roomName: data.roomName,
+                                    roomName: result.roomName,
                                     errorCode: code,
                                     errorMessage: message,
                                 })
@@ -1001,7 +976,7 @@ export class RecordsManager {
 
                     this._roomJoin.next(join);
                 } else {
-                    this._helper.transaction(asyncResult(event.taskId, data));
+                    this._helper.transaction(asyncResult(event.taskId, result));
                 }
             }
         } catch (e) {
@@ -1150,33 +1125,23 @@ export class RecordsManager {
                 ];
             }
 
-            let requestData: any = {
-                recordName: event.recordName,
-                permission: event.permission,
-                instances,
-            };
-
-            const result: AxiosResponse<
-                GrantMarkerPermissionResult | GrantResourcePermissionResult
-            > = await axios.post(
-                await this._publishUrl(
-                    info.auth,
-                    '/api/v2/records/permissions'
-                ),
-                requestData,
+            const result = await this._client.grantPermission(
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    recordName: event.recordName,
+                    permission: event.permission,
+                    instances,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Permission granted!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error(
@@ -1213,32 +1178,22 @@ export class RecordsManager {
                 ];
             }
 
-            let requestData: any = {
-                recordName: event.recordName,
-                permissionId: event.permissionId,
-                instances,
-            };
+            const result = await this._client.revokePermission(
+                {
+                    permissionId: event.permissionId,
+                    instances,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
+                }
+            );
 
-            const result: AxiosResponse<RevokePermissionResult> =
-                await axios.post(
-                    await this._publishUrl(
-                        info.auth,
-                        '/api/v2/records/permissions/revoke'
-                    ),
-                    requestData,
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
-                );
-
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Permission revoked!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error(
@@ -1288,32 +1243,27 @@ export class RecordsManager {
             });
 
             console.log('[RecordsManager] Granting inst admin role...', event);
-            let requestData: any = {
-                recordName: event.recordName,
-                inst: formatInstId(
-                    this._helper.origin.recordName,
-                    this._helper.origin.inst
-                ),
-                role: 'admin',
-                expireTimeMs: startOfNextDay.toMillis(),
-            };
-
-            const result: AxiosResponse<GrantRoleResult> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
-                requestData,
+            const result = await this._client.grantRole(
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    recordName: event.recordName,
+                    inst: formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                    role: 'admin',
+                    expireTimeMs: startOfNextDay.toMillis(),
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Role granted!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error(
@@ -1348,31 +1298,26 @@ export class RecordsManager {
                 ];
             }
 
-            let requestData: any = {
-                recordName: event.recordName,
-                userId: event.userId,
-                inst: event.inst,
-                role: event.role,
-                expireTimeMs: event.expireTimeMs,
-                instances,
-            };
-
-            const result: AxiosResponse<GrantRoleResult> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
-                requestData,
+            const result = await this._client.grantRole(
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    recordName: event.recordName,
+                    userId: event.userId,
+                    inst: event.inst,
+                    role: event.role,
+                    expireTimeMs: event.expireTimeMs,
+                    instances,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Role granted!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error granting role:', e);
@@ -1403,33 +1348,26 @@ export class RecordsManager {
             }
 
             console.log('[RecordsManager] Revoking role...', event);
-            let requestData: any = {
-                recordName: event.recordName,
-                userId: event.userId,
-                inst: event.inst,
-                role: event.role,
-                instances,
-            };
 
-            const result: AxiosResponse<RevokeRoleResult> = await axios.post(
-                await this._publishUrl(
-                    info.auth,
-                    '/api/v2/records/role/revoke'
-                ),
-                requestData,
+            const result = await this._client.revokeRole(
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    recordName: event.recordName,
+                    userId: event.userId,
+                    inst: event.inst,
+                    role: event.role,
+                    instances,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
 
-            if (result.data.success) {
+            if (result.success) {
                 console.log('[RecordsManager] Role revoked!');
             }
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error revoking role:', e);
@@ -1463,14 +1401,10 @@ export class RecordsManager {
             }
 
             const { endpoint, preferredModel, ...rest } = event.options;
-            let requestData: any = {
-                ...rest,
-                model: preferredModel,
-                messages: event.messages,
-            };
 
+            let instances: string[];
             if (hasValue(this._helper.origin)) {
-                requestData.instances = [
+                instances = [
                     formatInstId(
                         this._helper.origin.recordName,
                         this._helper.origin.inst
@@ -1478,18 +1412,24 @@ export class RecordsManager {
                 ];
             }
 
-            const result: AxiosResponse<AIChatResponse> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/ai/chat'),
-                requestData,
+            const result = await this._client.aiChat(
                 {
-                    ...this._axiosOptions,
-                    headers: info.headers,
+                    ...rest,
+                    model: preferredModel,
+                    messages: event.messages as [
+                        AIChatMessage,
+                        ...AIChatMessage[]
+                    ],
+                    instances,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
                 }
             );
+
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error sending chat message:', e);
@@ -1522,12 +1462,7 @@ export class RecordsManager {
                 return;
             }
 
-            const { endpoint, blockadeLabs, ...rest } = event.options;
-            let requestData: any = {
-                prompt: event.prompt,
-                negativePrompt: event.negativePrompt,
-                blockadeLabs: blockadeLabs,
-            };
+            const { blockadeLabs } = event.options;
 
             let instances: string[] = undefined;
             if (hasValue(this._helper.origin)) {
@@ -1539,29 +1474,27 @@ export class RecordsManager {
                 ];
             }
 
-            const result: AxiosResponse<AIGenerateSkyboxResponse> =
-                await axios.post(
-                    await this._publishUrl(info.auth, '/api/v2/ai/skybox'),
-                    {
-                        ...requestData,
-                        instances,
-                    },
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
-                );
+            const result = await this._client.createAiSkybox(
+                {
+                    prompt: event.prompt,
+                    negativePrompt: event.negativePrompt,
+                    blockadeLabs: blockadeLabs,
+                    instances,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
+                }
+            );
 
-            if (!result.data.success) {
+            if (!result.success) {
                 if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, result.data)
-                    );
+                    this._helper.transaction(asyncResult(event.taskId, result));
                 }
                 return;
             }
 
-            const skyboxId = result.data.skyboxId;
+            const skyboxId = result.skyboxId;
             for (let i = 0; i < 10; i++) {
                 if (!this._skipTimers) {
                     const seconds =
@@ -1582,23 +1515,21 @@ export class RecordsManager {
                     await wait(seconds);
                 }
 
-                const getResult: AxiosResponse<AIGetSkyboxResponse> =
-                    await axios.get(
-                        await this._publishUrl(info.auth, '/api/v2/ai/skybox', {
-                            skyboxId: result.data.skyboxId,
-                            instances,
-                        }),
-                        {
-                            ...this._axiosOptions,
-                            headers: info.headers,
-                        }
-                    );
+                const getResult = await this._client.getAiSkybox(
+                    {
+                        skyboxId,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: await info.auth.getRecordsOrigin(),
+                    }
+                );
 
-                if (getResult.data.success) {
-                    if (getResult.data.status === 'generated') {
+                if (getResult.success) {
+                    if (getResult.status === 'generated') {
                         if (hasValue(event.taskId)) {
                             this._helper.transaction(
-                                asyncResult(event.taskId, getResult.data)
+                                asyncResult(event.taskId, getResult)
                             );
                         }
                         return;
@@ -1671,7 +1602,9 @@ export class RecordsManager {
                         ...requestData,
                         instances,
                     },
-                    info.headers
+                    {
+                        Authorization: `Bearer ${info.token}`,
+                    }
                 );
 
             if (hasValue(event.taskId)) {
@@ -1785,28 +1718,18 @@ export class RecordsManager {
                 return;
             }
 
-            const query: any = {};
-            if (this._config.comId) {
-                query['comId'] = this._config.comId;
-            }
-
-            const result: AxiosResponse<ListUserStudiosAction> =
-                await axios.get(
-                    await this._publishUrl(
-                        info.auth,
-                        '/api/v2/studios/list',
-                        query
-                    ),
-                    {
-                        ...this._axiosOptions,
-                        headers: info.headers,
-                    }
-                );
+            const result = await this._client.listStudios(
+                {
+                    comId: this._config.comId ?? undefined,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
+                }
+            );
 
             if (hasValue(event.taskId)) {
-                this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
-                );
+                this._helper.transaction(asyncResult(event.taskId, result));
             }
         } catch (e) {
             console.error('[RecordsManager] Error listing studios:', e);
@@ -1843,7 +1766,6 @@ export class RecordsManager {
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;
-        headers: { [key: string]: string };
         token: string;
     }> {
         const auth = this._getAuthFromEvent(event.options);
@@ -1861,13 +1783,11 @@ export class RecordsManager {
             return {
                 error: true,
                 auth: null,
-                headers: null,
                 token: null,
             };
         }
 
         let token: string = null;
-        let headers: { [key: string]: string } = {};
         if ('recordKey' in event && isRecordKey(event.recordKey)) {
             const policy = await auth.getRecordKeyPolicy(event.recordKey);
 
@@ -1889,24 +1809,17 @@ export class RecordsManager {
                     return {
                         error: true,
                         auth: null,
-                        headers: null,
                         token: null,
                     };
                 }
-
-                headers['Authorization'] = `Bearer ${token}`;
             }
         } else {
             token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
-            if (hasValue(token)) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
         }
 
         return {
             error: false,
             auth,
-            headers,
             token,
         };
     }
