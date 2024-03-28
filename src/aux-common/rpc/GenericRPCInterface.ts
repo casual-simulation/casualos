@@ -98,6 +98,10 @@ export type RemoteProcedures<T extends Procedures> = {
     [K in keyof T]: OnlyFirstArg<T[K]['handler']>;
 };
 
+export type ProcedureInputs<T extends Procedures> = {
+    [K in keyof T]: z.infer<T[K]['schema']>;
+};
+
 export interface ProcedureBuilder {
     /**
      * Configures the origins that are allowed for the route.

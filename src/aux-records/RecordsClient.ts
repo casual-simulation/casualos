@@ -1,11 +1,14 @@
 import type {
     CallProcedureOptions,
+    Procedure,
+    ProcedureInputs,
     RemoteProcedures,
 } from '@casual-simulation/aux-common';
 import type { RecordsServer } from './RecordsServer';
 import axios from 'axios';
 
 export type RecordsClientType = RemoteProcedures<RecordsServer['procedures']>;
+export type RecordsClientInputs = ProcedureInputs<RecordsServer['procedures']>;
 
 /**
  * Defines a client that can be used to interact with the records API.
