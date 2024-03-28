@@ -5827,7 +5827,7 @@ export class RecordsServer {
                 fileUrl
             );
 
-            if (!fileNameResult.success) {
+            if (fileNameResult.success === false) {
                 return fileNameResult;
             }
 
