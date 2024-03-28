@@ -219,23 +219,27 @@ export default class ImageClassifier extends Vue {
                             imagesPromises.push(bitMap);
                         } else if (i.url) {
                             const img = document.createElement('img');
-                            img.src = i.url; // replace with the URL of the image
+                            img.src = i.url;
                             imagesPromises.push(Promise.resolve(img));
                         }
                     }
                     const images = await Promise.all(imagesPromises);
                     const predictions = [];
-                    for (let image of images) {
-                        const prediction = await model.predict(image);
+                    for (let i of images) {
+                        const prediction = await model.predict(i);
                         predictions.push(prediction);
                     }
                     const arg = {
-                        ...pick(
-                            this._openEvent,
-                            'modelUrl',
-                            'modelJsonUrl',
-                            'modelMetadataUrl'
-                        ),
+                        model: {
+                            ...pick(
+                                e,
+                                'modelUrl',
+                                'modelJsonUrl',
+                                'modelMetadataUrl'
+                            ),
+                            classLabels: model.getClassLabels(),
+                        },
+                        predictions: predictions,
                     };
                     sim.helper.transaction(asyncResult(e.taskId, arg));
                 }
