@@ -42,7 +42,7 @@ export class RecordsClient {
         options?: CallProcedureOptions
     ): Promise<any> {
         const response = await axios.post(
-            `${this._endpoint}/api/v3/callProcedure`,
+            `${options?.endpoint ?? this._endpoint}/api/v3/callProcedure`,
             { procedure: name, input },
             {
                 headers: this._authenticationHeaders(options),

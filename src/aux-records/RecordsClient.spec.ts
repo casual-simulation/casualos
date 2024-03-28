@@ -201,12 +201,15 @@ describe('createRecordsClient()', () => {
             const response = await client.callProcedure(
                 'test',
                 { test: true },
-                { sessionKey: 'customSessionKey' }
+                {
+                    sessionKey: 'customSessionKey',
+                    endpoint: 'http://example.com',
+                }
             );
             expect(response).toEqual({ success: true, test: true });
 
             expect(getLastPost()).toEqual([
-                'http://localhost:3000/api/v3/callProcedure',
+                'http://example.com/api/v3/callProcedure',
                 { procedure: 'test', input: { test: true } },
                 {
                     headers: {

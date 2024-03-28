@@ -88,6 +88,11 @@ export interface CallProcedureOptions {
      * The session key that should be used instead of the one that is currently set on the client.
      */
     sessionKey?: string;
+
+    /**
+     * The endpoint that should be used instead of the one that is currently set on the client.
+     */
+    endpoint?: string;
 }
 
 export type OnlyFirstArg<T> = T extends (input: infer U, ...args: any[]) => any
