@@ -155,6 +155,7 @@ export type AsyncActions =
     | MediaPermissionAction
     | GetAverageFrameRateAction
     | OpenImageClassifierAction
+    | OpenClassifyImagesAction
     | MeetCommandAction
     | MeetFunctionAction
     | ShowTooltipAction
@@ -879,6 +880,17 @@ export interface ImageClassifierOptions {
     cameraType?: CameraType;
 }
 
+export interface OpenClassifyImagesAction
+    extends AsyncAction,
+        ClassifyImagesOptions {
+    type: 'show_classify_images';
+
+    /**
+     * Whether the image classifier should be visible.
+     */
+    open: boolean;
+}
+
 export interface ClassifyImagesOptions {
     /**
      * The URL the the teachable machine model is available at.
@@ -897,6 +909,9 @@ export interface ClassifyImagesOptions {
      */
     modelMetadataUrl?: string;
 
+    /**
+     * The images that should be classified.
+     */
     images: Image[];
 }
 
@@ -3928,6 +3943,19 @@ export function openImageClassifier(
 ): OpenImageClassifierAction {
     return {
         type: 'show_image_classifier',
+        open,
+        ...options,
+        taskId,
+    };
+}
+
+export function classifyImages(
+    open: boolean,
+    options: ClassifyImagesOptions,
+    taskId?: number | string
+): OpenClassifyImagesAction {
+    return {
+        type: 'show_classify_images',
         open,
         ...options,
         taskId,

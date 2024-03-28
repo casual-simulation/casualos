@@ -191,6 +191,7 @@ import {
     MediaPermssionOptions,
     MediaPermissionAction,
     openImageClassifier as calcOpenImageClassifier,
+    classifyImages as calcOpenClassifyImages,
     OpenImageClassifierAction,
     ImageClassifierOptions,
     ClassifyImagesOptions,
@@ -6414,7 +6415,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function classifyImages(
         options: ClassifyImagesOptions
-    ): Promise<ClassifyImagesResult>;
+    ): Promise<ClassifyImagesResult> {
+        const task = context.createTask();
+        const action = calcOpenClassifyImages(true, options, task.taskId);
+        return addAsyncAction(task, action);
+    }
 
     /**
      * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag @onPhotoCameraOpened} shout once opened.
