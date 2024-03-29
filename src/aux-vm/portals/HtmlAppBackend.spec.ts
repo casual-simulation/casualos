@@ -479,7 +479,7 @@ describe('HtmlAppBackend', () => {
             expect(updateAction.appId).toBe('testPortal');
             expect(updateAction.updates.length).toBe(2);
             expect(updateAction.updates[0].type).toBe('event_listener');
-            expect(updateAction.updates[0].listenerName).toBe('Input');
+            expect(updateAction.updates[0].listenerName).toBe('input');
             expect(updateAction.updates[1].type).toBe('childList');
             expect(updateAction.updates[1].addedNodes.length).toBe(1);
             const inputNode1 = updateAction.updates[1].addedNodes[0] as any;
