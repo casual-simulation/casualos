@@ -36,6 +36,7 @@
 -   Fixed an issue where the registration flow would not always check display names properly.
 -   Improved wording for some registration errors.
 -   Fixed an issue where it was possible for a session to not be synced while the session itself believes that it is connected.
+-   Fixed an issue where using JSX syntax would show random syntax errors in the multiline code editor.
 
 ## V3.2.18
 
