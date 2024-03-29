@@ -21,6 +21,10 @@
             ```typescript
             let num = 0123; // This does not equal 123, but is actually 83 in decimal
             ```
+-   Enabled `preact/compat` for custom apps.
+    -   This change probably won't break anything, but I can't exactly be sure.
+    -   `preact/compat` improves Preact compatibility with React behavior and features.
+    -   See [the Preact website](https://preactjs.com/guide/v10/switching-to-preact/) for more information.
 
 ### :rocket: Features
 
