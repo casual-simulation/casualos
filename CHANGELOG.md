@@ -25,6 +25,10 @@
 ### :rocket: Features
 
 -   Added the ability to specify separate Redis servers for websocket connections, inst data, caches, and rate limits.
+-   Added the `os.appCompat` API.
+    -   It is an object that contains APIs from `preact/compat`.
+    -   This includes, but is not limited to, `Suspense`, `lazy()`, `createPortal()`, `forwardRef()`, `memo()`, and `PureComponent`.
+-   Added `createRef()` and `createContext()` to `os.appHooks`.
 
 ### :bug: Bug Fixes
 
