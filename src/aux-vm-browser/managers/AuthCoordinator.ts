@@ -30,9 +30,10 @@ import {
     reportInst,
 } from '@casual-simulation/aux-common';
 import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
-import {
+import type {
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 
 /**
@@ -294,7 +295,11 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         reason: AuthorizeActionMissingPermission,
         expireTimeMs: number = null,
         actions: ActionKinds[] = null
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    > {
         const sim = this._simulationManager.simulations.get(simId);
         if (sim) {
             const recordName = reason.recordName;

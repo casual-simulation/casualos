@@ -130,6 +130,7 @@ import {
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import { fromByteArray } from 'base64-js';
+import { z } from 'zod';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -179,6 +180,7 @@ verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
 });
 
 console.log = jest.fn();
+console.error = jest.fn();
 
 describe('RecordsServer', () => {
     let savedMemoryStore: MemoryStore;
@@ -1728,6 +1730,27 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'isEmailValid',
+                    {
+                        email: 'test@example.com',
+                    },
+                    accountHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    allowed: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         testOrigin('POST', '/api/v2/email/valid', () =>
             JSON.stringify({
                 email: 'test@example.com',
@@ -1758,6 +1781,27 @@ describe('RecordsServer', () => {
                     JSON.stringify({
                         displayName: 'test123',
                     }),
+                    accountHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    allowed: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'isDisplayNameValid',
+                    {
+                        displayName: 'test123',
+                    },
                     accountHeaders
                 )
             );
@@ -1836,6 +1880,38 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `listSessions`,
+                    undefined,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+                headers: accountCorsHeaders,
+            });
+
+            expect(JSON.parse(result.body as string)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: userId,
+                        sessionId: sessionId,
+                        grantedTimeMs: expect.any(Number),
+                        expireTimeMs: expireTimeMs,
+                        revokeTimeMs: null,
+                        ipAddress: '123.456.789',
+                        currentSession: true,
+                        nextSessionId: null,
+                    },
+                ],
+            });
+        });
+
         testOrigin('GET', '/api/v2/sessions');
         testAuthorization(() =>
             httpGet('/api/v2/sessions', authenticatedHeaders)
@@ -1849,6 +1925,46 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/v2/replaceSession`,
                     '',
+                    authenticatedHeaders,
+                    '999.999.999.999'
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+                headers: accountCorsHeaders,
+            });
+
+            let data = JSON.parse(result.body as string);
+
+            expect(data).toEqual({
+                success: true,
+                userId,
+                sessionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+                connectionKey: expect.any(String),
+            });
+
+            const parsed = parseSessionKey(data.sessionKey);
+
+            expect(parsed).not.toBe(null);
+
+            const [uid, sid] = parsed;
+
+            const session = await store.findSession(uid, sid);
+
+            expect(session.ipAddress).toBe('999.999.999.999');
+
+            const old = await store.findSession(userId, sessionId);
+            expect(old.revokeTimeMs).toBeGreaterThanOrEqual(old.grantedTimeMs);
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `replaceSession`,
+                    null,
                     authenticatedHeaders,
                     '999.999.999.999'
                 )
@@ -1971,6 +2087,36 @@ describe('RecordsServer', () => {
                     JSON.stringify({
                         sessionKey,
                     }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+                headers: accountCorsHeaders,
+            });
+
+            session = await store.findSession(userId, sessionId);
+            expect(session.revokeTimeMs).toBeGreaterThan(0);
+        });
+
+        it('should support procedures', async () => {
+            let session: AuthSession = await store.findSession(
+                userId,
+                sessionId
+            );
+            expect(session.revokeTimeMs).toBeNull();
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `revokeSession`,
+                    {
+                        userId,
+                        sessionId,
+                    },
                     authenticatedHeaders
                 )
             );
@@ -2114,6 +2260,39 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `completeLogin`,
+                    {
+                        userId,
+                        requestId,
+                        code,
+                    },
+                    {
+                        origin: 'https://account-origin.com',
+                    }
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    connectionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+
+            expect(parseSessionKey(data.sessionKey)).not.toBeNull();
+            expect(data.expireTimeMs).toBeGreaterThan(0);
+        });
+
         testOrigin('POST', '/api/v2/completeLogin', () =>
             JSON.stringify({
                 userId,
@@ -2142,6 +2321,55 @@ describe('RecordsServer', () => {
                         address: 'test@example.com',
                         addressType: 'email',
                     }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+                headers: accountCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+
+            expect(data).toEqual({
+                success: true,
+                userId,
+                requestId: expect.any(String),
+                address: 'test@example.com',
+                addressType: 'email',
+                expireTimeMs: expect.any(Number),
+            });
+
+            const messages = authMessenger.messages.filter(
+                (m) => m.address === 'test@example.com'
+            );
+            const lastMessage = messages[messages.length - 1];
+
+            expect(lastMessage).not.toBeFalsy();
+
+            const loginResult = await authController.completeLogin({
+                code: lastMessage.code,
+                ipAddress: '123.456.789',
+                requestId: data.requestId,
+                userId: data.userId,
+            });
+
+            expect(loginResult.success).toBe(true);
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `requestLogin`,
+                    {
+                        address: 'test@example.com',
+                        addressType: 'email',
+                    },
                     {
                         origin: 'https://account-origin.com',
                     },
@@ -2244,6 +2472,37 @@ describe('RecordsServer', () => {
                 httpPost(
                     `/api/v2/login/privo`,
                     JSON.stringify({}),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authorizationUrl: 'https://authorization_url',
+                    requestId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            privoClientMock.generateAuthorizationUrl.mockResolvedValueOnce({
+                authorizationUrl: 'https://authorization_url',
+                codeMethod: 'method',
+                codeVerifier: 'verifier',
+                redirectUrl: 'https://redirect_url',
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `requestPrivoLogin`,
+                    {},
                     {
                         origin: 'https://account-origin.com',
                     },
@@ -2377,6 +2636,83 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support procedures', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                    displayName: 'displayName',
+                },
+            });
+            const expireTime = Date.now() + 10000000;
+
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                state: 'state',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `processOAuthCode`,
+                    {
+                        code: 'code',
+                        state: 'state',
+                    },
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(await store.findOpenIDLoginRequest('requestId')).toEqual({
+                requestId: 'requestId',
+                state: 'state',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: expect.any(Number),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+        });
+
         testOrigin('POST', '/api/v2/oauth/code', () =>
             JSON.stringify({
                 code: 'code',
@@ -2476,6 +2812,77 @@ describe('RecordsServer', () => {
                     JSON.stringify({
                         requestId: 'requestId',
                     }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    connectionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            privoClientMock.processAuthorizationCallback.mockResolvedValueOnce({
+                accessToken: 'accessToken',
+                refreshToken: 'refreshToken',
+                tokenType: 'Bearer',
+                idToken: 'idToken',
+                expiresIn: 1000,
+                userInfo: {
+                    roleIdentifier: 'roleIdentifier',
+                    serviceId: 'serviceId',
+                    email: 'test@example.com',
+                    emailVerified: true,
+                    givenName: 'name',
+                    locale: 'en-US',
+                    permissions: [],
+                    displayName: 'displayName',
+                },
+            });
+
+            const expireTime = Date.now() + 10000000;
+            await store.saveOpenIDLoginRequest({
+                requestId: 'requestId',
+                state: 'state',
+                authorizationUrl: 'https://mock_authorization_url',
+                redirectUrl: 'https://redirect_url',
+                codeVerifier: 'verifier',
+                codeMethod: 'method',
+                requestTimeMs:
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis() - 100,
+                expireTimeMs: expireTime,
+                authorizationCode: 'code',
+                authorizationTimeMs: DateTime.utc(
+                    2023,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0
+                ).toMillis(),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                provider: PRIVO_OPEN_ID_PROVIDER,
+                scope: 'scope1 scope2',
+            });
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    `completeOAuthLogin`,
+                    {
+                        requestId: 'requestId',
+                    },
                     {
                         origin: 'https://account-origin.com',
                     },
@@ -2737,6 +3144,46 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support procedures', async () => {
+            privoClientMock.createChildAccount.mockResolvedValue({
+                success: true,
+                childServiceId: 'childServiceId',
+                parentServiceId: 'parentServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+            });
+
+            const response = await server.handleHttpRequest(
+                procedureRequest(
+                    `requestPrivoSignUp`,
+                    {
+                        name: 'Test',
+                        email: 'child@example.com',
+                        dateOfBirth: tenYearsAgo.toFormat('yyyy-MM-dd'),
+                        parentEmail: 'parent@example.com',
+                        displayName: 'displayName',
+                    },
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expectResponseBodyToEqual(response, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                    updatePasswordUrl: 'link',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         testOrigin('POST', '/api/v2/register/privo', () =>
             JSON.stringify({
                 name: 'Test',
@@ -2765,6 +3212,67 @@ describe('RecordsServer', () => {
             const result = await server.handleHttpRequest(
                 httpGet(
                     '/api/v2/webauthn/register/options',
+                    authenticatedHeaders
+                )
+            );
+
+            const response = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    options: {
+                        attestation: 'none',
+                        authenticatorSelection: {
+                            authenticatorAttachment: 'platform',
+                            requireResidentKey: false,
+                            residentKey: 'preferred',
+                            userVerification: 'preferred',
+                        },
+                        challenge: expect.any(String),
+                        excludeCredentials: [],
+                        extensions: {
+                            credProps: true,
+                        },
+                        pubKeyCredParams: [
+                            {
+                                alg: -8,
+                                type: 'public-key',
+                            },
+                            {
+                                alg: -7,
+                                type: 'public-key',
+                            },
+                            {
+                                alg: -257,
+                                type: 'public-key',
+                            },
+                        ],
+                        rp: {
+                            id: 'relying_party_id',
+                            name: 'Relying Party',
+                        },
+                        timeout: 60000,
+                        user: {
+                            displayName: 'test@example.com',
+                            id: userId,
+                            name: 'test@example.com',
+                        },
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(
+                response.options.challenge
+            );
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'getWebAuthnRegistrationOptions',
+                    undefined,
                     authenticatedHeaders
                 )
             );
@@ -2906,6 +3414,77 @@ describe('RecordsServer', () => {
             ]);
         });
 
+        it('should support procedures', async () => {
+            verifyRegistrationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                registrationInfo: {
+                    credentialID: new Uint8Array([1, 2, 3]),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    origin: relyingParty.origin,
+                    userVerified: true,
+                    credentialBackedUp: false,
+                    credentialDeviceType: 'singleDevice',
+                    credentialType: 'public-key',
+                    attestationObject: new Uint8Array([7, 8, 9]),
+                    aaguid: 'aaguid',
+                    fmt: 'tpm',
+                    authenticatorExtensionResults: {},
+                    rpID: relyingParty.id,
+                },
+            });
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'registerWebAuthn',
+                    {
+                        response: {
+                            id: 'id',
+                            rawId: 'rawId',
+                            response: {
+                                attestationObject: 'attestation',
+                                clientDataJSON: 'clientDataJSON',
+                                authenticatorData: 'authenticatorData',
+                                publicKey: 'publicKey',
+                                publicKeyAlgorithm: -7,
+                                transports: ['usb'],
+                            },
+                            clientExtensionResults: {},
+                            type: 'public-key',
+                            authenticatorAttachment: 'platform',
+                        },
+                    },
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(null);
+
+            const authenticators = await store.listUserAuthenticators(userId);
+            expect(authenticators).toEqual([
+                {
+                    id: expect.any(String),
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    credentialDeviceType: 'singleDevice',
+                    credentialBackedUp: false,
+                    transports: ['usb'],
+                    aaguid: 'aaguid',
+                    createdAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
         testOrigin(
             'POST',
             '/api/v2/webauthn/register',
@@ -2961,9 +3540,47 @@ describe('RecordsServer', () => {
             delete authenticatedHeaders['authorization'];
         });
 
-        it('should return the webauthn registration options', async () => {
+        it('should return the webauthn login options', async () => {
             const result = await server.handleHttpRequest(
                 httpGet('/api/v2/webauthn/login/options', authenticatedHeaders)
+            );
+
+            const response = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    requestId: expect.any(String),
+                    options: {
+                        userVerification: 'preferred',
+                        challenge: expect.any(String),
+                        rpId: relyingParty.id,
+                        timeout: 60000,
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const loginRequest = await store.findWebAuthnLoginRequest(
+                response.requestId
+            );
+            expect(loginRequest).toEqual({
+                requestId: response.requestId,
+                userId: null,
+                challenge: response.options.challenge,
+                requestTimeMs: expect.any(Number),
+                expireTimeMs: expect.any(Number),
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+            });
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'getWebAuthnLoginOptions',
+                    undefined,
+                    authenticatedHeaders
+                )
             );
 
             const response = expectResponseBodyToEqual(result, {
@@ -3004,7 +3621,7 @@ describe('RecordsServer', () => {
             delete authenticatedHeaders['authorization'];
         });
 
-        it('should return the webauthn login options', async () => {
+        it('should return the login result', async () => {
             const requestId = 'requestId';
             await store.saveWebAuthnLoginRequest({
                 requestId: requestId,
@@ -3053,6 +3670,72 @@ describe('RecordsServer', () => {
                             authenticatorAttachment: 'platform',
                         },
                     }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: userId,
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            const requestId = 'requestId';
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: Date.now() + 1000 * 60,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'completeWebAuthnLogin',
+                    {
+                        requestId: requestId,
+                        response: {
+                            id: fromByteArray(new Uint8Array([1, 2, 3])),
+                            rawId: 'rawId',
+                            clientExtensionResults: {},
+                            response: {
+                                authenticatorData: 'authenticatorData',
+                                clientDataJSON: 'clientDataJSON',
+                                signature: 'signature',
+                            },
+                            type: 'public-key',
+                            authenticatorAttachment: 'platform',
+                        },
+                    },
                     authenticatedHeaders
                 )
             );
@@ -3199,6 +3882,98 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support procedures', async () => {
+            const requestId = 'requestId';
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: Date.now() + 1000 * 60,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: 'aaguid1',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 100,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: 'aaguid2',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'listUserAuthenticators',
+                    undefined,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    authenticators: [
+                        {
+                            id: 'authenticatorId',
+                            userId: userId,
+                            credentialId: fromByteArray(
+                                new Uint8Array([1, 2, 3])
+                            ),
+                            counter: 0,
+                            credentialBackedUp: true,
+                            credentialDeviceType: 'singleDevice',
+                            transports: ['usb'],
+                            aaguid: 'aaguid1',
+                            registeringUserAgent: 'ua1',
+                            createdAtMs: 100,
+                        },
+                        {
+                            id: 'authenticatorId2',
+                            userId: userId,
+                            credentialId: fromByteArray(
+                                new Uint8Array([1, 2, 3, 4])
+                            ),
+                            counter: 0,
+                            credentialBackedUp: true,
+                            credentialDeviceType: 'singleDevice',
+                            transports: ['usb'],
+                            aaguid: 'aaguid2',
+                            registeringUserAgent: 'ua2',
+                            createdAtMs: 100,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         testOrigin('GET', '/api/v2/webauthn/authenticators');
         testRateLimit('GET', `/api/v2/webauthn/authenticators`);
         testAuthorization(() =>
@@ -3258,6 +4033,87 @@ describe('RecordsServer', () => {
                     JSON.stringify({
                         authenticatorId: 'authenticatorId',
                     }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const authenticators = await store.listUserAuthenticators(userId);
+            expect(authenticators).toEqual([
+                {
+                    id: 'authenticatorId2',
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                    counter: 0,
+                    credentialBackedUp: true,
+                    credentialDeviceType: 'singleDevice',
+                    credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                    transports: ['usb'],
+                    aaguid: 'aaguid2',
+                    registeringUserAgent: 'ua2',
+                    createdAtMs: 100,
+                },
+            ]);
+        });
+
+        it('should support procedures', async () => {
+            const requestId = 'requestId';
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: Date.now() + 1000 * 60,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: 'aaguid1',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 100,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: 'aaguid2',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'deleteUserAuthenticator',
+                    {
+                        authenticatorId: 'authenticatorId',
+                    },
                     authenticatedHeaders
                 )
             );
@@ -11139,7 +11995,7 @@ describe('RecordsServer', () => {
             );
 
             const result = await server.handleHttpRequest(
-                httpGet(`/api/v2/ai/skybox`, apiHeaders)
+                httpGet(`/api/v2/ai/skybox?skyboxId=id`, apiHeaders)
             );
 
             expectResponseBodyToEqual(result, {
@@ -13531,9 +14387,279 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                 },
+                headers: corsHeaders(defaultHeaders['origin']),
             });
 
             expect(handler).toHaveBeenCalledWith(request);
+        });
+
+        it('should use the given schema', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+
+            expect(handler).toHaveBeenCalledWith(request, { type: 'custom' });
+        });
+
+        it('should be able to use schemas for GET requests', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'GET',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpGet(
+                `/api/custom-route?value=${encodeURIComponent(
+                    123
+                )}&type=${'custom'}`,
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+
+            expect(handler).toHaveBeenCalledWith(request, { type: 'custom' });
+        });
+
+        it('should be able to use the account origins', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+                allowedOrigins: 'account',
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                { type: 'custom', value: 123 },
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                },
+                headers: {},
+            });
+
+            expect(handler).not.toHaveBeenCalled();
+
+            const request2 = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                authenticatedHeaders
+            );
+            const result2 = await server.handleHttpRequest(request2);
+
+            expectResponseBodyToEqual(result2, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to use the API origins', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+                allowedOrigins: 'api',
+            });
+
+            handler.mockResolvedValueOnce({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                },
+                headers: {},
+            });
+
+            expect(handler).not.toHaveBeenCalled();
+
+            const request2 = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                apiHeaders
+            );
+            const result2 = await server.handleHttpRequest(request2);
+
+            expectResponseBodyToEqual(result2, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return a 500 server error if the route throws an error', async () => {
+            const handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+
+            server.addRoute({
+                method: 'POST',
+                path: '/api/custom-route',
+                schema: z.object({
+                    type: z.literal('custom'),
+                }),
+                handler,
+            });
+
+            handler.mockImplementation(() => {
+                throw new Error('test error');
+            });
+
+            const request = httpPost(
+                '/api/custom-route',
+                JSON.stringify({ type: 'custom', value: 123 }),
+                defaultHeaders
+            );
+            const result = await server.handleHttpRequest(request);
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 500,
+                body: {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        describe('schema', () => {
+            let handler = jest.fn<
+                Promise<GenericHttpResponse>,
+                [GenericHttpRequest]
+            >();
+            beforeEach(() => {
+                handler = jest.fn<
+                    Promise<GenericHttpResponse>,
+                    [GenericHttpRequest]
+                >();
+
+                server.addRoute({
+                    method: 'POST',
+                    path: '/api/custom-route',
+                    schema: z.object({
+                        type: z.literal('custom'),
+                    }),
+                    handler,
+                });
+
+                handler.mockResolvedValueOnce({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                    }),
+                });
+            });
+
+            testBodyIsJson((body) =>
+                httpPost('/api/custom-route', body, defaultHeaders)
+            );
         });
     });
 
@@ -15204,6 +16330,24 @@ describe('RecordsServer', () => {
         ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
         return httpRequest('DELETE', url, body, headers, ipAddress);
+    }
+
+    function procedureRequest(
+        name: string,
+        input: any,
+        headers: GenericHttpHeaders = defaultHeaders,
+        ipAddress: string = '123.456.789'
+    ): GenericHttpRequest {
+        return httpRequest(
+            'POST',
+            '/api/v3/callProcedure',
+            JSON.stringify({
+                procedure: name,
+                input: input,
+            }),
+            headers,
+            ipAddress
+        );
     }
 
     function httpRequest(

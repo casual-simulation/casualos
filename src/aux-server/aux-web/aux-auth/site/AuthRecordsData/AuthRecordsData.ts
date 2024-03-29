@@ -59,12 +59,12 @@ export default class AuthRecordsData extends Vue {
 
     private _reset(page: number = 1) {
         this._helper = new LoadingHelper(async (lastItem) => {
-            let result = await authManager.listData(
-                this.recordName,
-                lastItem?.address
-            );
+            const result = await authManager.client.listData({
+                recordName: this.recordName,
+                address: lastItem?.address,
+            });
 
-            if (result) {
+            if (result.success === true) {
                 return {
                     items: result.items,
                     totalCount: result.totalCount,
@@ -100,7 +100,12 @@ export default class AuthRecordsData extends Vue {
     }
 
     async deleteItem(item: ListDataSuccess['items'][0]) {
-        if (await authManager.eraseData(this.recordName, item.address)) {
+        const result = await authManager.client.eraseData({
+            recordKey: this.recordName,
+            address: item.address,
+        });
+
+        if (result.success === true) {
             this.items.mdData = this.items.mdData.filter(
                 (i) => i.address !== item.address
             );

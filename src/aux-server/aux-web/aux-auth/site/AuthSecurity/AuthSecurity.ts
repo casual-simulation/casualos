@@ -84,7 +84,9 @@ export default class AuthSecurity extends Vue {
     }
 
     async deletePasskey(passkey: Passkey) {
-        const result = await authManager.deleteUserAuthenticator(passkey.id);
+        const result = await authManager.client.deleteUserAuthenticator({
+            authenticatorId: passkey.id,
+        });
         if (result.success) {
             this._loadPasskeys();
         }
@@ -114,9 +116,15 @@ export default class AuthSecurity extends Vue {
             let hasNewSessions = false;
             do {
                 hasNewSessions = false;
-                const result = await authManager.listSessions(expireTime);
+                const result = await authManager.client.listSessions({
+                    expireTimeMs: expireTime,
+                });
 
-                for (let session of result) {
+                if (result.success === false) {
+                    break;
+                }
+
+                for (let session of result.sessions) {
                     if (session.expireTimeMs > now) {
                         filteredSessions.push(session);
                         hasNewSessions = true;
@@ -142,7 +150,7 @@ export default class AuthSecurity extends Vue {
     }
 
     private async _loadPasskeys() {
-        const result = await authManager.listAuthenticators();
+        const result = await authManager.client.listUserAuthenticators();
         if (result.success === true) {
             this.passkeys = result.authenticators.map((auth) => {
                 const info = getInfoForAAGUID(auth.aaguid);
