@@ -35,3 +35,4 @@ export * from './Errors';
 export * from './common';
 export * from './websockets';
 export * from './http';
+export * from './rpc';

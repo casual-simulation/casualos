@@ -7790,6 +7790,14 @@ export interface DebuggerTagMaskUpdate extends DebuggerTagUpdate {
     space: string;
 }
 
+export interface PreactContext<T> {
+    Consumer: any;
+    Provider: any;
+    displayName?: string;
+}
+
+export type RefObject<T> = { current: T | null };
+
 
 declare global {
 
@@ -11483,6 +11491,59 @@ interface Os {
         render(vdom: any,
             parent: Element | Document | ShadowRoot | DocumentFragment,
             replaceNode?: Element | Text): void;
+
+        /**
+         * Creates a hook that can be used to get a reference to the HTML element that a Preact component is attached to.
+         */
+        createRef<T = any>(): RefObject<T>;
+
+        /**
+         * Creates a new context that can be used for sharing values between components.
+         * @param defaultValue The value.
+         */
+        createContext<T>(defaultValue: T): PreactContext<T>;
+    };
+
+    appCompat: {
+        /**
+         * The PureComponent Class.
+         * See https://preactjs.com/guide/v10/switching-to-preact/#purecomponent for more details.
+         */
+        PureComponent: any;
+
+        /**
+         * Creates a new component that renders the given component as a PureComponent.
+         * See https://preactjs.com/guide/v10/switching-to-preact/#memo for more details.
+         * @param component The component that should be converted.
+         */
+        memo<T>(component: T): T;
+
+        /**
+         * Creates a new component that is able to forward a reference further down the tree.
+         * See https://preactjs.com/guide/v10/switching-to-preact/#forwardref for more details.
+         * @param fn The function that should be used to forward the reference.
+         */
+        forwardRef(fn: any): any;
+
+        /**
+         * Creates a portal that can be used to render components outside of the normal DOM hierarchy.
+         * @param children The children that should be rendered.
+         * @param container The container for the children.
+         */
+        createPortal(children: any, container: Element): any;
+
+        /**
+         * The Suspense component class.
+         * See https://preactjs.com/guide/v10/switching-to-preact/#suspense-experimental for more details.
+         */
+        Suspense: any;
+
+        /**
+         * Creates a component that is lazily rendered.
+         * See https://preactjs.com/guide/v10/switching-to-preact/#suspense-experimental for more details.
+         * @param fn The function that should be used to render the component.
+         */
+        lazy<T>(fn: () => Promise<{ default: T } | T>): T;
     };
 
     /**

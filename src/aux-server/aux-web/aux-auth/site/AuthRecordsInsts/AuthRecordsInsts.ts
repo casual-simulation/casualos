@@ -61,12 +61,12 @@ export default class AuthRecordsInsts extends Vue {
 
     private _reset(page: number = 1) {
         this._helper = new LoadingHelper(async (lastItem) => {
-            let result = await authManager.listInsts(
-                this.recordName,
-                lastItem?.inst
-            );
+            const result = await authManager.client.listInsts({
+                recordName: this.recordName,
+                inst: lastItem?.inst,
+            });
 
-            if (result) {
+            if (result.success === true) {
                 return {
                     items: result.insts,
                     totalCount: result.totalCount,
@@ -111,7 +111,10 @@ export default class AuthRecordsInsts extends Vue {
     }
 
     async deleteInst(item: InstRecord) {
-        const result = await authManager.deleteInst(this.recordName, item.inst);
+        const result = await authManager.client.deleteInst({
+            recordName: this.recordName,
+            inst: item.inst,
+        });
         if (result.success === true) {
             this.items.mdData = this.items.mdData.filter(
                 (i) => i.inst !== item.inst

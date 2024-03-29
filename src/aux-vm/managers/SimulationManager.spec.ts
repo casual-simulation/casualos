@@ -331,6 +331,7 @@ class TestInitable implements Initable {
 
 class TestSubSimulation extends TestInitable implements SubSimEmitter {
     id: string;
+    isSubSimulation: boolean;
 
     constructor(action?: Function) {
         super(action);

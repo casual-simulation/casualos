@@ -240,6 +240,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _notificationMessenger: MultiNotificationMessenger;
 
     private _redis: RedisClientType | null = null;
+    private _redisCaches: RedisClientType | null = null;
+    private _redisInstData: RedisClientType | null = null;
+    private _redisWebsocketConnections: RedisClientType | null = null;
+    private _redisRateLimit: RedisClientType | null = null;
     private _s3: S3;
     private _rateLimitController: RateLimitController;
     private _websocketRateLimitController: RateLimitController;
@@ -328,7 +332,7 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Redis cache namespace must be provided.');
         }
 
-        const redis = this._ensureRedis(options);
+        const redis = this._ensureRedisCaches(options);
         this._multiCache = new RedisMultiCache(
             redis,
             options.redis.cacheNamespace
@@ -555,7 +559,7 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
-        const redis = this._ensureRedis(options);
+        const redis = this._ensureRedisWebsocketConnections(options);
         this._websocketConnectionStore = new RedisWebsocketConnectionStore(
             options.redis.websocketConnectionNamespace,
             redis,
@@ -652,7 +656,7 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
-        const redis = this._ensureRedis(options);
+        const redis = this._ensureRedisInstData(options);
         const prisma = this._ensurePrisma(options);
 
         this._tempInstRecordsStore = new RedisTempInstRecordsStore(
@@ -771,7 +775,7 @@ export class ServerBuilder implements SubscriptionLike {
         if (!options.rateLimit) {
             throw new Error('Rate limit options must be provided.');
         }
-        const client = this._ensureRedis(options);
+        const client = this._ensureRedisRateLimit(options);
         const store = new RedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
                 return client.sendCommand([command, ...args]);
@@ -807,7 +811,7 @@ export class ServerBuilder implements SubscriptionLike {
         if (!options.rateLimit) {
             throw new Error('Websocket rate limit options must be provided.');
         }
-        const client = this._ensureRedis(options);
+        const client = this._ensureRedisRateLimit(options);
         const store = new RedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
                 return client.sendCommand([command, ...args]);
@@ -1307,46 +1311,108 @@ export class ServerBuilder implements SubscriptionLike {
     private _ensureRedis(
         options: Pick<BuilderOptions, 'redis'>
     ): RedisClientType {
-        if (!this._redis) {
-            let retryStrategy = (retries: number, error: Error) => {
+        return (this._redis = this._createRedisClient(
+            this._redis,
+            options.redis
+        ));
+    }
+
+    private _ensureRedisWebsocketConnections(
+        options: Pick<BuilderOptions, 'redis'>
+    ): RedisClientType {
+        if (options.redis.servers.websocketConnections) {
+            return (this._redisWebsocketConnections = this._createRedisClient(
+                this._redisWebsocketConnections,
+                options.redis.servers.websocketConnections
+            ));
+        } else {
+            return this._ensureRedis(options);
+        }
+    }
+
+    private _ensureRedisInstData(
+        options: Pick<BuilderOptions, 'redis'>
+    ): RedisClientType {
+        if (options.redis.servers.instData) {
+            return (this._redisInstData = this._createRedisClient(
+                this._redisInstData,
+                options.redis.servers.instData
+            ));
+        } else {
+            return this._ensureRedis(options);
+        }
+    }
+
+    private _ensureRedisCaches(
+        options: Pick<BuilderOptions, 'redis'>
+    ): RedisClientType {
+        if (options.redis.servers.caches) {
+            return (this._redisCaches = this._createRedisClient(
+                this._redisCaches,
+                options.redis.servers.caches
+            ));
+        } else {
+            return this._ensureRedis(options);
+        }
+    }
+
+    private _ensureRedisRateLimit(
+        options: Pick<BuilderOptions, 'redis'>
+    ): RedisClientType {
+        if (options.redis.servers.rateLimit) {
+            return (this._redisRateLimit = this._createRedisClient(
+                this._redisRateLimit,
+                options.redis.servers.rateLimit
+            ));
+        } else {
+            return this._ensureRedis(options);
+        }
+    }
+
+    private _createRedisClient(
+        redis: RedisClientType,
+        options: RedisServerOptions
+    ) {
+        if (!redis) {
+            const retryStrategy = (retries: number, error: Error) => {
                 // reconnect after min(100ms per attempt, 3 seconds)
                 return Math.min(retries * 100, 3000);
             };
-            if (options.redis.url) {
-                this._redis = createRedisClient({
-                    url: options.redis.url,
+            if (options.url) {
+                redis = createRedisClient({
+                    url: options.url,
                     socket: {
                         reconnectStrategy: retryStrategy,
                     },
                 });
             } else {
-                if (!options.redis.host) {
+                if (!options.host) {
                     throw new Error(
                         'Redis host must be provided if a URL is not specified.'
                     );
                 }
-                this._redis = createRedisClient({
+                redis = createRedisClient({
                     socket: {
-                        host: options.redis.host,
-                        port: options.redis.port,
-                        tls: options.redis.tls,
+                        host: options.host,
+                        port: options.port,
+                        tls: options.tls,
                         reconnectStrategy: retryStrategy,
                     },
-                    password: options.redis.password,
+                    password: options.password,
                 });
             }
             this._initActions.push({
                 priority: 10,
                 action: async () => {
-                    await this._redis.connect();
+                    await redis.connect();
                 },
             });
             this._subscription.add(() => {
-                this._redis.quit();
+                redis.quit();
             });
         }
 
-        return this._redis;
+        return redis;
     }
 
     private _ensurePrisma(
@@ -1577,6 +1643,44 @@ const expireModeSchema = z.union([
     z.null().describe('The expiration will be updated every time.'),
 ]);
 
+const redisServerSchema = z.object({
+    url: z
+        .string()
+        .describe(
+            'The Redis connection URL that should be used. If omitted, then host, port, and password must be provided.'
+        )
+        .nonempty()
+        .optional(),
+    host: z
+        .string()
+        .describe(
+            'The host that the redis client should connect to. Ignored if url is provided.'
+        )
+        .nonempty()
+        .optional(),
+    port: z
+        .number()
+        .describe(
+            'The port that the redis client should connect to. Ignored if url is provided.'
+        )
+        .optional(),
+    password: z
+        .string()
+        .describe(
+            'The password that the redis client should use. Ignored if url is provided.'
+        )
+        .nonempty()
+        .optional(),
+    tls: z
+        .boolean()
+        .describe(
+            'Whether to use TLS for connecting to the Redis server. Ignored if url is provided.'
+        )
+        .optional(),
+});
+
+export type RedisServerOptions = z.infer<typeof redisServerSchema>;
+
 const redisSchema = z.object({
     url: z
         .string()
@@ -1611,6 +1715,34 @@ const redisSchema = z.object({
             'Whether to use TLS for connecting to the Redis server. Ignored if url is provided.'
         )
         .optional(),
+
+    servers: z
+        .object({
+            instData: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for storage of temporary inst data. If omitted, then the default server will be used.'
+                )
+                .optional(),
+            websocketConnections: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for storage of websocket connections. If omitted, then the default server will be used.'
+                )
+                .optional(),
+            caches: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for the caches. If omitted, then the default server will be used.'
+                )
+                .optional(),
+            rateLimit: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for rate limits. If omitted, then the default server will be used.'
+                )
+                .optional(),
+        })
+        .describe(
+            'The Redis servers that should be used for specific categories of data. If omitted, then the default server will be used.'
+        )
+        .default({}),
 
     rateLimitPrefix: z
         .string()

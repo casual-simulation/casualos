@@ -9,7 +9,7 @@
         "allowJs": false,
         "moduleResolution": "node",
         "sourceMap": true,
-        "lib": ["es2015", "es5", "dom"],
+        "lib": ["es2022", "es5", "dom"],
         "experimentalDecorators": true,
         "typeRoots": ["node_modules/@types", "./typings"]
     }

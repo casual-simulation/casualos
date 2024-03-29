@@ -387,7 +387,8 @@ import type {
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
-import { render } from 'preact';
+import { render, createRef, createContext } from 'preact';
+import * as compat from 'preact/compat';
 import type {
     Breakpoint,
     InterpreterContinuation,
@@ -3190,7 +3191,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 registerApp: registerApp,
                 unregisterApp,
                 compileApp: setAppContent,
-                appHooks: { ...hooks, render },
+                appHooks: { ...hooks, render, createRef, createContext },
+                appCompat: { ...compat },
                 listBuiltinTags,
                 reportInst,
                 requestAuthBot,

@@ -2,11 +2,11 @@
 
 ## V3.2.19
 
-#### Date: 3/21/2024
+#### Date: 3/29/2024
 
 ### :boom: Breaking Changes
 
--   Forced all scripts to compile in [`strict mode`](https://stackoverflow.com/a/27114400/1832856).
+-   Forced all scripts to compile in [Strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode).
     -   Strict mode restricts some functions and features of JavaScript to help catch common mistakes.
     -   Some examples:
         -   The `implements`, `interface`, `let`, `package`, `private`, `protected`, `public`, `static`, `yield` keywords are no longer allowed to be used as identifiers.
@@ -21,10 +21,26 @@
             ```typescript
             let num = 0123; // This does not equal 123, but is actually 83 in decimal
             ```
+-   Enabled `preact/compat` for custom apps.
+    -   This change probably won't break anything, but I can't exactly be sure.
+    -   `preact/compat` improves Preact compatibility with React behavior and features.
+    -   See [the Preact website](https://preactjs.com/guide/v10/switching-to-preact/) for more information.
+
+### :rocket: Features
+
+-   Added the ability to specify separate Redis servers for websocket connections, inst data, caches, and rate limits.
+-   Added the `os.appCompat` API.
+    -   It is an object that contains APIs from `preact/compat`.
+    -   This includes, but is not limited to, `Suspense`, `lazy()`, `createPortal()`, `forwardRef()`, `memo()`, and `PureComponent`.
+-   Added `createRef()` and `createContext()` to `os.appHooks`.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where attached debuggers would automatically get detached once a portal is opened or closed.
+-   Fixed an issue where the registration flow would not always check display names properly.
+-   Improved wording for some registration errors.
+-   Fixed an issue where it was possible for a session to not be synced while the session itself believes that it is connected.
+-   Fixed an issue where using JSX syntax would show random syntax errors in the multiline code editor.
 
 ## V3.2.18
 

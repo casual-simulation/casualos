@@ -1050,7 +1050,6 @@ export class AuthController {
             let updatePasswordUrl: string;
             let serviceId: string;
             let parentServiceId: string;
-            const email: string = request.email;
             if (years < 0) {
                 return {
                     success: false,
@@ -1135,9 +1134,9 @@ export class AuthController {
 
             const user: AuthUser = {
                 id: uuid(),
-                email: email,
+                email: null, // We don't store the email because it is stored in Privo.
                 phoneNumber: null,
-                name: request.name,
+                name: null, // We don't store the name because it is stored in Privo.
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
                 privoServiceId: serviceId,
@@ -2419,6 +2418,8 @@ export class AuthController {
 
             let privacyFeatures: PrivacyFeatures;
             let displayName: string = null;
+            let email: string = result.email;
+            let name: string = result.name;
             const privoConfig = await this._config.getPrivoConfiguration();
             if (privoConfig && result.privoServiceId) {
                 const userInfo = await this._privoClient.getUserInfo(
@@ -2429,6 +2430,8 @@ export class AuthController {
                     userInfo.permissions
                 );
                 displayName = userInfo.displayName;
+                email = userInfo.email;
+                name = userInfo.givenName;
 
                 if (
                     result.privacyFeatures?.publishData !==
@@ -2463,9 +2466,9 @@ export class AuthController {
             return {
                 success: true,
                 userId: result.id,
-                name: result.name,
+                name: name,
                 displayName,
-                email: result.email,
+                email: email,
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,

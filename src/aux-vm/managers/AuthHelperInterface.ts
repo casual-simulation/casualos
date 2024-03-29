@@ -3,7 +3,7 @@ import type {
     AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,
@@ -13,6 +13,7 @@ import {
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import { Observable, SubscriptionLike } from 'rxjs';
 import {
@@ -211,7 +212,11 @@ export interface AuthHelperInterface extends SubscriptionLike {
     grantPermission(
         recordName: string,
         permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult>;
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    >;
 
     /**
      * Provides the given login result to be used for the login process.
