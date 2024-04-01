@@ -236,6 +236,89 @@ describe('AuthController', () => {
         });
     });
 
+    describe('createAccount()', () => {
+        const userId = 'myid';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        it('should create a new account and return the session key for the user', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const result = await controller.createAccount({
+                userId: userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'uuid1',
+                sessionKey: formatV1SessionKey(
+                    'uuid1',
+                    fromByteArray(sessionId),
+                    fromByteArray(sessionSecret),
+                    Infinity
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    'uuid1',
+                    fromByteArray(sessionId),
+                    fromByteArray(connectionSecret),
+                    Infinity
+                ),
+                expireTimeMs: Infinity,
+            });
+
+            const user = await store.findUser('uuid1');
+
+            expect(user).toEqual({
+                id: 'uuid1',
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const session = await store.findSession(
+                'uuid1',
+                fromByteArray(sessionId)
+            );
+
+            expect(session).toEqual({
+                userId: 'uuid1',
+                sessionId: fromByteArray(sessionId),
+                secretHash: expect.any(String),
+                requestId: null,
+
+                connectionSecret: fromByteArray(connectionSecret),
+                grantedTimeMs: 150,
+                expireTimeMs: null,
+                revokeTimeMs: null,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: '127.0.0.1',
+
+                revokable: false,
+            });
+        });
+    });
+
     describe('requestLogin()', () => {
         const cases = [
             ['email', 'test@example.com'] as const,

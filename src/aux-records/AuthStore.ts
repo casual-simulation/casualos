@@ -802,6 +802,16 @@ export interface AuthSession {
      * If null, then Open ID was not used for the session.
      */
     oidExpiresAtMs?: number | null;
+
+    /**
+     * Whether the session is able to be revoked by the user.
+     * Setting this to false will prevent the user from revoking the session.
+     * Additionally, users will not be able to replace the session either.
+     * If false, then the session cannot be revoked by the user.
+     * If true, then the session can be revoked by the user.
+     * Default is true.
+     */
+    revokable?: boolean;
 }
 
 /**
