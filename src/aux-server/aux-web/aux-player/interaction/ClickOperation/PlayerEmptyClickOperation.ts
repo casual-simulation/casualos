@@ -72,10 +72,36 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
         sendAction: (simulation: Simulation, arg: any) => void
     ) {
         const simulation3Ds = this._game.getSimulations();
-        let inputDimension: string;
-        let inputRay: Ray;
-        let grid: Grid3D;
-        let sim: Simulation3D;
+
+        const sendGridAction = (
+            inputDimension: string,
+            inputRay: Ray,
+            grid: Grid3D,
+            sim: Simulation3D
+        ) => {
+            if (!inputRay || !grid || !inputDimension || !sim) {
+                return;
+            }
+
+            // Get grid tile that intersects with input ray.
+            const gridTile = grid.getTileFromRay(inputRay, true);
+
+            let position: any = {
+                x: Infinity,
+                Y: Infinity,
+            };
+            if (gridTile) {
+                position = {
+                    x: gridTile.tileCoordinate.x,
+                    y: gridTile.tileCoordinate.y,
+                };
+            }
+
+            sendAction(sim.simulation, {
+                dimension: inputDimension,
+                position: position,
+            });
+        };
 
         // If we're in VR, then send the empty click to the PlayerPageSimulation
         if (this._controller) {
@@ -83,10 +109,11 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                 (sim) => sim instanceof PlayerPageSimulation3D
             ) as PlayerPageSimulation3D;
             if (sim3D) {
-                inputDimension = sim3D.dimension;
-                inputRay = objectForwardRay(this._controller.ray);
-                grid = sim3D.grid3D;
-                sim = sim3D;
+                const inputDimension = sim3D.dimension;
+                const inputRay = objectForwardRay(this._controller.ray);
+                const grid = sim3D.grid3D;
+                const sim = sim3D;
+                sendGridAction(inputDimension, inputRay, grid, sim);
             }
         } else {
             // Otherwise, calculate the simulation based on the viewport the mouse is over
@@ -104,7 +131,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                     )
                 ) {
                     if (sim3D instanceof PlayerSimulation3D) {
-                        inputRay = Physics.screenPosToRay(
+                        const inputRay = Physics.screenPosToRay(
                             Input.screenPositionForViewport(
                                 pagePos,
                                 rig.viewport
@@ -112,89 +139,18 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                             rig.mainCamera
                         );
 
-                        inputDimension = sim3D.dimension;
-                        grid = sim3D.grid3D;
-                        sim = sim3D;
+                        const inputDimension = sim3D.dimension;
+                        const grid = sim3D.grid3D;
+
+                        sendGridAction(inputDimension, inputRay, grid, sim3D);
                     } else {
                         console.warn(
                             '[PlayerEmptyClickOperation] Unable to find grid for simulation',
-                            sim
+                            sim3D
                         );
                     }
-
-                    break;
                 }
             }
-
-            // const miniViewport = this._game.getMiniPortalViewport();
-            // const mapViewport = this._game.getMapPortalViewport();
-            // const isMiniPortal = Input.pagePositionOnViewport(
-            //     pagePos,
-            //     miniViewport,
-            //     viewports
-            // );
-            // const isMapPortal = Input.pagePositionOnViewport(
-            //     pagePos,
-            //     mapViewport,
-            //     viewports
-            // );
-
-            // if (isMiniPortal) {
-            //     const mini = this._game.findMiniSimulation3D(
-            //         sim3D.simulation
-            //     );
-            //     inputRay = Physics.screenPosToRay(
-            //         Input.screenPositionForViewport(
-            //             pagePos,
-            //             miniViewport
-            //         ),
-            //         mini.getMainCameraRig().mainCamera
-            //     );
-            //     inputDimension = mini.miniDimension;
-            //     grid = mini.grid3D;
-            // } else if (isMapPortal) {
-            //     const map = this._game.findMapSimulation3D(
-            //         sim3D.simulation
-            //     );
-            //     inputRay = Physics.screenPosToRay(
-            //         Input.screenPositionForViewport(
-            //             pagePos,
-            //             mapViewport
-            //         ),
-            //         map.getMainCameraRig().mainCamera
-            //     );
-            //     inputDimension = map.mapDimension;
-            //     grid = map.grid3D;
-            // } else {
-            //     inputRay = Physics.screenPosToRay(
-            //         this._game.getInput().getMouseScreenPos(),
-            //         sim3D.getMainCameraRig().mainCamera
-            //     );
-            //     inputDimension = sim3D.dimension;
-            //     grid = sim3D.grid3D;
-            // }
         }
-
-        if (!inputRay || !grid || !inputDimension || !sim) {
-            return;
-        }
-
-        // Get grid tile that intersects with input ray.
-        const gridTile = grid.getTileFromRay(inputRay, true);
-
-        let position: any = {
-            x: Infinity,
-            Y: Infinity,
-        };
-        if (gridTile) {
-            position = {
-                x: gridTile.tileCoordinate.x,
-                y: gridTile.tileCoordinate.y,
-            };
-        }
-        sendAction(sim.simulation, {
-            dimension: inputDimension,
-            position: position,
-        });
     }
 }

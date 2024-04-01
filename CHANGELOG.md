@@ -33,6 +33,7 @@
     -   It is an object that contains APIs from `preact/compat`.
     -   This includes, but is not limited to, `Suspense`, `lazy()`, `createPortal()`, `forwardRef()`, `memo()`, and `PureComponent`.
 -   Added `createRef()` and `createContext()` to `os.appHooks`.
+-   CasualOS will now send `@onGridClick`, `@onGridUp`, and `@onGridDown` shouts to all loaded insts.
 
 ### :bug: Bug Fixes
 
@@ -41,6 +42,8 @@
 -   Improved wording for some registration errors.
 -   Fixed an issue where it was possible for a session to not be synced while the session itself believes that it is connected.
 -   Fixed an issue where using JSX syntax would show random syntax errors in the multiline code editor.
+-   Fixed an issue where it was possible for CasualOS to waste resources by loading the portals for an inst multiple times.
+-   Fixed an issue where the miniGridPortal slider bar would interfere with the menuPortal.
 
 ## V3.2.18
 
