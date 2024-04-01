@@ -1927,7 +1927,9 @@ export class AuthController {
             } else {
                 if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
                     if (
-                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                        userInfo.allSessionRevokeTimeMs >=
+                            session.grantedTimeMs &&
+                        (session.revokable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
@@ -2173,6 +2175,14 @@ export class AuthController {
                 };
             }
 
+            if (session.revokable === false) {
+                return {
+                    success: false,
+                    errorCode: 'session_is_not_revokable',
+                    errorMessage: 'The session cannot be revoked.',
+                };
+            }
+
             const newSession: AuthSession = {
                 ...session,
                 revokeTimeMs: Date.now(),
@@ -2292,6 +2302,33 @@ export class AuthController {
             }
 
             const userId = keyResult.userId;
+            const session = await this._store.findSession(
+                userId,
+                keyResult.sessionId
+            );
+
+            if (!session) {
+                console.log(
+                    '[AuthController] [replaceSession] Could not find session.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            if (session.revokable === false) {
+                console.log(
+                    '[AuthController] [replaceSession] Session is irrevokable.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
             const now = Date.now();
 
             const newSessionId = fromByteArray(
@@ -2320,22 +2357,6 @@ export class AuthController {
                 nextSessionId: null,
                 ipAddress: request.ipAddress,
             };
-
-            const session = await this._store.findSession(
-                userId,
-                keyResult.sessionId
-            );
-
-            if (!session) {
-                console.log(
-                    '[AuthController] [replaceSession] Could not find session.'
-                );
-                return {
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
-                };
-            }
 
             await this._store.replaceSession(session, newSession, now);
 
@@ -3481,6 +3502,7 @@ export interface RevokeSessionFailure {
         | 'session_expired'
         | 'session_not_found'
         | 'session_already_revoked'
+        | 'session_is_not_revokable'
         | 'user_is_banned'
         | ServerError;
     errorMessage: string;

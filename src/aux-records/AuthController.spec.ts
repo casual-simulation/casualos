@@ -4832,6 +4832,54 @@ describe('AuthController', () => {
                     errorMessage: INVALID_KEY_ERROR_MESSAGE,
                 });
             });
+
+            it('should work if the session was granted before all sessions were revoked but the session is not revokable and also doesnt have a revoke time', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    999
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: 101,
+                    currentLoginRequestId: requestId,
+                });
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                    revokable: false,
+                });
+
+                nowMock.mockReturnValue(400);
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    sessionId: sessionId,
+                    allSessionsRevokedTimeMs: 101,
+                });
+            });
         });
 
         it('should work with sessions created by completeLogin()', async () => {
@@ -5513,6 +5561,63 @@ describe('AuthController', () => {
                     errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
                 });
             });
+
+            it('should work if the session was granted before all sessions were revoked but is not revokable and also has no expiration time', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                    revokable: false,
+                });
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: 101,
+                    currentLoginRequestId: requestId,
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(175);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                });
+            });
         });
 
         it('should work with keys created by completeLogin()', async () => {
@@ -6022,6 +6127,59 @@ describe('AuthController', () => {
             });
         });
 
+        it('should fail if the session is able to be revoked', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
+            const userId = 'myid';
+
+            const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+
+                revokable: false,
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'otherSession',
+                sessionKey: sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'session_is_not_revokable',
+                errorMessage: 'The session cannot be revoked.',
+            });
+        });
+
         describe('data validation', () => {
             const invalidIdCases = [
                 ['null', null as any],
@@ -6321,6 +6479,37 @@ describe('AuthController', () => {
                 revokeTimeMs: 150,
                 userId,
                 ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.replaceSession({
+                sessionKey: sessionKey,
+                ipAddress: '127.0.0.2',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+        });
+
+        it('should fail if the session is not revokable', async () => {
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+
+                revokable: false,
             });
 
             nowMock.mockReturnValue(200);
