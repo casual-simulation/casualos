@@ -85,6 +85,7 @@ html.ar-app .webxr-sessions canvas {
     bottom: 8px;
     left: 33%;
     width: 33%;
+    z-index: 3;
 }
 
 @media (max-width: 768px) {
