@@ -37,6 +37,7 @@ export class BaseSimulation implements Simulation {
 
     protected _onSubSimulationAdded: Subject<Simulation>;
     protected _onSubSimulationRemoved: Subject<Simulation>;
+    protected _isSubSimulation: boolean = false;
     private _subSimulations: Map<string, Simulation>;
 
     protected _subscriptions: SubscriptionLike[];
@@ -56,6 +57,10 @@ export class BaseSimulation implements Simulation {
 
     get configBotId() {
         return this._vm.configBotId;
+    }
+
+    get isSubSimulation() {
+        return this._isSubSimulation;
     }
 
     /**
@@ -256,7 +261,9 @@ export class BaseSimulation implements Simulation {
      * @param vm The VM that the simulation should use.
      */
     protected _createSubSimulation(vm: AuxVM) {
-        return new BaseSimulation(vm);
+        const sim = new BaseSimulation(vm);
+        sim._isSubSimulation = true;
+        return sim;
     }
 
     /**

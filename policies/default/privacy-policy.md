@@ -1,10 +1,26 @@
-﻿Last updated on February 22nd, 2024
+﻿**You can also access a children’s version of our privacy policy [here](/children-privacy-policy).**
 
-Please review this Privacy Policy. When using our products or services the terms of our Acceptable Use Policy and Terms of Service also apply.
+You can find a plain-text version of this privacy policy <a href="/privacy-policy.txt">here</a>.
 
-## Contents
+_Last updated on March 20, 2024_
 
-## Introduction
+Please review this Privacy Policy. When using our products or services the terms of our [Acceptable Use Policy](/acceptable-use-policy) and [Terms of Service](/terms) also apply.
+
+<h2 id="table-of-contents">Table of Contents</h2>
+
+1. [Table of Contents](#table-of-contents)
+2. [Introduction](#introduction)
+3. [Personal Information](#personal-information)
+4. [Information We Collect From Children](#information-we-collect-from-children)
+5. [Use in Schools and Museums](#use-in-schools-and-museums)
+6. [Cached Data](#cached-data)
+7. [Data Retention](#data-retention)
+8. [A Note to EU & UK Citizens](#a-note-to-eu--uk-citizens)
+9. [Links From Our Services](#links-from-our-services)
+10. [Security](#security)
+11. [Contact Us](#contact-us)
+
+<h2 id="introduction">Introduction</h2>
 
 Casual Simulation offers tools for authoring open source experiences. We at Casual Simulation Inc. strive to respect the privacy of everyone to the best of Our ability. This document describes how We collect, process, and store personal data.
 
@@ -24,7 +40,7 @@ If You are using the Services on behalf of You personally, “You” or “Your�
 
 Please review this privacy policy from time to time as We may make changes. If We make a change, We will post a notice at the top of the policy and update the last updated date. If We make a material change to the way We collect or process Your personal data, We will post notice and contact You if We have Your contact details prior to making the change.
 
-## Personal Information
+<h2 id="personal-information">Personal Information</h2>
 
 WE DO NOT SHARE OR SELL YOUR DATA OR LICENSED USER CONTENT INCLUDING ANONYMOUS DATA OR USER CONTENT.
 
@@ -36,7 +52,7 @@ After creating an account and logging in, Your User Content You publish via aux 
 
 We reserve the right to provide any of Your data or Licensed User Content to a government or government’s lawful authorities only when mandated or compelled by law, and We may or may not notify You of this as may be required by law.
 
-### Information We Collect From Children
+<h2 id="information-we-collect-from-children">Information We Collect From Children</h2>
 
 Our services are intended for users of all ages.
 All users are able to access the static version of the services. If you access Our services, You will be able to create an Experience Generation Gizmo or ‘egg’ for short. This is similar to creating a document in Microsoft Word and anything you create will only be saved locally to Your device.
@@ -46,11 +62,11 @@ We work with PRIVO to obtain consent and verify parents. PRIVO is a leading priv
 Parents can choose to allow children to publish eggs or create collaborative insts.
 There are infinite options for what anyone can do with their egg or inst, and this includes sharing or processing all types of personal information. For example, if a user decides to create or add sound or voice sampling, a user’s voice and anything they say will be publicly available. Some insts may also include a map that collects and processes location based on an IP address.
 
-### Use In Schools And Museums
+<h2 id="use-in-schools-and-museums">Use In Schools And Museums</h2>
 
 From time to time, We at Casual Simulation may demo Our services in a school or at a museum to a group of students. If You are accessing Our services via a live demo, We will ask You, a parent/guardian or a school to provide consent for participation in the services. The school will provide consent through a signed agreement. Any eggs or insts created in live sessions will either only be static versions as described above, or any insts will only be open to other students participating in the same session.
 
-## Cached Data
+<h2 id="cached-data">Cached Data</h2>
 
 We sometimes create and utilize cached data on Your device as may be necessary, at times, to use Our Services or otherwise make Our Services easier to use. Cached data is similar to Cookies in that data is stored locally on Your device depending upon what portions of the Services You use.
 
@@ -72,9 +88,13 @@ You can clear cached data by deleting it from Your device.
 
 YOU ACCESS USER CREATED CONTENT AT YOUR OWN RISK AND USER CREATED CONTENT MAY TRACK YOU, PUT ANY KIND OF CACHED DATA ON YOUR DEVICE (INCLUDING MALICIOUS CODE) OR USE YOUR DATA IN OTHER WAYS We CANNOT FORESEE OR PREVENT.
 
-## Data Retention
+<h2 id="data-retention">Data Retention</h2>
 
-### A Note to EU & UK Citizens
+If you do not create an account, we will not collect or store any data from your egg and it will only be saved locally to your device. If you have created an account in order to save your eggs and insts, we will store these for as long as necessary to provide the service. If your account is inactive for 12 months (i.e. you have not logged in during that period), we will flag the account and delete all collected information, including records, data, files, insts and other directly associated data, within 30 days of setting the flag.
+
+If you would like to request to access, view, modify or delete your or your child’s information, please contact us at [hello@casualsimulation.org](mailto:hello@casualsimulation.org). We will collect your name and email address to validate who you are and whose information you should have access to before acting on your request.
+
+<h2 id="a-note-to-eu--uk-citizens">A Note to EU & UK Citizens</h2>
 
 Where applicable Casual Simulation complies with the rights given to EU and UK Citizens under the General Data Protection Regulation (GDPR); These Rights are as follows:
 
@@ -89,22 +109,23 @@ Where applicable Casual Simulation complies with the rights given to EU and UK C
 To find out more or if you wish to take action on these rights you can contact us at [hello@casualsimulation.com](mailto:hello@casualsimulation.com).
 You also have the right to lodge a complaint with Your local supervisory authority if You are unsatisfied with how We have handled Your request, but please do contact Us first and We will work to resolve any issues.
 
-## Data Transfer
+<h2 id="data-transfer">Data Transfer</h2>
 
 If You are an EU or UK citizen, Your data may be transferred to a country that does not afford the same level of protection as the laws of certain other countries. In those cases, Casual Simulation will put in place appropriate safeguards to protect Your personal information in connection with the transfer. You can contact us for more information on data transfers using the contact information at [hello@casualsimulation.com](mailto:hello@casualsimulation.com).
 
-## Links From Our Services
+<h2 id="links-from-our-services">Links From Our Services</h2>
 
 We may provide links to third party websites or services from Our Services. You understand that when You click on these links any data which You provide thereafter is subject to such a third party's privacy policy and not ours.
 
-## Security
+<h2 id="security">Security</h2>
 
 We use generally accepted security measures and safeguards in an attempt to keep the data we collect secure and we require that the service providers we work with agree to do the same.
 These measures and safeguards include limiting access to the data to those persons who need it to complete their work, using a fire-wall protected environment, and storing personal information in secure operating environments. However, no security measure is full proof.
 
-## Contact Us
+<h2 id="contact-us">Contact Us</h2>
 
 If you, a parent or school have any questions about how we collect, use or process your personal data, your child’s or your student’s personal data please contact us using the details below:
 
 -   Email: [hello@casualsimulation.com](mailto:hello@casualsimulation.com)
 -   Address: 1300 Michigan ST NE Grand Rapids, MI, 49503
+-   Phone: +1 (616) 209-4439

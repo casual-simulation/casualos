@@ -866,7 +866,7 @@ export interface TagSpecificApiOptions {
     /**
      * The bot that is set as the config of the current bot.
      */
-    config: RuntimeBot;
+    config?: RuntimeBot;
 }
 
 export const GET_RUNTIME = Symbol('get_runtime');
@@ -6783,7 +6783,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getCurrentServer(): string {
         const user = context.playerBot;
         if (user) {
-            let inst = getTag(user, 'inst');
+            let inst = getTag(user, 'inst') ?? getTag(user, 'staticInst');
             if (hasValue(inst)) {
                 if (Array.isArray(inst)) {
                     return inst[0].toString();

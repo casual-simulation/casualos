@@ -4742,17 +4742,20 @@ export function enqueueAsyncError(
  * @param taskId The ID of the task.
  * @param result The result.
  * @param mapBots Whether to map any bots found in the result to their actual counterparts.
+ * @param uncopiable Whether the result should be uncopiable.
  */
 export function asyncResult(
     taskId: number | string,
     result: any,
-    mapBots?: boolean
+    mapBots?: boolean,
+    uncopiable?: boolean
 ): AsyncResultAction {
     return {
         type: 'async_result',
         taskId,
         result,
         mapBotsInResult: mapBots,
+        uncopiable,
     };
 }
 

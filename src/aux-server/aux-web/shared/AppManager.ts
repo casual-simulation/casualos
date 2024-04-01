@@ -1,7 +1,7 @@
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from 'rxjs';
-import { filter, map, scan } from 'rxjs/operators';
+import { filter, first, map, scan, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
 import {
     ConnectionIndicator,
@@ -83,7 +83,16 @@ interface StoredInst {
     vmOrigin: string;
 }
 
+declare function sa_event(
+    name: string,
+    metadata: any,
+    callback: Function
+): void;
+declare function sa_event(name: string, callback: Function): void;
+
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
+
+const INIT_OFFLINE_TIMEOUT_MILISECONDS = 5000;
 
 const STATIC_INSTS_STORE = 'staticInsts';
 const INSTS_STORE = 'publicInsts';
@@ -408,7 +417,7 @@ export class AppManager {
 
     private async _initCore() {
         console.log('[AppManager] Starting init...');
-        this._reportTime('Time to start');
+        this._reportTime('Time to start', 'start');
         console.log(
             '[AppManager] CasualOS Version:',
             this.version.latestTaggedVersion,
@@ -417,24 +426,38 @@ export class AppManager {
         await this._initIndexedDB();
         this._sendProgress('Running aux...', 0);
         await this._initConfig();
-        this._reportTime('Time to config');
+        this._reportTime('Time to config', 'config');
         await Promise.all([
             this._loadDeviceInfo().then(() => {
-                this._reportTime('Time to device info');
+                this._reportTime('Time to device info', 'device_info');
             }),
             this._initAuth().then(() => {
-                this._reportTime('Time to auth');
+                this._reportTime('Time to auth', 'auth');
             }),
         ]);
         await this._initComId();
-        this._reportTime('Time to init');
+        this._reportTime('Time to init', 'init');
         this._sendProgress('Initialized.', 1, true);
     }
 
-    private _reportTime(message: string) {
-        console.log(
-            `[AppManager] ${message}: ${Date.now() - this._startLoadTime}ms`
-        );
+    private _reportTime(
+        message: string,
+        timeKind: string,
+        basis: number = this._startLoadTime
+    ) {
+        const time = Date.now() - basis;
+        console.log(`[AppManager] ${message}: ${time}ms`);
+
+        if (typeof sa_event === 'function') {
+            sa_event(
+                `time_${timeKind}`,
+                {
+                    time,
+                    message,
+                },
+                () => {}
+            );
+        }
     }
 
     private async _initAuth() {
@@ -622,8 +645,8 @@ export class AppManager {
         }
     }
 
-    private _initOffline() {
-        if ('serviceWorker' in navigator) {
+    initOffline() {
+        if ('serviceWorker' in navigator && !this._updateServiceWorker) {
             console.log('[AppManager] Registering Service Worker');
             this._updateServiceWorker = registerSW({
                 onNeedRefresh: () => {
@@ -647,15 +670,24 @@ export class AppManager {
      * Gets the name of the record that the given owner should be loaded from.
      * @param owner The owner of the record.
      */
-    getRecordName(owner: string): string {
+    getRecordName(owner: string): { recordName: string; owner: string } {
         if (owner === PLAYER_OWNER) {
-            return (
-                this.auth.primary.currentLoginStatus.authData?.userId ?? null
-            );
+            return {
+                owner,
+                recordName:
+                    this.auth?.primary?.currentLoginStatus?.authData?.userId ??
+                    null,
+            };
         } else if (owner === PUBLIC_OWNER) {
-            return null;
+            return {
+                owner,
+                recordName: null,
+            };
         } else {
-            return owner;
+            return {
+                owner: null,
+                recordName: owner,
+            };
         }
     }
 
@@ -664,6 +696,7 @@ export class AppManager {
         inst: string,
         isStatic: boolean
     ) {
+        const timeBasis = Date.now();
         const simulationId = getSimulationId(recordName, inst, isStatic);
         if (
             (this.simulationManager.primary &&
@@ -679,6 +712,26 @@ export class AppManager {
             inst,
             isStatic
         );
+
+        this._primaryPromise.then((manager) => {
+            this._reportTime(
+                'Time to create primary simulation',
+                'create_sim',
+                timeBasis
+            );
+            manager.connection.syncStateChanged
+                .pipe(
+                    first((state) => state),
+                    tap(() => {
+                        this._reportTime(
+                            'Time to first sync',
+                            'first_sync',
+                            timeBasis
+                        );
+                    })
+                )
+                .subscribe();
+        });
 
         return await this._primaryPromise;
     }
@@ -703,9 +756,6 @@ export class AppManager {
             inst,
             isStatic,
         });
-
-        this._initOffline();
-        this._reportTime('Time to primary simulation');
         this._primarySimulationAvailableSubject.next(true);
 
         const sim = this.simulationManager.primary;
@@ -725,7 +775,14 @@ export class AppManager {
                     progress: 1,
                     done: true,
                 });
+                console.log('[AppManager] Primary simulation is done.');
                 this._progress.complete();
+
+                if (!this._updateServiceWorker) {
+                    setTimeout(() => {
+                        this.initOffline();
+                    }, INIT_OFFLINE_TIMEOUT_MILISECONDS);
+                }
             }
         );
 

@@ -120,7 +120,8 @@ export type WebsocketErrorCode =
     | 'action_not_supported'
     | 'not_logged_in'
     | 'subscription_limit_reached'
-    | 'inst_not_found';
+    | 'inst_not_found'
+    | 'invalid_connection_state';
 
 /**
  * Defines an interface that contains information about an error that occurred.

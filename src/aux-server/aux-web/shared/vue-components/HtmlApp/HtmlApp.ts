@@ -155,7 +155,7 @@ export default class HtmlApp extends Vue {
                 result.then(
                     (r) => {
                         this._simulation.helper.transaction(
-                            asyncResult(event.taskId, r)
+                            asyncResult(event.taskId, r, undefined, true)
                         );
                     },
                     (err) => {
@@ -166,7 +166,7 @@ export default class HtmlApp extends Vue {
                 );
             } else {
                 this._simulation.helper.transaction(
-                    asyncResult(event.taskId, result)
+                    asyncResult(event.taskId, result, undefined, true)
                 );
             }
         } catch (err) {

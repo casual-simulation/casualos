@@ -372,7 +372,9 @@ export type KnownErrorCodes =
     | 'unacceptable_connection_token'
     | 'invalid_token'
     | 'unacceptable_connection_id'
-    | 'message_not_found';
+    | 'message_not_found'
+    | 'not_found'
+    | 'invalid_connection_state';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -472,6 +474,10 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'message_not_found') {
             return 404;
+        } else if (response.errorCode === 'not_found') {
+            return 404;
+        } else if (response.errorCode === 'invalid_connection_state') {
+            return 500;
         } else {
             return 400;
         }

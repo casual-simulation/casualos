@@ -61,7 +61,7 @@ export default class EnterAccountInfoDialog extends Vue {
     acceptedTerms: boolean = false;
     name: string = '';
     displayName: string = '';
-    dateOfBirth: Date = null;
+    dateOfBirth: string = null;
     parentEmail: string = null;
     processing: boolean = false;
     errors: FormError[] = [];
@@ -97,6 +97,10 @@ export default class EnterAccountInfoDialog extends Vue {
         return hasParentEmailError ? 'md-invalid' : '';
     }
 
+    get maxDate() {
+        return DateTime.local().toFormat('yyyy-MM-dd');
+    }
+
     get registerEmailFieldHint() {
         if (this.requireEmail) {
             return 'Email';
@@ -111,7 +115,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get requireEmail() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) >= 18;
         }
         return false;
@@ -119,7 +123,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get requireParentEmail() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) < 18;
         }
         return false;
@@ -127,7 +131,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get requireTermsOfService() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return Math.abs(dob.diffNow('years').years) >= 18;
         }
         return false;
@@ -135,7 +139,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     get dateOfBirthText() {
         if (this.dateOfBirth) {
-            const dob = DateTime.fromJSDate(this.dateOfBirth);
+            const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
             return dob.toLocaleString(DateTime.DATE_MED);
         }
         return '';
@@ -175,7 +179,7 @@ export default class EnterAccountInfoDialog extends Vue {
         this._sub.unsubscribe();
     }
 
-    async checkDisplayName() {
+    async checkDisplayName(): Promise<void> {
         if (!this.displayName || !this.name) {
             return;
         }
@@ -215,14 +219,15 @@ export default class EnterAccountInfoDialog extends Vue {
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
-                        errorMessage: 'This display name is not allowed.',
+                        errorMessage:
+                            'This display name is either not allowed or already taken.',
                     },
                 ];
             }
         }
     }
 
-    async checkEmail() {
+    async checkEmail(): Promise<void> {
         if (!this.email) {
             return;
         }
@@ -240,7 +245,7 @@ export default class EnterAccountInfoDialog extends Vue {
                 {
                     for: EMAIL_FIELD,
                     errorCode: 'invalid_email',
-                    errorMessage: 'This email is not allowed.',
+                    errorMessage: 'This email is already taken.',
                 },
             ];
         }
@@ -252,6 +257,7 @@ export default class EnterAccountInfoDialog extends Vue {
 
     async cancelRegistration() {
         await this._endpoint.cancelLogin();
+        this.$emit('close');
     }
 
     async provideDateOfBirth() {
@@ -266,26 +272,46 @@ export default class EnterAccountInfoDialog extends Vue {
             return;
         }
 
+        const dob = DateTime.fromFormat(this.dateOfBirth, 'yyyy-MM-dd');
+        if (dob > DateTime.local()) {
+            this.errors = [
+                {
+                    for: DATE_OF_BIRTH_FIELD,
+                    errorCode: 'invalid_date_of_birth',
+                    errorMessage: 'Please enter a date in the past.',
+                },
+            ];
+            return;
+        }
+
         this.errors = [];
         this.enterDateOfBirth = false;
     }
 
     async register() {
-        this.processing = true;
-        this.displayName = this.displayName.trim();
-        this.name = this.name.trim();
-        this.email = this.email.trim();
-        this.parentEmail = this.parentEmail?.trim();
+        try {
+            this.processing = true;
+            this.displayName = this.displayName.trim();
+            this.name = this.name.trim();
+            this.email = this.email.trim();
+            this.parentEmail = this.parentEmail?.trim();
 
-        const info: PrivoSignUpInfo = {
-            acceptedTermsOfService: this.acceptedTerms,
-            email: this.email,
-            name: this.name,
-            dateOfBirth: this.dateOfBirth,
-            displayName: this.displayName,
-            parentEmail: this.parentEmail,
-        };
+            const info: PrivoSignUpInfo = {
+                acceptedTermsOfService: this.acceptedTerms,
+                email: this.email,
+                name: this.name,
+                dateOfBirth: DateTime.fromFormat(
+                    this.dateOfBirth,
+                    'yyyy-MM-dd'
+                ).toJSDate(),
+                displayName: this.displayName,
+                parentEmail: this.parentEmail,
+            };
 
-        await this._endpoint.providePrivoSignUpInfo(info);
+            await this._endpoint.providePrivoSignUpInfo(info);
+        } catch (err) {
+            this.processing = false;
+            console.error(err);
+        }
     }
 }

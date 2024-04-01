@@ -1,3 +1,5 @@
+console.log = jest.fn();
+
 import {
     CompleteLoginSuccess,
     LoginRequestSuccess,
@@ -7,8 +9,6 @@ import { resourceUsage } from 'process';
 import { AuthManager } from './AuthManager';
 
 jest.mock('axios');
-
-console.log = jest.fn();
 
 describe('AuthManager', () => {
     let manager: AuthManager;

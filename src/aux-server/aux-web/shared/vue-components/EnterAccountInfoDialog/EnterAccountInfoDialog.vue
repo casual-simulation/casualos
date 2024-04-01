@@ -3,7 +3,7 @@
         :md-active.sync="showEnterAccountInfo"
         @md-closed="cancelRegistration()"
         :md-close-on-esc="true"
-        :md-click-outside-to-close="true"
+        :md-click-outside-to-close="false"
         :md-fullscreen="true"
         class="input-dialog"
     >
@@ -12,16 +12,17 @@
             <form v-if="enterDateOfBirth" @submit.prevent="provideDateOfBirth()">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
-                        <md-datepicker
-                            v-model="dateOfBirth"
-                            :class="dateOfBirthFieldClass"
-                            :md-model-type="Date"
-                            :md-disabled-dates="disabledDates"
-                        >
-                            <label>Date of Birth</label>
-
+                        <md-field class="md-has-value" :class="dateOfBirthFieldClass">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <md-input
+                                name="dateOfBirth"
+                                id="dateOfBirth"
+                                type="date"
+                                v-model="dateOfBirth"
+                                :max="maxDate"
+                            />
                             <field-errors field="dateOfBirth" :errors="errors" />
-                        </md-datepicker>
+                        </md-field>
                     </div>
                 </div>
                 <field-errors :field="null" :errors="errors" />
@@ -32,7 +33,7 @@
             <form v-else @submit.prevent="register()">
                 <div class="md-layout md-gutter">
                     <div class="md-layout-item">
-                        <md-field :class="displayNameFieldClass">
+                        <md-field :class="displayNameFieldClass" class="display-name-field">
                             <label for="name">Display Name</label>
                             <md-input
                                 name="displayName"
@@ -117,6 +118,10 @@
             </form>
         </md-dialog-content>
         <md-dialog-actions>
+            <md-button type="button" @click="cancelRegistration()" :disabled="processing">
+                <span>Cancel</span>
+            </md-button>
+            <span class="spacer"></span>
             <md-button
                 v-if="enterDateOfBirth"
                 type="button"

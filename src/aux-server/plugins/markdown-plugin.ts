@@ -21,8 +21,7 @@ const fileRegex = /\.(md)$/;
 export default function markdownPlugin(options: Options = {}): Plugin {
     const pipeline = unified()
         .use(remarkParse)
-        .use(remarkToc, { ordered: true, tight: true })
-        .use(remarkRehype)
+        .use(remarkRehype, { allowDangerousHtml: true })
         .use(rehypeSlug)
         .use(rehypeStringify, { allowDangerousHtml: true });
 

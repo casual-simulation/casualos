@@ -518,6 +518,8 @@ describe('getStatusCode()', () => {
         ['invalid_token', 400] as const,
         ['unacceptable_connection_id', 400] as const,
         ['message_not_found', 404] as const,
+        ['not_found', 404] as const,
+        ['invalid_connection_state', 500] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {

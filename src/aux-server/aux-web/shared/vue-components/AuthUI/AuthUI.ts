@@ -34,6 +34,10 @@ export default class AuthUI extends Vue {
     showAccountInfo: boolean = false;
     loginStatus: LoginStatus = null;
 
+    get isLoggedIn() {
+        return !!this.loginStatus;
+    }
+
     /**
      * Whether the "Request Access" button should be shown on the "Not Authorized" screen.
      */
@@ -65,6 +69,7 @@ export default class AuthUI extends Vue {
             appManager.authCoordinator.onMissingPermission.subscribe((e) => {
                 this.showNotAuthorized = true;
                 this.allowRequestAccess = false;
+                this.loginStatus = appManager.auth.primary.currentLoginStatus;
                 this._simId = e.simulationId;
                 this._origin = e.origin;
                 this._missingPermissionReason = e.reason;
@@ -79,6 +84,7 @@ export default class AuthUI extends Vue {
         this._sub.add(
             appManager.authCoordinator.onNotAuthorized.subscribe((e) => {
                 this.showNotAuthorized = true;
+                this.loginStatus = appManager.auth.primary.currentLoginStatus;
                 this._simId = e.simulationId;
                 this._origin = e.origin;
             })

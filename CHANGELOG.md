@@ -1,8 +1,89 @@
 # CasualOS Changelog
 
-## V3.2.17
+## V3.2.19
 
 #### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Forced all scripts to compile in [Strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode).
+    -   Strict mode restricts some functions and features of JavaScript to help catch common mistakes.
+    -   Some examples:
+        -   The `implements`, `interface`, `let`, `package`, `private`, `protected`, `public`, `static`, `yield` keywords are no longer allowed to be used as identifiers.
+        -   Assignments to non-writable globals (`Infinity`, `undefined`, etc.) are no longer allowed.
+        -   Assignments to non-writable properties now throws a TypeError.
+        -   It is no longer allowed to set properties on a primitive value.
+        -   Attempts to delete a non-configurable or otherwise undeletable property now throws a TypeError.
+        -   Duplicate parameter names are no longer allowed.
+        -   Numbers literals are no longer allowed to start with `0`.
+            -   This is because sloppy mode allowed otcal literals to be any number starting with `0` and having every digit less than `8`
+            -   If you weren't careful, it was easy to accidentally write an octal number. e.g.
+            ```typescript
+            let num = 0123; // This does not equal 123, but is actually 83 in decimal
+            ```
+
+### :rocket: Features
+
+-   Added the ability to specify separate Redis servers for websocket connections, inst data, caches, and rate limits.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where attached debuggers would automatically get detached once a portal is opened or closed.
+-   Fixed an issue where the registration flow would not always check display names properly.
+-   Improved wording for some registration errors.
+-   Fixed an issue where it was possible for a session to not be synced while the session itself believes that it is connected.
+
+## V3.2.18
+
+#### Date: 3/20/2024
+
+### :rocket: Features
+
+-   Added support for ES Module-style `import` and `export` statements.
+    -   [ES Modules](https://javascript.info/modules-intro) are a way to organize code into separate listeners.
+    -   With this update, CasualOS now supports using [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) statements in scripts.
+    -   By default, modules can be imported from 3 different places:
+        -   Scripts based on system tag. You can import exported functions and variables from any script based on the system tag of its bot. For example, `import {abc} from "example.system.tag"` can be used to import the `abc` variable or function from the bot with the `example.system` system and the `tag` tag.
+        -   URLs. The URLs can be imported. For example, `import { sortBy } from 'https://esm.run/lodash-es';"` imports the [`sortBy` function](https://lodash.com/docs/4.17.15#sortBy) from the [`lodash-es` module](https://www.npmjs.com/package/lodash-es) provided by [https://esm.run](https://esm.run).
+        -   The `casualos` module. This module exports all of CasualOS's built-in functions. It is the only module that cannot be overriden with `@onResolveModule`. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+    -   In addition to the default ways, you can provide your own custom module resolution logic by using `@onResolveModule`.
+        -   See the documentation for `@onResolveModule` for more information.
+-   Added support for TypeScript syntax.
+    -   [TypeScript](https://www.typescriptlang.org/) is an extension of JavaScript that enables you to add type information to your code.
+    -   Combined with ES Modules, this means it is much easier to catch simple bugs because the editor will tell you when something doesn't match up.
+    -   For now, errors are only surfaced in each script, but in the future it will be possible to check for errors in any script.
+    -   There are a couple limitations:
+        -   Generally, any TypeScript feature that requires a significant amount of code generation (e.g. [enums](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#enums)) are not supported.
+        -   Additionally, the `let casted = <any>value;` syntax for casting types is not supported since all scripts support JSX.
+-   Added the `📄` prefix for "library" scripts.
+    -   Before, the only way to make a script was to use the `@` prefix. Using the `@` prefix makes what we call a "listener script" or "listener tag".
+    -   Now, you can use the `📄` prefix instead of `@`. Using `📄` makes what we call a "library script" or "library tag".
+    -   Library scripts work similarly to listener scripts, except with a couple key changes:
+        -   Library scripts cannot be shouted to. Instead, they have to be imported. This means you cannot use `shout()` or `whisper()` to communicate with a library script. Additionally, `thisBot.script()` does not work either.
+        -   Library scripts have to import all CasualOS functions. This means you cannot simply use `os.toast()`, you have to first import the `casualos` module. For example:
+            ```typescript
+            import { os } from 'casualos';
+            os.toast('Hello from my module!');
+            ```
+-   Updated CasualOS to support ECMAScript 14.
+-   Updated Preact to v10.19.6
+-   Added the ability to use `.transferControlToOffscreen()` and `.getContext()` functions on `<canvas>` HTML elements.
+-   Added the ability to use `.setPointerCapture()` and `.releasePointerCapture()` functions on HTML elements.
+-   Updated the privacy policies.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `?owner=player` in the URL while not being logged in would cause a public inst to be loaded instead of prompting the user to login.
+-   Fixed an issue where custom apps would not reappear after logging in with a code.
+-   Fixed an issue where `os.getCurrentInst()` would return `undefined` if the inst is a static inst.
+
+## V3.2.17
+
+#### Date: 3/6/2024
 
 ### :rocket: Features
 
@@ -15,6 +96,19 @@
     -   This makes it easy to support setting a custom domain or CDN or public file records.
     -   It does not support private file records at this moment.
 -   Support changing the bucket that S3 files are stored in.
+-   Added support for [passkeys](https://blog.google/technology/safety-security/the-beginning-of-the-end-of-the-password/).
+    -   Passkeys are new way to sign in to apps and websites without a password. Depending on your device and platform, passkeys can even be synced across your devices.
+    -   On CasualOS, passkeys offer a quicker way to login that doesn't require checking your email or phone number every time.
+    -   On supported devices, if you login using a traditional method, CasualOS will ask you if you want to register a passkey for the device.
+    -   Upon your next login, you can use the passkey to login instead of having to enter your email and wait for a code.
+-   Changed the date of birth input to handle manually-typed input better.
+-   Added the ability to track some load time metrics using SimpleAnalytics events.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.calculateRayFromCamera()` would return incorrect results for the ray origin.
+-   Improved CasualOS to delay installation of the service worker until either the inst is fully loaded or the BIOS is shown.
+-   Fixed an issue where the `miniMapPortal` and `miniGridPortal` were not able to be resized.
 
 ## V3.2.16
 

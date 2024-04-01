@@ -297,7 +297,7 @@ export class PlaywrightSimulation
     }
 
     protected _createSubSimulation(vm: AuxVM) {
-        return new PlaywrightSimulation(
+        const sim = new PlaywrightSimulation(
             {
                 recordName: null,
                 inst: null,
@@ -309,6 +309,8 @@ export class PlaywrightSimulation
             },
             vm
         );
+        sim._isSubSimulation = true;
+        return sim;
     }
 
     private _getAuthEndpointHelper(endpoint: string): AuthHelperInterface {

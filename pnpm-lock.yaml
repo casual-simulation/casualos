@@ -12,6 +12,9 @@ patchedDependencies:
   '@mdx-js/mdx@3.0.0':
     hash: lqdilpwhfhkxjukceppb4twwum
     path: patches/@mdx-js/mdx@3.0.0.patch
+  acorn-typescript@1.4.13:
+    hash: 6c2dd2yvtei2d4lpomumi2s22q
+    path: patches/acorn-typescript@1.4.13.patch
   fake-indexeddb@5.0.1:
     hash: 32aodcxqlam32klerymhxuwzha
     path: patches/fake-indexeddb@5.0.1.patch
@@ -199,7 +202,7 @@ importers:
         version: 29.7.0
       jest-html-reporter:
         specifier: ^3.7.1
-        version: 3.10.2(jest@29.7.0)(typescript@4.9.5)
+        version: 3.10.2(jest@29.7.0)(typescript@5.3.3)
       jest-raw-loader:
         specifier: 1.0.1
         version: 1.0.1
@@ -246,8 +249,8 @@ importers:
         specifier: 9.0.0
         version: 9.0.0
       rollup-plugin-visualizer:
-        specifier: 5.10.0
-        version: 5.10.0
+        specifier: 5.12.0
+        version: 5.12.0
       sass:
         specifier: 1.56.1
         version: 1.56.1
@@ -259,10 +262,10 @@ importers:
         version: 4.4.18
       ts-jest:
         specifier: 29.0.5
-        version: 29.0.5(@babel/core@7.23.5)(esbuild@0.19.8)(jest@29.7.0)(typescript@4.9.5)
+        version: 29.0.5(@babel/core@7.23.5)(esbuild@0.19.8)(jest@29.7.0)(typescript@5.3.3)
       typescript:
-        specifier: ^4.9.5
-        version: 4.9.5
+        specifier: ^5.0.2
+        version: 5.3.3
       unified:
         specifier: 11.0.4
         version: 11.0.4
@@ -346,7 +349,7 @@ importers:
   src/aux-benchmarks:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       benchmark:
         specifier: 2.1.4
@@ -389,7 +392,7 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.7
+        specifier: ^3.2.18
         version: link:../js-interpreter
       '@casual-simulation/stacktrace':
         specifier: ^3.1.11
@@ -403,21 +406,12 @@ importers:
       '@tweenjs/tween.js':
         specifier: 18.6.0
         version: 18.6.0
-      '@types/acorn':
-        specifier: ^4.0.6
-        version: 4.0.6
       '@types/estraverse':
         specifier: ^5.1.1
         version: 5.1.7
       '@types/uuid':
         specifier: ^8.3.1
         version: 8.3.4
-      acorn:
-        specifier: ^8.0.1
-        version: 8.11.2
-      acorn-jsx:
-        specifier: ^5.3.2
-        version: 5.3.2(acorn@8.11.2)
       astring:
         specifier: 1.7.5
         version: 1.7.5
@@ -446,8 +440,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -471,22 +465,22 @@ importers:
   src/aux-components:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -524,9 +518,6 @@ importers:
       '@webxr-input-profiles/motion-controllers':
         specifier: 1.0.0
         version: 1.0.0
-      acorn:
-        specifier: ^8.0.1
-        version: 8.11.2
       astring:
         specifier: 1.7.5
         version: 1.7.5
@@ -652,7 +643,7 @@ importers:
   src/aux-records:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -669,6 +660,12 @@ importers:
       '@google/generative-ai':
         specifier: 0.2.1
         version: 0.2.1
+      '@simplewebauthn/server':
+        specifier: 9.0.3
+        version: 9.0.3
+      '@simplewebauthn/types':
+        specifier: 9.0.1
+        version: 9.0.1
       axios:
         specifier: 1.6.2
         version: 1.6.2
@@ -721,10 +718,10 @@ importers:
         specifier: ^3.359.0
         version: 3.468.0
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-records
       axios:
         specifier: 1.6.2
@@ -742,10 +739,10 @@ importers:
   src/aux-runtime:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -763,7 +760,7 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.7
+        specifier: ^3.2.18
         version: link:../js-interpreter
       '@casual-simulation/stacktrace':
         specifier: ^3.1.11
@@ -774,9 +771,6 @@ importers:
       '@tweenjs/tween.js':
         specifier: 18.6.0
         version: 18.6.0
-      '@types/acorn':
-        specifier: ^4.0.6
-        version: 4.0.6
       '@types/estraverse':
         specifier: ^5.1.1
         version: 5.1.7
@@ -787,11 +781,14 @@ importers:
         specifier: ^8.3.1
         version: 8.3.4
       acorn:
-        specifier: ^8.0.1
-        version: 8.11.2
+        specifier: 8.11.3
+        version: 8.11.3
       acorn-jsx:
-        specifier: ^5.3.2
-        version: 5.3.2(acorn@8.11.2)
+        specifier: 5.3.2
+        version: 5.3.2(acorn@8.11.3)
+      acorn-typescript:
+        specifier: 1.4.13
+        version: 1.4.13(patch_hash=6c2dd2yvtei2d4lpomumi2s22q)(acorn@8.11.3)
       astring:
         specifier: 1.7.5
         version: 1.7.5
@@ -826,8 +823,8 @@ importers:
         specifier: 2.4.6
         version: 2.4.6
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -881,31 +878,31 @@ importers:
         specifier: ^3.359.0
         version: 3.468.0
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -923,11 +920,11 @@ importers:
         specifier: ^3.1.11
         version: link:../fast-json-stable-stringify
       '@casual-simulation/js-interpreter':
-        specifier: ^3.2.7
+        specifier: ^3.2.18
         version: link:../js-interpreter
       '@casual-simulation/monaco-editor':
-        specifier: 0.35.3
-        version: 0.35.3
+        specifier: 0.47.1
+        version: 0.47.1
       '@casual-simulation/multi-streams-mixer':
         specifier: ^3.2.14
         version: link:../multi-streams-mixer
@@ -961,6 +958,12 @@ importers:
       '@prisma/client':
         specifier: ^5.7.0
         version: 5.7.0(prisma@5.7.0)
+      '@simplewebauthn/browser':
+        specifier: 9.0.1
+        version: 9.0.1
+      '@simplewebauthn/types':
+        specifier: 9.0.1
+        version: 9.0.1
       '@teachablemachine/image':
         specifier: 0.8.5
         version: 0.8.5(@tensorflow/tfjs@4.2.0)
@@ -979,9 +982,6 @@ importers:
       '@webxr-input-profiles/motion-controllers':
         specifier: 1.0.0
         version: 1.0.0
-      acorn:
-        specifier: ^8.0.1
-        version: 8.11.2
       astring:
         specifier: 1.7.5
         version: 1.7.5
@@ -1111,6 +1111,9 @@ importers:
       troika-three-text:
         specifier: 0.46.4
         version: 0.46.4(three@0.159.0)
+      typescript:
+        specifier: ^5.0.2
+        version: 5.3.3
       unique-names-generator:
         specifier: 4.2.0
         version: 4.2.0
@@ -1152,7 +1155,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1224,13 +1227,13 @@ importers:
   src/aux-vm:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1242,7 +1245,7 @@ importers:
         specifier: ^3.2.7
         version: link:../timesync
       '@casual-simulation/undom':
-        specifier: ^3.2.14
+        specifier: ^3.2.18
         version: link:../undom
       axios:
         specifier: 1.6.2
@@ -1263,8 +1266,8 @@ importers:
         specifier: 3.4.4
         version: 3.4.4
       preact:
-        specifier: 10.10.1
-        version: 10.10.1
+        specifier: 10.19.6
+        version: 10.19.6
       rxjs:
         specifier: 7.5.7
         version: 7.5.7
@@ -1275,25 +1278,25 @@ importers:
   src/aux-vm-browser:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1329,19 +1332,19 @@ importers:
   src/aux-vm-client:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1371,16 +1374,16 @@ importers:
   src/aux-vm-deno:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1407,16 +1410,16 @@ importers:
   src/aux-vm-node:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.2.7
@@ -1437,7 +1440,7 @@ importers:
   src/aux-websocket:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^3.2.7
@@ -1449,7 +1452,7 @@ importers:
   src/aux-websocket-aws:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.2.16
+        specifier: ^3.2.18
         version: link:../aux-common
       '@casual-simulation/websocket':
         specifier: ^3.2.7
@@ -1534,15 +1537,9 @@ importers:
       '@casual-simulation/error-stack-parser':
         specifier: ^2.0.7
         version: 2.0.7
-      '@types/acorn':
-        specifier: ^4.0.6
-        version: 4.0.6
       '@types/estree':
         specifier: 1.0.0
         version: 1.0.0
-      acorn:
-        specifier: ^8.0.1
-        version: 8.11.2
       stackframe:
         specifier: ^1.2.0
         version: 1.3.4
@@ -4016,8 +4013,8 @@ packages:
       stackframe: 1.3.4
     dev: false
 
-  /@casual-simulation/monaco-editor@0.35.3:
-    resolution: {integrity: sha512-g5XdeUJjeq39UxPRxaoHDojavatemUK+KtviR7WtvUZdw51P7y9FkX//qoaWzNw22mcFw3uMqsqvLOdMeiU8Wg==}
+  /@casual-simulation/monaco-editor@0.47.1:
+    resolution: {integrity: sha512-cCzGOoYqGM5+OAL7u26L2BcPSG0hvOt9SgF+Xg/x3n5A/9rxdn+bZVNr+9Uwhbq40Kazl58M3se5wJadpg+Vlg==}
     dependencies:
       '@types/shelljs': 0.8.15
       pin-github-action: 1.9.1
@@ -5089,6 +5086,10 @@ packages:
     dependencies:
       '@hapi/hoek': 9.3.0
 
+  /@hexagon/base64@1.1.28:
+    resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
+    dev: false
+
   /@hutson/parse-repository-url@3.0.2:
     resolution: {integrity: sha512-H9XAx3hc0BQHY6l+IFSWHDySypcXsvsuLhgYLUGywmJ5pswRVQJUHpOsobnLYp2ZUaUlKiKDrgWWhosOwAEM8Q==}
     engines: {node: '>=6.9.0'}
@@ -5127,7 +5128,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       jest-message-util: 29.7.0
       jest-util: 29.7.0
@@ -5243,7 +5244,7 @@ packages:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       '@jridgewell/trace-mapping': 0.3.20
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit: 0.1.2
@@ -5384,7 +5385,7 @@ packages:
     resolution: {integrity: sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==}
     dev: false
 
-  /@lerna/create@8.0.0(typescript@4.9.5):
+  /@lerna/create@8.0.0(typescript@5.3.3):
     resolution: {integrity: sha512-mCeEhjFDRwPY7J4uxCjqdzPwPFBUGlkdlQjBidaX5XaoQcxR2hAAvgHZKfVGkUUEZKfyPcWwKzen4KydNB2G7A==}
     engines: {node: '>=18.0.0'}
     dependencies:
@@ -5399,7 +5400,7 @@ packages:
       columnify: 1.6.0
       conventional-changelog-core: 5.0.1
       conventional-recommended-bump: 7.0.1
-      cosmiconfig: 8.3.6(typescript@4.9.5)
+      cosmiconfig: 8.3.6(typescript@5.3.3)
       dedent: 0.7.0
       execa: 5.0.0
       fs-extra: 11.2.0
@@ -5461,6 +5462,10 @@ packages:
       - supports-color
       - typescript
     dev: true
+
+  /@levischuck/tiny-cbor@0.2.2:
+    resolution: {integrity: sha512-f5CnPw997Y2GQ8FAvtuVVC19FX8mwNNC+1XJcIi16n/LTJifKO6QBgGLgN3YEmqtGMk17SKSuoWES3imJVxAVw==}
+    dev: false
 
   /@mdx-js/mdx@3.0.0(patch_hash=lqdilpwhfhkxjukceppb4twwum):
     resolution: {integrity: sha512-Icm0TBKBLYqroYbNW3BPnzMGn+7mwpQOK310aZ7+fkCtiU3aqv2cdcX+nd0Ydo3wI5Rx8bX2Z2QmGb/XcAClCw==}
@@ -5975,7 +5980,7 @@ packages:
   /@octokit/types@2.16.2:
     resolution: {integrity: sha512-O75k56TYvJ8WpAakWwYRN8Bgu60KrmX0z1KqFp1kNiFNkgW+JW+9EBKZ+S33PU6SLvbihqd+3drvPxKK68Ee8Q==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: false
 
   /@octokit/types@6.41.0:
@@ -5989,6 +5994,50 @@ packages:
     dependencies:
       '@octokit/openapi-types': 18.1.1
     dev: true
+
+  /@peculiar/asn1-android@2.3.10:
+    resolution: {integrity: sha512-z9Rx9cFJv7UUablZISe7uksNbFJCq13hO0yEAOoIpAymALTLlvUOSLnGiQS7okPaM5dP42oTLhezH6XDXRXjGw==}
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.8
+      asn1js: 3.0.5
+      tslib: 2.6.2
+    dev: false
+
+  /@peculiar/asn1-ecc@2.3.8:
+    resolution: {integrity: sha512-Ah/Q15y3A/CtxbPibiLM/LKcMbnLTdUdLHUgdpB5f60sSvGkXzxJCu5ezGTFHogZXWNX3KSmYqilCrfdmBc6pQ==}
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.8
+      '@peculiar/asn1-x509': 2.3.8
+      asn1js: 3.0.5
+      tslib: 2.6.2
+    dev: false
+
+  /@peculiar/asn1-rsa@2.3.8:
+    resolution: {integrity: sha512-ES/RVEHu8VMYXgrg3gjb1m/XG0KJWnV4qyZZ7mAg7rrF3VTmRbLxO8mk+uy0Hme7geSMebp+Wvi2U6RLLEs12Q==}
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.8
+      '@peculiar/asn1-x509': 2.3.8
+      asn1js: 3.0.5
+      tslib: 2.6.2
+    dev: false
+
+  /@peculiar/asn1-schema@2.3.8:
+    resolution: {integrity: sha512-ULB1XqHKx1WBU/tTFIA+uARuRoBVZ4pNdOA878RDrRbBfBGcSzi5HBkdScC6ZbHn8z7L8gmKCgPC1LHRrP46tA==}
+    dependencies:
+      asn1js: 3.0.5
+      pvtsutils: 1.3.5
+      tslib: 2.6.2
+    dev: false
+
+  /@peculiar/asn1-x509@2.3.8:
+    resolution: {integrity: sha512-voKxGfDU1c6r9mKiN5ZUsZWh3Dy1BABvTM3cimf0tztNwyMJPhiXY94eRTgsMQe6ViLfT6EoXxkWVzcm3mFAFw==}
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.8
+      asn1js: 3.0.5
+      ipaddr.js: 2.1.0
+      pvtsutils: 1.3.5
+      tslib: 2.6.2
+    dev: false
 
   /@pkgjs/parseargs@0.11.0:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -6380,6 +6429,33 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@simplewebauthn/browser@9.0.1:
+    resolution: {integrity: sha512-wD2WpbkaEP4170s13/HUxPcAV5y4ZXaKo1TfNklS5zDefPinIgXOpgz1kpEvobAsaLPa2KeH7AKKX/od1mrBJw==}
+    dependencies:
+      '@simplewebauthn/types': 9.0.1
+    dev: false
+
+  /@simplewebauthn/server@9.0.3:
+    resolution: {integrity: sha512-FMZieoBosrVLFxCnxPFD9Enhd1U7D8nidVDT4MsHc6l4fdVcjoeHjDueeXCloO1k5O/fZg1fsSXXPKbY2XTzDA==}
+    engines: {node: '>=16.0.0'}
+    dependencies:
+      '@hexagon/base64': 1.1.28
+      '@levischuck/tiny-cbor': 0.2.2
+      '@peculiar/asn1-android': 2.3.10
+      '@peculiar/asn1-ecc': 2.3.8
+      '@peculiar/asn1-rsa': 2.3.8
+      '@peculiar/asn1-schema': 2.3.8
+      '@peculiar/asn1-x509': 2.3.8
+      '@simplewebauthn/types': 9.0.1
+      cross-fetch: 4.0.0
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
+  /@simplewebauthn/types@9.0.1:
+    resolution: {integrity: sha512-tGSRP1QvsAvsJmnOlRQyw/mvK9gnPtjEc5fg2+m8n+QUa+D7rvrKkOYyfpy42GTs90X3RDOnqJgfHt+qO67/+w==}
+    dev: false
 
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -7529,7 +7605,7 @@ packages:
   /@types/fs-extra@8.1.5:
     resolution: {integrity: sha512-0dzKcwO+S8s2kuF5Z9oUWatQJj5Uq/iqphEtE3GQJVRRYm/tD1LglU2UnXi2A8jLq5umkGouOXOR9y0n613ZwQ==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/geojson@7946.0.13:
@@ -7540,12 +7616,12 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
 
   /@types/graceful-fs@4.1.9:
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/gtag.js@0.0.12:
@@ -7712,7 +7788,7 @@ packages:
   /@types/node-fetch@2.6.9:
     resolution: {integrity: sha512-bQVlnMLFJ2d35DkPNjEPmd9ueO/rh5EiaZt2bhqiSarPjZIuIV6bPQVqcrEyvNo+AfTrRGVazle1tl597w3gfA==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       form-data: 4.0.0
     dev: false
 
@@ -7820,7 +7896,7 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/retry@0.12.0:
@@ -7853,7 +7929,7 @@ packages:
     resolution: {integrity: sha512-x2EM6TJOybec7c52BX0ZspPodMsQUd5L6PRwOunVyVUhXiBSKf3AezDL8Dgvgt5o0UfKNfuA0eMLr2wLT4AiBA==}
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
 
   /@types/serve-index@1.9.4:
     resolution: {integrity: sha512-qLpGZ/c2fhSs5gnYsQxtDEq3Oy8SXPClIXkW5ghvAvsNuVSA8k+gCONcUCS/UjLEYvYps+e8uBtfgXgvhwfNug==}
@@ -7872,7 +7948,7 @@ packages:
     resolution: {integrity: sha512-vzmnCHl6hViPu9GNLQJ+DZFd6BQI2DBTUeOvYHqkWQLMfKAAQYMb/xAmZkTogZI/vqXHCWkqDRymDI5p0QTi5Q==}
     dependencies:
       '@types/glob': 7.2.0
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: false
 
   /@types/sockjs@0.3.36:
@@ -7898,7 +7974,7 @@ packages:
   /@types/svgo@2.6.4:
     resolution: {integrity: sha512-l4cmyPEckf8moNYHdJ+4wkHvFxjyW6ulm9l4YGaOxeyBWPhBOT0gvni1InpFPdzx1dKf/2s62qGITwxNWnPQng==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/three@0.140.0:
@@ -8252,24 +8328,24 @@ packages:
   /acorn-globals@7.0.1:
     resolution: {integrity: sha512-umOSDSDrfHbTNPuNpC2NSnnA3LUrqpevPb4T9jRx4MagXNS0rs+gwiTcAvqCRmsD6utzsrzNt+ebm00SNWiC3Q==}
     dependencies:
-      acorn: 8.11.2
+      acorn: 8.11.3
       acorn-walk: 8.3.1
     dev: true
 
-  /acorn-import-assertions@1.9.0(acorn@8.11.2):
+  /acorn-import-assertions@1.9.0(acorn@8.11.3):
     resolution: {integrity: sha512-cmMwop9x+8KFhxvKrKfPYmN6/pKTYYHBqLa0DfvVZcKMJWNyWLnaqND7dx/qn66R7ewM1UX5XMaDVP5wlVTaVA==}
     peerDependencies:
       acorn: ^8
     dependencies:
-      acorn: 8.11.2
+      acorn: 8.11.3
     dev: false
 
-  /acorn-jsx@5.3.2(acorn@8.11.2):
+  /acorn-jsx@5.3.2(acorn@8.11.3):
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
-      acorn: 8.11.2
+      acorn: 8.11.3
     dev: false
 
   /acorn-node@1.8.2:
@@ -8279,6 +8355,15 @@ packages:
       acorn-walk: 7.2.0
       xtend: 4.0.2
     dev: true
+
+  /acorn-typescript@1.4.13(patch_hash=6c2dd2yvtei2d4lpomumi2s22q)(acorn@8.11.3):
+    resolution: {integrity: sha512-xsc9Xv0xlVfwp2o7sQ+GCQ1PgbkdcpWdTzrwXxO3xDMTAywVS3oXVOcOHuRjAPkS4P9b+yc/qNF15460v+jp4Q==}
+    peerDependencies:
+      acorn: '>=8.9.0'
+    dependencies:
+      acorn: 8.11.3
+    dev: false
+    patched: true
 
   /acorn-walk@7.2.0:
     resolution: {integrity: sha512-OPdCF6GsMIP+Az+aWfAAOEt2/+iVDKE7oy6lJ098aoe59oAmK76qV6Gw60SbZ8jHuG2wH058GF4pLFbYamYrVA==}
@@ -8295,8 +8380,8 @@ packages:
     hasBin: true
     dev: true
 
-  /acorn@8.11.2:
-    resolution: {integrity: sha512-nc0Axzp/0FILLEVsm4fNwLCwMttvhEI263QtVPQcbpfZZ3ts0hLsZGOpE6czNlid7CJ9MlyH8reXkpsf3YUY4w==}
+  /acorn@8.11.3:
+    resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -8576,6 +8661,15 @@ packages:
     resolution: {integrity: sha512-ix/FxPn0MDjeyJ7i/yoHGFt/EX6LyNbxSEhPPXODPL+KB0VPk86UYfL0lMdy+KCnv+fmvIzySwaK5COwqVbWTQ==}
     dependencies:
       safer-buffer: 2.1.2
+    dev: false
+
+  /asn1js@3.0.5:
+    resolution: {integrity: sha512-FVnvrKJwpt9LP2lAMl8qZswRNm3T4q9CON+bxldk2iwk3FFpuwhx2FfinyitizWHsVYyaY+y5JzDR0rCMV5yTQ==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      pvtsutils: 1.3.5
+      pvutils: 1.1.3
+      tslib: 2.6.2
     dev: false
 
   /assert-plus@1.0.0:
@@ -10154,22 +10248,6 @@ packages:
       yaml: 1.10.2
     dev: false
 
-  /cosmiconfig@8.3.6(typescript@4.9.5):
-    resolution: {integrity: sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      typescript: '>=4.9.5'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-    dependencies:
-      import-fresh: 3.3.0
-      js-yaml: 4.1.0
-      parse-json: 5.2.0
-      path-type: 4.0.0
-      typescript: 4.9.5
-    dev: true
-
   /cosmiconfig@8.3.6(typescript@5.3.3):
     resolution: {integrity: sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==}
     engines: {node: '>=14'}
@@ -10184,7 +10262,6 @@ packages:
       parse-json: 5.2.0
       path-type: 4.0.0
       typescript: 5.3.3
-    dev: false
 
   /create-ecdh@4.0.4:
     resolution: {integrity: sha512-mf+TCx8wWc9VpuxfP2ht0iSISLZnt0JgWlrOKZiNqyUZWnjIaCIVNQArMHnCZKfEYRg6IM7A+NeJoN8gf/Ws0A==}
@@ -10240,6 +10317,14 @@ packages:
     dependencies:
       cross-spawn: 7.0.3
     dev: true
+
+  /cross-fetch@4.0.0:
+    resolution: {integrity: sha512-e4a5N8lVvuLgAWgnCrLr2PP0YyDOTHa9H/Rj54dirp61qXnNq46m82bRhNqIA5VccJtWBvPTFRV3TtvHUKPB1g==}
+    dependencies:
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /cross-spawn@5.1.0:
     resolution: {integrity: sha512-pTgQJ5KC0d2hcY8eyL1IzlBPYjTkyH72XRZPnLyKus2mBfNjQs3klqbJU2VILqZryAZUt9JOb3h/mWMy23/f5A==}
@@ -13965,7 +14050,7 @@ packages:
       '@jest/expect': 29.7.0
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       co: 4.6.0
       dedent: 1.5.1
@@ -14183,7 +14268,7 @@ packages:
     dependencies:
       '@jest/types': 29.6.3
       '@types/graceful-fs': 4.1.9
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -14196,7 +14281,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /jest-html-reporter@3.10.2(jest@29.7.0)(typescript@4.9.5):
+  /jest-html-reporter@3.10.2(jest@29.7.0)(typescript@5.3.3):
     resolution: {integrity: sha512-XRBa5ylHPUQoo8aJXEEdKsTruieTdlPbRktMx9WG9evMTxzJEKGFMaw5x+sQxJuClWdNR72GGwbOaz+6HIlksA==}
     engines: {node: '>=4.8.3'}
     peerDependencies:
@@ -14209,7 +14294,7 @@ packages:
       jest: 29.7.0(@types/node@18.19.3)
       mkdirp: 1.0.4
       strip-ansi: 6.0.1
-      typescript: 4.9.5
+      typescript: 5.3.3
       xmlbuilder: 15.0.0
     dev: true
 
@@ -14340,7 +14425,7 @@ packages:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       emittery: 0.13.1
       graceful-fs: 4.2.11
@@ -14371,7 +14456,7 @@ packages:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       chalk: 4.1.2
       cjs-module-lexer: 1.2.3
       collect-v8-coverage: 1.0.2
@@ -14447,7 +14532,7 @@ packages:
     dependencies:
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.13.1
@@ -14459,7 +14544,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: true
@@ -14477,7 +14562,7 @@ packages:
     resolution: {integrity: sha512-eIz2msL/EzL9UFTFFx7jBTkeZfku0yUAyZZZmJ93H2TYEiroIx2PQjEXcwYtYl8zXCxb+PAmA2hLIt/6ZEkPHw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -14569,7 +14654,7 @@ packages:
         optional: true
     dependencies:
       abab: 2.0.6
-      acorn: 8.11.2
+      acorn: 8.11.3
       acorn-globals: 7.0.1
       cssom: 0.5.0
       cssstyle: 2.3.0
@@ -14786,7 +14871,7 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
     dependencies:
-      '@lerna/create': 8.0.0(typescript@4.9.5)
+      '@lerna/create': 8.0.0(typescript@5.3.3)
       '@npmcli/run-script': 6.0.2
       '@nx/devkit': 17.1.3(nx@17.1.3)
       '@octokit/plugin-enterprise-rest': 6.0.1
@@ -14799,7 +14884,7 @@ packages:
       conventional-changelog-angular: 7.0.0
       conventional-changelog-core: 5.0.1
       conventional-recommended-bump: 7.0.1
-      cosmiconfig: 8.3.6(typescript@4.9.5)
+      cosmiconfig: 8.3.6(typescript@5.3.3)
       dedent: 0.7.0
       envinfo: 7.8.1
       execa: 5.0.0
@@ -14851,7 +14936,7 @@ packages:
       strong-log-transformer: 2.1.0
       tar: 6.1.11
       temp-dir: 1.0.0
-      typescript: 4.9.5
+      typescript: 5.3.3
       upath: 2.0.1
       uuid: 9.0.1
       validate-npm-package-license: 3.0.4
@@ -15824,8 +15909,8 @@ packages:
   /micromark-extension-mdxjs@3.0.0:
     resolution: {integrity: sha512-A873fJfhnJ2siZyUrJ31l34Uqwy4xIFmvPY1oj+Ean5PHcPBYzEsvqvWGaWcfEIr11O5Dlw3p2y0tZWpKHDejQ==}
     dependencies:
-      acorn: 8.11.2
-      acorn-jsx: 5.3.2(acorn@8.11.2)
+      acorn: 8.11.3
+      acorn-jsx: 5.3.2(acorn@8.11.3)
       micromark-extension-mdx-expression: 3.0.0
       micromark-extension-mdx-jsx: 3.0.0
       micromark-extension-mdx-md: 2.0.0
@@ -17977,8 +18062,8 @@ packages:
       posthtml-render: 1.4.0
     dev: true
 
-  /preact@10.10.1:
-    resolution: {integrity: sha512-cXljG59ylGtSLismoLojXPAGvnh2ipQr3BYz9KZQr+1sdASCT+sR/v8dSMDS96xGCdtln2wHfAHCnLJK+XcBNg==}
+  /preact@10.19.6:
+    resolution: {integrity: sha512-gympg+T2Z1fG1unB8NH29yHJwnEaCH37Z32diPDku316OTnRPeMbiRV9kTrfZpocXjdfnWuFUl/Mj4BHaf6gnw==}
     dev: false
 
   /precise-commits@1.0.2(prettier@2.8.8):
@@ -18163,7 +18248,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       long: 4.0.0
     dev: false
 
@@ -18182,7 +18267,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       long: 5.2.3
     dev: false
 
@@ -18262,6 +18347,17 @@ packages:
   /pure-rand@6.0.4:
     resolution: {integrity: sha512-LA0Y9kxMYv47GIPJy6MI84fqTd2HmYZI83W/kM/SkKfDlajnZYfmXFTxkbY+xSBPkLJxltMa9hIkmdc29eguMA==}
     dev: true
+
+  /pvtsutils@1.3.5:
+    resolution: {integrity: sha512-ARvb14YB9Nm2Xi6nBq1ZX6dAM0FsJnuk+31aUp4TrcZEdKUlSqOqsxJHUPJDNE3qiIp+iUPEIeR6Je/tgV7zsA==}
+    dependencies:
+      tslib: 2.6.2
+    dev: false
+
+  /pvutils@1.1.3:
+    resolution: {integrity: sha512-pMpnA0qRdFp32b1sJl1wOJNxZLQ2cbQx+k6tjNtZ8CpvVhNqEPRgivZ2WOUev2YMajecdH7ctUPDvEe87nariQ==}
+    engines: {node: '>=6.0.0'}
+    dev: false
 
   /qrcode@1.5.3:
     resolution: {integrity: sha512-puyri6ApkEHYiVl4CFzo1tDkAZ+ATcnbJrJ6RiBM1Fhctdn/ix9MTE3hRph33omisEbC/2fcfemsseiKgBPKZg==}
@@ -19204,8 +19300,8 @@ packages:
       terser: 5.26.0
     dev: true
 
-  /rollup-plugin-visualizer@5.10.0:
-    resolution: {integrity: sha512-N4AkNL0qFvipegbDJ0kupS+8eKGjL0q+lYwV46NflLX/B8Rh73wz3kCIdg50bR6XVhNcaMA4Eb519xtm90Ckfg==}
+  /rollup-plugin-visualizer@5.12.0:
+    resolution: {integrity: sha512-8/NU9jXcHRs7Nnj07PF2o4gjxmm9lXIrZ8r175bT9dK8qoLlvKTwRMArRCMgpMGlq8CTLugRvEmyMeMXIU2pNQ==}
     engines: {node: '>=14'}
     hasBin: true
     peerDependencies:
@@ -20409,7 +20505,7 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
     dependencies:
-      acorn: 8.11.2
+      acorn: 8.11.3
       commander: 2.20.3
       source-map: 0.6.1
       source-map-support: 0.5.21
@@ -20421,7 +20517,7 @@ packages:
     hasBin: true
     dependencies:
       '@jridgewell/source-map': 0.3.5
-      acorn: 8.11.2
+      acorn: 8.11.3
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -20649,7 +20745,7 @@ packages:
     resolution: {integrity: sha512-+1iDGY6NmOGidq7i7xZGA4cm8DAa6fqdYcvO5Z6yBevH++Bdo9Qt/mN0TzHUgcCcKv1gmh9+W5dHqz8pMWbCbg==}
     dev: false
 
-  /ts-jest@29.0.5(@babel/core@7.23.5)(esbuild@0.19.8)(jest@29.7.0)(typescript@4.9.5):
+  /ts-jest@29.0.5(@babel/core@7.23.5)(esbuild@0.19.8)(jest@29.7.0)(typescript@5.3.3):
     resolution: {integrity: sha512-PL3UciSgIpQ7f6XjVOmbi96vmDHUqAyqDr8YxzopDqX3kfgYtX1cuNeBjP+L9sFXi6nzsGGA6R3fP3DDDJyrxA==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     hasBin: true
@@ -20680,7 +20776,7 @@ packages:
       lodash.memoize: 4.1.2
       make-error: 1.3.6
       semver: 7.5.4
-      typescript: 4.9.5
+      typescript: 5.3.3
       yargs-parser: 21.1.1
     dev: true
 
@@ -20861,17 +20957,10 @@ packages:
       typescript: 5.3.3
     dev: false
 
-  /typescript@4.9.5:
-    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-    dev: true
-
   /typescript@5.3.3:
     resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: false
 
   /ua-parser-js@1.0.37:
     resolution: {integrity: sha512-bhTyI94tZofjo+Dn8SN6Zv8nBDvyXTymAdM3LDI/0IboIUwTu1rEhW7v2TfiVsoYWgkQ4kOVqnI8APUFbIQIFQ==}
@@ -21654,7 +21743,7 @@ packages:
     hasBin: true
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      acorn: 8.11.2
+      acorn: 8.11.3
       acorn-walk: 8.3.1
       commander: 7.2.0
       debounce: 1.2.1
@@ -21769,8 +21858,8 @@ packages:
       '@webassemblyjs/ast': 1.11.6
       '@webassemblyjs/wasm-edit': 1.11.6
       '@webassemblyjs/wasm-parser': 1.11.6
-      acorn: 8.11.2
-      acorn-import-assertions: 1.9.0(acorn@8.11.2)
+      acorn: 8.11.3
+      acorn-import-assertions: 1.9.0(acorn@8.11.3)
       browserslist: 4.22.2
       chrome-trace-event: 1.0.3
       enhanced-resolve: 5.15.0

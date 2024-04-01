@@ -1201,7 +1201,11 @@ export class Interpreter {
             proto !== null
         ) {
             for (let [key, prototype, constructor] of copyPrototypes) {
-                if (proto === prototype) {
+                if (
+                    proto === prototype ||
+                    (prototype === Function.prototype &&
+                        typeof value === 'function')
+                ) {
                     return [
                         this.realm.Intrinsics[key] as ObjectValue,
                         constructor,

@@ -1,5 +1,5 @@
 <template>
-    <div class="terms-container">
+    <div class="terms-container policy-container">
         <md-card>
             <md-card-header>
                 <h1 class="md-title">{{ hostname }} Terms of Service</h1>

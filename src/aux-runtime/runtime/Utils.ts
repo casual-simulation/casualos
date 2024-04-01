@@ -296,3 +296,16 @@ export function markAsRuntimePromise<T>(
 
     return promise as RuntimePromise<T>;
 }
+
+/**
+ * Determines if the given string represents a URL.
+ * @param value The value to check.
+ */
+export function isUrl(value: string): boolean {
+    try {
+        new URL(value);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}

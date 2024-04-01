@@ -55,6 +55,12 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         this._bucket = bucket;
     }
 
+    async disconnect(connectionId: string): Promise<void> {
+        await this._api.deleteConnection({
+            ConnectionId: connectionId,
+        });
+    }
+
     async presignMessageUpload(): Promise<PresignFileUploadResult> {
         try {
             const uploadUrl = await getMessageUploadUrl(

@@ -55,4 +55,10 @@ export interface WebsocketMessenger {
         method: string,
         headers: UploadHttpHeaders
     ): Promise<string | null | undefined>;
+
+    /**
+     * Disconnects the given connection.
+     * @param connectionId The ID of the connection.
+     */
+    disconnect(connectionId: string): Promise<void>;
 }

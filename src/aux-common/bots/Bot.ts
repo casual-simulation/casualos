@@ -1,5 +1,6 @@
 import { type } from 'os';
 import { TagEditOp } from './AuxStateHelpers';
+import { BotModule, BotModuleResult } from './BotModule';
 
 export type PartialBot = Partial<Bot>;
 
@@ -298,6 +299,31 @@ export interface CompiledBotListeners {
      * Gets the listener in the given tag.
      */
     [tag: string]: (arg?: any) => any;
+}
+
+/**
+ * An interface that maps module names to compiled modules.
+ *
+ * ```typescript
+ * interface Modules {
+ *      [tag: string]: BotModule;
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listeners
+ * @docid CompiledBotModules
+ */
+export interface CompiledBotModules {
+    /**
+     * Gets the listener in the given tag.
+     */
+    [tag: string]: BotModule;
+}
+
+export interface CompiledBotExports {
+    [tag: string]: Promise<BotModuleResult>;
 }
 
 /**
@@ -2167,6 +2193,11 @@ export const ON_DISALLOW_COLLABORATION_UPGRADE: string =
     'onDisallowCollaborationUpgrade';
 
 /**
+ * The name of the event that is triggered when a module needs to be resolved.
+ */
+export const ON_RESOLVE_MODULE: string = 'onResolveModule';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -2355,6 +2386,11 @@ export const ROTATION_TAG_PREFIX: string = '🔁';
 export const DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES: string[] = ['📖'];
 
 /**
+ * The default script prefixes for library portals.
+ */
+export const LIBRARY_SCRIPT_PREFIX = '📄';
+
+/**
  * The list of known tag prefixes.
  */
 export const KNOWN_TAG_PREFIXES: string[] = [
@@ -2366,6 +2402,7 @@ export const KNOWN_TAG_PREFIXES: string[] = [
     NUMBER_TAG_PREFIX,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
+    LIBRARY_SCRIPT_PREFIX,
 ];
 
 /**

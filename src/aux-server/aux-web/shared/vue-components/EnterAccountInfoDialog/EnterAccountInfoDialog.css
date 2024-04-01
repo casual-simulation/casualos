@@ -6,3 +6,7 @@
 .terms-of-service-error {
     color: #c93131;
 }
+
+.display-name-field.md-invalid {
+    margin-bottom: 44px;
+}

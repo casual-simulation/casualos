@@ -1,6 +1,7 @@
 import {
     AuthController,
     CompleteLoginSuccess,
+    findRelyingPartyForOrigin,
     getPrivacyFeaturesFromPermissions,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_TOKEN_ERROR_MESSAGE,
@@ -9,6 +10,9 @@ import {
     LOGIN_REQUEST_LIFETIME_MS,
     OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
     PRIVO_OPEN_ID_PROVIDER,
+    RelyingParty,
+    RequestWebAuthnLoginSuccess,
+    RequestWebAuthnRegistrationSuccess,
     SESSION_LIFETIME_MS,
 } from './AuthController';
 import {
@@ -38,6 +42,21 @@ import {
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
 import { PrivoClientInterface } from './PrivoClient';
+import {
+    VerifiedRegistrationResponse,
+    VerifyAuthenticationResponseOpts,
+    verifyRegistrationResponse,
+    generateRegistrationOptions,
+    GenerateRegistrationOptionsOpts,
+    generateAuthenticationOptions,
+    GenerateAuthenticationOptionsOpts,
+    verifyAuthenticationResponse,
+    VerifiedAuthenticationResponse,
+} from '@simplewebauthn/server';
+import {
+    PublicKeyCredentialCreationOptionsJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/types';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -54,6 +73,53 @@ const originalDateNow = Date.now;
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
+
+jest.mock('@simplewebauthn/server');
+let verifyRegistrationResponseMock: jest.Mock<
+    Promise<VerifiedRegistrationResponse>,
+    [VerifyAuthenticationResponseOpts]
+> = verifyRegistrationResponse as any;
+let generateRegistrationOptionsMock: jest.Mock<
+    Promise<PublicKeyCredentialCreationOptionsJSON>,
+    [GenerateRegistrationOptionsOpts]
+> = generateRegistrationOptions as any;
+let generateAuthenticationOptionsMock: jest.Mock<
+    Promise<PublicKeyCredentialRequestOptionsJSON>,
+    [GenerateAuthenticationOptionsOpts]
+> = generateAuthenticationOptions as any;
+
+let verifyAuthenticationResponseMock: jest.Mock<
+    Promise<VerifiedAuthenticationResponse>,
+    [VerifyAuthenticationResponseOpts]
+> = verifyAuthenticationResponse as any;
+
+generateRegistrationOptionsMock.mockImplementation(async (opts) => {
+    const generateRegistrationOptions = jest.requireActual(
+        '@simplewebauthn/server'
+    ).generateRegistrationOptions;
+    return generateRegistrationOptions(opts);
+});
+
+verifyRegistrationResponseMock.mockImplementation(async (opts) => {
+    const verifyRegistrationResponse = jest.requireActual(
+        '@simplewebauthn/server'
+    ).verifyRegistrationResponse;
+    return verifyRegistrationResponse(opts);
+});
+
+generateAuthenticationOptionsMock.mockImplementation(async (opts) => {
+    const generateAuthenticationOptions = jest.requireActual(
+        '@simplewebauthn/server'
+    ).generateAuthenticationOptions;
+    return generateAuthenticationOptions(opts);
+});
+
+verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
+    const verifyAuthenticationResponse = jest.requireActual(
+        '@simplewebauthn/server'
+    ).verifyAuthenticationResponse;
+    return verifyAuthenticationResponse(opts);
+});
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -85,6 +151,7 @@ describe('AuthController', () => {
         >;
     };
     let nowMock: jest.Mock<number>;
+    let relyingParty: RelyingParty;
 
     beforeEach(() => {
         nowMock = Date.now = jest.fn();
@@ -131,12 +198,19 @@ describe('AuthController', () => {
             checkDisplayName: jest.fn(),
         };
 
+        relyingParty = {
+            name: 'example relying party',
+            id: 'example.com',
+            origin: 'https://example.com',
+        };
+
         controller = new AuthController(
             store,
             messenger,
             store,
             undefined,
-            privoClient
+            privoClient,
+            [relyingParty]
         );
 
         uuidMock.mockReset();
@@ -1422,8 +1496,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
@@ -1529,7 +1603,7 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
+                name: null,
                 email: null,
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
@@ -1628,8 +1702,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
@@ -1768,8 +1842,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
                 currentLoginRequestId: null,
@@ -1864,8 +1938,8 @@ describe('AuthController', () => {
 
             expect(await store.findUser('userId')).toEqual({
                 id: 'userId',
-                name: 'test name',
-                email: 'test@example.com',
+                name: null,
+                email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
                 currentLoginRequestId: null,
@@ -2037,6 +2111,1141 @@ describe('AuthController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'The given provider is not supported.',
+            });
+        });
+    });
+
+    describe('requestWebAuthnRegistration()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 1,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should return the generated options', async () => {
+            const response = (await controller.requestWebAuthnRegistration({
+                userId,
+                originOrHost: relyingParty.origin,
+            })) as RequestWebAuthnRegistrationSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                options: {
+                    challenge: expect.any(String),
+                    rp: {
+                        name: relyingParty.name,
+                        id: relyingParty.id,
+                    },
+                    user: {
+                        id: userId,
+                        name: 'email',
+                        displayName: 'email',
+                    },
+                    pubKeyCredParams: [
+                        {
+                            alg: -8,
+                            type: 'public-key',
+                        },
+                        {
+                            alg: -7,
+                            type: 'public-key',
+                        },
+                        {
+                            alg: -257,
+                            type: 'public-key',
+                        },
+                    ],
+                    timeout: 60000,
+                    attestation: 'none',
+                    excludeCredentials: [],
+                    authenticatorSelection: {
+                        authenticatorAttachment: 'platform',
+                        requireResidentKey: false,
+                        residentKey: 'preferred',
+                        userVerification: 'preferred',
+                    },
+                    extensions: {
+                        credProps: true,
+                    },
+                },
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(
+                response.options.challenge
+            );
+        });
+
+        it('should work when not given an origin', async () => {
+            const response = (await controller.requestWebAuthnRegistration({
+                userId,
+                originOrHost: null,
+            })) as RequestWebAuthnRegistrationSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                options: {
+                    challenge: expect.any(String),
+                    rp: {
+                        name: relyingParty.name,
+                        id: relyingParty.id,
+                    },
+                    user: {
+                        id: userId,
+                        name: 'email',
+                        displayName: 'email',
+                    },
+                    pubKeyCredParams: [
+                        {
+                            alg: -8,
+                            type: 'public-key',
+                        },
+                        {
+                            alg: -7,
+                            type: 'public-key',
+                        },
+                        {
+                            alg: -257,
+                            type: 'public-key',
+                        },
+                    ],
+                    timeout: 60000,
+                    attestation: 'none',
+                    excludeCredentials: [],
+                    authenticatorSelection: {
+                        authenticatorAttachment: 'platform',
+                        requireResidentKey: false,
+                        residentKey: 'preferred',
+                        userVerification: 'preferred',
+                    },
+                    extensions: {
+                        credProps: true,
+                    },
+                },
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(
+                response.options.challenge
+            );
+        });
+
+        it('should return not_supported if no relying party has been configured', async () => {
+            controller.relyingParties = [];
+            const response = await controller.requestWebAuthnRegistration({
+                userId,
+                originOrHost: relyingParty.origin,
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return invalid_origin if the request comes from a wrong origin', async () => {
+            const response = await controller.requestWebAuthnRegistration({
+                userId,
+                originOrHost: 'wrong',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
+            });
+        });
+    });
+
+    describe('completeWebAuthnRegistration()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 1,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should complete the registration', async () => {
+            uuidMock.mockReturnValueOnce('authenticatorId');
+            verifyRegistrationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                registrationInfo: {
+                    credentialID: new Uint8Array([1, 2, 3]),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    origin: relyingParty.origin,
+                    userVerified: true,
+                    credentialBackedUp: false,
+                    credentialDeviceType: 'singleDevice',
+                    credentialType: 'public-key',
+                    attestationObject: new Uint8Array([7, 8, 9]),
+                    aaguid: 'aaguid',
+                    fmt: 'tpm',
+                    authenticatorExtensionResults: {},
+                    rpID: relyingParty.id,
+                },
+            });
+            const response = await controller.completeWebAuthnRegistration({
+                userId,
+                response: {
+                    id: 'id',
+                    rawId: 'rawId',
+                    response: {
+                        attestationObject: 'attestation',
+                        clientDataJSON: 'clientDataJSON',
+                        authenticatorData: 'authenticatorData',
+                        publicKey: 'publicKey',
+                        publicKeyAlgorithm: -7,
+                        transports: ['usb'],
+                    },
+                    clientExtensionResults: {},
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+                originOrHost: relyingParty.origin,
+                userAgent: 'ua',
+            });
+
+            expect(response).toEqual({
+                success: true,
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(null);
+
+            const authenticators = await store.listUserAuthenticators(userId);
+
+            expect(authenticators).toEqual([
+                {
+                    id: 'authenticatorId',
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    credentialDeviceType: 'singleDevice',
+                    credentialBackedUp: false,
+                    transports: ['usb'],
+                    aaguid: 'aaguid',
+                    registeringUserAgent: 'ua',
+                    createdAtMs: 400,
+                },
+            ]);
+        });
+
+        it('should work when not given an origin', async () => {
+            uuidMock.mockReturnValueOnce('authenticatorId');
+            verifyRegistrationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                registrationInfo: {
+                    credentialID: new Uint8Array([1, 2, 3]),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    origin: relyingParty.origin,
+                    userVerified: true,
+                    credentialBackedUp: false,
+                    credentialDeviceType: 'singleDevice',
+                    credentialType: 'public-key',
+                    attestationObject: new Uint8Array([7, 8, 9]),
+                    aaguid: 'aaguid',
+                    fmt: 'tpm',
+                    authenticatorExtensionResults: {},
+                    rpID: relyingParty.id,
+                },
+            });
+            const response = await controller.completeWebAuthnRegistration({
+                userId,
+                response: {
+                    id: 'id',
+                    rawId: 'rawId',
+                    response: {
+                        attestationObject: 'attestation',
+                        clientDataJSON: 'clientDataJSON',
+                        authenticatorData: 'authenticatorData',
+                        publicKey: 'publicKey',
+                        publicKeyAlgorithm: -7,
+                        transports: ['usb'],
+                    },
+                    clientExtensionResults: {},
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+
+                // Non-cross-origin requests don't include the origin header
+                originOrHost: null,
+                userAgent: 'ua',
+            });
+
+            expect(response).toEqual({
+                success: true,
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBe(null);
+
+            const authenticators = await store.listUserAuthenticators(userId);
+
+            expect(authenticators).toEqual([
+                {
+                    id: 'authenticatorId',
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    counter: 100,
+                    credentialDeviceType: 'singleDevice',
+                    credentialBackedUp: false,
+                    transports: ['usb'],
+                    aaguid: 'aaguid',
+                    registeringUserAgent: 'ua',
+                    createdAtMs: 400,
+                },
+            ]);
+        });
+
+        it('should return not_supported if no relying party has been configured', async () => {
+            controller.relyingParties = [];
+            const response = await controller.completeWebAuthnRegistration({
+                userId,
+                response: {} as any,
+                originOrHost: relyingParty.origin,
+                userAgent: 'ua',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return invalid_origin if the request comes from a wrong origin', async () => {
+            const response = await controller.completeWebAuthnRegistration({
+                userId,
+                response: {} as any,
+                originOrHost: 'wrong',
+                userAgent: 'ua',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
+            });
+        });
+    });
+
+    describe('requestWebAuthnLogin()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 1,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should return the generated options', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const response = (await controller.requestWebAuthnLogin({
+                ipAddress: '123.456.789',
+                originOrHost: relyingParty.origin,
+            })) as RequestWebAuthnLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                requestId: 'requestId',
+                options: {
+                    userVerification: 'preferred',
+                    allowCredentials: undefined,
+                    rpId: relyingParty.id,
+                    challenge: expect.any(String),
+                    timeout: 60000,
+                },
+            });
+
+            // Requesting a login should not change the currentWebAuthnChallenge
+            // because logging in can use the conditional UI flow.
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBeFalsy();
+
+            const loginRequest = await store.findWebAuthnLoginRequest(
+                'requestId'
+            );
+            expect(loginRequest).toEqual({
+                requestId: 'requestId',
+                userId: null,
+                challenge: response.options.challenge,
+                requestTimeMs: 400,
+                expireTimeMs: 400 + LOGIN_REQUEST_LIFETIME_MS,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+            });
+        });
+
+        it('should work when not given an origin', async () => {
+            uuidMock.mockReturnValueOnce('requestId');
+            const response = (await controller.requestWebAuthnLogin({
+                ipAddress: '123.456.789',
+
+                // non-cross-origin requests don't include the origin header
+                originOrHost: null,
+            })) as RequestWebAuthnLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                requestId: 'requestId',
+                options: {
+                    userVerification: 'preferred',
+                    allowCredentials: undefined,
+                    rpId: relyingParty.id,
+                    challenge: expect.any(String),
+                    timeout: 60000,
+                },
+            });
+
+            // Requesting a login should not change the currentWebAuthnChallenge
+            // because logging in can use the conditional UI flow.
+            const user = await store.findUser(userId);
+            expect(user.currentWebAuthnChallenge).toBeFalsy();
+
+            const loginRequest = await store.findWebAuthnLoginRequest(
+                'requestId'
+            );
+            expect(loginRequest).toEqual({
+                requestId: 'requestId',
+                userId: null,
+                challenge: response.options.challenge,
+                requestTimeMs: 400,
+                expireTimeMs: 400 + LOGIN_REQUEST_LIFETIME_MS,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+            });
+        });
+
+        it('should return a not_supported result if no relying party is configured', async () => {
+            controller.relyingParties = [];
+            const response = await controller.requestWebAuthnLogin({
+                ipAddress: '123.456.789',
+                originOrHost: relyingParty.origin,
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return a invalid_origin result if the request comes from the wrong origin', async () => {
+            const response = await controller.requestWebAuthnLogin({
+                ipAddress: '123.456.789',
+                originOrHost: 'wrong',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
+            });
+        });
+    });
+
+    describe('completeWebAuthnLogin()', () => {
+        const userId = 'myid';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should return the generated options', async () => {
+            const requestId = 'requestId';
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+            uuidMock.mockReturnValueOnce('sessionId');
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: 1000,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {
+                    newCounter: 1,
+                    credentialBackedUp: true,
+                    credentialDeviceType: 'singleDevice',
+                    credentialID: new Uint8Array([1, 2, 3]),
+                    origin: relyingParty.origin,
+                    rpID: relyingParty.id,
+                    userVerified: true,
+                },
+            });
+
+            const response = await controller.completeWebAuthnLogin({
+                requestId: requestId,
+                ipAddress: '123.456.789',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+                originOrHost: relyingParty.origin,
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: formatV1SessionKey(
+                    'myid',
+                    fromByteArray(sessionId),
+                    fromByteArray(sessionSecret),
+                    400 + SESSION_LIFETIME_MS
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    'myid',
+                    fromByteArray(sessionId),
+                    fromByteArray(connectionSecret),
+                    400 + SESSION_LIFETIME_MS
+                ),
+                expireTimeMs: 400 + SESSION_LIFETIME_MS,
+            });
+
+            expect(randomBytesMock).toHaveBeenCalledTimes(3);
+            expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
+            expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+            expect(randomBytesMock).toHaveBeenNthCalledWith(3, 16); // Should request 16 bytes (128 bits) for the connection secret
+
+            expect(store.sessions).toEqual([
+                {
+                    userId: 'myid',
+                    sessionId: fromByteArray(sessionId),
+
+                    // It should treat session secrets as high-entropy
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        fromByteArray(sessionSecret),
+                        fromByteArray(sessionId)
+                    ),
+                    connectionSecret: fromByteArray(connectionSecret),
+                    grantedTimeMs: 400,
+                    expireTimeMs: 400 + SESSION_LIFETIME_MS,
+                    revokeTimeMs: null,
+                    requestId: null,
+                    oidRequestId: null,
+                    webauthnRequestId: 'requestId',
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    ipAddress: '123.456.789',
+                },
+            ]);
+            expect(store.webauthnLoginRequests).toEqual([
+                {
+                    userId: 'myid',
+                    challenge: 'challenge',
+                    requestId: requestId,
+                    requestTimeMs: 300,
+                    expireTimeMs: 1000,
+                    completedTimeMs: 400,
+                    ipAddress: '123.456.789',
+                },
+            ]);
+            expect(store.users).toEqual([
+                {
+                    id: 'myid',
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                },
+            ]);
+
+            expect(
+                await store.findUserAuthenticatorByCredentialId(
+                    fromByteArray(new Uint8Array([1, 2, 3]))
+                )
+            ).toEqual({
+                authenticator: {
+                    id: 'authenticatorId',
+                    userId: userId,
+                    credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                    counter: 1,
+                    credentialBackedUp: true,
+                    credentialDeviceType: 'singleDevice',
+                    credentialPublicKey: new Uint8Array([4, 5, 6]),
+                    transports: ['usb'],
+                    aaguid: '',
+                    registeringUserAgent: 'ua',
+                    createdAtMs: 100,
+                },
+                user: {
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                },
+            });
+        });
+
+        it('should work if not given an origin', async () => {
+            const requestId = 'requestId';
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+            uuidMock.mockReturnValueOnce('sessionId');
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: 1000,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const response = await controller.completeWebAuthnLogin({
+                requestId: requestId,
+                ipAddress: '123.456.789',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+                originOrHost: null,
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: formatV1SessionKey(
+                    'myid',
+                    fromByteArray(sessionId),
+                    fromByteArray(sessionSecret),
+                    400 + SESSION_LIFETIME_MS
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    'myid',
+                    fromByteArray(sessionId),
+                    fromByteArray(connectionSecret),
+                    400 + SESSION_LIFETIME_MS
+                ),
+                expireTimeMs: 400 + SESSION_LIFETIME_MS,
+            });
+
+            expect(randomBytesMock).toHaveBeenCalledTimes(3);
+            expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
+            expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+            expect(randomBytesMock).toHaveBeenNthCalledWith(3, 16); // Should request 16 bytes (128 bits) for the connection secret
+
+            expect(store.sessions).toEqual([
+                {
+                    userId: 'myid',
+                    sessionId: fromByteArray(sessionId),
+
+                    // It should treat session secrets as high-entropy
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        fromByteArray(sessionSecret),
+                        fromByteArray(sessionId)
+                    ),
+                    connectionSecret: fromByteArray(connectionSecret),
+                    grantedTimeMs: 400,
+                    expireTimeMs: 400 + SESSION_LIFETIME_MS,
+                    revokeTimeMs: null,
+                    requestId: null,
+                    oidRequestId: null,
+                    webauthnRequestId: 'requestId',
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    ipAddress: '123.456.789',
+                },
+            ]);
+            expect(store.webauthnLoginRequests).toEqual([
+                {
+                    userId: 'myid',
+                    challenge: 'challenge',
+                    requestId: requestId,
+                    requestTimeMs: 300,
+                    expireTimeMs: 1000,
+                    completedTimeMs: 400,
+                    ipAddress: '123.456.789',
+                },
+            ]);
+            expect(store.users).toEqual([
+                {
+                    id: 'myid',
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                },
+            ]);
+        });
+
+        it('should reject the login if the user is banned', async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                banTimeMs: 300,
+            });
+
+            const requestId = 'requestId';
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+            uuidMock.mockReturnValueOnce('sessionId');
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            await store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: 'challenge',
+                requestTimeMs: 300,
+                expireTimeMs: 1000,
+                completedTimeMs: null,
+                ipAddress: '123.456.789',
+                userId: null,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '',
+                registeringUserAgent: 'ua',
+                createdAtMs: 100,
+            });
+
+            verifyAuthenticationResponseMock.mockResolvedValueOnce({
+                verified: true,
+                authenticationInfo: {} as any,
+            });
+
+            const response = await controller.completeWebAuthnLogin({
+                requestId: requestId,
+                ipAddress: '123.456.789',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+                originOrHost: relyingParty.origin,
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'user_is_banned',
+                errorMessage: 'The user has been banned.',
+            });
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(store.sessions).toEqual([]);
+        });
+
+        it('should return a not_supported result if no relying party is configured', async () => {
+            controller.relyingParties = [];
+            const response = await controller.completeWebAuthnLogin({
+                requestId: 'requestId',
+                ipAddress: '123.456.789',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+                originOrHost: relyingParty.origin,
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'WebAuthn is not supported on this server.',
+            });
+        });
+
+        it('should return a invalid_origin result if the request comes from the wrong origin', async () => {
+            const response = await controller.completeWebAuthnLogin({
+                requestId: 'requestId',
+                ipAddress: '123.456.789',
+                response: {
+                    id: fromByteArray(new Uint8Array([1, 2, 3])),
+                    rawId: 'rawId',
+                    clientExtensionResults: {},
+                    response: {
+                        authenticatorData: 'authenticatorData',
+                        clientDataJSON: 'clientDataJSON',
+                        signature: 'signature',
+                    },
+                    type: 'public-key',
+                    authenticatorAttachment: 'platform',
+                },
+                originOrHost: 'wrong',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'invalid_origin',
+                errorMessage:
+                    'The request must be made from an authorized origin.',
+            });
+        });
+    });
+
+    describe('listUserAuthenticators()', () => {
+        const userId = 'myid';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId3',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4, 5])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7, 8]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua3',
+                createdAtMs: 400,
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should return the list of authenticators that are registered for the user', async () => {
+            const response = await controller.listUserAuthenticators(userId);
+
+            expect(response).toEqual({
+                success: true,
+                authenticators: [
+                    {
+                        id: 'authenticatorId',
+                        counter: 0,
+                        credentialBackedUp: true,
+                        credentialDeviceType: 'singleDevice',
+                        credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                        transports: ['usb'],
+                        aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                        registeringUserAgent: 'ua1',
+                        createdAtMs: 400,
+                        userId: userId,
+                    },
+                    {
+                        id: 'authenticatorId2',
+                        counter: 0,
+                        credentialBackedUp: true,
+                        credentialDeviceType: 'singleDevice',
+                        credentialId: fromByteArray(
+                            new Uint8Array([1, 2, 3, 4])
+                        ),
+                        transports: ['usb'],
+                        aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                        registeringUserAgent: 'ua2',
+                        createdAtMs: 400,
+                        userId: userId,
+                    },
+                    {
+                        id: 'authenticatorId3',
+                        counter: 0,
+                        credentialBackedUp: true,
+                        credentialDeviceType: 'singleDevice',
+                        credentialId: fromByteArray(
+                            new Uint8Array([1, 2, 3, 4, 5])
+                        ),
+                        transports: ['usb'],
+                        aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                        registeringUserAgent: 'ua3',
+                        createdAtMs: 400,
+                        userId: userId,
+                    },
+                ],
+            });
+        });
+    });
+
+    describe('deleteUserAuthenticator()', () => {
+        const userId = 'myid';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3])),
+                credentialPublicKey: new Uint8Array([4, 5, 6]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua1',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId2',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua2',
+                createdAtMs: 400,
+            });
+
+            await store.saveUserAuthenticator({
+                id: 'authenticatorId3',
+                userId: userId,
+                counter: 0,
+                credentialBackedUp: true,
+                credentialDeviceType: 'singleDevice',
+                credentialId: fromByteArray(new Uint8Array([1, 2, 3, 4, 5])),
+                credentialPublicKey: new Uint8Array([4, 5, 6, 7, 8]),
+                transports: ['usb'],
+                aaguid: '771b48fd-d3d4-4f74-9232-fc157ab0507a',
+                registeringUserAgent: 'ua3',
+                createdAtMs: 400,
+            });
+
+            nowMock.mockReturnValue(400);
+        });
+
+        it('should delete the given user authenticator', async () => {
+            expect(store.userAuthenticators).toHaveLength(3);
+
+            const response = await controller.deleteUserAuthenticator(
+                userId,
+                'authenticatorId3'
+            );
+
+            expect(response).toEqual({
+                success: true,
+            });
+
+            expect(store.userAuthenticators).toHaveLength(2);
+        });
+
+        it('should return authenticator_not_found if the authenticator doesnt exist', async () => {
+            const response = await controller.deleteUserAuthenticator(
+                userId,
+                'missingId'
+            );
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'not_found',
+                errorMessage: 'The given authenticator was not found.',
             });
         });
     });
@@ -5650,9 +6859,9 @@ describe('AuthController', () => {
 
                 await store.saveUser({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,
@@ -5665,7 +6874,7 @@ describe('AuthController', () => {
                 privoClientMock.getUserInfo.mockResolvedValue({
                     serviceId: 'serviceId',
                     emailVerified: true,
-                    email: 'email',
+                    email: 'privoemail',
                     givenName: 'name',
                     locale: 'en-US',
                     roleIdentifier: 'ab1Child',
@@ -5703,9 +6912,9 @@ describe('AuthController', () => {
                 expect(result).toEqual({
                     success: true,
                     userId: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: 'privoemail',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -5774,8 +6983,8 @@ describe('AuthController', () => {
                     success: true,
                     userId: userId,
                     email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -5795,9 +7004,9 @@ describe('AuthController', () => {
 
                 expect(await store.findUser(userId)).toEqual({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,
@@ -5872,8 +7081,8 @@ describe('AuthController', () => {
                     success: true,
                     userId: userId,
                     email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -5893,9 +7102,9 @@ describe('AuthController', () => {
 
                 expect(await store.findUser(userId)).toEqual({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,
@@ -5970,8 +7179,8 @@ describe('AuthController', () => {
                     success: true,
                     userId: userId,
                     email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    phoneNumber: null,
+                    name: 'name',
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     hasActiveSubscription: false,
@@ -5991,9 +7200,9 @@ describe('AuthController', () => {
 
                 expect(await store.findUser(userId)).toEqual({
                     id: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
                     avatarUrl: 'avatar url',
                     avatarPortraitUrl: 'avatar portrait url',
                     allSessionRevokeTimeMs: undefined,
@@ -6707,6 +7916,42 @@ describe('getPrivacyFeaturesFromPermissions()', () => {
             allowAI: false,
             allowPublicInsts: true,
         });
+    });
+});
+
+describe('findRelyingPartyForOrigin()', () => {
+    const parties: RelyingParty[] = [
+        {
+            id: 'example',
+            name: 'Test',
+            origin: 'https://example.com',
+        },
+        {
+            id: 'example',
+            name: 'Test Port',
+            origin: 'https://example.com:3000',
+        },
+        {
+            id: 'different',
+            name: 'Different with port',
+            origin: 'https://different.com:3000',
+        },
+    ];
+
+    it('should return the first relying party if there is no origin', () => {
+        expect(findRelyingPartyForOrigin(parties, null)).toEqual(parties[0]);
+    });
+
+    it('should return the relying party that exactly matches the given origin', () => {
+        expect(
+            findRelyingPartyForOrigin(parties, 'https://different.com:3000')
+        ).toEqual(parties[2]);
+    });
+
+    it('should return the relying party that matches the given domain and port', () => {
+        expect(findRelyingPartyForOrigin(parties, 'example.com:3000')).toEqual(
+            parties[1]
+        );
     });
 });
 

@@ -14,7 +14,7 @@ import {
     EquirectangularReflectionMapping,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import {
     Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
@@ -771,6 +771,7 @@ export abstract class Game {
                 this._backgroundVideoElement.loop = true;
                 this._backgroundVideoElement.muted = true;
                 this._backgroundVideoElement.playsInline = true;
+                this._backgroundVideoElement.setAttribute('playsinline', '');
                 this._backgroundVideoElement.style.pointerEvents = 'none';
                 this._backgroundVideoElement.style.position = 'absolute';
                 this._backgroundVideoElement.style.left = '50%';

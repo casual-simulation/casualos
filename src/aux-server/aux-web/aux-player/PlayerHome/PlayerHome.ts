@@ -364,6 +364,10 @@ export default class PlayerHome extends Vue {
         this.showBios = true;
         const options = await this._getBiosOptions();
         this.biosOptions = options;
+
+        // If we show the BIOS options, then
+        // we should have time to initialize the service worker
+        appManager.initOffline();
     }
 
     async signIn() {
@@ -411,7 +415,7 @@ export default class PlayerHome extends Vue {
             this._loadPrivateInst();
         } else if (isPublicInst(option)) {
             this._loadPublicInst();
-        } else if (option === 'enter join code') {
+        } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
         } else {
             this.showBios = true;
@@ -717,7 +721,14 @@ export default class PlayerHome extends Vue {
     ) {
         this._loadedStaticInst = isStatic;
         const owner = getFirst(recordName);
-        const record = appManager.getRecordName(owner);
+        let recordInfo = appManager.getRecordName(owner);
+
+        while (recordInfo.owner === PLAYER_OWNER && !recordInfo.recordName) {
+            await appManager.auth.primary.authenticate();
+            recordInfo = appManager.getRecordName(owner);
+        }
+
+        const record = recordInfo.recordName;
         if (typeof newServer === 'string') {
             await this._loadPrimarySimulation(record, newServer, isStatic);
 

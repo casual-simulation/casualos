@@ -309,9 +309,19 @@ export class WebsocketController {
             connectionId
         );
         if (!connection) {
-            throw new Error(
-                'Unable to watch branch. The connection was not found!'
+            console.error(
+                `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to watch branch. Connection not found!`
             );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_connection_state',
+                errorMessage: `A server error occurred. (namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId})`,
+                recordName: event.recordName,
+                inst: event.inst,
+                branch: event.branch,
+            });
+            await this.messenger.disconnect(connectionId);
+            return;
         }
 
         if (connection.token && event.recordName) {
@@ -606,9 +616,19 @@ export class WebsocketController {
             connectionId
         );
         if (!connection) {
-            throw new Error(
-                'Unable to watch branch. The connection was not found!'
+            console.error(
+                `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to add updates. Connection not found!`
             );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_connection_state',
+                errorMessage: `A server error occurred. (namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId})`,
+                recordName: event.recordName,
+                inst: event.inst,
+                branch: event.branch,
+            });
+            await this.messenger.disconnect(connectionId);
+            return;
         }
 
         if (connection.token && event.recordName) {

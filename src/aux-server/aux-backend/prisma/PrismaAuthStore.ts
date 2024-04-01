@@ -9,6 +9,9 @@ import {
     AuthSubscription,
     AuthSubscriptionPeriod,
     AuthUser,
+    AuthUserAuthenticator,
+    AuthUserAuthenticatorWithUser,
+    AuthWebAuthnLoginRequest,
     ListSessionsDataResult,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
@@ -19,6 +22,7 @@ import {
     Prisma,
     PrismaClient,
     User,
+    UserAuthenticator,
     AuthSession as PrismaSession,
     Subscription as PrismaSubscription,
     SubscriptionPeriod,
@@ -417,6 +421,214 @@ export class PrismaAuthStore implements AuthStore {
             data: {
                 authorizationCode: authorizationCode,
                 authorizationTime: convertToDate(authorizationTimeMs),
+            },
+        });
+    }
+
+    async findWebAuthnLoginRequest(
+        requestId: string
+    ): Promise<AuthWebAuthnLoginRequest> {
+        const request = await this._client.webAuthnLoginRequest.findUnique({
+            where: {
+                requestId,
+            },
+        });
+
+        if (!request) {
+            return null;
+        }
+
+        return {
+            requestId: request.requestId,
+            userId: request.userId,
+            challenge: request.challenge,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            completedTimeMs: convertToMillis(request.completedTime),
+            ipAddress: request.ipAddress,
+        };
+    }
+
+    async saveWebAuthnLoginRequest(
+        request: AuthWebAuthnLoginRequest
+    ): Promise<AuthWebAuthnLoginRequest> {
+        await this._client.webAuthnLoginRequest.upsert({
+            where: {
+                requestId: request.requestId,
+            },
+            create: {
+                requestId: request.requestId,
+                userId: request.userId,
+                challenge: request.challenge,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                ipAddress: request.ipAddress,
+            },
+            update: {
+                challenge: request.challenge,
+                requestTime: convertToDate(request.requestTimeMs),
+                expireTime: convertToDate(request.expireTimeMs),
+                completedTime: convertToDate(request.completedTimeMs),
+                ipAddress: request.ipAddress,
+            },
+        });
+
+        return request;
+    }
+
+    async markWebAuthnLoginRequestComplete(
+        requestId: string,
+        userId: string,
+        completedTimeMs: number
+    ): Promise<void> {
+        await this._client.webAuthnLoginRequest.update({
+            where: {
+                requestId: requestId,
+            },
+            data: {
+                completedTime: convertToDate(completedTimeMs),
+                userId: userId,
+            },
+        });
+    }
+
+    async setCurrentWebAuthnChallenge(
+        userId: string,
+        challenge: string
+    ): Promise<void> {
+        await this._client.user.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                currentWebAuthnChallenge: challenge,
+            },
+        });
+    }
+
+    async listUserAuthenticators(
+        userId: string
+    ): Promise<AuthUserAuthenticator[]> {
+        const auths = await this._client.userAuthenticator.findMany({
+            where: {
+                userId: userId,
+            },
+        });
+
+        return auths.map((a) => this._convertToUserAuthenticator(a));
+    }
+
+    async saveUserAuthenticatorCounter(
+        id: string,
+        newCounter: number
+    ): Promise<void> {
+        await this._client.userAuthenticator.update({
+            where: {
+                id: id,
+            },
+            data: {
+                counter: newCounter,
+            },
+        });
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<number> {
+        const result = await this._client.userAuthenticator.delete({
+            where: {
+                id: authenticatorId,
+                userId,
+            },
+        });
+
+        if (result) {
+            return 1;
+        }
+        return 0;
+    }
+
+    private _convertToUserAuthenticator(
+        authenticator: UserAuthenticator
+    ): AuthUserAuthenticator {
+        return {
+            id: authenticator.id,
+            credentialId: authenticator.credentialId,
+            userId: authenticator.userId,
+            counter: authenticator.counter,
+            credentialBackedUp: authenticator.credentialBackedUp,
+            credentialDeviceType:
+                authenticator.credentialDeviceType as AuthUserAuthenticator['credentialDeviceType'],
+            credentialPublicKey: new Uint8Array(
+                authenticator.credentialPublicKey
+            ),
+            transports:
+                authenticator.transports as AuthUserAuthenticator['transports'],
+            aaguid: authenticator.aaguid,
+            registeringUserAgent: authenticator.registeringUserAgent,
+            createdAtMs: convertToMillis(authenticator.createdAt),
+        };
+    }
+
+    async findUserAuthenticatorByCredentialId(
+        credentialId: string
+    ): Promise<AuthUserAuthenticatorWithUser> {
+        const authenticator = await this._client.userAuthenticator.findUnique({
+            where: {
+                credentialId: credentialId,
+            },
+            include: {
+                user: true,
+            },
+        });
+
+        if (!authenticator) {
+            return { authenticator: null, user: null };
+        }
+
+        return {
+            authenticator: this._convertToUserAuthenticator(authenticator),
+            user: this._convertToAuthUser(authenticator.user),
+        };
+    }
+
+    async saveUserAuthenticator(
+        authenticator: AuthUserAuthenticator
+    ): Promise<void> {
+        await this._client.userAuthenticator.upsert({
+            where: {
+                id: authenticator.id,
+            },
+            create: {
+                id: authenticator.id,
+                userId: authenticator.userId,
+                credentialId: authenticator.credentialId,
+                counter: authenticator.counter,
+                credentialBackedUp: authenticator.credentialBackedUp,
+                credentialDeviceType: authenticator.credentialDeviceType,
+                credentialPublicKey: Buffer.from(
+                    authenticator.credentialPublicKey
+                ),
+                transports: authenticator.transports,
+                aaguid: authenticator.aaguid,
+                registeringUserAgent: authenticator.registeringUserAgent,
+                createdAt: convertToDate(authenticator.createdAtMs),
+            },
+            update: {
+                id: authenticator.id,
+                userId: authenticator.userId,
+                credentialId: authenticator.credentialId,
+                counter: authenticator.counter,
+                credentialBackedUp: authenticator.credentialBackedUp,
+                credentialDeviceType: authenticator.credentialDeviceType,
+                credentialPublicKey: Buffer.from(
+                    authenticator.credentialPublicKey
+                ),
+                transports: authenticator.transports,
+                aaguid: authenticator.aaguid,
+                registeringUserAgent: authenticator.registeringUserAgent,
             },
         });
     }
@@ -951,6 +1163,14 @@ export class PrismaAuthStore implements AuthStore {
                     allowAI: user.allowAI ?? true,
                     allowPublicInsts: user.allowPublicInsts ?? true,
                 },
+                currentWebAuthnChallenge: user.currentWebAuthnChallenge,
+                subscriptionInfoId: user.subscriptionInfoId,
+                subscriptionPeriodEndMs: convertToMillis(
+                    user.subscriptionPeriodEnd
+                ),
+                subscriptionPeriodStartMs: convertToMillis(
+                    user.subscriptionPeriodStart
+                ),
             };
         }
         return null;

@@ -30,7 +30,7 @@
                 <md-button
                     @click="makeNormalTag()"
                     class="md-dense"
-                    :class="{ active: !(isScript || isFormula || isAnyPrefix) }"
+                    :class="{ active: !(isScript || isFormula || isAnyPrefix || !isLibrary) }"
                 >
                     <md-tooltip>Make Normal Tag</md-tooltip>
                     <span class="hashtag">#</span>
@@ -42,6 +42,14 @@
                 <md-button @click="makeScriptTag()" class="md-dense" :class="{ active: isScript }">
                     <md-tooltip>Make Listen Tag</md-tooltip>
                     <span class="at-symbol">@</span>
+                </md-button>
+                <md-button
+                    @click="makeLibraryTag()"
+                    class="md-dense"
+                    :class="{ active: isLibrary }"
+                >
+                    <md-tooltip>Make Library Tag</md-tooltip>
+                    <span class="at-symbol">📄</span>
                 </md-button>
                 <md-button
                     v-for="prefix in scriptPrefixes"

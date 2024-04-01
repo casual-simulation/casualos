@@ -6,7 +6,7 @@ import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 export type SubSimEmitter = Pick<
     Simulation,
-    'onSubSimulationAdded' | 'onSubSimulationRemoved'
+    'onSubSimulationAdded' | 'onSubSimulationRemoved' | 'isSubSimulation'
 >;
 
 export interface SimulationFactoryOptions {
@@ -125,7 +125,7 @@ export class SimulationManager<
     async removeNonMatchingSimulations(id: string) {
         let promises: Promise<void>[] = [];
         for (let [key, value] of this.simulations) {
-            if (key !== id) {
+            if (key !== id && !value.isSubSimulation) {
                 promises.push(this.removeSimulation(key));
             }
         }

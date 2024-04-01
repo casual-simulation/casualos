@@ -54,6 +54,11 @@ export interface Simulation extends Initable {
     get configBotId(): string;
 
     /**
+     * Whether the simulation is a sub-simulation.
+     */
+    get isSubSimulation(): boolean;
+
+    /**
      * Gets whether the app is connected to the inst but may
      * or may not be synced to the inst.
      */

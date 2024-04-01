@@ -1,12 +1,16 @@
 import {
     AddressType,
+    AuthListedUserAuthenticator,
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
     AuthSession,
     AuthStore,
     AuthUser,
+    AuthUserAuthenticator,
 } from './AuthStore';
 import {
+    NotAuthorizedError,
+    NotLoggedInError,
     NotSupportedError,
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
@@ -49,6 +53,24 @@ import {
 import { DateTime } from 'luxon';
 import { PrivoConfiguration } from './PrivoConfiguration';
 import { ZodIssue } from 'zod';
+import type {
+    PublicKeyCredentialCreationOptionsJSON,
+    RegistrationResponseJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+    AuthenticationResponseJSON,
+} from '@simplewebauthn/types';
+import {
+    VerifiedAuthenticationResponse,
+    generateAuthenticationOptions,
+    generateRegistrationOptions,
+    verifyAuthenticationResponse,
+    verifyRegistrationResponse,
+} from '@simplewebauthn/server';
+import {
+    base64URLStringToBuffer,
+    bufferToBase64URLString,
+} from './Base64UrlUtils';
+import { getInfoForAAGUID } from './AAGUID';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -59,6 +81,11 @@ export const LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 5; // 5 minutes
  * The number of miliseconds that an Open ID login request should be valid for before expiration.
  */
 export const OPEN_ID_LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 20; // 20 minutes
+
+/**
+ * The number of miliseconds that a WebAuthN request should be valid for before expiration.
+ */
+export const WEB_AUTHN_LOGIN_REQUEST_LIFETIME_MS = 1000 * 60 * 5; // 5 minutes
 
 /**
  * The number of bytes that should be used for login request IDs.
@@ -126,6 +153,23 @@ export const MAX_OPEN_AI_API_KEY_LENGTH = 100;
  */
 export const PRIVO_OPEN_ID_PROVIDER = 'privo';
 
+export interface RelyingParty {
+    /**
+     * The human readable name of the relying party.
+     */
+    name: string;
+
+    /**
+     * The domain of the relying party.
+     */
+    id: string;
+
+    /**
+     * The HTTP origin that the relying party is hosted on.
+     */
+    origin: string;
+}
+
 /**
  * Defines a class that is able to authenticate users.
  */
@@ -135,19 +179,30 @@ export class AuthController {
     private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
+    private _webAuthNRelyingParties: RelyingParty[];
+
+    get relyingParties() {
+        return this._webAuthNRelyingParties;
+    }
+
+    set relyingParties(value: RelyingParty[]) {
+        this._webAuthNRelyingParties = value;
+    }
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
         forceAllowSubscriptionFeatures: boolean = false,
-        privoClient: PrivoClientInterface = null
+        privoClient: PrivoClientInterface = null,
+        relyingParties: RelyingParty[] = []
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
+        this._webAuthNRelyingParties = relyingParties;
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -995,7 +1050,6 @@ export class AuthController {
             let updatePasswordUrl: string;
             let serviceId: string;
             let parentServiceId: string;
-            const email: string = request.email;
             if (years < 0) {
                 return {
                     success: false,
@@ -1080,9 +1134,9 @@ export class AuthController {
 
             const user: AuthUser = {
                 id: uuid(),
-                email: email,
+                email: null, // We don't store the email because it is stored in Privo.
                 phoneNumber: null,
-                name: request.name,
+                name: null, // We don't store the name because it is stored in Privo.
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
                 privoServiceId: serviceId,
@@ -1157,6 +1211,531 @@ export class AuthController {
         } catch (err) {
             console.error(
                 `[AuthController] Error occurred while requesting Privo sign up`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestWebAuthnRegistration(
+        request: RequestWebAuthnRegistration
+    ): Promise<RequestWebAuthnRegistrationResult> {
+        try {
+            if (this._webAuthNRelyingParties.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                };
+            }
+
+            const user = await this._store.findUser(request.userId);
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const authenticators = await this._store.listUserAuthenticators(
+                user.id
+            );
+            const options = await generateRegistrationOptions({
+                rpName: relyingParty.name,
+                rpID: relyingParty.id,
+                userID: user.id,
+                userName: user.email ?? user.phoneNumber,
+                attestationType: 'none',
+                excludeCredentials: authenticators.map((auth) => ({
+                    id: base64URLStringToBuffer(auth.credentialId),
+                    type: 'public-key',
+                    transports: auth.transports,
+                })),
+                authenticatorSelection: {
+                    residentKey: 'preferred',
+                    userVerification: 'preferred',
+                    authenticatorAttachment: 'platform',
+                },
+            });
+
+            await this._store.setCurrentWebAuthnChallenge(
+                user.id,
+                options.challenge
+            );
+
+            return {
+                success: true,
+                options,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting WebAuthn registration options`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async completeWebAuthnRegistration(
+        request: CompleteWebAuthnRegistrationRequest
+    ): Promise<CompleteWebAuthnRegistrationResult> {
+        try {
+            if (this._webAuthNRelyingParties.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                };
+            }
+
+            const user = await this._store.findUser(request.userId);
+
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const currentChallenge = user.currentWebAuthnChallenge;
+
+            try {
+                const verification = await verifyRegistrationResponse({
+                    response: request.response,
+                    expectedChallenge: currentChallenge,
+                    expectedOrigin: relyingParty.origin,
+                    expectedRPID: relyingParty.id,
+                });
+
+                if (verification.verified) {
+                    const registration = verification.registrationInfo;
+                    const credentialId = bufferToBase64URLString(
+                        registration.credentialID
+                    );
+                    const authenticator: AuthUserAuthenticator = {
+                        id: uuid(),
+                        userId: user.id,
+                        credentialId,
+                        credentialPublicKey: registration.credentialPublicKey,
+                        counter: registration.counter,
+                        credentialBackedUp: registration.credentialBackedUp,
+                        credentialDeviceType: registration.credentialDeviceType,
+                        transports: request.response.response.transports,
+                        aaguid: verification.registrationInfo.aaguid,
+                        registeringUserAgent: request.userAgent,
+                        createdAtMs: Date.now(),
+                    };
+
+                    await this._store.setCurrentWebAuthnChallenge(
+                        user.id,
+                        null
+                    );
+                    await this._store.saveUserAuthenticator(authenticator);
+
+                    return {
+                        success: true,
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The registration response was not authorized.',
+                    };
+                }
+            } catch (err) {
+                console.error(
+                    `[AuthController] Error occurred while verifying WebAuthn registration response`,
+                    err
+                );
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: err.message,
+                };
+            }
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while completing WebAuthn registration`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async requestWebAuthnLogin(
+        request: RequestWebAuthnLogin
+    ): Promise<RequestWebAuthnLoginResult> {
+        try {
+            if (this._webAuthNRelyingParties.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                };
+            }
+
+            const options = await generateAuthenticationOptions({
+                rpID: relyingParty.id,
+                userVerification: 'preferred',
+            });
+
+            const requestId = uuid();
+            const nowMs = Date.now();
+            await this._store.saveWebAuthnLoginRequest({
+                requestId: requestId,
+                challenge: options.challenge,
+                requestTimeMs: nowMs,
+                expireTimeMs: nowMs + WEB_AUTHN_LOGIN_REQUEST_LIFETIME_MS,
+                completedTimeMs: null,
+                ipAddress: request.ipAddress,
+                userId: null,
+            });
+
+            return {
+                success: true,
+                requestId,
+                options,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting WebAuthn login`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async completeWebAuthnLogin(
+        request: CompleteWebAuthnLoginRequest
+    ): Promise<CompleteWebAuthnLoginResult> {
+        try {
+            if (this._webAuthNRelyingParties.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'WebAuthn is not supported on this server.',
+                };
+            }
+
+            const relyingParty = findRelyingPartyForOrigin(
+                this._webAuthNRelyingParties,
+                request.originOrHost
+            );
+
+            if (!relyingParty) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                };
+            }
+
+            const loginRequest = await this._store.findWebAuthnLoginRequest(
+                request.requestId
+            );
+
+            if (!loginRequest) {
+                console.error('could not find login request!');
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            let validRequest = true;
+            if (Date.now() >= loginRequest.expireTimeMs) {
+                console.error('Expired!');
+                validRequest = false;
+            } else if (loginRequest.completedTimeMs > 0) {
+                console.error('Completed!');
+                validRequest = false;
+            } else if (loginRequest.ipAddress !== request.ipAddress) {
+                console.error('Wrong IP!');
+                validRequest = false;
+            }
+
+            if (!validRequest) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            const { authenticator, user } =
+                await this._store.findUserAuthenticatorByCredentialId(
+                    request.response.id
+                );
+
+            if (!authenticator) {
+                console.error('No Authenticator!');
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                };
+            }
+
+            if (user.banTimeMs > 0) {
+                return {
+                    success: false,
+                    errorCode: 'user_is_banned',
+                    errorMessage: 'The user has been banned.',
+                    banReason: user.banReason,
+                };
+            }
+
+            try {
+                const options = await verifyAuthenticationResponse({
+                    response: request.response,
+                    expectedChallenge: loginRequest.challenge,
+                    expectedOrigin: relyingParty.origin,
+                    expectedRPID: relyingParty.id,
+                    authenticator: {
+                        credentialID: new Uint8Array(
+                            base64URLStringToBuffer(authenticator.credentialId)
+                        ),
+                        counter: authenticator.counter,
+                        credentialPublicKey: authenticator.credentialPublicKey,
+                        transports: authenticator.transports,
+                    },
+                });
+
+                if (!options.verified) {
+                    console.error('Not verified!');
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                    };
+                }
+
+                await this._store.saveUserAuthenticatorCounter(
+                    authenticator.id,
+                    options.authenticationInfo.newCounter
+                );
+            } catch (err) {
+                console.error(
+                    `[AuthController] Error occurred while verifying WebAuthn login response`,
+                    err
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: err.message,
+                };
+            }
+
+            const sessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const sessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const now = Date.now();
+
+            const session: AuthSession = {
+                userId: user.id,
+                sessionId: sessionId,
+
+                requestId: null,
+                oidRequestId: null,
+                webauthnRequestId: loginRequest.requestId,
+
+                // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                // so we should use a hash that is optimized for high-entropy inputs.
+                secretHash: hashHighEntropyPasswordWithSalt(
+                    sessionSecret,
+                    sessionId
+                ),
+                connectionSecret: connectionSecret,
+                grantedTimeMs: now,
+                revokeTimeMs: null,
+                expireTimeMs: now + SESSION_LIFETIME_MS,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+            };
+            await this._store.markWebAuthnLoginRequestComplete(
+                loginRequest.requestId,
+                user.id,
+                Date.now()
+            );
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionKey: formatV1SessionKey(
+                    user.id,
+                    sessionId,
+                    sessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    user.id,
+                    sessionId,
+                    connectionSecret,
+                    session.expireTimeMs
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while requesting WebAuthn login`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async listUserAuthenticators(
+        userId: string
+    ): Promise<ListUserAuthenticatorsResult> {
+        try {
+            if (!userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const authenticators = await this._store.listUserAuthenticators(
+                userId
+            );
+            return {
+                success: true,
+                authenticators: authenticators.map((a) => ({
+                    id: a.id,
+                    aaguid: a.aaguid,
+                    userId: a.userId,
+                    credentialId: a.credentialId,
+                    credentialDeviceType: a.credentialDeviceType,
+                    credentialBackedUp: a.credentialBackedUp,
+                    counter: a.counter,
+                    transports: a.transports,
+                    registeringUserAgent: a.registeringUserAgent,
+                    createdAtMs: a.createdAtMs,
+                })),
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while listing user authenticators`,
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async deleteUserAuthenticator(
+        userId: string,
+        authenticatorId: string
+    ): Promise<DeleteUserAuthenticatorResult> {
+        try {
+            if (!userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You need to be logged in for the operation to work.',
+                };
+            }
+
+            const numDeleted = await this._store.deleteUserAuthenticator(
+                userId,
+                authenticatorId
+            );
+            if (numDeleted <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The given authenticator was not found.',
+                };
+            }
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                `[AuthController] Error occurred while deleting a user authenticator`,
                 err
             );
             return {
@@ -1839,6 +2418,8 @@ export class AuthController {
 
             let privacyFeatures: PrivacyFeatures;
             let displayName: string = null;
+            let email: string = result.email;
+            let name: string = result.name;
             const privoConfig = await this._config.getPrivoConfiguration();
             if (privoConfig && result.privoServiceId) {
                 const userInfo = await this._privoClient.getUserInfo(
@@ -1849,6 +2430,8 @@ export class AuthController {
                     userInfo.permissions
                 );
                 displayName = userInfo.displayName;
+                email = userInfo.email;
+                name = userInfo.givenName;
 
                 if (
                     result.privacyFeatures?.publishData !==
@@ -1883,9 +2466,9 @@ export class AuthController {
             return {
                 success: true,
                 userId: result.id,
-                name: result.name,
+                name: name,
                 displayName,
-                email: result.email,
+                email: email,
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
@@ -3143,6 +3726,221 @@ export interface IsValidDisplayNameSuccess {
     containsName?: boolean;
 }
 
+export interface RequestWebAuthnRegistration {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /*
+     * The HTTP origin or host that the request is coming from.
+     */
+    originOrHost: string | null;
+}
+
+export type RequestWebAuthnRegistrationResult =
+    | RequestWebAuthnRegistrationSuccess
+    | RequestWebAuthnRegistrationFailure;
+
+export interface RequestWebAuthnRegistrationSuccess {
+    success: true;
+    options: PublicKeyCredentialCreationOptionsJSON;
+}
+
+export interface RequestWebAuthnRegistrationFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | 'invalid_origin';
+    errorMessage: string;
+}
+
+export interface CompleteWebAuthnRegistrationRequest {
+    /**
+     * The ID of the user that is logged in.
+     */
+    userId: string;
+
+    /**
+     * The registration response.
+     */
+    response: RegistrationResponseJSON;
+
+    /**
+     * The HTTP origin or host that the request was made from.
+     */
+    originOrHost: string;
+
+    /**
+     * The user agent that the request was made from.
+     */
+    userAgent: string | null;
+}
+
+export interface RequestWebAuthnLogin {
+    /**
+     * The IP Address that the login request is from.
+     */
+    ipAddress: string;
+
+    /**
+     * The HTTP origin or host that the request is coming from.
+     * Null if the request is coming from the same origin as the server.
+     */
+    originOrHost: string | null;
+}
+
+export type RequestWebAuthnLoginResult =
+    | RequestWebAuthnLoginSuccess
+    | RequestWebAuthnLoginFailure;
+
+export interface RequestWebAuthnLoginSuccess {
+    success: true;
+    /**
+     * The ID of the login request.
+     */
+    requestId: string;
+
+    /**
+     * The options for the login request.
+     */
+    options: PublicKeyCredentialRequestOptionsJSON;
+}
+
+export interface RequestWebAuthnLoginFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | LoginRequestFailure['errorCode']
+        | 'invalid_origin';
+    errorMessage: string;
+}
+
+export interface CompleteWebAuthnLoginRequest {
+    /**
+     * The ID of the login request.
+     */
+    requestId: string;
+
+    /**
+     * The response to the login request.
+     */
+    response: AuthenticationResponseJSON;
+
+    /**
+     * The IP Address that the login request is from.
+     */
+    ipAddress: string;
+
+    /**
+     * The HTTP origin or host that the request is coming from.
+     * Null if the origin is from the same origin as the server.
+     */
+    originOrHost: string | null;
+}
+
+export type CompleteWebAuthnLoginResult =
+    | CompleteWebAuthnLoginSuccess
+    | CompleteWebAuthnLoginFailure;
+
+export interface CompleteWebAuthnLoginSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that the session is for.
+     */
+    userId: string;
+
+    /**
+     * The secret key that provides access for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The unix timestamp in miliseconds that the session will expire at.
+     */
+    expireTimeMs: number;
+}
+
+export interface CompleteWebAuthnLoginFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | CompleteLoginFailure['errorCode']
+        | LoginRequestFailure['errorCode']
+        | 'invalid_origin';
+    errorMessage: string;
+
+    /**
+     * The ban reason for the user.
+     */
+    banReason?: AuthUser['banReason'];
+}
+
+export type CompleteWebAuthnRegistrationResult =
+    | CompleteWebAuthnRegistrationSuccess
+    | CompleteWebAuthnRegistrationFailure;
+
+export interface CompleteWebAuthnRegistrationSuccess {
+    success: true;
+}
+
+export interface CompleteWebAuthnRegistrationFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | NotAuthorizedError
+        | 'invalid_origin'
+        | 'unacceptable_request';
+    errorMessage: string;
+}
+
+export type ListUserAuthenticatorsResult =
+    | ListUserAuthenticatorsSuccess
+    | ListUserAuthenticatorsFailure;
+
+export interface ListUserAuthenticatorsSuccess {
+    success: true;
+    authenticators: AuthListedUserAuthenticator[];
+}
+
+export interface ListUserAuthenticatorsFailure {
+    success: false;
+    errorCode: ServerError | NotLoggedInError;
+    errorMessage: string;
+}
+
+export type DeleteUserAuthenticatorResult =
+    | DeleteUserAuthenticatorSuccess
+    | DeleteUserAuthenticatorFailure;
+
+export interface DeleteUserAuthenticatorSuccess {
+    success: true;
+}
+
+export interface DeleteUserAuthenticatorFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'not_found';
+    errorMessage: string;
+}
+
 export interface IsValidDisplayNameFailure {
     success: false;
     errorCode: ServerError;
@@ -3180,4 +3978,24 @@ export function getPrivacyFeaturesFromPermissions(
         allowAI,
         allowPublicInsts,
     };
+}
+
+export function findRelyingPartyForOrigin(
+    relyingParties: RelyingParty[],
+    originOrHost: string
+): RelyingParty {
+    if (!originOrHost) {
+        return relyingParties[0];
+    }
+    return relyingParties.find((rp) => {
+        const matchesOrigin = rp.origin === originOrHost;
+
+        if (matchesOrigin) {
+            return true;
+        }
+
+        const originUrl = new URL(rp.origin);
+        const host = originUrl.host;
+        return originOrHost === host;
+    });
 }

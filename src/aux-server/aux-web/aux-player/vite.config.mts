@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { defineConfig } from 'vite';
+import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
@@ -131,10 +131,11 @@ export default defineConfig(({ command, mode }) => ({
                 ...policies.files,
             },
         }),
+        splitVendorChunkPlugin(),
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
             : []),
-        process.env.VITE_BASIC_SSL === 'true' ? basicSsl() : [],
+        process.argv.some((a) => a === '--ssl') ? basicSsl() : [],
     ],
     assetsInclude: ['**/*.gltf', '**/*.glb'],
     define: {

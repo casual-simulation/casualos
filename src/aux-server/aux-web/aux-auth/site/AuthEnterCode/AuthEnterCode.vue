@@ -17,6 +17,8 @@
                                 <md-input
                                     name="code"
                                     id="code"
+                                    inputmode="decimal"
+                                    autocomplete="one-time-code"
                                     v-model="code"
                                     :disabled="processing"
                                 />

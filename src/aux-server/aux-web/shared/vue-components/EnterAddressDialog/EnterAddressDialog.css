@@ -6,3 +6,8 @@
 .terms-of-service-error {
     color: #c93131;
 }
+
+.enter-address-form {
+    display: flex;
+    flex-direction: column;
+}

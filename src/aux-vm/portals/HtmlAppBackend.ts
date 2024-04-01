@@ -13,7 +13,9 @@ import { AuxHelper } from '../vm';
 import { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
 import undom, {
-    BUILTIN_HTML_ELEMENT_FUNCTIONS,
+    BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS,
+    BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS,
+    BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS,
     registerMethodHandler,
     RootNode,
     supressMutations,
@@ -33,6 +35,7 @@ export const ELEMENT_SPECIFIC_PROPERTIES: { [nodeName: string]: string[] } = {
     IMG: ['width', 'height', 'naturalWidth', 'naturalHeight', 'currentSrc'],
     VIDEO: ['videoWidth', 'videoHeight', 'duration', 'currentSrc'],
     SECTION: ['scrollTop', 'offsetHeight'],
+    CANVAS: ['height', 'width'],
 };
 
 const TEXT_REFERENCE_PROPERTIES = ['data'];
@@ -271,8 +274,12 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     private _registerMethodHandlers(doc: Document) {
-        for (let method of BUILTIN_HTML_ELEMENT_FUNCTIONS) {
+        for (let method of BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS) {
             this._registerVoidMethodHandler(doc, 'HTMLElement', method);
+        }
+
+        for (let method of BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS) {
+            this._registerPromiseMethodHandler(doc, 'HTMLElement', method);
         }
 
         const inputElemenetFunctions = [
@@ -310,6 +317,14 @@ export class HtmlAppBackend implements AppBackend {
         ];
         for (let method of videoElementFunctions) {
             this._registerPromiseMethodHandler(doc, 'HTMLVideoElement', method);
+        }
+
+        for (let method of BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS) {
+            this._registerPromiseMethodHandler(
+                doc,
+                'HTMLCanvasElement',
+                method
+            );
         }
     }
 

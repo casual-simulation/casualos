@@ -35,7 +35,7 @@ import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import TypescriptWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import TypescriptWorker from './monaco/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import {
     SubscriptionLike,
@@ -80,6 +80,7 @@ import {
     edit,
     edits,
     insert,
+    isModule,
     mergeVersions,
     preserve,
     TagEditOp,
@@ -99,14 +100,21 @@ import { triggerMonacoLoaded } from './MonacoAsync';
 import './public/monaco-editor/quick-open-file/quick-open-file';
 import './public/monaco-editor/quick-search-all/quick-search-all';
 import { getModelUriFromId } from './MonacoUtils';
-import { Transpiler, replaceMacros } from '@casual-simulation/aux-runtime';
+import {
+    Transpiler,
+    replaceMacros,
+} from '@casual-simulation/aux-runtime/runtime/Transpiler';
+
+let worker: Worker;
 
 export function setup() {
+    worker = new TypescriptWorker();
+
     // Tell monaco how to create the web workers
     (<any>self).MonacoEnvironment = {
         getWorker: function (moduleId: string, label: string) {
             if (label === 'typescript' || label === 'javascript') {
-                return new TypescriptWorker();
+                return worker;
             } else if (label === 'html') {
                 return new HtmlWorker();
             } else if (label === 'css') {
@@ -123,10 +131,15 @@ export function setup() {
         noSemanticValidation: true,
         noSyntaxValidation: false,
     });
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: false,
+    });
 
     // Set compiler options
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ES2015,
+        target: monaco.languages.typescript.ScriptTarget.ESNext,
+        module: monaco.languages.typescript.ModuleKind.ESNext,
 
         // Auto-import the given libraries
         lib: ['lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
@@ -139,7 +152,8 @@ export function setup() {
         jsx: monaco.languages.typescript.JsxEmit.Preserve,
     });
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        target: monaco.languages.typescript.ScriptTarget.ES2015,
+        target: monaco.languages.typescript.ScriptTarget.ESNext,
+        module: monaco.languages.typescript.ModuleKind.ESNext,
 
         // Auto-import the given libraries
         lib: ['lib.es2015.d.ts', 'file:///AuxDefinitions.d.ts'],
@@ -161,15 +175,27 @@ export function setup() {
         'file:///AuxDefinitions.d.ts'
     );
 
+    // Eagerly sync models to get intellisense for all models
+    monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
+
+    // Register the formula library
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+        calculateFormulaDefinitions(),
+        'file:///AuxDefinitions.d.ts'
+    );
+
     triggerMonacoLoaded();
 }
 
 interface ModelInfo {
+    simId: string;
     botId: string;
     tag: string;
+    space: string;
     decorators: string[];
     isFormula: boolean;
     isScript: boolean;
+    isModule: boolean;
     isCustomPortalScript: boolean;
     prefix: string;
     editOffset: number;
@@ -181,6 +207,10 @@ interface ModelInfo {
 let subs: SubscriptionLike[] = [];
 let activeModel: monaco.editor.ITextModel = null;
 let models: Map<string, ModelInfo> = new Map();
+
+export function getModelInfoFromUri(uri: monaco.Uri) {
+    return models.get(uri.toString());
+}
 
 /**
  * The model that should be marked as active.
@@ -208,7 +238,8 @@ export function watchSimulation(
                     isCustomPortalScript(
                         simulation,
                         calculateBotValue(null, f, tag)
-                    )
+                    ) ||
+                    isModule(f.tags[tag])
                 ) {
                     loadModel(simulation, f, tag, null, () => {
                         if (getEditor) {
@@ -251,7 +282,7 @@ export function watchSimulation(
     }
 
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
-        'javascript',
+        'typescript',
         {
             triggerCharacters: ['#', '.'],
             async provideCompletionItems(
@@ -390,6 +421,16 @@ export function watchSimulation(
         'auth',
         'botId',
         monaco.languages.typescript.javascriptDefaults
+    );
+
+    sub.add(
+        simulation.watcher.stateUpdated.subscribe(async (update) => {
+            worker.postMessage({
+                __type: 'state',
+                simId: simulation.id,
+                update,
+            });
+        })
     );
 
     return sub;
@@ -1261,7 +1302,7 @@ function tagScriptLanguage(
     script: any
 ): string {
     if (isScript(script)) {
-        return 'javascript';
+        return 'typescript';
     } else if (
         (typeof script === 'object' && hasValue(script)) ||
         isFormula(script)
@@ -1312,7 +1353,12 @@ export function shouldKeepModelLoaded(
 ): boolean {
     let info = models.get(model.uri.toString());
     if (info) {
-        return info.isScript || info.isFormula || info.isCustomPortalScript;
+        return (
+            info.isScript ||
+            info.isFormula ||
+            info.isCustomPortalScript ||
+            info.isModule
+        );
     } else {
         return true;
     }
@@ -1329,11 +1375,14 @@ function watchModel(
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
+        simId: simulation.id,
         botId: bot.id,
         tag: tag,
+        space,
         decorators: [],
         isFormula: false,
         isScript: false,
+        isModule: false,
         isCustomPortalScript: false,
         editOffset: 0,
         prefix: '',
@@ -1669,6 +1718,7 @@ function updateDecorators(
     const prefix = calcGetScriptPrefix(KNOWN_TAG_PREFIXES, value);
     info.isFormula = isFormula(value);
     info.isScript = isScript(value);
+    info.isModule = isModule(value);
     info.isCustomPortalScript = false;
     info.prefix = prefix ?? '';
     if (hasValue(prefix)) {
@@ -1703,6 +1753,7 @@ function updateDecorators(
         const wasPortalScript = info.isCustomPortalScript;
         info.isFormula = false;
         info.isScript = false;
+        info.isModule = false;
         info.isCustomPortalScript = true;
         info.editOffset = prefix.prefix.length;
 
@@ -1721,6 +1772,7 @@ function updateDecorators(
         info.decorators = model.deltaDecorations(info.decorators, []);
         info.isFormula = typeof value === 'object' && hasValue(value);
         info.isScript = false;
+        info.isModule = false;
         info.isCustomPortalScript = false;
         info.editOffset = 0;
     }
