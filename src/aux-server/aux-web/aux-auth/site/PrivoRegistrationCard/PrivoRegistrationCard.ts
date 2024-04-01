@@ -155,10 +155,10 @@ export default class PrivoRegistrationCard extends Vue {
         if (!this.displayName || !this.name) {
             return;
         }
-        const result = await authManager.isValidDisplayName(
-            this.displayName,
-            this.name
-        );
+        const result = await authManager.client.isDisplayNameValid({
+            displayName: this.displayName,
+            name: this.name,
+        });
 
         const valid = !result.success || result.allowed;
 

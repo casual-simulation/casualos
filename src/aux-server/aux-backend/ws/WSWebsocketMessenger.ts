@@ -24,6 +24,13 @@ export class WSWebsocketMessenger implements WebsocketMessenger {
         this._connections.delete(connectionId);
     }
 
+    async disconnect(connectionId: string): Promise<void> {
+        const con = this._connections.get(connectionId);
+        if (con) {
+            con.close();
+        }
+    }
+
     async sendMessage(
         connectionIds: string[],
         data: WebsocketMessage,

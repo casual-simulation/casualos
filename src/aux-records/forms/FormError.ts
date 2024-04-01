@@ -1,4 +1,4 @@
-import { KnownErrorCodes } from '../Utils';
+import { KnownErrorCodes } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 
 export const EMAIL_FIELD = 'email';

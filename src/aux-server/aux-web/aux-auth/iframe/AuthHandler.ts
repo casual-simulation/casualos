@@ -41,6 +41,7 @@ import {
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -150,7 +151,9 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
-        return authManager.getComIdWebConfig(comId);
+        return authManager.client.getPlayerConfig({
+            comId,
+        });
     }
 
     async provideOAuthLoginComplete(): Promise<void> {
@@ -274,7 +277,10 @@ export class AuthHandler implements AuxAuth {
             };
         }
 
-        const key = await authManager.createPublicRecordKey(recordName, policy);
+        const key = await authManager.client.createRecordKey({
+            recordName,
+            policy,
+        });
         console.log('[AuthHandler] Record key created.');
 
         if (key.success === false) {
@@ -453,14 +459,19 @@ export class AuthHandler implements AuxAuth {
     async isValidEmailAddress(
         email: string
     ): Promise<IsValidEmailAddressResult> {
-        return await authManager.isValidEmailAddress(email);
+        return await authManager.client.isEmailValid({
+            email,
+        });
     }
 
     async isValidDisplayName(
         displayName: string,
         name: string
     ): Promise<IsValidDisplayNameResult> {
-        return await authManager.isValidDisplayName(displayName, name);
+        return await authManager.client.isDisplayNameValid({
+            displayName,
+            name,
+        });
     }
 
     async provideCode(code: string): Promise<void> {
@@ -532,12 +543,39 @@ export class AuthHandler implements AuxAuth {
             }
         }
 
+        if (info.displayName && info.name) {
+            const validDisplayName =
+                await authManager.client.isDisplayNameValid({
+                    displayName: info.displayName,
+                    name: info.name,
+                });
+            if (validDisplayName.success === false) {
+                errors.push(...getFormErrors(validDisplayName));
+            } else if (!validDisplayName.allowed) {
+                if (validDisplayName.containsName) {
+                    errors.push({
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage:
+                            'The display name cannot contain your name.',
+                    });
+                } else {
+                    errors.push({
+                        for: DISPLAY_NAME_FIELD,
+                        errorCode: 'invalid_display_name',
+                        errorMessage:
+                            'This display name is either not allowed or already taken.',
+                    });
+                }
+            }
+        }
+
         if (info.email) {
             if (!(await authManager.validateEmail(info.email))) {
                 errors.push({
                     for: EMAIL_FIELD,
                     errorCode: 'invalid_email',
-                    errorMessage: 'The provided email is not accepted.',
+                    errorMessage: 'This email is already taken.',
                 });
             }
         }
@@ -578,8 +616,15 @@ export class AuthHandler implements AuxAuth {
     async grantPermission(
         recordName: string,
         permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
-        return await authManager.grantPermission(recordName, permission);
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    > {
+        return await authManager.client.grantPermission({
+            recordName,
+            permission,
+        });
     }
 
     private _getTokenExpirationTime(token: string): number {
@@ -911,29 +956,53 @@ export class AuthHandler implements AuxAuth {
                 )
             );
 
-            const result = await authManager.signUpWithPrivo({
-                acceptedTermsOfService: info.acceptedTermsOfService,
-                displayName: info.displayName,
-                email: info.email,
-                name: info.name,
-                dateOfBirth: info.dateOfBirth,
-                parentEmail: info.parentEmail,
-            });
+            let updatePasswordUrl: string;
+            try {
+                const result = await authManager.signUpWithPrivo({
+                    acceptedTermsOfService: info.acceptedTermsOfService,
+                    displayName: info.displayName,
+                    email: info.email,
+                    name: info.name,
+                    dateOfBirth: info.dateOfBirth,
+                    parentEmail: info.parentEmail,
+                });
 
-            if (result.success === false) {
-                console.log(
-                    '[AuthHandler] Failed to sign up with Privo.',
-                    result
+                if (result.success === false) {
+                    console.log(
+                        '[AuthHandler] Failed to sign up with Privo.',
+                        result
+                    );
+
+                    const errors = getFormErrors(result);
+
+                    this._loginUIStatus.next({
+                        page: 'enter_privo_account_info',
+                        termsOfServiceUrl: this.termsOfServiceUrl,
+                        privacyPolicyUrl: this.privacyPolicyUrl,
+                        siteName: this.siteName,
+                        errors: errors,
+                    });
+                    continue;
+                }
+                updatePasswordUrl = result.updatePasswordUrl;
+            } catch (err) {
+                console.error(
+                    '[AuthHandler] Error signing up with Privo.',
+                    err
                 );
-
-                const errors = getFormErrors(result);
-
                 this._loginUIStatus.next({
                     page: 'enter_privo_account_info',
                     termsOfServiceUrl: this.termsOfServiceUrl,
                     privacyPolicyUrl: this.privacyPolicyUrl,
                     siteName: this.siteName,
-                    errors: errors,
+                    errors: [
+                        {
+                            for: null,
+                            errorCode: 'server_error',
+                            errorMessage:
+                                'An error occurred. Please try again later.',
+                        },
+                    ],
                 });
                 continue;
             }
@@ -943,7 +1012,7 @@ export class AuthHandler implements AuxAuth {
 
             this._loginUIStatus.next({
                 page: 'show_update_password_link',
-                updatePasswordUrl: result.updatePasswordUrl,
+                updatePasswordUrl: updatePasswordUrl,
                 providedParentEmail: !!info.parentEmail,
             });
 

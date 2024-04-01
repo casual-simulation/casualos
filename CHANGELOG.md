@@ -1,5 +1,50 @@
 # CasualOS Changelog
 
+## V3.2.19
+
+#### Date: 4/1/2024
+
+### :boom: Breaking Changes
+
+-   Forced all scripts to compile in [Strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode).
+    -   Strict mode restricts some functions and features of JavaScript to help catch common mistakes.
+    -   Some examples:
+        -   The `implements`, `interface`, `let`, `package`, `private`, `protected`, `public`, `static`, `yield` keywords are no longer allowed to be used as identifiers.
+        -   Assignments to non-writable globals (`Infinity`, `undefined`, etc.) are no longer allowed.
+        -   Assignments to non-writable properties now throws a TypeError.
+        -   It is no longer allowed to set properties on a primitive value.
+        -   Attempts to delete a non-configurable or otherwise undeletable property now throws a TypeError.
+        -   Duplicate parameter names are no longer allowed.
+        -   Numbers literals are no longer allowed to start with `0`.
+            -   This is because sloppy mode allowed otcal literals to be any number starting with `0` and having every digit less than `8`
+            -   If you weren't careful, it was easy to accidentally write an octal number. e.g.
+            ```typescript
+            let num = 0123; // This does not equal 123, but is actually 83 in decimal
+            ```
+-   Enabled `preact/compat` for custom apps.
+    -   This change probably won't break anything, but I can't exactly be sure.
+    -   `preact/compat` improves Preact compatibility with React behavior and features.
+    -   See [the Preact website](https://preactjs.com/guide/v10/switching-to-preact/) for more information.
+
+### :rocket: Features
+
+-   Added the ability to specify separate Redis servers for websocket connections, inst data, caches, and rate limits.
+-   Added the `os.appCompat` API.
+    -   It is an object that contains APIs from `preact/compat`.
+    -   This includes, but is not limited to, `Suspense`, `lazy()`, `createPortal()`, `forwardRef()`, `memo()`, and `PureComponent`.
+-   Added `createRef()` and `createContext()` to `os.appHooks`.
+-   CasualOS will now send `@onGridClick`, `@onGridUp`, and `@onGridDown` shouts to all loaded insts.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where attached debuggers would automatically get detached once a portal is opened or closed.
+-   Fixed an issue where the registration flow would not always check display names properly.
+-   Improved wording for some registration errors.
+-   Fixed an issue where it was possible for a session to not be synced while the session itself believes that it is connected.
+-   Fixed an issue where using JSX syntax would show random syntax errors in the multiline code editor.
+-   Fixed an issue where it was possible for CasualOS to waste resources by loading the portals for an inst multiple times.
+-   Fixed an issue where the miniGridPortal slider bar would interfere with the menuPortal.
+
 ## V3.2.18
 
 #### Date: 3/20/2024

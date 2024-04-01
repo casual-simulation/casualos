@@ -61,12 +61,12 @@ export default class AuthRecordsFiles extends Vue {
 
     private _reset() {
         this._helper = new LoadingHelper(async (lastItem) => {
-            let result = await authManager.listFiles(
-                this.recordName,
-                lastItem?.fileName
-            );
+            const result = await authManager.client.listFiles({
+                recordName: this.recordName,
+                fileName: lastItem?.fileName,
+            });
 
-            if (result) {
+            if (result.success === true) {
                 return {
                     items: result.files,
                     totalCount: result.totalCount,
@@ -102,7 +102,11 @@ export default class AuthRecordsFiles extends Vue {
     }
 
     async deleteFile(item: ListedFile) {
-        if (await authManager.eraseFile(this.recordName, item.url)) {
+        const result = await authManager.client.eraseFile({
+            recordKey: this.recordName,
+            fileUrl: item.url,
+        });
+        if (result.success === true) {
             this.items.mdData = this.items.mdData.filter(
                 (i) => i.url !== item.url
             );

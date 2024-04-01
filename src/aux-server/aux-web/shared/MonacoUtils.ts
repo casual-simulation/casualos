@@ -6,7 +6,7 @@ export function getModelUriFromId(
     tag: string,
     space: string
 ): string {
-    let tagWithExtension = tag.indexOf('.') >= 0 ? tag : `${tag}.ts`;
+    let tagWithExtension = tag.indexOf('.') >= 0 ? tag : `${tag}.tsx`;
     if (hasValue(space)) {
         return encodeURI(`file:///${id}/${space}/${tagWithExtension}`);
     } else {

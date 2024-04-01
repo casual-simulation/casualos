@@ -179,7 +179,7 @@ export default class EnterAccountInfoDialog extends Vue {
         this._sub.unsubscribe();
     }
 
-    async checkDisplayName() {
+    async checkDisplayName(): Promise<void> {
         if (!this.displayName || !this.name) {
             return;
         }
@@ -219,14 +219,15 @@ export default class EnterAccountInfoDialog extends Vue {
                     {
                         for: DISPLAY_NAME_FIELD,
                         errorCode: 'invalid_display_name',
-                        errorMessage: 'This display name is not allowed.',
+                        errorMessage:
+                            'This display name is either not allowed or already taken.',
                     },
                 ];
             }
         }
     }
 
-    async checkEmail() {
+    async checkEmail(): Promise<void> {
         if (!this.email) {
             return;
         }
@@ -244,7 +245,7 @@ export default class EnterAccountInfoDialog extends Vue {
                 {
                     for: EMAIL_FIELD,
                     errorCode: 'invalid_email',
-                    errorMessage: 'This email is not allowed.',
+                    errorMessage: 'This email is already taken.',
                 },
             ];
         }
@@ -288,24 +289,29 @@ export default class EnterAccountInfoDialog extends Vue {
     }
 
     async register() {
-        this.processing = true;
-        this.displayName = this.displayName.trim();
-        this.name = this.name.trim();
-        this.email = this.email.trim();
-        this.parentEmail = this.parentEmail?.trim();
+        try {
+            this.processing = true;
+            this.displayName = this.displayName.trim();
+            this.name = this.name.trim();
+            this.email = this.email.trim();
+            this.parentEmail = this.parentEmail?.trim();
 
-        const info: PrivoSignUpInfo = {
-            acceptedTermsOfService: this.acceptedTerms,
-            email: this.email,
-            name: this.name,
-            dateOfBirth: DateTime.fromFormat(
-                this.dateOfBirth,
-                'yyyy-MM-dd'
-            ).toJSDate(),
-            displayName: this.displayName,
-            parentEmail: this.parentEmail,
-        };
+            const info: PrivoSignUpInfo = {
+                acceptedTermsOfService: this.acceptedTerms,
+                email: this.email,
+                name: this.name,
+                dateOfBirth: DateTime.fromFormat(
+                    this.dateOfBirth,
+                    'yyyy-MM-dd'
+                ).toJSDate(),
+                displayName: this.displayName,
+                parentEmail: this.parentEmail,
+            };
 
-        await this._endpoint.providePrivoSignUpInfo(info);
+            await this._endpoint.providePrivoSignUpInfo(info);
+        } catch (err) {
+            this.processing = false;
+            console.error(err);
+        }
     }
 }

@@ -234,7 +234,7 @@ import {
     Rotation,
 } from '@casual-simulation/aux-common/math';
 import * as hooks from 'preact/hooks';
-import { render } from 'preact';
+import { render, createRef, createContext } from 'preact';
 import {
     getInterpretableFunction,
     INTERPRETABLE_FUNCTION,
@@ -5490,6 +5490,8 @@ describe('AuxLibrary', () => {
                 expect(appHooks).toEqual({
                     ...hooks,
                     render,
+                    createContext,
+                    createRef,
                 });
                 expect(appHooks).not.toBe(hooks);
             });

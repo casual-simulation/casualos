@@ -27,6 +27,8 @@ export class NodeSimulation extends BaseSimulation {
     }
 
     protected _createSubSimulation(vm: AuxVM) {
-        return new NodeSimulation(vm.id, vm.origin, vm.configBotId, vm);
+        const sim = new NodeSimulation(vm.id, vm.origin, vm.configBotId, vm);
+        sim._isSubSimulation = true;
+        return sim;
     }
 }

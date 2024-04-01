@@ -6,7 +6,7 @@ import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 export type SubSimEmitter = Pick<
     Simulation,
-    'onSubSimulationAdded' | 'onSubSimulationRemoved'
+    'onSubSimulationAdded' | 'onSubSimulationRemoved' | 'isSubSimulation'
 >;
 
 export interface SimulationFactoryOptions {
@@ -43,6 +43,7 @@ export class SimulationManager<
     private _simulationRemoved: Subject<TSimulation>;
     private _simulationSubscriptions: Map<string, Subscription>;
     private _simulationPromises: Map<string, Promise<TSimulation>>;
+    private _initializedSimulations: Map<string, TSimulation> = new Map();
 
     /**
      * The ID of the primary simulation.
@@ -70,7 +71,7 @@ export class SimulationManager<
      */
     get simulationAdded(): Observable<TSimulation> {
         return this._simulationAdded.pipe(
-            startWith(...this.simulations.values())
+            startWith(...this._initializedSimulations.values())
         );
     }
 
@@ -125,7 +126,7 @@ export class SimulationManager<
     async removeNonMatchingSimulations(id: string) {
         let promises: Promise<void>[] = [];
         for (let [key, value] of this.simulations) {
-            if (key !== id) {
+            if (key !== id && !value.isSubSimulation) {
                 promises.push(this.removeSimulation(key));
             }
         }
@@ -215,7 +216,9 @@ export class SimulationManager<
 
         await sim.init();
 
+        this._initializedSimulations.set(id, sim);
         this._simulationAdded.next(sim);
+
         return sim;
     }
 
@@ -237,6 +240,7 @@ export class SimulationManager<
             this.simulations.delete(id);
             this._simulationPromises.delete(id);
             this._simulationSubscriptions.delete(id);
+            this._initializedSimulations.delete(id);
             this._simulationRemoved.next(sim);
         }
     }

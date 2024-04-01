@@ -1729,7 +1729,7 @@ export interface CreatePublicRecordKeyFailure {
     /**
      * The unique reason as to why the error occurred.
      */
-    errorReason:
+    errorReason?:
         | 'user_denied'
         | NotLoggedInError
         | 'record_owned_by_different_user'
