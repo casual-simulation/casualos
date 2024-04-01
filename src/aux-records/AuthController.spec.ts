@@ -282,7 +282,7 @@ describe('AuthController', () => {
                     fromByteArray(connectionSecret),
                     Infinity
                 ),
-                expireTimeMs: Infinity,
+                expireTimeMs: null,
             });
 
             const user = await store.findUser('uuid1');

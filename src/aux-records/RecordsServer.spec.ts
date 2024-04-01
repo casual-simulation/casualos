@@ -1831,6 +1831,30 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/createAccount', () => {
+        it('should create a new account', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/createAccount',
+                    JSON.stringify({}),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    expireTimeMs: null,
+                    connectionKey: expect.any(String),
+                    sessionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+    });
+
     describe('GET /api/v2/sessions', () => {
         it('should return the list of sessions for the user', async () => {
             const result = await server.handleHttpRequest(
