@@ -282,7 +282,7 @@ export class AuthController {
                     connectionSecret,
                     session.expireTimeMs ?? Infinity
                 ),
-                expireTimeMs: session.expireTimeMs ?? Infinity,
+                expireTimeMs: session.expireTimeMs,
             };
         } catch (err) {
             console.error(
@@ -2064,7 +2064,9 @@ export class AuthController {
             } else {
                 if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
                     if (
-                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                        userInfo.allSessionRevokeTimeMs >=
+                            session.grantedTimeMs &&
+                        (session.revokable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
