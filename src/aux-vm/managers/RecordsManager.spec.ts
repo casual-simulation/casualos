@@ -277,15 +277,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/data',
                     {
-                        procedure: 'recordData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
                     },
                     {
@@ -341,18 +338,15 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/data',
                     {
-                        procedure: 'recordData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
-                            updatePolicy: true,
-                            deletePolicy: ['user1'],
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
+                        updatePolicy: true,
+                        deletePolicy: ['user1'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -406,17 +400,14 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/data',
                     {
-                        procedure: 'recordData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
-                            markers: ['marker1', 'marker2'],
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
+                        markers: ['marker1', 'marker2'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -473,17 +464,14 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/data',
                     {
-                        procedure: 'recordData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
-                            instances: ['/myInst'],
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -540,17 +528,14 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/data',
                     {
-                        procedure: 'recordData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
-                            instances: ['record/myInst'],
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
+                        instances: ['record/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -602,15 +587,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
+                    'http://localhost:9999/api/v2/records/data',
                     {
-                        procedure: 'recordData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
                     },
                     {
@@ -665,15 +647,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/manual/data',
                     {
-                        procedure: 'recordManualData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
                     },
                     {
@@ -728,15 +707,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
+                    'http://localhost:9999/api/v2/records/manual/data',
                     {
-                        procedure: 'recordManualData',
-                        input: {
-                            recordKey: 'myToken',
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
                     },
                     {
@@ -916,15 +892,12 @@ describe('RecordsManager', () => {
                     }),
                 ]);
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/data',
                     {
-                        procedure: 'recordData',
-                        input: {
-                            recordKey: recordKey,
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
+                        recordKey: recordKey,
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
                     },
                     {
@@ -980,15 +953,12 @@ describe('RecordsManager', () => {
                     }),
                 ]);
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/manual/data',
                     {
-                        procedure: 'recordManualData',
-                        input: {
-                            recordKey: recordKey,
-                            address: 'myAddress',
-                            data: {
-                                myRecord: true,
-                            },
+                        recordKey: recordKey,
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
                         },
                     },
                     {
@@ -1027,15 +997,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1078,15 +1041,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {},
@@ -1135,16 +1091,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                            instances: ['/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress&instances=%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1192,16 +1140,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                            instances: ['record/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress&instances=record%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1250,15 +1190,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
-                    {
-                        procedure: 'getData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/data?recordName=testRecord&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1303,15 +1236,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getManualData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1362,15 +1288,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
-                    {
-                        procedure: 'getManualData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1474,15 +1393,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1529,15 +1441,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress',
                     { validateStatus: expect.any(Function), headers: {} },
                 ]);
 
@@ -1583,16 +1488,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                            instances: ['/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress&instances=%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1643,16 +1540,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                            instances: ['record/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress&instances=record%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1704,15 +1593,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/data/list?recordName=testRecord&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1759,14 +1641,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1826,16 +1702,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            marker: 'myMarker',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -1890,16 +1758,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            marker: 'myMarker',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
                     { validateStatus: expect.any(Function), headers: {} },
                 ]);
 
@@ -1953,17 +1813,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            marker: 'myMarker',
-                            address: 'myAddress',
-                            instances: ['/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress&instances=%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -2022,17 +1873,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            marker: 'myMarker',
-                            address: 'myAddress',
-                            instances: ['record/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress&instances=record%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -2087,16 +1929,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            marker: 'myMarker',
-                            address: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/data/list?recordName=testRecord&marker=myMarker&address=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -2151,15 +1985,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listData',
-                        input: {
-                            recordName: 'testRecord',
-                            marker: 'myMarker',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&marker=myMarker',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -2211,15 +2038,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseData',
-                            input: {
-                                recordKey: 'myToken',
-                                address: 'myAddress',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -2268,15 +2089,12 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
                         {
-                            procedure: 'eraseData',
-                            input: {
-                                recordKey: 'myToken',
-                                address: 'myAddress',
-                                instances: ['/myInst'],
-                            },
+                            recordKey: 'myToken',
+                            address: 'myAddress',
+                            instances: ['/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -2326,15 +2144,12 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
                         {
-                            procedure: 'eraseData',
-                            input: {
-                                recordKey: 'myToken',
-                                address: 'myAddress',
-                                instances: ['record/myInst'],
-                            },
+                            recordKey: 'myToken',
+                            address: 'myAddress',
+                            instances: ['record/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -2385,15 +2200,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:9999/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseData',
-                            input: {
-                                recordKey: 'myToken',
-                                address: 'myAddress',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:9999/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -2439,15 +2248,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'deleteManualData',
-                            input: {
-                                recordKey: 'myToken',
-                                address: 'myAddress',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/manual/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -2499,15 +2302,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:9999/api/v3/callProcedure',
-                        {
-                            procedure: 'deleteManualData',
-                            input: {
-                                recordKey: 'myToken',
-                                address: 'myAddress',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:9999/api/v2/records/manual/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -2606,15 +2403,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseData',
-                            input: {
-                                recordKey: 'myToken',
-                                address: 'myAddress',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
+                        { recordKey: 'myToken', address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -2703,15 +2494,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseData',
-                            input: {
-                                recordKey: recordKey,
-                                address: 'myAddress',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/data',
+                        { recordKey: recordKey, address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -2760,15 +2545,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'deleteManualData',
-                            input: {
-                                recordKey: recordKey,
-                                address: 'myAddress',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/manual/data',
+                        { recordKey: recordKey, address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -2831,17 +2610,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
-                                fileByteLength: 6,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.txt',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.txt',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -2907,17 +2683,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
-                                fileByteLength: 6,
-                                fileMimeType: 'text/xml',
-                                fileDescription: 'test.txt',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/xml',
+                            fileDescription: 'test.txt',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -2977,17 +2750,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '8499ab51a0226b4977bbf0549b394225fe12643376782a2bb3d141014de70820',
-                                fileByteLength: 31,
-                                fileMimeType: 'application/json',
-                                fileDescription: 'test.json',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '8499ab51a0226b4977bbf0549b394225fe12643376782a2bb3d141014de70820',
+                            fileByteLength: 31,
+                            fileMimeType: 'application/json',
+                            fileDescription: 'test.json',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3054,17 +2824,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '8499ab51a0226b4977bbf0549b394225fe12643376782a2bb3d141014de70820',
-                                fileByteLength: 31,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.json',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '8499ab51a0226b4977bbf0549b394225fe12643376782a2bb3d141014de70820',
+                            fileByteLength: 31,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.json',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3118,17 +2885,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '95b50f5aa4106c3872f3ba7a52ae035b5875a729f6a8ab6f02d86c57eda56c0b',
-                                fileByteLength: 11,
-                                fileMimeType: 'text/html',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '95b50f5aa4106c3872f3ba7a52ae035b5875a729f6a8ab6f02d86c57eda56c0b',
+                            fileByteLength: 11,
+                            fileMimeType: 'text/html',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3189,17 +2953,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '95b50f5aa4106c3872f3ba7a52ae035b5875a729f6a8ab6f02d86c57eda56c0b',
-                                fileByteLength: 11,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '95b50f5aa4106c3872f3ba7a52ae035b5875a729f6a8ab6f02d86c57eda56c0b',
+                            fileByteLength: 11,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3263,17 +3024,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
-                                fileByteLength: 123,
-                                fileMimeType: 'application/zip',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/zip',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3331,17 +3089,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7',
-                                fileByteLength: 4,
-                                fileMimeType: 'application/zip',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7',
+                            fileByteLength: 4,
+                            fileMimeType: 'application/zip',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3412,17 +3167,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
-                                fileByteLength: 123,
-                                fileMimeType: 'application/octet-stream',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/octet-stream',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3486,17 +3238,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
-                                fileByteLength: 123,
-                                fileMimeType: 'application/octet-stream',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/octet-stream',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3560,17 +3309,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
-                                fileByteLength: 123,
-                                fileMimeType: 'application/zip',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'cc63be92e3a900cd067da89473b61b40579b54ef54f8305c2ffcc893743792e9',
+                            fileByteLength: 123,
+                            fileMimeType: 'application/zip',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3635,17 +3381,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5',
-                                fileByteLength: 128,
-                                fileMimeType: 'application/octet-stream',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5',
+                            fileByteLength: 128,
+                            fileMimeType: 'application/octet-stream',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3696,17 +3439,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5',
-                                fileByteLength: 2,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5',
+                            fileByteLength: 2,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3757,17 +3497,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
-                                fileByteLength: 4,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3825,17 +3562,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:9999/api/v3/callProcedure',
+                        'http://localhost:9999/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
-                                fileByteLength: 4,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -3943,17 +3677,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
-                                fileByteLength: 4,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -4030,17 +3761,14 @@ describe('RecordsManager', () => {
                         expect(getRequests()).toEqual([
                             [
                                 'post',
-                                'http://localhost:3002/api/v3/callProcedure',
+                                'http://localhost:3002/api/v2/records/file',
                                 {
-                                    procedure: 'recordFile',
-                                    input: {
-                                        recordKey: 'myToken',
-                                        fileSha256Hex:
-                                            'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
-                                        fileByteLength: 4,
-                                        fileMimeType: 'text/plain',
-                                        fileDescription: 'test.html',
-                                    },
+                                    recordKey: 'myToken',
+                                    fileSha256Hex:
+                                        'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                                    fileByteLength: 4,
+                                    fileMimeType: 'text/plain',
+                                    fileDescription: 'test.html',
                                 },
                                 {
                                     validateStatus: expect.any(Function),
@@ -4092,17 +3820,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
-                                fileByteLength: 4,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -4220,17 +3945,14 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: recordKey,
-                                fileSha256Hex:
-                                    'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
-                                fileByteLength: 4,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.html',
-                            },
+                            recordKey: recordKey,
+                            fileSha256Hex:
+                                'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
+                            fileByteLength: 4,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.html',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -4304,18 +4026,15 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
-                                fileByteLength: 6,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.txt',
-                                instances: ['/myInst'],
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.txt',
+                            instances: ['/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -4386,18 +4105,15 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
-                                fileByteLength: 6,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.txt',
-                                instances: ['record/myInst'],
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.txt',
+                            instances: ['record/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -4463,18 +4179,15 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'recordFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileSha256Hex:
-                                    '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
-                                fileByteLength: 6,
-                                fileMimeType: 'text/plain',
-                                fileDescription: 'test.txt',
-                                markers: ['test1', 'test2'],
-                            },
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.txt',
+                            markers: ['test1', 'test2'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -4536,14 +4249,8 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getFile',
-                            input: {
-                                fileUrl: 'myFileUrl',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/records/file?fileUrl=myFileUrl',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -4602,15 +4309,8 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getFile',
-                            input: {
-                                fileUrl: 'myFileUrl',
-                                instances: ['/myInst'],
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/records/file?fileUrl=myFileUrl&instances=%2FmyInst',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -4669,15 +4369,8 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getFile',
-                            input: {
-                                fileUrl: 'myFileUrl',
-                                instances: ['record/myInst'],
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/records/file?fileUrl=myFileUrl&instances=record%2FmyInst',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -4739,14 +4432,8 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:9999/api/v3/callProcedure',
-                        {
-                            procedure: 'getFile',
-                            input: {
-                                fileUrl: 'myFileUrl',
-                            },
-                        },
+                        'get',
+                        'http://localhost:9999/api/v2/records/file?fileUrl=myFileUrl',
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -4792,14 +4479,8 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getFile',
-                            input: {
-                                fileUrl: 'myFileUrl',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/records/file?fileUrl=myFileUrl',
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -4847,15 +4528,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileUrl: 'myFileUrl',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
+                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -4904,15 +4579,12 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'eraseFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileUrl: 'myFileUrl',
-                                instances: ['/myInst'],
-                            },
+                            recordKey: 'myToken',
+                            fileUrl: 'myFileUrl',
+                            instances: ['/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -4962,15 +4634,12 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
                         {
-                            procedure: 'eraseFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileUrl: 'myFileUrl',
-                                instances: ['record/myInst'],
-                            },
+                            recordKey: 'myToken',
+                            fileUrl: 'myFileUrl',
+                            instances: ['record/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -5020,15 +4689,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:9999/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileUrl: 'myFileUrl',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:9999/api/v2/records/file',
+                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -5073,15 +4736,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseFile',
-                            input: {
-                                recordKey: 'myToken',
-                                fileUrl: 'myFileUrl',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
+                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -5174,15 +4831,9 @@ describe('RecordsManager', () => {
 
                 expect(getRequests()).toEqual([
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'eraseFile',
-                            input: {
-                                recordKey: recordKey,
-                                fileUrl: 'myFileUrl',
-                            },
-                        },
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
+                        { recordKey: recordKey, fileUrl: 'myFileUrl' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -5230,14 +4881,11 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/events/count',
                     {
-                        procedure: 'addEventCount',
-                        input: {
-                            recordKey: 'recordKey',
-                            eventName: 'eventName',
-                            count: 10,
-                        },
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -5285,15 +4933,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/events/count',
                     {
-                        procedure: 'addEventCount',
-                        input: {
-                            recordKey: 'recordKey',
-                            eventName: 'eventName',
-                            count: 10,
-                            instances: ['/myInst'],
-                        },
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -5341,15 +4986,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/events/count',
                     {
-                        procedure: 'addEventCount',
-                        input: {
-                            recordKey: 'recordKey',
-                            eventName: 'eventName',
-                            count: 10,
-                            instances: ['record/myInst'],
-                        },
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
+                        instances: ['record/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -5398,14 +5040,11 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
+                    'http://localhost:9999/api/v2/records/events/count',
                     {
-                        procedure: 'addEventCount',
-                        input: {
-                            recordKey: 'recordKey',
-                            eventName: 'eventName',
-                            count: 10,
-                        },
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -5449,14 +5088,11 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/events/count',
                     {
-                        procedure: 'addEventCount',
-                        input: {
-                            recordKey: 'recordKey',
-                            eventName: 'eventName',
-                            count: 10,
-                        },
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -5548,14 +5184,11 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/events/count',
                     {
-                        procedure: 'addEventCount',
-                        input: {
-                            recordKey: recordKey,
-                            eventName: 'eventName',
-                            count: 10,
-                        },
+                        recordKey: recordKey,
+                        eventName: 'eventName',
+                        count: 10,
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -5602,15 +5235,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getEventCount',
-                        input: {
-                            recordName: 'testRecord',
-                            eventName: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -5649,15 +5275,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getEventCount',
-                        input: {
-                            recordName: 'testRecord',
-                            eventName: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
                     {
                         validateStatus: expect.any(Function),
                         headers: {},
@@ -5699,16 +5318,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getEventCount',
-                        input: {
-                            recordName: 'testRecord',
-                            eventName: 'myAddress',
-                            instances: ['/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress&instances=%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -5752,16 +5363,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'getEventCount',
-                        input: {
-                            recordName: 'testRecord',
-                            eventName: 'myAddress',
-                            instances: ['record/myInst'],
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress&instances=record%2FmyInst',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -5830,15 +5433,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
-                    {
-                        procedure: 'getEventCount',
-                        input: {
-                            recordName: 'testRecord',
-                            eventName: 'myAddress',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
                     { validateStatus: expect.any(Function), headers: {} },
                 ]);
 
@@ -5878,16 +5474,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/meet/token',
+                    { roomName: 'myRoom', userName: 'userId' },
                     {
-                        procedure: 'createMeetToken',
-                        input: {
-                            roomName: 'myRoom',
-                            userName: 'userId',
-                        },
-                    },
-                    {
-                        headers: {},
                         validateStatus: expect.any(Function),
                     },
                 ]);
@@ -5944,16 +5533,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/meet/token',
+                    { roomName: 'myRoom', userName: 'userId' },
                     {
-                        procedure: 'createMeetToken',
-                        input: {
-                            roomName: 'myRoom',
-                            userName: 'userId',
-                        },
-                    },
-                    {
-                        headers: {},
                         validateStatus: expect.any(Function),
                     },
                 ]);
@@ -6032,16 +5614,9 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
+                    'http://localhost:9999/api/v2/meet/token',
+                    { roomName: 'myRoom', userName: 'userId' },
                     {
-                        procedure: 'createMeetToken',
-                        input: {
-                            roomName: 'myRoom',
-                            userName: 'userId',
-                        },
-                    },
-                    {
-                        headers: {},
                         validateStatus: expect.any(Function),
                     },
                 ]);
@@ -6392,22 +5967,19 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/permissions',
                     {
-                        procedure: 'grantPermission',
-                        input: {
-                            recordName: 'recordName',
-                            permission: {
-                                marker: 'marker',
-                                resourceKind: 'data',
-                                action: 'read',
-                                subjectType: 'role',
-                                subjectId: 'developer',
-                                expireTimeMs: null,
-                                options: {},
-                            },
-                            instances: ['/myInst'],
+                        recordName: 'recordName',
+                        permission: {
+                            marker: 'marker',
+                            resourceKind: 'data',
+                            action: 'read',
+                            subjectType: 'role',
+                            subjectId: 'developer',
+                            expireTimeMs: null,
+                            options: {},
                         },
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6457,13 +6029,11 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/permissions/revoke',
                     {
-                        procedure: 'revokePermission',
-                        input: {
-                            permissionId: 'permissionId',
-                            instances: ['/myInst'],
-                        },
+                        recordName: 'recordName',
+                        permissionId: 'permissionId',
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6549,15 +6119,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/role/grant',
                     {
-                        procedure: 'grantRole',
-                        input: {
-                            recordName: 'recordName',
-                            inst: '/myInst',
-                            role: 'admin',
-                            expireTimeMs: startOfNextDay.toMillis(),
-                        },
+                        recordName: 'recordName',
+                        inst: '/myInst',
+                        role: 'admin',
+                        expireTimeMs: startOfNextDay.toMillis(),
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6613,16 +6180,13 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/role/grant',
                     {
-                        procedure: 'grantRole',
-                        input: {
-                            recordName: 'recordName',
-                            userId: 'userId',
-                            role: 'developer',
-                            expireTimeMs: null,
-                            instances: ['/myInst'],
-                        },
+                        recordName: 'recordName',
+                        userId: 'userId',
+                        role: 'developer',
+                        expireTimeMs: null,
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6668,16 +6232,13 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/role/grant',
                     {
-                        procedure: 'grantRole',
-                        input: {
-                            recordName: 'recordName',
-                            inst: 'inst',
-                            role: 'developer',
-                            expireTimeMs: null,
-                            instances: ['/myInst'],
-                        },
+                        recordName: 'recordName',
+                        inst: 'inst',
+                        role: 'developer',
+                        expireTimeMs: null,
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6726,15 +6287,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/role/revoke',
                     {
-                        procedure: 'revokeRole',
-                        input: {
-                            recordName: 'recordName',
-                            userId: 'userId',
-                            role: 'developer',
-                            instances: ['/myInst'],
-                        },
+                        recordName: 'recordName',
+                        userId: 'userId',
+                        role: 'developer',
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6773,15 +6331,12 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/records/role/revoke',
                     {
-                        procedure: 'revokeRole',
-                        input: {
-                            recordName: 'recordName',
-                            inst: 'inst',
-                            role: 'developer',
-                            instances: ['/myInst'],
-                        },
+                        recordName: 'recordName',
+                        inst: 'inst',
+                        role: 'developer',
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6843,17 +6398,14 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/ai/chat',
                     {
-                        procedure: 'aiChat',
-                        input: {
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: 'Hello!',
-                                },
-                            ],
-                        },
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6917,18 +6469,15 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/ai/chat',
                     {
-                        procedure: 'aiChat',
-                        input: {
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: 'Hello!',
-                                },
-                            ],
-                            model: 'custom-model',
-                        },
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        model: 'custom-model',
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -6995,18 +6544,15 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/ai/chat',
                     {
-                        procedure: 'aiChat',
-                        input: {
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: 'Hello!',
-                                },
-                            ],
-                            instances: ['/myInst'],
-                        },
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        instances: ['/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -7073,18 +6619,15 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/ai/chat',
                     {
-                        procedure: 'aiChat',
-                        input: {
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: 'Hello!',
-                                },
-                            ],
-                            instances: ['record/myInst'],
-                        },
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        instances: ['record/myInst'],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -7148,17 +6691,14 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
+                    'http://localhost:9999/api/v2/ai/chat',
                     {
-                        procedure: 'aiChat',
-                        input: {
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: 'Hello!',
-                                },
-                            ],
-                        },
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -7221,17 +6761,14 @@ describe('RecordsManager', () => {
                 await waitAsync();
 
                 expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
+                    'http://localhost:3002/api/v2/ai/chat',
                     {
-                        procedure: 'aiChat',
-                        input: {
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: 'Hello!',
-                                },
-                            ],
-                        },
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
                     },
                     {
                         validateStatus: expect.any(Function),
@@ -7337,12 +6874,9 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/ai/skybox',
                         {
-                            procedure: 'createAiSkybox',
-                            input: {
-                                prompt: 'prompt',
-                            },
+                            prompt: 'prompt',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -7352,14 +6886,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7368,14 +6896,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7437,13 +6959,10 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/ai/skybox',
                         {
-                            procedure: 'createAiSkybox',
-                            input: {
-                                prompt: 'prompt',
-                                instances: ['/myInst'],
-                            },
+                            prompt: 'prompt',
+                            instances: ['/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -7453,14 +6972,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id&instances=%2FmyInst',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7469,14 +6982,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id&instances=%2FmyInst',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7540,13 +7047,10 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/ai/skybox',
                         {
-                            procedure: 'createAiSkybox',
-                            input: {
-                                prompt: 'prompt',
-                                instances: ['record/myInst'],
-                            },
+                            prompt: 'prompt',
+                            instances: ['record/myInst'],
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -7556,14 +7060,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id&instances=record%2FmyInst',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7572,14 +7070,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id&instances=record%2FmyInst',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7645,12 +7137,9 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:9999/api/v3/callProcedure',
+                        'http://localhost:9999/api/v2/ai/skybox',
                         {
-                            procedure: 'createAiSkybox',
-                            input: {
-                                prompt: 'prompt',
-                            },
+                            prompt: 'prompt',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -7660,14 +7149,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:9999/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:9999/api/v2/ai/skybox?skyboxId=skybox-id',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7676,14 +7159,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:9999/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:9999/api/v2/ai/skybox?skyboxId=skybox-id',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7743,12 +7220,9 @@ describe('RecordsManager', () => {
                 expect(getRequests()).toEqual([
                     [
                         'post',
-                        'http://localhost:3002/api/v3/callProcedure',
+                        'http://localhost:3002/api/v2/ai/skybox',
                         {
-                            procedure: 'createAiSkybox',
-                            input: {
-                                prompt: 'prompt',
-                            },
+                            prompt: 'prompt',
                         },
                         {
                             validateStatus: expect.any(Function),
@@ -7758,14 +7232,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -7774,14 +7242,8 @@ describe('RecordsManager', () => {
                         },
                     ],
                     [
-                        'post',
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            procedure: 'getAiSkybox',
-                            input: {
-                                skyboxId: 'skybox-id',
-                            },
-                        },
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
                         {
                             validateStatus: expect.any(Function),
                             headers: {
@@ -8331,12 +7793,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listStudios',
-                        input: {},
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -8398,14 +7856,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listStudios',
-                        input: {
-                            comId: 'comId1',
-                        },
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list?comId=comId1',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -8456,12 +7908,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listStudios',
-                        input: {},
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -8539,12 +7987,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
-                        procedure: 'listStudios',
-                        input: {},
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -8595,12 +8039,8 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v3/callProcedure',
-                    {
-                        procedure: 'listStudios',
-                        input: {},
-                    },
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/studios/list',
                     {
                         validateStatus: expect.any(Function),
                         headers: {
@@ -8823,18 +8263,15 @@ describe('RecordsManager', () => {
             });
 
             expect(getLastPost()).toEqual([
-                'http://localhost:3002/api/v3/callProcedure',
+                'http://localhost:3002/api/v2/records/insts/report',
                 {
-                    procedure: 'reportInst',
-                    input: {
-                        recordName: null,
-                        inst: 'inst',
-                        automaticReport: false,
-                        reportReason: 'spam',
-                        reportReasonText: 'description',
-                        reportedUrl: 'url',
-                        reportedPermalink: 'permalink',
-                    },
+                    recordName: null,
+                    inst: 'inst',
+                    automaticReport: false,
+                    reportReason: 'spam',
+                    reportReasonText: 'description',
+                    reportedUrl: 'url',
+                    reportedPermalink: 'permalink',
                 },
                 {
                     validateStatus: expect.any(Function),
