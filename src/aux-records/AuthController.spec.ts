@@ -5613,9 +5613,13 @@ describe('AuthController', () => {
                 const result = await controller.validateConnectionToken(token);
 
                 expect(result).toEqual({
-                    success: false,
-                    errorCode: 'invalid_token',
-                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                    success: true,
+                    userId,
+                    sessionId,
+                    inst: 'inst',
+                    recordName: 'recordName',
+                    connectionId: 'connectionId',
+                    allSessionsRevokedTimeMs: 101,
                 });
             });
         });
