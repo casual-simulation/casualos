@@ -2317,7 +2317,7 @@ export class RecordsServer {
                 .http('GET', '/api/v2/studios/list')
                 .inputs(
                     z.object({
-                        comId: z.string().nonempty().optional(),
+                        comId: z.string().nonempty().nullable().optional(),
                     })
                 )
                 .handler(async ({ comId }, context) => {

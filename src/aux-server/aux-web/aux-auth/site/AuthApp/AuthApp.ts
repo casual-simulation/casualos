@@ -205,7 +205,7 @@ export default class AuthApp extends Vue {
         try {
             const comId = authManager.getComIdFromUrl();
             const result = await authManager.client.listStudios({
-                comId,
+                comId: comId ?? undefined,
             });
 
             if (result.success === false) {
