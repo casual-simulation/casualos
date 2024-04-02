@@ -17,18 +17,6 @@ const config = new Conf({
 });
 const program = new Command();
 
-let client: ReturnType<typeof createRecordsClient>;
-
-async function getClient(endpoint: string) {
-    if (!endpoint) {
-        endpoint = await getEndpoint();
-    }
-    if (!client) {
-        client = createRecordsClient(endpoint);
-    }
-    return client;
-}
-
 program
     .name('casualos')
     .description('A CLI for CasualOS')
@@ -40,8 +28,18 @@ program
     .description('Login to the CasualOS API')
     .action(async () => {
         const opts = program.optsWithGlobals();
-        const endpoint = opts.endpoint;
-        await login(opts.endpoint);
+        const endpoint = await getEndpoint(opts.endpoint);
+        await login(endpoint);
+    });
+
+program
+    .command('logout')
+    .description('Logout of the CasualOS API')
+    .action(async () => {
+        const opts = program.optsWithGlobals();
+        const endpoint = await getEndpoint(opts.endpoint);
+        saveSessionKey(endpoint, null);
+        console.log('Logged out!');
     });
 
 program
@@ -55,14 +53,15 @@ program
     .command('query')
     .description('Query the CasualOS API')
     .argument('[procedure]', 'The procedure to execute')
+    .argument('[input]', 'The input to the procedure')
     .option('-k, --key <key>', 'The session key to use for the query.')
-    .action(async (procedure, options) => {
+    .action(async (procedure, input, options) => {
         const opts = program.optsWithGlobals();
-        const endpoint = opts.endpoint;
-        const client = await getClient(endpoint);
-        if (options.key) {
-            client.sessionKey = await getSessionKey(endpoint, options.key);
-        }
+        const endpoint = await getEndpoint(opts.endpoint);
+        const client = await getClient(
+            endpoint,
+            opts.key ?? (await getOrRefreshSessionKey(endpoint))
+        );
         const availableOperations = await client.listProcedures({});
         if (!procedure) {
             const response = await prompts({
@@ -88,103 +87,120 @@ program
 
         console.log('Your selected operation:', operation);
 
-        const input = await askForInputs(operation.inputs, operation.name);
-
+        if (!input) {
+            input = await askForInputs(operation.inputs, operation.name);
+        } else {
+            input = JSON.parse(input);
+        }
         console.log('Your input:', input);
 
         const confirm = await prompts({
             type: 'confirm',
             name: 'continue',
             message: 'Do you want to continue?',
+            initial: true,
         });
 
         if (confirm.continue) {
-            let result = await client.callProcedure(operation.name, input, {
-                headers: getHeaders(),
-            });
-
-            if (
-                result.success === false &&
-                result.errorCode === 'not_logged_in'
-            ) {
-                const loginResponse = await prompts({
-                    type: 'confirm',
-                    name: 'login',
-                    message:
-                        'You are not logged in. Do you want to log in and try again?',
-                });
-
-                if (loginResponse.login) {
-                    if (await login(endpoint)) {
-                        result = await client.callProcedure(
-                            operation.name,
-                            input,
-                            {
-                                headers: getHeaders(),
-                            }
-                        );
-                    }
-                }
-            }
-
+            const result = await callProcedure(client, operation.name, input);
             console.log('Result:', result);
         } else {
             console.log('Cancelled.');
         }
     });
 
-async function getSessionKey(
-    endpoint: string,
-    key?: string,
-    loginIfNecessary = false
+async function callProcedure(
+    client: ReturnType<typeof createRecordsClient>,
+    operation: string,
+    input: any
 ) {
-    if (key) {
-        return key;
-    }
+    while (true) {
+        const result = await client.callProcedure(operation, input, {
+            headers: getHeaders(client),
+        });
 
-    key = String(config.get(`${endpoint}:sessionKey`));
+        if (result.success === false && result.errorCode === 'not_logged_in') {
+            const loginResponse = await prompts({
+                type: 'confirm',
+                name: 'login',
+                message:
+                    'You are not logged in. Do you want to log in and try again?',
+                initial: true,
+            });
 
-    const parsed = parseSessionKey(key);
-
-    if (!parsed) {
-        if (loginIfNecessary && (await login(endpoint))) {
-            return getSessionKey(endpoint);
-        }
-
-        return null;
-    }
-
-    const [userId, sessionId, secret, expireTimeMs] = parsed;
-
-    if (expireTimeMs < Date.now()) {
-        if (loginIfNecessary && (await login(endpoint))) {
-            return getSessionKey(endpoint);
-        }
-    } else {
-        const lifetimeMs = expireTimeMs - Date.now();
-        const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
-
-        if (loginIfNecessary && refreshTimeMs < REFRESH_LIFETIME_MS) {
-            console.log(
-                `Session key expires in less than one week. Replacing stored session key.`
-            );
-
-            if (await login(endpoint)) {
-                return getSessionKey(endpoint);
+            if (loginResponse.login) {
+                const key = await login(client);
+                if (!key) {
+                    return result;
+                }
+            } else {
+                return result;
             }
+        } else {
+            return result;
         }
+    }
+}
+
+async function getClient(endpoint: string, key: string) {
+    console.log('Using endpoint: ', endpoint);
+    const client = createRecordsClient(endpoint);
+    if (key) {
+        client.sessionKey = key;
+    }
+    return client;
+}
+
+async function getOrRefreshSessionKey(endpoint: string) {
+    const key = getSessionKey(endpoint);
+
+    if (isExpired(key)) {
+        return null;
+    } else if (willExpire(key)) {
+        return await replaceSessionKey(endpoint, key);
     }
 
     return key;
 }
 
-async function login(endpoint: string) {
-    const client = await getClient(endpoint);
+function getSessionKey(endpoint: string) {
+    return String(config.get(`${endpoint}:sessionKey`));
+}
 
+function saveSessionKey(endpoint: string, key: string) {
+    config.set(`${endpoint}:sessionKey`, key);
+}
+
+function getExpiration(key: string): number {
+    const parsed = parseSessionKey(key);
+
+    if (!parsed) {
+        return 0;
+    }
+
+    const [userId, sessionId, secret, expireTimeMs] = parsed;
+
+    return expireTimeMs;
+}
+
+function isExpired(key: string) {
+    const expireTimeMs = getExpiration(key);
+    return expireTimeMs < Date.now();
+}
+
+function willExpire(key: string) {
+    const expireTimeMs = getExpiration(key);
+    const lifetimeMs = expireTimeMs - Date.now();
+    const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
+    return refreshTimeMs < 0;
+}
+
+async function login(client: ReturnType<typeof createRecordsClient>) {
     const response = await prompts([
         {
             type: 'select',
             name: 'type',
+            message: 'Select the type of address to use for login.',
             choices: [
                 {
                     title: 'Email',
@@ -212,7 +228,7 @@ async function login(endpoint: string) {
             addressType: addressType,
         },
         {
-            headers: getHeaders(),
+            headers: getHeaders(client),
         }
     );
 
@@ -232,27 +248,55 @@ async function login(endpoint: string) {
                 userId: result.userId,
             },
             {
-                headers: getHeaders(),
+                headers: getHeaders(client),
             }
         );
 
         if (loginResult.success === true) {
-            config.set(`${endpoint}:sessionKey`, loginResult.sessionKey);
+            saveSessionKey(client.endpoint, loginResult.sessionKey);
+            client.sessionKey = loginResult.sessionKey;
             console.log('Login successful!');
-            return true;
+            return loginResult.sessionKey;
         } else {
+            saveSessionKey(client.endpoint, null);
+            client.sessionKey = null;
             console.log('Failed to complete login:');
             console.log(loginResult);
-            return false;
+            return null;
         }
     } else {
+        saveSessionKey(client.endpoint, null);
+        client.sessionKey = null;
         console.log('Failed to create login request:');
         console.log(result);
-        return false;
+        return null;
     }
 }
 
-async function getEndpoint() {
+async function replaceSessionKey(endpoint: string, key: string) {
+    const client = await getClient(endpoint, key);
+
+    const result = await client.replaceSession(undefined, {
+        sessionKey: key,
+    });
+
+    if (result.success === true) {
+        saveSessionKey(endpoint, result.sessionKey);
+        console.log('Session key replaced!');
+
+        return result.sessionKey;
+    }
+
+    saveSessionKey(endpoint, null);
+    console.log('Failed to replace session key:');
+    console.log(result);
+    return null;
+}
+
+async function getEndpoint(endpoint: string) {
+    if (endpoint) {
+        return endpoint;
+    }
     let savedEndpoint = String(config.get('currentEndpoint'));
     if (!savedEndpoint) {
         savedEndpoint = await updateEndpoint();
@@ -273,7 +317,7 @@ async function updateEndpoint() {
     return savedEndpoint;
 }
 
-function getHeaders() {
+function getHeaders(client: RecordsClient) {
     return {
         origin: client.endpoint,
     };
@@ -288,21 +332,3 @@ async function main() {
 }
 
 main();
-
-// async function start() {
-//     const reponse = await prompts({
-//         type: 'select',
-//         name: 'action',
-//         message: 'What would you like to do?',
-//         choices: [
-//             { title: 'Migrate', value: 'migrate' },
-//             { title: 'Collect Responses', value: 'collect' },
-//         ],
-//     });
-
-//     if (reponse.action === 'migrate') {
-//         await migrate();
-//     } else {
-//         await collectAndSaveResponses();
-//     }
-// }

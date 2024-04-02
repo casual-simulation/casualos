@@ -1355,12 +1355,7 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION.nullable().optional(),
                         marker: MARKER_VALIDATION.optional(),
-                        sort: z
-                            .union([
-                                z.literal('ascending'),
-                                z.literal('descending'),
-                            ])
-                            .optional(),
+                        sort: z.enum(['ascending', 'descending']).optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
                 )

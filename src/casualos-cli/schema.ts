@@ -23,7 +23,7 @@ export async function askForInputs(
                 initial: inputs.defaultValue ?? undefined,
             });
 
-            return response.value;
+            return response.value || undefined;
         } else if (inputs.type === 'number') {
             const response = await prompts({
                 type: 'number',
@@ -32,7 +32,9 @@ export async function askForInputs(
                 initial: inputs.defaultValue ?? undefined,
             });
 
-            return response.value;
+            return typeof response.value === 'number'
+                ? response.value
+                : undefined;
         } else if (inputs.type === 'boolean') {
             const response = await prompts({
                 type: 'toggle',
@@ -43,7 +45,9 @@ export async function askForInputs(
                 inactive: 'no',
             });
 
-            return response.value;
+            return typeof response.value === 'boolean'
+                ? response.value
+                : undefined;
         } else if (inputs.type === 'date') {
             const response = await prompts({
                 type: 'date',
@@ -52,7 +56,7 @@ export async function askForInputs(
                 initial: inputs.defaultValue ?? undefined,
             });
 
-            return response.value;
+            return response.value || undefined;
         } else if (inputs.type === 'literal') {
             return inputs.value;
         } else if (inputs.type === 'array') {
@@ -85,6 +89,23 @@ async function askForArrayInputs(
     name: string
 ): Promise<any[]> {
     const result: any[] = [];
+
+    if (inputs.optional || inputs.nullable) {
+        const response = await prompts({
+            type: 'confirm',
+            name: 'continue',
+            message: `Do you want to enter an array for ${name}?`,
+        });
+
+        if (!response.continue) {
+            if (inputs.nullable) {
+                return null;
+            } else {
+                return undefined;
+            }
+        }
+    }
+
     let length = 0;
     if (typeof inputs.exactLength === 'number') {
         length = inputs.exactLength;
@@ -111,15 +132,42 @@ async function askForEnumInputs(
     inputs: EnumSchemaMetadata,
     name: string
 ): Promise<any> {
+    let choices = inputs.values.map((value) => ({
+        title: value,
+        value: value,
+    }));
+    if (inputs.nullable) {
+        choices = [
+            {
+                title: '(null)',
+                value: '',
+            },
+            ...choices,
+        ];
+    }
+    if (inputs.optional) {
+        choices = [
+            {
+                title: '(undefined)',
+                value: '',
+            },
+            ...choices,
+        ];
+    }
     const response = await prompts({
         type: 'select',
         name: 'value',
         message: `Select a value for ${name}.`,
-        choices: inputs.values.map((value) => ({
-            title: value,
-            value: value,
-        })),
+        choices: choices,
     });
+
+    if (response.value === '') {
+        if (inputs.nullable) {
+            return null;
+        } else {
+            return undefined;
+        }
+    }
 
     return response.value;
 }
