@@ -58,7 +58,10 @@ export class RecordsClient {
             `${options?.endpoint ?? this._endpoint}/api/v3/callProcedure`,
             { procedure: name, input },
             {
-                headers: this._authenticationHeaders(options),
+                headers: {
+                    ...(options?.headers ?? {}),
+                    ...this._authenticationHeaders(options),
+                },
                 validateStatus: () => true,
             }
         );

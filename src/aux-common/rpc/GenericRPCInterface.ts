@@ -93,6 +93,11 @@ export interface CallProcedureOptions {
      * The endpoint that should be used instead of the one that is currently set on the client.
      */
     endpoint?: string;
+
+    /**
+     * The headers that should be included in the request.
+     */
+    headers?: Record<string, string>;
 }
 
 export type OnlyFirstArg<T> = T extends (input: infer U, ...args: any[]) => any
