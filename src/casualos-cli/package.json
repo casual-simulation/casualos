@@ -2,14 +2,15 @@
     "name": "casualos",
     "version": "3.2.19",
     "description": "Common library for AUX Vue components and Misc",
-    "main": "index.js",
+    "main": "./dist/index.js",
     "types": "index.d.ts",
-    "module": "index",
+    "module": "./dist/index.js",
     "bin": {
-        "casualos": "./cli.js"
+        "casualos": "./dist/cli.js"
     },
     "scripts": {
-        "start": "node ./cli.js",
+        "start": "node ./dist/cli.js",
+        "build": "node ./script/build-cli.mjs",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },

@@ -4,3 +4,4 @@
 !typings/**/*
 docs
 package-lock.json
+dist/
