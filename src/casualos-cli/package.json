@@ -1,0 +1,51 @@
+{
+    "name": "casualos",
+    "version": "3.2.19",
+    "description": "Common library for AUX Vue components and Misc",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index",
+    "bin": {
+        "casualos": "./cli.js"
+    },
+    "scripts": {
+        "start": "node ./cli.js",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "keywords": [
+        "aux",
+        "so4",
+        "realtime",
+        "crdt"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "homepage": "https://github.com/casual-simulation/casualos#readme",
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@casual-simulation/aux-common": "^3.2.19",
+        "@casual-simulation/aux-records": "^3.2.19",
+        "axios": "1.6.2",
+        "@types/prompts": "^2.4.9",
+        "prompts": "2.4.2",
+        "commander": "12.0.0"
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts",
+        "**/*.def"
+    ]
+}

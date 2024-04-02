@@ -1464,6 +1464,27 @@ importers:
         specifier: 7.5.7
         version: 7.5.7
 
+  src/casualos-cli:
+    dependencies:
+      '@casual-simulation/aux-common':
+        specifier: ^3.2.19
+        version: link:../aux-common
+      '@casual-simulation/aux-records':
+        specifier: ^3.2.19
+        version: link:../aux-records
+      '@types/prompts':
+        specifier: ^2.4.9
+        version: 2.4.9
+      axios:
+        specifier: 1.6.2
+        version: 1.6.2
+      commander:
+        specifier: 12.0.0
+        version: 12.0.0
+      prompts:
+        specifier: 2.4.2
+        version: 2.4.2
+
   src/chalk: {}
 
   src/crypto:
@@ -7844,7 +7865,6 @@ packages:
     dependencies:
       '@types/node': 18.19.3
       kleur: 3.0.3
-    dev: true
 
   /@types/prop-types@15.7.11:
     resolution: {integrity: sha512-ga8y9v9uyeiLdpKddhxYQkxNDrfvuPrlFb0N1qnZZByvcElJaXthF1UhvCh9TLWJBEHeNtdnbysW7Y6Uq8CVng==}
@@ -9898,6 +9918,11 @@ packages:
   /commander@10.0.1:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
+    dev: false
+
+  /commander@12.0.0:
+    resolution: {integrity: sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==}
+    engines: {node: '>=18'}
     dev: false
 
   /commander@2.20.3:
