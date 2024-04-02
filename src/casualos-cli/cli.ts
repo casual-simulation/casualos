@@ -4,31 +4,24 @@ import {
     RecordsClient,
     createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
-import type {
-    ArraySchemaMetadata,
-    DiscriminatedUnionSchemaMetadata,
-    EnumSchemaMetadata,
-    ObjectSchemaMetadata,
-    SchemaMetadata,
-    UnionSchemaMetadata,
-} from '../aux-common';
+import { askForInputs } from './schema';
+
+// @ts-ignore
+import Conf from 'conf';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+
+const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
+
+const config = new Conf({
+    projectName: 'casualos-cli',
+});
 const program = new Command();
 
 let client: ReturnType<typeof createRecordsClient>;
-let savedEndpoint: string;
 
 async function getClient(endpoint: string) {
     if (!endpoint) {
-        if (!savedEndpoint) {
-            const response = await prompts({
-                type: 'text',
-                name: 'endpoint',
-                message: 'Enter the endpoint to use for queries.',
-            });
-
-            savedEndpoint = response.endpoint;
-        }
-        endpoint = savedEndpoint;
+        endpoint = await getEndpoint();
     }
     if (!client) {
         client = createRecordsClient(endpoint);
@@ -43,15 +36,32 @@ program
     .option('-e, --endpoint <url>', 'The endpoint to use for queries.');
 
 program
+    .command('login')
+    .description('Login to the CasualOS API')
+    .action(async () => {
+        const opts = program.optsWithGlobals();
+        const endpoint = opts.endpoint;
+        await login(opts.endpoint);
+    });
+
+program
+    .command('set-endpoint')
+    .description('Set the endpoint that is currently in use.')
+    .action(async () => {
+        await updateEndpoint();
+    });
+
+program
     .command('query')
     .description('Query the CasualOS API')
     .argument('[procedure]', 'The procedure to execute')
     .option('-k, --key <key>', 'The session key to use for the query.')
     .action(async (procedure, options) => {
         const opts = program.optsWithGlobals();
-        const client = await getClient(opts.endpoint);
+        const endpoint = opts.endpoint;
+        const client = await getClient(endpoint);
         if (options.key) {
-            client.sessionKey = options.key;
+            client.sessionKey = await getSessionKey(endpoint, options.key);
         }
         const availableOperations = await client.listProcedures({});
         if (!procedure) {
@@ -89,11 +99,33 @@ program
         });
 
         if (confirm.continue) {
-            const result = await client.callProcedure(operation.name, input, {
-                headers: {
-                    origin: opts.endpoint,
-                },
+            let result = await client.callProcedure(operation.name, input, {
+                headers: getHeaders(),
             });
+
+            if (
+                result.success === false &&
+                result.errorCode === 'not_logged_in'
+            ) {
+                const loginResponse = await prompts({
+                    type: 'confirm',
+                    name: 'login',
+                    message:
+                        'You are not logged in. Do you want to log in and try again?',
+                });
+
+                if (loginResponse.login) {
+                    if (await login(endpoint)) {
+                        result = await client.callProcedure(
+                            operation.name,
+                            input,
+                            {
+                                headers: getHeaders(),
+                            }
+                        );
+                    }
+                }
+            }
 
             console.log('Result:', result);
         } else {
@@ -101,174 +133,150 @@ program
         }
     });
 
-async function askForInputs(
-    inputs: SchemaMetadata,
-    name: string
-): Promise<any> {
-    if (inputs) {
-        if (inputs.type === 'object') {
-            return await askForObjectInputs(inputs, name);
-        } else if (inputs.type === 'string') {
-            const response = await prompts({
-                type: 'text',
-                name: 'value',
-                message: `Enter a value for ${name}.`,
-                initial: inputs.defaultValue ?? undefined,
-            });
+async function getSessionKey(
+    endpoint: string,
+    key?: string,
+    loginIfNecessary = false
+) {
+    if (key) {
+        return key;
+    }
 
-            return response.value;
-        } else if (inputs.type === 'number') {
-            const response = await prompts({
-                type: 'number',
-                name: 'value',
-                message: `Enter a number for ${name}.`,
-                initial: inputs.defaultValue ?? undefined,
-            });
+    key = String(config.get(`${endpoint}:sessionKey`));
 
-            return response.value;
-        } else if (inputs.type === 'boolean') {
-            const response = await prompts({
-                type: 'toggle',
-                name: 'value',
-                message: `Enable ${name}?`,
-                initial: inputs.defaultValue ?? undefined,
-                active: 'yes',
-                inactive: 'no',
-            });
+    const parsed = parseSessionKey(key);
 
-            return response.value;
-        } else if (inputs.type === 'date') {
-            const response = await prompts({
-                type: 'date',
-                name: 'value',
-                message: `Enter a date for ${name}.`,
-                initial: inputs.defaultValue ?? undefined,
-            });
+    if (!parsed) {
+        if (loginIfNecessary && (await login(endpoint))) {
+            return getSessionKey(endpoint);
+        }
 
-            return response.value;
-        } else if (inputs.type === 'literal') {
-            return inputs.value;
-        } else if (inputs.type === 'array') {
-            return await askForArrayInputs(inputs, name);
-        } else if (inputs.type === 'enum') {
-            return await askForEnumInputs(inputs, name);
-        } else if (inputs.type === 'union') {
-            return await askForUnionInputs(inputs, name);
+        return null;
+    }
+
+    const [userId, sessionId, secret, expireTimeMs] = parsed;
+
+    if (expireTimeMs < Date.now()) {
+        if (loginIfNecessary && (await login(endpoint))) {
+            return getSessionKey(endpoint);
+        }
+    } else {
+        const lifetimeMs = expireTimeMs - Date.now();
+        const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
+
+        if (loginIfNecessary && refreshTimeMs < REFRESH_LIFETIME_MS) {
+            console.log(
+                `Session key expires in less than one week. Replacing stored session key.`
+            );
+
+            if (await login(endpoint)) {
+                return getSessionKey(endpoint);
+            }
         }
     }
 
-    return undefined;
+    return key;
 }
 
-async function askForObjectInputs(
-    inputs: ObjectSchemaMetadata,
-    name: string
-): Promise<any> {
-    const result: any = {};
-    for (let key in inputs.schema) {
-        const prop = inputs.schema[key];
-        const value = await askForInputs(prop, `${name}.${key}`);
-        result[key] = value;
-    }
-    return result;
-}
+async function login(endpoint: string) {
+    const client = await getClient(endpoint);
 
-async function askForArrayInputs(
-    inputs: ArraySchemaMetadata,
-    name: string
-): Promise<any[]> {
-    const result: any[] = [];
-    let length = 0;
-    if (typeof inputs.exactLength === 'number') {
-        length = inputs.exactLength;
-    } else {
-        const response = await prompts({
-            type: 'number',
-            name: 'length',
-            message: `Enter the length of the array for ${name}.`,
-            min: inputs.minLength ?? undefined,
-            max: inputs.maxLength ?? undefined,
-        });
-        length = response.length;
-    }
-
-    for (let i = 0; i < length; i++) {
-        const value = await askForInputs(inputs.schema, `${name}[${i}]`);
-        result.push(value);
-    }
-
-    return result;
-}
-
-async function askForEnumInputs(
-    inputs: EnumSchemaMetadata,
-    name: string
-): Promise<any> {
-    const response = await prompts({
-        type: 'select',
-        name: 'value',
-        message: `Select a value for ${name}.`,
-        choices: inputs.values.map((value) => ({
-            title: value,
-            value: value,
-        })),
-    });
-
-    return response.value;
-}
-
-async function askForUnionInputs(
-    inputs: UnionSchemaMetadata,
-    name: string
-): Promise<any> {
-    if ('discriminator' in inputs) {
-        return await askForDiscriminatedUnionInputs(
-            inputs as DiscriminatedUnionSchemaMetadata,
-            name
-        );
-    } else {
-        const kind = await prompts({
+    const response = await prompts([
+        {
             type: 'select',
-            name: 'kind',
-            message: `Select a kind for ${name}.`,
-            choices: inputs.options.map((option) => ({
-                title: option.type,
-                description: option.description,
-                value: option,
-            })),
+            name: 'type',
+            choices: [
+                {
+                    title: 'Email',
+                    value: 'email',
+                },
+                {
+                    title: 'phone',
+                    value: 'phone',
+                },
+            ],
+        },
+        {
+            type: 'text',
+            name: 'address',
+            message: 'Enter your address.',
+        },
+    ]);
+
+    const addressType = response.type;
+    const address = response.address;
+
+    const result = await client.requestLogin(
+        {
+            address: address,
+            addressType: addressType,
+        },
+        {
+            headers: getHeaders(),
+        }
+    );
+
+    if (result.success) {
+        const response = await prompts({
+            type: 'text',
+            name: 'code',
+            message: 'Enter the code that was sent to your address.',
         });
 
-        return await askForInputs(kind.kind, name);
+        const code = response.code;
+
+        const loginResult = await client.completeLogin(
+            {
+                code: code,
+                requestId: result.requestId,
+                userId: result.userId,
+            },
+            {
+                headers: getHeaders(),
+            }
+        );
+
+        if (loginResult.success === true) {
+            config.set(`${endpoint}:sessionKey`, loginResult.sessionKey);
+            console.log('Login successful!');
+            return true;
+        } else {
+            console.log('Failed to complete login:');
+            console.log(loginResult);
+            return false;
+        }
+    } else {
+        console.log('Failed to create login request:');
+        console.log(result);
+        return false;
     }
 }
 
-async function askForDiscriminatedUnionInputs(
-    inputs: DiscriminatedUnionSchemaMetadata,
-    name: string
-): Promise<any> {
-    const kind = await prompts({
-        type: 'select',
-        name: 'kind',
-        message: `Select a ${inputs.discriminator} for ${name}.`,
-        choices: inputs.options.map((option) => {
-            const prop = option.schema[inputs.discriminator];
-            if (prop.type !== 'literal') {
-                return {
-                    title: option.type,
-                    description: option.description,
-                    value: option,
-                };
-            }
+async function getEndpoint() {
+    let savedEndpoint = String(config.get('currentEndpoint'));
+    if (!savedEndpoint) {
+        savedEndpoint = await updateEndpoint();
+    }
+    return savedEndpoint;
+}
 
-            return {
-                title: prop.value,
-                description: option.description,
-                value: option,
-            };
-        }),
+async function updateEndpoint() {
+    const response = await prompts({
+        type: 'text',
+        name: 'endpoint',
+        message: 'Enter the endpoint to use for queries.',
     });
 
-    return await askForInputs(kind.kind, name);
+    const savedEndpoint = response.endpoint;
+    config.set('currentEndpoint', savedEndpoint);
+    console.log('Endpoint updated to ' + savedEndpoint);
+    return savedEndpoint;
+}
+
+function getHeaders() {
+    return {
+        origin: client.endpoint,
+    };
 }
 
 async function main() {

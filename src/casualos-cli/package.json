@@ -10,6 +10,7 @@
     },
     "scripts": {
         "start": "node ./dist/cli.js",
+        "dev": "npm run build && npm start",
         "build": "node ./script/build-cli.mjs",
         "test": "jest",
         "test:watch": "jest --watchAll"
@@ -37,9 +38,12 @@
         "@casual-simulation/aux-common": "^3.2.19",
         "@casual-simulation/aux-records": "^3.2.19",
         "axios": "1.6.2",
-        "@types/prompts": "^2.4.9",
         "prompts": "2.4.2",
-        "commander": "12.0.0"
+        "commander": "12.0.0",
+        "conf": "12.0.0"
+    },
+    "devDependencies": {
+        "@types/prompts": "^2.4.9"
     },
     "files": [
         "/README.md",

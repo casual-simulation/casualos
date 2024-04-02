@@ -25,6 +25,10 @@ export class RecordsClient {
         this._sessionKey = value;
     }
 
+    get endpoint() {
+        return this._endpoint;
+    }
+
     constructor(endpoint: string) {
         this._endpoint = endpoint;
         this._sessionKey = null;
