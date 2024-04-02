@@ -314,7 +314,7 @@ describe('AuthController', () => {
                 nextSessionId: null,
                 ipAddress: '127.0.0.1',
 
-                revokable: false,
+                revocable: false,
             });
         });
     });
@@ -4833,7 +4833,7 @@ describe('AuthController', () => {
                 });
             });
 
-            it('should work if the session was granted before all sessions were revoked but the session is not revokable and also doesnt have a revoke time', async () => {
+            it('should work if the session was granted before all sessions were revoked but the session is not revocable and also doesnt have a revoke time', async () => {
                 const requestId = 'requestId';
                 const sessionId = toBase64String('sessionId');
                 const code = 'code';
@@ -4866,7 +4866,7 @@ describe('AuthController', () => {
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
-                    revokable: false,
+                    revocable: false,
                 });
 
                 nowMock.mockReturnValue(400);
@@ -5562,7 +5562,7 @@ describe('AuthController', () => {
                 });
             });
 
-            it('should work if the session was granted before all sessions were revoked but is not revokable and also has no expiration time', async () => {
+            it('should work if the session was granted before all sessions were revoked but is not revocable and also has no expiration time', async () => {
                 const requestId = 'requestId';
                 const sessionId = toBase64String('sessionId');
                 const code = 'code';
@@ -5584,7 +5584,7 @@ describe('AuthController', () => {
                     revokeTimeMs: null,
                     userId,
                     ipAddress: '127.0.0.1',
-                    revokable: false,
+                    revocable: false,
                 });
 
                 await store.saveUser({
@@ -6166,7 +6166,7 @@ describe('AuthController', () => {
                 userId,
                 ipAddress: '127.0.0.1',
 
-                revokable: false,
+                revocable: false,
             });
 
             nowMock.mockReturnValue(400);
@@ -6499,7 +6499,7 @@ describe('AuthController', () => {
             });
         });
 
-        it('should fail if the session is not revokable', async () => {
+        it('should fail if the session is not revocable', async () => {
             await store.saveSession({
                 requestId,
                 sessionId,
@@ -6513,7 +6513,7 @@ describe('AuthController', () => {
                 userId,
                 ipAddress: '127.0.0.1',
 
-                revokable: false,
+                revocable: false,
             });
 
             nowMock.mockReturnValue(200);

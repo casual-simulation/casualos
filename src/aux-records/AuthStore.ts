@@ -811,7 +811,7 @@ export interface AuthSession {
      * If true, then the session can be revoked by the user.
      * Default is true.
      */
-    revokable?: boolean;
+    revocable?: boolean;
 }
 
 /**

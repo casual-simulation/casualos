@@ -1189,6 +1189,8 @@ export class PrismaAuthStore implements AuthStore {
             ipAddress: session.ipAddress,
             nextSessionId: session.nextSessionId,
             connectionSecret: session.connectionSecret,
+
+            revocable: session.revocable,
         };
     }
 

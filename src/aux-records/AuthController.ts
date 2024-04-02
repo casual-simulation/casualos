@@ -263,7 +263,7 @@ export class AuthController {
                 nextSessionId: null,
                 ipAddress: request.ipAddress,
 
-                revokable: false,
+                revocable: false,
             };
             await this._store.saveSession(session);
 
@@ -1929,7 +1929,7 @@ export class AuthController {
                     if (
                         userInfo.allSessionRevokeTimeMs >=
                             session.grantedTimeMs &&
-                        (session.revokable !== false || !!session.revokeTimeMs)
+                        (session.revocable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
@@ -2066,7 +2066,7 @@ export class AuthController {
                     if (
                         userInfo.allSessionRevokeTimeMs >=
                             session.grantedTimeMs &&
-                        (session.revokable !== false || !!session.revokeTimeMs)
+                        (session.revocable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
@@ -2177,7 +2177,7 @@ export class AuthController {
                 };
             }
 
-            if (session.revokable === false) {
+            if (session.revocable === false) {
                 return {
                     success: false,
                     errorCode: 'session_is_not_revokable',
@@ -2320,7 +2320,7 @@ export class AuthController {
                 };
             }
 
-            if (session.revokable === false) {
+            if (session.revocable === false) {
                 console.log(
                     '[AuthController] [replaceSession] Session is irrevokable.'
                 );
