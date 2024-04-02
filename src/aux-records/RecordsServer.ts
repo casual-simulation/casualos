@@ -35,6 +35,7 @@ import {
     RPCContext,
     RemoteProcedures,
     ResourceKinds,
+    getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
 import {
@@ -2851,6 +2852,16 @@ export class RecordsServer {
                         success: true,
                         ...data,
                     };
+                }),
+
+            listProcedures: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/procedures')
+                .inputs(z.object({}))
+                .handler(async ({}, context) => {
+                    const procedures = this._procedures;
+                    const metadata = getProcedureMetadata(procedures);
+                    return { success: true, ...metadata };
                 }),
         };
     }

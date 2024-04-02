@@ -658,6 +658,42 @@ describe('RecordsServer', () => {
         jest.useRealTimers();
     });
 
+    describe('GET /api/v2/procedures', () => {
+        it('should return the list of procedures', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/procedures', defaultHeaders)
+            );
+
+            const body = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    procedures: expect.any(Object),
+                },
+                headers: corsHeaders(defaultHeaders.origin),
+            });
+
+            expect(body).toMatchSnapshot();
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest('listProcedures', {}, defaultHeaders)
+            );
+
+            const body = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    procedures: expect.any(Object),
+                },
+                headers: corsHeaders(defaultHeaders.origin),
+            });
+
+            expect(body).toMatchSnapshot();
+        });
+    });
+
     describe('GET /api/{userId}/metadata', () => {
         it('should return the metadata for the given userId', async () => {
             const result = await server.handleHttpRequest(
