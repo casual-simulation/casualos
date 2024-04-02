@@ -201,3 +201,231 @@ class ProcBuilder
         };
     }
 }
+
+export interface ProceduresMetadata {
+    procedures: ProcedureMetadata[];
+}
+
+export interface ProcedureMetadata {
+    /**
+     * The name of the procedure.
+     */
+    name: string;
+
+    /**
+     * The schema that should be used for the input into the RPC.
+     */
+    inputs: SchemaMetadata;
+
+    /**
+     * The set of origins that are allowed for the route.
+     * If true, then all origins are allowed.
+     * If 'account', then only the configured account origins are allowed.
+     * If 'api', then only the configured API origins are allowed.
+     * If omitted, then it is up to the handler to determine if the origin is allowed.
+     */
+    origins?: Set<string> | true | 'account' | 'api';
+
+    /**
+     * The HTTP-specific configuration for the procedure.
+     */
+    http?: {
+        /**
+         * The HTTP method that should be used for the route.
+         */
+        method: GenericHttpRequest['method'];
+
+        /**
+         * The path for the HTTP route.
+         */
+        path: string;
+    };
+}
+
+/**
+ * Gets the metadata for the given procedures.
+ * @param procedures The procedures to get metadata for.
+ */
+export function getProcedureMetadata(
+    procedures: Procedures
+): ProceduresMetadata {
+    let metadatas: ProcedureMetadata[] = [];
+    for (let procedure of Object.keys(procedures)) {
+        const proc = procedures[procedure];
+        metadatas.push({
+            name: procedure,
+            inputs: proc.schema ? getSchemaMetadata(proc.schema) : undefined,
+            origins: proc.allowedOrigins,
+            http: proc.http,
+        });
+    }
+
+    return {
+        procedures: metadatas,
+    };
+}
+
+export interface BaseSchemaMetadata {
+    type: string;
+    nullable?: boolean;
+    optional?: boolean;
+    description?: string;
+
+    hasDefault?: boolean;
+    defaultValue?: any;
+}
+
+export interface StringSchemaMetadata extends BaseSchemaMetadata {
+    type: 'string';
+}
+
+export interface BooleanSchemaMetadata extends BaseSchemaMetadata {
+    type: 'boolean';
+}
+
+export interface NumberSchemaMetadata extends BaseSchemaMetadata {
+    type: 'number';
+}
+
+export interface ObjectSchemaMetadata extends BaseSchemaMetadata {
+    type: 'object';
+    schema: Record<string, SchemaMetadata>;
+    catchall?: SchemaMetadata;
+}
+
+export interface ArraySchemaMetadata extends BaseSchemaMetadata {
+    type: 'array';
+    schema: SchemaMetadata;
+    maxLength?: number;
+    minLength?: number;
+    exactLength?: number;
+}
+
+export interface LiteralSchemaMetadata extends BaseSchemaMetadata {
+    type: 'literal';
+    value: any;
+}
+
+export interface EnumSchemaMetadata extends BaseSchemaMetadata {
+    type: 'enum';
+    values: string[];
+}
+
+export interface DateSchemaMetadata extends BaseSchemaMetadata {
+    type: 'date';
+}
+
+export interface AnySchemaMetadata extends BaseSchemaMetadata {
+    type: 'any';
+}
+
+export interface NullSchemaMetadata extends BaseSchemaMetadata {
+    type: 'null';
+}
+
+export interface UnionSchemaMetadata extends BaseSchemaMetadata {
+    type: 'union';
+    options: SchemaMetadata[];
+}
+
+export interface DiscriminatedUnionSchemaMetadata extends UnionSchemaMetadata {
+    options: ObjectSchemaMetadata[];
+    discriminator: string;
+}
+
+export type SchemaMetadata =
+    | StringSchemaMetadata
+    | BooleanSchemaMetadata
+    | NumberSchemaMetadata
+    | ObjectSchemaMetadata
+    | ArraySchemaMetadata
+    | LiteralSchemaMetadata
+    | EnumSchemaMetadata
+    | DateSchemaMetadata
+    | AnySchemaMetadata
+    | NullSchemaMetadata
+    | UnionSchemaMetadata
+    | DiscriminatedUnionSchemaMetadata;
+
+/**
+ * Gets a serializable version of the schema metdata.
+ * @param schema The schema to get metadata for.
+ */
+export function getSchemaMetadata(schema: z.ZodType): SchemaMetadata {
+    if (schema instanceof z.ZodString) {
+        return { type: 'string', description: schema._def.description };
+    } else if (schema instanceof z.ZodBoolean) {
+        return { type: 'boolean', description: schema._def.description };
+    } else if (schema instanceof z.ZodNumber) {
+        return { type: 'number', description: schema._def.description };
+    } else if (schema instanceof z.ZodAny) {
+        return { type: 'any', description: schema._def.description };
+    } else if (schema instanceof z.ZodNull) {
+        return { type: 'null', description: schema._def.description };
+    } else if (schema instanceof z.ZodObject) {
+        const schemaMetadata: Record<string, SchemaMetadata> = {};
+        for (let key in schema.shape) {
+            schemaMetadata[key] = getSchemaMetadata(schema.shape[key]);
+        }
+        return {
+            type: 'object',
+            schema: schemaMetadata,
+            catchall: schema._def.catchall
+                ? getSchemaMetadata(schema._def.catchall)
+                : undefined,
+            description: schema._def.description,
+        };
+    } else if (schema instanceof z.ZodArray) {
+        return {
+            type: 'array',
+            schema: getSchemaMetadata(schema._def.type),
+            maxLength: schema._def.maxLength?.value,
+            minLength: schema._def.minLength?.value,
+            exactLength: schema._def.exactLength?.value,
+            description: schema._def.description,
+        };
+    } else if (schema instanceof z.ZodEnum) {
+        return {
+            type: 'enum',
+            values: [...schema._def.values],
+            description: schema._def.description,
+        };
+    } else if (schema instanceof z.ZodDate) {
+        return { type: 'date', description: schema._def.description };
+    } else if (schema instanceof z.ZodLiteral) {
+        return {
+            type: 'literal',
+            value: schema.value,
+            description: schema._def.description,
+        };
+    } else if (schema instanceof z.ZodOptional) {
+        return { ...getSchemaMetadata(schema._def.innerType), optional: true };
+    } else if (schema instanceof z.ZodNullable) {
+        return { ...getSchemaMetadata(schema._def.innerType), nullable: true };
+    } else if (schema instanceof z.ZodDefault) {
+        return {
+            ...getSchemaMetadata(schema._def.innerType),
+            hasDefault: true,
+            defaultValue: schema._def.defaultValue(),
+        };
+    } else if (schema instanceof z.ZodNever) {
+        return undefined;
+    } else if (schema instanceof z.ZodEffects) {
+        return { ...getSchemaMetadata(schema._def.schema) };
+    } else if (schema instanceof z.ZodUnion) {
+        return {
+            type: 'union',
+            options: schema._def.options.map((o: any) => getSchemaMetadata(o)),
+            description: schema._def.description,
+        };
+    } else if (schema instanceof z.ZodDiscriminatedUnion) {
+        return {
+            type: 'union',
+            options: schema._def.options.map((o: any) => getSchemaMetadata(o)),
+            discriminator: schema._def.discriminator,
+            description: schema._def.description,
+        };
+    } else {
+        throw new Error(`Unsupported schema type: ${schema}`);
+    }
+}
