@@ -28,6 +28,19 @@ export class RecordsClient {
     constructor(endpoint: string) {
         this._endpoint = endpoint;
         this._sessionKey = null;
+
+        Object.defineProperties(this, {
+            then: {
+                value: undefined,
+                configurable: false,
+                writable: false,
+            },
+            catch: {
+                value: undefined,
+                configurable: false,
+                writable: false,
+            },
+        });
     }
 
     /**
