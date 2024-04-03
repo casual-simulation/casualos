@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.2.20
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added the ability to create accounts that are not associated with an email or phone number.
+    -   These accounts are also issued a session key that cannot be revoked and does not expire.
+    -   They will mostly be used for one-time subscriptions and machine users.
+
 ## V3.2.19
 
 #### Date: 4/1/2024
