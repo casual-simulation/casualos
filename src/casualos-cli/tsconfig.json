@@ -6,9 +6,7 @@
         "declaration": true,
         "declarationMap": true,
         "composite": true,
-        "incremental": true,
-        "module": "Node16",
-        "moduleResolution": "Node16"
+        "incremental": true
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
