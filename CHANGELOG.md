@@ -1,6 +1,6 @@
 # CasualOS Changelog
 
-## V3.2.20
+## V3.3.0
 
 #### Date: TBD
 
