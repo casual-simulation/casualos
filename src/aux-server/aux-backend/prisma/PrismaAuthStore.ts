@@ -722,6 +722,7 @@ export class PrismaAuthStore implements AuthStore {
             nextSessionId: session.nextSessionId,
             ipAddress: session.ipAddress,
             connectionSecret: session.connectionSecret,
+            revocable: session.revocable,
         };
         await this._client.authSession.upsert({
             where: {
@@ -759,6 +760,7 @@ export class PrismaAuthStore implements AuthStore {
                         ipAddress: newSession.ipAddress,
                         previousSessionId: session.sessionId,
                         connectionSecret: newSession.connectionSecret,
+                        revocable: session.revocable,
                     },
                 },
             },
@@ -1189,6 +1191,8 @@ export class PrismaAuthStore implements AuthStore {
             ipAddress: session.ipAddress,
             nextSessionId: session.nextSessionId,
             connectionSecret: session.connectionSecret,
+
+            revocable: session.revocable,
         };
     }
 

@@ -35,6 +35,7 @@ import {
     RPCContext,
     RemoteProcedures,
     ResourceKinds,
+    getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
 import {
@@ -545,6 +546,31 @@ export class RecordsServer {
                         name
                     );
                 }),
+
+            createAccount: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/createAccount')
+                .inputs(z.object({}))
+                .handler(async ({}, context) => {
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._auth.createAccount({
+                        userId: validation.userId,
+                        ipAddress: context.ipAddress,
+                    });
+
+                    return result;
+                }),
+
             listSessions: procedure()
                 .origins('account')
                 .http('GET', '/api/v2/sessions')
@@ -1329,12 +1355,7 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION.nullable().optional(),
                         marker: MARKER_VALIDATION.optional(),
-                        sort: z
-                            .union([
-                                z.literal('ascending'),
-                                z.literal('descending'),
-                            ])
-                            .optional(),
+                        sort: z.enum(['ascending', 'descending']).optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
                 )
@@ -2826,6 +2847,16 @@ export class RecordsServer {
                         success: true,
                         ...data,
                     };
+                }),
+
+            listProcedures: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/procedures')
+                .inputs(z.object({}))
+                .handler(async ({}, context) => {
+                    const procedures = this._procedures;
+                    const metadata = getProcedureMetadata(procedures);
+                    return { success: true, ...metadata };
                 }),
         };
     }

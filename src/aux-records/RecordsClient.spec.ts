@@ -255,6 +255,11 @@ describe('createRecordsClient()', () => {
         );
     });
 
+    it('should return undefined for Promise properties', () => {
+        expect((client as any).then).toBeUndefined();
+        expect((client as any).catch).toBeUndefined();
+    });
+
     describe('proxied methods', () => {
         it('should have all the methods that the client has', () => {
             expect(client).toHaveProperty('callProcedure');

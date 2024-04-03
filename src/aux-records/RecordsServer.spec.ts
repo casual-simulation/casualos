@@ -658,6 +658,42 @@ describe('RecordsServer', () => {
         jest.useRealTimers();
     });
 
+    describe('GET /api/v2/procedures', () => {
+        it('should return the list of procedures', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/procedures', defaultHeaders)
+            );
+
+            const body = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    procedures: expect.any(Object),
+                },
+                headers: corsHeaders(defaultHeaders.origin),
+            });
+
+            expect(body).toMatchSnapshot();
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest('listProcedures', {}, defaultHeaders)
+            );
+
+            const body = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    procedures: expect.any(Object),
+                },
+                headers: corsHeaders(defaultHeaders.origin),
+            });
+
+            expect(body).toMatchSnapshot();
+        });
+    });
+
     describe('GET /api/{userId}/metadata', () => {
         it('should return the metadata for the given userId', async () => {
             const result = await server.handleHttpRequest(
@@ -1829,6 +1865,30 @@ describe('RecordsServer', () => {
                 displayName: 'test123',
             })
         );
+    });
+
+    describe('POST /api/v2/createAccount', () => {
+        it('should create a new account', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/createAccount',
+                    JSON.stringify({}),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    expireTimeMs: null,
+                    connectionKey: expect.any(String),
+                    sessionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
     });
 
     describe('GET /api/v2/sessions', () => {

@@ -53,7 +53,8 @@
         "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench",
         "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile",
         "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def",
-        "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite"
+        "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite",
+        "cli": "lerna exec --no-prefix --scope casualos -- npm run dev"
     },
     "devDependencies": {
         "@babel/core": "^7.14.3",

@@ -1,0 +1,7 @@
+*.js
+*.js.map
+*.d.ts
+!typings/**/*
+docs
+package-lock.json
+dist/
