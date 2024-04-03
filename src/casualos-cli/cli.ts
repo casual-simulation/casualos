@@ -31,7 +31,10 @@ program
     .name('casualos')
     .description('A CLI for CasualOS')
     .version('0.0.1')
-    .option('-e, --endpoint <url>', 'The endpoint to use for queries.');
+    .option(
+        '-e, --endpoint <url>',
+        'The endpoint to use for queries. Can be used to override the current endpoint.'
+    );
 
 program
     .command('login')
@@ -55,7 +58,10 @@ program
 
 program
     .command('set-endpoint')
-    .argument('[endpoint]', 'The endpoint to use for queries.')
+    .argument(
+        '[endpoint]',
+        'The endpoint to use for queries. If omitted, then you will be prompted to enter an endpoint.'
+    )
     .description('Set the endpoint that is currently in use.')
     .action(async (endpoint) => {
         if (endpoint) {
@@ -76,9 +82,18 @@ program
 program
     .command('query')
     .description('Query the CasualOS API')
-    .argument('[procedure]', 'The procedure to execute')
-    .argument('[input]', 'The input to the procedure')
-    .option('-k, --key <key>', 'The session key to use for the query.')
+    .argument(
+        '[procedure]',
+        'The procedure to execute. If omitted, then you will be prompted to select a procedure.'
+    )
+    .argument(
+        '[input]',
+        'The input to the procedure. If specified, then it will be parsed as JSON. If omitted, then you will be prompted to enter the input.'
+    )
+    .option(
+        '-k, --key <key>',
+        'The session key to use for the query. If not specified, then the current session key will be used.'
+    )
     .action(async (procedure, input, options) => {
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
@@ -93,7 +108,14 @@ program
 program
     .command('repl')
     .description('Start a REPL for the CasualOS API')
-    .option('-k, --key <key>', 'The session key to use for the query.')
+    .option(
+        '-k, --key <key>',
+        'The session key to use for the session. If omitted, then the current session key will be used.'
+    )
+    .addHelpText(
+        'after',
+        `\nThe CasualOS REPL allows you to interact with the CasualOS API using a Read-Eval-Print Loop (REPL).\nIt supports JavaScript and has a special function, query([procedure], [input]), that can be used to query the API.`
+    )
     .action(async (options) => {
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
