@@ -557,9 +557,9 @@ async function main() {
     }
 }
 
-function convertToString(str: unknown) {
+function convertToString(str: unknown): string {
     if (typeof str === 'undefined' || str === null) {
-        return str;
+        return str as string;
     }
     return String(str);
 }
