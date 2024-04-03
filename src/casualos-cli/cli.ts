@@ -55,9 +55,14 @@ program
 
 program
     .command('set-endpoint')
+    .argument('[endpoint]', 'The endpoint to use for queries.')
     .description('Set the endpoint that is currently in use.')
-    .action(async () => {
-        await updateEndpoint();
+    .action(async (endpoint) => {
+        if (endpoint) {
+            saveCurrentEndpoint(endpoint);
+        } else {
+            await updateEndpoint();
+        }
     });
 
 program
@@ -487,6 +492,7 @@ async function getEndpoint(endpoint: string) {
         return endpoint;
     }
     let savedEndpoint = getCurrentEndpoint();
+    console.log('saved endpoint', savedEndpoint);
     if (!savedEndpoint) {
         savedEndpoint = await updateEndpoint();
     }
@@ -505,9 +511,13 @@ async function updateEndpoint() {
     });
 
     const savedEndpoint = response.endpoint;
-    config.set('currentEndpoint', savedEndpoint);
-    console.log('Endpoint updated to ' + savedEndpoint);
+    saveCurrentEndpoint(savedEndpoint);
     return savedEndpoint;
+}
+
+function saveCurrentEndpoint(endpoint: string) {
+    config.set('currentEndpoint', endpoint);
+    console.log('Endpoint updated to:', endpoint);
 }
 
 function getHeaders(client: RecordsClient) {
