@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.3.0
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added a command line interface (CLI) for CasualOS.
+    -   It is available on NPM as `casualos`, and provides functionality to query the CasualOS backend API.
+    -   It currently provides the following operations:
+        -   `login` - Authenticates the cilent to a CasualOS backend.
+        -   `query` - Queries a CasualOS backend.
+        -   `repl` - A Read-eval-print-loop (REPL) that makes interacting with the CasualOS backend via JavaScript really easy.
+
 ## V3.2.19
 
 #### Date: 4/1/2024
