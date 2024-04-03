@@ -18,7 +18,7 @@
         "serverless": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run serverless",
         "merge:secrets": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run merge:secrets",
         "rebuild": "npm run clean && npm run build",
-        "build": "npm run clean && npm run build:libs && npm run build:server && npm run build:proxy && npm run build:redirector",
+        "build": "npm run clean && npm run build:libs && npm run build:server && npm run build:proxy && npm run build:redirector && build:cli",
         "build:tar:docker": "npm run build && npm run tar:docker",
         "build:docker": "npm run build && npm run package:docker",
         "build:docker:arm32": "npm run build:tar:docker && npm run package:docker:arm32",
@@ -54,7 +54,8 @@
         "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile",
         "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def",
         "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite",
-        "cli": "lerna exec --no-prefix --scope casualos -- npm run dev"
+        "cli": "lerna exec --no-prefix --scope casualos -- npm run dev",
+        "build:cli": "lerna exec --no-prefix --scope casualos -- npm run build"
     },
     "devDependencies": {
         "@babel/core": "^7.14.3",
