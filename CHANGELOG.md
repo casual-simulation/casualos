@@ -6,6 +6,12 @@
 
 ### :rocket: Features
 
+-   Added a command line interface (CLI) for CasualOS.
+    -   It is available on NPM as `casualos`, and provides functionality to query the CasualOS backend API.
+    -   It currently provides the following operations:
+        -   `login` - Authenticates the cilent to a CasualOS backend.
+        -   `query` - Queries a CasualOS backend.
+        -   `repl` - A Read-eval-print-loop (REPL) that makes interacting with the CasualOS backend via JavaScript really easy.
 -   Added the ability to create accounts that are not associated with an email or phone number.
     -   These accounts are also issued a session key that cannot be revoked and does not expire.
     -   They will mostly be used for one-time subscriptions and machine users.

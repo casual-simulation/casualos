@@ -25,9 +25,26 @@ export class RecordsClient {
         this._sessionKey = value;
     }
 
+    get endpoint() {
+        return this._endpoint;
+    }
+
     constructor(endpoint: string) {
         this._endpoint = endpoint;
         this._sessionKey = null;
+
+        Object.defineProperties(this, {
+            then: {
+                value: undefined,
+                configurable: false,
+                writable: false,
+            },
+            catch: {
+                value: undefined,
+                configurable: false,
+                writable: false,
+            },
+        });
     }
 
     /**
@@ -45,7 +62,10 @@ export class RecordsClient {
             `${options?.endpoint ?? this._endpoint}/api/v3/callProcedure`,
             { procedure: name, input },
             {
-                headers: this._authenticationHeaders(options),
+                headers: {
+                    ...(options?.headers ?? {}),
+                    ...this._authenticationHeaders(options),
+                },
                 validateStatus: () => true,
             }
         );

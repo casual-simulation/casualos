@@ -35,6 +35,7 @@ import {
     RPCContext,
     RemoteProcedures,
     ResourceKinds,
+    getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
 import {
@@ -1354,12 +1355,7 @@ export class RecordsServer {
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION.nullable().optional(),
                         marker: MARKER_VALIDATION.optional(),
-                        sort: z
-                            .union([
-                                z.literal('ascending'),
-                                z.literal('descending'),
-                            ])
-                            .optional(),
+                        sort: z.enum(['ascending', 'descending']).optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
                 )
@@ -2851,6 +2847,16 @@ export class RecordsServer {
                         success: true,
                         ...data,
                     };
+                }),
+
+            listProcedures: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/procedures')
+                .inputs(z.object({}))
+                .handler(async ({}, context) => {
+                    const procedures = this._procedures;
+                    const metadata = getProcedureMetadata(procedures);
+                    return { success: true, ...metadata };
                 }),
         };
     }
