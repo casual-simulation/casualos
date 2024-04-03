@@ -1010,17 +1010,11 @@ Object {
           },
           "sort": Object {
             "optional": true,
-            "options": Array [
-              Object {
-                "type": "literal",
-                "value": "ascending",
-              },
-              Object {
-                "type": "literal",
-                "value": "descending",
-              },
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
             ],
-            "type": "union",
           },
         },
         "type": "object",
@@ -3663,17 +3657,11 @@ Object {
           },
           "sort": Object {
             "optional": true,
-            "options": Array [
-              Object {
-                "type": "literal",
-                "value": "ascending",
-              },
-              Object {
-                "type": "literal",
-                "value": "descending",
-              },
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
             ],
-            "type": "union",
           },
         },
         "type": "object",
