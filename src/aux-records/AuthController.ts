@@ -7,6 +7,7 @@ import {
     AuthStore,
     AuthUser,
     AuthUserAuthenticator,
+    SaveNewUserFailure,
 } from './AuthStore';
 import {
     NotAuthorizedError,
@@ -203,6 +204,97 @@ export class AuthController {
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
         this._webAuthNRelyingParties = relyingParties;
+    }
+
+    async createAccount(
+        request: CreateAccountRequest
+    ): Promise<CreateAccountResult> {
+        try {
+            const user = await this._store.findUser(request.userId);
+
+            if (!user) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user is not logged in.',
+                };
+            }
+
+            const newUser: AuthUser = {
+                id: uuid(),
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            };
+
+            const result = await this._store.saveNewUser(newUser);
+            if (result.success === false) {
+                return result;
+            }
+
+            const sessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const sessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const now = Date.now();
+
+            const session: AuthSession = {
+                userId: newUser.id,
+                sessionId: sessionId,
+                requestId: null,
+
+                // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                // so we should use a hash that is optimized for high-entropy inputs.
+                secretHash: hashHighEntropyPasswordWithSalt(
+                    sessionSecret,
+                    sessionId
+                ),
+                connectionSecret: connectionSecret,
+                grantedTimeMs: now,
+                revokeTimeMs: null,
+                expireTimeMs: null,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+
+                revocable: false,
+            };
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionKey: formatV1SessionKey(
+                    newUser.id,
+                    sessionId,
+                    sessionSecret,
+                    session.expireTimeMs ?? Infinity
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    newUser.id,
+                    sessionId,
+                    connectionSecret,
+                    session.expireTimeMs ?? Infinity
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while creating account',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -1835,7 +1927,9 @@ export class AuthController {
             } else {
                 if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
                     if (
-                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                        userInfo.allSessionRevokeTimeMs >=
+                            session.grantedTimeMs &&
+                        (session.revocable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
@@ -1970,7 +2064,9 @@ export class AuthController {
             } else {
                 if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
                     if (
-                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                        userInfo.allSessionRevokeTimeMs >=
+                            session.grantedTimeMs &&
+                        (session.revocable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
@@ -2078,6 +2174,14 @@ export class AuthController {
                     success: false,
                     errorCode: 'session_already_revoked',
                     errorMessage: 'The session has already been revoked.',
+                };
+            }
+
+            if (session.revocable === false) {
+                return {
+                    success: false,
+                    errorCode: 'session_is_not_revokable',
+                    errorMessage: 'The session cannot be revoked.',
                 };
             }
 
@@ -2200,6 +2304,33 @@ export class AuthController {
             }
 
             const userId = keyResult.userId;
+            const session = await this._store.findSession(
+                userId,
+                keyResult.sessionId
+            );
+
+            if (!session) {
+                console.log(
+                    '[AuthController] [replaceSession] Could not find session.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            if (session.revocable === false) {
+                console.log(
+                    '[AuthController] [replaceSession] Session is irrevokable.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
             const now = Date.now();
 
             const newSessionId = fromByteArray(
@@ -2228,22 +2359,6 @@ export class AuthController {
                 nextSessionId: null,
                 ipAddress: request.ipAddress,
             };
-
-            const session = await this._store.findSession(
-                userId,
-                keyResult.sessionId
-            );
-
-            if (!session) {
-                console.log(
-                    '[AuthController] [replaceSession] Could not find session.'
-                );
-                return {
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
-                };
-            }
 
             await this._store.replaceSession(session, newSession, now);
 
@@ -3040,6 +3155,70 @@ export interface PrivoSignUpRequestFailure {
     issues?: ZodIssue[];
 }
 
+export interface CreateAccountRequest {
+    /**
+     * The ID of the logged in user.
+     */
+    userId: string;
+
+    /**
+     * The IP Address that the request is being made from.
+     */
+    ipAddress: string;
+}
+
+export type CreateAccountResult = CreateAccountSuccess | CreateAccountFailure;
+
+export interface CreateAccountSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that was created.
+     */
+    userId: string;
+
+    /**
+     * The session key that was issued for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that was issued for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The expiration time of the session in miliseconds in Unix time.
+     */
+    expireTimeMs: number;
+}
+
+export interface CreateAccountFailure {
+    success: false;
+
+    /**
+     * The code of the error.
+     */
+    errorCode:
+        | 'unacceptable_request'
+        | 'not_logged_in'
+        | 'not_authorized'
+        | 'invalid_display_name'
+        | NotSupportedError
+        | SaveNewUserFailure['errorCode']
+        | ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+
+    /**
+     * The issues that were found with the request.
+     */
+    issues?: ZodIssue[];
+}
+
 export interface LoginRequest {
     /**
      * The address that the login is for.
@@ -3325,6 +3504,7 @@ export interface RevokeSessionFailure {
         | 'session_expired'
         | 'session_not_found'
         | 'session_already_revoked'
+        | 'session_is_not_revokable'
         | 'user_is_banned'
         | ServerError;
     errorMessage: string;

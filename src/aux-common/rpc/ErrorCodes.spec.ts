@@ -78,6 +78,8 @@ describe('getStatusCode()', () => {
         ['message_not_found', 404] as const,
         ['not_found', 404] as const,
         ['invalid_connection_state', 500] as const,
+        ['user_already_exists', 400] as const,
+        ['session_is_not_revokable', 400] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
