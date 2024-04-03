@@ -5,6 +5,7 @@ import {
     createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
 import { askForInputs } from './schema';
+import repl from 'node:repl';
 
 // @ts-ignore
 import Conf from 'conf';
@@ -14,7 +15,10 @@ import {
     AddressType,
     CompleteLoginSuccess,
     CompleteOpenIDLoginSuccess,
+    getExpireTime,
 } from '@casual-simulation/aux-records';
+import { stderr, stdout } from 'process';
+import { Duplex, PassThrough, Readable } from 'node:stream';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -57,6 +61,14 @@ program
     });
 
 program
+    .command('status')
+    .description('Get the status of the current session.')
+    .action(async () => {
+        const endpoint = getCurrentEndpoint();
+        printStatus(endpoint);
+    });
+
+program
     .command('query')
     .description('Query the CasualOS API')
     .argument('[procedure]', 'The procedure to execute')
@@ -69,38 +81,121 @@ program
             endpoint,
             opts.key ?? (await getOrRefreshSessionKey(endpoint))
         );
-        const availableOperations = await client.listProcedures({});
-        if (!procedure) {
-            const response = await prompts({
-                type: 'select',
-                name: 'procedure',
-                message: 'Select the procedure to execute',
-                choices: availableOperations.procedures.map((op) => ({
-                    title: op.name,
-                    value: op.name,
-                })),
-            });
-            procedure = response.procedure;
-        }
 
-        const operation = availableOperations.procedures.find(
-            (p) => p.name === procedure
+        await query(client, procedure, input);
+    });
+
+program
+    .command('repl')
+    .description('Start a REPL for the CasualOS API')
+    .option('-k, --key <key>', 'The session key to use for the query.')
+    .action(async (options) => {
+        const opts = program.optsWithGlobals();
+        const endpoint = await getEndpoint(opts.endpoint);
+        const client = await getClient(
+            endpoint,
+            opts.key ?? (await getOrRefreshSessionKey(endpoint))
         );
 
-        if (!operation) {
-            console.error(`Could not find operation ${procedure}!`);
-            return;
+        const replIn = new PassThrough();
+
+        process.stdin.pipe(replIn);
+
+        function pauseRepl(func: (...args: any[]) => Promise<void>) {
+            return async (...args: any[]) => {
+                process.stdin.unpipe(replIn);
+                replIn.pause();
+                try {
+                    return await func(...args);
+                } finally {
+                    replIn.resume();
+                    process.stdin.pipe(replIn);
+                }
+            };
         }
 
-        console.log('Your selected operation:', operation);
+        const replServer = repl.start({
+            prompt: 'casualos > ',
+            input: replIn,
+            output: process.stdout,
+        });
 
-        if (!input) {
-            input = await askForInputs(operation.inputs, operation.name);
-        } else {
-            input = JSON.parse(input);
-        }
-        console.log('Your input:', input);
+        replServer.on('exit', () => {
+            process.stdin.unpipe(replIn);
+        });
 
+        replServer.defineCommand('login', {
+            help: 'Login to the CasualOS API',
+            action(cmd) {
+                console.log('command: ', cmd);
+                const _this = this;
+                async function loginImpl() {
+                    try {
+                        _this.pause();
+                        await login(client);
+                    } finally {
+                        _this.resume();
+                        _this.displayPrompt();
+                    }
+                }
+
+                loginImpl();
+            },
+        });
+
+        Object.defineProperties(replServer.context, {
+            query: {
+                configurable: false,
+                writable: false,
+                enumerable: true,
+                value: pauseRepl(async (procedure: string, input: any) => {
+                    return await query(client, procedure, input, false, true);
+                }),
+            },
+        });
+    });
+
+async function query(
+    client: ReturnType<typeof createRecordsClient>,
+    procedure: string,
+    input: any,
+    shouldConfirm: boolean = true,
+    isJavaScriptInput: boolean = false
+) {
+    const availableOperations = await client.listProcedures({});
+    if (!procedure) {
+        const response = await prompts({
+            type: 'select',
+            name: 'procedure',
+            message: 'Select the procedure to execute',
+            choices: availableOperations.procedures.map((op) => ({
+                title: op.name,
+                value: op.name,
+            })),
+        });
+        procedure = response.procedure;
+    }
+
+    const operation = availableOperations.procedures.find(
+        (p) => p.name === procedure
+    );
+
+    if (!operation) {
+        console.error(`Could not find operation ${procedure}!`);
+        return;
+    }
+
+    console.log('Your selected operation:', operation);
+
+    if (!input) {
+        input = await askForInputs(operation.inputs, operation.name);
+    } else if (!isJavaScriptInput) {
+        input = JSON.parse(input);
+    }
+    console.log('Your input:', input);
+
+    let continueRequest = true;
+    if (shouldConfirm) {
         const confirm = await prompts({
             type: 'confirm',
             name: 'continue',
@@ -108,13 +203,19 @@ program
             initial: true,
         });
 
-        if (confirm.continue) {
-            const result = await callProcedure(client, operation.name, input);
+        continueRequest = confirm.continue;
+    }
+
+    if (continueRequest) {
+        const result = await callProcedure(client, operation.name, input);
+        if (shouldConfirm) {
             console.log('Result:', result);
-        } else {
-            console.log('Cancelled.');
         }
-    });
+        return result;
+    } else {
+        console.log('Cancelled.');
+    }
+}
 
 async function callProcedure(
     client: ReturnType<typeof createRecordsClient>,
@@ -150,7 +251,8 @@ async function callProcedure(
 }
 
 async function getClient(endpoint: string, key: string) {
-    console.log('Using endpoint: ', endpoint);
+    printStatus(endpoint);
+
     const client = createRecordsClient(endpoint);
     if (key) {
         client.sessionKey = key;
@@ -384,11 +486,15 @@ async function getEndpoint(endpoint: string) {
     if (endpoint) {
         return endpoint;
     }
-    let savedEndpoint = String(config.get('currentEndpoint'));
+    let savedEndpoint = getCurrentEndpoint();
     if (!savedEndpoint) {
         savedEndpoint = await updateEndpoint();
     }
     return savedEndpoint;
+}
+
+function getCurrentEndpoint() {
+    return String(config.get('currentEndpoint'));
 }
 
 async function updateEndpoint() {
@@ -408,6 +514,29 @@ function getHeaders(client: RecordsClient) {
     return {
         origin: client.endpoint,
     };
+}
+
+function printStatus(endpoint: string) {
+    if (!endpoint) {
+        console.log('No endpoint is currently set.');
+        console.log('Set an endpoint using the set-endpoint command.');
+        return;
+    }
+
+    console.log('Current endpoint:', endpoint);
+
+    const key = getSessionKey(endpoint);
+    if (key) {
+        const expire = getExpiration(key);
+        if (expire < Date.now()) {
+            console.log('The current session has expired.');
+        } else {
+            console.log('You are logged in.');
+            console.log('Session expires at:', new Date(expire).toString());
+        }
+    } else {
+        console.log('You are not logged in.');
+    }
 }
 
 async function main() {
