@@ -8,7 +8,13 @@ import { askForInputs } from './schema';
 
 // @ts-ignore
 import Conf from 'conf';
+
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import {
+    AddressType,
+    CompleteLoginSuccess,
+    CompleteOpenIDLoginSuccess,
+} from '@casual-simulation/aux-records';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -29,7 +35,8 @@ program
     .action(async () => {
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
-        await login(endpoint);
+        const client = await getClient(endpoint, getSessionKey(endpoint));
+        await login(client);
     });
 
 program
@@ -171,6 +178,19 @@ function saveSessionKey(endpoint: string, key: string) {
     config.set(`${endpoint}:sessionKey`, key);
 }
 
+function saveLoginResult(
+    client: ReturnType<typeof createRecordsClient>,
+    result: CompleteLoginSuccess | CompleteOpenIDLoginSuccess
+) {
+    if (!result) {
+        saveSessionKey(client.endpoint, null);
+        client.sessionKey = null;
+    } else {
+        saveSessionKey(client.endpoint, result.sessionKey);
+        client.sessionKey = result.sessionKey;
+    }
+}
+
 function getExpiration(key: string): number {
     const parsed = parseSessionKey(key);
 
@@ -207,21 +227,38 @@ async function login(client: ReturnType<typeof createRecordsClient>) {
                     value: 'email',
                 },
                 {
-                    title: 'phone',
+                    title: 'Phone',
                     value: 'phone',
+                },
+                {
+                    title: 'Privo',
+                    value: 'privo',
                 },
             ],
         },
-        {
+    ]);
+
+    if (response.type === 'privo') {
+        return await loginWithPrivo(client);
+    } else if (response.type === 'email' || response.type === 'phone') {
+        const addressResponse = await prompts({
             type: 'text',
             name: 'address',
             message: 'Enter your address.',
-        },
-    ]);
+        });
 
-    const addressType = response.type;
-    const address = response.address;
+        const addressType = response.type;
+        const address = addressResponse.address;
 
+        return await loginWithCode(client, address, addressType);
+    }
+}
+
+async function loginWithCode(
+    client: ReturnType<typeof createRecordsClient>,
+    address: string,
+    addressType: AddressType
+) {
     const result = await client.requestLogin(
         {
             address: address,
@@ -253,24 +290,74 @@ async function login(client: ReturnType<typeof createRecordsClient>) {
         );
 
         if (loginResult.success === true) {
-            saveSessionKey(client.endpoint, loginResult.sessionKey);
-            client.sessionKey = loginResult.sessionKey;
+            saveLoginResult(client, loginResult);
             console.log('Login successful!');
             return loginResult.sessionKey;
         } else {
-            saveSessionKey(client.endpoint, null);
-            client.sessionKey = null;
+            saveLoginResult(client, null);
             console.log('Failed to complete login:');
             console.log(loginResult);
             return null;
         }
     } else {
-        saveSessionKey(client.endpoint, null);
-        client.sessionKey = null;
+        saveLoginResult(client, null);
         console.log('Failed to create login request:');
         console.log(result);
         return null;
     }
+}
+
+async function loginWithPrivo(client: ReturnType<typeof createRecordsClient>) {
+    const result = await client.requestPrivoLogin(
+        {},
+        {
+            headers: getHeaders(client),
+        }
+    );
+
+    if (result.success === false) {
+        saveLoginResult(client, null);
+        console.log('Failed to request Privo login:');
+        console.log(result);
+        return null;
+    }
+
+    const open = (await import('open')).default;
+    await open(result.authorizationUrl);
+
+    const startTime = Date.now();
+    const timeout = 1000 * 60 * 5; // 5 minutes
+    while (Date.now() - startTime < timeout) {
+        const loginResult = await client.completeOAuthLogin(
+            {
+                requestId: result.requestId,
+            },
+            {
+                headers: getHeaders(client),
+            }
+        );
+
+        if (loginResult.success === true) {
+            saveLoginResult(client, loginResult);
+            console.log('Login successful!');
+            return loginResult.sessionKey;
+        } else {
+            if (loginResult.errorCode === 'not_completed') {
+                // Wait for a second before trying again.
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            } else {
+                saveLoginResult(client, null);
+                console.log('Failed to complete login:');
+                console.log(loginResult);
+                return null;
+            }
+        }
+    }
+
+    saveLoginResult(client, null);
+    console.log('Failed to complete login:');
+    console.log('Timed out');
+    return null;
 }
 
 async function replaceSessionKey(endpoint: string, key: string) {
