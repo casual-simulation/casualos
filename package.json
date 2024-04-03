@@ -18,7 +18,7 @@
         "serverless": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run serverless",
         "merge:secrets": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run merge:secrets",
         "rebuild": "npm run clean && npm run build",
-        "build": "npm run clean && npm run build:libs && npm run build:server && npm run build:proxy && npm run build:redirector && build:cli",
+        "build": "npm run clean && npm run build:libs && npm run build:server && npm run build:proxy && npm run build:redirector && npm run build:cli",
         "build:tar:docker": "npm run build && npm run tar:docker",
         "build:docker": "npm run build && npm run package:docker",
         "build:docker:arm32": "npm run build:tar:docker && npm run package:docker:arm32",
