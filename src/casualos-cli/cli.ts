@@ -273,7 +273,7 @@ async function getOrRefreshSessionKey(endpoint: string) {
 }
 
 function getSessionKey(endpoint: string) {
-    return String(config.get(`${endpoint}:sessionKey`));
+    return convertToString(config.get(`${endpoint}:sessionKey`));
 }
 
 function saveSessionKey(endpoint: string, key: string) {
@@ -494,7 +494,7 @@ async function getEndpoint(endpoint: string) {
 }
 
 function getCurrentEndpoint() {
-    return String(config.get('currentEndpoint'));
+    return convertToString(config.get('currentEndpoint'));
 }
 
 async function updateEndpoint() {
@@ -545,6 +545,13 @@ async function main() {
     } catch (err) {
         console.error(err);
     }
+}
+
+function convertToString(str: unknown) {
+    if (typeof str === 'undefined' || str === null) {
+        return str;
+    }
+    return String(str);
 }
 
 main();
