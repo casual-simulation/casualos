@@ -215,9 +215,12 @@ async function query(
     isJavaScriptInput: boolean = false
 ) {
     const availableOperations = await client.listProcedures({});
-    if (!procedure) {
+    while (
+        !procedure ||
+        !availableOperations.procedures.find((p) => p.name === procedure)
+    ) {
         const response = await prompts({
-            type: 'select',
+            type: 'autocomplete',
             name: 'procedure',
             message: 'Select the procedure to execute',
             choices: availableOperations.procedures.map((op) => ({
