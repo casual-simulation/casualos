@@ -27,10 +27,12 @@ const config = new Conf({
 });
 const program = new Command();
 
+declare const GIT_TAG: string;
+
 program
     .name('casualos')
     .description('A CLI for CasualOS')
-    .version('0.0.1')
+    .version(GIT_TAG)
     .option(
         '-e, --endpoint <url>',
         'The endpoint to use for queries. Can be used to override the current endpoint.'
