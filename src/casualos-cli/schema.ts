@@ -1,4 +1,5 @@
 import prompts from 'prompts';
+import repl from 'node:repl';
 import type {
     ArraySchemaMetadata,
     DiscriminatedUnionSchemaMetadata,
@@ -10,11 +11,12 @@ import type {
 
 export async function askForInputs(
     inputs: SchemaMetadata,
-    name: string
+    name: string,
+    repl: repl.REPLServer = null
 ): Promise<any> {
     if (inputs) {
         if (inputs.type === 'object') {
-            return await askForObjectInputs(inputs, name);
+            return await askForObjectInputs(inputs, name, repl);
         } else if (inputs.type === 'string') {
             const response = await prompts({
                 type: 'text',
@@ -23,10 +25,10 @@ export async function askForInputs(
                 initial: inputs.defaultValue ?? undefined,
             });
 
-            return response.value || undefined;
+            return evalResult(response.value || undefined, repl, String);
         } else if (inputs.type === 'number') {
             const response = await prompts({
-                type: 'number',
+                type: repl ? 'text' : 'number',
                 name: 'value',
                 message: `Enter a number for ${name}.`,
                 initial: inputs.defaultValue ?? undefined,
@@ -34,10 +36,12 @@ export async function askForInputs(
 
             return typeof response.value === 'number'
                 ? response.value
+                : typeof response.value === 'string'
+                ? await evalResult(response.value || undefined, repl, Number)
                 : undefined;
         } else if (inputs.type === 'boolean') {
             const response = await prompts({
-                type: 'toggle',
+                type: repl ? 'text' : 'toggle',
                 name: 'value',
                 message: `Enable ${name}?`,
                 initial: inputs.defaultValue ?? undefined,
@@ -47,42 +51,82 @@ export async function askForInputs(
 
             return typeof response.value === 'boolean'
                 ? response.value
+                : typeof response.value === 'string'
+                ? await evalResult(response.value || undefined, repl, Boolean)
                 : undefined;
         } else if (inputs.type === 'date') {
             const response = await prompts({
-                type: 'date',
+                type: repl ? 'text' : 'date',
                 name: 'value',
                 message: `Enter a date for ${name}.`,
                 initial: inputs.defaultValue ?? undefined,
             });
 
-            return response.value || undefined;
+            return response.value instanceof Date
+                ? response.value
+                : typeof response.value === 'string'
+                ? await evalResult(response.value || undefined, repl, Date)
+                : undefined;
         } else if (inputs.type === 'literal') {
             return inputs.value;
         } else if (inputs.type === 'null') {
             return null;
         } else if (inputs.type === 'array') {
-            return await askForArrayInputs(inputs, name);
+            return await askForArrayInputs(inputs, name, repl);
         } else if (inputs.type === 'enum') {
-            return await askForEnumInputs(inputs, name);
+            return await askForEnumInputs(inputs, name, repl);
         } else if (inputs.type === 'union') {
-            return await askForUnionInputs(inputs, name);
+            return await askForUnionInputs(inputs, name, repl);
         } else if (inputs.type === 'any') {
-            return await askForAnyInputs(name);
+            return await askForAnyInputs(name, repl);
         }
     }
 
     return undefined;
 }
 
+async function evalResult(
+    result: any,
+    repl: repl.REPLServer,
+    type: any
+): Promise<any> {
+    if (typeof result === 'string' && repl && result.startsWith('.')) {
+        const script = result.slice(1);
+        if (script.startsWith('.')) {
+            // Scripts can be escaped with a double dot.
+            return script;
+        }
+
+        const promise = new Promise((resolve, reject) => {
+            repl.eval(result.slice(1), repl.context, 'repl', (err, value) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(value);
+            });
+        });
+
+        const value = await promise;
+        return value;
+    }
+
+    if (type && result !== undefined && result !== null && result !== '') {
+        return type(result);
+    }
+
+    return result;
+}
+
 async function askForObjectInputs(
     inputs: ObjectSchemaMetadata,
-    name: string
+    name: string,
+    repl: repl.REPLServer
 ): Promise<any> {
     const result: any = {};
     for (let key in inputs.schema) {
         const prop = inputs.schema[key];
-        const value = await askForInputs(prop, `${name}.${key}`);
+        const value = await askForInputs(prop, `${name}.${key}`, repl);
         result[key] = value;
     }
     return result;
@@ -90,7 +134,8 @@ async function askForObjectInputs(
 
 async function askForArrayInputs(
     inputs: ArraySchemaMetadata,
-    name: string
+    name: string,
+    repl: repl.REPLServer
 ): Promise<any[]> {
     const result: any[] = [];
 
@@ -125,7 +170,7 @@ async function askForArrayInputs(
     }
 
     for (let i = 0; i < length; i++) {
-        const value = await askForInputs(inputs.schema, `${name}[${i}]`);
+        const value = await askForInputs(inputs.schema, `${name}[${i}]`, repl);
         result.push(value);
     }
 
@@ -134,7 +179,8 @@ async function askForArrayInputs(
 
 async function askForEnumInputs(
     inputs: EnumSchemaMetadata,
-    name: string
+    name: string,
+    repl: repl.REPLServer
 ): Promise<any> {
     let choices = inputs.values.map((value) => ({
         title: value,
@@ -178,12 +224,14 @@ async function askForEnumInputs(
 
 async function askForUnionInputs(
     inputs: UnionSchemaMetadata,
-    name: string
+    name: string,
+    repl: repl.REPLServer
 ): Promise<any> {
     if ('discriminator' in inputs) {
         return await askForDiscriminatedUnionInputs(
             inputs as DiscriminatedUnionSchemaMetadata,
-            name
+            name,
+            repl
         );
     } else {
         const kind = await prompts({
@@ -213,13 +261,14 @@ async function askForUnionInputs(
             }),
         });
 
-        return await askForInputs(kind.kind, name);
+        return await askForInputs(kind.kind, name, repl);
     }
 }
 
 async function askForDiscriminatedUnionInputs(
     inputs: DiscriminatedUnionSchemaMetadata,
-    name: string
+    name: string,
+    repl: repl.REPLServer
 ): Promise<any> {
     const kind = await prompts({
         type: 'select',
@@ -243,10 +292,13 @@ async function askForDiscriminatedUnionInputs(
         }),
     });
 
-    return await askForInputs(kind.kind, name);
+    return await askForInputs(kind.kind, name, repl);
 }
 
-async function askForAnyInputs(name: string): Promise<any> {
+async function askForAnyInputs(
+    name: string,
+    repl: repl.REPLServer
+): Promise<any> {
     const kind = await prompts({
         type: 'select',
         name: 'kind',
@@ -295,6 +347,11 @@ async function askForAnyInputs(name: string): Promise<any> {
                     return undefined;
                 }
 
+                const script = response.value;
+                if (typeof script === 'string' && script.startsWith('.')) {
+                    return await evalResult(script, repl, null);
+                }
+
                 return JSON.parse(response.value);
             } catch (err) {
                 console.log('Invalid JSON value.', err);
@@ -308,6 +365,7 @@ async function askForAnyInputs(name: string): Promise<any> {
             nullable: true,
             optional: true,
         },
-        name
+        name,
+        repl
     );
 }
