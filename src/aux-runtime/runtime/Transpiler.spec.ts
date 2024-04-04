@@ -1657,6 +1657,26 @@ describe('Transpiler', () => {
                     transpiler.transpile(`export abstract class Test {}`)
                 ).toBe(`class Test {}\nawait exports({ Test, });`);
             });
+
+            it('should remove type annotations from field declarations in classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`class Test { field: number; }`)
+                ).toBe(`class Test { field; }`);
+
+                expect(
+                    transpiler.transpile(`class Test { field: number = 123; }`)
+                ).toBe(`class Test { field = 123; }`);
+
+                // private field
+                expect(
+                    transpiler.transpile(`class Test { #field: number; }`)
+                ).toBe(`class Test { #field; }`);
+
+                expect(
+                    transpiler.transpile(`class Test { #field: number = 123; }`)
+                ).toBe(`class Test { #field = 123; }`);
+            });
         });
     });
 
