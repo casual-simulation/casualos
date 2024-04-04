@@ -16,6 +16,10 @@
     -   These accounts are also issued a session key that cannot be revoked and does not expire.
     -   They will mostly be used for one-time subscriptions and machine users.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where ES2022 class fields would not support type annotations.
+
 ## V3.2.19
 
 #### Date: 4/1/2024
