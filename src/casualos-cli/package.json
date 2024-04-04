@@ -1,7 +1,7 @@
 {
     "name": "casualos",
     "version": "3.2.19",
-    "description": "Common library for AUX Vue components and Misc",
+    "description": "Command line interface for CasualOS.",
     "main": "./dist/index.js",
     "types": "index.d.ts",
     "module": "./dist/index.js",
