@@ -801,6 +801,8 @@ export class PlayerGame extends Game {
                     const sim =
                         targetPortal === 'mapPortal'
                             ? mapPortalSim3D
+                            : targetPortal === 'miniMapPortal'
+                            ? miniMapPortalSim3D
                             : targetPortal === 'miniGridPortal'
                             ? miniPortalSim3D
                             : playerSim3D;
