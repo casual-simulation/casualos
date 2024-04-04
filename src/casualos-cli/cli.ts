@@ -69,8 +69,31 @@ program
         if (endpoint) {
             saveCurrentEndpoint(endpoint);
         } else {
-            await updateEndpoint();
+            endpoint = await updateEndpoint();
         }
+
+        const origin = getOrigin(endpoint);
+        if (origin !== endpoint) {
+            const response = await prompts({
+                type: 'confirm',
+                name: 'confirm',
+                message: `The origin for the endpoint (${origin}) is different from the endpoint (${endpoint}) itself. Do you want to keep it?`,
+                initial: true,
+            });
+
+            if (response.confirm) {
+                return;
+            }
+        }
+
+        const originResponse = await prompts({
+            type: 'text',
+            name: 'origin',
+            message: 'Enter the origin to use for requests to this endpoint.',
+            initial: endpoint,
+        });
+
+        saveOrigin(endpoint, originResponse.origin);
     });
 
 program
@@ -273,6 +296,18 @@ async function callProcedure(
             } else {
                 return result;
             }
+        } else if (
+            result.success === false &&
+            result.errorCode === 'invalid_origin'
+        ) {
+            const originResponse = await prompts({
+                type: 'text',
+                name: 'origin',
+                message:
+                    'The endpoint does not allow itself as an origin. Enter the origin to use for the request.',
+            });
+
+            saveOrigin(client.endpoint, originResponse.origin);
         } else {
             return result;
         }
@@ -544,9 +579,22 @@ function saveCurrentEndpoint(endpoint: string) {
     console.log('Endpoint updated to:', endpoint);
 }
 
+function saveOrigin(endpoint: string, origin: string) {
+    config.set(`${endpoint}:origin`, origin);
+}
+
+function getOrigin(endpoint: string) {
+    let origin = config.get(`${endpoint}:origin`);
+    if (typeof origin === 'string' && origin) {
+        return origin;
+    }
+
+    return endpoint;
+}
+
 function getHeaders(client: RecordsClient) {
     return {
-        origin: client.endpoint,
+        origin: getOrigin(client.endpoint),
     };
 }
 
