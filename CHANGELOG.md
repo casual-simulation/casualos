@@ -19,6 +19,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where ES2022 class fields would not support type annotations.
+-   Fixed an issue where the `miniGridPortal` did not support using `os.focusOn()` with a position.
 
 ## V3.2.19
 
