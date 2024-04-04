@@ -59,12 +59,16 @@ export async function askForInputs(
             return response.value || undefined;
         } else if (inputs.type === 'literal') {
             return inputs.value;
+        } else if (inputs.type === 'null') {
+            return null;
         } else if (inputs.type === 'array') {
             return await askForArrayInputs(inputs, name);
         } else if (inputs.type === 'enum') {
             return await askForEnumInputs(inputs, name);
         } else if (inputs.type === 'union') {
             return await askForUnionInputs(inputs, name);
+        } else if (inputs.type === 'any') {
+            return await askForAnyInputs(name);
         }
     }
 
@@ -186,11 +190,27 @@ async function askForUnionInputs(
             type: 'select',
             name: 'kind',
             message: `Select a kind for ${name}.`,
-            choices: inputs.options.map((option) => ({
-                title: option.type,
-                description: option.description,
-                value: option,
-            })),
+            choices: inputs.options.map((option) => {
+                if (option.type === 'literal') {
+                    return {
+                        title: `(${option.value})`,
+                        description: option.description,
+                        value: option.value,
+                    };
+                } else if (option.type === 'null') {
+                    return {
+                        title: `(null)`,
+                        description: option.description,
+                        value: null,
+                    };
+                }
+
+                return {
+                    title: option.type,
+                    description: option.description,
+                    value: option,
+                };
+            }),
         });
 
         return await askForInputs(kind.kind, name);
@@ -224,4 +244,70 @@ async function askForDiscriminatedUnionInputs(
     });
 
     return await askForInputs(kind.kind, name);
+}
+
+async function askForAnyInputs(name: string): Promise<any> {
+    const kind = await prompts({
+        type: 'select',
+        name: 'kind',
+        message: `Select a kind for ${name}.`,
+        choices: [
+            {
+                title: 'json',
+                description: 'A JSON value.',
+                value: 'json',
+            },
+            {
+                title: 'string',
+                description: 'A string value.',
+                value: 'string',
+            },
+            {
+                title: 'number',
+                description: 'A number value.',
+                value: 'number',
+            },
+            {
+                title: 'boolean',
+                description: 'A boolean value.',
+                value: 'boolean',
+            },
+            {
+                title: '(null)',
+                description: 'A null value.',
+                value: 'null',
+            },
+        ],
+    });
+
+    if (kind.kind === 'null') {
+        return null;
+    } else if (kind.kind === 'json') {
+        while (true) {
+            try {
+                const response = await prompts({
+                    type: 'text',
+                    name: 'value',
+                    message: `Enter a JSON value for ${name}.`,
+                });
+
+                if (response.value === '' || response.value === undefined) {
+                    return undefined;
+                }
+
+                return JSON.parse(response.value);
+            } catch (err) {
+                console.log('Invalid JSON value.', err);
+            }
+        }
+    }
+
+    return await askForInputs(
+        {
+            type: kind.kind,
+            nullable: true,
+            optional: true,
+        },
+        name
+    );
 }
