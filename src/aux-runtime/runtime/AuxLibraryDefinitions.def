@@ -12078,6 +12078,29 @@ interface Os {
     calculateRayFromCamera(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', viewportCoordinates: Vector2): Promise<RaycastRay>;
 
     /**
+     * Calculates the viewport coordinates that the given position would be projected to in the camera of the given portal.
+     * Returns a promise that resolves with the calculated viewport coordinates.
+     * 
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     * 
+     * This function is useful for converting a position in the portal to a position on the camera viewport (screen position, but the location is not in pixels).
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param position the 3D position that should be projected to the viewport.
+     * 
+     * @example Calculate the viewport coordinates of the current bot in the home dimension in the grid portal
+     * const botPosition = new Vector3(
+     *   thisBot.homeX,
+     *   thisBot.homeY,
+     *   thisBot.homeZ
+     * );
+     * const viewportPosition = await os.calculateViewportCoordinatesFromPosition("grid", botPosition);
+     * os.toast(viewportPosition);
+     */
+    calculateViewportCoordinatesFromPosition(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', position: Vector3): Promise<Vector2>;
+
+    /**
      * Requests that the given address be pre-cached so that it is available for use on a bot.
      * Returns a promise that resolves once the address has been cached.
      * @param address The address that should be cached.

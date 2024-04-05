@@ -236,6 +236,7 @@ import {
     getRecordsEndpoint as calcGetRecordsEndpoint,
     ldrawCountAddressBuildSteps as calcLdrawCountAddressBuildSteps,
     ldrawCountTextBuildSteps as calcLdrawCountTextBuildSteps,
+    calculateViewportCoordinatesFromPosition as calcCalculateViewportCoordinatesFromPosition,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3235,6 +3236,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 raycastFromCamera,
                 raycast,
                 calculateRayFromCamera,
+                calculateViewportCoordinatesFromPosition,
                 bufferFormAddressGLTF,
                 startFormAnimation,
                 stopFormAnimation,
@@ -9705,6 +9707,40 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcCalculateRayFromCamera(
             portal,
             { x: viewportCoordinates.x, y: viewportCoordinates.y },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the viewport coordinates that the given position would be projected to in the camera of the given portal.
+     * Returns a promise that resolves with the calculated viewport coordinates.
+     *
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * This function is useful for converting a position in the portal to a position on the camera viewport (screen position, but the location is not in pixels).
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param position the 3D position that should be projected to the viewport.
+     *
+     * @example Calculate the viewport coordinates of the current bot in the home dimension in the grid portal
+     * const botPosition = new Vector3(
+     *   thisBot.homeX,
+     *   thisBot.homeY,
+     *   thisBot.homeZ
+     * );
+     * const viewportPosition = await os.calculateViewportCoordinatesFromPosition("grid", botPosition);
+     * os.toast(viewportPosition);
+     */
+    function calculateViewportCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        position: Vector3
+    ): Promise<Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateViewportCoordinatesFromPosition(
+            portal,
+            { x: position.x || 0, y: position.y || 0, z: position.z || 0 },
             task.taskId
         );
         return addAsyncAction(task, event);

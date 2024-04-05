@@ -174,7 +174,8 @@ export type AsyncActions =
     | EnableCollaborationAction
     | GetRecordsEndpointAction
     | ShowAccountInfoAction
-    | LDrawCountBuildStepsAction;
+    | LDrawCountBuildStepsAction
+    | CalculateViewportCoordinatesFromPositionAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3150,6 +3151,27 @@ export interface CalculateRayFromCameraAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that calculates the 2D viewport coordinates from the given 3D position.
+ *
+ * @dochash types/os/portals
+ * @docname CalculateViewportCoordinatesFromPositionAction
+ */
+export interface CalculateViewportCoordinatesFromPositionAction
+    extends AsyncAction {
+    type: 'calculate_viewport_coordinates_from_position';
+
+    /**
+     * The portal that the ray should be calculated for.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The 3D position that the viewport coordinates should be calculated for.
+     */
+    position: Point3D;
+}
+
+/**
  * Defines an event that requests the pre-caching of a GLTF mesh.
  *
  * @dochash types/os/portals
@@ -5171,6 +5193,25 @@ export function calculateRayFromCamera(
         type: 'calculate_camera_ray',
         portal,
         viewportCoordinates,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new CalculateViewportCoordinatesFromPositionAction.
+ * @param portal The portal that the ray should be calcualted for.
+ * @param position The 3D position that the ray should be calculated for.
+ * @param taskId The ID of the task.
+ */
+export function calculateViewportCoordinatesFromPosition(
+    portal: CameraPortal,
+    position: Point3D,
+    taskId?: number | string
+): CalculateViewportCoordinatesFromPositionAction {
+    return {
+        type: 'calculate_viewport_coordinates_from_position',
+        portal,
+        position,
         taskId,
     };
 }

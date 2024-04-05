@@ -139,6 +139,7 @@ import {
     getRecordsEndpoint,
     ldrawCountAddressBuildSteps,
     ldrawCountTextBuildSteps,
+    calculateViewportCoordinatesFromPosition,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -7447,6 +7448,46 @@ describe('AuxLibrary', () => {
                     {
                         x: 1,
                         y: 2,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateViewportCoordinatesFromPosition()', () => {
+            it('should emit a CalculateViewportCoordinatesFromPositionAction', () => {
+                const promise: any =
+                    library.api.os.calculateViewportCoordinatesFromPosition(
+                        'grid',
+                        new Vector3(1, 2, 3)
+                    );
+                const expected = calculateViewportCoordinatesFromPosition(
+                    'grid',
+                    {
+                        x: 1,
+                        y: 2,
+                        z: 3,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default each coordinate to 0 if not specified', () => {
+                const promise: any =
+                    library.api.os.calculateViewportCoordinatesFromPosition(
+                        'grid',
+                        {} as any
+                    );
+                const expected = calculateViewportCoordinatesFromPosition(
+                    'grid',
+                    {
+                        x: 0,
+                        y: 0,
+                        z: 0,
                     },
                     context.tasks.size
                 );
