@@ -140,6 +140,8 @@ import {
     ldrawCountAddressBuildSteps,
     ldrawCountTextBuildSteps,
     calculateViewportCoordinatesFromPosition,
+    calculateScreenCoordinatesFromViewportCoordinates,
+    calculateViewportCoordinatesFromScreenCoordinates,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -7491,6 +7493,48 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateScreenCoordinatesFromViewportCoordinates()', () => {
+            it('should emit a CalculateScreenCoordinatesFromViewportCoordinates', () => {
+                const promise: any =
+                    library.api.os.calculateScreenCoordinatesFromViewportCoordinates(
+                        'grid',
+                        new Vector2(1, 2)
+                    );
+                const expected =
+                    calculateScreenCoordinatesFromViewportCoordinates(
+                        'grid',
+                        {
+                            x: 1,
+                            y: 2,
+                        },
+                        context.tasks.size
+                    );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateViewportCoordinatesFromScreenCoordinates()', () => {
+            it('should emit a CalculateViewportCoordinatesFromScreenCoordinates', () => {
+                const promise: any =
+                    library.api.os.calculateViewportCoordinatesFromScreenCoordinates(
+                        'grid',
+                        new Vector2(1, 2)
+                    );
+                const expected =
+                    calculateViewportCoordinatesFromScreenCoordinates(
+                        'grid',
+                        {
+                            x: 1,
+                            y: 2,
+                        },
+                        context.tasks.size
+                    );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

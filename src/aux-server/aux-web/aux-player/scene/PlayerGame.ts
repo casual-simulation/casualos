@@ -81,6 +81,8 @@ import {
     ImportAUXAction,
     LDrawCountBuildStepsAction,
     CalculateViewportCoordinatesFromPositionAction,
+    CalculateScreenCoordinatesFromViewportCoordinatesAction,
+    CalculateViewportCoordinatesFromScreenCoordinatesAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -866,6 +868,22 @@ export class PlayerGame extends Game {
                     e.type === 'calculate_viewport_coordinates_from_position'
                 ) {
                     this._calculateViewportCoordinatesFromPosition(sim, e);
+                } else if (
+                    e.type ===
+                    'calculate_screen_coordinates_from_viewport_coordinates'
+                ) {
+                    this._calculateScreenCoordinatesFromViewportCoordinates(
+                        sim,
+                        e
+                    );
+                } else if (
+                    e.type ===
+                    'calculate_viewport_coordinates_from_screen_coordinates'
+                ) {
+                    this._calculateViewportCoordinatesFromScreenCoordinates(
+                        sim,
+                        e
+                    );
                 } else if (e.type === 'buffer_form_address_gltf') {
                     this._bufferFormAddressGltf(sim, e);
                 } else if (e.type === 'start_form_animation') {
@@ -994,6 +1012,58 @@ export class PlayerGame extends Game {
             );
         } else {
             sim.helper.transaction(asyncResult(e.taskId, null));
+        }
+    }
+
+    private _calculateViewportCoordinatesFromScreenCoordinates(
+        sim: BrowserSimulation,
+        e: CalculateViewportCoordinatesFromScreenCoordinatesAction
+    ) {
+        try {
+            const portalTag = getPortalTag(e.portal);
+            const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+            if (_3dSim) {
+                const rig = _3dSim.getMainCameraRig();
+                const viewportCoordinates = Input.screenPositionForViewport(
+                    new Vector2(e.coordinates.x, e.coordinates.y),
+                    rig.viewport
+                );
+                sim.helper.transaction(
+                    asyncResult(
+                        e.taskId,
+                        convertVector2(viewportCoordinates),
+                        true
+                    )
+                );
+            } else {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            }
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private _calculateScreenCoordinatesFromViewportCoordinates(
+        sim: BrowserSimulation,
+        e: CalculateScreenCoordinatesFromViewportCoordinatesAction
+    ) {
+        try {
+            const portalTag = getPortalTag(e.portal);
+            const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+            if (_3dSim) {
+                const rig = _3dSim.getMainCameraRig();
+                const pagePosition = Input.pagePositionForViewport(
+                    new Vector2(e.coordinates.x, e.coordinates.y),
+                    rig.viewport
+                );
+                sim.helper.transaction(
+                    asyncResult(e.taskId, convertVector2(pagePosition), true)
+                );
+            } else {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            }
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
         }
     }
 

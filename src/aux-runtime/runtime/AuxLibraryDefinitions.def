@@ -12101,6 +12101,48 @@ interface Os {
     calculateViewportCoordinatesFromPosition(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', position: Vector3): Promise<Vector2>;
 
     /**
+     * Calculates the screen coordinates that the given viewport coordinates map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 2D viewport coordinates that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates at the center of grid portal screen
+     * const screenCoordinates = await os.calculateScreenCoordinatesFromViewportCoordinates('grid', new Vector2(0, 0));
+     * os.toast(screenCoordinates);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromViewportCoordinates
+     * @docgroup 10-raycast
+     */
+    calculateScreenCoordinatesFromViewportCoordinates(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', coordinates: Vector2): Promise<Vector2>;
+
+    /**
+     * Calculates the viewport coordinates that the given screen coordinates map to on the camera.
+     * Returns a promise that resolves with the calculated viewport coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 2D screen coordinates that should be converted to viewport coordinates.
+     * 
+     * @example Calculate the viewport coordinates at (0,0) on the screen
+     * const viewportCoordinates = await os.calculateViewportCoordinatesFromScreenCoordinates('grid', new Vector2(0, 0));
+     * os.toast(viewportCoordinates);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.calculateViewportCoordinatesFromScreenCoordinates
+     * @docgroup 10-raycast
+     */
+    calculateViewportCoordinatesFromScreenCoordinates(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', coordinates: Vector2): Promise<Vector2>;
+
+    /**
      * Requests that the given address be pre-cached so that it is available for use on a bot.
      * Returns a promise that resolves once the address has been cached.
      * @param address The address that should be cached.
