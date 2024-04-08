@@ -15,6 +15,17 @@
 -   Added the ability to create accounts that are not associated with an email or phone number.
     -   These accounts are also issued a session key that cannot be revoked and does not expire.
     -   They will mostly be used for one-time subscriptions and machine users.
+-   Added several functions to make working with screen coordinates easier.
+    -   `os.calculateViewportCoordinatesFromPosition(portal, position)` - Calculates the viewport coordinates from the given 3D position in the portal.
+        -   `portal` is the portal that the request is from (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 3D position in the portal.
+        -   Viewport coordinates locate a specific point on the image that the camera produces. `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+    -   `os.calculateViewportCoordinatesFromScreenCoordinates(portal, coordinates)` - Calculates the viewport coordinates from the given 2D screen position.
+        -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 2D position on the screen.
+    -   `os.calculateScreenCoordinatesFromViewportCoordinates(portal, coordinates)` - Calculates the screen coordinates from the given 2D viewport coordinates.
+        -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 2D viewport coordinates that the screen coordinates should be found for.
 
 ### :bug: Bug Fixes
 
