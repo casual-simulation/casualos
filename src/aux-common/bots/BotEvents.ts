@@ -174,7 +174,10 @@ export type AsyncActions =
     | EnableCollaborationAction
     | GetRecordsEndpointAction
     | ShowAccountInfoAction
-    | LDrawCountBuildStepsAction;
+    | LDrawCountBuildStepsAction
+    | CalculateViewportCoordinatesFromPositionAction
+    | CalculateScreenCoordinatesFromViewportCoordinatesAction
+    | CalculateViewportCoordinatesFromScreenCoordinatesAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3150,6 +3153,69 @@ export interface CalculateRayFromCameraAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that calculates the 2D viewport coordinates from the given 3D position.
+ *
+ * @dochash types/os/portals
+ * @docname CalculateViewportCoordinatesFromPositionAction
+ */
+export interface CalculateViewportCoordinatesFromPositionAction
+    extends AsyncAction {
+    type: 'calculate_viewport_coordinates_from_position';
+
+    /**
+     * The portal that the ray should be calculated for.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The 3D position that the viewport coordinates should be calculated for.
+     */
+    position: Point3D;
+}
+
+/**
+ * Defines an event that calculates the 2D screen coordinates from the given 2D viewport coordinates.
+ *
+ * @dochash types/os/portals
+ * @docname CalculateScreenCoordinatesFromViewportCoordinatesAction
+ */
+export interface CalculateScreenCoordinatesFromViewportCoordinatesAction
+    extends AsyncAction {
+    type: 'calculate_screen_coordinates_from_viewport_coordinates';
+
+    /**
+     * The portal that the ray should be calculated for.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The 2D position that the screen coordinates should be calculated for.
+     */
+    coordinates: Point2D;
+}
+
+/**
+ * Defines an event that calculates the 2D viewport coordinates from the given 2D screen coordinates.
+ *
+ * @dochash types/os/portals
+ * @docname CalculateViewportCoordinatesFromScreenCoordinatesAction
+ */
+export interface CalculateViewportCoordinatesFromScreenCoordinatesAction
+    extends AsyncAction {
+    type: 'calculate_viewport_coordinates_from_screen_coordinates';
+
+    /**
+     * The portal that the ray should be calculated for.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The 2D position that the viewport coordinates should be calculated for.
+     */
+    coordinates: Point2D;
+}
+
+/**
  * Defines an event that requests the pre-caching of a GLTF mesh.
  *
  * @dochash types/os/portals
@@ -5171,6 +5237,63 @@ export function calculateRayFromCamera(
         type: 'calculate_camera_ray',
         portal,
         viewportCoordinates,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new CalculateViewportCoordinatesFromPositionAction.
+ * @param portal The portal that the ray should be calcualted for.
+ * @param position The 3D position that the ray should be calculated for.
+ * @param taskId The ID of the task.
+ */
+export function calculateViewportCoordinatesFromPosition(
+    portal: CameraPortal,
+    position: Point3D,
+    taskId?: number | string
+): CalculateViewportCoordinatesFromPositionAction {
+    return {
+        type: 'calculate_viewport_coordinates_from_position',
+        portal,
+        position,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new CalculateScreenCoordinatesFromViewportCoordinatesAction.
+ * @param portal The portal that the ray should be calcualted for.
+ * @param coordinates The 2D position that the coordinates should be calculated for.
+ * @param taskId The ID of the task.
+ */
+export function calculateScreenCoordinatesFromViewportCoordinates(
+    portal: CameraPortal,
+    coordinates: Point2D,
+    taskId?: number | string
+): CalculateScreenCoordinatesFromViewportCoordinatesAction {
+    return {
+        type: 'calculate_screen_coordinates_from_viewport_coordinates',
+        portal,
+        coordinates,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new CalculateViewportCoordinatesFromScreenCoordinatesAction.
+ * @param portal The portal that the ray should be calcualted for.
+ * @param coordinates The 2D position that the coordinates should be calculated for.
+ * @param taskId The ID of the task.
+ */
+export function calculateViewportCoordinatesFromScreenCoordinates(
+    portal: CameraPortal,
+    coordinates: Point2D,
+    taskId?: number | string
+): CalculateViewportCoordinatesFromScreenCoordinatesAction {
+    return {
+        type: 'calculate_viewport_coordinates_from_screen_coordinates',
+        portal,
+        coordinates,
         taskId,
     };
 }

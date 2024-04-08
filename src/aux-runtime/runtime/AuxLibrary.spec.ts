@@ -139,6 +139,9 @@ import {
     getRecordsEndpoint,
     ldrawCountAddressBuildSteps,
     ldrawCountTextBuildSteps,
+    calculateViewportCoordinatesFromPosition,
+    calculateScreenCoordinatesFromViewportCoordinates,
+    calculateViewportCoordinatesFromScreenCoordinates,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -7450,6 +7453,88 @@ describe('AuxLibrary', () => {
                     },
                     context.tasks.size
                 );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateViewportCoordinatesFromPosition()', () => {
+            it('should emit a CalculateViewportCoordinatesFromPositionAction', () => {
+                const promise: any =
+                    library.api.os.calculateViewportCoordinatesFromPosition(
+                        'grid',
+                        new Vector3(1, 2, 3)
+                    );
+                const expected = calculateViewportCoordinatesFromPosition(
+                    'grid',
+                    {
+                        x: 1,
+                        y: 2,
+                        z: 3,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should default each coordinate to 0 if not specified', () => {
+                const promise: any =
+                    library.api.os.calculateViewportCoordinatesFromPosition(
+                        'grid',
+                        {} as any
+                    );
+                const expected = calculateViewportCoordinatesFromPosition(
+                    'grid',
+                    {
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateScreenCoordinatesFromViewportCoordinates()', () => {
+            it('should emit a CalculateScreenCoordinatesFromViewportCoordinates', () => {
+                const promise: any =
+                    library.api.os.calculateScreenCoordinatesFromViewportCoordinates(
+                        'grid',
+                        new Vector2(1, 2)
+                    );
+                const expected =
+                    calculateScreenCoordinatesFromViewportCoordinates(
+                        'grid',
+                        {
+                            x: 1,
+                            y: 2,
+                        },
+                        context.tasks.size
+                    );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateViewportCoordinatesFromScreenCoordinates()', () => {
+            it('should emit a CalculateViewportCoordinatesFromScreenCoordinates', () => {
+                const promise: any =
+                    library.api.os.calculateViewportCoordinatesFromScreenCoordinates(
+                        'grid',
+                        new Vector2(1, 2)
+                    );
+                const expected =
+                    calculateViewportCoordinatesFromScreenCoordinates(
+                        'grid',
+                        {
+                            x: 1,
+                            y: 2,
+                        },
+                        context.tasks.size
+                    );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

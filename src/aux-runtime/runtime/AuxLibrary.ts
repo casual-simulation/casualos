@@ -236,6 +236,10 @@ import {
     getRecordsEndpoint as calcGetRecordsEndpoint,
     ldrawCountAddressBuildSteps as calcLdrawCountAddressBuildSteps,
     ldrawCountTextBuildSteps as calcLdrawCountTextBuildSteps,
+    calculateViewportCoordinatesFromPosition as calcCalculateViewportCoordinatesFromPosition,
+    calculateScreenCoordinatesFromViewportCoordinates as calcCalculateScreenCoordinatesFromViewportCoordinates,
+    calculateViewportCoordinatesFromScreenCoordinates as calcCalculateViewportCoordinatesFromScreenCoordinates,
+    Point2D,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3235,6 +3239,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 raycastFromCamera,
                 raycast,
                 calculateRayFromCamera,
+                calculateViewportCoordinatesFromPosition,
+                calculateScreenCoordinatesFromViewportCoordinates,
+                calculateViewportCoordinatesFromScreenCoordinates,
                 bufferFormAddressGLTF,
                 startFormAnimation,
                 stopFormAnimation,
@@ -9705,6 +9712,114 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcCalculateRayFromCamera(
             portal,
             { x: viewportCoordinates.x, y: viewportCoordinates.y },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the viewport coordinates that the given position would be projected to in the camera of the given portal.
+     * Returns a promise that resolves with the calculated viewport coordinates.
+     *
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * This function is useful for converting a position in the portal to a position on the camera viewport (screen position, but the location is not in pixels).
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param position the 3D position that should be projected to the viewport.
+     *
+     * @example Calculate the viewport coordinates of the current bot in the home dimension in the grid portal
+     * const botPosition = new Vector3(
+     *   thisBot.homeX,
+     *   thisBot.homeY,
+     *   thisBot.homeZ
+     * );
+     * const viewportPosition = await os.calculateViewportCoordinatesFromPosition("grid", botPosition);
+     * os.toast(viewportPosition);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateViewportCoordinatesFromPosition
+     * @docgroup 10-raycast
+     */
+    function calculateViewportCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        position: Vector3
+    ): Promise<Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateViewportCoordinatesFromPosition(
+            portal,
+            { x: position.x || 0, y: position.y || 0, z: position.z || 0 },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the screen coordinates that the given viewport coordinates map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 2D viewport coordinates that should be converted to screen coordinates.
+     *
+     * @example Calculate the screen coordinates at the center of grid portal screen
+     * const screenCoordinates = await os.calculateScreenCoordinatesFromViewportCoordinates('grid', new Vector2(0, 0));
+     * os.toast(screenCoordinates);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromViewportCoordinates
+     * @docgroup 10-raycast
+     */
+    function calculateScreenCoordinatesFromViewportCoordinates(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point2D
+    ): Promise<Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateScreenCoordinatesFromViewportCoordinates(
+            portal,
+            {
+                x: coordinates.x || 0,
+                y: coordinates.y || 0,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the viewport coordinates that the given screen coordinates map to on the camera.
+     * Returns a promise that resolves with the calculated viewport coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 2D screen coordinates that should be converted to viewport coordinates.
+     *
+     * @example Calculate the viewport coordinates at (0,0) on the screen
+     * const viewportCoordinates = await os.calculateViewportCoordinatesFromScreenCoordinates('grid', new Vector2(0, 0));
+     * os.toast(viewportCoordinates);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateViewportCoordinatesFromScreenCoordinates
+     * @docgroup 10-raycast
+     */
+    function calculateViewportCoordinatesFromScreenCoordinates(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point2D
+    ): Promise<Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateViewportCoordinatesFromScreenCoordinates(
+            portal,
+            {
+                x: coordinates.x || 0,
+                y: coordinates.y || 0,
+            },
             task.taskId
         );
         return addAsyncAction(task, event);
