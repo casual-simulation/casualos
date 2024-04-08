@@ -16,6 +16,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import {
     LoginRequest,
@@ -181,6 +182,7 @@ export class PrismaAuthStore implements AuthStore {
             allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
             allowAI: user.privacyFeatures?.allowAI ?? true,
             allowPublicInsts: user.privacyFeatures?.allowPublicInsts ?? true,
+            role: user.role,
         };
 
         await this._client.user.upsert({
@@ -222,6 +224,7 @@ export class PrismaAuthStore implements AuthStore {
                 allowAI: user.privacyFeatures?.allowAI ?? true,
                 allowPublicInsts:
                     user.privacyFeatures?.allowPublicInsts ?? true,
+                role: user.role,
             };
 
             if (!!user.currentLoginRequestId) {
@@ -1173,6 +1176,7 @@ export class PrismaAuthStore implements AuthStore {
                 subscriptionPeriodStartMs: convertToMillis(
                     user.subscriptionPeriodStart
                 ),
+                role: user.role as UserRole,
             };
         }
         return null;
