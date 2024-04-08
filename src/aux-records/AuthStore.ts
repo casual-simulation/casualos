@@ -5,7 +5,6 @@ import {
     AuthenticatorTransportFuture,
     CredentialDeviceType,
 } from '@simplewebauthn/types';
-import { AttestationFormat } from '@simplewebauthn/server/script/helpers/decodeAttestationObject';
 
 /**
  * Defines an interface that represents an auth store.

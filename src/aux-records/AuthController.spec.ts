@@ -4350,6 +4350,54 @@ describe('AuthController', () => {
                     });
                 });
 
+                it('should include the user role', async () => {
+                    await store.saveUser({
+                        id: 'myid',
+                        email: 'email',
+                        phoneNumber: 'phonenumber',
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        role: 'superUser',
+                    });
+
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                        role: 'superUser',
+                    });
+                });
+
                 it('should fail if the session secret doesnt match the hash', async () => {
                     const requestId = 'requestId';
                     const sessionId = toBase64String('sessionId');
@@ -4528,6 +4576,57 @@ describe('AuthController', () => {
                         success: true,
                         userId: userId,
                         sessionId: sessionId,
+                    });
+                });
+
+                it('should include the user role', async () => {
+                    await store.saveUser({
+                        id: 'myid',
+                        email: 'email',
+                        phoneNumber: 'phonenumber',
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        role: 'superUser',
+                    });
+
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        connectionSecret: code,
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                        role: 'superUser',
                     });
                 });
 
@@ -7484,6 +7583,71 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                     currentLoginRequestId: undefined,
                     privoServiceId: 'serviceId',
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+            });
+        });
+
+        describe('superUser', () => {
+            const superUserId = 'superUserId';
+            const superUserSessionId = toBase64String('superUserSessionId');
+            const superUserSessionKey = formatV1SessionKey(
+                superUserId,
+                superUserSessionId,
+                code,
+                200
+            );
+
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: superUserId,
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    role: 'superUser',
+                });
+
+                await store.saveSession({
+                    requestId: null,
+                    sessionId: superUserSessionId,
+                    secretHash: hashPasswordWithSalt(code, superUserSessionId),
+                    connectionSecret: code,
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 999,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId: superUserId,
+                    ipAddress: '127.0.0.1',
+                });
+            });
+
+            it('should allow super users to get other users info', async () => {
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey: superUserSessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: null,
                     privacyFeatures: {
                         publishData: true,
                         allowPublicData: true,
