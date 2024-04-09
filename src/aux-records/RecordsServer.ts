@@ -619,10 +619,11 @@ export class RecordsServer {
                     z
                         .object({
                             expireTimeMs: z.coerce.number().int().optional(),
+                            userId: z.string().optional(),
                         })
                         .default({})
                 )
-                .handler(async ({ expireTimeMs }, context) => {
+                .handler(async ({ expireTimeMs, userId }, context) => {
                     const sessionKey = context.sessionKey;
 
                     if (!sessionKey) {
@@ -635,10 +636,10 @@ export class RecordsServer {
                         return UNACCEPTABLE_SESSION_KEY;
                     }
 
-                    const [userId] = parsed;
+                    const [sessionKeyUserId] = parsed;
 
                     const result = await this._auth.listSessions({
-                        userId,
+                        userId: userId ?? sessionKeyUserId,
                         sessionKey,
                         expireTimeMs,
                     });

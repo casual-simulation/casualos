@@ -6781,6 +6781,20 @@ describe('AuthController', () => {
             });
         });
 
+        it('should return not_authorized if requesting sessions for someone else', async () => {
+            nowMock.mockReturnValue(400);
+            const result = (await controller.listSessions({
+                userId: 'otheruserId',
+                sessionKey: sessionKey,
+            })) as ListSessionsSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: 'The session key is invalid.',
+            });
+        });
+
         it('should use the time that all sessions were revoked at if the token was granted before all sessions were revoked', async () => {
             nowMock.mockReturnValue(400);
             await store.saveUser({
@@ -6888,6 +6902,86 @@ describe('AuthController', () => {
                     });
                 }
             );
+        });
+
+        describe('superUser', () => {
+            const superUserId = 'superUserId';
+            const superUserSessionId = toBase64String('superUserSessionId');
+            const superUserSessionKey = formatV1SessionKey(
+                superUserId,
+                superUserSessionId,
+                code,
+                200
+            );
+
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: superUserId,
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    role: 'superUser',
+                });
+
+                await store.saveSession({
+                    requestId: null,
+                    sessionId: superUserSessionId,
+                    secretHash: hashPasswordWithSalt(code, superUserSessionId),
+                    connectionSecret: code,
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 999,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId: superUserId,
+                    ipAddress: '127.0.0.1',
+                });
+            });
+
+            it('should allow the sessions to be listed if requested by a super user', async () => {
+                nowMock.mockReturnValue(400);
+                const result = (await controller.listSessions({
+                    userId: 'myid',
+                    sessionKey: superUserSessionKey,
+                })) as ListSessionsSuccess;
+
+                expect(result.success).toBe(true);
+                expect(result.sessions).toHaveLength(10);
+                expect(result.sessions[0]).toEqual({
+                    sessionId: 'session20',
+                    userId: 'myid',
+                    expireTimeMs: 1020,
+                    grantedTimeMs: 120,
+                    revokeTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    currentSession: false,
+                    nextSessionId: null,
+                });
+                expect(result.sessions[5]).toEqual({
+                    sessionId: 'session15',
+                    userId: 'myid',
+                    expireTimeMs: 1015,
+                    grantedTimeMs: 115,
+                    revokeTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    currentSession: false,
+                    nextSessionId: 'nextSessionId',
+                });
+                expect(result.sessions[9]).toEqual({
+                    sessionId: 'session11',
+                    userId: 'myid',
+                    expireTimeMs: 1011,
+                    grantedTimeMs: 111,
+                    revokeTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    currentSession: false,
+                    nextSessionId: null,
+                });
+            });
         });
     });
 

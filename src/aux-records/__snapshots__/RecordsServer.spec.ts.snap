@@ -76,6 +76,10 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -2734,6 +2738,10 @@ Object {
           "expireTimeMs": Object {
             "optional": true,
             "type": "number",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
           },
         },
         "type": "object",

@@ -191,6 +191,7 @@ describe('RecordsServer', () => {
     let savedOwnerId: string;
     let savedOwnerSessionId: string;
     let savedOwnerConnectionKey: string;
+    let savedOwnerSessionKey: string;
     let savedExpireTimeMs: number;
     let savedSessionSecret: string;
     let savedRecordKey: string;
@@ -235,6 +236,7 @@ describe('RecordsServer', () => {
         savedOwnerId = owner.userId;
         savedOwnerConnectionKey = owner.connectionKey;
         savedOwnerSessionId = owner.sessionId;
+        savedOwnerSessionKey = owner.sessionKey;
 
         let [uid, sid, secret, expire] = parseSessionKey(savedSessionKey);
         savedSessionId = sid;
@@ -336,6 +338,7 @@ describe('RecordsServer', () => {
     let ownerId: string;
     let ownerSessionId: string;
     let ownerConnectionKey: string;
+    let ownerSessionKey: string;
     let expireTimeMs: number;
     let sessionSecret: string;
     let recordKey: string;
@@ -411,6 +414,7 @@ describe('RecordsServer', () => {
         ownerId = savedOwnerId;
         ownerSessionId = savedOwnerSessionId;
         ownerConnectionKey = savedOwnerConnectionKey;
+        ownerSessionKey = savedOwnerSessionKey;
         expireTimeMs = savedExpireTimeMs;
         sessionSecret = savedSessionSecret;
         recordKey = savedRecordKey;
@@ -1977,6 +1981,41 @@ describe('RecordsServer', () => {
                         nextSessionId: null,
                     },
                 ],
+            });
+        });
+
+        it('should allow listing other user sessions if the user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/sessions?userId=${userId}`, {
+                    authorization: `Bearer ${ownerSessionKey}`,
+                    origin: accountOrigin,
+                })
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessions: [
+                        {
+                            userId: userId,
+                            sessionId: sessionId,
+                            grantedTimeMs: expect.any(Number),
+                            expireTimeMs: expireTimeMs,
+                            revokeTimeMs: null,
+                            ipAddress: '123.456.789',
+                            currentSession: false,
+                            nextSessionId: null,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
             });
         });
 

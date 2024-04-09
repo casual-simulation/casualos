@@ -2435,7 +2435,10 @@ export class AuthController {
             const keyResult = await this.validateSessionKey(request.sessionKey);
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
+            } else if (
+                !isSuperUserRole(keyResult.role) &&
+                keyResult.userId !== request.userId
+            ) {
                 return {
                     success: false,
                     errorCode: 'invalid_key',
