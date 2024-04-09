@@ -13,7 +13,7 @@ import {
     PRIVO_OPEN_ID_PROVIDER,
     ValidateSessionKeyResult,
 } from './AuthController';
-import { parseSessionKey } from './AuthUtils';
+import { isSuperUserRole, parseSessionKey } from './AuthUtils';
 import { LivekitController } from './LivekitController';
 import { RecordsController } from './RecordsController';
 import { EventRecordsController } from './EventRecordsController';
@@ -1473,9 +1473,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         studioId: z.string().nonempty().optional(),
+                        userId: z.string().optional(),
                     })
                 )
-                .handler(async ({ studioId }, context) => {
+                .handler(async ({ studioId, userId }, context) => {
                     const validation = await this._validateSessionKey(
                         context.sessionKey
                     );
@@ -1491,6 +1492,19 @@ export class RecordsServer {
                             studioId,
                             validation.userId
                         );
+                        return result;
+                    } else if (userId && userId !== validation.userId) {
+                        if (!isSuperUserRole(validation.role)) {
+                            return {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                            } as const;
+                        }
+
+                        const result = await this._records.listRecords(userId);
+
                         return result;
                     } else {
                         const result = await this._records.listRecords(

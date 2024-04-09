@@ -9047,6 +9047,70 @@ describe('RecordsServer', () => {
             });
         });
 
+        describe('?userId', () => {
+            beforeEach(async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    role: 'superUser',
+                });
+            });
+
+            it('should return the list of records for the given user if the current user is a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/records/list?userId=${userId}`, {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: apiOrigin,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        records: [
+                            {
+                                name: 'test1',
+                                ownerId: userId,
+                                studioId: null,
+                            },
+                            {
+                                name: 'test2',
+                                ownerId: userId,
+                                studioId: null,
+                            },
+                            {
+                                name: 'test3',
+                                ownerId: userId,
+                                studioId: null,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return 403 not_authorized if the current user is not a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/list?userId=${'different'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
         testAuthorization(() => httpGet('/api/v2/records/list', apiHeaders));
     });
 

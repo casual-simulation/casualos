@@ -1121,6 +1121,10 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -3781,6 +3785,10 @@ Object {
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
             "optional": true,
             "type": "string",
           },
