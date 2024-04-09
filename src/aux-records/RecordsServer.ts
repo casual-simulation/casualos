@@ -73,6 +73,9 @@ import {
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 
+declare const GIT_TAG: string;
+declare const GIT_HASH: string;
+
 export const NOT_LOGGED_IN_RESULT = {
     success: false as const,
     errorCode: 'not_logged_in' as const,
@@ -602,7 +605,7 @@ export class RecordsServer {
                     }
 
                     const result = await this._auth.createAccount({
-                        userId: validation.userId,
+                        userRole: validation.role,
                         ipAddress: context.ipAddress,
                     });
 
@@ -2894,7 +2897,14 @@ export class RecordsServer {
                 .handler(async ({}, context) => {
                     const procedures = this._procedures;
                     const metadata = getProcedureMetadata(procedures);
-                    return { success: true, ...metadata };
+                    return {
+                        success: true,
+                        ...metadata,
+                        version:
+                            typeof GIT_TAG === 'string' ? GIT_TAG : undefined,
+                        versionHash:
+                            typeof GIT_HASH === 'string' ? GIT_HASH : undefined,
+                    };
                 }),
         };
     }
