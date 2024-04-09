@@ -524,6 +524,44 @@ export class RecordsServer {
 
     private _createProcedures() {
         return {
+            getUserInfo: procedure()
+                .origins('account')
+                .inputs(
+                    z.object({
+                        userId: z.string(),
+                    })
+                )
+                .handler(async ({ userId }, context) => {
+                    const authorization = context.sessionKey;
+
+                    if (!authorization) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const result = await this._auth.getUserInfo({
+                        userId,
+                        sessionKey: authorization,
+                    });
+
+                    if (result.success === false) {
+                        return result;
+                    }
+
+                    return {
+                        success: true,
+                        name: result.name,
+                        avatarUrl: result.avatarUrl,
+                        avatarPortraitUrl: result.avatarPortraitUrl,
+                        email: result.email,
+                        phoneNumber: result.phoneNumber,
+                        hasActiveSubscription: result.hasActiveSubscription,
+                        subscriptionTier: result.subscriptionTier,
+                        privacyFeatures: result.privacyFeatures,
+                        displayName: result.displayName,
+                        role: result.role,
+                    } as const;
+                }),
+
             isEmailValid: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/email/valid')
@@ -2866,7 +2904,9 @@ export class RecordsServer {
         for (let procedureName of Object.keys(procs)) {
             if (procs.hasOwnProperty(procedureName)) {
                 const procedure = (procs as any)[procedureName];
-                this._addProcedureRoute(procedure);
+                if (procedure.http) {
+                    this._addProcedureRoute(procedure);
+                }
             }
         }
 
@@ -2950,7 +2990,9 @@ export class RecordsServer {
         procedure: Procedure<TInput, TOutput>
     ) {
         (this._procedures as any)[name] = procedure;
-        this._addProcedureRoute(procedure);
+        if (procedure.http) {
+            this._addProcedureRoute(procedure);
+        }
     }
 
     /**

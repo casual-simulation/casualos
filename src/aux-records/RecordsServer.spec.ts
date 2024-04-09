@@ -911,6 +911,38 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'getUserInfo',
+                    {
+                        userId,
+                    },
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    displayName: null,
+                    role: 'none',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         testRateLimit('GET', `/api/{userId:${userId}}/metadata`);
     });
 

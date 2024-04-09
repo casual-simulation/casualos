@@ -4,6 +4,18 @@ exports[`RecordsServer GET /api/v2/procedures should return the list of procedur
 Object {
   "procedures": Array [
     Object {
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getUserInfo",
+      "origins": "account",
+    },
+    Object {
       "http": Object {
         "method": "POST",
         "path": "/api/v2/email/valid",
@@ -2650,6 +2662,18 @@ Object {
 exports[`RecordsServer GET /api/v2/procedures should support procedures 1`] = `
 Object {
   "procedures": Array [
+    Object {
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getUserInfo",
+      "origins": "account",
+    },
     Object {
       "http": Object {
         "method": "POST",
