@@ -1902,6 +1902,14 @@ describe('RecordsServer', () => {
     });
 
     describe('POST /api/v2/createAccount', () => {
+        beforeEach(async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+        });
+
         it('should create a new account', async () => {
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -1909,6 +1917,24 @@ describe('RecordsServer', () => {
                     JSON.stringify({}),
                     authenticatedHeaders
                 )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    expireTimeMs: null,
+                    connectionKey: expect.any(String),
+                    sessionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest('createAccount', {}, authenticatedHeaders)
             );
 
             expectResponseBodyToEqual(result, {

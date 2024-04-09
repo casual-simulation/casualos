@@ -237,18 +237,6 @@ describe('AuthController', () => {
     });
 
     describe('createAccount()', () => {
-        const userId = 'myid';
-
-        beforeEach(async () => {
-            await store.saveUser({
-                id: userId,
-                email: 'email',
-                phoneNumber: 'phonenumber',
-                allSessionRevokeTimeMs: undefined,
-                currentLoginRequestId: undefined,
-            });
-        });
-
         it('should create a new account and return the session key for the user', async () => {
             const sessionId = new Uint8Array([7, 8, 9]);
             const sessionSecret = new Uint8Array([10, 11, 12]);
@@ -263,7 +251,7 @@ describe('AuthController', () => {
             uuidMock.mockReturnValueOnce('uuid1');
 
             const result = await controller.createAccount({
-                userId: userId,
+                userRole: 'superUser',
                 ipAddress: '127.0.0.1',
             });
 
@@ -316,6 +304,34 @@ describe('AuthController', () => {
 
                 revocable: false,
             });
+        });
+
+        it('should require that the user is a superUser', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const result = await controller.createAccount({
+                userRole: 'none',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+
+            const user = await store.findUser('uuid1');
+            expect(user).toBeFalsy();
         });
     });
 

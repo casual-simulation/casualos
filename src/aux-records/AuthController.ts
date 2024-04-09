@@ -212,13 +212,12 @@ export class AuthController {
         request: CreateAccountRequest
     ): Promise<CreateAccountResult> {
         try {
-            const user = await this._store.findUser(request.userId);
-
-            if (!user) {
+            if (!isSuperUserRole(request.userRole)) {
                 return {
                     success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage: 'The user is not logged in.',
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 };
             }
 
@@ -3164,9 +3163,9 @@ export interface PrivoSignUpRequestFailure {
 
 export interface CreateAccountRequest {
     /**
-     * The ID of the logged in user.
+     * The role of the logged in user.
      */
-    userId: string;
+    userRole: UserRole;
 
     /**
      * The IP Address that the request is being made from.
