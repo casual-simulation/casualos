@@ -6933,6 +6933,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -6976,6 +6977,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -7004,6 +7006,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -7043,6 +7046,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -7082,6 +7086,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -7123,6 +7128,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -7301,6 +7307,7 @@ describe('AuthController', () => {
                         allowAI: false,
                         allowPublicInsts: true,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -7371,6 +7378,7 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: false,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -7469,6 +7477,7 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: true,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -7567,6 +7576,7 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: true,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -7631,6 +7641,33 @@ describe('AuthController', () => {
                 });
             });
 
+            it('should include the role of the user', async () => {
+                const result = await controller.getUserInfo({
+                    userId: superUserId,
+                    sessionKey: superUserSessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: superUserId,
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    role: 'superUser',
+                });
+            });
+
             it('should allow super users to get other users info', async () => {
                 const result = await controller.getUserInfo({
                     userId,
@@ -7654,6 +7691,7 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: true,
                     },
+                    role: 'none',
                 });
             });
         });

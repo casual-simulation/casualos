@@ -718,6 +718,7 @@ describe('RecordsServer', () => {
                         allowPublicInsts: true,
                     },
                     displayName: null,
+                    role: 'none',
                 },
                 headers: accountCorsHeaders,
             });
@@ -790,6 +791,7 @@ describe('RecordsServer', () => {
                         allowPublicInsts: true,
                     },
                     displayName: null,
+                    role: 'none',
                 },
                 headers: accountCorsHeaders,
             });

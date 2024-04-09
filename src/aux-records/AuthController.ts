@@ -2596,6 +2596,7 @@ export class AuthController {
                 hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: tier ?? null,
                 privacyFeatures: privacyFeatures,
+                role: result.role ?? 'none',
             };
         } catch (err) {
             console.error(
@@ -3757,6 +3758,11 @@ export interface GetUserInfoSuccess {
      * The privacy-related features that the user has enabled.
      */
     privacyFeatures: PrivacyFeatures;
+
+    /**
+     * The role that the user has in the system.
+     */
+    role: UserRole;
 }
 
 export interface GetUserInfoFailure {

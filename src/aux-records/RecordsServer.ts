@@ -6291,6 +6291,7 @@ export class RecordsServer {
             subscriptionTier: result.subscriptionTier,
             privacyFeatures: result.privacyFeatures,
             displayName: result.displayName,
+            role: result.role,
         });
     }
 
