@@ -2344,6 +2344,10 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
         },
         "type": "object",
       },
@@ -5008,6 +5012,10 @@ Object {
         "schema": Object {
           "comId": Object {
             "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
             "optional": true,
             "type": "string",
           },

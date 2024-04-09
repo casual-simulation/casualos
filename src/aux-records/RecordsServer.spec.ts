@@ -12931,6 +12931,152 @@ describe('RecordsServer', () => {
                     headers: apiCorsHeaders,
                 });
             });
+
+            describe('?userId', () => {
+                beforeEach(async () => {
+                    const owner = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...owner,
+                        role: 'superUser',
+                    });
+                });
+
+                it('should list the studios that the user has access to if the current user is a super user', async () => {
+                    const result = await server.handleHttpRequest(
+                        httpGet(
+                            `/api/v2/studios/list?userId=${userId}&comId=${'comId1'}`,
+                            {
+                                authorization: `Bearer ${ownerSessionKey}`,
+                                origin: apiOrigin,
+                            }
+                        )
+                    );
+
+                    expectResponseBodyToEqual(result, {
+                        statusCode: 200,
+                        body: {
+                            success: true,
+                            studios: [
+                                {
+                                    studioId: 'studioId2',
+                                    displayName: 'studio 2',
+                                    role: 'admin',
+                                    isPrimaryContact: true,
+                                    subscriptionTier: null,
+                                    ownerStudioComId: 'comId1',
+                                },
+                                {
+                                    studioId: 'studioId3',
+                                    displayName: 'studio 3',
+                                    role: 'member',
+                                    isPrimaryContact: true,
+                                    subscriptionTier: null,
+                                    ownerStudioComId: 'comId1',
+                                },
+                            ],
+                        },
+                        headers: apiCorsHeaders,
+                    });
+                });
+
+                it('should return a 403 if the user is not a super user', async () => {
+                    const owner = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...owner,
+                        role: 'none',
+                    });
+
+                    const result = await server.handleHttpRequest(
+                        httpGet(
+                            `/api/v2/studios/list?userId=${userId}&comId=${'comId1'}`,
+                            {
+                                authorization: `Bearer ${ownerSessionKey}`,
+                                origin: apiOrigin,
+                            }
+                        )
+                    );
+
+                    expectResponseBodyToEqual(result, {
+                        statusCode: 403,
+                        body: {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                        },
+                        headers: apiCorsHeaders,
+                    });
+                });
+            });
+        });
+
+        describe('?userId', () => {
+            beforeEach(async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'superUser',
+                });
+            });
+
+            it('should list the studios that the user has access to if the current user is a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/studios/list?userId=${userId}`, {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: apiOrigin,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studioId2',
+                                displayName: 'studio 2',
+                                role: 'admin',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                            },
+                            {
+                                studioId: 'studioId3',
+                                displayName: 'studio 3',
+                                role: 'member',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return a 403 if the user is not a super user', async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'none',
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/studios/list?userId=${userId}`, {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: apiOrigin,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
         });
 
         testAuthorization(() => httpGet('/api/v2/studios/list', apiHeaders));

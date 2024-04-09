@@ -2395,9 +2395,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         comId: z.string().nonempty().nullable().optional(),
+                        userId: z.string().optional(),
                     })
                 )
-                .handler(async ({ comId }, context) => {
+                .handler(async ({ comId, userId }, context) => {
                     const sessionKeyValidation = await this._validateSessionKey(
                         context.sessionKey
                     );
@@ -2410,16 +2411,27 @@ export class RecordsServer {
                         return sessionKeyValidation;
                     }
 
+                    if (userId && userId !== sessionKeyValidation.userId) {
+                        if (!isSuperUserRole(sessionKeyValidation.role)) {
+                            return {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                            } as const;
+                        }
+                    } else {
+                        userId = sessionKeyValidation.userId;
+                    }
+
                     if (comId) {
                         const result = await this._records.listStudiosByComId(
-                            sessionKeyValidation.userId,
+                            userId,
                             comId
                         );
                         return result;
                     } else {
-                        const result = await this._records.listStudios(
-                            sessionKeyValidation.userId
-                        );
+                        const result = await this._records.listStudios(userId);
                         return result;
                     }
                 }),
