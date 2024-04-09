@@ -40,6 +40,7 @@ import {
 import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
 import { NotificationMessenger } from './NotificationMessenger';
+import { isSuperUserRole } from './AuthUtils';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
@@ -845,6 +846,18 @@ export class RecordsController {
                     errorMessage: 'This operation is not supported.',
                 };
             }
+
+            const user = await this._auth.findUser(userId);
+            if (isSuperUserRole(user?.role)) {
+                const records = await this._store.listRecordsByStudioId(
+                    studioId
+                );
+                return {
+                    success: true,
+                    records,
+                };
+            }
+
             const records = await this._store.listRecordsByStudioIdAndUserId(
                 studioId,
                 userId

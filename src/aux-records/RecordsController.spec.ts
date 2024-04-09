@@ -1978,6 +1978,42 @@ describe('RecordsController', () => {
                 ],
             });
         });
+
+        it('should return all records owned by the studio if the user is a super user', async () => {
+            await store.removeStudioAssignment('studioId', 'userId');
+
+            const user = await store.findUser('userId');
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+
+            const result = await manager.listStudioRecords(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                records: [
+                    {
+                        name: 'record1',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                    {
+                        name: 'record2',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                    {
+                        name: 'record3',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                ],
+            });
+        });
     });
 
     describe('createStudio()', () => {
