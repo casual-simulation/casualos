@@ -1068,6 +1068,12 @@ export class AuthHandler implements AuxAuth {
             clearTimeout(this._refreshTimeout);
         }
         const expiry = this._getTokenExpirationTime(token);
+
+        if (expiry < 0 || !isFinite(expiry)) {
+            console.log('[AuthHandler] Token does not expire.');
+            return;
+        }
+
         const now = Date.now();
         const lifetimeMs = expiry - now;
         const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
