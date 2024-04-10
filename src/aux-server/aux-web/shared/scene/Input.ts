@@ -2351,7 +2351,7 @@ export class Input {
             return;
         }
 
-        if (this._usePinchSelectGesture) {
+        if (this._usePinchSelectGesture && controller.inputSource.hand) {
             const indexFingerTip =
                 controller.fingerTips.get('index-finger-tip');
             const thumbTip = controller.fingerTips.get('thumb-tip');
