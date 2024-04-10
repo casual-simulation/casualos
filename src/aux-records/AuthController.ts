@@ -8,6 +8,7 @@ import {
     AuthUser,
     AuthUserAuthenticator,
     SaveNewUserFailure,
+    UserRole,
 } from './AuthStore';
 import {
     NotAuthorizedError,
@@ -35,6 +36,7 @@ import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
+    isSuperUserRole,
     parseSessionKey,
     randomCode,
     verifyConnectionToken,
@@ -210,13 +212,12 @@ export class AuthController {
         request: CreateAccountRequest
     ): Promise<CreateAccountResult> {
         try {
-            const user = await this._store.findUser(request.userId);
-
-            if (!user) {
+            if (!isSuperUserRole(request.userRole)) {
                 return {
                     success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage: 'The user is not logged in.',
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 };
             }
 
@@ -1961,6 +1962,7 @@ export class AuthController {
                 subscriptionId: subscriptionId ?? undefined,
                 subscriptionTier: subscriptionTier ?? undefined,
                 privacyFeatures: userInfo.privacyFeatures,
+                role: userInfo.role,
             };
         } catch (err) {
             console.error(
@@ -2433,7 +2435,10 @@ export class AuthController {
             const keyResult = await this.validateSessionKey(request.sessionKey);
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
+            } else if (
+                !isSuperUserRole(keyResult.role) &&
+                keyResult.userId !== request.userId
+            ) {
                 return {
                     success: false,
                     errorCode: 'invalid_key',
@@ -2509,7 +2514,10 @@ export class AuthController {
             const keyResult = await this.validateSessionKey(request.sessionKey);
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
+            } else if (
+                !isSuperUserRole(keyResult.role) &&
+                keyResult.userId !== request.userId
+            ) {
                 console.log(
                     '[AuthController] [getUserInfo] Request User ID doesnt match session key User ID!'
                 );
@@ -2590,6 +2598,7 @@ export class AuthController {
                 hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: tier ?? null,
                 privacyFeatures: privacyFeatures,
+                role: result.role ?? 'none',
             };
         } catch (err) {
             console.error(
@@ -3157,9 +3166,9 @@ export interface PrivoSignUpRequestFailure {
 
 export interface CreateAccountRequest {
     /**
-     * The ID of the logged in user.
+     * The role of the logged in user.
      */
-    userId: string;
+    userRole: UserRole;
 
     /**
      * The IP Address that the request is being made from.
@@ -3393,6 +3402,11 @@ export interface ValidateSessionKeySuccess {
      * If null or omitted, then all features are enabled.
      */
     privacyFeatures?: PrivacyFeatures;
+
+    /**
+     * The role of the user.
+     */
+    role?: UserRole;
 }
 
 export interface ValidateSessionKeyFailure {
@@ -3746,6 +3760,11 @@ export interface GetUserInfoSuccess {
      * The privacy-related features that the user has enabled.
      */
     privacyFeatures: PrivacyFeatures;
+
+    /**
+     * The role that the user has in the system.
+     */
+    role: UserRole;
 }
 
 export interface GetUserInfoFailure {

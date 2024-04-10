@@ -4,6 +4,18 @@ exports[`RecordsServer GET /api/v2/procedures should return the list of procedur
 Object {
   "procedures": Array [
     Object {
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getUserInfo",
+      "origins": "account",
+    },
+    Object {
       "http": Object {
         "method": "POST",
         "path": "/api/v2/email/valid",
@@ -63,6 +75,10 @@ Object {
           "expireTimeMs": Object {
             "optional": true,
             "type": "number",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
           },
         },
         "type": "object",
@@ -1102,6 +1118,10 @@ Object {
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
             "optional": true,
             "type": "string",
           },
@@ -2321,6 +2341,10 @@ Object {
         "schema": Object {
           "comId": Object {
             "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
             "optional": true,
             "type": "string",
           },
@@ -2651,6 +2675,18 @@ exports[`RecordsServer GET /api/v2/procedures should support procedures 1`] = `
 Object {
   "procedures": Array [
     Object {
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getUserInfo",
+      "origins": "account",
+    },
+    Object {
       "http": Object {
         "method": "POST",
         "path": "/api/v2/email/valid",
@@ -2710,6 +2746,10 @@ Object {
           "expireTimeMs": Object {
             "optional": true,
             "type": "number",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
           },
         },
         "type": "object",
@@ -3749,6 +3789,10 @@ Object {
       "inputs": Object {
         "schema": Object {
           "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
             "optional": true,
             "type": "string",
           },
@@ -4968,6 +5012,10 @@ Object {
         "schema": Object {
           "comId": Object {
             "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
             "optional": true,
             "type": "string",
           },
