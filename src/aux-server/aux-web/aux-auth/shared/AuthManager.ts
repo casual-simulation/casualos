@@ -551,6 +551,24 @@ export class AuthManager {
         }
     }
 
+    getSessionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('sessionKey')) {
+            return params.get('sessionKey');
+        } else {
+            return null;
+        }
+    }
+
+    getConnectionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('connectionKey')) {
+            return params.get('connectionKey');
+        } else {
+            return null;
+        }
+    }
+
     private async _revokeSessionKey(sessionKey: string): Promise<void> {
         try {
             const result = await this.client.revokeSession(
