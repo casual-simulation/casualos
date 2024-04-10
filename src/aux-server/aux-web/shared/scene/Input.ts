@@ -2123,6 +2123,18 @@ export class Input {
                 (c) => c.inputSource === source
             );
             if (!controller) {
+                if (
+                    this._isSafariBrowser &&
+                    (source.targetRayMode === 'tracked-pointer' ||
+                        source.targetRayMode === 'transient-pointer') &&
+                    !source.gamepad
+                ) {
+                    // Shimming tracker-pointer input source with fake gamepad so that it's compatible with MotionController library.
+                    // Without this, Safari VisionOS does not provide a Gamepad as part of its XRInputSource despite the xr-standard spec which
+                    // causes the MotionController library to fail to load the controller models on VisionOS.
+                    source.gamepad = <any>{ buttons: [], axes: [] };
+                }
+
                 controller = {
                     primaryInputState: new InputState(),
                     squeezeInputState: new InputState(),

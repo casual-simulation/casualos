@@ -18,6 +18,7 @@ export interface XRSession extends EventTarget {
 }
 
 export interface XRInputSource {
+    gamepad: Gamepad | null;
     handedness: XRHandedness;
     targetRayMode: XRTargetRayMode;
     targetRaySpace: XRSpace;
