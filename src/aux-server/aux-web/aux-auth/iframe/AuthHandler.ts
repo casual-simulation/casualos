@@ -338,6 +338,16 @@ export class AuthHandler implements AuxAuth {
 
     async openAccountPage(): Promise<void> {
         const url = new URL('/', location.origin);
+        if (
+            authManager.currentSessionKey !== authManager.savedSessionKey &&
+            authManager.currentConnectionKey !== authManager.savedConnectionKey
+        ) {
+            url.searchParams.set('sessionKey', authManager.currentSessionKey);
+            url.searchParams.set(
+                'connectionKey',
+                authManager.currentConnectionKey
+            );
+        }
         window.open(url.href, '_blank');
     }
 
