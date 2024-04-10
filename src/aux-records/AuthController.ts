@@ -1903,9 +1903,13 @@ export class AuthController {
                 };
             }
 
-            if (now >= session.expireTimeMs) {
+            if (
+                typeof session.expireTimeMs === 'number' &&
+                now >= session.expireTimeMs
+            ) {
                 console.log(
-                    '[AuthController] [validateSessionKey] Session has expired.'
+                    '[AuthController] [validateSessionKey] Session has expired.',
+                    session
                 );
                 return {
                     success: false,

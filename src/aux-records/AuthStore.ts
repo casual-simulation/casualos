@@ -734,8 +734,9 @@ export interface AuthSession {
 
     /**
      * The unix timestamp in miliseconds that the session will expire at.
+     * If null, then the session does not expire.
      */
-    expireTimeMs: number;
+    expireTimeMs: number | null;
 
     /**
      * The unix timestamp in miliseconds that the session was revoked at.

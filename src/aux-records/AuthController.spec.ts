@@ -4325,6 +4325,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                     currentLoginRequestId: undefined,
                 });
+                nowMock.mockReturnValue(101);
             });
 
             describe('v1 hashes', () => {
@@ -4347,6 +4348,44 @@ describe('AuthController', () => {
                         secretHash: hashPasswordWithSalt(code, sessionId),
                         connectionSecret: code,
                         expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
+                });
+
+                it('should allow session keys that dont expire', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        Infinity
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
+                        expireTimeMs: null,
                         grantedTimeMs: 100,
                         previousSessionId: null,
                         nextSessionId: null,
@@ -4576,6 +4615,47 @@ describe('AuthController', () => {
                         ),
                         connectionSecret: code,
                         expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
+                });
+
+                it('should allow sessions that dont expire', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        Infinity
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        connectionSecret: code,
+                        expireTimeMs: null,
                         grantedTimeMs: 100,
                         previousSessionId: null,
                         nextSessionId: null,
