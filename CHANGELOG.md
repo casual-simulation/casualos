@@ -15,6 +15,7 @@
 -   Added the ability to create accounts that are not associated with an email or phone number.
     -   These accounts are also issued a session key that cannot be revoked and does not expire.
     -   They will mostly be used for one-time subscriptions and machine users.
+    -   This ability is only accessible by super users (see below).
 -   Added several functions to make working with screen coordinates easier.
     -   `os.calculateViewportCoordinatesFromPosition(portal, position)` - Calculates the viewport coordinates from the given 3D position in the portal.
         -   `portal` is the portal that the request is from (one of `grid`, `miniGrid`, `map`, or `miniMap`).
@@ -26,6 +27,19 @@
     -   `os.calculateScreenCoordinatesFromViewportCoordinates(portal, coordinates)` - Calculates the screen coordinates from the given 2D viewport coordinates.
         -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
         -   `position` is the 2D viewport coordinates that the screen coordinates should be found for.
+-   Added the `superUser` user role.
+    -   This is internal to CasualOS and is not related to roles that control access to record data.
+    -   There are currently only two roles: `none`, and `superUser`.
+    -   Currently, roles have to be assigned manually through the database. There is not API to grant a user the `superUser` role.
+    -   All users default to the `none` role.
+    -   When assigned the `superUser` role, a user has access to some operations that they would not normally have access to, including:
+        -   `getUserInfo` for all users
+        -   `createAccount`
+        -   `listSessions` for all users
+        -   `listRecords` for all users and studios
+        -   `listStudios` for all users
+        -   `listStudioMembers` for all studios
+        -   `getSubscriptions` for all users and studios
 
 ### :bug: Bug Fixes
 
