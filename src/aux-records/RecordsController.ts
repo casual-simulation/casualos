@@ -1290,16 +1290,24 @@ export class RecordsController {
 
             const userAssignment = members.find((m) => m.userId === userId);
 
+            let role: StudioAssignmentRole;
             if (!userAssignment) {
-                return {
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to access this studio.',
-                };
+                const user = await this._auth.findUser(userId);
+                if (!isSuperUserRole(user?.role)) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to access this studio.',
+                    };
+                } else {
+                    role = 'admin';
+                }
+            } else {
+                role = userAssignment.role;
             }
 
-            if (userAssignment.role === 'admin') {
+            if (role === 'admin') {
                 return {
                     success: true,
                     members: members.map((m) => ({

@@ -13159,6 +13159,56 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should list the members of the studio if the user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/studios/members/list?studioId=${studioId}`, {
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
+                })
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    members: sortBy(
+                        [
+                            {
+                                studioId,
+                                userId: userId,
+                                isPrimaryContact: true,
+                                role: 'admin',
+                                user: {
+                                    id: userId,
+                                    email: 'test@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                            {
+                                studioId,
+                                userId: 'userId2',
+                                isPrimaryContact: false,
+                                role: 'member',
+                                user: {
+                                    id: 'userId2',
+                                    email: 'test2@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                        ],
+                        (u) => u.userId
+                    ),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         testAuthorization(() =>
             httpGet(
                 '/api/v2/studios/members/list?studioId=studioId1',
