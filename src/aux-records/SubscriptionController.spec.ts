@@ -11,6 +11,7 @@ import {
 } from './SubscriptionConfiguration';
 import { Studio } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
+import { createTestUser } from './TestUtils';
 
 console.log = jest.fn();
 
@@ -641,6 +642,58 @@ describe('SubscriptionController', () => {
                     errorMessage: 'This method is not supported.',
                 });
             });
+
+            it('should allow super users to get the subscription status of other users', async () => {
+                const { sessionKey } = await createTestUser(
+                    {
+                        auth: auth,
+                        authMessenger: authMessenger,
+                    },
+                    'su@example.com'
+                );
+
+                const user = await store.findUserByAddress(
+                    'su@example.com',
+                    'email'
+                );
+                await store.saveUser({
+                    ...user,
+                    role: 'superUser',
+                });
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
         });
 
         describe('studio', () => {
@@ -1067,6 +1120,59 @@ describe('SubscriptionController', () => {
                     success: false,
                     errorCode: 'not_supported',
                     errorMessage: 'This method is not supported.',
+                });
+            });
+
+            it('should allow super users to get the subscription status of studios that they are not part of', async () => {
+                const { sessionKey } = await createTestUser(
+                    {
+                        auth: auth,
+                        authMessenger: authMessenger,
+                    },
+                    'su@example.com'
+                );
+
+                const user = await store.findUserByAddress(
+                    'su@example.com',
+                    'email'
+                );
+                await store.saveUser({
+                    ...user,
+                    role: 'superUser',
+                });
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: user.id,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
                 });
             });
         });

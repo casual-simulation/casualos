@@ -1184,6 +1184,83 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should return the list of subscriptions if the current user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [
+                        {
+                            id: 'subscription_id',
+                            status: 'active',
+                            start_date: 123,
+                            ended_at: null,
+                            cancel_at: null,
+                            canceled_at: null,
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            items: [
+                                {
+                                    id: 'item_id',
+                                    price: {
+                                        id: 'price_id',
+                                        interval: 'month',
+                                        interval_count: 1,
+                                        currency: 'usd',
+                                        unit_amount: 123,
+
+                                        product: {
+                                            id: 'product_id',
+                                            name: 'Product Name',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/{userId:${userId}}/subscription`, {
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
+                })
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                            featureList: ['Feature 1', 'Feature 2'],
+                        },
+                    ],
+                    purchasableSubscriptions: [],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         it('should return a list of purchasable subscriptions for the user', async () => {
             stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
                 {
@@ -13781,6 +13858,83 @@ describe('RecordsServer', () => {
                     headers: accountCorsHeaders,
                 });
             });
+
+            it('should allow super users to get subscription info for any user', async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'superUser',
+                });
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/subscriptions?userId=${userId}`, {
+                        ...authenticatedHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
         });
 
         describe('?studioId', () => {
@@ -14068,6 +14222,83 @@ describe('RecordsServer', () => {
                         errorMessage:
                             'The given session key is invalid. It must be a correctly formatted string.',
                     }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should allow super users to get subscription info for any studio', async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'superUser',
+                });
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/subscriptions?studioId=${studioId}`, {
+                        ...authenticatedHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
                     headers: accountCorsHeaders,
                 });
             });
