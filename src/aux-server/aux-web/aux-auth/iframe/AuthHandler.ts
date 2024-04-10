@@ -109,7 +109,11 @@ export class AuthHandler implements AuxAuth {
     private _loginPromise: Promise<AuthData>;
     private _isLoggingIn: boolean;
 
-    constructor() {
+    constructor(sessionKey?: string, connectionKey?: string) {
+        if (sessionKey && connectionKey) {
+            authManager.useTemporaryKeys(sessionKey, connectionKey);
+        }
+
         this._oauthChannel.addEventListener('message', (event) => {
             if (event.data === 'login') {
                 console.log('[AuthHandler] Got oauth login message.');
@@ -649,8 +653,8 @@ export class AuthHandler implements AuxAuth {
         if (!authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
         }
-        this._token = authManager.savedSessionKey;
-        this._connectionKey = authManager.savedConnectionKey;
+        this._token = authManager.currentSessionKey;
+        this._connectionKey = authManager.currentConnectionKey;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
             avatarUrl: authManager.avatarUrl,

@@ -12,7 +12,9 @@ export class AuthHelper {
     private _requirePrivoLogin: boolean;
     private _factory: (
         primaryAuthOrigin: string,
-        primaryRecordsOrigin: string
+        primaryRecordsOrigin: string,
+        sessionKey?: string,
+        connectionKey?: string
     ) => AuthHelperInterface;
 
     private _onEndpointDiscovered: Subject<{
@@ -47,19 +49,35 @@ export class AuthHelper {
         primaryRecordsOrigin: string,
         factory?: (
             primaryAuthOrigin: string,
-            primaryRecordsOrigin: string
+            primaryRecordsOrigin: string,
+            sessionKey?: string,
+            connectionKey?: string
         ) => AuthHelperInterface,
-        requirePrivoLogin?: boolean
+        requirePrivoLogin?: boolean,
+        primarySessionKey?: string,
+        primaryConnectionKey?: string
     ) {
         this._factory =
             factory ??
-            ((primaryAuthOrigin, primaryRecordsOrigin) =>
+            ((
+                primaryAuthOrigin,
+                primaryRecordsOrigin,
+                sessionKey,
+                connectionKey
+            ) =>
                 new AuthEndpointHelper(
                     primaryAuthOrigin,
                     primaryRecordsOrigin,
-                    requirePrivoLogin
+                    requirePrivoLogin,
+                    sessionKey,
+                    connectionKey
                 ));
-        this._primary = this._factory(primaryAuthOrigin, primaryRecordsOrigin);
+        this._primary = this._factory(
+            primaryAuthOrigin,
+            primaryRecordsOrigin,
+            primarySessionKey,
+            primaryConnectionKey
+        );
         this._auths = new Map();
         this._loginUIStatus = new Subject();
         this._requirePrivoLogin = requirePrivoLogin ?? false;
