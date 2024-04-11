@@ -6413,6 +6413,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, action);
     }
 
+    /**
+     * Classifies the given images using the image classifier. Returns a promise that resolves with the results of the classification.
+     *
+     * @param options the options that should be used for the image classification.
+     *
+     * @example Classify the given images.
+     * const files = await os.showUploadFiles()
+     * const classify = os.classifyImages({
+     *      modelUrl: "MY_MODEL_URL",
+     *      images: files.map((file) => {
+     *         return {file}
+     *      })
+     * })
+     *
+     * @dochash actions/os/image-classification
+     * @docname os.classifyImages
+     * @docgroup 10-image-classifier
+     */
     function classifyImages(
         options: ClassifyImagesOptions
     ): Promise<ClassifyImagesResult> {
