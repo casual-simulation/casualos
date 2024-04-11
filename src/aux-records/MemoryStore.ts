@@ -1597,7 +1597,7 @@ export class MemoryStore
                     request.stripeCustomerId ?? studio.stripeCustomerId,
                 subscriptionPeriodStartMs: request.currentPeriodStartMs,
                 subscriptionPeriodEndMs: request.currentPeriodEndMs,
-                subscriptionInfoId: subscription?.id,
+                subscriptionInfoId: subscription?.id ?? null,
             });
         }
     }
