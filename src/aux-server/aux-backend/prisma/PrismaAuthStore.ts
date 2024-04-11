@@ -949,7 +949,7 @@ export class PrismaAuthStore implements AuthStore {
                     },
                 };
             } else {
-                updateData.subscriptionInfo = null;
+                updateData.subscriptionInfoId = null;
             }
 
             await this._client.user.update({
@@ -994,7 +994,7 @@ export class PrismaAuthStore implements AuthStore {
                     },
                 };
             } else {
-                updateData.subscriptionInfo = null;
+                updateData.subscriptionInfoId = null;
             }
 
             await this._client.studio.update({
