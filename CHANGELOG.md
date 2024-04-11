@@ -44,6 +44,11 @@
         -   `listStudios` for all users
         -   `listStudioMembers` for all studios
         -   `getSubscriptions` for all users and studios
+-   Added the ability to specify user login details in the URL.
+    -   When logged in, CasualOS stores a `sessionKey` and a `connectionKey` in the local storage of their web browser to keep them logged in.
+    -   When the `sessionKey` and `connectionKey` query params are specified in the URL, they will be used instead of the stored ones.
+    -   Additionally, they work for users who are not logged in.
+    -   This makes it possible to give someone a URL that grants them automatic access to an account.
 
 ### :bug: Bug Fixes
 
