@@ -1076,13 +1076,16 @@ export interface UpdateSubscriptionInfoRequest {
 
     /**
      * The ID of the subscription in Stripe's database.
+     * If null, then the subscription is not associated with a stripe subscription.
      */
-    stripeSubscriptionId: string;
+    stripeSubscriptionId: string | null;
 
     /**
      * The ID of the stripe customer.
+     * If null, then the subscription is not associated with a stripe customer.
+     * Note that if the user already has a customer ID, and null is provided, then the customer ID will not be updated.
      */
-    stripeCustomerId: string;
+    stripeCustomerId: string | null;
 
     /**
      * The unix time in miliseconds that the current subscription period started at.

@@ -911,12 +911,18 @@ export function getComIdFeatures(
  * @param subscriptionStatus The status of the subscription.
  * @param subscriptionId The ID of the subscription.
  * @param type The type of the user.
+ * @param periodStartMs The start of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param periodEndMs The end of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param nowMs The current time in milliseconds.
  */
 export function getSubscriptionFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
     subscriptionId: string,
-    type: 'user' | 'studio'
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
 ): FeaturesConfiguration {
     if (!config) {
         return allowAllFeatures();
@@ -925,7 +931,14 @@ export function getSubscriptionFeatures(
         const roleSubscriptions = config.subscriptions.filter((s) =>
             subscriptionMatchesRole(s, type)
         );
-        if (isActiveSubscription(subscriptionStatus)) {
+        if (
+            isActiveSubscription(
+                subscriptionStatus,
+                periodStartMs,
+                periodEndMs,
+                nowMs
+            )
+        ) {
             const sub = roleSubscriptions.find((s) => s.id === subscriptionId);
             const tier = sub?.tier;
             const features = tier ? config.tiers[tier]?.features : null;

@@ -1513,9 +1513,11 @@ export class MemoryStore
     ): Promise<void> {
         if (request.userId) {
             const user = await this.findUser(request.userId);
-            let subscription = await this.getSubscriptionByStripeSubscriptionId(
-                request.stripeSubscriptionId
-            );
+            let subscription = request.stripeSubscriptionId
+                ? await this.getSubscriptionByStripeSubscriptionId(
+                      request.stripeSubscriptionId
+                  )
+                : null;
 
             if (subscription) {
                 await this.saveSubscription({
@@ -1527,7 +1529,7 @@ export class MemoryStore
                     currentPeriodEndMs: request.currentPeriodEndMs,
                     currentPeriodStartMs: request.currentPeriodStartMs,
                 });
-            } else {
+            } else if (request.stripeSubscriptionId) {
                 subscription = {
                     id: uuid(),
                     userId: user.id,
@@ -1547,16 +1549,19 @@ export class MemoryStore
                 ...user,
                 subscriptionId: request.subscriptionId,
                 subscriptionStatus: request.subscriptionStatus,
-                stripeCustomerId: request.stripeCustomerId,
+                stripeCustomerId:
+                    request.stripeCustomerId ?? user.stripeCustomerId,
                 subscriptionPeriodStartMs: request.currentPeriodStartMs,
                 subscriptionPeriodEndMs: request.currentPeriodEndMs,
-                subscriptionInfoId: subscription.id,
+                subscriptionInfoId: subscription?.id ?? null,
             });
         } else if (request.studioId) {
             const studio = await this.getStudioById(request.studioId);
-            let subscription = await this.getSubscriptionByStripeSubscriptionId(
-                request.stripeSubscriptionId
-            );
+            let subscription = request.stripeSubscriptionId
+                ? await this.getSubscriptionByStripeSubscriptionId(
+                      request.stripeSubscriptionId
+                  )
+                : null;
 
             if (subscription) {
                 await this.saveSubscription({
@@ -1568,7 +1573,7 @@ export class MemoryStore
                     currentPeriodEndMs: request.currentPeriodEndMs,
                     currentPeriodStartMs: request.currentPeriodStartMs,
                 });
-            } else {
+            } else if (request.stripeSubscriptionId) {
                 subscription = {
                     id: uuid(),
                     userId: null,
@@ -1588,10 +1593,11 @@ export class MemoryStore
                 ...studio,
                 subscriptionId: request.subscriptionId,
                 subscriptionStatus: request.subscriptionStatus,
-                stripeCustomerId: request.stripeCustomerId,
+                stripeCustomerId:
+                    request.stripeCustomerId ?? studio.stripeCustomerId,
                 subscriptionPeriodStartMs: request.currentPeriodStartMs,
                 subscriptionPeriodEndMs: request.currentPeriodEndMs,
-                subscriptionInfoId: subscription.id,
+                subscriptionInfoId: subscription?.id,
             });
         }
     }
