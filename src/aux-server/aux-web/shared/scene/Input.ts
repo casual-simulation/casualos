@@ -102,7 +102,6 @@ export class Input {
     private _controllerAdded = new Subject<ControllerData>();
     private _controllerRemoved = new Subject<ControllerData>();
     private _usePointerEvents = false;
-    private _usePinchSelectGesture = false;
 
     /**
      * The events that have occurred during this frame.
@@ -389,12 +388,6 @@ export class Input {
         }
 
         this._isSafariBrowser = isSafariBrowser;
-        this._usePinchSelectGesture = isSafariBrowser;
-        if (this.debugLevel > 0) {
-            console.log(
-                `[input] usePinchSelectGesture: ${this._usePinchSelectGesture}`
-            );
-        }
 
         this._mouseData = {
             leftButtonState: new InputState(),
@@ -430,6 +423,7 @@ export class Input {
             squeezeInputState: new InputState(),
             ray: new Group(),
             fingerTips: new Map(),
+            usePinchSelectGesture: null,
         };
 
         this._handleFocus = this._bind(this._handleFocus.bind(this));
@@ -2123,14 +2117,63 @@ export class Input {
                 (c) => c.inputSource === source
             );
             if (!controller) {
+                if (
+                    this._isSafariBrowser &&
+                    (source.targetRayMode === 'tracked-pointer' ||
+                        source.targetRayMode === 'transient-pointer') &&
+                    !source.gamepad
+                ) {
+                    // Shimming XRInputSource with fake Gamepad so that it's compatible with MotionController library.
+                    // Without this, Safari VisionOS does not provide a Gamepad as part of its XRInputSource despite the xr-standard spec which
+                    // causes the MotionController library to fail to load the controller models on VisionOS.
+                    source.gamepad = <any>{ buttons: [], axes: [] };
+
+                    if (this.debugLevel > 0) {
+                        console.log(
+                            `[Input] Shimmed XRInputSource with fake Gamepad so that it's compatible with MotionController library.`
+                        );
+                    }
+                }
+
+                let usePinchSelectGesture = false;
+                let showMesh = true;
+                let showPointer = true;
+
+                if (
+                    this._isSafariBrowser &&
+                    source.hand &&
+                    source.targetRayMode === 'tracked-pointer'
+                ) {
+                    showPointer = false;
+
+                    if (this.debugLevel > 0) {
+                        console.log(
+                            `[Input] Safari hand input detected. Disabling pointer.`
+                        );
+                    }
+                } else if (source.targetRayMode === 'transient-pointer') {
+                    showMesh = false;
+                    showPointer = false;
+
+                    if (this.debugLevel > 0) {
+                        console.log(
+                            `[Input] transient-pointer input detected. Disabling pointer and mesh.`
+                        );
+                    }
+                }
+
                 controller = {
                     primaryInputState: new InputState(),
                     squeezeInputState: new InputState(),
-                    mesh: new WebXRControllerMesh(source),
+                    mesh: new WebXRControllerMesh(source, {
+                        showMesh,
+                        showPointer,
+                    }),
                     ray: new Group(),
                     inputSource: source,
                     identifier: uuid(),
                     fingerTips: new Map(),
+                    usePinchSelectGesture,
                 };
                 this._controllerData.push(controller);
                 this._setupControllerMesh(controller);
@@ -2167,14 +2210,13 @@ export class Input {
             return;
         }
 
-        if (this._usePinchSelectGesture) {
-            return;
-        }
-
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
         if (!controller) {
+            return;
+        }
+        if (controller.usePinchSelectGesture) {
             return;
         }
         this._updateControllerPoses(event.frame, controller);
@@ -2199,14 +2241,13 @@ export class Input {
             return;
         }
 
-        if (this._usePinchSelectGesture) {
-            return;
-        }
-
         const controller = this._controllerData.find(
             (c) => c.inputSource === event.inputSource
         );
         if (!controller) {
+            return;
+        }
+        if (controller.usePinchSelectGesture) {
             return;
         }
         this._updateControllerPoses(event.frame, controller);
@@ -2351,7 +2392,7 @@ export class Input {
             return;
         }
 
-        if (this._usePinchSelectGesture) {
+        if (controller.usePinchSelectGesture && controller.inputSource.hand) {
             const indexFingerTip =
                 controller.fingerTips.get('index-finger-tip');
             const thumbTip = controller.fingerTips.get('thumb-tip');
@@ -2690,6 +2731,11 @@ export interface ControllerData {
      * The map of finger tip IDs to their 3D location and radius.
      */
     fingerTips: Map<XRHandJoint, Sphere>;
+
+    /**
+     * Wether or not this controller utilizes custom pinching gestures for primary input.
+     */
+    usePinchSelectGesture: boolean;
 }
 
 export const MOUSE_INPUT_METHOD_IDENTIFIER =

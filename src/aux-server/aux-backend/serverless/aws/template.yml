@@ -80,6 +80,11 @@ Resources:
                     Properties:
                         Path: /api/v2/{extra+}
                         Method: Any
+                HandleApiV3:
+                    Type: Api
+                    Properties:
+                        Path: /api/v3/{extra+}
+                        Method: Any
                 MarkFileUploaded:
                     Type: S3
                     Properties:

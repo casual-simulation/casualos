@@ -28,13 +28,14 @@ import {
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
 
 interface StaticAuxAuth {
-    new (): AuxAuth;
+    new (sessionKey?: string, connectionKey?: string): AuxAuth;
 }
 
 /**
@@ -62,6 +63,8 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     private _newTab: Window;
     private _tabCloseInterval: any;
     private _requirePrivoLogin: boolean;
+    private _initialSessionKey: string;
+    private _initialConnectionKey: string;
 
     private _authenticationPromise: Promise<AuthData>;
     private _authenticating: boolean = false;
@@ -80,15 +83,21 @@ export class AuthEndpointHelper implements AuthHelperInterface {
      * @param iframeOrigin The URL that the auth iframe should be loaded from.
      * @param defaultRecordsOrigin The HTTP Origin that should be used for the records origin if the auth site does not support protocol version 4.
      * @param requirePrivoLogin Whether to require that the user login with Privo.
+     * @param sessionKey The session key that should be used. If not specified, then the stored session key will be used.
+     * @param connectionKey The connection key that should be used. If not specified, then the stored connection key will be used.
      */
     constructor(
         iframeOrigin?: string,
         defaultRecordsOrigin?: string,
-        requirePrivoLogin?: boolean
+        requirePrivoLogin?: boolean,
+        sessionKey?: string,
+        connectionKey?: string
     ) {
         this._origin = iframeOrigin;
         this._defaultRecordsOrigin = defaultRecordsOrigin;
         this._requirePrivoLogin = requirePrivoLogin;
+        this._initialSessionKey = sessionKey;
+        this._initialConnectionKey = connectionKey;
     }
 
     get origin(): string {
@@ -166,7 +175,10 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         this._channel = setupChannel(this._iframe.contentWindow);
 
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
-        this._proxy = await new wrapper();
+        this._proxy = await new wrapper(
+            this._initialSessionKey,
+            this._initialConnectionKey
+        );
         try {
             this._protocolVersion = await this._proxy.getProtocolVersion();
         } catch (err) {
@@ -636,7 +648,11 @@ export class AuthEndpointHelper implements AuthHelperInterface {
     async grantPermission(
         recordName: string,
         permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    > {
         if (!hasValue(this._origin)) {
             return null;
         }

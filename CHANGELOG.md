@@ -1,8 +1,63 @@
 # CasualOS Changelog
 
-## V3.2.19
+## V3.3.0
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Added a command line interface (CLI) for CasualOS.
+    -   It is available on NPM as `casualos`, and provides functionality to query the CasualOS backend API.
+    -   It currently provides the following operations:
+        -   `login` - Authenticates the cilent to a CasualOS backend.
+        -   `query` - Queries a CasualOS backend.
+        -   `repl` - A Read-eval-print-loop (REPL) that makes interacting with the CasualOS backend via JavaScript really easy.
+-   Added the ability to create accounts that are not associated with an email or phone number.
+    -   These accounts are also issued a session key that cannot be revoked and does not expire.
+    -   They will mostly be used for one-time subscriptions and machine users.
+    -   This ability is only accessible by super users (see below).
+-   Added several functions to make working with screen coordinates easier.
+    -   `os.calculateViewportCoordinatesFromPosition(portal, position)` - Calculates the viewport coordinates from the given 3D position in the portal.
+        -   `portal` is the portal that the request is from (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 3D position in the portal.
+        -   Viewport coordinates locate a specific point on the image that the camera produces. `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+    -   `os.calculateViewportCoordinatesFromScreenCoordinates(portal, coordinates)` - Calculates the viewport coordinates from the given 2D screen position.
+        -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 2D position on the screen.
+    -   `os.calculateScreenCoordinatesFromViewportCoordinates(portal, coordinates)` - Calculates the screen coordinates from the given 2D viewport coordinates.
+        -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 2D viewport coordinates that the screen coordinates should be found for.
+-   Added eye tracking based `transient-input` support for Apple Vision Pro.
+    -   Look at bots you want to interact with and then pinch to start selection.
+    -   Dragging your hand will manipulate the input ray relative to where your eyes were looking until you let go of your pinch.
+    -   Feels like the natural input style that the rest of visionOS uses.
+-   Added the `superUser` user role.
+    -   This is internal to CasualOS and is not related to roles that control access to record data.
+    -   There are currently only two roles: `none`, and `superUser`.
+    -   Currently, roles have to be assigned manually through the database. There is not API to grant a user the `superUser` role.
+    -   All users default to the `none` role.
+    -   When assigned the `superUser` role, a user has access to some operations that they would not normally have access to, including:
+        -   `getUserInfo` for all users
+        -   `createAccount`
+        -   `listSessions` for all users
+        -   `listRecords` for all users and studios
+        -   `listStudios` for all users
+        -   `listStudioMembers` for all studios
+        -   `getSubscriptions` for all users and studios
+-   Added the ability to specify user login details in the URL.
+    -   When logged in, CasualOS stores a `sessionKey` and a `connectionKey` in the local storage of their web browser to keep them logged in.
+    -   When the `sessionKey` and `connectionKey` query params are specified in the URL, they will be used instead of the stored ones.
+    -   Additionally, they work for users who are not logged in.
+    -   This makes it possible to give someone a URL that grants them automatic access to an account.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where ES2022 class fields would not support type annotations.
+-   Fixed an issue where the `miniGridPortal` did not support using `os.focusOn()` with a position.
+
+## V3.2.19
+
+#### Date: 4/1/2024
 
 ### :boom: Breaking Changes
 
@@ -21,10 +76,19 @@
             ```typescript
             let num = 0123; // This does not equal 123, but is actually 83 in decimal
             ```
+-   Enabled `preact/compat` for custom apps.
+    -   This change probably won't break anything, but I can't exactly be sure.
+    -   `preact/compat` improves Preact compatibility with React behavior and features.
+    -   See [the Preact website](https://preactjs.com/guide/v10/switching-to-preact/) for more information.
 
 ### :rocket: Features
 
 -   Added the ability to specify separate Redis servers for websocket connections, inst data, caches, and rate limits.
+-   Added the `os.appCompat` API.
+    -   It is an object that contains APIs from `preact/compat`.
+    -   This includes, but is not limited to, `Suspense`, `lazy()`, `createPortal()`, `forwardRef()`, `memo()`, and `PureComponent`.
+-   Added `createRef()` and `createContext()` to `os.appHooks`.
+-   CasualOS will now send `@onGridClick`, `@onGridUp`, and `@onGridDown` shouts to all loaded insts.
 
 ### :bug: Bug Fixes
 
@@ -32,6 +96,9 @@
 -   Fixed an issue where the registration flow would not always check display names properly.
 -   Improved wording for some registration errors.
 -   Fixed an issue where it was possible for a session to not be synced while the session itself believes that it is connected.
+-   Fixed an issue where using JSX syntax would show random syntax errors in the multiline code editor.
+-   Fixed an issue where it was possible for CasualOS to waste resources by loading the portals for an inst multiple times.
+-   Fixed an issue where the miniGridPortal slider bar would interfere with the menuPortal.
 
 ## V3.2.18
 

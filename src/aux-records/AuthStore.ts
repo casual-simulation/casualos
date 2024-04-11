@@ -5,7 +5,6 @@ import {
     AuthenticatorTransportFuture,
     CredentialDeviceType,
 } from '@simplewebauthn/types';
-import { AttestationFormat } from '@simplewebauthn/server/script/helpers/decodeAttestationObject';
 
 /**
  * Defines an interface that represents an auth store.
@@ -462,7 +461,20 @@ export interface AuthUser {
      * If null or omitted, then the user has access to all features.
      */
     privacyFeatures?: PrivacyFeatures | null;
+
+    /**
+     * The role that the user has been assigned in the system.
+     */
+    role?: 'none' | 'superUser';
 }
+
+/**
+ * Defines an interface that represents the role that a user can have.
+ *
+ * - "none" means that the user has no special permissions.
+ * - "superUser" means that the user has additional permissions that only special users should have.
+ */
+export type UserRole = 'none' | 'superUser';
 
 export interface AuthUserAuthenticator {
     /**
@@ -722,8 +734,9 @@ export interface AuthSession {
 
     /**
      * The unix timestamp in miliseconds that the session will expire at.
+     * If null, then the session does not expire.
      */
-    expireTimeMs: number;
+    expireTimeMs: number | null;
 
     /**
      * The unix timestamp in miliseconds that the session was revoked at.
@@ -802,6 +815,16 @@ export interface AuthSession {
      * If null, then Open ID was not used for the session.
      */
     oidExpiresAtMs?: number | null;
+
+    /**
+     * Whether the session is able to be revoked by the user.
+     * Setting this to false will prevent the user from revoking the session.
+     * Additionally, users will not be able to replace the session either.
+     * If false, then the session cannot be revoked by the user.
+     * If true, then the session can be revoked by the user.
+     * Default is true.
+     */
+    revocable?: boolean;
 }
 
 /**

@@ -52,6 +52,12 @@
             "request": "launch",
             "name": "Debug Benchmarks",
             "program": "${workspaceFolder}/src/aux-benchmarks/dist/index.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Typedoc",
+            "program": "${workspaceFolder}/docs/typedoc-plugin/dist/index.js"
         }
     ]
 }

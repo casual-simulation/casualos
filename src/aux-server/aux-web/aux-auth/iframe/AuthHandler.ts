@@ -41,6 +41,7 @@ import {
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
@@ -108,7 +109,11 @@ export class AuthHandler implements AuxAuth {
     private _loginPromise: Promise<AuthData>;
     private _isLoggingIn: boolean;
 
-    constructor() {
+    constructor(sessionKey?: string, connectionKey?: string) {
+        if (sessionKey && connectionKey) {
+            authManager.useTemporaryKeys(sessionKey, connectionKey);
+        }
+
         this._oauthChannel.addEventListener('message', (event) => {
             if (event.data === 'login') {
                 console.log('[AuthHandler] Got oauth login message.');
@@ -150,7 +155,9 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
-        return authManager.getComIdWebConfig(comId);
+        return authManager.client.getPlayerConfig({
+            comId,
+        });
     }
 
     async provideOAuthLoginComplete(): Promise<void> {
@@ -274,7 +281,10 @@ export class AuthHandler implements AuxAuth {
             };
         }
 
-        const key = await authManager.createPublicRecordKey(recordName, policy);
+        const key = await authManager.client.createRecordKey({
+            recordName,
+            policy,
+        });
         console.log('[AuthHandler] Record key created.');
 
         if (key.success === false) {
@@ -328,6 +338,16 @@ export class AuthHandler implements AuxAuth {
 
     async openAccountPage(): Promise<void> {
         const url = new URL('/', location.origin);
+        if (
+            authManager.currentSessionKey !== authManager.savedSessionKey &&
+            authManager.currentConnectionKey !== authManager.savedConnectionKey
+        ) {
+            url.searchParams.set('sessionKey', authManager.currentSessionKey);
+            url.searchParams.set(
+                'connectionKey',
+                authManager.currentConnectionKey
+            );
+        }
         window.open(url.href, '_blank');
     }
 
@@ -453,14 +473,19 @@ export class AuthHandler implements AuxAuth {
     async isValidEmailAddress(
         email: string
     ): Promise<IsValidEmailAddressResult> {
-        return await authManager.isValidEmailAddress(email);
+        return await authManager.client.isEmailValid({
+            email,
+        });
     }
 
     async isValidDisplayName(
         displayName: string,
         name: string
     ): Promise<IsValidDisplayNameResult> {
-        return await authManager.isValidDisplayName(displayName, name);
+        return await authManager.client.isDisplayNameValid({
+            displayName,
+            name,
+        });
     }
 
     async provideCode(code: string): Promise<void> {
@@ -533,10 +558,11 @@ export class AuthHandler implements AuxAuth {
         }
 
         if (info.displayName && info.name) {
-            const validDisplayName = await authManager.isValidDisplayName(
-                info.displayName,
-                info.name
-            );
+            const validDisplayName =
+                await authManager.client.isDisplayNameValid({
+                    displayName: info.displayName,
+                    name: info.name,
+                });
             if (validDisplayName.success === false) {
                 errors.push(...getFormErrors(validDisplayName));
             } else if (!validDisplayName.allowed) {
@@ -604,8 +630,15 @@ export class AuthHandler implements AuxAuth {
     async grantPermission(
         recordName: string,
         permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
-        return await authManager.grantPermission(recordName, permission);
+    ): Promise<
+        | GrantMarkerPermissionResult
+        | GrantResourcePermissionResult
+        | ValidateSessionKeyFailure
+    > {
+        return await authManager.client.grantPermission({
+            recordName,
+            permission,
+        });
     }
 
     private _getTokenExpirationTime(token: string): number {
@@ -630,8 +663,8 @@ export class AuthHandler implements AuxAuth {
         if (!authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
         }
-        this._token = authManager.savedSessionKey;
-        this._connectionKey = authManager.savedConnectionKey;
+        this._token = authManager.currentSessionKey;
+        this._connectionKey = authManager.currentConnectionKey;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
             avatarUrl: authManager.avatarUrl,
@@ -1049,6 +1082,12 @@ export class AuthHandler implements AuxAuth {
             clearTimeout(this._refreshTimeout);
         }
         const expiry = this._getTokenExpirationTime(token);
+
+        if (expiry < 0 || !isFinite(expiry)) {
+            console.log('[AuthHandler] Token does not expire.');
+            return;
+        }
+
         const now = Date.now();
         const lifetimeMs = expiry - now;
         const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);

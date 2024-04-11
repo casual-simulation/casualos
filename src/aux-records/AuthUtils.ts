@@ -8,6 +8,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { sha256, hmac } from 'hash.js';
 import { fromByteArray, toByteArray } from 'base64-js';
+import type { UserRole } from './AuthStore';
 
 /**
  * The number of characters that random codes should contain.
@@ -378,4 +379,12 @@ export function verifyConnectionToken(
     } catch {
         return false;
     }
+}
+
+/**
+ * Determines whether the given role is a super user role.
+ * @param role The role to check.
+ */
+export function isSuperUserRole(role: UserRole): boolean {
+    return role === 'superUser';
 }

@@ -78,43 +78,13 @@ exports[`AuxLibrary expect() toEqual() should throw when bots have the same tag 
 `;
 
 exports[`AuxLibrary html h() should return a HTML VDOM element 1`] = `
-Object {
-  "__": null,
-  "__b": 0,
-  "__c": null,
-  "__d": undefined,
-  "__e": null,
-  "__i": -1,
-  "__k": null,
-  "__u": 0,
-  "__v": 2,
-  "constructor": undefined,
-  "key": undefined,
-  "props": Object {
-    "children": "Hello, World!",
-  },
-  "ref": undefined,
-  "type": "h1",
-}
+<h1>
+  Hello, World!
+</h1>
 `;
 
 exports[`AuxLibrary html should return a HTML VDOM element 1`] = `
-Object {
-  "__": null,
-  "__b": 0,
-  "__c": null,
-  "__d": undefined,
-  "__e": null,
-  "__i": -1,
-  "__k": null,
-  "__u": 0,
-  "__v": 1,
-  "constructor": undefined,
-  "key": undefined,
-  "props": Object {
-    "children": "Hello, World!",
-  },
-  "ref": undefined,
-  "type": "h1",
-}
+<h1>
+  Hello, World!
+</h1>
 `;

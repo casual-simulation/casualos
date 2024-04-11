@@ -8,7 +8,7 @@ Object {
     Object {
       "addedNodes": undefined,
       "listenerDelta": 1,
-      "listenerName": "Input",
+      "listenerName": "input",
       "nextSibling": undefined,
       "previousSibling": undefined,
       "removedNodes": undefined,

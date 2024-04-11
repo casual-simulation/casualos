@@ -223,12 +223,7 @@ Object {
 
 exports[`AuxRuntime interpreted shout() should compile listeners to use the html.h() function for JSX 1`] = `
 Array [
-  Object {
-    "key": undefined,
-    "props": Object {},
-    "ref": undefined,
-    "type": "div",
-  },
+  <div />,
 ]
 `;
 
@@ -616,11 +611,6 @@ Object {
 
 exports[`AuxRuntime not-interpreted shout() should compile listeners to use the html.h() function for JSX 1`] = `
 Array [
-  Object {
-    "key": undefined,
-    "props": Object {},
-    "ref": undefined,
-    "type": "div",
-  },
+  <div />,
 ]
 `;

@@ -7,6 +7,8 @@ import {
     AuthStore,
     AuthUser,
     AuthUserAuthenticator,
+    SaveNewUserFailure,
+    UserRole,
 } from './AuthStore';
 import {
     NotAuthorizedError,
@@ -34,6 +36,7 @@ import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
+    isSuperUserRole,
     parseSessionKey,
     randomCode,
     verifyConnectionToken,
@@ -203,6 +206,96 @@ export class AuthController {
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
         this._webAuthNRelyingParties = relyingParties;
+    }
+
+    async createAccount(
+        request: CreateAccountRequest
+    ): Promise<CreateAccountResult> {
+        try {
+            if (!isSuperUserRole(request.userRole)) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                };
+            }
+
+            const newUser: AuthUser = {
+                id: uuid(),
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            };
+
+            const result = await this._store.saveNewUser(newUser);
+            if (result.success === false) {
+                return result;
+            }
+
+            const sessionId = fromByteArray(
+                randomBytes(SESSION_ID_BYTE_LENGTH)
+            );
+            const sessionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
+            const now = Date.now();
+
+            const session: AuthSession = {
+                userId: newUser.id,
+                sessionId: sessionId,
+                requestId: null,
+
+                // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                // so we should use a hash that is optimized for high-entropy inputs.
+                secretHash: hashHighEntropyPasswordWithSalt(
+                    sessionSecret,
+                    sessionId
+                ),
+                connectionSecret: connectionSecret,
+                grantedTimeMs: now,
+                revokeTimeMs: null,
+                expireTimeMs: null,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: request.ipAddress,
+
+                revocable: false,
+            };
+            await this._store.saveSession(session);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionKey: formatV1SessionKey(
+                    newUser.id,
+                    sessionId,
+                    sessionSecret,
+                    session.expireTimeMs ?? Infinity
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    newUser.id,
+                    sessionId,
+                    connectionSecret,
+                    session.expireTimeMs ?? Infinity
+                ),
+                expireTimeMs: session.expireTimeMs,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error occurred while creating account',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -1810,9 +1903,13 @@ export class AuthController {
                 };
             }
 
-            if (now >= session.expireTimeMs) {
+            if (
+                typeof session.expireTimeMs === 'number' &&
+                now >= session.expireTimeMs
+            ) {
                 console.log(
-                    '[AuthController] [validateSessionKey] Session has expired.'
+                    '[AuthController] [validateSessionKey] Session has expired.',
+                    session
                 );
                 return {
                     success: false,
@@ -1835,7 +1932,9 @@ export class AuthController {
             } else {
                 if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
                     if (
-                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                        userInfo.allSessionRevokeTimeMs >=
+                            session.grantedTimeMs &&
+                        (session.revocable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
@@ -1867,6 +1966,7 @@ export class AuthController {
                 subscriptionId: subscriptionId ?? undefined,
                 subscriptionTier: subscriptionTier ?? undefined,
                 privacyFeatures: userInfo.privacyFeatures,
+                role: userInfo.role,
             };
         } catch (err) {
             console.error(
@@ -1970,7 +2070,9 @@ export class AuthController {
             } else {
                 if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
                     if (
-                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                        userInfo.allSessionRevokeTimeMs >=
+                            session.grantedTimeMs &&
+                        (session.revocable !== false || !!session.revokeTimeMs)
                     ) {
                         return {
                             success: false,
@@ -2078,6 +2180,14 @@ export class AuthController {
                     success: false,
                     errorCode: 'session_already_revoked',
                     errorMessage: 'The session has already been revoked.',
+                };
+            }
+
+            if (session.revocable === false) {
+                return {
+                    success: false,
+                    errorCode: 'session_is_not_revokable',
+                    errorMessage: 'The session cannot be revoked.',
                 };
             }
 
@@ -2200,6 +2310,33 @@ export class AuthController {
             }
 
             const userId = keyResult.userId;
+            const session = await this._store.findSession(
+                userId,
+                keyResult.sessionId
+            );
+
+            if (!session) {
+                console.log(
+                    '[AuthController] [replaceSession] Could not find session.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            if (session.revocable === false) {
+                console.log(
+                    '[AuthController] [replaceSession] Session is irrevokable.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
             const now = Date.now();
 
             const newSessionId = fromByteArray(
@@ -2228,22 +2365,6 @@ export class AuthController {
                 nextSessionId: null,
                 ipAddress: request.ipAddress,
             };
-
-            const session = await this._store.findSession(
-                userId,
-                keyResult.sessionId
-            );
-
-            if (!session) {
-                console.log(
-                    '[AuthController] [replaceSession] Could not find session.'
-                );
-                return {
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
-                };
-            }
 
             await this._store.replaceSession(session, newSession, now);
 
@@ -2318,7 +2439,10 @@ export class AuthController {
             const keyResult = await this.validateSessionKey(request.sessionKey);
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
+            } else if (
+                !isSuperUserRole(keyResult.role) &&
+                keyResult.userId !== request.userId
+            ) {
                 return {
                     success: false,
                     errorCode: 'invalid_key',
@@ -2394,7 +2518,10 @@ export class AuthController {
             const keyResult = await this.validateSessionKey(request.sessionKey);
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
+            } else if (
+                !isSuperUserRole(keyResult.role) &&
+                keyResult.userId !== request.userId
+            ) {
                 console.log(
                     '[AuthController] [getUserInfo] Request User ID doesnt match session key User ID!'
                 );
@@ -2475,6 +2602,7 @@ export class AuthController {
                 hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: tier ?? null,
                 privacyFeatures: privacyFeatures,
+                role: result.role ?? 'none',
             };
         } catch (err) {
             console.error(
@@ -3040,6 +3168,70 @@ export interface PrivoSignUpRequestFailure {
     issues?: ZodIssue[];
 }
 
+export interface CreateAccountRequest {
+    /**
+     * The role of the logged in user.
+     */
+    userRole: UserRole;
+
+    /**
+     * The IP Address that the request is being made from.
+     */
+    ipAddress: string;
+}
+
+export type CreateAccountResult = CreateAccountSuccess | CreateAccountFailure;
+
+export interface CreateAccountSuccess {
+    success: true;
+
+    /**
+     * The ID of the user that was created.
+     */
+    userId: string;
+
+    /**
+     * The session key that was issued for the session.
+     */
+    sessionKey: string;
+
+    /**
+     * The connection key that was issued for the session.
+     */
+    connectionKey: string;
+
+    /**
+     * The expiration time of the session in miliseconds in Unix time.
+     */
+    expireTimeMs: number;
+}
+
+export interface CreateAccountFailure {
+    success: false;
+
+    /**
+     * The code of the error.
+     */
+    errorCode:
+        | 'unacceptable_request'
+        | 'not_logged_in'
+        | 'not_authorized'
+        | 'invalid_display_name'
+        | NotSupportedError
+        | SaveNewUserFailure['errorCode']
+        | ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+
+    /**
+     * The issues that were found with the request.
+     */
+    issues?: ZodIssue[];
+}
+
 export interface LoginRequest {
     /**
      * The address that the login is for.
@@ -3214,6 +3406,11 @@ export interface ValidateSessionKeySuccess {
      * If null or omitted, then all features are enabled.
      */
     privacyFeatures?: PrivacyFeatures;
+
+    /**
+     * The role of the user.
+     */
+    role?: UserRole;
 }
 
 export interface ValidateSessionKeyFailure {
@@ -3325,6 +3522,7 @@ export interface RevokeSessionFailure {
         | 'session_expired'
         | 'session_not_found'
         | 'session_already_revoked'
+        | 'session_is_not_revokable'
         | 'user_is_banned'
         | ServerError;
     errorMessage: string;
@@ -3566,6 +3764,11 @@ export interface GetUserInfoSuccess {
      * The privacy-related features that the user has enabled.
      */
     privacyFeatures: PrivacyFeatures;
+
+    /**
+     * The role that the user has in the system.
+     */
+    role: UserRole;
 }
 
 export interface GetUserInfoFailure {

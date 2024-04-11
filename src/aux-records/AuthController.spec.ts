@@ -236,6 +236,105 @@ describe('AuthController', () => {
         });
     });
 
+    describe('createAccount()', () => {
+        it('should create a new account and return the session key for the user', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const result = await controller.createAccount({
+                userRole: 'superUser',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'uuid1',
+                sessionKey: formatV1SessionKey(
+                    'uuid1',
+                    fromByteArray(sessionId),
+                    fromByteArray(sessionSecret),
+                    Infinity
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    'uuid1',
+                    fromByteArray(sessionId),
+                    fromByteArray(connectionSecret),
+                    Infinity
+                ),
+                expireTimeMs: null,
+            });
+
+            const user = await store.findUser('uuid1');
+
+            expect(user).toEqual({
+                id: 'uuid1',
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const session = await store.findSession(
+                'uuid1',
+                fromByteArray(sessionId)
+            );
+
+            expect(session).toEqual({
+                userId: 'uuid1',
+                sessionId: fromByteArray(sessionId),
+                secretHash: expect.any(String),
+                requestId: null,
+
+                connectionSecret: fromByteArray(connectionSecret),
+                grantedTimeMs: 150,
+                expireTimeMs: null,
+                revokeTimeMs: null,
+                previousSessionId: null,
+                nextSessionId: null,
+                ipAddress: '127.0.0.1',
+
+                revocable: false,
+            });
+        });
+
+        it('should require that the user is a superUser', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const result = await controller.createAccount({
+                userRole: 'none',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+
+            const user = await store.findUser('uuid1');
+            expect(user).toBeFalsy();
+        });
+    });
+
     describe('requestLogin()', () => {
         const cases = [
             ['email', 'test@example.com'] as const,
@@ -4226,6 +4325,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                     currentLoginRequestId: undefined,
                 });
+                nowMock.mockReturnValue(101);
             });
 
             describe('v1 hashes', () => {
@@ -4264,6 +4364,92 @@ describe('AuthController', () => {
                         success: true,
                         userId: userId,
                         sessionId: sessionId,
+                    });
+                });
+
+                it('should allow session keys that dont expire', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        Infinity
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
+                        expireTimeMs: null,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
+                });
+
+                it('should include the user role', async () => {
+                    await store.saveUser({
+                        id: 'myid',
+                        email: 'email',
+                        phoneNumber: 'phonenumber',
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        role: 'superUser',
+                    });
+
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                        role: 'superUser',
                     });
                 });
 
@@ -4445,6 +4631,98 @@ describe('AuthController', () => {
                         success: true,
                         userId: userId,
                         sessionId: sessionId,
+                    });
+                });
+
+                it('should allow sessions that dont expire', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        Infinity
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        connectionSecret: code,
+                        expireTimeMs: null,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
+                });
+
+                it('should include the user role', async () => {
+                    await store.saveUser({
+                        id: 'myid',
+                        email: 'email',
+                        phoneNumber: 'phonenumber',
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        role: 'superUser',
+                    });
+
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
+
+                    await store.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        connectionSecret: code,
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                        role: 'superUser',
                     });
                 });
 
@@ -4747,6 +5025,54 @@ describe('AuthController', () => {
                     success: false,
                     errorCode: 'invalid_key',
                     errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
+            it('should work if the session was granted before all sessions were revoked but the session is not revocable and also doesnt have a revoke time', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const userId = 'myid';
+
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    999
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: 101,
+                    currentLoginRequestId: requestId,
+                });
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                    revocable: false,
+                });
+
+                nowMock.mockReturnValue(400);
+
+                const result = await controller.validateSessionKey(sessionKey);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    sessionId: sessionId,
+                    allSessionsRevokedTimeMs: 101,
                 });
             });
         });
@@ -5430,6 +5756,67 @@ describe('AuthController', () => {
                     errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
                 });
             });
+
+            it('should work if the session was granted before all sessions were revoked but is not revocable and also has no expiration time', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                    revocable: false,
+                });
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: 101,
+                    currentLoginRequestId: requestId,
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'recordName',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(175);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    sessionId,
+                    inst: 'inst',
+                    recordName: 'recordName',
+                    connectionId: 'connectionId',
+                    allSessionsRevokedTimeMs: 101,
+                });
+            });
         });
 
         it('should work with keys created by completeLogin()', async () => {
@@ -5939,6 +6326,59 @@ describe('AuthController', () => {
             });
         });
 
+        it('should fail if the session is able to be revoked', async () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
+            const userId = 'myid';
+
+            const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+
+                revocable: false,
+            });
+
+            nowMock.mockReturnValue(400);
+
+            const result = await controller.revokeSession({
+                userId: userId,
+                sessionId: 'otherSession',
+                sessionKey: sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'session_is_not_revokable',
+                errorMessage: 'The session cannot be revoked.',
+            });
+        });
+
         describe('data validation', () => {
             const invalidIdCases = [
                 ['null', null as any],
@@ -6254,6 +6694,37 @@ describe('AuthController', () => {
             });
         });
 
+        it('should fail if the session is not revocable', async () => {
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+
+                revocable: false,
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.replaceSession({
+                sessionKey: sessionKey,
+                ipAddress: '127.0.0.2',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+        });
+
         describe('data validation', () => {
             const invalidIdCases = [
                 ['null', null as any],
@@ -6390,6 +6861,20 @@ describe('AuthController', () => {
             });
         });
 
+        it('should return not_authorized if requesting sessions for someone else', async () => {
+            nowMock.mockReturnValue(400);
+            const result = (await controller.listSessions({
+                userId: 'otheruserId',
+                sessionKey: sessionKey,
+            })) as ListSessionsSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: 'The session key is invalid.',
+            });
+        });
+
         it('should use the time that all sessions were revoked at if the token was granted before all sessions were revoked', async () => {
             nowMock.mockReturnValue(400);
             await store.saveUser({
@@ -6498,6 +6983,86 @@ describe('AuthController', () => {
                 }
             );
         });
+
+        describe('superUser', () => {
+            const superUserId = 'superUserId';
+            const superUserSessionId = toBase64String('superUserSessionId');
+            const superUserSessionKey = formatV1SessionKey(
+                superUserId,
+                superUserSessionId,
+                code,
+                200
+            );
+
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: superUserId,
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    role: 'superUser',
+                });
+
+                await store.saveSession({
+                    requestId: null,
+                    sessionId: superUserSessionId,
+                    secretHash: hashPasswordWithSalt(code, superUserSessionId),
+                    connectionSecret: code,
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 999,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId: superUserId,
+                    ipAddress: '127.0.0.1',
+                });
+            });
+
+            it('should allow the sessions to be listed if requested by a super user', async () => {
+                nowMock.mockReturnValue(400);
+                const result = (await controller.listSessions({
+                    userId: 'myid',
+                    sessionKey: superUserSessionKey,
+                })) as ListSessionsSuccess;
+
+                expect(result.success).toBe(true);
+                expect(result.sessions).toHaveLength(10);
+                expect(result.sessions[0]).toEqual({
+                    sessionId: 'session20',
+                    userId: 'myid',
+                    expireTimeMs: 1020,
+                    grantedTimeMs: 120,
+                    revokeTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    currentSession: false,
+                    nextSessionId: null,
+                });
+                expect(result.sessions[5]).toEqual({
+                    sessionId: 'session15',
+                    userId: 'myid',
+                    expireTimeMs: 1015,
+                    grantedTimeMs: 115,
+                    revokeTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    currentSession: false,
+                    nextSessionId: 'nextSessionId',
+                });
+                expect(result.sessions[9]).toEqual({
+                    sessionId: 'session11',
+                    userId: 'myid',
+                    expireTimeMs: 1011,
+                    grantedTimeMs: 111,
+                    revokeTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    currentSession: false,
+                    nextSessionId: null,
+                });
+            });
+        });
     });
 
     describe('getUserInfo()', () => {
@@ -6558,6 +7123,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -6601,6 +7167,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -6629,6 +7196,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -6668,6 +7236,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -6707,6 +7276,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -6748,6 +7318,7 @@ describe('AuthController', () => {
                     allowAI: true,
                     allowPublicInsts: true,
                 },
+                role: 'none',
             });
         });
 
@@ -6926,6 +7497,7 @@ describe('AuthController', () => {
                         allowAI: false,
                         allowPublicInsts: true,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -6996,6 +7568,7 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: false,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -7094,6 +7667,7 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: true,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -7192,6 +7766,7 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: true,
                     },
+                    role: 'none',
                 });
 
                 expect(privoClientMock.getUserInfo).toHaveBeenCalledWith(
@@ -7214,6 +7789,99 @@ describe('AuthController', () => {
                         allowAI: true,
                         allowPublicInsts: true,
                     },
+                });
+            });
+        });
+
+        describe('superUser', () => {
+            const superUserId = 'superUserId';
+            const superUserSessionId = toBase64String('superUserSessionId');
+            const superUserSessionKey = formatV1SessionKey(
+                superUserId,
+                superUserSessionId,
+                code,
+                200
+            );
+
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: superUserId,
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    role: 'superUser',
+                });
+
+                await store.saveSession({
+                    requestId: null,
+                    sessionId: superUserSessionId,
+                    secretHash: hashPasswordWithSalt(code, superUserSessionId),
+                    connectionSecret: code,
+                    expireTimeMs: 1000,
+                    grantedTimeMs: 999,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId: superUserId,
+                    ipAddress: '127.0.0.1',
+                });
+            });
+
+            it('should include the role of the user', async () => {
+                const result = await controller.getUserInfo({
+                    userId: superUserId,
+                    sessionKey: superUserSessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: superUserId,
+                    email: null,
+                    phoneNumber: null,
+                    name: null,
+                    avatarUrl: null,
+                    avatarPortraitUrl: null,
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    role: 'superUser',
+                });
+            });
+
+            it('should allow super users to get other users info', async () => {
+                const result = await controller.getUserInfo({
+                    userId,
+                    sessionKey: superUserSessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    role: 'none',
                 });
             });
         });

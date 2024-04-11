@@ -22,7 +22,7 @@ import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
-import { v4 as uuid } from 'uuid';
+import { isSuperUserRole } from './AuthUtils';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -119,7 +119,10 @@ export class SubscriptionController {
                 return keyResult;
             } else {
                 if (request.userId) {
-                    if (keyResult.userId !== request.userId) {
+                    if (
+                        !isSuperUserRole(keyResult.role) &&
+                        keyResult.userId !== request.userId
+                    ) {
                         console.log(
                             '[SubscriptionController] [getSubscriptionStatus] Request User ID doesnt match session key User ID!'
                         );
@@ -130,9 +133,7 @@ export class SubscriptionController {
                         };
                     }
 
-                    const user = await this._authStore.findUser(
-                        keyResult.userId
-                    );
+                    const user = await this._authStore.findUser(request.userId);
                     customerId = user.stripeCustomerId;
                     role = 'user';
                 } else if (request.studioId) {
@@ -145,7 +146,10 @@ export class SubscriptionController {
                             }
                         );
 
-                    if (assignments.length <= 0) {
+                    if (
+                        !isSuperUserRole(keyResult.role) &&
+                        assignments.length <= 0
+                    ) {
                         console.log(
                             '[SubscriptionController] [getSubscriptionStatus] Request user does not have access to studio!'
                         );
@@ -171,7 +175,7 @@ export class SubscriptionController {
                 const config = await this._getConfig();
                 return {
                     success: true,
-                    userId: keyResult.userId,
+                    userId: request.userId ?? keyResult.userId,
                     studioId: request.studioId,
                     publishableKey: this._stripe.publishableKey,
                     subscriptions: [],
@@ -227,7 +231,7 @@ export class SubscriptionController {
 
             return {
                 success: true,
-                userId: keyResult.userId,
+                userId: request.userId ?? keyResult.userId,
                 studioId: request.studioId,
                 publishableKey: this._stripe.publishableKey,
                 subscriptions,

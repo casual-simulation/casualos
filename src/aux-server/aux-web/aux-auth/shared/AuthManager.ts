@@ -60,6 +60,7 @@ import type {
     CompleteWebAuthnLoginSuccess,
     CompleteLoginSuccess,
     ListUserAuthenticatorsResult,
+    ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -85,6 +86,7 @@ import {
     startAuthentication,
     startRegistration,
 } from '@simplewebauthn/browser';
+import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
@@ -133,6 +135,10 @@ export class AuthManager {
     private _websocketEndpoint: string;
     private _websocketProtocol: RemoteCausalRepoProtocol;
     private _gitTag: string;
+    private _client: ReturnType<typeof createRecordsClient>;
+
+    private _temporarySessionKey: string;
+    private _temporaryConnectionKey: string;
 
     constructor(
         apiEndpoint: string,
@@ -148,6 +154,8 @@ export class AuthManager {
         this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
         this._studiosSupported = ASSUME_STUDIOS_SUPPORTED;
         this._usePrivoLogin = USE_PRIVO_LOGIN;
+        this._client = createRecordsClient(this.apiEndpoint);
+        this._updateClientSessionKey();
     }
 
     get userId() {
@@ -207,11 +215,17 @@ export class AuthManager {
     }
 
     get userInfoLoaded() {
-        return !!this._userId && !!this.savedSessionKey && !!this._appMetadata;
+        return (
+            !!this._userId && !!this.currentSessionKey && !!this._appMetadata
+        );
     }
 
     get loginState(): Observable<boolean> {
         return this._loginState;
+    }
+
+    get client() {
+        return this._client;
     }
 
     /**
@@ -260,35 +274,9 @@ export class AuthManager {
             };
         }
 
-        const result = await axios.post<IsValidEmailAddressResult>(
-            `${this.apiEndpoint}/api/v2/email/valid`,
-            {
-                email,
-            },
-            {
-                validateStatus: (status) => status < 500,
-            }
-        );
-
-        return result.data;
-    }
-
-    async isValidDisplayName(
-        displayName: string,
-        name: string
-    ): Promise<IsValidDisplayNameResult> {
-        const result = await axios.post<IsValidDisplayNameResult>(
-            `${this.apiEndpoint}/api/v2/displayName/valid`,
-            {
-                displayName,
-                name,
-            },
-            {
-                validateStatus: (status) => status < 500,
-            }
-        );
-
-        return result.data;
+        return this.client.isEmailValid({
+            email,
+        });
     }
 
     async validateSmsNumber(sms: string): Promise<boolean> {
@@ -297,7 +285,7 @@ export class AuthManager {
     }
 
     isLoggedIn(): boolean {
-        const sessionKey = this.savedSessionKey;
+        const sessionKey = this.currentSessionKey;
         if (!sessionKey) {
             return false;
         }
@@ -316,7 +304,7 @@ export class AuthManager {
 
     async loadUserInfo() {
         const [userId, sessionId, sessionSecret, expireTimeMs] =
-            parseSessionKey(this.savedSessionKey);
+            parseSessionKey(this.currentSessionKey);
         this._userId = userId;
         this._sessionId = sessionId;
         this._appMetadata = await this._loadAppMetadata();
@@ -324,8 +312,13 @@ export class AuthManager {
         if (!this._appMetadata) {
             this._userId = null;
             this._sessionId = null;
-            this.savedSessionKey = null;
-            this.savedConnectionKey = null;
+            if (this._temporarySessionKey) {
+                this._temporarySessionKey = null;
+                this._temporaryConnectionKey = null;
+            } else {
+                this.savedSessionKey = null;
+                this.savedConnectionKey = null;
+            }
         } else {
             this._saveAcceptedTerms(true);
             if (this.email) {
@@ -337,41 +330,20 @@ export class AuthManager {
         return this.userInfoLoaded;
     }
 
-    async createPublicRecordKey(
-        recordName: string,
-        policy: PublicRecordKeyPolicy
-    ): Promise<CreatePublicRecordKeyResult> {
-        if (!this.userInfoLoaded) {
-            await this.loadUserInfo();
-        }
-        const response = await axios.post(
-            `${this.apiEndpoint}/api/v2/records/key`,
-            {
-                recordName: recordName,
-                policy: policy,
-            },
-            {
-                headers: this._authenticationHeaders(),
-                validateStatus: (status) => status < 500,
-            }
-        );
-        return response.data;
-    }
-
     async loginWithWebAuthn(
         useBrowserAutofill?: boolean
     ): Promise<CompleteWebAuthnLoginResult | RequestWebAuthnLoginResult> {
-        const optionsResult = await this.getWebAuthnLoginOptions();
+        const optionsResult = await this.client.getWebAuthnLoginOptions();
         if (optionsResult.success === true) {
             try {
                 const response = await startAuthentication(
                     optionsResult.options,
                     useBrowserAutofill
                 );
-                const result = await this.completeWebAuthnLogin(
-                    optionsResult.requestId,
-                    response
-                );
+                const result = await this.client.completeWebAuthnLogin({
+                    requestId: optionsResult.requestId,
+                    response,
+                });
 
                 if (result.success === true) {
                     this.updateLoginStateFromResult(result);
@@ -393,53 +365,46 @@ export class AuthManager {
         return optionsResult;
     }
 
-    async listAuthenticators(): Promise<ListUserAuthenticatorsResult> {
-        const response = await axios.get<ListUserAuthenticatorsResult>(
-            `${this.apiEndpoint}/api/v2/webauthn/authenticators`,
-            {
-                headers: this._authenticationHeaders(),
-                validateStatus: (status) => true,
-            }
-        );
-
-        return response.data;
-    }
-
-    async deleteUserAuthenticator(
-        authenticatorId: string
-    ): Promise<ListUserAuthenticatorsResult> {
-        const response = await axios.post<ListUserAuthenticatorsResult>(
-            `${this.apiEndpoint}/api/v2/webauthn/authenticators/delete`,
-            {
-                authenticatorId,
-            },
-            {
-                headers: this._authenticationHeaders(),
-                validateStatus: (status) => true,
-            }
-        );
-
-        return response.data;
-    }
-
     updateLoginStateFromResult(
         result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
     ): void {
         this.savedSessionKey = result.sessionKey;
         this.savedConnectionKey = result.connectionKey;
         this._userId = result.userId;
+
+        this._temporarySessionKey = null;
+        this._temporaryConnectionKey = null;
+    }
+
+    useTemporaryKeys(sessionKey: string, connectionKey: string) {
+        if (sessionKey && connectionKey) {
+            console.log('[AuthManager] Using temporary keys.');
+            const [userId, sessionId] = parseSessionKey(sessionKey);
+            this._temporarySessionKey = sessionKey;
+            this._temporaryConnectionKey = connectionKey;
+            this._sessionId = sessionId;
+            this._userId = userId;
+            this._updateClientSessionKey();
+        }
+    }
+
+    private _updateClientSessionKey() {
+        this._client.sessionKey = this.currentSessionKey;
     }
 
     async addPasskeyWithWebAuthn(): Promise<
-        RequestWebAuthnRegistrationResult | CompleteWebAuthnRegistrationResult
+        | RequestWebAuthnRegistrationResult
+        | CompleteWebAuthnRegistrationResult
+        | ValidateSessionKeyFailure
     > {
-        const optionsResult = await this.getWebAuthnRegistrationOptions();
+        const optionsResult =
+            await this.client.getWebAuthnRegistrationOptions();
         if (optionsResult.success === true) {
             try {
                 const response = await startRegistration(optionsResult.options);
-                const result = await this.completeWebAuthnRegistration(
-                    response
-                );
+                const result = await this.client.registerWebAuthn({
+                    response,
+                });
                 return result;
             } catch (error) {
                 console.error(error);
@@ -459,112 +424,24 @@ export class AuthManager {
         return optionsResult;
     }
 
-    async getWebAuthnRegistrationOptions(): Promise<RequestWebAuthnRegistrationResult> {
-        const response = await fetch(
-            `${this.apiEndpoint}/api/v2/webauthn/register/options`,
-            {
-                headers: this._authenticationHeaders(),
-            }
-        );
-
-        const json = await response.text();
-        return JSON.parse(json);
-    }
-
-    async completeWebAuthnRegistration(
-        r: RegistrationResponseJSON
-    ): Promise<CompleteWebAuthnRegistrationResult> {
-        const response = await fetch(
-            `${this.apiEndpoint}/api/v2/webauthn/register`,
-            {
-                body: JSON.stringify({
-                    response: r,
-                }),
-                method: 'POST',
-                headers: {
-                    ...this._authenticationHeaders(),
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-        const json = await response.text();
-        return JSON.parse(json);
-    }
-
-    async getWebAuthnLoginOptions(): Promise<RequestWebAuthnLoginResult> {
-        const response = await fetch(
-            `${this.apiEndpoint}/api/v2/webauthn/login/options`,
-            {
-                headers: this._authenticationHeaders(),
-            }
-        );
-
-        const json = await response.text();
-        return JSON.parse(json);
-    }
-
-    async completeWebAuthnLogin(
-        requestId: string,
-        r: AuthenticationResponseJSON
-    ): Promise<CompleteWebAuthnLoginResult> {
-        const response = await fetch(
-            `${this.apiEndpoint}/api/v2/webauthn/login`,
-            {
-                body: JSON.stringify({
-                    requestId,
-                    response: r,
-                }),
-                method: 'POST',
-                headers: {
-                    ...this._authenticationHeaders(),
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-        const json = await response.text();
-        return JSON.parse(json);
-    }
-
     async logout(revokeSessionKey: boolean = true) {
-        const sessionKey = this.savedSessionKey;
-        if (sessionKey) {
-            this.savedSessionKey = null;
-            if (revokeSessionKey) {
-                await this._revokeSessionKey(sessionKey);
+        if (this.currentSessionKey === this.savedSessionKey) {
+            const sessionKey = this.savedSessionKey;
+            if (sessionKey) {
+                this.savedSessionKey = null;
+                if (revokeSessionKey) {
+                    await this._revokeSessionKey(sessionKey);
+                }
             }
+            this.savedConnectionKey = null;
         }
-        this.savedConnectionKey = null;
+        this._temporaryConnectionKey = null;
+        this._temporarySessionKey = null;
         this._userId = null;
         this._sessionId = null;
         this._appMetadata = null;
         this._saveEmail(null);
         this._loginState.next(false);
-    }
-
-    async listSessions(expireTimeMs: number = null): Promise<ListedSession[]> {
-        const query = omitBy(
-            {
-                expireTimeMs,
-            },
-            (o) => typeof o === 'undefined' || o === null
-        );
-        const url = new URL(`${this.apiEndpoint}/api/v2/sessions`);
-        for (let key in query) {
-            url.searchParams.set(key, query[key].toString());
-        }
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-        });
-
-        const result = response.data as ListSessionsResult;
-
-        if (result.success) {
-            return result.sessions;
-        } else {
-            return [];
-        }
     }
 
     async listSubscriptions(): Promise<GetSubscriptionStatusSuccess> {
@@ -615,470 +492,6 @@ export class AuthManager {
             }
             return null;
         }
-    }
-
-    async listRecords(): Promise<ListedRecord[]> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/list`);
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListRecordsResult;
-        if (result.success === true) {
-            return result.records;
-        } else {
-            if (result.errorCode === 'not_supported') {
-                return [];
-            }
-        }
-
-        return null;
-    }
-
-    async listStudioRecords(studioId: string): Promise<ListedRecord[]> {
-        const url = new URL(
-            `${
-                this.apiEndpoint
-            }/api/v2/records/list?studioId=${encodeURIComponent(studioId)}`
-        );
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListRecordsResult;
-        if (result.success === true) {
-            return result.records;
-        } else {
-            if (result.errorCode === 'not_supported') {
-                return [];
-            }
-        }
-
-        return null;
-    }
-
-    async getStudio(studioId: string): Promise<GetStudioResult> {
-        const url = new URL(
-            `${this.apiEndpoint}/api/v2/studios?studioId=${encodeURIComponent(
-                studioId
-            )}`
-        );
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-        });
-
-        return response.data as GetStudioResult;
-    }
-
-    async updateStudio(
-        studio: UpdateStudioRequest['studio']
-    ): Promise<UpdateStudioResult> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/studios`);
-
-        const response = await axios.put(url.href, studio, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => true,
-        });
-
-        return response.data as UpdateStudioResult;
-    }
-
-    async listStudioMembers(studioId: string): Promise<ListedStudioMember[]> {
-        const url = new URL(
-            `${
-                this.apiEndpoint
-            }/api/v2/studios/members/list?studioId=${encodeURIComponent(
-                studioId
-            )}`
-        );
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListStudioMembersResult;
-        if (result.success === true) {
-            return result.members;
-        } else {
-            return [];
-        }
-    }
-
-    async addStudioMember(
-        request: Omit<AddStudioMemberRequest, 'userId'>
-    ): Promise<AddStudioMemberResult> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/studios/members`);
-
-        const response = await axios.post(url.href, request, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as AddStudioMemberResult;
-        return result;
-    }
-
-    async removeStudioMember(
-        request: Omit<RemoveStudioMemberRequest, 'userId'>
-    ): Promise<RemoveStudioMemberResult> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/studios/members`);
-
-        const response = await axios.delete(url.href, {
-            data: request,
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as RemoveStudioMemberResult;
-        return result;
-    }
-
-    async requestComId(
-        studioId: string,
-        newComId: string
-    ): Promise<ComIdRequestResult> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/studios/requestComId`);
-
-        const response = await axios.post(
-            url.href,
-            {
-                studioId,
-                comId: newComId,
-            },
-            {
-                headers: this._authenticationHeaders(),
-                validateStatus: (status) => true,
-            }
-        );
-
-        return response.data as ComIdRequestResult;
-    }
-
-    async listStudios(comId?: string): Promise<ListedStudio[]> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/studios/list`);
-
-        if (comId) {
-            url.searchParams.set('comId', comId);
-        }
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListStudiosResult;
-        if (result.success === true) {
-            return result.studios;
-        }
-
-        return null;
-    }
-
-    async listPermissions(
-        recordName: string,
-        options: {
-            marker?: string;
-            resourceKind?: ResourceKinds;
-            resourceId?: string;
-        }
-    ): Promise<ListPermissionsResult> {
-        const url = new URL(
-            `${this.apiEndpoint}/api/v2/records/permissions/list`
-        );
-
-        url.searchParams.set('recordName', recordName);
-        if (options.marker) {
-            url.searchParams.set('marker', options.marker);
-        }
-        if (options.resourceKind) {
-            url.searchParams.set('resourceKind', options.resourceKind);
-        }
-        if (options.resourceId) {
-            url.searchParams.set('resourceId', options.resourceId);
-        }
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        return response.data as ListPermissionsResult;
-    }
-
-    async createStudio(
-        displayName: string,
-        ownerStudioComId?: string
-    ): Promise<string> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/studios`);
-
-        const response = await axios.post(
-            url.href,
-            {
-                displayName,
-                ownerStudioComId,
-            },
-            {
-                headers: this._authenticationHeaders(),
-                validateStatus: (status) => status < 500 || status === 501,
-            }
-        );
-
-        const result = response.data as CreateStudioResult;
-        if (result.success === true) {
-            return result.studioId;
-        } else {
-            return null;
-        }
-    }
-
-    async createRecord(
-        request: Omit<CreateRecordRequest, 'userId'>
-    ): Promise<CreateRecordResult> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records`);
-
-        const response = await axios.post(
-            url.href,
-            {
-                ...request,
-            },
-            {
-                headers: this._authenticationHeaders(),
-                validateStatus: (status) => status < 500 || status === 501,
-            }
-        );
-
-        return response.data as CreateRecordResult;
-    }
-
-    async listData(recordName: string, startingAddress?: string) {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/data/list`);
-
-        url.searchParams.set('recordName', recordName);
-        if (startingAddress) {
-            url.searchParams.set('address', startingAddress);
-        }
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListDataResult;
-        if (result.success === true) {
-            return result;
-        } else {
-            if (result.errorCode === 'not_supported') {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    async listFiles(recordName: string, startingFileName?: string) {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/file/list`);
-
-        url.searchParams.set('recordName', recordName);
-        if (startingFileName) {
-            url.searchParams.set('fileName', startingFileName);
-        }
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListFilesResult;
-        if (result.success === true) {
-            return result;
-        } else {
-            if (result.errorCode === 'not_supported') {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    async eraseFile(
-        recordKeyOrName: string,
-        fileUrl: string
-    ): Promise<boolean> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/file`);
-
-        const response = await axios.delete(url.href, {
-            headers: this._authenticationHeaders(),
-            data: {
-                recordKey: recordKeyOrName,
-                fileUrl: fileUrl,
-            },
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as EraseFileResult;
-        return result.success === true;
-    }
-
-    async eraseData(
-        recordKeyOrName: string,
-        address: string
-    ): Promise<boolean> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/data`);
-
-        const response = await axios.delete(url.href, {
-            headers: this._authenticationHeaders(),
-            data: {
-                recordKey: recordKeyOrName,
-                address: address,
-            },
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as EraseDataResult;
-        return result.success === true;
-    }
-
-    // async listPolicies(recordName: string, startingMarker?: string) {
-    //     const url = new URL(`${this.apiEndpoint}/api/v2/records/policy/list`);
-
-    //     url.searchParams.set('recordName', recordName);
-    //     if (startingMarker) {
-    //         url.searchParams.set('startingMarker', startingMarker);
-    //     }
-
-    //     const response = await axios.get(url.href, {
-    //         headers: this._authenticationHeaders(),
-    //         validateStatus: (status) => status < 500 || status === 501,
-    //     });
-
-    //     const result = response.data as ListUserPoliciesResult;
-    //     if (result.success === true) {
-    //         return result;
-    //     }
-
-    //     return null;
-    // }
-
-    async grantPermission(
-        recordName: string,
-        permission: AvailablePermissions
-    ): Promise<GrantMarkerPermissionResult | GrantResourcePermissionResult> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/permissions`);
-
-        const response = await axios.post(
-            url.href,
-            {
-                recordName,
-                permission,
-            },
-            {
-                headers: this._authenticationHeaders(),
-                validateStatus: (status) => status < 500 || status === 501,
-            }
-        );
-
-        const result = response.data as
-            | GrantMarkerPermissionResult
-            | GrantResourcePermissionResult;
-        return result;
-    }
-
-    async listRoleAssignments(recordName: string, startingRole?: string) {
-        const url = new URL(
-            `${this.apiEndpoint}/api/v2/records/role/assignments/list`
-        );
-
-        url.searchParams.set('recordName', recordName);
-        if (startingRole) {
-            url.searchParams.set('startingRole', startingRole);
-        }
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListRoleAssignmentsResult;
-        if (result.success === true) {
-            return result;
-        } else {
-            if (result.errorCode === 'not_supported') {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    async listEvents(recordName: string, startingEventName?: string) {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/events/list`);
-
-        url.searchParams.set('recordName', recordName);
-        if (startingEventName) {
-            url.searchParams.set('eventName', startingEventName);
-        }
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListEventsResult;
-        if (result.success === true) {
-            return result;
-        } else {
-            if (result.errorCode === 'not_supported') {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    async deleteInst(recordName: string, inst: string) {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/insts`);
-
-        const response = await axios.delete(url.href, {
-            headers: this._authenticationHeaders(),
-            data: {
-                recordName: recordName,
-                inst: inst,
-            },
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        return response.data as EraseInstResult;
-    }
-
-    async listInsts(recordName: string, startingInst?: string) {
-        const url = new URL(`${this.apiEndpoint}/api/v2/records/insts/list`);
-
-        url.searchParams.set('recordName', recordName);
-        if (startingInst) {
-            url.searchParams.set('inst', startingInst);
-        }
-
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-            validateStatus: (status) => status < 500 || status === 501,
-        });
-
-        const result = response.data as ListInstsResult;
-        if (result.success === true) {
-            return result;
-        } else {
-            if (result.errorCode === 'not_supported') {
-                return null;
-            }
-        }
-
-        return null;
     }
 
     async manageSubscriptions(
@@ -1138,31 +551,41 @@ export class AuthManager {
         }
     }
 
-    async getComIdWebConfig(comId: string): Promise<GetPlayerConfigResult> {
-        const url = new URL(`${this.apiEndpoint}/api/v2/player/config`);
-        url.searchParams.set('comId', comId);
-        const response = await axios.get(url.href, {
-            headers: this._authenticationHeaders(),
-        });
+    getSessionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('sessionKey')) {
+            return params.get('sessionKey');
+        } else {
+            return null;
+        }
+    }
 
-        const result = response.data as GetPlayerConfigResult;
-        return result;
+    getConnectionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('connectionKey')) {
+            return params.get('connectionKey');
+        } else {
+            return null;
+        }
     }
 
     private async _revokeSessionKey(sessionKey: string): Promise<void> {
         try {
-            const response = await axios.post(
-                `${this.apiEndpoint}/api/v2/revokeSession`,
+            const result = await this.client.revokeSession(
                 {
-                    sessionKey: sessionKey,
+                    sessionKey,
                 },
-                {
-                    headers: {
-                        Authorization: `Bearer ${sessionKey}`,
-                    },
-                }
+                { sessionKey }
             );
-            console.log('[AuthManager] Session key revoked!');
+
+            if (result.success) {
+                console.log('[AuthManager] Session key revoked!');
+            } else {
+                console.log(
+                    '[AuthManager] Could not revoke session key:',
+                    result
+                );
+            }
         } catch (err) {
             console.log('[AuthManager] Could not revoke session key:', err);
         }
@@ -1177,22 +600,7 @@ export class AuthManager {
     }
 
     async loginWithPrivo() {
-        const response = await axios.post<OpenIDLoginRequestResult>(
-            `${this.apiEndpoint}/api/v2/login/privo`,
-            {},
-            {
-                validateStatus: (status) => status < 500,
-            }
-        );
-
-        const result = response.data;
-        // if (result.success === true) {
-        //     this.savedSessionKey = result.sessionKey;
-        //     this.savedConnectionKey = result.connectionKey;
-        //     this._userId = result.userId;
-        // }
-
-        return result;
+        return this.client.requestPrivoLogin({});
     }
 
     async signUpWithPrivo(info: PrivoSignUpInfo) {
@@ -1202,33 +610,17 @@ export class AuthManager {
     async processAuthCode(
         params: object
     ): Promise<ProcessOpenIDAuthorizationCodeResult> {
-        const response = await axios.post<ProcessOpenIDAuthorizationCodeResult>(
-            `${this.apiEndpoint}/api/v2/oauth/code`,
-            {
-                ...params,
-            },
-            {
-                validateStatus: (status) => status < 500,
-            }
-        );
-
-        return response.data;
+        return this.client.processOAuthCode({
+            ...params,
+        });
     }
 
     async completeOAuthLogin(
         requestId: string
     ): Promise<CompleteOpenIDLoginResult> {
-        const response = await axios.post<CompleteOpenIDLoginResult>(
-            `${this.apiEndpoint}/api/v2/oauth/complete`,
-            {
-                requestId,
-            },
-            {
-                validateStatus: (status) => status < 500,
-            }
-        );
-
-        const result = response.data;
+        const result = await this.client.completeOAuthLogin({
+            requestId,
+        });
 
         if (result.success === true) {
             this.updateLoginStateFromResult(result);
@@ -1240,21 +632,13 @@ export class AuthManager {
     private async _privoRegister(
         info: PrivoSignUpInfo
     ): Promise<PrivoSignUpRequestResult> {
-        const response = await axios.post<PrivoSignUpRequestResult>(
-            `${this.apiEndpoint}/api/v2/register/privo`,
-            {
-                email: !!info.email ? info.email : undefined,
-                displayName: info.displayName,
-                name: info.name,
-                dateOfBirth: info.dateOfBirth?.toJSON(),
-                parentEmail: info.parentEmail || undefined,
-            },
-            {
-                validateStatus: (status) => true,
-            }
-        );
-
-        const result = response.data;
+        const result = await this.client.requestPrivoSignUp({
+            email: !!info.email ? info.email : undefined,
+            displayName: info.displayName,
+            name: info.name,
+            dateOfBirth: info.dateOfBirth,
+            parentEmail: info.parentEmail || undefined,
+        });
 
         if (result.success === true) {
             this.updateLoginStateFromResult(result);
@@ -1268,11 +652,11 @@ export class AuthManager {
         requestId: string,
         code: string
     ): Promise<CompleteLoginResult> {
-        const result = await this._completeLoginRequest(
+        const result = await this.client.completeLogin({
             userId,
             requestId,
-            code
-        );
+            code,
+        });
 
         if (result.success === true) {
             this.updateLoginStateFromResult(result);
@@ -1281,23 +665,11 @@ export class AuthManager {
         return result;
     }
 
-    async revokeSession(
-        userId: string,
-        sessionId: string
-    ): Promise<RevokeSessionResult> {
-        const response = await axios.post(
-            `${this.apiEndpoint}/api/v2/revokeSession`,
-            {
-                userId,
-                sessionId,
-            },
-            {
-                validateStatus: (status) => status < 500,
-                headers: this._authenticationHeaders(),
-            }
-        );
-
-        const result = response.data as RevokeSessionResult;
+    async revokeSession(userId: string, sessionId: string) {
+        const result = await this.client.revokeSession({
+            userId,
+            sessionId,
+        });
 
         if (
             result.success &&
@@ -1312,23 +684,14 @@ export class AuthManager {
         return result;
     }
 
-    async revokeAllSessions(userId?: string): Promise<RevokeAllSessionsResult> {
+    async revokeAllSessions(userId?: string) {
         if (!userId) {
             userId = this.userId;
         }
 
-        const response = await axios.post(
-            `${this.apiEndpoint}/api/v2/revokeAllSessions`,
-            {
-                userId,
-            },
-            {
-                validateStatus: (status) => status < 500,
-                headers: this._authenticationHeaders(),
-            }
-        );
-
-        const result = response.data as RevokeAllSessionsResult;
+        const result = await this.client.revokeAllSessions({
+            userId,
+        });
 
         if (result.success && userId === this.userId) {
             this.savedSessionKey = null;
@@ -1339,17 +702,8 @@ export class AuthManager {
         return result;
     }
 
-    async replaceSession(): Promise<ReplaceSessionResult> {
-        const response = await axios.post(
-            `${this.apiEndpoint}/api/v2/replaceSession`,
-            {},
-            {
-                validateStatus: (status) => status < 500,
-                headers: this._authenticationHeaders(),
-            }
-        );
-
-        const result = response.data as ReplaceSessionResult;
+    async replaceSession() {
+        const result = await this.client.replaceSession();
 
         if (result.success && result.userId === this.userId) {
             this.savedSessionKey = result.sessionKey;
@@ -1359,42 +713,14 @@ export class AuthManager {
         return result;
     }
 
-    private async _completeLoginRequest(
-        userId: string,
-        requestId: string,
-        code: string
-    ): Promise<CompleteLoginResult> {
-        const response = await axios.post(
-            `${this.apiEndpoint}/api/v2/completeLogin`,
-            {
-                userId,
-                requestId,
-                code,
-            },
-            {
-                validateStatus: (status) => status < 500,
-            }
-        );
-
-        return response.data;
-    }
-
     private async _login(
         address: string,
         addressType: AddressType
     ): Promise<LoginRequestResult> {
-        const response = await axios.post(
-            `${this.apiEndpoint}/api/v2/login`,
-            {
-                address: address,
-                addressType: addressType,
-            },
-            {
-                validateStatus: (status) => status < 500,
-            }
-        );
-
-        return response.data;
+        return this.client.requestLogin({
+            address,
+            addressType,
+        });
     }
 
     get version(): string {
@@ -1409,6 +735,14 @@ export class AuthManager {
         return localStorage.getItem(ACCEPTED_TERMS_KEY) === 'true';
     }
 
+    get currentSessionKey(): string {
+        return this._temporarySessionKey ?? this.savedSessionKey;
+    }
+
+    get currentConnectionKey(): string {
+        return this._temporaryConnectionKey ?? this.savedConnectionKey;
+    }
+
     get savedSessionKey(): string {
         return localStorage.getItem(SESSION_KEY);
     }
@@ -1419,6 +753,7 @@ export class AuthManager {
         } else {
             localStorage.setItem(SESSION_KEY, value);
         }
+        this._updateClientSessionKey();
     }
 
     get savedConnectionKey(): string {
@@ -1520,7 +855,7 @@ export class AuthManager {
 
     private _authenticationHeaders(): Record<string, string> {
         return {
-            Authorization: `Bearer ${this.savedSessionKey}`,
+            Authorization: `Bearer ${this.currentSessionKey}`,
         };
     }
 

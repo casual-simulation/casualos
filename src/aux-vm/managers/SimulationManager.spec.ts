@@ -331,15 +331,12 @@ class TestInitable implements Initable {
 
 class TestSubSimulation extends TestInitable implements SubSimEmitter {
     id: string;
+    isSubSimulation: boolean;
 
     constructor(action?: Function) {
         super(action);
         this.onSubSimulationAdded = new Subject();
         this.onSubSimulationRemoved = new Subject();
-    }
-
-    get isSubSimulation(): boolean {
-        return true;
     }
 
     onSubSimulationAdded: Subject<Simulation>;

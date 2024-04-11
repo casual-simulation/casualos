@@ -1657,6 +1657,71 @@ describe('Transpiler', () => {
                     transpiler.transpile(`export abstract class Test {}`)
                 ).toBe(`class Test {}\nawait exports({ Test, });`);
             });
+
+            it('should remove type annotations from field declarations in classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(`class Test { field: number; }`)
+                ).toBe(`class Test { field; }`);
+
+                expect(
+                    transpiler.transpile(`class Test { field: number = 123; }`)
+                ).toBe(`class Test { field = 123; }`);
+
+                // private field
+                expect(
+                    transpiler.transpile(`class Test { #field: number; }`)
+                ).toBe(`class Test { #field; }`);
+
+                expect(
+                    transpiler.transpile(`class Test { #field: number = 123; }`)
+                ).toBe(`class Test { #field = 123; }`);
+            });
+
+            it('should remove type annotations from method declarations in classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `class Test { method(prop: number): number { return 123; } }`
+                    )
+                ).toBe(`class Test { method(prop) { return 123; } }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { #method(prop: number): number { return 123; } }`
+                    )
+                ).toBe(`class Test { #method(prop) { return 123; } }`);
+            });
+
+            it('should remove type annotations from getter declarations in classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `class Test { get value(): number { return 123; } }`
+                    )
+                ).toBe(`class Test { get value() { return 123; } }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { get #value(): number { return 123; } }`
+                    )
+                ).toBe(`class Test { get #value() { return 123; } }`);
+            });
+
+            it('should remove type annotations from setter declarations in classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `class Test { set value(val: number) { } }`
+                    )
+                ).toBe(`class Test { set value(val) { } }`);
+
+                expect(
+                    transpiler.transpile(
+                        `class Test { set #value(val: number) { } }`
+                    )
+                ).toBe(`class Test { set #value(val) { } }`);
+            });
         });
     });
 

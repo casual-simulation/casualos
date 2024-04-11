@@ -46,6 +46,8 @@ model User {
     allowAI Boolean?
     allowPublicInsts Boolean?
 
+    role String?
+
     loginRequests LoginRequest[]
     webauthnLoginRequests WebAuthnLoginRequest[]
     sessions AuthSession[]
@@ -147,8 +149,10 @@ model AuthSession {
     oidExpiresAtMs Int?
 
     grantedTime DateTime
-    expireTime DateTime
+    expireTime DateTime?
     revokeTime DateTime?
+
+    revocable  Boolean?
 
     requestId String?
     request LoginRequest? @relation(fields: [requestId], references: [requestId])

@@ -56,12 +56,12 @@ export default class AuthRecordsEvents extends Vue {
 
     private _reset() {
         this._helper = new LoadingHelper(async (lastItem) => {
-            let result = await authManager.listEvents(
-                this.recordName,
-                lastItem?.eventName
-            );
+            const result = await authManager.client.listEvents({
+                recordName: this.recordName,
+                eventName: lastItem?.eventName,
+            });
 
-            if (result) {
+            if (result.success === true) {
                 return {
                     items: result.events,
                     totalCount: result.totalCount,

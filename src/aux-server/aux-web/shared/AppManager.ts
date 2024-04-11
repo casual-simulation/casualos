@@ -460,17 +460,42 @@ export class AppManager {
         }
     }
 
+    getSessionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('sessionKey')) {
+            return params.get('sessionKey');
+        } else {
+            return null;
+        }
+    }
+
+    getConnectionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('connectionKey')) {
+            return params.get('connectionKey');
+        } else {
+            return null;
+        }
+    }
+
     private async _initAuth() {
         let factory: (
             primaryAuthOrigin: string,
-            recordsAuthOrigin: string
+            recordsAuthOrigin: string,
+            sessionKey?: string,
+            connectionKey?: string
         ) => AuthHelperInterface;
+
+        const sessionKey = this.getSessionKeyFromUrl();
+        const connectionKey = this.getConnectionKeyFromUrl();
 
         this._auth = new AuthHelper(
             this.config.authOrigin,
             this.config.recordsOrigin,
             factory,
-            this.config.requirePrivoLogin
+            this.config.requirePrivoLogin,
+            sessionKey,
+            connectionKey
         );
         this._authCoordinator.authHelper = this._auth;
         console.log('[AppManager] Authenticating user in background...');

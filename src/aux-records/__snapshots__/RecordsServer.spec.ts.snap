@@ -1,0 +1,5343 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RecordsServer GET /api/v2/procedures should return the list of procedures 1`] = `
+Object {
+  "procedures": Array [
+    Object {
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getUserInfo",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/email/valid",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "email": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "isEmailValid",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/displayName/valid",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "displayName": Object {
+            "type": "string",
+          },
+          "name": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "isDisplayNameValid",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/createAccount",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "createAccount",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/sessions",
+      },
+      "inputs": Object {
+        "defaultValue": Object {},
+        "hasDefault": true,
+        "schema": Object {
+          "expireTimeMs": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSessions",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/replaceSession",
+      },
+      "name": "replaceSession",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/revokeAllSessions",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeAllSessions",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/revokeSession",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "sessionId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "sessionKey": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeSession",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/completeLogin",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "code": Object {
+            "type": "string",
+          },
+          "requestId": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "addressType": Object {
+            "type": "enum",
+            "values": Array [
+              "email",
+              "phone",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/login/privo",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "requestPrivoLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/oauth/code",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "code": Object {
+            "type": "string",
+          },
+          "state": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "processOAuthCode",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/oauth/complete",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "requestId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeOAuthLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/register/privo",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "dateOfBirth": Object {
+            "type": "date",
+          },
+          "displayName": Object {
+            "type": "string",
+          },
+          "email": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "name": Object {
+            "type": "string",
+          },
+          "parentEmail": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestPrivoSignUp",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/webauthn/register/options",
+      },
+      "name": "getWebAuthnRegistrationOptions",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/webauthn/register",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "response": Object {
+            "schema": Object {
+              "authenticatorAttachment": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "cross-platform",
+                  "platform",
+                ],
+              },
+              "clientExtensionResults": Object {
+                "schema": Object {
+                  "appid": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "credProps": Object {
+                    "optional": true,
+                    "schema": Object {
+                      "rk": Object {
+                        "optional": true,
+                        "type": "boolean",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "hmacCreateSecret": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                },
+                "type": "object",
+              },
+              "id": Object {
+                "type": "string",
+              },
+              "rawId": Object {
+                "type": "string",
+              },
+              "response": Object {
+                "schema": Object {
+                  "attestationObject": Object {
+                    "type": "string",
+                  },
+                  "authenticatorData": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "clientDataJSON": Object {
+                    "type": "string",
+                  },
+                  "publicKey": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "publicKeyAlgorithm": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "transports": Object {
+                    "optional": true,
+                    "schema": Object {
+                      "type": "string",
+                    },
+                    "type": "array",
+                  },
+                },
+                "type": "object",
+              },
+              "type": Object {
+                "type": "literal",
+                "value": "public-key",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "registerWebAuthn",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/webauthn/login/options",
+      },
+      "name": "getWebAuthnLoginOptions",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/webauthn/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "requestId": Object {
+            "type": "string",
+          },
+          "response": Object {
+            "schema": Object {
+              "authenticatorAttachment": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "cross-platform",
+                  "platform",
+                ],
+              },
+              "clientExtensionResults": Object {
+                "schema": Object {
+                  "appid": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "credProps": Object {
+                    "optional": true,
+                    "schema": Object {
+                      "rk": Object {
+                        "optional": true,
+                        "type": "boolean",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "hmacCreateSecret": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                },
+                "type": "object",
+              },
+              "id": Object {
+                "type": "string",
+              },
+              "rawId": Object {
+                "type": "string",
+              },
+              "response": Object {
+                "schema": Object {
+                  "authenticatorData": Object {
+                    "type": "string",
+                  },
+                  "clientDataJSON": Object {
+                    "type": "string",
+                  },
+                  "signature": Object {
+                    "type": "string",
+                  },
+                  "userHandle": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": Object {
+                "type": "literal",
+                "value": "public-key",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeWebAuthnLogin",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/webauthn/authenticators",
+      },
+      "name": "listUserAuthenticators",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/webauthn/authenticators/delete",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "authenticatorId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteUserAuthenticator",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/meet/token",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "roomName": Object {
+            "type": "string",
+          },
+          "userName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createMeetToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "ownerId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createRecord",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/events/count",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "count": Object {
+            "type": "number",
+          },
+          "eventName": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "addEventCount",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/events/count",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "eventName": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getEventCount",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/events/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "eventName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listEvents",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/events",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "count": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "eventName": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateEvent",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/manual/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteManualData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/manual/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManualData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/manual/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "data": Object {
+            "type": "any",
+          },
+          "deletePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+          "updatePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordManualData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "fileUrl": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/file/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listFiles",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileUrl": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileByteLength": Object {
+            "type": "number",
+          },
+          "fileDescription": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "fileMimeType": Object {
+            "type": "string",
+          },
+          "fileSha256Hex": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "PUT",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileUrl": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/data/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "data": Object {
+            "type": "any",
+          },
+          "deletePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+          "updatePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listRecords",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/key",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "policy": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createRecordKey",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "permission": Object {
+            "discriminator": "resourceKind",
+            "options": Array [
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "create",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "delete",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "data",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "create",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "delete",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "allowedMimeTypes": Object {
+                        "optional": true,
+                        "options": Array [
+                          Object {
+                            "type": "literal",
+                            "value": true,
+                          },
+                          Object {
+                            "schema": Object {
+                              "type": "string",
+                            },
+                            "type": "array",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "maxFileSizeInBytes": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "file",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "increment",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "count",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "event",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "assign",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "unassign",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "grantPermission",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "revokePermission",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "marker",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "grant",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "revoke",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "maxDurationMs": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "role",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "create",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "updateData",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "delete",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "sendAction",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "inst",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+            ],
+            "type": "union",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "permissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokePermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "resourceId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "resourceKind": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "data",
+              },
+              Object {
+                "type": "literal",
+                "value": "file",
+              },
+              Object {
+                "type": "literal",
+                "value": "event",
+              },
+              Object {
+                "type": "literal",
+                "value": "marker",
+              },
+              Object {
+                "type": "literal",
+                "value": "role",
+              },
+              Object {
+                "type": "literal",
+                "value": "inst",
+              },
+            ],
+            "type": "union",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPermissions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/role/user/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listUserRoles",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/role/inst/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInstRoles",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/role/assignments/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "role": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "startingRole": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listRoleAssignments",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/role/grant",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "role": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/role/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "role": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/chat",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "frequencyPenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "messages": Object {
+            "minLength": 1,
+            "schema": Object {
+              "schema": Object {
+                "author": Object {
+                  "optional": true,
+                  "type": "string",
+                },
+                "content": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "schema": Object {
+                        "options": Array [
+                          Object {
+                            "schema": Object {
+                              "text": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "base64": Object {
+                                "type": "string",
+                              },
+                              "mimeType": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "url": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "type": "array",
+                    },
+                  ],
+                  "type": "union",
+                },
+                "role": Object {
+                  "options": Array [
+                    Object {
+                      "type": "literal",
+                      "value": "system",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "user",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "assistant",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "function",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "model": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "presencePenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "stopWords": Object {
+            "maxLength": 4,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "temperature": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "topP": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "aiChat",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/skybox",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "blockadeLabs": Object {
+            "optional": true,
+            "schema": Object {
+              "remixImagineId": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "seed": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "skyboxStyleId": Object {
+                "optional": true,
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "negativePrompt": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "prompt": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createAiSkybox",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/ai/skybox",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "skyboxId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getAiSkybox",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/image",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "cfgScale": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "clipGuidancePreset": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "height": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "model": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "negativePrompt": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "numberOfImages": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "prompt": Object {
+            "type": "string",
+          },
+          "sampler": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "seed": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "steps": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "stylePreset": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "width": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createAiImage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "displayName": Object {
+            "type": "string",
+          },
+          "ownerStudioComId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "PUT",
+        "path": "/api/v2/studios",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comIdConfig": Object {
+            "optional": true,
+            "schema": Object {
+              "allowedStudioCreators": Object {
+                "description": "Who is allowed to create studios in this comId.",
+                "options": Array [
+                  Object {
+                    "type": "literal",
+                    "value": "anyone",
+                  },
+                  Object {
+                    "type": "literal",
+                    "value": "only-members",
+                  },
+                ],
+                "type": "union",
+              },
+            },
+            "type": "object",
+          },
+          "displayName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "id": Object {
+            "type": "string",
+          },
+          "logoUrl": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "playerConfig": Object {
+            "description": "The configuration that the comId provides which overrides the default player configuration.",
+            "optional": true,
+            "schema": Object {
+              "ab1BootstrapURL": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "allowedBiosOptions": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": "enum",
+                  "values": Array [
+                    "enter join code",
+                    "join inst",
+                    "static inst",
+                    "local inst",
+                    "local",
+                    "public inst",
+                    "private inst",
+                    "free inst",
+                    "free",
+                    "studio inst",
+                    "studio",
+                    "sign in",
+                    "sign up",
+                    "sign out",
+                  ],
+                },
+                "type": "array",
+              },
+              "arcGisApiKey": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "automaticBiosOption": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "enter join code",
+                  "join inst",
+                  "static inst",
+                  "local inst",
+                  "local",
+                  "public inst",
+                  "private inst",
+                  "free inst",
+                  "free",
+                  "studio inst",
+                  "studio",
+                  "sign in",
+                  "sign up",
+                  "sign out",
+                ],
+              },
+              "defaultBiosOption": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "enter join code",
+                  "join inst",
+                  "static inst",
+                  "local inst",
+                  "local",
+                  "public inst",
+                  "private inst",
+                  "free inst",
+                  "free",
+                  "studio inst",
+                  "studio",
+                  "sign in",
+                  "sign up",
+                  "sign out",
+                ],
+              },
+              "jitsiAppName": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "what3WordsApiKey": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/requestComId",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comId": Object {
+            "type": "string",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestStudioComId",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listStudios",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios/members/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listStudioMembers",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/members",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "addedEmail": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "addedPhoneNumber": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "addedUserId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "role": Object {
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "admin",
+              },
+              Object {
+                "type": "literal",
+                "value": "member",
+              },
+            ],
+            "type": "union",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "addStudioMember",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/studios/members",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "removedUserId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "removeStudioMember",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/player/config",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPlayerConfig",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/subscriptions",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getSubscriptions",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/subscriptions/manage",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expectedPrice": Object {
+            "optional": true,
+            "schema": Object {
+              "cost": Object {
+                "type": "number",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "interval": Object {
+                "type": "enum",
+                "values": Array [
+                  "month",
+                  "year",
+                  "week",
+                  "day",
+                ],
+              },
+              "intervalLength": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "subscriptionId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManageSubscriptionLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/insts/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInsts",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/insts",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordKey": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteInst",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/insts/report",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "automaticReport": Object {
+            "type": "boolean",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "type": "string",
+          },
+          "reportReason": Object {
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "poor-performance",
+              },
+              Object {
+                "type": "literal",
+                "value": "spam",
+              },
+              Object {
+                "type": "literal",
+                "value": "harassment",
+              },
+              Object {
+                "type": "literal",
+                "value": "copyright-infringement",
+              },
+              Object {
+                "type": "literal",
+                "value": "obscene",
+              },
+              Object {
+                "type": "literal",
+                "value": "illegal",
+              },
+              Object {
+                "type": "literal",
+                "value": "other",
+              },
+            ],
+            "type": "union",
+          },
+          "reportReasonText": Object {
+            "type": "string",
+          },
+          "reportedPermalink": Object {
+            "type": "string",
+          },
+          "reportedUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "reportInst",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/instData",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "branch": Object {
+            "defaultValue": "default",
+            "hasDefault": true,
+            "type": "string",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getInstData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/procedures",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "listProcedures",
+      "origins": true,
+    },
+  ],
+  "success": true,
+}
+`;
+
+exports[`RecordsServer GET /api/v2/procedures should support procedures 1`] = `
+Object {
+  "procedures": Array [
+    Object {
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getUserInfo",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/email/valid",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "email": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "isEmailValid",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/displayName/valid",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "displayName": Object {
+            "type": "string",
+          },
+          "name": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "isDisplayNameValid",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/createAccount",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "createAccount",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/sessions",
+      },
+      "inputs": Object {
+        "defaultValue": Object {},
+        "hasDefault": true,
+        "schema": Object {
+          "expireTimeMs": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSessions",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/replaceSession",
+      },
+      "name": "replaceSession",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/revokeAllSessions",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeAllSessions",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/revokeSession",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "sessionId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "sessionKey": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeSession",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/completeLogin",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "code": Object {
+            "type": "string",
+          },
+          "requestId": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "addressType": Object {
+            "type": "enum",
+            "values": Array [
+              "email",
+              "phone",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/login/privo",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "requestPrivoLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/oauth/code",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "code": Object {
+            "type": "string",
+          },
+          "state": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "processOAuthCode",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/oauth/complete",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "requestId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeOAuthLogin",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/register/privo",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "dateOfBirth": Object {
+            "type": "date",
+          },
+          "displayName": Object {
+            "type": "string",
+          },
+          "email": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "name": Object {
+            "type": "string",
+          },
+          "parentEmail": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestPrivoSignUp",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/webauthn/register/options",
+      },
+      "name": "getWebAuthnRegistrationOptions",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/webauthn/register",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "response": Object {
+            "schema": Object {
+              "authenticatorAttachment": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "cross-platform",
+                  "platform",
+                ],
+              },
+              "clientExtensionResults": Object {
+                "schema": Object {
+                  "appid": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "credProps": Object {
+                    "optional": true,
+                    "schema": Object {
+                      "rk": Object {
+                        "optional": true,
+                        "type": "boolean",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "hmacCreateSecret": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                },
+                "type": "object",
+              },
+              "id": Object {
+                "type": "string",
+              },
+              "rawId": Object {
+                "type": "string",
+              },
+              "response": Object {
+                "schema": Object {
+                  "attestationObject": Object {
+                    "type": "string",
+                  },
+                  "authenticatorData": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "clientDataJSON": Object {
+                    "type": "string",
+                  },
+                  "publicKey": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "publicKeyAlgorithm": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "transports": Object {
+                    "optional": true,
+                    "schema": Object {
+                      "type": "string",
+                    },
+                    "type": "array",
+                  },
+                },
+                "type": "object",
+              },
+              "type": Object {
+                "type": "literal",
+                "value": "public-key",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "registerWebAuthn",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/webauthn/login/options",
+      },
+      "name": "getWebAuthnLoginOptions",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/webauthn/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "requestId": Object {
+            "type": "string",
+          },
+          "response": Object {
+            "schema": Object {
+              "authenticatorAttachment": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "cross-platform",
+                  "platform",
+                ],
+              },
+              "clientExtensionResults": Object {
+                "schema": Object {
+                  "appid": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "credProps": Object {
+                    "optional": true,
+                    "schema": Object {
+                      "rk": Object {
+                        "optional": true,
+                        "type": "boolean",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "hmacCreateSecret": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                },
+                "type": "object",
+              },
+              "id": Object {
+                "type": "string",
+              },
+              "rawId": Object {
+                "type": "string",
+              },
+              "response": Object {
+                "schema": Object {
+                  "authenticatorData": Object {
+                    "type": "string",
+                  },
+                  "clientDataJSON": Object {
+                    "type": "string",
+                  },
+                  "signature": Object {
+                    "type": "string",
+                  },
+                  "userHandle": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "type": Object {
+                "type": "literal",
+                "value": "public-key",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "completeWebAuthnLogin",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/webauthn/authenticators",
+      },
+      "name": "listUserAuthenticators",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/webauthn/authenticators/delete",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "authenticatorId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteUserAuthenticator",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/meet/token",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "roomName": Object {
+            "type": "string",
+          },
+          "userName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createMeetToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "ownerId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createRecord",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/events/count",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "count": Object {
+            "type": "number",
+          },
+          "eventName": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "addEventCount",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/events/count",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "eventName": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getEventCount",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/events/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "eventName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listEvents",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/events",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "count": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "eventName": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateEvent",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/manual/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteManualData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/manual/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManualData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/manual/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "data": Object {
+            "type": "any",
+          },
+          "deletePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+          "updatePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordManualData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "fileUrl": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/file/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listFiles",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileUrl": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileByteLength": Object {
+            "type": "number",
+          },
+          "fileDescription": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "fileMimeType": Object {
+            "type": "string",
+          },
+          "fileSha256Hex": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "PUT",
+        "path": "/api/v2/records/file",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileUrl": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateFile",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/data/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/data",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "data": Object {
+            "type": "any",
+          },
+          "deletePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "markers": Object {
+            "maxLength": 10,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordKey": Object {
+            "type": "string",
+          },
+          "updatePolicy": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": true,
+              },
+              Object {
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            ],
+            "type": "union",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordData",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listRecords",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/key",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "policy": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createRecordKey",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "permission": Object {
+            "discriminator": "resourceKind",
+            "options": Array [
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "create",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "delete",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "data",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "create",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "delete",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "allowedMimeTypes": Object {
+                        "optional": true,
+                        "options": Array [
+                          Object {
+                            "type": "literal",
+                            "value": true,
+                          },
+                          Object {
+                            "schema": Object {
+                              "type": "string",
+                            },
+                            "type": "array",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "maxFileSizeInBytes": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "file",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "increment",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "count",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "event",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "assign",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "unassign",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "grantPermission",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "revokePermission",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "marker",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "grant",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "revoke",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "options": Object {
+                    "schema": Object {
+                      "maxDurationMs": Object {
+                        "optional": true,
+                        "type": "number",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "role",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "create",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "read",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "update",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "updateData",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "delete",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "list",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "sendAction",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "inst",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "options": Array [
+                      Object {
+                        "type": "literal",
+                        "value": "user",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "inst",
+                      },
+                      Object {
+                        "type": "literal",
+                        "value": "role",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+            ],
+            "type": "union",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantPermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/permissions/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "permissionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokePermission",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/permissions/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "resourceId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "resourceKind": Object {
+            "optional": true,
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "data",
+              },
+              Object {
+                "type": "literal",
+                "value": "file",
+              },
+              Object {
+                "type": "literal",
+                "value": "event",
+              },
+              Object {
+                "type": "literal",
+                "value": "marker",
+              },
+              Object {
+                "type": "literal",
+                "value": "role",
+              },
+              Object {
+                "type": "literal",
+                "value": "inst",
+              },
+            ],
+            "type": "union",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPermissions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/role/user/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listUserRoles",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/role/inst/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInstRoles",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/role/assignments/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "role": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "startingRole": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listRoleAssignments",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/role/grant",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "role": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/role/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "role": Object {
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/chat",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "frequencyPenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "messages": Object {
+            "minLength": 1,
+            "schema": Object {
+              "schema": Object {
+                "author": Object {
+                  "optional": true,
+                  "type": "string",
+                },
+                "content": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "schema": Object {
+                        "options": Array [
+                          Object {
+                            "schema": Object {
+                              "text": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "base64": Object {
+                                "type": "string",
+                              },
+                              "mimeType": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "url": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "type": "array",
+                    },
+                  ],
+                  "type": "union",
+                },
+                "role": Object {
+                  "options": Array [
+                    Object {
+                      "type": "literal",
+                      "value": "system",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "user",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "assistant",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "function",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "model": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "presencePenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "stopWords": Object {
+            "maxLength": 4,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "temperature": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "topP": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "aiChat",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/skybox",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "blockadeLabs": Object {
+            "optional": true,
+            "schema": Object {
+              "remixImagineId": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "seed": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "skyboxStyleId": Object {
+                "optional": true,
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "negativePrompt": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "prompt": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createAiSkybox",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/ai/skybox",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "skyboxId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getAiSkybox",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/image",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "cfgScale": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "clipGuidancePreset": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "height": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "model": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "negativePrompt": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "numberOfImages": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "prompt": Object {
+            "type": "string",
+          },
+          "sampler": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "seed": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "steps": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "stylePreset": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "width": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createAiImage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "displayName": Object {
+            "type": "string",
+          },
+          "ownerStudioComId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "PUT",
+        "path": "/api/v2/studios",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comIdConfig": Object {
+            "optional": true,
+            "schema": Object {
+              "allowedStudioCreators": Object {
+                "description": "Who is allowed to create studios in this comId.",
+                "options": Array [
+                  Object {
+                    "type": "literal",
+                    "value": "anyone",
+                  },
+                  Object {
+                    "type": "literal",
+                    "value": "only-members",
+                  },
+                ],
+                "type": "union",
+              },
+            },
+            "type": "object",
+          },
+          "displayName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "id": Object {
+            "type": "string",
+          },
+          "logoUrl": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "playerConfig": Object {
+            "description": "The configuration that the comId provides which overrides the default player configuration.",
+            "optional": true,
+            "schema": Object {
+              "ab1BootstrapURL": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "allowedBiosOptions": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": "enum",
+                  "values": Array [
+                    "enter join code",
+                    "join inst",
+                    "static inst",
+                    "local inst",
+                    "local",
+                    "public inst",
+                    "private inst",
+                    "free inst",
+                    "free",
+                    "studio inst",
+                    "studio",
+                    "sign in",
+                    "sign up",
+                    "sign out",
+                  ],
+                },
+                "type": "array",
+              },
+              "arcGisApiKey": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "automaticBiosOption": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "enter join code",
+                  "join inst",
+                  "static inst",
+                  "local inst",
+                  "local",
+                  "public inst",
+                  "private inst",
+                  "free inst",
+                  "free",
+                  "studio inst",
+                  "studio",
+                  "sign in",
+                  "sign up",
+                  "sign out",
+                ],
+              },
+              "defaultBiosOption": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "enter join code",
+                  "join inst",
+                  "static inst",
+                  "local inst",
+                  "local",
+                  "public inst",
+                  "private inst",
+                  "free inst",
+                  "free",
+                  "studio inst",
+                  "studio",
+                  "sign in",
+                  "sign up",
+                  "sign out",
+                ],
+              },
+              "jitsiAppName": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "what3WordsApiKey": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateStudio",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/requestComId",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comId": Object {
+            "type": "string",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestStudioComId",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listStudios",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/studios/members/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listStudioMembers",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/members",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "addedEmail": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "addedPhoneNumber": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "addedUserId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "role": Object {
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "admin",
+              },
+              Object {
+                "type": "literal",
+                "value": "member",
+              },
+            ],
+            "type": "union",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "addStudioMember",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/studios/members",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "removedUserId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "removeStudioMember",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/player/config",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "comId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPlayerConfig",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/subscriptions",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getSubscriptions",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/subscriptions/manage",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expectedPrice": Object {
+            "optional": true,
+            "schema": Object {
+              "cost": Object {
+                "type": "number",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "interval": Object {
+                "type": "enum",
+                "values": Array [
+                  "month",
+                  "year",
+                  "week",
+                  "day",
+                ],
+              },
+              "intervalLength": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "subscriptionId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManageSubscriptionLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/insts/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInsts",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/insts",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordKey": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "deleteInst",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/insts/report",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "automaticReport": Object {
+            "type": "boolean",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "type": "string",
+          },
+          "reportReason": Object {
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "poor-performance",
+              },
+              Object {
+                "type": "literal",
+                "value": "spam",
+              },
+              Object {
+                "type": "literal",
+                "value": "harassment",
+              },
+              Object {
+                "type": "literal",
+                "value": "copyright-infringement",
+              },
+              Object {
+                "type": "literal",
+                "value": "obscene",
+              },
+              Object {
+                "type": "literal",
+                "value": "illegal",
+              },
+              Object {
+                "type": "literal",
+                "value": "other",
+              },
+            ],
+            "type": "union",
+          },
+          "reportReasonText": Object {
+            "type": "string",
+          },
+          "reportedPermalink": Object {
+            "type": "string",
+          },
+          "reportedUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "reportInst",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/instData",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "branch": Object {
+            "defaultValue": "default",
+            "hasDefault": true,
+            "type": "string",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getInstData",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/procedures",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "listProcedures",
+      "origins": true,
+    },
+  ],
+  "success": true,
+}
+`;
