@@ -13,7 +13,7 @@ import {
     PRIVO_OPEN_ID_PROVIDER,
     ValidateSessionKeyResult,
 } from './AuthController';
-import { parseSessionKey } from './AuthUtils';
+import { isSuperUserRole, parseSessionKey } from './AuthUtils';
 import { LivekitController } from './LivekitController';
 import { RecordsController } from './RecordsController';
 import { EventRecordsController } from './EventRecordsController';
@@ -72,6 +72,9 @@ import {
 } from '@casual-simulation/aux-common';
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
+
+declare const GIT_TAG: string;
+declare const GIT_HASH: string;
 
 export const NOT_LOGGED_IN_RESULT = {
     success: false as const,
@@ -524,6 +527,44 @@ export class RecordsServer {
 
     private _createProcedures() {
         return {
+            getUserInfo: procedure()
+                .origins('account')
+                .inputs(
+                    z.object({
+                        userId: z.string(),
+                    })
+                )
+                .handler(async ({ userId }, context) => {
+                    const authorization = context.sessionKey;
+
+                    if (!authorization) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const result = await this._auth.getUserInfo({
+                        userId,
+                        sessionKey: authorization,
+                    });
+
+                    if (result.success === false) {
+                        return result;
+                    }
+
+                    return {
+                        success: true,
+                        name: result.name,
+                        avatarUrl: result.avatarUrl,
+                        avatarPortraitUrl: result.avatarPortraitUrl,
+                        email: result.email,
+                        phoneNumber: result.phoneNumber,
+                        hasActiveSubscription: result.hasActiveSubscription,
+                        subscriptionTier: result.subscriptionTier,
+                        privacyFeatures: result.privacyFeatures,
+                        displayName: result.displayName,
+                        role: result.role,
+                    } as const;
+                }),
+
             isEmailValid: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/email/valid')
@@ -564,7 +605,7 @@ export class RecordsServer {
                     }
 
                     const result = await this._auth.createAccount({
-                        userId: validation.userId,
+                        userRole: validation.role,
                         ipAddress: context.ipAddress,
                     });
 
@@ -578,10 +619,11 @@ export class RecordsServer {
                     z
                         .object({
                             expireTimeMs: z.coerce.number().int().optional(),
+                            userId: z.string().optional(),
                         })
                         .default({})
                 )
-                .handler(async ({ expireTimeMs }, context) => {
+                .handler(async ({ expireTimeMs, userId }, context) => {
                     const sessionKey = context.sessionKey;
 
                     if (!sessionKey) {
@@ -594,10 +636,10 @@ export class RecordsServer {
                         return UNACCEPTABLE_SESSION_KEY;
                     }
 
-                    const [userId] = parsed;
+                    const [sessionKeyUserId] = parsed;
 
                     const result = await this._auth.listSessions({
-                        userId,
+                        userId: userId ?? sessionKeyUserId,
                         sessionKey,
                         expireTimeMs,
                     });
@@ -1431,9 +1473,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         studioId: z.string().nonempty().optional(),
+                        userId: z.string().optional(),
                     })
                 )
-                .handler(async ({ studioId }, context) => {
+                .handler(async ({ studioId, userId }, context) => {
                     const validation = await this._validateSessionKey(
                         context.sessionKey
                     );
@@ -1449,6 +1492,19 @@ export class RecordsServer {
                             studioId,
                             validation.userId
                         );
+                        return result;
+                    } else if (userId && userId !== validation.userId) {
+                        if (!isSuperUserRole(validation.role)) {
+                            return {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                            } as const;
+                        }
+
+                        const result = await this._records.listRecords(userId);
+
                         return result;
                     } else {
                         const result = await this._records.listRecords(
@@ -2339,9 +2395,10 @@ export class RecordsServer {
                 .inputs(
                     z.object({
                         comId: z.string().nonempty().nullable().optional(),
+                        userId: z.string().optional(),
                     })
                 )
-                .handler(async ({ comId }, context) => {
+                .handler(async ({ comId, userId }, context) => {
                     const sessionKeyValidation = await this._validateSessionKey(
                         context.sessionKey
                     );
@@ -2354,16 +2411,27 @@ export class RecordsServer {
                         return sessionKeyValidation;
                     }
 
+                    if (userId && userId !== sessionKeyValidation.userId) {
+                        if (!isSuperUserRole(sessionKeyValidation.role)) {
+                            return {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                            } as const;
+                        }
+                    } else {
+                        userId = sessionKeyValidation.userId;
+                    }
+
                     if (comId) {
                         const result = await this._records.listStudiosByComId(
-                            sessionKeyValidation.userId,
+                            userId,
                             comId
                         );
                         return result;
                     } else {
-                        const result = await this._records.listStudios(
-                            sessionKeyValidation.userId
-                        );
+                        const result = await this._records.listStudios(userId);
                         return result;
                     }
                 }),
@@ -2856,7 +2924,14 @@ export class RecordsServer {
                 .handler(async ({}, context) => {
                     const procedures = this._procedures;
                     const metadata = getProcedureMetadata(procedures);
-                    return { success: true, ...metadata };
+                    return {
+                        success: true,
+                        ...metadata,
+                        version:
+                            typeof GIT_TAG === 'string' ? GIT_TAG : undefined,
+                        versionHash:
+                            typeof GIT_HASH === 'string' ? GIT_HASH : undefined,
+                    };
                 }),
         };
     }
@@ -2866,7 +2941,9 @@ export class RecordsServer {
         for (let procedureName of Object.keys(procs)) {
             if (procs.hasOwnProperty(procedureName)) {
                 const procedure = (procs as any)[procedureName];
-                this._addProcedureRoute(procedure);
+                if (procedure.http) {
+                    this._addProcedureRoute(procedure);
+                }
             }
         }
 
@@ -2950,7 +3027,9 @@ export class RecordsServer {
         procedure: Procedure<TInput, TOutput>
     ) {
         (this._procedures as any)[name] = procedure;
-        this._addProcedureRoute(procedure);
+        if (procedure.http) {
+            this._addProcedureRoute(procedure);
+        }
     }
 
     /**
@@ -6291,6 +6370,7 @@ export class RecordsServer {
             subscriptionTier: result.subscriptionTier,
             privacyFeatures: result.privacyFeatures,
             displayName: result.displayName,
+            role: result.role,
         });
     }
 

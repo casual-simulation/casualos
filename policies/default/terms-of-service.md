@@ -1,4 +1,4 @@
-﻿Last updated on February 22nd, 2024
+﻿Last updated on April 10th, 2024
 
 Casual Simulation offers tools for authoring open source experiences.
 
@@ -39,9 +39,7 @@ If You are using the Services on behalf of You personally, "You" means You indiv
 
 PLEASE BE AWARE THAT BY USING THE SERVICES, EXCEPT FOR CERTAIN TYPES OF DISPUTES DESCRIBED IN THE SECTION TITLED "MANDATORY ARBITRATION" BELOW, YOU AGREE THAT ALL DISPUTES BETWEEN YOU AND US WILL BE RESOLVED BY BINDING, INDIVIDUAL ARBITRATION AND YOU WAIVE YOUR RIGHT TO PARTICIPATE IN A CLASS ACTION LAWSUIT OR CLASS-WIDE ARBITRATION.
 
-You must be at least 13 years old to access or use the Services. By accessing or using the Services in any manner, You represent and warrant that You are at least 13 years of age. If You are under 13 years old, You may not, under any circumstances or for any reason, access or use the Services in any manner, and may not provide any personal information to or on the Services (including, for example, a name, address, telephone number or email address).
-
-If You are located within the European Union, You must be at least 16 years old to access or use the Services. By accessing or using the Services in any manner, You represent and warrant that You are at least 16 years of age. If You are under 16 years old, You may not, under any circumstances or for any reason, access or use the Services in any manner, and may not provide any personal information to or on the Services (including, for example, a name, address, telephone number or email address).
+All ages may access or use the Services, but if You are under 18 You require the consent of Your parent or legal guardian.
 
 These Terms of Service, and any rights and licenses granted hereunder, may not be transferred or assigned by You, but may be assigned by Us without restriction.
 

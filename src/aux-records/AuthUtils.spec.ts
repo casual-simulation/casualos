@@ -10,6 +10,7 @@ import {
     parseConnectionKey,
     generateV1ConnectionToken,
     verifyConnectionToken,
+    isSuperUserRole,
 } from './AuthUtils';
 import {
     toBase64String,
@@ -553,5 +554,17 @@ describe('parseConnectionToken()', () => {
                 expect.any(String),
             ]);
         });
+    });
+});
+
+describe('isSuperUserRole()', () => {
+    it('should return true if the given user has the super user role', () => {
+        expect(isSuperUserRole('superUser')).toBe(true);
+    });
+
+    it('should return false if the given user does not have the super user role', () => {
+        expect(isSuperUserRole('none')).toBe(false);
+        expect(isSuperUserRole(null)).toBe(false);
+        expect(isSuperUserRole(undefined)).toBe(false);
     });
 });

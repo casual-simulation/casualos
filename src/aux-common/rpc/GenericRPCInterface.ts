@@ -208,6 +208,9 @@ class ProcBuilder
 }
 
 export interface ProceduresMetadata {
+    /**
+     * The list of procedures.
+     */
     procedures: ProcedureMetadata[];
 }
 

@@ -1978,6 +1978,42 @@ describe('RecordsController', () => {
                 ],
             });
         });
+
+        it('should return all records owned by the studio if the user is a super user', async () => {
+            await store.removeStudioAssignment('studioId', 'userId');
+
+            const user = await store.findUser('userId');
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+
+            const result = await manager.listStudioRecords(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                records: [
+                    {
+                        name: 'record1',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                    {
+                        name: 'record2',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                    {
+                        name: 'record3',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                ],
+            });
+        });
     });
 
     describe('createStudio()', () => {
@@ -3122,9 +3158,19 @@ describe('RecordsController', () => {
                 isPrimaryContact: false,
                 role: 'member',
             });
+
+            await store.saveNewUser({
+                id: 'superUserId',
+                name: null,
+                email: 'su@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                role: 'superUser',
+            });
         });
 
-        it('should list the users in the studio that the user has access to', async () => {
+        it('should list the users in the studio that the admin has access to', async () => {
             const result = await manager.listStudioMembers(studioId, 'userId');
 
             expect(result).toEqual({
@@ -3170,7 +3216,7 @@ describe('RecordsController', () => {
             });
         });
 
-        it('should list the users in the studio that the user has access to', async () => {
+        it('should list the users in the studio that the member has access to', async () => {
             const result = await manager.listStudioMembers(studioId, 'userId3');
 
             expect(result).toEqual({
@@ -3204,6 +3250,55 @@ describe('RecordsController', () => {
                         user: {
                             id: 'userId3',
                             name: 'test user 3',
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should list the users in the studio if the user is a super user', async () => {
+            const result = await manager.listStudioMembers(
+                studioId,
+                'superUserId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                members: [
+                    {
+                        studioId,
+                        userId: 'userId',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            name: 'test user',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId,
+                        userId: 'userId2',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        user: {
+                            id: 'userId2',
+                            name: 'test user 2',
+                            email: 'test2@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId,
+                        userId: 'userId3',
+                        isPrimaryContact: false,
+                        role: 'member',
+                        user: {
+                            id: 'userId3',
+                            name: 'test user 3',
+                            email: null,
+                            phoneNumber: '555',
                         },
                     },
                 ],
