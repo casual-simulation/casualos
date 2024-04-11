@@ -49,6 +49,7 @@
     -   When the `sessionKey` and `connectionKey` query params are specified in the URL, they will be used instead of the stored ones.
     -   Additionally, they work for users who are not logged in.
     -   This makes it possible to give someone a URL that grants them automatic access to an account.
+-   Added `classifyImages` function.
 
 ### :bug: Bug Fixes
 
