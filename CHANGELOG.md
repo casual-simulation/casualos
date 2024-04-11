@@ -49,6 +49,8 @@
     -   When the `sessionKey` and `connectionKey` query params are specified in the URL, they will be used instead of the stored ones.
     -   Additionally, they work for users who are not logged in.
     -   This makes it possible to give someone a URL that grants them automatic access to an account.
+-   Added the `updateSubscription` operation (`POST /api/v2/subscriptions/update`) to allow super users to grant a subscription to users or studios.
+    -   Currently, it can only be used to grant/revoke simple non-stripe subscriptions. If the user already has a stripe subscription, then the function will refuse to make changes.
 
 ### :bug: Bug Fixes
 
