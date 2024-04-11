@@ -27,6 +27,10 @@
     -   `os.calculateScreenCoordinatesFromViewportCoordinates(portal, coordinates)` - Calculates the screen coordinates from the given 2D viewport coordinates.
         -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
         -   `position` is the 2D viewport coordinates that the screen coordinates should be found for.
+-   Added eye tracking based `transient-input` support for Apple Vision Pro.
+    -   Look at bots you want to interact with and then pinch to start selection.
+    -   Dragging your hand will manipulate the input ray relative to where your eyes were looking until you let go of your pinch.
+    -   Feels like the natural input style that the rest of visionOS uses.
 -   Added the `superUser` user role.
     -   This is internal to CasualOS and is not related to roles that control access to record data.
     -   There are currently only two roles: `none`, and `superUser`.

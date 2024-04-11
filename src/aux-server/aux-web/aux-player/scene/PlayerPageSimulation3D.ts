@@ -27,7 +27,6 @@ import {
     objectWorldDirectionRay,
     cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
-import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
 
 const wristOffsets = {
@@ -77,6 +76,22 @@ const wristOffsets = {
             -120 * ThreeMath.DEG2RAD,
             -90 * ThreeMath.DEG2RAD,
             90 * ThreeMath.DEG2RAD
+        ),
+    },
+    safari_hand_right: {
+        positionOffset: new Vector3(0.1, 0.05, -0.05),
+        rotationOffset: new Euler(
+            -90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            -90 * ThreeMath.DEG2RAD
+        ),
+    },
+    safari_hand_left: {
+        positionOffset: new Vector3(0.1, -0.05, -0.05),
+        rotationOffset: new Euler(
+            90 * ThreeMath.DEG2RAD,
+            0 * ThreeMath.DEG2RAD,
+            -90 * ThreeMath.DEG2RAD
         ),
     },
     none: {
@@ -437,20 +452,20 @@ if (typeof window !== 'undefined') {
     merge(window, {
         aux: {
             setWristControllerPosition: function (
-                hand: keyof typeof wristOffsets,
+                key: keyof typeof wristOffsets,
                 x: number,
                 y: number,
                 z: number
             ) {
-                wristOffsets[hand].positionOffset.set(x, y, z);
+                wristOffsets[key].positionOffset.set(x, y, z);
             },
             setWristControllerRotation: function (
-                hand: keyof typeof wristOffsets,
+                key: keyof typeof wristOffsets,
                 x: number,
                 y: number,
                 z: number
             ) {
-                wristOffsets[hand].rotationOffset.set(
+                wristOffsets[key].rotationOffset.set(
                     x * ThreeMath.DEG2RAD,
                     y * ThreeMath.DEG2RAD,
                     z * ThreeMath.DEG2RAD
@@ -466,15 +481,17 @@ function applyWristControllerOffset(controller: ControllerData, obj: Object3D) {
 
     const browser = Bowser.getParser(navigator.userAgent);
     const onHoloLens =
-        isHand &&
         browser.getBrowserName(true) === 'microsoft edge' &&
         browser.getOSName(true) === 'windows';
+    const onSafari = browser.getBrowserName(true) === 'safari';
 
     let key: keyof typeof wristOffsets = 'none';
     if (handedness === 'left') {
         if (isHand) {
             if (onHoloLens) {
                 key = 'hololens_hand_left';
+            } else if (onSafari) {
+                key = 'safari_hand_left';
             } else {
                 key = 'generic_hand_left';
             }
@@ -485,6 +502,8 @@ function applyWristControllerOffset(controller: ControllerData, obj: Object3D) {
         if (isHand) {
             if (onHoloLens) {
                 key = 'hololens_hand_right';
+            } else if (onSafari) {
+                key = 'safari_hand_right';
             } else {
                 key = 'generic_hand_right';
             }
