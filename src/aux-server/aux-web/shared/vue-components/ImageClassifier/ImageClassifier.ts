@@ -201,7 +201,6 @@ export default class ImageClassifier extends Vue {
                         );
                     }
                 } else if (e.type === 'show_classify_images') {
-                    console.log('hit show_classify_images');
                     const tmImage = await import('@teachablemachine/image');
                     const urls = getImageClassifierUrls(e);
                     const model = await tmImage.load(urls.json, urls.metadata);
