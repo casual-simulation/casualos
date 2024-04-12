@@ -1,22 +1,14 @@
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Vector2, Group, Object3D } from '@casual-simulation/three';
+import { Vector2, Object3D } from '@casual-simulation/three';
 import {
     Bot,
     botUpdated,
-    PartialBot,
     BotAction,
     BotCalculationContext,
-    objectsAtDimensionGridPosition,
-    getBotIndex,
-    botRemoved,
-    DROP_ACTION_NAME,
-    DROP_ANY_ACTION_NAME,
     MOD_DROP_ACTION_NAME,
-    toast,
     createBot,
     BotTags,
-    botAdded,
     merge,
     MOD_DROP_EXIT_ACTION_NAME,
     MOD_DROP_ENTER_ACTION_NAME,
@@ -26,7 +18,6 @@ import {
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { AuxBot3DDecoratorFactory } from '../../scene/decorators/AuxBot3DDecoratorFactory';
-import { setParent } from '../../scene/SceneUtils';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { ControllerData, InputMethod } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';

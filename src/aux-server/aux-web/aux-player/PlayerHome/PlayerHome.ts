@@ -796,6 +796,9 @@ export default class PlayerHome extends Vue {
         let changes: BotTags = {};
         let hasChange = false;
         for (let tag of tags) {
+            if (tag === 'sessionKey' || tag === 'connectionKey') {
+                continue;
+            }
             const oldValue = calculateBotValue(calc, bot, tag);
             const newValue = this.query[tag];
             if (newValue !== oldValue) {

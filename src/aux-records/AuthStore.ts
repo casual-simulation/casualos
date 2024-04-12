@@ -5,7 +5,6 @@ import {
     AuthenticatorTransportFuture,
     CredentialDeviceType,
 } from '@simplewebauthn/types';
-import { AttestationFormat } from '@simplewebauthn/server/script/helpers/decodeAttestationObject';
 
 /**
  * Defines an interface that represents an auth store.
@@ -462,7 +461,20 @@ export interface AuthUser {
      * If null or omitted, then the user has access to all features.
      */
     privacyFeatures?: PrivacyFeatures | null;
+
+    /**
+     * The role that the user has been assigned in the system.
+     */
+    role?: 'none' | 'superUser';
 }
+
+/**
+ * Defines an interface that represents the role that a user can have.
+ *
+ * - "none" means that the user has no special permissions.
+ * - "superUser" means that the user has additional permissions that only special users should have.
+ */
+export type UserRole = 'none' | 'superUser';
 
 export interface AuthUserAuthenticator {
     /**
@@ -722,8 +734,9 @@ export interface AuthSession {
 
     /**
      * The unix timestamp in miliseconds that the session will expire at.
+     * If null, then the session does not expire.
      */
-    expireTimeMs: number;
+    expireTimeMs: number | null;
 
     /**
      * The unix timestamp in miliseconds that the session was revoked at.
@@ -1063,13 +1076,16 @@ export interface UpdateSubscriptionInfoRequest {
 
     /**
      * The ID of the subscription in Stripe's database.
+     * If null, then the subscription is not associated with a stripe subscription.
      */
-    stripeSubscriptionId: string;
+    stripeSubscriptionId: string | null;
 
     /**
      * The ID of the stripe customer.
+     * If null, then the subscription is not associated with a stripe customer.
+     * Note that if the user already has a customer ID, and null is provided, then the customer ID will not be updated.
      */
-    stripeCustomerId: string;
+    stripeCustomerId: string | null;
 
     /**
      * The unix time in miliseconds that the current subscription period started at.

@@ -18,6 +18,7 @@ export interface XRSession extends EventTarget {
 }
 
 export interface XRInputSource {
+    gamepad: Gamepad | null;
     handedness: XRHandedness;
     targetRayMode: XRTargetRayMode;
     targetRaySpace: XRSpace;
@@ -32,7 +33,11 @@ export interface XRFrame {
 }
 
 export type XRHandedness = 'none' | 'left' | 'right';
-export type XRTargetRayMode = 'gaze' | 'tracked-pointer' | 'screen';
+export type XRTargetRayMode =
+    | 'gaze'
+    | 'tracked-pointer'
+    | 'screen'
+    | 'transient-pointer';
 
 export interface XRSpace {}
 
@@ -85,7 +90,7 @@ export const xrHandJoints = [
     'pinky-finger-tip',
 ] as const;
 
-export type XRHandJoint = typeof xrHandJoints[number];
+export type XRHandJoint = (typeof xrHandJoints)[number];
 
 export interface XRHand extends Iterable<[XRHandJoint, XRJointSpace]> {
     readonly size: number;

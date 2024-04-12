@@ -46,6 +46,8 @@ model User {
     allowAI Boolean?
     allowPublicInsts Boolean?
 
+    role String?
+
     loginRequests LoginRequest[]
     webauthnLoginRequests WebAuthnLoginRequest[]
     sessions AuthSession[]

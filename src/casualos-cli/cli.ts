@@ -176,32 +176,20 @@ program
             process.stdin.unpipe(replIn);
         });
 
-        replServer.defineCommand('login', {
-            help: 'Login to the CasualOS API',
-            action(cmd) {
-                console.log('command: ', cmd);
-                const _this = this;
-                async function loginImpl() {
-                    try {
-                        _this.pause();
-                        await login(client);
-                    } finally {
-                        _this.resume();
-                        _this.displayPrompt();
-                    }
-                }
-
-                loginImpl();
-            },
-        });
-
         Object.defineProperties(replServer.context, {
             query: {
                 configurable: false,
                 writable: false,
                 enumerable: true,
                 value: pauseRepl(async (procedure: string, input: any) => {
-                    return await query(client, procedure, input, false, true);
+                    return await query(
+                        client,
+                        procedure,
+                        input,
+                        false,
+                        true,
+                        replServer
+                    );
                 }),
             },
         });
@@ -212,12 +200,16 @@ async function query(
     procedure: string,
     input: any,
     shouldConfirm: boolean = true,
-    isJavaScriptInput: boolean = false
+    isJavaScriptInput: boolean = false,
+    repl: repl.REPLServer = null
 ) {
     const availableOperations = await client.listProcedures({});
-    if (!procedure) {
+    while (
+        !procedure ||
+        !availableOperations.procedures.find((p) => p.name === procedure)
+    ) {
         const response = await prompts({
-            type: 'select',
+            type: 'autocomplete',
             name: 'procedure',
             message: 'Select the procedure to execute',
             choices: availableOperations.procedures.map((op) => ({
@@ -240,7 +232,7 @@ async function query(
     console.log('Your selected operation:', operation);
 
     if (!input) {
-        input = await askForInputs(operation.inputs, operation.name);
+        input = await askForInputs(operation.inputs, operation.name, repl);
     } else if (!isJavaScriptInput) {
         input = JSON.parse(input);
     }

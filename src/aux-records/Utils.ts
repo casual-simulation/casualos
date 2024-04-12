@@ -399,9 +399,21 @@ export function tryDecodeUriComponent(component: string): string | null {
 /**
  * Determines whether the given subscription status should be treated as an active subscription.
  * @param status The status.
+ * @param periodStartMs The start of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param periodEndMs The end of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param nowMs The current time in unix time in miliseconds.
  */
-export function isActiveSubscription(status: string): boolean {
-    return status === 'active' || status === 'trialing';
+export function isActiveSubscription(
+    status: string,
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): boolean {
+    const active = status === 'active' || status === 'trialing';
+    if (active && periodStartMs && periodEndMs) {
+        return nowMs >= periodStartMs && nowMs <= periodEndMs;
+    }
+    return active;
 }
 
 /**

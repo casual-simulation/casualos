@@ -2,7 +2,7 @@
 
 ## V3.3.0
 
-#### Date: 4/4/2024
+#### Date: 4/12/2024
 
 ### :rocket: Features
 
@@ -15,10 +15,48 @@
 -   Added the ability to create accounts that are not associated with an email or phone number.
     -   These accounts are also issued a session key that cannot be revoked and does not expire.
     -   They will mostly be used for one-time subscriptions and machine users.
+    -   This ability is only accessible by super users (see below).
+-   Added several functions to make working with screen coordinates easier.
+    -   `os.calculateViewportCoordinatesFromPosition(portal, position)` - Calculates the viewport coordinates from the given 3D position in the portal.
+        -   `portal` is the portal that the request is from (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 3D position in the portal.
+        -   Viewport coordinates locate a specific point on the image that the camera produces. `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+    -   `os.calculateViewportCoordinatesFromScreenCoordinates(portal, coordinates)` - Calculates the viewport coordinates from the given 2D screen position.
+        -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 2D position on the screen.
+    -   `os.calculateScreenCoordinatesFromViewportCoordinates(portal, coordinates)` - Calculates the screen coordinates from the given 2D viewport coordinates.
+        -   `portal` is the portal that the request is for (one of `grid`, `miniGrid`, `map`, or `miniMap`).
+        -   `position` is the 2D viewport coordinates that the screen coordinates should be found for.
+-   Added eye tracking based `transient-input` support for Apple Vision Pro.
+    -   Look at bots you want to interact with and then pinch to start selection.
+    -   Dragging your hand will manipulate the input ray relative to where your eyes were looking until you let go of your pinch.
+    -   Feels like the natural input style that the rest of visionOS uses.
+-   Added the `superUser` user role.
+    -   This is internal to CasualOS and is not related to roles that control access to record data.
+    -   There are currently only two roles: `none`, and `superUser`.
+    -   Currently, roles have to be assigned manually through the database. There is not API to grant a user the `superUser` role.
+    -   All users default to the `none` role.
+    -   When assigned the `superUser` role, a user has access to some operations that they would not normally have access to, including:
+        -   `getUserInfo` for all users
+        -   `createAccount`
+        -   `listSessions` for all users
+        -   `listRecords` for all users and studios
+        -   `listStudios` for all users
+        -   `listStudioMembers` for all studios
+        -   `getSubscriptions` for all users and studios
+-   Added the ability to specify user login details in the URL.
+    -   When logged in, CasualOS stores a `sessionKey` and a `connectionKey` in the local storage of their web browser to keep them logged in.
+    -   When the `sessionKey` and `connectionKey` query params are specified in the URL, they will be used instead of the stored ones.
+    -   Additionally, they work for users who are not logged in.
+    -   This makes it possible to give someone a URL that grants them automatic access to an account.
+-   Added the `updateSubscription` operation (`POST /api/v2/subscriptions/update`) to allow super users to grant a subscription to users or studios.
+    -   Currently, it can only be used to grant/revoke simple non-stripe subscriptions. If the user already has a stripe subscription, then the function will refuse to make changes.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where ES2022 class fields would not support type annotations.
+-   Fixed an issue where the `miniGridPortal` did not support using `os.focusOn()` with a position.
+-   Fixed some performance issues when updating lots of bots across multiple frames.
 
 ## V3.2.19
 

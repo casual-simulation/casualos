@@ -559,8 +559,18 @@ describe('isActiveSubscription()', () => {
         [undefined as any, false] as const,
     ];
 
-    it.each(statusTypes)('should map %s to %s', (status, expected) => {
-        expect(isActiveSubscription(status)).toBe(expected);
+    describe.each(statusTypes)('%s', (status, expected) => {
+        it(expected ? 'return true' : 'return false', () => {
+            expect(isActiveSubscription(status)).toBe(expected);
+        });
+
+        it('should be able to take a subscription period into account', () => {
+            expect(isActiveSubscription(status, 100, 200, 99)).toBe(false);
+            expect(isActiveSubscription(status, 100, 200, 100)).toBe(expected);
+            expect(isActiveSubscription(status, 100, 200, 105)).toBe(expected);
+            expect(isActiveSubscription(status, 100, 200, 200)).toBe(expected);
+            expect(isActiveSubscription(status, 100, 200, 201)).toBe(false);
+        });
     });
 });
 

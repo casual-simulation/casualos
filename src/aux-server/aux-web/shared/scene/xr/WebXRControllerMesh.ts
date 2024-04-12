@@ -30,6 +30,11 @@ import { PointerRay3D } from './PointerRay3D';
 
 const pool = getGLTFPool('webxr');
 
+interface WebXRControllerMeshParams {
+    showMesh?: boolean;
+    showPointer?: boolean;
+}
+
 export class WebXRControllerMesh implements SubscriptionLike {
     closed: boolean;
 
@@ -54,18 +59,40 @@ export class WebXRControllerMesh implements SubscriptionLike {
     private _bones: Map<XRHandJoint, Object3D>;
     private _pointer: PointerRay3D;
     private _dummy: Object3D;
+    private _params: WebXRControllerMeshParams;
 
-    constructor(inputSource: XRInputSource) {
+    constructor(
+        inputSource: XRInputSource,
+        params?: WebXRControllerMeshParams
+    ) {
         this.inputSource = inputSource;
+        this._params = Object.assign<
+            WebXRControllerMeshParams,
+            WebXRControllerMeshParams
+        >(
+            {
+                // Params defaults.
+                showMesh: true,
+                showPointer: true,
+            },
+            params
+        );
         this._nodes = new Map();
         this.group = new Group();
         this.mesh = new Group();
-        this._pointer = new PointerRay3D();
+
+        if (this._params.showPointer) {
+            this._pointer = new PointerRay3D();
+        }
+
         this._dummy = new Object3D();
 
         this.group.add(this.mesh);
         this.group.add(this._dummy);
-        this.mesh.add(this._pointer);
+
+        if (this._params.showPointer) {
+            this.mesh.add(this._pointer);
+        }
     }
 
     async init(controller: MotionController) {
@@ -73,6 +100,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
         if (!this.controller) {
             return;
         }
+        if (!this._params.showMesh) {
+            return;
+        }
+
         const gltf = await pool.loadGLTF(this.controller.assetUrl);
         this._scene = gltf.scene;
         this._sceneRoot = this._scene;
@@ -80,10 +111,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
         this.mesh.add(this._sceneRoot);
         this._addTouchDots();
         this._findNodes();
-
-        if (this.inputSource.hand) {
-            this._findBones();
-        }
+        this._findBones();
     }
 
     update(frame: XRFrame, referenceSpace: XRSpace) {
@@ -107,12 +135,9 @@ export class WebXRControllerMesh implements SubscriptionLike {
         copyPose(gripPose, this.mesh);
 
         this._updateMotionControllerModel();
-
-        if (this.inputSource.hand) {
-            this._updateHands(frame, referenceSpace);
-        }
-
+        this._updateHands(frame, referenceSpace);
         this._updatePointer(rayPose);
+
         this.mesh.updateMatrixWorld();
     }
 
@@ -121,6 +146,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
      * @param hit The hit location.
      */
     setPointerHitDistance(distance: number) {
+        if (!this._pointer) {
+            return;
+        }
+
         if (distance) {
             this._pointer.stopDistance = distance;
         } else {
@@ -129,6 +158,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
     }
 
     private _updatePointer(pose: XRPose) {
+        if (!this._pointer) {
+            return;
+        }
+
         copyPose(pose, this._dummy);
         const ray = objectWorldForwardRay(this._dummy);
         this._pointer.ray = ray;
@@ -137,6 +170,9 @@ export class WebXRControllerMesh implements SubscriptionLike {
 
     private _updateMotionControllerModel() {
         if (!this.controller) {
+            return;
+        }
+        if (!this._params.showMesh) {
             return;
         }
 
@@ -188,7 +224,13 @@ export class WebXRControllerMesh implements SubscriptionLike {
     }
 
     private _updateHands(frame: XRFrame, referenceSpace: XRSpace) {
+        if (!this.inputSource.hand) {
+            return;
+        }
         if (!this._bones) {
+            return;
+        }
+        if (!this._params.showMesh) {
             return;
         }
 
@@ -214,6 +256,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
     }
 
     private _findNodes() {
+        if (!this._params.showMesh) {
+            return;
+        }
+
         // Loop through the components and find the nodes needed for each components' visual responses
         for (let component of values(this.controller.components)) {
             const { touchPointNodeName, visualResponses } = component;
@@ -276,6 +322,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
     }
 
     private _findBones() {
+        if (!this.inputSource.hand) {
+            return;
+        }
+
         this._bones = new Map();
 
         xrHandJoints.forEach((jointName) => {
@@ -295,6 +345,10 @@ export class WebXRControllerMesh implements SubscriptionLike {
      * Add touch dots to all touchpad components so the finger can be seen
      */
     private _addTouchDots() {
+        if (!this._params.showMesh) {
+            return;
+        }
+
         for (let componentId of Object.keys(this.controller.components)) {
             const component = this.controller.components[componentId];
             // Find the touchpads

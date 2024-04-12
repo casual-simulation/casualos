@@ -191,6 +191,7 @@ describe('RecordsServer', () => {
     let savedOwnerId: string;
     let savedOwnerSessionId: string;
     let savedOwnerConnectionKey: string;
+    let savedOwnerSessionKey: string;
     let savedExpireTimeMs: number;
     let savedSessionSecret: string;
     let savedRecordKey: string;
@@ -235,6 +236,7 @@ describe('RecordsServer', () => {
         savedOwnerId = owner.userId;
         savedOwnerConnectionKey = owner.connectionKey;
         savedOwnerSessionId = owner.sessionId;
+        savedOwnerSessionKey = owner.sessionKey;
 
         let [uid, sid, secret, expire] = parseSessionKey(savedSessionKey);
         savedSessionId = sid;
@@ -336,6 +338,7 @@ describe('RecordsServer', () => {
     let ownerId: string;
     let ownerSessionId: string;
     let ownerConnectionKey: string;
+    let ownerSessionKey: string;
     let expireTimeMs: number;
     let sessionSecret: string;
     let recordKey: string;
@@ -411,6 +414,7 @@ describe('RecordsServer', () => {
         ownerId = savedOwnerId;
         ownerSessionId = savedOwnerSessionId;
         ownerConnectionKey = savedOwnerConnectionKey;
+        ownerSessionKey = savedOwnerSessionKey;
         expireTimeMs = savedExpireTimeMs;
         sessionSecret = savedSessionSecret;
         recordKey = savedRecordKey;
@@ -718,6 +722,7 @@ describe('RecordsServer', () => {
                         allowPublicInsts: true,
                     },
                     displayName: null,
+                    role: 'none',
                 },
                 headers: accountCorsHeaders,
             });
@@ -790,6 +795,7 @@ describe('RecordsServer', () => {
                         allowPublicInsts: true,
                     },
                     displayName: null,
+                    role: 'none',
                 },
                 headers: accountCorsHeaders,
             });
@@ -905,6 +911,38 @@ describe('RecordsServer', () => {
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
                 }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'getUserInfo',
+                    {
+                        userId,
+                    },
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    displayName: null,
+                    role: 'none',
+                },
                 headers: accountCorsHeaders,
             });
         });
@@ -1115,6 +1153,83 @@ describe('RecordsServer', () => {
                     `/api/{userId:${userId}}/subscription`,
                     authenticatedHeaders
                 )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                            featureList: ['Feature 1', 'Feature 2'],
+                        },
+                    ],
+                    purchasableSubscriptions: [],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return the list of subscriptions if the current user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [
+                        {
+                            id: 'subscription_id',
+                            status: 'active',
+                            start_date: 123,
+                            ended_at: null,
+                            cancel_at: null,
+                            canceled_at: null,
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            items: [
+                                {
+                                    id: 'item_id',
+                                    price: {
+                                        id: 'price_id',
+                                        interval: 'month',
+                                        interval_count: 1,
+                                        currency: 'usd',
+                                        unit_amount: 123,
+
+                                        product: {
+                                            id: 'product_id',
+                                            name: 'Product Name',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/{userId:${userId}}/subscription`, {
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
+                })
             );
 
             expectResponseBodyToEqual(result, {
@@ -1868,6 +1983,14 @@ describe('RecordsServer', () => {
     });
 
     describe('POST /api/v2/createAccount', () => {
+        beforeEach(async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+        });
+
         it('should create a new account', async () => {
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -1875,6 +1998,24 @@ describe('RecordsServer', () => {
                     JSON.stringify({}),
                     authenticatedHeaders
                 )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    expireTimeMs: null,
+                    connectionKey: expect.any(String),
+                    sessionKey: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            const result = await server.handleHttpRequest(
+                procedureRequest('createAccount', {}, authenticatedHeaders)
             );
 
             expectResponseBodyToEqual(result, {
@@ -1917,6 +2058,41 @@ describe('RecordsServer', () => {
                         nextSessionId: null,
                     },
                 ],
+            });
+        });
+
+        it('should allow listing other user sessions if the user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/sessions?userId=${userId}`, {
+                    authorization: `Bearer ${ownerSessionKey}`,
+                    origin: accountOrigin,
+                })
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessions: [
+                        {
+                            userId: userId,
+                            sessionId: sessionId,
+                            grantedTimeMs: expect.any(Number),
+                            expireTimeMs: expireTimeMs,
+                            revokeTimeMs: null,
+                            ipAddress: '123.456.789',
+                            currentSession: false,
+                            nextSessionId: null,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
             });
         });
 
@@ -8948,6 +9124,70 @@ describe('RecordsServer', () => {
             });
         });
 
+        describe('?userId', () => {
+            beforeEach(async () => {
+                const user = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...user,
+                    role: 'superUser',
+                });
+            });
+
+            it('should return the list of records for the given user if the current user is a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/records/list?userId=${userId}`, {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: apiOrigin,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        records: [
+                            {
+                                name: 'test1',
+                                ownerId: userId,
+                                studioId: null,
+                            },
+                            {
+                                name: 'test2',
+                                ownerId: userId,
+                                studioId: null,
+                            },
+                            {
+                                name: 'test3',
+                                ownerId: userId,
+                                studioId: null,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return 403 not_authorized if the current user is not a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/list?userId=${'different'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
         testAuthorization(() => httpGet('/api/v2/records/list', apiHeaders));
     });
 
@@ -12768,6 +13008,152 @@ describe('RecordsServer', () => {
                     headers: apiCorsHeaders,
                 });
             });
+
+            describe('?userId', () => {
+                beforeEach(async () => {
+                    const owner = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...owner,
+                        role: 'superUser',
+                    });
+                });
+
+                it('should list the studios that the user has access to if the current user is a super user', async () => {
+                    const result = await server.handleHttpRequest(
+                        httpGet(
+                            `/api/v2/studios/list?userId=${userId}&comId=${'comId1'}`,
+                            {
+                                authorization: `Bearer ${ownerSessionKey}`,
+                                origin: apiOrigin,
+                            }
+                        )
+                    );
+
+                    expectResponseBodyToEqual(result, {
+                        statusCode: 200,
+                        body: {
+                            success: true,
+                            studios: [
+                                {
+                                    studioId: 'studioId2',
+                                    displayName: 'studio 2',
+                                    role: 'admin',
+                                    isPrimaryContact: true,
+                                    subscriptionTier: null,
+                                    ownerStudioComId: 'comId1',
+                                },
+                                {
+                                    studioId: 'studioId3',
+                                    displayName: 'studio 3',
+                                    role: 'member',
+                                    isPrimaryContact: true,
+                                    subscriptionTier: null,
+                                    ownerStudioComId: 'comId1',
+                                },
+                            ],
+                        },
+                        headers: apiCorsHeaders,
+                    });
+                });
+
+                it('should return a 403 if the user is not a super user', async () => {
+                    const owner = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...owner,
+                        role: 'none',
+                    });
+
+                    const result = await server.handleHttpRequest(
+                        httpGet(
+                            `/api/v2/studios/list?userId=${userId}&comId=${'comId1'}`,
+                            {
+                                authorization: `Bearer ${ownerSessionKey}`,
+                                origin: apiOrigin,
+                            }
+                        )
+                    );
+
+                    expectResponseBodyToEqual(result, {
+                        statusCode: 403,
+                        body: {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                        },
+                        headers: apiCorsHeaders,
+                    });
+                });
+            });
+        });
+
+        describe('?userId', () => {
+            beforeEach(async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'superUser',
+                });
+            });
+
+            it('should list the studios that the user has access to if the current user is a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/studios/list?userId=${userId}`, {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: apiOrigin,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studioId2',
+                                displayName: 'studio 2',
+                                role: 'admin',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                            },
+                            {
+                                studioId: 'studioId3',
+                                displayName: 'studio 3',
+                                role: 'member',
+                                isPrimaryContact: true,
+                                subscriptionTier: null,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return a 403 if the user is not a super user', async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'none',
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/studios/list?userId=${userId}`, {
+                        authorization: `Bearer ${ownerSessionKey}`,
+                        origin: apiOrigin,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
         });
 
         testAuthorization(() => httpGet('/api/v2/studios/list', apiHeaders));
@@ -12812,6 +13198,56 @@ describe('RecordsServer', () => {
                     `/api/v2/studios/members/list?studioId=${studioId}`,
                     authenticatedHeaders
                 )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    members: sortBy(
+                        [
+                            {
+                                studioId,
+                                userId: userId,
+                                isPrimaryContact: true,
+                                role: 'admin',
+                                user: {
+                                    id: userId,
+                                    email: 'test@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                            {
+                                studioId,
+                                userId: 'userId2',
+                                isPrimaryContact: false,
+                                role: 'member',
+                                user: {
+                                    id: 'userId2',
+                                    email: 'test2@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                        ],
+                        (u) => u.userId
+                    ),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should list the members of the studio if the user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/studios/members/list?studioId=${studioId}`, {
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
+                })
             );
 
             expectResponseBodyToEqual(result, {
@@ -13422,6 +13858,83 @@ describe('RecordsServer', () => {
                     headers: accountCorsHeaders,
                 });
             });
+
+            it('should allow super users to get subscription info for any user', async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'superUser',
+                });
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/subscriptions?userId=${userId}`, {
+                        ...authenticatedHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
         });
 
         describe('?studioId', () => {
@@ -13709,6 +14222,83 @@ describe('RecordsServer', () => {
                         errorMessage:
                             'The given session key is invalid. It must be a correctly formatted string.',
                     }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should allow super users to get subscription info for any studio', async () => {
+                const owner = await store.findUser(ownerId);
+                await store.saveUser({
+                    ...owner,
+                    role: 'superUser',
+                });
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(`/api/v2/subscriptions?studioId=${studioId}`, {
+                        ...authenticatedHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    })
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
                     headers: accountCorsHeaders,
                 });
             });
@@ -14306,6 +14896,208 @@ describe('RecordsServer', () => {
             testUrl('POST', '/api/v2/subscriptions/manage', () =>
                 JSON.stringify({
                     studioId,
+                })
+            );
+        });
+    });
+
+    describe('POST /api/v2/subscriptions/update', () => {
+        beforeEach(async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+        });
+
+        describe('userId', () => {
+            it('should update the subscription of the given user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        {
+                            ...authenticatedHeaders,
+                            authorization: `Bearer ${ownerSessionKey}`,
+                        }
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: expect.any(String),
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: expect.any(String),
+                    subscriptionId: 'sub_id',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 123,
+                    subscriptionPeriodEndMs: 999,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should return 403 if the current user is not a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: expect.any(String),
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: expect.any(String),
+                });
+            });
+
+            testUrl(
+                'POST',
+                '/api/v2/subscriptions/manage',
+                () =>
+                    JSON.stringify({
+                        userId,
+                        subscriptionId: 'sub_id',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 123,
+                        subscriptionPeriodEndMs: 999,
+                    }),
+                () => ({
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
+                })
+            );
+        });
+
+        describe('studioId', () => {
+            let studio: Studio;
+
+            beforeEach(async () => {
+                studio = {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                };
+                await store.addStudio(studio);
+            });
+
+            it('should update the subscription of the given studio', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            studioId: studio.id,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        {
+                            ...authenticatedHeaders,
+                            authorization: `Bearer ${ownerSessionKey}`,
+                        }
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    id: studio.id,
+                    displayName: studio.displayName,
+                    subscriptionId: 'sub_id',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 123,
+                    subscriptionPeriodEndMs: 999,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should return 403 if the current user is not a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            studioId: studio.id,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    id: studio.id,
+                    displayName: studio.displayName,
+                });
+            });
+
+            testUrl(
+                'POST',
+                '/api/v2/subscriptions/manage',
+                () =>
+                    JSON.stringify({
+                        studioId: studio.id,
+                        subscriptionId: 'sub_id',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 123,
+                        subscriptionPeriodEndMs: 999,
+                    }),
+                () => ({
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
                 })
             );
         });

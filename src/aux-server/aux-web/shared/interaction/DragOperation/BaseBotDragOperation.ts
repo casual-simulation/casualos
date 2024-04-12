@@ -14,19 +14,13 @@ import {
     PartialBot,
     BotAction,
     BotCalculationContext,
-    objectsAtDimensionGridPosition,
-    getBotIndex,
-    botRemoved,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
-    MOD_DROP_ACTION_NAME,
-    toast,
     createBot,
     DRAG_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
     BotTags,
     isBot,
-    calculateBooleanTagValue,
     ShoutAction,
     DROP_EXIT_ACTION_NAME,
     DROP_ENTER_ACTION_NAME,
@@ -36,8 +30,6 @@ import {
     onDragArg,
     ANY_DROP_ENTER_ACTION_NAME,
     ANY_DROP_EXIT_ACTION_NAME,
-    SnapTarget,
-    SnapPoint,
     onDraggingArg,
     DRAGGING_ACTION_NAME,
     DRAGGING_ANY_ACTION_NAME,
@@ -45,7 +37,6 @@ import {
     VECTOR_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 
-import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { Subscription } from 'rxjs';
 import {
@@ -55,11 +46,7 @@ import {
 } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
 import { merge } from 'lodash';
-import {
-    SnapBotsHelper,
-    SnapBotsInterface,
-    SnapOptions,
-} from './SnapInterface';
+import { SnapBotsHelper, SnapBotsInterface } from './SnapInterface';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.

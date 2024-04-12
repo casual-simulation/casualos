@@ -91,7 +91,7 @@ export function createTestControllers(
 }
 
 export async function createTestUser(
-    { auth, authMessenger, records }: TestServices,
+    { auth, authMessenger }: Pick<TestServices, 'auth' | 'authMessenger'>,
     emailAddress: string = 'test@example.com'
 ) {
     const loginRequest = await auth.requestLogin({
