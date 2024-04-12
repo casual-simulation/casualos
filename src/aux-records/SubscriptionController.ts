@@ -9,6 +9,7 @@ import {
     AuthStore,
     AuthUser,
     UpdateSubscriptionPeriodRequest,
+    UserRole,
 } from './AuthStore';
 import {
     STRIPE_EVENT_INVOICE_PAID_SCHEMA,
@@ -17,7 +18,11 @@ import {
     StripeInterface,
     StripeInvoice,
 } from './StripeInterface';
-import { ServerError } from '@casual-simulation/aux-common/Errors';
+import {
+    NotAuthorizedError,
+    NotLoggedInError,
+    ServerError,
+} from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
@@ -240,6 +245,157 @@ export class SubscriptionController {
         } catch (err) {
             console.error(
                 '[SubscriptionController] An error occurred while getting subscription status:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to update the subscription for the given user.
+     * @param request The request to update the subscription.
+     */
+    async updateSubscription(
+        request: UpdateSubscriptionRequest
+    ): Promise<UpdateSubscriptionResult> {
+        try {
+            if (!request.currentUserId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You must be logged in to update a subscription.',
+                };
+            }
+
+            if (!isSuperUserRole(request.currentUserRole)) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                };
+            }
+
+            if (!request.userId && !request.studioId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The given request is invalid. It must have a user ID or studio ID.',
+                };
+            }
+
+            if (request.userId) {
+                console.log(
+                    `[SubscriptionController] [updateSubscription currentUserId: ${request.currentUserId}, userId: ${request.userId}, subscriptionId: ${request.subscriptionId}, subscriptionStatus: ${request.subscriptionStatus}] Updating subscription.`
+                );
+
+                const user = await this._authStore.findUser(request.userId);
+
+                if (!user) {
+                    return {
+                        success: false,
+                        errorCode: 'user_not_found',
+                        errorMessage: 'The user could not be found.',
+                    };
+                }
+
+                if (
+                    user.subscriptionInfoId &&
+                    isActiveSubscription(
+                        user.subscriptionStatus,
+                        user.subscriptionPeriodStartMs,
+                        user.subscriptionPeriodEndMs
+                    )
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'The user already has an active stripe subscription. Currently, this operation only supports updating the subscription of a user who does not have an active stripe subscription.',
+                    };
+                }
+
+                await this._authStore.updateSubscriptionInfo({
+                    userId: user.id,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionId
+                        ? request.subscriptionStatus
+                        : null,
+                    currentPeriodStartMs: request.subscriptionId
+                        ? request.subscriptionPeriodStartMs
+                        : null,
+                    currentPeriodEndMs: request.subscriptionId
+                        ? request.subscriptionPeriodEndMs
+                        : null,
+                    stripeCustomerId: null,
+                    stripeSubscriptionId: null,
+                });
+
+                return {
+                    success: true,
+                };
+            } else {
+                console.log(
+                    `[SubscriptionController] [updateSubscription currentUserId: ${request.currentUserId}, studioId: ${request.studioId}, subscriptionId: ${request.subscriptionId}, subscriptionStatus: ${request.subscriptionStatus}] Updating subscription.`
+                );
+
+                const studio = await this._recordsStore.getStudioById(
+                    request.studioId
+                );
+
+                if (!studio) {
+                    return {
+                        success: false,
+                        errorCode: 'studio_not_found',
+                        errorMessage: 'The studio could not be found.',
+                    };
+                }
+
+                if (
+                    studio.subscriptionInfoId &&
+                    isActiveSubscription(
+                        studio.subscriptionStatus,
+                        studio.subscriptionPeriodStartMs,
+                        studio.subscriptionPeriodEndMs
+                    )
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'The studio already has an active stripe subscription. Currently, this operation only supports updating the subscription of a studio which does not have an active stripe subscription.',
+                    };
+                }
+
+                await this._authStore.updateSubscriptionInfo({
+                    studioId: studio.id,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionId
+                        ? request.subscriptionStatus
+                        : null,
+                    currentPeriodStartMs: request.subscriptionId
+                        ? request.subscriptionPeriodStartMs
+                        : null,
+                    currentPeriodEndMs: request.subscriptionId
+                        ? request.subscriptionPeriodEndMs
+                        : null,
+                    stripeCustomerId: null,
+                    stripeSubscriptionId: null,
+                });
+
+                return {
+                    success: true,
+                };
+            }
+        } catch (err) {
+            console.error(
+                '[SubscriptionController] An error occurred while updating a subscription:',
                 err
             );
             return {
@@ -1335,5 +1491,70 @@ export interface HandleStripeWebhookSuccess {
 export interface HandleStripeWebhookFailure {
     success: false;
     errorCode: ServerError | 'invalid_request' | 'not_supported';
+    errorMessage: string;
+}
+
+export interface UpdateSubscriptionRequest {
+    /**
+     * The role of the user that is currently logged in.
+     */
+    currentUserRole: UserRole | undefined | null;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    currentUserId: string;
+
+    /**
+     * The ID of the user whose subscription should be updated.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio whose subscription should be updated.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the subscription that the user should have.
+     * If null, then the subscription will be removed from the user.
+     */
+    subscriptionId: string | null;
+
+    /**
+     * The status of the subscription.
+     */
+    subscriptionStatus: SubscriptionStatus['statusCode'] | null;
+
+    /**
+     * The unix time in miliseconds that the subscription period starts.
+     * If null, then the subscription does not have a start date. This means that the subscription has already started.
+     */
+    subscriptionPeriodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds that the subscription period ends.
+     * If null, then the subscription does not have an end date. This means that the subscription will never end.
+     */
+    subscriptionPeriodEndMs: number | null;
+}
+
+export type UpdateSubscriptionResult =
+    | UpdateSubscriptionSuccess
+    | UpdateSubscriptionFailure;
+
+export interface UpdateSubscriptionSuccess {
+    success: true;
+}
+
+export interface UpdateSubscriptionFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'user_not_found'
+        | 'studio_not_found'
+        | 'invalid_request';
     errorMessage: string;
 }

@@ -14901,6 +14901,208 @@ describe('RecordsServer', () => {
         });
     });
 
+    describe('POST /api/v2/subscriptions/update', () => {
+        beforeEach(async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+        });
+
+        describe('userId', () => {
+            it('should update the subscription of the given user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        {
+                            ...authenticatedHeaders,
+                            authorization: `Bearer ${ownerSessionKey}`,
+                        }
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: expect.any(String),
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: expect.any(String),
+                    subscriptionId: 'sub_id',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 123,
+                    subscriptionPeriodEndMs: 999,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should return 403 if the current user is not a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.findUser(userId)).toEqual({
+                    id: userId,
+                    email: expect.any(String),
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: expect.any(String),
+                });
+            });
+
+            testUrl(
+                'POST',
+                '/api/v2/subscriptions/manage',
+                () =>
+                    JSON.stringify({
+                        userId,
+                        subscriptionId: 'sub_id',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 123,
+                        subscriptionPeriodEndMs: 999,
+                    }),
+                () => ({
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
+                })
+            );
+        });
+
+        describe('studioId', () => {
+            let studio: Studio;
+
+            beforeEach(async () => {
+                studio = {
+                    id: 'studioId',
+                    displayName: 'my studio',
+                };
+                await store.addStudio(studio);
+            });
+
+            it('should update the subscription of the given studio', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            studioId: studio.id,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        {
+                            ...authenticatedHeaders,
+                            authorization: `Bearer ${ownerSessionKey}`,
+                        }
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    id: studio.id,
+                    displayName: studio.displayName,
+                    subscriptionId: 'sub_id',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 123,
+                    subscriptionPeriodEndMs: 999,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should return 403 if the current user is not a super user', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/update`,
+                        JSON.stringify({
+                            studioId: studio.id,
+                            subscriptionId: 'sub_id',
+                            subscriptionStatus: 'active',
+                            subscriptionPeriodStartMs: 123,
+                            subscriptionPeriodEndMs: 999,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    id: studio.id,
+                    displayName: studio.displayName,
+                });
+            });
+
+            testUrl(
+                'POST',
+                '/api/v2/subscriptions/manage',
+                () =>
+                    JSON.stringify({
+                        studioId: studio.id,
+                        subscriptionId: 'sub_id',
+                        subscriptionStatus: 'active',
+                        subscriptionPeriodStartMs: 123,
+                        subscriptionPeriodEndMs: 999,
+                    }),
+                () => ({
+                    ...authenticatedHeaders,
+                    authorization: `Bearer ${ownerSessionKey}`,
+                })
+            );
+        });
+    });
+
     describe('GET /instData', () => {
         it('should return the inst data that is stored', async () => {
             const update = constructInitializationUpdate({
