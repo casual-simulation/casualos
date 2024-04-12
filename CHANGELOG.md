@@ -56,6 +56,7 @@
 
 -   Fixed an issue where ES2022 class fields would not support type annotations.
 -   Fixed an issue where the `miniGridPortal` did not support using `os.focusOn()` with a position.
+-   Fixed some performance issues when updating lots of bots across multiple frames.
 
 ## V3.2.19
 
