@@ -1,31 +1,20 @@
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     calculateNumericalTagValue,
     BotCalculationContext,
     Bot,
-    calculateGridScale,
-    objectsAtDimensionGridPosition,
     getBotPosition,
     getBotRotation,
-    getDimensionScale,
-    getDimensionGridHeight,
     cacheFunction,
-    calculateBooleanTagValue,
     getBotOrientationMode,
-    getBotAnchorPoint,
-    BotAnchorPoint,
     BotOrientationMode,
     getBotIndex,
-    getBotScale,
     getAnchorPointOffset,
     LocalActions,
-    Easing,
-    EaseMode,
     hasValue,
     enqueueAsyncResult,
     BotAction,
-    LocalTweenAction,
     LocalRotationTweenAction,
     LocalPositionTweenAction,
     enqueueAsyncError,
@@ -34,32 +23,20 @@ import {
 } from '@casual-simulation/aux-common';
 import {
     Rotation,
-    AUX_ROTATION_TO_THREEJS,
     Vector3 as CasualVector3,
-    LookRotation,
 } from '@casual-simulation/aux-common/math';
 import {
     Vector3,
     Quaternion,
     Euler,
-    Vector2,
     Object3D,
     MathUtils as ThreeMath,
     Matrix4,
 } from '@casual-simulation/three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
-import { realPosToGridPos, Axial, posToKey } from '../hex';
-import { BuilderGroup3D } from '../BuilderGroup3D';
-import {
-    calculateScale,
-    cameraUpwardRay,
-    objectForwardRay,
-    WORLD_UP,
-} from '../SceneUtils';
+import { calculateScale } from '../SceneUtils';
 import { Game } from '../Game';
-import TWEEN, { Tween } from '@tweenjs/tween.js';
-import { MapSimulation3D } from '../../../aux-player/scene/MapSimulation3D';
-import { CoordinateSystem } from '../CoordinateSystem';
+import TWEEN from '@tweenjs/tween.js';
 import { DimensionGroup3D } from '../DimensionGroup3D';
 
 const tempVector3 = new Vector3();

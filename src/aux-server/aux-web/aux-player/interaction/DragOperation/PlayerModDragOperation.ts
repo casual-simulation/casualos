@@ -1,30 +1,20 @@
 import { Physics } from '../../../shared/scene/Physics';
 import {
     Bot,
-    PartialBot,
-    botAdded,
-    BotAction,
     BotTags,
     getDropBotFromGridPosition,
-    objectsAtDimensionGridPosition,
 } from '@casual-simulation/aux-common/bots';
 import {
-    createBot,
     BotCalculationContext,
-    CREATE_ACTION_NAME,
     getBotPosition,
-    getBotIndex,
 } from '@casual-simulation/aux-common';
-import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BaseModDragOperation } from '../../../shared/interaction/DragOperation/BaseModDragOperation';
-import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { Vector2, Ray } from '@casual-simulation/three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { Input, InputMethod } from '../../../shared/scene/Input';
-import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 import { GridTile } from '../../../shared/scene/Grid3D';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -96,18 +86,17 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             return;
         }
 
-        const viewport = (this._inMiniPortal
-            ? this._miniSimulation3D.getMainCameraRig()
-            : this._simulation3D.getMainCameraRig()
+        const viewport = (
+            this._inMiniPortal
+                ? this._miniSimulation3D.getMainCameraRig()
+                : this._simulation3D.getMainCameraRig()
         ).viewport;
-        const {
-            gameObject,
-            hit,
-        } = this._interaction.findHoveredGameObjectFromRay(
-            inputRay,
-            (obj) => obj.pointable,
-            viewport
-        );
+        const { gameObject, hit } =
+            this._interaction.findHoveredGameObjectFromRay(
+                inputRay,
+                (obj) => obj.pointable,
+                viewport
+            );
         if (gameObject instanceof AuxBot3D) {
             const nextContext = gameObject.dimension;
 
