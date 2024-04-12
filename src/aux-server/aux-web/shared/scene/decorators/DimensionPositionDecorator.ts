@@ -140,32 +140,6 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 coordinateTransform
             );
 
-            if (
-                this._positionUpdated(currentGridPos, currentSortOrder) ||
-                this._heightUpdated(currentHeight)
-            ) {
-                let ids = [] as string[];
-                if (this._lastPos) {
-                    const objectsAtLastPosition =
-                        objectsAtDimensionGridPosition(
-                            calc,
-                            this.bot3D.dimension,
-                            this._lastPos
-                        );
-                    ids.push(...objectsAtLastPosition.map((b) => b.id));
-                }
-                if (currentGridPos) {
-                    const objectsAtCurrentPosition =
-                        objectsAtDimensionGridPosition(
-                            calc,
-                            this.bot3D.dimension,
-                            currentGridPos
-                        );
-                    ids.push(...objectsAtCurrentPosition.map((b) => b.id));
-                }
-
-                this.bot3D.dimensionGroup.simulation3D.ensureUpdate(ids);
-            }
             this._lastPos = currentGridPos;
             this._lastSortOrder = currentSortOrder;
             this._lastHeight = currentHeight;
@@ -208,18 +182,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         }
     }
 
-    botRemoved(calc: BotCalculationContext): void {
-        if (this._lastPos) {
-            const objectsAtPosition = objectsAtDimensionGridPosition(
-                calc,
-                this.bot3D.dimension,
-                this._lastPos
-            );
-            this.bot3D.dimensionGroup.simulation3D.ensureUpdate(
-                objectsAtPosition.map((f) => f.id)
-            );
-        }
-    }
+    botRemoved(calc: BotCalculationContext): void {}
 
     private _heightUpdated(currentHeight: number): boolean {
         return Math.abs(this._lastHeight - currentHeight) > 0.01;
