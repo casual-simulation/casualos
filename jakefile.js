@@ -78,6 +78,13 @@ task('generate-stub-projects', [], async function () {
 
     const projects = [
         path.resolve(__dirname, 'xpexchange', 'xp-api', 'tsconfig.json'),
+        path.resolve(
+            __dirname,
+            'extensions',
+            'casualos-casualware',
+            'casualware-api',
+            'tsconfig.json'
+        ),
     ];
 
     const defaultProjectJson = {
