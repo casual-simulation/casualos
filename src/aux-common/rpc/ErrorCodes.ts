@@ -68,7 +68,9 @@ export type KnownErrorCodes =
     | 'unacceptable_connection_id'
     | 'message_not_found'
     | 'not_found'
-    | 'invalid_connection_state';
+    | 'invalid_connection_state'
+    | 'user_already_exists'
+    | 'session_is_not_revokable';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -172,6 +174,8 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'invalid_connection_state') {
             return 500;
+        } else if (response.errorCode === 'user_already_exists') {
+            return 400;
         } else {
             return 400;
         }

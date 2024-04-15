@@ -265,6 +265,13 @@ router.beforeEach((to, from, next) => {
 });
 
 const manager = authManager;
+
+const sessionKeyUrl = authManager.getSessionKeyFromUrl();
+const connectionKeyUrl = authManager.getConnectionKeyFromUrl();
+if (sessionKeyUrl && connectionKeyUrl) {
+    authManager.useTemporaryKeys(sessionKeyUrl, connectionKeyUrl);
+}
+
 let messagePort: MessagePort;
 
 if (window.opener) {

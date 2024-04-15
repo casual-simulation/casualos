@@ -303,7 +303,7 @@ describe('StateUpdatedEvent', () => {
     });
 
     describe('updatedBot()', () => {
-        it('should return an updated bot with the given tag changes', () => {
+        it('should return the bot with the list of tags that have been changed', () => {
             const updated = updatedBot(
                 {
                     tags: {
@@ -320,15 +320,14 @@ describe('StateUpdatedEvent', () => {
 
             expect(updated).toEqual({
                 bot: createBot('test', {
-                    abc: null,
-                    num: 456,
-                    newTag: true,
+                    abc: 'def',
+                    num: 123,
                 }),
                 tags: ['num', 'newTag', 'abc'],
             });
         });
 
-        it('should return an updated bot with the given tag mask changes', () => {
+        it('should return the bot with the list of tags that have been changed', () => {
             const updated = updatedBot(
                 {
                     masks: {
@@ -364,12 +363,10 @@ describe('StateUpdatedEvent', () => {
                     tags: {},
                     masks: {
                         first: {
-                            num: 456,
-                            newTag: true,
+                            abc: 'def',
                         },
                         second: {
-                            num: 456,
-                            newTag: true,
+                            num: 123,
                         },
                     },
                 },
@@ -377,7 +374,7 @@ describe('StateUpdatedEvent', () => {
             });
         });
 
-        it('should return an updated bot with the given signature changes', () => {
+        it('should the bot with the list of signatures that have been updated', () => {
             const updated = updatedBot(
                 {
                     signatures: {
@@ -401,8 +398,8 @@ describe('StateUpdatedEvent', () => {
                     id: 'test',
                     tags: {},
                     signatures: {
-                        num: 'c',
-                        newTag: 'd',
+                        abc: 'a',
+                        num: 'b',
                     },
                 },
                 tags: [],

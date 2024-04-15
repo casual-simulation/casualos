@@ -137,6 +137,9 @@ export class AuthManager {
     private _gitTag: string;
     private _client: ReturnType<typeof createRecordsClient>;
 
+    private _temporarySessionKey: string;
+    private _temporaryConnectionKey: string;
+
     constructor(
         apiEndpoint: string,
         websocketEndpoint: string,
@@ -152,7 +155,7 @@ export class AuthManager {
         this._studiosSupported = ASSUME_STUDIOS_SUPPORTED;
         this._usePrivoLogin = USE_PRIVO_LOGIN;
         this._client = createRecordsClient(this.apiEndpoint);
-        this._client.sessionKey = this.savedSessionKey;
+        this._updateClientSessionKey();
     }
 
     get userId() {
@@ -212,7 +215,9 @@ export class AuthManager {
     }
 
     get userInfoLoaded() {
-        return !!this._userId && !!this.savedSessionKey && !!this._appMetadata;
+        return (
+            !!this._userId && !!this.currentSessionKey && !!this._appMetadata
+        );
     }
 
     get loginState(): Observable<boolean> {
@@ -280,7 +285,7 @@ export class AuthManager {
     }
 
     isLoggedIn(): boolean {
-        const sessionKey = this.savedSessionKey;
+        const sessionKey = this.currentSessionKey;
         if (!sessionKey) {
             return false;
         }
@@ -299,7 +304,7 @@ export class AuthManager {
 
     async loadUserInfo() {
         const [userId, sessionId, sessionSecret, expireTimeMs] =
-            parseSessionKey(this.savedSessionKey);
+            parseSessionKey(this.currentSessionKey);
         this._userId = userId;
         this._sessionId = sessionId;
         this._appMetadata = await this._loadAppMetadata();
@@ -307,8 +312,13 @@ export class AuthManager {
         if (!this._appMetadata) {
             this._userId = null;
             this._sessionId = null;
-            this.savedSessionKey = null;
-            this.savedConnectionKey = null;
+            if (this._temporarySessionKey) {
+                this._temporarySessionKey = null;
+                this._temporaryConnectionKey = null;
+            } else {
+                this.savedSessionKey = null;
+                this.savedConnectionKey = null;
+            }
         } else {
             this._saveAcceptedTerms(true);
             if (this.email) {
@@ -361,6 +371,25 @@ export class AuthManager {
         this.savedSessionKey = result.sessionKey;
         this.savedConnectionKey = result.connectionKey;
         this._userId = result.userId;
+
+        this._temporarySessionKey = null;
+        this._temporaryConnectionKey = null;
+    }
+
+    useTemporaryKeys(sessionKey: string, connectionKey: string) {
+        if (sessionKey && connectionKey) {
+            console.log('[AuthManager] Using temporary keys.');
+            const [userId, sessionId] = parseSessionKey(sessionKey);
+            this._temporarySessionKey = sessionKey;
+            this._temporaryConnectionKey = connectionKey;
+            this._sessionId = sessionId;
+            this._userId = userId;
+            this._updateClientSessionKey();
+        }
+    }
+
+    private _updateClientSessionKey() {
+        this._client.sessionKey = this.currentSessionKey;
     }
 
     async addPasskeyWithWebAuthn(): Promise<
@@ -396,14 +425,18 @@ export class AuthManager {
     }
 
     async logout(revokeSessionKey: boolean = true) {
-        const sessionKey = this.savedSessionKey;
-        if (sessionKey) {
-            this.savedSessionKey = null;
-            if (revokeSessionKey) {
-                await this._revokeSessionKey(sessionKey);
+        if (this.currentSessionKey === this.savedSessionKey) {
+            const sessionKey = this.savedSessionKey;
+            if (sessionKey) {
+                this.savedSessionKey = null;
+                if (revokeSessionKey) {
+                    await this._revokeSessionKey(sessionKey);
+                }
             }
+            this.savedConnectionKey = null;
         }
-        this.savedConnectionKey = null;
+        this._temporaryConnectionKey = null;
+        this._temporarySessionKey = null;
         this._userId = null;
         this._sessionId = null;
         this._appMetadata = null;
@@ -513,6 +546,24 @@ export class AuthManager {
         const params = new URLSearchParams(location.search);
         if (params.has('comId') || params.has('comID')) {
             return params.get('comId') ?? params.get('comID');
+        } else {
+            return null;
+        }
+    }
+
+    getSessionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('sessionKey')) {
+            return params.get('sessionKey');
+        } else {
+            return null;
+        }
+    }
+
+    getConnectionKeyFromUrl(): string {
+        const params = new URLSearchParams(location.search);
+        if (params.has('connectionKey')) {
+            return params.get('connectionKey');
         } else {
             return null;
         }
@@ -684,6 +735,14 @@ export class AuthManager {
         return localStorage.getItem(ACCEPTED_TERMS_KEY) === 'true';
     }
 
+    get currentSessionKey(): string {
+        return this._temporarySessionKey ?? this.savedSessionKey;
+    }
+
+    get currentConnectionKey(): string {
+        return this._temporaryConnectionKey ?? this.savedConnectionKey;
+    }
+
     get savedSessionKey(): string {
         return localStorage.getItem(SESSION_KEY);
     }
@@ -694,7 +753,7 @@ export class AuthManager {
         } else {
             localStorage.setItem(SESSION_KEY, value);
         }
-        this._client.sessionKey = value;
+        this._updateClientSessionKey();
     }
 
     get savedConnectionKey(): string {
@@ -796,7 +855,7 @@ export class AuthManager {
 
     private _authenticationHeaders(): Record<string, string> {
         return {
-            Authorization: `Bearer ${this.savedSessionKey}`,
+            Authorization: `Bearer ${this.currentSessionKey}`,
         };
     }
 

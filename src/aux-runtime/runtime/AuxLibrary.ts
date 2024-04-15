@@ -236,6 +236,10 @@ import {
     getRecordsEndpoint as calcGetRecordsEndpoint,
     ldrawCountAddressBuildSteps as calcLdrawCountAddressBuildSteps,
     ldrawCountTextBuildSteps as calcLdrawCountTextBuildSteps,
+    calculateViewportCoordinatesFromPosition as calcCalculateViewportCoordinatesFromPosition,
+    calculateScreenCoordinatesFromViewportCoordinates as calcCalculateScreenCoordinatesFromViewportCoordinates,
+    calculateViewportCoordinatesFromScreenCoordinates as calcCalculateViewportCoordinatesFromScreenCoordinates,
+    Point2D,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3235,6 +3239,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 raycastFromCamera,
                 raycast,
                 calculateRayFromCamera,
+                calculateViewportCoordinatesFromPosition,
+                calculateScreenCoordinatesFromViewportCoordinates,
+                calculateViewportCoordinatesFromScreenCoordinates,
                 bufferFormAddressGLTF,
                 startFormAnimation,
                 stopFormAnimation,
@@ -8978,18 +8985,74 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the data stored in the given file.
-     * @param result The successful result of a os.recordFile() call.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Downloads the [file](glossary:file-record) that is specified in the given {@link os.recordFile} result.
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param result the result of a {@link os.recordFile} call.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint. Only used for private files.
+     *
+     * @example Get a file that was uploaded
+     * const recordKeyResult = await os.getPublicRecordKey('myRecord');
+     * if (!recordKeyResult.success) {
+     *     os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+     *     return;
+     * }
+     * const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+     *     description: 'my bots'
+     * });
+     *
+     * if (result.success) {
+     *     tags.uploadResult = result;
+     *     os.toast("Success! Uploaded to " + result.url);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * // Download the file later
+     * const fileData = await os.getFile(tags.uploadResult);
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.getFile
+     * @docid os.getFile-result
      */
     function getFile(
         result: RecordFileApiSuccess,
         endpoint?: string
     ): Promise<any>;
     /**
-     * Gets the data stored in the given file.
-     * @param url The URL that the file is stored at.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Downloads the [file](glossary:file-record) at the given URL.
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param url the URL that the file is stored at.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint. Only used for private files.
+     *
+     * @example Get a file that was uploaded
+     * const recordKeyResult = await os.getPublicRecordKey('myRecord');
+     * if (!recordKeyResult.success) {
+     *     os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+     *     return;
+     * }
+     * const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+     *     description: 'my bots'
+     * });
+     *
+     * if (result.success) {
+     *     tags.uploadUrl = result.url;
+     *     os.toast("Success! Uploaded to " + result.url);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * // Download the file later
+     * const fileData = await os.getFile(tags.uploadUrl);
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.getFile
+     * @docid os.getFile-url
      */
     function getFile(url: string, endpoint?: string): Promise<any>;
     /**
@@ -9064,19 +9127,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the data stored in the given public file.
+     * Gets the data stored in the given public [file](glossary:file-record).
      * Only works for files that have the `publicRead` marker.
      * If the file is not public, then this operation will fail.
-     * @param result The successful result of a os.recordFile() call.
-     * @param endpoint The endpoint that should be queried. Optional.
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param result the result of a {@link os.recordFile} call.
+     *
+     * @example Get a public file
+     * const fileData = await os.getFile(recordFileResult);
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.getPublicFile
+     * @docid os.getPublicFile-result
      */
     function getPublicFile(result: RecordFileApiSuccess): Promise<any>;
 
     /**
-     * Gets the data stored in the given public file.
+     * Gets the data stored in the given public [file](glossary:file-record).
      * Only works for files that have the `publicRead` marker.
      * If the file is not public, then this operation will fail.
-     * @param url The URL that the public file is stored at.
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param url the URL that the file is stored at.
+     *
+     * @example Get a public file
+     * let fileUrl = 'ENTER_FILE_URL_HERE';
+     * const fileData = await os.getFile(fileUrl);
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.getPublicFile
+     * @docid os.getPublicFile-url
      */
     function getPublicFile(url: string): Promise<any>;
 
@@ -9117,9 +9202,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the data stored in the given private file.
-     * @param result The successful result of a os.recordFile() call.
-     * @param endpoint The endpoint that should be queried. Optional.
+     * Gets the data stored in the given private [file](glossary:file-record).
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param result the result of a {@link os.recordFile} call.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get a private file
+     * const result = await os.getPrivateFile(recordFileResult);
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.getPrivateFile
+     * @docid os.getPrivateFile-result
      */
     function getPrivateFile(
         result: RecordFileApiSuccess,
@@ -9127,9 +9223,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<any>;
 
     /**
-     * Gets the data stored in the given private file.
-     * @param url The URL that the public file is stored at.
-     * @param endpoint The endpoint that should be queried. Optional.
+     * Gets the data stored in the given private [file](glossary:file-record).
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param url the URL that the file is stored at.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get a private file
+     * const fileUrl = 'ENTER_FILE_URL_HERE';
+     * const result = await os.getPrivateFile(fileUrl);
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.getPrivateFile
+     * @docid os.getPrivateFile-url
      */
     function getPrivateFile(url: string, endpoint?: string): Promise<any>;
 
@@ -9196,10 +9304,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Deletes the specified file using the given record key.
+     * Erases the [file](glossary:file-record) referenced in the given {@link os.recordFile} result.
+     * Returns a promise that resolves with an object that indicates if the file was deleted or if an error occurred.
+     *
      * @param recordKeyOrName The record key or name that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.
      * @param endpoint The records endpoint that should be queried. Optional.
+     *
+     * @example Delete a file
+     * const result = await os.eraseFile(tags.recordKey, recordFileResult);
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.eraseFile
+     * @docid os.eraseFile-result
      */
     function eraseFile(
         recordKeyOrName: string,
@@ -9207,10 +9331,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         endpoint?: string
     ): Promise<EraseFileResult>;
     /**
-     * Deletes the specified file using the given record key.
-     * @param recordKeyOrName The record key or record name that should be used to delete the file.
-     * @param url The URL that the file is stored at.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Erases the [file](glossary:file-record) at the given URL.
+     * Returns a promise that resolves with an object that indicates if the file was deleted or if an error occurred.
+     *
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param url the URL that the file is stored at.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Delete a file
+     * const result = await os.eraseFile(tags.recordKey, fileUrl);
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.eraseFile
+     * @docid os.eraseFile-url
      */
     function eraseFile(
         recordKeyOrName: string,
@@ -9572,6 +9712,114 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcCalculateRayFromCamera(
             portal,
             { x: viewportCoordinates.x, y: viewportCoordinates.y },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the viewport coordinates that the given position would be projected to in the camera of the given portal.
+     * Returns a promise that resolves with the calculated viewport coordinates.
+     *
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * This function is useful for converting a position in the portal to a position on the camera viewport (screen position, but the location is not in pixels).
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param position the 3D position that should be projected to the viewport.
+     *
+     * @example Calculate the viewport coordinates of the current bot in the home dimension in the grid portal
+     * const botPosition = new Vector3(
+     *   thisBot.homeX,
+     *   thisBot.homeY,
+     *   thisBot.homeZ
+     * );
+     * const viewportPosition = await os.calculateViewportCoordinatesFromPosition("grid", botPosition);
+     * os.toast(viewportPosition);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateViewportCoordinatesFromPosition
+     * @docgroup 10-raycast
+     */
+    function calculateViewportCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        position: Vector3
+    ): Promise<Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateViewportCoordinatesFromPosition(
+            portal,
+            { x: position.x || 0, y: position.y || 0, z: position.z || 0 },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the screen coordinates that the given viewport coordinates map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 2D viewport coordinates that should be converted to screen coordinates.
+     *
+     * @example Calculate the screen coordinates at the center of grid portal screen
+     * const screenCoordinates = await os.calculateScreenCoordinatesFromViewportCoordinates('grid', new Vector2(0, 0));
+     * os.toast(screenCoordinates);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromViewportCoordinates
+     * @docgroup 10-raycast
+     */
+    function calculateScreenCoordinatesFromViewportCoordinates(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point2D
+    ): Promise<Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateScreenCoordinatesFromViewportCoordinates(
+            portal,
+            {
+                x: coordinates.x || 0,
+                y: coordinates.y || 0,
+            },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the viewport coordinates that the given screen coordinates map to on the camera.
+     * Returns a promise that resolves with the calculated viewport coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * Viewport coordinates locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 2D screen coordinates that should be converted to viewport coordinates.
+     *
+     * @example Calculate the viewport coordinates at (0,0) on the screen
+     * const viewportCoordinates = await os.calculateViewportCoordinatesFromScreenCoordinates('grid', new Vector2(0, 0));
+     * os.toast(viewportCoordinates);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateViewportCoordinatesFromScreenCoordinates
+     * @docgroup 10-raycast
+     */
+    function calculateViewportCoordinatesFromScreenCoordinates(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point2D
+    ): Promise<Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateViewportCoordinatesFromScreenCoordinates(
+            portal,
+            {
+                x: coordinates.x || 0,
+                y: coordinates.y || 0,
+            },
             task.taskId
         );
         return addAsyncAction(task, event);

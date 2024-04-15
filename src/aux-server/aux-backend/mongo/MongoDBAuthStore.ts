@@ -31,6 +31,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import { Db, Collection, FilterQuery } from 'mongodb';
 import { v4 as uuid } from 'uuid';
@@ -496,6 +497,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     banReason: user.banReason,
                     privoServiceId: user.privoServiceId,
                     privoParentServiceId: user.privoParentServiceId,
+                    role: user.role,
                 },
             },
             {
@@ -539,6 +541,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             banReason: user.banReason,
             privoServiceId: user.privoServiceId,
             privoParentServiceId: user.privoParentServiceId,
+            role: user.role,
         });
 
         return {
@@ -1395,6 +1398,7 @@ export interface MongoDBAuthUser {
     privoParentServiceId?: string;
 
     privacyFeatures?: PrivacyFeatures;
+    role?: UserRole;
 }
 
 export interface MongoDBUserAuthenticator extends AuthUserAuthenticator {

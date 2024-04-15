@@ -165,6 +165,10 @@ const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
         'typeParameters',
     ],
     Identifier: [...VisitorKeys.Identifier, 'typeAnnotation'],
+    PropertyDefinition: [
+        ...(VisitorKeys as any).PropertyDefinition,
+        'typeAnnotation',
+    ],
 };
 
 /**

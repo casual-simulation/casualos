@@ -16,6 +16,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import {
     LoginRequest,
@@ -181,6 +182,7 @@ export class PrismaAuthStore implements AuthStore {
             allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
             allowAI: user.privacyFeatures?.allowAI ?? true,
             allowPublicInsts: user.privacyFeatures?.allowPublicInsts ?? true,
+            role: user.role,
         };
 
         await this._client.user.upsert({
@@ -222,6 +224,7 @@ export class PrismaAuthStore implements AuthStore {
                 allowAI: user.privacyFeatures?.allowAI ?? true,
                 allowPublicInsts:
                     user.privacyFeatures?.allowPublicInsts ?? true,
+                role: user.role,
             };
 
             if (!!user.currentLoginRequestId) {
@@ -722,6 +725,7 @@ export class PrismaAuthStore implements AuthStore {
             nextSessionId: session.nextSessionId,
             ipAddress: session.ipAddress,
             connectionSecret: session.connectionSecret,
+            revocable: session.revocable,
         };
         await this._client.authSession.upsert({
             where: {
@@ -759,6 +763,7 @@ export class PrismaAuthStore implements AuthStore {
                         ipAddress: newSession.ipAddress,
                         previousSessionId: session.sessionId,
                         connectionSecret: newSession.connectionSecret,
+                        revocable: session.revocable,
                     },
                 },
             },
@@ -909,78 +914,94 @@ export class PrismaAuthStore implements AuthStore {
         const periodStart = convertToDate(request.currentPeriodStartMs);
         const periodEnd = convertToDate(request.currentPeriodEndMs);
         if (request.userId) {
+            const updateData: Prisma.UserUpdateArgs<any>['data'] = {
+                subscriptionId: request.subscriptionId,
+                subscriptionStatus: request.subscriptionStatus,
+                subscriptionPeriodStart: periodStart,
+                subscriptionPeriodEnd: periodEnd,
+            };
+
+            if (request.stripeCustomerId) {
+                updateData.stripeCustomerId = request.stripeCustomerId;
+            }
+
+            if (request.stripeSubscriptionId) {
+                updateData.subscriptionInfo = {
+                    upsert: {
+                        create: {
+                            id: uuid(),
+                            userId: request.userId,
+                            subscriptionId: request.subscriptionId,
+                            subscriptionStatus: request.subscriptionStatus,
+                            stripeCustomerId: request.stripeCustomerId,
+                            stripeSubscriptionId: request.stripeSubscriptionId,
+                            currentPeriodStart: periodStart,
+                            currentPeriodEnd: periodEnd,
+                        },
+                        update: {
+                            subscriptionId: request.subscriptionId,
+                            subscriptionStatus: request.subscriptionStatus,
+                            stripeCustomerId: request.stripeCustomerId,
+                            stripeSubscriptionId: request.stripeSubscriptionId,
+                            currentPeriodStart: periodStart,
+                            currentPeriodEnd: periodEnd,
+                        },
+                    },
+                };
+            } else {
+                updateData.subscriptionInfoId = null;
+            }
+
             await this._client.user.update({
                 where: {
                     id: request.userId,
                 },
-                data: {
-                    subscriptionId: request.subscriptionId,
-                    subscriptionStatus: request.subscriptionStatus,
-                    stripeCustomerId: request.stripeCustomerId,
-                    subscriptionPeriodStart: periodStart,
-                    subscriptionPeriodEnd: periodEnd,
-                    subscriptionInfo: {
-                        upsert: {
-                            create: {
-                                id: uuid(),
-                                userId: request.userId,
-                                subscriptionId: request.subscriptionId,
-                                subscriptionStatus: request.subscriptionStatus,
-                                stripeCustomerId: request.stripeCustomerId,
-                                stripeSubscriptionId:
-                                    request.stripeSubscriptionId,
-                                currentPeriodStart: periodStart,
-                                currentPeriodEnd: periodEnd,
-                            },
-                            update: {
-                                subscriptionId: request.subscriptionId,
-                                subscriptionStatus: request.subscriptionStatus,
-                                stripeCustomerId: request.stripeCustomerId,
-                                stripeSubscriptionId:
-                                    request.stripeSubscriptionId,
-                                currentPeriodStart: periodStart,
-                                currentPeriodEnd: periodEnd,
-                            },
-                        },
-                    },
-                },
+                data: updateData,
             });
         } else if (request.studioId) {
+            const updateData: Prisma.StudioUpdateArgs<any>['data'] = {
+                subscriptionId: request.subscriptionId,
+                subscriptionStatus: request.subscriptionStatus,
+                subscriptionPeriodStart: periodStart,
+                subscriptionPeriodEnd: periodEnd,
+            };
+
+            if (request.stripeCustomerId) {
+                updateData.stripeCustomerId = request.stripeCustomerId;
+            }
+
+            if (request.stripeSubscriptionId) {
+                updateData.subscriptionInfo = {
+                    upsert: {
+                        create: {
+                            id: uuid(),
+                            studioId: request.studioId,
+                            subscriptionId: request.subscriptionId,
+                            subscriptionStatus: request.subscriptionStatus,
+                            stripeCustomerId: request.stripeCustomerId,
+                            stripeSubscriptionId: request.stripeSubscriptionId,
+                            currentPeriodStart: periodStart,
+                            currentPeriodEnd: periodEnd,
+                        },
+                        update: {
+                            subscriptionId: request.subscriptionId,
+                            subscriptionStatus: request.subscriptionStatus,
+                            stripeCustomerId: request.stripeCustomerId,
+                            stripeSubscriptionId: request.stripeSubscriptionId,
+                            currentPeriodStart: periodStart,
+                            currentPeriodEnd: periodEnd,
+                        },
+                    },
+                };
+            } else {
+                updateData.subscriptionInfoId = null;
+            }
+
             await this._client.studio.update({
                 where: {
                     id: request.studioId,
                 },
-                data: {
-                    subscriptionId: request.subscriptionId,
-                    subscriptionStatus: request.subscriptionStatus,
-                    stripeCustomerId: request.stripeCustomerId,
-                    subscriptionPeriodStart: periodStart,
-                    subscriptionPeriodEnd: periodEnd,
-                    subscriptionInfo: {
-                        upsert: {
-                            create: {
-                                id: uuid(),
-                                studioId: request.studioId,
-                                subscriptionId: request.subscriptionId,
-                                subscriptionStatus: request.subscriptionStatus,
-                                stripeCustomerId: request.stripeCustomerId,
-                                stripeSubscriptionId:
-                                    request.stripeSubscriptionId,
-                                currentPeriodStart: periodStart,
-                                currentPeriodEnd: periodEnd,
-                            },
-                            update: {
-                                subscriptionId: request.subscriptionId,
-                                subscriptionStatus: request.subscriptionStatus,
-                                stripeCustomerId: request.stripeCustomerId,
-                                stripeSubscriptionId:
-                                    request.stripeSubscriptionId,
-                                currentPeriodStart: periodStart,
-                                currentPeriodEnd: periodEnd,
-                            },
-                        },
-                    },
-                },
+                data: updateData,
             });
         }
     }
@@ -1171,6 +1192,7 @@ export class PrismaAuthStore implements AuthStore {
                 subscriptionPeriodStartMs: convertToMillis(
                     user.subscriptionPeriodStart
                 ),
+                role: user.role as UserRole,
             };
         }
         return null;
@@ -1189,6 +1211,8 @@ export class PrismaAuthStore implements AuthStore {
             ipAddress: session.ipAddress,
             nextSessionId: session.nextSessionId,
             connectionSecret: session.connectionSecret,
+
+            revocable: session.revocable,
         };
     }
 

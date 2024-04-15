@@ -91,7 +91,7 @@
         "@tensorflow/tfjs": "4.2.0",
         "@tweenjs/tween.js": "18.6.0",
         "@uriopass/nosleep.js": "0.12.2",
-        "@webxr-input-profiles/assets": "1.0.9",
+        "@webxr-input-profiles/assets": "1.0.14",
         "@webxr-input-profiles/motion-controllers": "1.0.0",
         "astring": "1.7.5",
         "aws-sdk": "^2.968.0",

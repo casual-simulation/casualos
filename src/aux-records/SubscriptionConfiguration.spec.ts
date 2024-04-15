@@ -400,6 +400,32 @@ describe('getSubscriptionFeatures()', () => {
                 );
                 expect(features === config.tiers.beta.features).toBe(true);
             });
+
+            it('should return the default features if the subscription has expired', () => {
+                const features = getSubscriptionFeatures(
+                    config,
+                    status,
+                    'subId',
+                    'user',
+                    1000, // start
+                    2000, // end
+                    2001 // now
+                );
+                expect(features === config.defaultFeatures.user).toBe(true);
+            });
+
+            it('should return the features for the subscription if it is still active', () => {
+                const features = getSubscriptionFeatures(
+                    config,
+                    status,
+                    'subId',
+                    'user',
+                    1000, // start
+                    2000, // end
+                    1500 // now
+                );
+                expect(features === config.tiers.beta.features).toBe(true);
+            });
         } else {
             it('should return the default features for the user', () => {
                 const features = getSubscriptionFeatures(
