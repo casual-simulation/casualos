@@ -88,16 +88,15 @@ task('generate-stub-projects', [], async function () {
     ];
 
     const defaultProjectJson = {
-        extends: '../../tsconfig.base.json',
         compilerOptions: {
             baseUrl: '.',
             outDir: '../../temp/xp-api/',
             composite: true,
             incremental: true,
         },
-        include: ['**/*.ts', '../../src/aux-server/typings/**/*'],
+        include: ['**/*.ts'],
         exclude: ['node_modules', 'lib', '**/*.spec.ts'],
-        references: [{ path: '../../src/aux-records' }],
+        references: [],
     };
 
     for (let project of projects) {
@@ -106,9 +105,22 @@ task('generate-stub-projects', [], async function () {
             console.log('Creating tsconfig.json stub for ' + project);
             const dirname = path.dirname(project);
             mkdirSync(dirname, { recursive: true });
+
+            const pathToTsconfigBase = path.relative(
+                dirname,
+                path.resolve(__dirname, 'tsconfig.base.json')
+            );
+
             writeFileSync(
                 project,
-                JSON.stringify(defaultProjectJson, null, 2),
+                JSON.stringify(
+                    {
+                        extends: pathToTsconfigBase,
+                        ...defaultProjectJson,
+                    },
+                    null,
+                    2
+                ),
                 {
                     encoding: 'utf-8',
                     flag: 'w',
