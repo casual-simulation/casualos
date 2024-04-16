@@ -6429,7 +6429,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example Classify the given images.
      * const files = await os.showUploadFiles()
-     * const classify = os.classifyImages({
+     * const classify = await os.classifyImages({
      *      modelUrl: "MY_MODEL_URL",
      *      images: files.map((file) => {
      *         return {file}
@@ -6444,7 +6444,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         options: ClassifyImagesOptions
     ): Promise<ClassifyImagesResult> {
         const task = context.createTask();
-        const action = calcOpenClassifyImages(true, options, task.taskId);
+        const action = calcOpenClassifyImages(options, task.taskId);
         return addAsyncAction(task, action);
     }
 

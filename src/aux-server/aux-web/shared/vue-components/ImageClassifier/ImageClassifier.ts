@@ -7,7 +7,7 @@ import {
     ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
     ON_IMAGE_CLASSIFIED_ACTION_NAME,
     OpenImageClassifierAction,
-    OpenClassifyImagesAction,
+    ClassifyImagesAction,
     Image,
     action,
     asyncResult,
@@ -59,7 +59,7 @@ export default class ImageClassifier extends Vue {
     cameraType: CameraType = null;
     image: Image[] = null;
 
-    private _openEvent: OpenImageClassifierAction | OpenClassifyImagesAction;
+    private _openEvent: OpenImageClassifierAction;
 
     constructor() {
         super();
@@ -200,7 +200,7 @@ export default class ImageClassifier extends Vue {
                             ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME
                         );
                     }
-                } else if (e.type === 'show_classify_images') {
+                } else if (e.type === 'classify_images') {
                     const tmImage = await import('@teachablemachine/image');
                     const urls = getImageClassifierUrls(e);
                     const model = await tmImage.load(urls.json, urls.metadata);

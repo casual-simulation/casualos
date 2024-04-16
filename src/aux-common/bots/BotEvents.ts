@@ -155,7 +155,7 @@ export type AsyncActions =
     | MediaPermissionAction
     | GetAverageFrameRateAction
     | OpenImageClassifierAction
-    | OpenClassifyImagesAction
+    | ClassifyImagesAction
     | MeetCommandAction
     | MeetFunctionAction
     | ShowTooltipAction
@@ -883,15 +883,10 @@ export interface ImageClassifierOptions {
     cameraType?: CameraType;
 }
 
-export interface OpenClassifyImagesAction
+export interface ClassifyImagesAction
     extends AsyncAction,
         ClassifyImagesOptions {
-    type: 'show_classify_images';
-
-    /**
-     * Whether the image classifier should be visible.
-     */
-    open: boolean;
+    type: 'classify_images';
 }
 
 export interface ClassifyImagesOptions {
@@ -993,28 +988,6 @@ export interface ClassifyImagesResult {
 }
 
 export interface ImageClassification {
-    /**
-     * The URL of the image.
-     * Omitted if a URL was not specified for the image.
-     */
-    url?: string;
-
-    /**
-     * The file that represents the image.
-     * Omitted if a file was not used for the image.
-     */
-    file?: {
-        /**
-         * The name of the file.
-         */
-        name: string;
-
-        /**
-         * The size of the file.
-         */
-        size: number;
-    };
-
     /**
      * The predictions for the image.
      */
@@ -4016,13 +3989,11 @@ export function openImageClassifier(
 }
 
 export function classifyImages(
-    open: boolean,
     options: ClassifyImagesOptions,
     taskId?: number | string
-): OpenClassifyImagesAction {
+): ClassifyImagesAction {
     return {
-        type: 'show_classify_images',
-        open,
+        type: 'classify_images',
         ...options,
         taskId,
     };
