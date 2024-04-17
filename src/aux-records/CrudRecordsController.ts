@@ -30,15 +30,27 @@ import { ValidatePublicRecordKeyFailure } from './RecordsController';
 
 export interface CrudRecordsConfiguration<
     T extends CrudRecord,
-    TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics
+    TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics,
+    TStore extends CrudRecordsStore<T, TMetrics> = CrudRecordsStore<T, TMetrics>
 > {
     /**
      * The name for the controller.
      */
     name: string;
 
-    store: CrudRecordsStore<T, TMetrics>;
+    /**
+     * The store that the controller uses.
+     */
+    store: TStore;
+
+    /**
+     * The policy controller.
+     */
     policies: PolicyController;
+
+    /**
+     * The configuration store.
+     */
     config: ConfigurationStore;
 
     /**
@@ -58,16 +70,36 @@ export interface CrudRecordsConfiguration<
 export abstract class CrudRecordsController<
     T extends CrudRecord,
     TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics,
+    TStore extends CrudRecordsStore<T, TMetrics> = CrudRecordsStore<
+        T,
+        TMetrics
+    >,
     TResult extends Partial<T> = T
 > {
-    private _store: CrudRecordsStore<T, TMetrics>;
+    private _store: TStore;
     private _policies: PolicyController;
     private _config: ConfigurationStore;
     private _name: string;
     private _allowRecordKeys: boolean;
     private _resourceKind: ResourceKinds;
 
-    constructor(config: CrudRecordsConfiguration<T, TMetrics>) {
+    protected config() {
+        return this._config;
+    }
+
+    protected name() {
+        return this._name;
+    }
+
+    protected policies() {
+        return this._policies;
+    }
+
+    protected store() {
+        return this._store;
+    }
+
+    constructor(config: CrudRecordsConfiguration<T, TMetrics, TStore>) {
         this._name = config.name;
         this._allowRecordKeys = config.allowRecordKeys;
         this._store = config.store;

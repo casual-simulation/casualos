@@ -54,3 +54,4 @@ export * from './forms';
 
 export * from './ComIdConfig';
 export * from './CrudRecordsStore';
+export * from './CrudRecordsController';
