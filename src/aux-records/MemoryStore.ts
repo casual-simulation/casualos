@@ -2771,6 +2771,10 @@ export class MemoryStore
         this._aiSkyboxMetrics.push(metrics);
     }
 
+    async getSubscriptionInfoForRecord(recordName: string) {
+        return await this._getSubscriptionInfo(recordName);
+    }
+
     private async _getSubscriptionInfo(
         recordName: string
     ): Promise<SubscriptionMetrics> {
@@ -2830,6 +2834,10 @@ export class MemoryStore
         }
 
         return metrics;
+    }
+
+    async listRecordsForSubscriptionByRecordName(recordName: string) {
+        return await this._listRecordsForSubscription(recordName);
     }
 
     private async _listRecordsForSubscription(recordName: string) {

@@ -90,7 +90,7 @@ export class CrudRecordsController<
 
     async recordItem(
         request: CrudRecordItemRequest<T>
-    ): Promise<CrudRecordItemResult<T>> {
+    ): Promise<CrudRecordItemResult> {
         try {
             const contextResult =
                 await this._policies.constructAuthorizationContext({
@@ -208,6 +208,8 @@ export class CrudRecordsController<
             await this._store.putItem(recordName, request.item);
             return {
                 success: true,
+                recordName,
+                address: request.item.address,
             };
         } catch (err) {
             console.error(`[${this._name}] Error recording item:`, err);
@@ -242,12 +244,14 @@ export interface CrudRecordItemRequest<T> {
     item: T;
 }
 
-export type CrudRecordItemResult<T> =
-    | CrudRecordItemSuccess<T>
+export type CrudRecordItemResult =
+    | CrudRecordItemSuccess
     | CrudRecordItemFailure;
 
-export interface CrudRecordItemSuccess<T> {
+export interface CrudRecordItemSuccess {
     success: true;
+    recordName: string;
+    address: string;
 }
 
 export interface CrudRecordItemFailure {
