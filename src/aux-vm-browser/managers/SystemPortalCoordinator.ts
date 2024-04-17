@@ -46,7 +46,6 @@ import {
     SystemPortalPane,
     getSystemPortalPane,
     getOpenSystemPortalPane,
-    updatedBot,
     isModule,
     parseModule,
 } from '@casual-simulation/aux-common';

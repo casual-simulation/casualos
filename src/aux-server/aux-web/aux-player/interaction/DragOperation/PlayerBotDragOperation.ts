@@ -2,24 +2,15 @@ import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/
 import {
     Bot,
     BotCalculationContext,
-    BotDragMode,
-    objectsAtDimensionGridPosition,
-    getDropBotFromGridPosition,
     BotTags,
-    BotPositioningMode,
     getBotPosition,
-    getBotIndex,
-    calculateStringTagValue,
     getBotTransformer,
     hasValue,
     isBotMovable,
-    SnapPoint,
     getBotScale,
     getAnchorPointOffset,
-    createBot,
     getBotRotation,
     SnapAxis,
-    calculateGridScale,
     SnapGrid,
     realNumberOrDefault,
     getBotShape,
@@ -31,9 +22,6 @@ import {
     Ray,
     Vector3,
     Quaternion,
-    Euler,
-    Color,
-    Box3,
     Matrix4,
     Group,
     Object3D,
@@ -43,12 +31,11 @@ import { Input, InputMethod, InputModality } from '../../../shared/scene/Input';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
-import { take, drop, flatMap } from 'lodash';
+import { take, drop } from 'lodash';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import {
     calculateHitFace,
-    convertRotationToAuxCoordinates,
     isBotChildOf,
     objectForwardRay,
     safeSetParent,

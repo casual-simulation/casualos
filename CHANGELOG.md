@@ -1,8 +1,16 @@
 # CasualOS Changelog
 
-## V3.3.0
+## V3.3.1
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Added `classifyImages()` function.
+
+## V3.3.0
+
+#### Date: 4/15/2024
 
 ### :rocket: Features
 
@@ -49,12 +57,14 @@
     -   When the `sessionKey` and `connectionKey` query params are specified in the URL, they will be used instead of the stored ones.
     -   Additionally, they work for users who are not logged in.
     -   This makes it possible to give someone a URL that grants them automatic access to an account.
--   Added `classifyImages` function.
+-   Added the `updateSubscription` operation (`POST /api/v2/subscriptions/update`) to allow super users to grant a subscription to users or studios.
+    -   Currently, it can only be used to grant/revoke simple non-stripe subscriptions. If the user already has a stripe subscription, then the function will refuse to make changes.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where ES2022 class fields would not support type annotations.
 -   Fixed an issue where the `miniGridPortal` did not support using `os.focusOn()` with a position.
+-   Fixed some performance issues when updating lots of bots across multiple frames.
 
 ## V3.2.19
 

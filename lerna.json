@@ -2,6 +2,6 @@
   "packages": [
     "src/*"
   ],
-  "version": "3.2.19",
+  "version": "3.3.0",
   "npmClient": "pnpm"
 }

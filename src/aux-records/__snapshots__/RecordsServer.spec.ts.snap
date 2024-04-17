@@ -2519,6 +2519,54 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/subscriptions/update",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "subscriptionId": Object {
+            "nullable": true,
+            "type": "string",
+          },
+          "subscriptionPeriodEndMs": Object {
+            "nullable": true,
+            "type": "number",
+          },
+          "subscriptionPeriodStartMs": Object {
+            "nullable": true,
+            "type": "number",
+          },
+          "subscriptionStatus": Object {
+            "nullable": true,
+            "type": "enum",
+            "values": Array [
+              "active",
+              "canceled",
+              "ended",
+              "past_due",
+              "unpaid",
+              "incomplete",
+              "incomplete_expired",
+              "trialing",
+              "paused",
+            ],
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateSubscription",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/insts/list",
       },
@@ -5186,6 +5234,54 @@ Object {
         "type": "object",
       },
       "name": "getManageSubscriptionLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/subscriptions/update",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "subscriptionId": Object {
+            "nullable": true,
+            "type": "string",
+          },
+          "subscriptionPeriodEndMs": Object {
+            "nullable": true,
+            "type": "number",
+          },
+          "subscriptionPeriodStartMs": Object {
+            "nullable": true,
+            "type": "number",
+          },
+          "subscriptionStatus": Object {
+            "nullable": true,
+            "type": "enum",
+            "values": Array [
+              "active",
+              "canceled",
+              "ended",
+              "past_due",
+              "unpaid",
+              "incomplete",
+              "incomplete_expired",
+              "trialing",
+              "paused",
+            ],
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateSubscription",
       "origins": "account",
     },
     Object {

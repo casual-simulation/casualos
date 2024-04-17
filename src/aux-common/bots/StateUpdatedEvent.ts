@@ -100,12 +100,9 @@ export function updatedBot(
 ): UpdatedBot {
     let tags = new Set<string>();
     let signatures = [] as string[];
-    const bot = cloneDeep(currentBot);
 
     if (partialBot.tags) {
         for (let tag in partialBot.tags) {
-            const val = partialBot.tags[tag];
-            bot.tags[tag] = val;
             tags.add(tag);
         }
     }
@@ -115,15 +112,6 @@ export function updatedBot(
             if (!signatures) {
                 signatures = [];
             }
-            if (!bot.signatures) {
-                bot.signatures = {};
-            }
-            const val = partialBot.signatures[sig];
-            if (hasValue(val)) {
-                bot.signatures[sig] = val;
-            } else {
-                delete bot.signatures[sig];
-            }
             signatures.push(sig);
         }
     }
@@ -132,31 +120,19 @@ export function updatedBot(
         for (let space in partialBot.masks) {
             for (let tag in partialBot.masks[space]) {
                 tags.add(tag);
-                if (!bot.masks) {
-                    bot.masks = {};
-                }
-                if (!bot.masks[space]) {
-                    bot.masks[space] = {};
-                }
-                const val = partialBot.masks[space][tag];
-                if (hasValue(val)) {
-                    bot.masks[space][tag] = val;
-                } else {
-                    delete bot.masks[space][tag];
-                }
             }
         }
     }
 
     if (signatures.length > 0) {
         return {
-            bot,
+            bot: currentBot,
             tags: [...tags.values()],
             signatures,
         };
     } else {
         return {
-            bot,
+            bot: currentBot,
             tags: [...tags.values()],
         };
     }

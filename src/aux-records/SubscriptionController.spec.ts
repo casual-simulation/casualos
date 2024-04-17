@@ -13,6 +13,7 @@ import { Studio } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
 import { createTestUser } from './TestUtils';
 
+const originalDateNow = Date.now;
 console.log = jest.fn();
 
 describe('SubscriptionController', () => {
@@ -36,8 +37,10 @@ describe('SubscriptionController', () => {
     let stripe: StripeInterface;
     let userId: string;
     let sessionKey: string;
+    let nowMock: jest.Mock<number>;
 
     beforeEach(async () => {
+        nowMock = Date.now = jest.fn();
         store = new MemoryStore({
             subscriptions: {
                 subscriptions: [
@@ -158,6 +161,10 @@ describe('SubscriptionController', () => {
 
         userId = result.userId;
         sessionKey = result.sessionKey;
+    });
+
+    afterAll(() => {
+        Date.now = originalDateNow;
     });
 
     describe('getSubscriptionStatus()', () => {
@@ -1173,6 +1180,493 @@ describe('SubscriptionController', () => {
                             ],
                         },
                     ],
+                });
+            });
+        });
+    });
+
+    describe('updateSubscription()', () => {
+        describe('user', () => {
+            let user: AuthUser;
+
+            beforeEach(async () => {
+                user = await store.findUserByAddress(
+                    'test@example.com',
+                    'email'
+                );
+                expect(user.stripeCustomerId).toBeFalsy();
+
+                nowMock.mockReturnValue(101);
+            });
+
+            it('should return a not_authorized result if the user is not a super user', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: user.id,
+                    currentUserRole: user.role,
+                    userId: user.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                });
+            });
+
+            it('should be able to update the subscription of a user', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    userId: user.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should be able to save a subscription with no start or end dates', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    userId: user.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should be able to set a subscription to inactive', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    userId: user.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'ended',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'ended',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should be able to remove a subscription', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    userId: user.id,
+                    subscriptionId: null,
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should not update the stripe customer ID', async () => {
+                await store.saveUser({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                });
+
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    userId: user.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should reject if the user already has an active stripe subscription', async () => {
+                await store.saveUser({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: 'sub_info_1',
+                });
+
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    userId: user.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The user already has an active stripe subscription. Currently, this operation only supports updating the subscription of a user who does not have an active stripe subscription.',
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: 'sub_info_1',
+                });
+            });
+
+            it('should work if the user has an inactive stripe subscription', async () => {
+                await store.saveUser({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'cancelled',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: 'sub_info_1',
+                });
+
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    userId: user.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.findUser(user.id)).toEqual({
+                    ...user,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                    stripeCustomerId: 'stripe_customer',
+                });
+            });
+        });
+
+        describe('studio', () => {
+            let studio: Studio;
+
+            beforeEach(async () => {
+                studio = {
+                    id: 'studio_id',
+                    displayName: 'Studio Name',
+                };
+                await store.addStudio(studio);
+                nowMock.mockReturnValue(101);
+            });
+
+            it('should return a not_authorized result if the user is not a super user', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'userId',
+                    currentUserRole: 'none',
+                    studioId: studio.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                });
+            });
+
+            it('should be able to update the subscription of a user', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    studioId: studio.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should be able to save a subscription with no start or end dates', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    studioId: studio.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should be able to set a subscription to inactive', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    studioId: studio.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'ended',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'ended',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should be able to remove a subscription', async () => {
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    studioId: studio.id,
+                    subscriptionId: null,
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                    subscriptionId: null,
+                    subscriptionStatus: null,
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should not update the stripe customer ID', async () => {
+                await store.updateStudio({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                });
+
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    studioId: studio.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                });
+            });
+
+            it('should reject if the user already has an active stripe subscription', async () => {
+                await store.updateStudio({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: 'sub_info_1',
+                });
+
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    studioId: studio.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The studio already has an active stripe subscription. Currently, this operation only supports updating the subscription of a studio which does not have an active stripe subscription.',
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: 'sub_info_1',
+                });
+            });
+
+            it('should work if the user has an inactive stripe subscription', async () => {
+                await store.updateStudio({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'cancelled',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 200,
+                    subscriptionInfoId: 'sub_info_1',
+                });
+
+                const result = await controller.updateSubscription({
+                    currentUserId: 'super_user_id',
+                    currentUserRole: 'superUser',
+                    studioId: studio.id,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(await store.getStudioById(studio.id)).toEqual({
+                    ...studio,
+                    subscriptionId: 'sub_1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: null,
+                    subscriptionPeriodEndMs: null,
+                    subscriptionInfoId: null,
+                    stripeCustomerId: 'stripe_customer',
                 });
             });
         });

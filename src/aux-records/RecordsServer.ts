@@ -2734,6 +2734,84 @@ export class RecordsServer {
                     }
                 ),
 
+            updateSubscription: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/subscriptions/update')
+                .inputs(
+                    z.object({
+                        userId: z.string().optional(),
+                        studioId: z.string().optional(),
+                        subscriptionId: z.string().nullable(),
+                        subscriptionStatus: z
+                            .enum([
+                                'active',
+                                'canceled',
+                                'ended',
+                                'past_due',
+                                'unpaid',
+                                'incomplete',
+                                'incomplete_expired',
+                                'trialing',
+                                'paused',
+                            ])
+                            .nullable(),
+                        subscriptionPeriodStartMs: z
+                            .number()
+                            .positive()
+                            .int()
+                            .nullable(),
+                        subscriptionPeriodEndMs: z
+                            .number()
+                            .positive()
+                            .int()
+                            .nullable(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            userId,
+                            studioId,
+                            subscriptionId,
+                            subscriptionStatus,
+                            subscriptionPeriodStartMs,
+                            subscriptionPeriodEndMs,
+                        },
+                        context
+                    ) => {
+                        if (!this._subscriptions) {
+                            return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKey = context.sessionKey;
+
+                        if (!sessionKey) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            sessionKey
+                        );
+                        if (validation.success === false) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._subscriptions.updateSubscription({
+                                currentUserId: validation.userId,
+                                currentUserRole: validation.role,
+                                userId,
+                                studioId,
+                                subscriptionId,
+                                subscriptionStatus,
+                                subscriptionPeriodStartMs,
+                                subscriptionPeriodEndMs,
+                            });
+
+                        return result;
+                    }
+                ),
+
             listInsts: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/insts/list')
@@ -3026,9 +3104,24 @@ export class RecordsServer {
         name: string,
         procedure: Procedure<TInput, TOutput>
     ) {
+        if (name in this._procedures) {
+            throw new Error(
+                `A procedure already exists with the name: ${name}`
+            );
+        }
         (this._procedures as any)[name] = procedure;
         if (procedure.http) {
             this._addProcedureRoute(procedure);
+        }
+    }
+
+    /**
+     * Adds the given procedures to the server.
+     * @param procedures The procedures that should be added.
+     */
+    addProcedures(procedures: Procedures) {
+        for (let name of Object.keys(procedures)) {
+            this.addProcedure(name, procedures[name]);
         }
     }
 
