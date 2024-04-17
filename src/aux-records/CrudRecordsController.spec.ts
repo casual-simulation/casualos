@@ -593,6 +593,145 @@ describe('CrudRecordsController', () => {
                 errorMessage: expect.any(String),
             });
         });
+
+        it('should return invalid_record_key if record keys are not allowed', async () => {
+            manager = new TestController({
+                policies,
+                store: itemsStore,
+                name: 'testItem',
+                allowRecordKeys: false,
+                resourceKind: 'data',
+                config: store,
+            });
+
+            const result = await manager.getItem({
+                recordName: key,
+                userId,
+                address: 'address2',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: expect.any(String),
+            });
+        });
+    });
+
+    describe('eraseItem()', () => {
+        beforeEach(async () => {
+            await itemsStore.createItem('testRecord', {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await itemsStore.createItem('testRecord', {
+                address: 'address2',
+                markers: [PRIVATE_MARKER],
+            });
+
+            await itemsStore.createItem('testRecord', {
+                address: 'address3',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should erase the item if the user has access', async () => {
+            const result = await manager.eraseItem({
+                recordName: 'testRecord',
+                userId,
+                address: 'address2',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address2')
+            ).resolves.toBeFalsy();
+        });
+
+        it('should erase the item if the record key has access', async () => {
+            const result = await manager.eraseItem({
+                recordName: key,
+                userId,
+                address: 'address2',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address2')
+            ).resolves.toBeFalsy();
+        });
+
+        it('should return data_not_found if the item doesnt exist', async () => {
+            const result = await manager.eraseItem({
+                recordName: 'testRecord',
+                userId,
+                address: 'missing',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The item was not found.',
+            });
+        });
+
+        it('should return invalid_record_key if the controller doesnt allow record keys', async () => {
+            manager = new TestController({
+                policies,
+                store: itemsStore,
+                name: 'testItem',
+                allowRecordKeys: false,
+                resourceKind: 'data',
+                config: store,
+            });
+
+            const result = await manager.eraseItem({
+                recordName: key,
+                userId,
+                address: 'address2',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: expect.any(String),
+            });
+
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address2')
+            ).resolves.toBeTruthy();
+        });
+
+        it('should return record_not_found if the record doesnt exist', async () => {
+            const result = await manager.eraseItem({
+                recordName: 'missing',
+                userId,
+                address: 'address2',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: expect.any(String),
+            });
+
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address2')
+            ).resolves.toBeTruthy();
+        });
     });
 });
 

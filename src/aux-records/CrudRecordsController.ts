@@ -21,6 +21,7 @@ import {
     KnownErrorCodes,
     NotAuthorizedError,
     NotLoggedInError,
+    PUBLIC_READ_MARKER,
     ResourceKinds,
     ServerError,
 } from '@casual-simulation/aux-common';
@@ -225,6 +226,15 @@ export abstract class CrudRecordsController<
                 return context;
             }
 
+            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_record_key',
+                    errorMessage:
+                        'Record keys are not allowed for these items.',
+                };
+            }
+
             const result = await this._store.getItemByAddress(
                 context.context.recordName,
                 request.address
@@ -262,6 +272,78 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             console.error(`[${this._name}] Error getting item:`, err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async eraseItem(
+        request: CrudEraseItemRequest
+    ): Promise<CrudEraseItemResult> {
+        try {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_record_key',
+                    errorMessage:
+                        'Record keys are not allowed for these items.',
+                };
+            }
+
+            const result = await this._store.getItemByAddress(
+                context.context.recordName,
+                request.address
+            );
+
+            if (!result) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                };
+            }
+
+            const markers = result.markers;
+
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: request.userId,
+                        instances: request.instances,
+                        resourceKind: this._resourceKind,
+                        resourceId: request.address,
+                        action: 'delete',
+                        markers,
+                    }
+                );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            await this._store.deleteItem(
+                context.context.recordName,
+                request.address
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(`[${this._name}] Error erasing item:`, err);
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -356,9 +438,25 @@ export interface CheckSubscriptionMetricsFailure {
 }
 
 export interface CrudGetItemRequest {
+    /**
+     * The name of the record that the request is for.
+     * Can also be a record key.
+     */
     recordName: string;
+
+    /**
+     * The address of the item that should be retrieved.
+     */
     address: string;
-    userId: string | null;
+
+    /**
+     * The ID of the user who is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The instances that the request is coming from.
+     */
     instances: string[];
 }
 
@@ -370,6 +468,47 @@ export interface CrudGetItemSuccess<T> {
 }
 
 export interface CrudGetItemFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | 'data_not_found';
+    errorMessage: string;
+}
+
+export interface CrudEraseItemRequest {
+    /**
+     * The name of the record that the request is for.
+     * Can also be a record key.
+     */
+    recordName: string;
+
+    /**
+     * The address of the item that should be erased.
+     */
+    address: string;
+
+    /**
+     * The ID of the user who is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The instances that the request is coming from.
+     */
+    instances: string[];
+}
+
+export type CrudEraseItemResult = CrudEraseItemSuccess | CrudEraseItemFailure;
+
+export interface CrudEraseItemSuccess {
+    success: true;
+}
+
+export interface CrudEraseItemFailure {
     success: false;
     errorCode:
         | ServerError
