@@ -1,6 +1,6 @@
 {
   "packages": [
-    "src/*"
+    "src/casualware-records"
   ],
   "version": "3.3.0",
   "npmClient": "pnpm"
