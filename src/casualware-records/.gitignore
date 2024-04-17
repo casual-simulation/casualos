@@ -1,0 +1,9 @@
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
+tsconfig.tsbuildinfo
+!typings/**/*
+docs
+package-lock.json
+node_modules

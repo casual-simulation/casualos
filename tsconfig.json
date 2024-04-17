@@ -47,6 +47,7 @@
         { "path": "./src/aux-websocket-aws" },
         { "path": "./xpexchange/xp-api" },
         { "path": "./extensions/casualos-casualware/casualware-api" },
-        { "path": "./src/casualos-cli" }
+        { "path": "./src/casualos-cli" },
+        { "path": "./src/casualware-records" }
     ]
 }
