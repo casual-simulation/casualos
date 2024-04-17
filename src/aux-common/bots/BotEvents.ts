@@ -155,6 +155,7 @@ export type AsyncActions =
     | MediaPermissionAction
     | GetAverageFrameRateAction
     | OpenImageClassifierAction
+    | ClassifyImagesAction
     | MeetCommandAction
     | MeetFunctionAction
     | ShowTooltipAction
@@ -880,6 +881,130 @@ export interface ImageClassifierOptions {
      * The camera that should be used for the image classifier.
      */
     cameraType?: CameraType;
+}
+
+export interface ClassifyImagesAction
+    extends AsyncAction,
+        ClassifyImagesOptions {
+    type: 'classify_images';
+}
+
+export interface ClassifyImagesOptions {
+    /**
+     * The URL the the teachable machine model is available at.
+     */
+    modelUrl?: string;
+
+    /**
+     * The URL that the teachable machine model JSON is available at.
+     * Not required if modelUrl is provided.
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The URL that the teachable machine model metadata is available at.
+     * Not required if modelUrl is provided.
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The images that should be classified.
+     */
+    images: Image[];
+}
+
+export interface Image {
+    /**
+     * The URL that the image should be downloaded from for classification.
+     */
+    url?: string;
+
+    /**
+     * The file that should be used for classification.
+     */
+    file?: {
+        /**
+         * The name of the file. Includes the file extension.
+         */
+        name: string;
+
+        /**
+         * The size of the file in bytes.
+         */
+        size: number;
+
+        /**
+         * The data of the file.
+         * If the file is a text file, the data will be a string.
+         * If the file is not a text file, the data will be an ArrayBuffer.
+         *
+         * Text files have one of the following extentions:
+         * .txt
+         * .json
+         * .md
+         * .aux
+         * .html
+         * .js
+         * .ts
+         * All the other file extentions map to an ArrayBuffer.
+         */
+        data: string | ArrayBuffer;
+
+        /**
+         * The MIME type of the file.
+         * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+         */
+        mimeType: string;
+    };
+}
+
+export interface ClassifyImagesResult {
+    /**
+     * The model that the classifier is currently operating on.
+     */
+    model: {
+        /**
+         * The modeUrl that was provided to open the classifier.
+         */
+        modelUrl?: string;
+
+        /**
+         * The modelJsonUrl that was provided to open the classifier.
+         */
+        modelJsonUrl?: string;
+
+        /**
+         * The modelMetadataUrl that was provided to open the classifier.
+         */
+        modelMetadataUrl?: string;
+
+        /**
+         * The names of the categories that the loaded model contains.
+         */
+        classLabels: string[];
+    };
+
+    images: ImageClassification[];
+}
+
+export interface ImageClassification {
+    /**
+     * The predictions for the image.
+     */
+    predictions: ImagePrediction[];
+}
+
+export interface ImagePrediction {
+    /**
+     * The name of the class name.
+     */
+    className: string;
+
+    /**
+     * The probability (between 0 and 1) that the image belongs to this category.
+     * All of the probabilities added together will equal (or be really close to) 1.
+     */
+    probability: number;
 }
 
 /**
@@ -3858,6 +3983,17 @@ export function openImageClassifier(
     return {
         type: 'show_image_classifier',
         open,
+        ...options,
+        taskId,
+    };
+}
+
+export function classifyImages(
+    options: ClassifyImagesOptions,
+    taskId?: number | string
+): ClassifyImagesAction {
+    return {
+        type: 'classify_images',
         ...options,
         taskId,
     };

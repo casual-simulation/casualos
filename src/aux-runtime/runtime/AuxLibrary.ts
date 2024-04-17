@@ -191,8 +191,11 @@ import {
     MediaPermssionOptions,
     MediaPermissionAction,
     openImageClassifier as calcOpenImageClassifier,
+    classifyImages as calcOpenClassifyImages,
     OpenImageClassifierAction,
     ImageClassifierOptions,
+    ClassifyImagesOptions,
+    ClassifyImagesResult,
     isBotDate,
     DATE_TAG_PREFIX,
     parseBotDate,
@@ -3035,6 +3038,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 openImageClassifier,
                 closeImageClassifier,
+                classifyImages,
 
                 openPhotoCamera,
                 capturePhoto,
@@ -6415,6 +6419,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function closeImageClassifier(): Promise<void> {
         const task = context.createTask();
         const action = calcOpenImageClassifier(false, {}, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Classifies the given images using the image classifier. Returns a promise that resolves with the results of the classification.
+     *
+     * @param options the options that should be used for the image classification.
+     *
+     * @example Classify the given images.
+     * const files = await os.showUploadFiles()
+     * const classify = await os.classifyImages({
+     *      modelUrl: "MY_MODEL_URL",
+     *      images: files.map((file) => {
+     *         return {file}
+     *      })
+     * })
+     *
+     * @dochash actions/os/image-classification
+     * @docname os.classifyImages
+     * @docgroup 10-image-classifier
+     */
+    function classifyImages(
+        options: ClassifyImagesOptions
+    ): Promise<ClassifyImagesResult> {
+        const task = context.createTask();
+        const action = calcOpenClassifyImages(options, task.taskId);
         return addAsyncAction(task, action);
     }
 
