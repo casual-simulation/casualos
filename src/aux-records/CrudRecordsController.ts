@@ -1,9 +1,11 @@
 import {
+    AuthorizationContext,
     AuthorizeSubjectFailure,
     AuthorizeUserAndInstancesForResourcesResult,
     AuthorizeUserAndInstancesForResourcesSuccess,
     AuthorizeUserAndInstancesResult,
     AuthorizeUserAndInstancesSuccess,
+    ConstructAuthorizationContextFailure,
     PolicyController,
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
@@ -46,26 +48,15 @@ export interface CrudRecordsConfiguration<
      * The kind of resource that the controller is for.
      */
     resourceKind: ResourceKinds;
-
-    /**
-     * Checks that the given metrics are valid for the subscription.
-     * @param metrics The metrics that were fetched from the database.
-     * @param action The action that is being performed.
-     * @param authorization The authorization for the user and instances.
-     */
-    checkSubscriptionMetrics(
-        metrics: TMetrics,
-        action: ActionKinds,
-        authorization: AuthorizeUserAndInstancesForResourcesSuccess
-    ): Promise<CheckSubscriptionMetricsResult>;
 }
 
 /**
  * Defines a controller that can be used to present a CRUD API.
  */
-export class CrudRecordsController<
+export abstract class CrudRecordsController<
     T extends CrudRecord,
-    TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics
+    TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics,
+    TResult extends Partial<T> = T
 > {
     private _store: CrudRecordsStore<T, TMetrics>;
     private _policies: PolicyController;
@@ -73,10 +64,6 @@ export class CrudRecordsController<
     private _name: string;
     private _allowRecordKeys: boolean;
     private _resourceKind: ResourceKinds;
-    private _checkSubscriptionMetrics: CrudRecordsConfiguration<
-        T,
-        TMetrics
-    >['checkSubscriptionMetrics'];
 
     constructor(config: CrudRecordsConfiguration<T, TMetrics>) {
         this._name = config.name;
@@ -85,7 +72,6 @@ export class CrudRecordsController<
         this._policies = config.policies;
         this._config = config.config;
         this._resourceKind = config.resourceKind;
-        this._checkSubscriptionMetrics = config.checkSubscriptionMetrics;
     }
 
     async recordItem(
@@ -220,6 +206,95 @@ export class CrudRecordsController<
             };
         }
     }
+
+    async getItem(
+        request: CrudGetItemRequest
+    ): Promise<CrudGetItemResult<TResult>> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+                instances: request.instances,
+            };
+
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const result = await this._store.getItemByAddress(
+                context.context.recordName,
+                request.address
+            );
+
+            if (!result) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                };
+            }
+
+            const markers = result.markers;
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: request.userId,
+                        instances: request.instances,
+                        resourceKind: this._resourceKind,
+                        resourceId: request.address,
+                        action: 'read',
+                        markers: markers,
+                    }
+                );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            return {
+                success: true,
+                item: this._convertItemToResult(result, context.context),
+            };
+        } catch (err) {
+            console.error(`[${this._name}] Error getting item:`, err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Checks that the given metrics are valid for the subscription.
+     * @param metrics The metrics that were fetched from the database.
+     * @param action The action that is being performed.
+     * @param authorization The authorization for the user and instances.
+     */
+    protected abstract _checkSubscriptionMetrics(
+        metrics: TMetrics,
+        action: ActionKinds,
+        authorization: AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<CheckSubscriptionMetricsResult>;
+
+    /**
+     * Converts the given item to a version that is able to be returned to clients.
+     * Can be overriden to ensure that some fields are not returned.
+     * @param item The item that should be converted.
+     * @param context The authorization context.
+     * @returns The converted item.
+     */
+    protected _convertItemToResult(
+        item: T,
+        context: AuthorizationContext
+    ): TResult {
+        return item as unknown as TResult;
+    }
 }
 
 export interface CrudRecordItemRequest<T> {
@@ -277,5 +352,31 @@ export interface CheckSubscriptionMetricsSuccess {
 export interface CheckSubscriptionMetricsFailure {
     success: false;
     errorCode: ServerError | 'subscription_limit_reached' | NotAuthorizedError;
+    errorMessage: string;
+}
+
+export interface CrudGetItemRequest {
+    recordName: string;
+    address: string;
+    userId: string | null;
+    instances: string[];
+}
+
+export type CrudGetItemResult<T> = CrudGetItemSuccess<T> | CrudGetItemFailure;
+
+export interface CrudGetItemSuccess<T> {
+    success: true;
+    item: T;
+}
+
+export interface CrudGetItemFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | 'data_not_found';
     errorMessage: string;
 }

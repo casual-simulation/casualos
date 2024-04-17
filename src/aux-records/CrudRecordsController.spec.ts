@@ -1,6 +1,9 @@
 import { DataRecordsController } from './DataRecordsController';
 import { MemoryStore } from './MemoryStore';
-import { PolicyController } from './PolicyController';
+import {
+    AuthorizeUserAndInstancesForResourcesSuccess,
+    PolicyController,
+} from './PolicyController';
 import { RecordsController } from './RecordsController';
 import {
     createTestControllers,
@@ -14,15 +17,17 @@ import {
     CrudSubscriptionMetrics,
 } from './CrudRecordsStore';
 import {
+    CheckSubscriptionMetricsResult,
     CheckSubscriptionMetricsSuccess,
     CrudRecordItemSuccess,
+    CrudRecordsConfiguration,
     CrudRecordsController,
 } from './CrudRecordsController';
 import {
+    ActionKinds,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { address } from 'faker';
 
 console.log = jest.fn();
 
@@ -31,7 +36,7 @@ describe('CrudRecordsController', () => {
     let itemsStore: MemoryCrudRecordsStore<TestItem>;
     let records: RecordsController;
     let policies: PolicyController;
-    let manager: CrudRecordsController<TestItem>;
+    let manager: TestController;
     let key: string;
     let subjectlessKey: string;
 
@@ -46,16 +51,13 @@ describe('CrudRecordsController', () => {
         itemsStore = new MemoryCrudRecordsStore(store);
         policies = services.policies;
         records = services.records;
-        manager = new CrudRecordsController<TestItem>({
+        manager = new TestController({
             policies,
             store: itemsStore,
             name: 'testItem',
             allowRecordKeys: true,
             resourceKind: 'data',
             config: store,
-            checkSubscriptionMetrics: async () => ({
-                success: true,
-            }),
         });
 
         const user = await createTestUser(services, 'test@example.com');
@@ -188,16 +190,13 @@ describe('CrudRecordsController', () => {
             });
 
             it('should reject the request if record keys are not allowed', async () => {
-                manager = new CrudRecordsController<TestItem>({
+                manager = new TestController({
                     policies,
                     store: itemsStore,
                     name: 'testItem',
                     allowRecordKeys: false,
                     resourceKind: 'data',
                     config: store,
-                    checkSubscriptionMetrics: async () => ({
-                        success: true,
-                    }),
                 });
 
                 const result = (await manager.recordItem({
@@ -222,16 +221,13 @@ describe('CrudRecordsController', () => {
             });
 
             it('should reject the request if subjectless keys are not allowed', async () => {
-                manager = new CrudRecordsController<TestItem>({
+                manager = new TestController({
                     policies,
                     store: itemsStore,
                     name: 'testItem',
                     allowRecordKeys: false,
                     resourceKind: 'data',
                     config: store,
-                    checkSubscriptionMetrics: async () => ({
-                        success: true,
-                    }),
                 });
 
                 const result = (await manager.recordItem({
@@ -256,26 +252,18 @@ describe('CrudRecordsController', () => {
             });
 
             it('should reject the request if the subscription check fails', async () => {
-                manager = new CrudRecordsController<TestItem>({
-                    policies,
-                    store: itemsStore,
-                    name: 'testItem',
-                    allowRecordKeys: true,
-                    resourceKind: 'data',
-                    config: store,
-                    checkSubscriptionMetrics: async (
-                        metrics,
-                        action,
-                        authorization
-                    ) => {
-                        expect(action).toBe('create');
-                        return {
-                            success: false,
-                            errorCode: 'subscription_limit_reached',
-                            errorMessage: 'Subscription limit reached',
-                        };
-                    },
-                });
+                manager.checkSubscriptionMetrics = async (
+                    metrics,
+                    action,
+                    authorization
+                ) => {
+                    expect(action).toBe('create');
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage: 'Subscription limit reached',
+                    };
+                };
 
                 const result = await manager.recordItem({
                     recordKeyOrRecordName: key,
@@ -408,16 +396,13 @@ describe('CrudRecordsController', () => {
             });
 
             it('should reject the request if record keys are not allowed', async () => {
-                manager = new CrudRecordsController<TestItem>({
+                manager = new TestController({
                     policies,
                     store: itemsStore,
                     name: 'testItem',
                     allowRecordKeys: false,
                     resourceKind: 'data',
                     config: store,
-                    checkSubscriptionMetrics: async () => ({
-                        success: true,
-                    }),
                 });
 
                 const result = (await manager.recordItem({
@@ -445,16 +430,13 @@ describe('CrudRecordsController', () => {
             });
 
             it('should reject the request if subjectless keys are not allowed', async () => {
-                manager = new CrudRecordsController<TestItem>({
+                manager = new TestController({
                     policies,
                     store: itemsStore,
                     name: 'testItem',
                     allowRecordKeys: false,
                     resourceKind: 'data',
                     config: store,
-                    checkSubscriptionMetrics: async () => ({
-                        success: true,
-                    }),
                 });
 
                 const result = (await manager.recordItem({
@@ -482,26 +464,27 @@ describe('CrudRecordsController', () => {
             });
 
             it('should reject the request if the subscription check fails', async () => {
-                manager = new CrudRecordsController<TestItem>({
+                manager = new TestController({
                     policies,
                     store: itemsStore,
                     name: 'testItem',
                     allowRecordKeys: true,
                     resourceKind: 'data',
                     config: store,
-                    checkSubscriptionMetrics: async (
-                        metrics,
-                        action,
-                        authorization
-                    ) => {
-                        expect(action).toBe('update');
-                        return {
-                            success: false,
-                            errorCode: 'subscription_limit_reached',
-                            errorMessage: 'Subscription limit reached',
-                        };
-                    },
                 });
+
+                manager.checkSubscriptionMetrics = async (
+                    metrics,
+                    action,
+                    authorization
+                ) => {
+                    expect(action).toBe('update');
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage: 'Subscription limit reached',
+                    };
+                };
 
                 const result = await manager.recordItem({
                     recordKeyOrRecordName: key,
@@ -528,9 +511,139 @@ describe('CrudRecordsController', () => {
             });
         });
     });
+
+    describe('getItem()', () => {
+        beforeEach(async () => {
+            await itemsStore.createItem('testRecord', {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await itemsStore.createItem('testRecord', {
+                address: 'address2',
+                markers: [PRIVATE_MARKER],
+            });
+
+            await itemsStore.createItem('testRecord', {
+                address: 'address3',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should return the item if the user has access', async () => {
+            const result = await manager.getItem({
+                recordName: 'testRecord',
+                userId,
+                address: 'address2',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                },
+            });
+        });
+
+        it('should be able to use a record key to access the item', async () => {
+            const result = await manager.getItem({
+                recordName: key,
+                userId,
+                address: 'address2',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                },
+            });
+        });
+
+        it('should return data_not_found if the item was not found', async () => {
+            const result = await manager.getItem({
+                recordName: 'testRecord',
+                userId,
+                address: 'missing',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should return record_not_found if the record doesnt exist', async () => {
+            const result = await manager.getItem({
+                recordName: 'missing',
+                userId,
+                address: 'address',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+    });
 });
 
 export interface TestItem extends CrudRecord {}
+
+export class TestController extends CrudRecordsController<TestItem> {
+    private __checkSubscriptionMetrics: (
+        metrics: CrudSubscriptionMetrics,
+        action: ActionKinds,
+        authorization: AuthorizeUserAndInstancesForResourcesSuccess
+    ) => Promise<CheckSubscriptionMetricsResult>;
+
+    set checkSubscriptionMetrics(
+        value: (
+            metrics: CrudSubscriptionMetrics,
+            action: ActionKinds,
+            authorization: AuthorizeUserAndInstancesForResourcesSuccess
+        ) => Promise<CheckSubscriptionMetricsResult>
+    ) {
+        this.__checkSubscriptionMetrics = value;
+    }
+
+    constructor(
+        config: CrudRecordsConfiguration<TestItem, CrudSubscriptionMetrics>,
+        checkSubscriptionMetrics?: (
+            metrics: CrudSubscriptionMetrics,
+            action: ActionKinds,
+            authorization: AuthorizeUserAndInstancesForResourcesSuccess
+        ) => Promise<CheckSubscriptionMetricsResult>
+    ) {
+        super(config);
+        this.__checkSubscriptionMetrics = checkSubscriptionMetrics as any;
+    }
+
+    protected async _checkSubscriptionMetrics(
+        metrics: CrudSubscriptionMetrics,
+        action: ActionKinds,
+        authorization: AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<CheckSubscriptionMetricsResult> {
+        if (this.__checkSubscriptionMetrics) {
+            return await this.__checkSubscriptionMetrics(
+                metrics,
+                action,
+                authorization
+            );
+        }
+        return {
+            success: true,
+        };
+    }
+}
 
 // export function testCrudController<T extends CrudRecord, TMetrics extends CrudSubscriptionMetrics>(
 //     createStore: () => CrudRecordsStore<T, TMetrics>,
