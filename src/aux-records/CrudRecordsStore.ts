@@ -1,4 +1,4 @@
-import { SubscriptionMetrics } from 'MetricsStore';
+import { SubscriptionMetrics } from './MetricsStore';
 
 /**
  * Defines an interface for a store that can be used to create, read, update, and delete items in a record.
