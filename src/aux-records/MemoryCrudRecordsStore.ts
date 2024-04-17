@@ -90,6 +90,10 @@ export class MemoryCrudRecordsStore<
             if (!address || key > address) {
                 items.push(item);
             }
+
+            if (items.length >= 10) {
+                break;
+            }
         }
 
         return {
@@ -120,6 +124,10 @@ export class MemoryCrudRecordsStore<
                 ) {
                     items.push(item);
                 }
+            }
+
+            if (items.length >= 10) {
+                break;
             }
         }
 

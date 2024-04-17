@@ -17,6 +17,7 @@ import {
 } from './CrudRecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
+    ACCOUNT_MARKER,
     ActionKinds,
     KnownErrorCodes,
     NotAuthorizedError,
@@ -75,6 +76,10 @@ export abstract class CrudRecordsController<
         this._resourceKind = config.resourceKind;
     }
 
+    /**
+     * Creates or updates an item in the given record.
+     * @param request The request.
+     */
     async recordItem(
         request: CrudRecordItemRequest<T>
     ): Promise<CrudRecordItemResult> {
@@ -208,6 +213,10 @@ export abstract class CrudRecordsController<
         }
     }
 
+    /**
+     * Gets the item with the given address from the given record.
+     * @param request The request to get the item.
+     */
     async getItem(
         request: CrudGetItemRequest
     ): Promise<CrudGetItemResult<TResult>> {
@@ -280,6 +289,10 @@ export abstract class CrudRecordsController<
         }
     }
 
+    /**
+     * Deletes the item with the given address from the given record.
+     * @param request The request.
+     */
     async eraseItem(
         request: CrudEraseItemRequest
     ): Promise<CrudEraseItemResult> {
@@ -344,6 +357,66 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             console.error(`[${this._name}] Error erasing item:`, err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists items in the given record.
+     * @param request The request.
+     */
+    async listItems(
+        request: CrudListItemsRequest
+    ): Promise<CrudListItemsResult<TResult>> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+                instances: request.instances,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: request.userId,
+                        instances: request.instances,
+                        resourceKind: this._resourceKind,
+                        action: 'list',
+                        markers: [ACCOUNT_MARKER],
+                    }
+                );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const result2 = await this._store.listItems(
+                context.context.recordName,
+                request.startingAddress
+            );
+
+            return {
+                success: true,
+                recordName: context.context.recordName,
+                items: result2.items.map((item) =>
+                    this._convertItemToResult(item, context.context)
+                ),
+                totalCount: result2.totalCount,
+            };
+        } catch (err) {
+            console.error(`[${this._name}] Error listing items:`, err);
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -509,6 +582,69 @@ export interface CrudEraseItemSuccess {
 }
 
 export interface CrudEraseItemFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | 'data_not_found';
+    errorMessage: string;
+}
+
+export interface CrudListItemsRequest {
+    /**
+     * The name of the record that the request is for.
+     * Can also be a record key.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user who is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The instances that the request is coming from.
+     */
+    instances: string[];
+
+    /**
+     * The address that the list should start at.
+     */
+    startingAddress?: string | null;
+}
+
+export type CrudListItemsResult<T> =
+    | CrudListItemsSuccess<T>
+    | CrudListItemsFailure;
+
+export interface CrudListItemsSuccess<T> {
+    success: true;
+    /**
+     * The name of the record that the items are from.
+     */
+    recordName: string;
+
+    /**
+     * The items that were listed.
+     */
+    items: T[];
+
+    /**
+     * The total number of items in the record.
+     */
+    totalCount: number;
+
+    /**
+     * The marker that was listed.
+     * If null, then all markers are listed.
+     */
+    marker?: string;
+}
+
+export interface CrudListItemsFailure {
     success: false;
     errorCode:
         | ServerError

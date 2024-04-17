@@ -733,6 +733,93 @@ describe('CrudRecordsController', () => {
             ).resolves.toBeTruthy();
         });
     });
+
+    describe('listItems()', () => {
+        let items: TestItem[];
+        beforeEach(async () => {
+            items = [];
+            for (let i = 0; i < 20; i++) {
+                const item: TestItem = {
+                    address: 'address' + i,
+                    markers: [PRIVATE_MARKER],
+                };
+                await itemsStore.createItem('testRecord', item);
+                items.push(item);
+            }
+        });
+
+        it('should return a list of items', async () => {
+            const result = await manager.listItems({
+                recordName: 'testRecord',
+                userId,
+                startingAddress: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: items.slice(0, 10),
+                totalCount: 20,
+            });
+        });
+
+        it('should be able to use a record key', async () => {
+            const result = await manager.listItems({
+                recordName: key,
+                userId,
+                startingAddress: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: items.slice(0, 10),
+                totalCount: 20,
+            });
+        });
+
+        it('should return items after the given starting address', async () => {
+            const result = await manager.listItems({
+                recordName: 'testRecord',
+                userId,
+                startingAddress: 'address3',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: items.slice(4, 10),
+                totalCount: 20,
+            });
+        });
+
+        it('should return not_authorized if the user does not have access to the account marker', async () => {
+            const result = await manager.listItems({
+                recordName: 'testRecord',
+                userId: otherUserId,
+                startingAddress: 'address3',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: expect.any(String),
+                reason: {
+                    action: 'list',
+                    recordName: 'testRecord',
+                    resourceId: undefined,
+                    resourceKind: 'data',
+                    subjectId: 'otherUserId',
+                    subjectType: 'user',
+                    type: 'missing_permission',
+                },
+            });
+        });
+    });
 });
 
 export interface TestItem extends CrudRecord {}
