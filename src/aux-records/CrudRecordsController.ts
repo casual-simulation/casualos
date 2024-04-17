@@ -386,6 +386,15 @@ export abstract class CrudRecordsController<
                 return context;
             }
 
+            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_record_key',
+                    errorMessage:
+                        'Record keys are not allowed for these items.',
+                };
+            }
+
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -406,6 +415,77 @@ export abstract class CrudRecordsController<
                 context.context.recordName,
                 request.startingAddress
             );
+
+            return {
+                success: true,
+                recordName: context.context.recordName,
+                items: result2.items.map((item) =>
+                    this._convertItemToResult(item, context.context)
+                ),
+                totalCount: result2.totalCount,
+            };
+        } catch (err) {
+            console.error(`[${this._name}] Error listing items:`, err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists items in the given record by the given marker.
+     * @param request The request.
+     */
+    async listItemsByMarker(
+        request: CrudListItemsByMarkerRequest
+    ): Promise<CrudListItemsResult<TResult>> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+                instances: request.instances,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_record_key',
+                    errorMessage:
+                        'Record keys are not allowed for these items.',
+                };
+            }
+
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: request.userId,
+                        instances: request.instances,
+                        resourceKind: this._resourceKind,
+                        action: 'list',
+                        markers: [request.marker],
+                    }
+                );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const result2 = await this._store.listItemsByMarker({
+                recordName: context.context.recordName,
+                startingAddress: request.startingAddress,
+                marker: request.marker,
+                sort: request.sort,
+            });
 
             return {
                 success: true,
@@ -614,6 +694,18 @@ export interface CrudListItemsRequest {
      * The address that the list should start at.
      */
     startingAddress?: string | null;
+}
+
+export interface CrudListItemsByMarkerRequest extends CrudListItemsRequest {
+    /**
+     * The marker that the items should have.
+     */
+    marker: string;
+
+    /**
+     * The sort order that the items should be listed in.
+     */
+    sort?: 'ascending' | 'descending';
 }
 
 export type CrudListItemsResult<T> =

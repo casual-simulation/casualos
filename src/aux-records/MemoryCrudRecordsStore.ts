@@ -125,10 +125,6 @@ export class MemoryCrudRecordsStore<
                     items.push(item);
                 }
             }
-
-            if (items.length >= 10) {
-                break;
-            }
         }
 
         if (request.sort) {
@@ -141,7 +137,7 @@ export class MemoryCrudRecordsStore<
 
         return {
             success: true,
-            items,
+            items: items.slice(0, 10),
             totalCount: count,
             marker: marker,
         };

@@ -780,6 +780,30 @@ describe('CrudRecordsController', () => {
             });
         });
 
+        it('should return invalid_record_key if record keys are not allowed', async () => {
+            manager = new TestController({
+                policies,
+                store: itemsStore,
+                name: 'testItem',
+                allowRecordKeys: false,
+                resourceKind: 'data',
+                config: store,
+            });
+
+            const result = await manager.listItems({
+                recordName: key,
+                userId,
+                startingAddress: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: expect.any(String),
+            });
+        });
+
         it('should return items after the given starting address', async () => {
             const result = await manager.listItems({
                 recordName: 'testRecord',
@@ -813,7 +837,131 @@ describe('CrudRecordsController', () => {
                     recordName: 'testRecord',
                     resourceId: undefined,
                     resourceKind: 'data',
-                    subjectId: 'otherUserId',
+                    subjectId: otherUserId,
+                    subjectType: 'user',
+                    type: 'missing_permission',
+                },
+            });
+        });
+    });
+
+    describe('listItemsByMarker()', () => {
+        let items: TestItem[];
+        beforeEach(async () => {
+            items = [];
+            for (let i = 0; i < 40; i++) {
+                const item: TestItem = {
+                    address: 'address' + i,
+                    markers: [
+                        i % 2 === 0 ? PRIVATE_MARKER : PUBLIC_READ_MARKER,
+                    ],
+                };
+                await itemsStore.createItem('testRecord', item);
+                items.push(item);
+            }
+        });
+
+        it('should return a list of items that have the given marker', async () => {
+            const result = await manager.listItemsByMarker({
+                recordName: 'testRecord',
+                userId,
+                marker: PRIVATE_MARKER,
+                startingAddress: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: items
+                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                    .slice(0, 10),
+                totalCount: 20,
+            });
+        });
+
+        it('should return a list of items that are after the starting address', async () => {
+            const result = await manager.listItemsByMarker({
+                recordName: 'testRecord',
+                userId,
+                marker: PRIVATE_MARKER,
+                startingAddress: 'address1',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: items
+                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                    .slice(1, 11),
+                totalCount: 20,
+            });
+        });
+
+        it('should be able to use a record key', async () => {
+            const result = await manager.listItemsByMarker({
+                recordName: key,
+                userId,
+                marker: PRIVATE_MARKER,
+                startingAddress: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: items
+                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                    .slice(0, 10),
+                totalCount: 20,
+            });
+        });
+
+        it('should return invalid_record_key if record keys are not allowed', async () => {
+            manager = new TestController({
+                policies,
+                store: itemsStore,
+                name: 'testItem',
+                allowRecordKeys: false,
+                resourceKind: 'data',
+                config: store,
+            });
+
+            const result = await manager.listItemsByMarker({
+                recordName: key,
+                userId,
+                marker: PRIVATE_MARKER,
+                startingAddress: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_record_key',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should return not_authorized if the user does not have access to the marker', async () => {
+            const result = await manager.listItemsByMarker({
+                recordName: 'testRecord',
+                userId: otherUserId,
+                marker: PRIVATE_MARKER,
+                startingAddress: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: expect.any(String),
+                reason: {
+                    action: 'list',
+                    recordName: 'testRecord',
+                    resourceId: undefined,
+                    resourceKind: 'data',
+                    subjectId: otherUserId,
                     subjectType: 'user',
                     type: 'missing_permission',
                 },
