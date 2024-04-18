@@ -1,12 +1,8 @@
 name: Sync Fork
 
 on:
-    workflow_dispatch:
-        inputs:
-            branch:
-                description: 'Branch to deploy'
-                required: true
-                default: 'staging'
+    schedule:
+        - cron: "0 4 * * *"
 
 jobs:
   sync_fork_job:
