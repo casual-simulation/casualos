@@ -1,0 +1,28 @@
+name: Sync Fork
+
+on:
+    workflow_dispatch:
+        inputs:
+            branch:
+                description: 'Branch to deploy'
+                required: true
+                default: 'staging'
+
+jobs:
+  sync_fork_job:
+    name: A job to sync with CasualOS
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v1
+        with:
+            node-version: 18.x
+      - name: NPM Install
+        run: |
+            corepack enable
+            npm run bootstrap
+      - name: Sync Fork
+        run: |
+            node ./script/sync-fork.mjs sync-fork ${{ github.repository }} casual-simulation/casualos -a ${{ secrets.GITHUB_TOKEN }} -s ${{ secrets.GITHUB_TOKEN }}
