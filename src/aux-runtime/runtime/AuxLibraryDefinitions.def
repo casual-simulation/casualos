@@ -868,10 +868,134 @@ export interface OpenImageClassifierAction extends AsyncAction {
     cameraType?: CameraType;
 }
 
+export interface ClassifyImagesAction extends AsyncAction {
+    type: 'classify_images';
+
+    /**
+     * The URL that the model should be loaded from.
+     */
+    modelUrl?: string;
+
+    /**
+    * The URL that the model JSON should be loaded from.
+    * Not required. Can be used if you are storing the model JSON in a custom location.
+    */
+    modelJsonUrl?: string;
+
+    /**
+    * The URL that the model metadata should be loaded from.
+    * Not required. Can be used if you are storing the model metadata in a custom location.
+    */
+    modelMetadataUrl?: string;
+
+    /**
+    * The images that should be classified.
+    */
+    images: Image[];
+}
+
+export interface Image {
+    /**
+     * The URL that the image should be downloaded from for classification.
+     */
+    url?: string;
+
+    /**
+     * The file that should be used for classification.
+     */
+    file?: {
+        /**
+         * The name of the file. Includes the file extension.
+         */
+        name: string;
+
+        /**
+         * The size of the file in bytes.
+         */
+        size: number;
+
+        /**
+         * The data of the file.
+         * If the file is a text file, the data will be a string.
+         * If the file is not a text file, the data will be an ArrayBuffer.
+         *
+         * Text files have one of the following extentions:
+         * .txt
+         * .json
+         * .md
+         * .aux
+         * .html
+         * .js
+         * .ts
+         * All the other file extentions map to an ArrayBuffer.
+         */
+        data: string | ArrayBuffer;
+
+        /**
+         * The MIME type of the file.
+         * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+         */
+        mimeType: string;
+    };
+}
+
+export interface ClassifyImagesResult {
+    /**
+     * The model that the classifier is currently operating on.
+     */
+    model: {
+        /**
+         * The modeUrl that was provided to open the classifier.
+         */
+        modelUrl?: string;
+
+        /**
+         * The modelJsonUrl that was provided to open the classifier.
+         */
+        modelJsonUrl?: string;
+
+        /**
+         * The modelMetadataUrl that was provided to open the classifier.
+         */
+        modelMetadataUrl?: string;
+
+        /**
+         * The names of the categories that the loaded model contains.
+         */
+        classLabels: string[];
+    };
+
+    images: ImageClassification[];
+}
+export interface ImageClassification {
+    /**
+     * The predictions for the image.
+     */
+    predictions: ImagePrediction[];
+}
+
+export interface ImagePrediction {
+    /**
+     * The name of the class name.
+     */
+    className: string;
+
+    /**
+     * The probability (between 0 and 1) that the image belongs to this category.
+     * All of the probabilities added together will equal (or be really close to) 1.
+     */
+    probability: number;
+}
+
 export type ImageClassifierOptions = Pick<
     OpenImageClassifierAction,
     'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'cameraType'
 >;
+
+export type ClassifyImagesOptions = Pick<
+    ClassifyImagesAction,
+    'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'images'
+>
 
 /**
  * An event that is used to load a simulation.
@@ -11067,6 +11191,26 @@ interface Os {
      * Returns a promise that resolves when the image classifier has been closed.
      */
     closeImageClassifier(): Promise<void>;
+
+    /**
+     * Classifies the given images using the image classifier. Returns a promise that resolves with the results of the classification.
+     * 
+     * @param options the options that should be used for the image classification.
+     * 
+     * @example Classify the given images.
+     * const files = await os.showUploadFiles()
+     * const classify = os.classifyImages({
+     *      modelUrl: "MY_MODEL_URL",
+     *      images: files.map((file) => {
+     *         return {file}
+     *      })
+     * })
+     * 
+     * @dochash actions/os/image-classification
+     * @docname os.classifyImages
+     * @docgroup 10-image-classifier
+    */
+    classifyImages(options: ClassifyImagesOptions): Promise<ClassifyImagesResult>
 
     /**
      * Gets the local device time in miliseconds since January 1st 1970 UTC-0.
