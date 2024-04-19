@@ -1504,6 +1504,24 @@ importers:
         specifier: ^2.4.9
         version: 2.4.9
 
+  src/casualware-records:
+    dependencies:
+      '@casual-simulation/aux-common':
+        specifier: ^3.2.12
+        version: link:../aux-common
+      '@casual-simulation/aux-records':
+        specifier: ^3.2.13
+        version: link:../aux-records
+      '@casual-simulation/aux-server':
+        specifier: ^3.2.13
+        version: link:../aux-server
+      '@casual-simulation/rate-limit-redis':
+        specifier: 3.2.7
+        version: link:../rate-limit-redis
+      zod:
+        specifier: 3.22.4
+        version: 3.22.4
+
   src/chalk: {}
 
   src/crypto:
