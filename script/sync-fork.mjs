@@ -1,4 +1,4 @@
-import { Octokit } from '@octokit/rest';
+import { Octokit, RequestError } from 'octokit';
 import { Command } from 'commander';
 import { simpleGit } from 'simple-git';
 
@@ -68,76 +68,99 @@ program
 
         console.log(`Pushed sync branch: ${syncBranchName}`);
 
-        const pr = await github.rest.pulls.create({
-            owner: currentOwner,
-            repo: currentRepo,
-            title: `Sync with ${owner}/${repo}`,
-            head: syncBranchName,
-            base: currentBranch,
-            body: `PR to automatically sync [${owner}/${repo}](${githubRepo.data.html_url}):[${currentBranch}](${githubRepo.data.html_url + '/blob/' + currentBranch}) into this repository.`
-        });
-        await github.rest.issues.update({
-            owner: currentOwner,
-            repo: currentRepo,
-            issue_number: pr.data.number,
-            labels: [label],
-        });
+        const cleanup = async () => {
+            console.log('Cleaning up...');
+            await github.rest.git.deleteRef({
+                owner: currentOwner,
+                repo: currentRepo,
+                ref: `heads/${syncBranchName}`,
+            });
+        };
 
-        console.log(`Pull request #${pr.data.number} created.`);
-        
-        if (merge) {
-            console.log(`Merging pull request with method: ${mergeMethod}`);
-            let counter = 0;
-            let merged = false;
-            while (counter < mergeAttemptCount) {
-                // wait 5 extra seconds for each attempt, up to 20 seconds
-                const seconds = Math.min(counter * 5, 20);
-                await wait(seconds * 1000);
-                
-                const mergablePr = await github.rest.pulls.get({
-                    owner: currentOwner,
-                    repo: currentRepo,
-                    pull_number: pr.data.number,
-                });
+        try {
+            const pr = await github.rest.pulls.create({
+                owner: currentOwner,
+                repo: currentRepo,
+                title: `Sync with ${owner}/${repo}`,
+                head: syncBranchName,
+                base: currentBranch,
+                body: `PR to automatically sync [${owner}/${repo}](${githubRepo.data.html_url}):[${currentBranch}](${githubRepo.data.html_url + '/blob/' + currentBranch}) into this repository.`
+            });
+            await github.rest.issues.update({
+                owner: currentOwner,
+                repo: currentRepo,
+                issue_number: pr.data.number,
+                labels: [label],
+            });
 
-                if (mergablePr.data.mergeable) {
-                    console.log(`Merging pull request #${pr.data.number}`);
-                    const merge = await github.rest.pulls.merge({
+            console.log(`Pull request #${pr.data.number} created.`);
+            
+            if (merge) {
+                console.log(`Merging pull request with method: ${mergeMethod}`);
+                let counter = 0;
+                let merged = false;
+                while (counter < mergeAttemptCount) {
+                    // wait 5 extra seconds for each attempt, up to 20 seconds
+                    const seconds = Math.min(counter * 5, 20);
+                    await wait(seconds * 1000);
+                    
+                    const mergablePr = await github.rest.pulls.get({
                         owner: currentOwner,
                         repo: currentRepo,
                         pull_number: pr.data.number,
-                        merge_method: mergeMethod,
                     });
-                    merged = true;
 
-                    if (merge.data.merged) {
-                        console.log(`Pull request #${pr.data.number} merged successfully.\n${merge.data.sha.slice(0, 7)}: ${merge.data.message}`);
-
-                        console.log('Cleaning up...');
-                        await github.rest.git.deleteRef({
+                    if (mergablePr.data.mergeable) {
+                        console.log(`Merging pull request #${pr.data.number}`);
+                        const merge = await github.rest.pulls.merge({
                             owner: currentOwner,
                             repo: currentRepo,
-                            ref: `heads/${syncBranchName}`,
+                            pull_number: pr.data.number,
+                            merge_method: mergeMethod,
                         });
+                        merged = true;
+
+                        if (merge.data.merged) {
+                            console.log(`Pull request #${pr.data.number} merged successfully.\n${merge.data.sha.slice(0, 7)}: ${merge.data.message}`);
+                            await cleanup();
+                        }
+                        break;
+                    } else if (mergablePr.data.mergeable === false) {
+                        console.log(`Pull request #${pr.data.number} is not able to be merged. Skipping merge.`);
+                        break;
                     }
-                    break;
-                } else if (mergablePr.data.mergeable === false) {
-                    console.log(`Pull request #${pr.data.number} is not able to be merged. Skipping merge.`);
-                    break;
+
+                    counter += 1;
                 }
 
-                counter += 1;
-            }
+                if (!merged) {
+                    console.error(`Failed to merge pull request #${pr.data.number} after ${counter} attempts.`);
+                    process.exit(1);
+                }
 
-            if (!merged) {
-                console.error(`Failed to merge pull request #${pr.data.number} after ${counter} attempts.`);
-                process.exit(1);
+                console.log('Merged.');
+            } else {
+                console.log('Skipping automatic merge.');
             }
-
-            console.log('Done.');
-        } else {
-            console.log('Skipping automatic merge.');
+        } catch(err) {
+            if (err instanceof RequestError) {
+                const message = err.response?.data?.errors?.[0]?.message ?? '';
+                if (/no commits between/gi.test(message)) {
+                    console.log('No changes to sync.');
+                    await cleanup();
+                    return;
+                } else if (/A pull request already exists for/gi.test(message)) {
+                    console.log('A pull request already exists to sync these changes. Skipping because this PR must be manually merged.')
+                    return;
+                } else {
+                    throw err;
+                }
+            } else {
+                throw err;
+            }
         }
+
+        console.log('Done.');
     });
 
 program.parseAsync(process.argv);
