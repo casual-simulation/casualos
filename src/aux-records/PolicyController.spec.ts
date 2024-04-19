@@ -2541,6 +2541,7 @@ describe('PolicyController', () => {
             ['inst'],
             ['marker'],
             ['role'],
+            ['purchasableItem'],
         ];
 
         // Admins can perform all actions on all resources
@@ -3386,6 +3387,26 @@ describe('PolicyController', () => {
                     ['increment', 'resourceId'],
                 ],
             ],
+            [
+                'purchasableItem',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ]
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -3485,7 +3506,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['list', null],
                 ],
-            ],
+            ]
         ];
 
         describe.each(studioMemberResourceKindCases)(
@@ -3881,6 +3902,26 @@ describe('PolicyController', () => {
                     ['increment', 'resourceId'],
                 ],
             ],
+            [
+                'purchasableItem',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                ],
+            ]
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -3947,6 +3988,10 @@ describe('PolicyController', () => {
             ['file', [['read', 'resourceId']]],
             ['event', [['count', 'resourceId']]],
             ['inst', [['read', 'resourceId']]],
+            ['purchasableItem', [
+                ['read', 'resourceId'],
+                ['list', null]
+            ]],
         ];
 
         const publicReadSubjectTypeCases: [

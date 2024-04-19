@@ -773,6 +773,14 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if(resourceKind === 'purchasableItem') {
+        // purchasableItem.read and purchasableItem.list
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     }
 
     // All other actions are not allowed.

@@ -21,6 +21,7 @@ export const EVENT_RESOURCE_KIND = 'event';
 export const MARKER_RESOURCE_KIND = 'marker';
 export const ROLE_RESOURCE_KIND = 'role';
 export const INST_RESOURCE_KIND = 'inst';
+export const PURCHASABLE_ITEM_RESOURCE_KIND = 'purchasableItem';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -34,7 +35,8 @@ export type ResourceKinds =
     | 'event'
     | 'marker'
     | 'role'
-    | 'inst';
+    | 'inst'
+    | 'purchasableItem';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -214,6 +216,7 @@ export const RESOURCE_KIND_VALIDATION = z.union([
     z.literal(MARKER_RESOURCE_KIND),
     z.literal(ROLE_RESOURCE_KIND),
     z.literal(INST_RESOURCE_KIND),
+    z.literal(PURCHASABLE_ITEM_RESOURCE_KIND),
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.union([
