@@ -38,9 +38,6 @@ importers:
       '@babel/preset-env':
         specifier: ^7.14.4
         version: 7.23.5(@babel/core@7.23.5)
-      '@octokit/request-error':
-        specifier: 6.1.1
-        version: 6.1.1
       '@playwright/test':
         specifier: ^1.22.1
         version: 1.40.1
@@ -6185,13 +6182,6 @@ packages:
       '@octokit/types': 13.4.1
       deprecation: 2.3.1
       once: 1.4.0
-
-  /@octokit/request-error@6.1.1:
-    resolution: {integrity: sha512-1mw1gqT3fR/WFvnoVpY/zUM2o/XkMs/2AszUUG9I69xn0JFLv6PGkPhNk5lbfvROs79wiS0bqiJNxfCZcRJJdg==}
-    engines: {node: '>= 18'}
-    dependencies:
-      '@octokit/types': 13.4.1
-    dev: true
 
   /@octokit/request@5.6.3:
     resolution: {integrity: sha512-bFJl0I1KVc9jYTe9tdGGpAMPy32dLBXXo1dS/YwSCTL/2nd9XeHsY616RE3HPXDVk+a+dBuzyz5YdlXwcDTr2A==}
