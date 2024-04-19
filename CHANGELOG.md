@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.1
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added `classifyImages()` function.
+
 ## V3.3.0
 
 #### Date: 4/15/2024
