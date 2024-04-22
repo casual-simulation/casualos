@@ -131,6 +131,9 @@ import {
 } from '@simplewebauthn/types';
 import { fromByteArray } from 'base64-js';
 import { z } from 'zod';
+import { PurchasableItemRecordsController } from './casualware/PurchasableItemRecordsController';
+import { PurchasableItemRecordsStore } from './casualware/PurchasableItemRecordsStore';
+import { MemoryPurchasableItemRecordsStore } from './casualware/MemoryPurchasableItemRecordsStore';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -285,6 +288,8 @@ describe('RecordsServer', () => {
     let websocketMessenger: MemoryWebsocketMessenger;
     let websocketController: WebsocketController;
     let moderationController: ModerationController;
+    let purchasableItemsStore: PurchasableItemRecordsStore;
+    let purchasableItemsController: PurchasableItemRecordsController;
 
     let policyController: PolicyController;
 
@@ -622,6 +627,12 @@ describe('RecordsServer', () => {
             policies: store,
         });
         moderationController = new ModerationController(store, store, store);
+        purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
+        purchasableItemsController = new PurchasableItemRecordsController({
+            config: store,
+            policies: policyController,
+            store: purchasableItemsStore,
+        });
 
         server = new RecordsServer(
             allowedAccountOrigins,
@@ -639,7 +650,8 @@ describe('RecordsServer', () => {
             aiController,
             websocketController,
             moderationController,
-            rateLimitController
+            rateLimitController,
+            purchasableItemsController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -11899,6 +11911,262 @@ describe('RecordsServer', () => {
                     automaticReport: false,
                 }),
                 apiHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/records/purchasableItems', () => {
+        beforeEach(async () => {
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+                item: {
+                    address: 'item1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    redirectUrl: 'https://example.com',
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                },
+                instances: [],
+            });
+        });
+
+        it('should be able to get the item', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'item1',
+                        name: 'Item 1',
+                        redirectUrl: 'https://example.com',
+                        roleName: 'role1',
+                        roleGrantTimeMs: 1000,
+                        stripePurchaseLink: 'https://example.com',
+                        markers: [PUBLIC_READ_MARKER],
+                    }
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 401 when the user needs to be logged in', async () => {
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+                item: {
+                    address: 'item1',
+                    name: 'Item 1',
+                    markers: ['secret'],
+                    redirectUrl: 'https://example.com',
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                },
+                instances: [],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the user is not authorized', async () => {
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+                item: {
+                    address: 'item1',
+                    name: 'Item 1',
+                    markers: ['secret'],
+                    redirectUrl: 'https://example.com',
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                },
+                instances: [],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'item1',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the inst is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+                item: {
+                    address: 'item1',
+                    name: 'Item 1',
+                    markers: ['secret'],
+                    redirectUrl: 'https://example.com',
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                },
+                instances: [],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'item1',
+                        action: 'read',
+                        subjectType: 'inst',
+                        subjectId: '/inst',
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a address', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'address is required.',
+                            path: ['address'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 404 when trying to get an item that doesnt exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=missing`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                defaultHeaders
             )
         );
     });

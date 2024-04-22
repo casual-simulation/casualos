@@ -138,6 +138,14 @@ export type InstActionKinds =
     | 'sendAction';
 
 /**
+ * The possible types of actions that can be performed on purchasableItem resources.
+ * 
+ * @dochash types/permissions
+ * @docname PurchasableItemActionKinds
+ */
+export type PurchasableItemActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -152,93 +160,102 @@ export type AvailablePermissions =
     | EventPermission
     | MarkerPermission
     | RolePermission
-    | InstPermission;
+    | InstPermission
+    | PurchasableItemPermission;
 
-export const SUBJECT_TYPE_VALIDATION = z.union([
-    z.literal('user'),
-    z.literal('inst'),
-    z.literal('role'),
+export const SUBJECT_TYPE_VALIDATION = z.enum([
+    'user',
+    'inst',
+    'role',
 ]);
 
-export const DATA_ACTION_KINDS_VALIDATION = z.union([
-    z.literal(READ_ACTION),
-    z.literal(CREATE_ACTION),
-    z.literal(UPDATE_ACTION),
-    z.literal(DELETE_ACTION),
-    z.literal(LIST_ACTION),
+export const DATA_ACTION_KINDS_VALIDATION = z.enum([
+    READ_ACTION,
+    CREATE_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
 ]);
 
-export const FILE_ACTION_KINDS_VALIDATION = z.union([
-    z.literal(READ_ACTION),
-    z.literal(CREATE_ACTION),
-    z.literal(UPDATE_ACTION),
-    z.literal(DELETE_ACTION),
-    z.literal(LIST_ACTION),
+export const FILE_ACTION_KINDS_VALIDATION = z.enum([
+    READ_ACTION,
+    CREATE_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
 ]);
 
-export const EVENT_ACTION_KINDS_VALIDATION = z.union([
-    z.literal(INCREMENT_ACTION),
-    z.literal(COUNT_ACTION),
-    z.literal(UPDATE_ACTION),
-    z.literal(LIST_ACTION),
+export const EVENT_ACTION_KINDS_VALIDATION = z.enum([
+    INCREMENT_ACTION,
+    COUNT_ACTION,
+    UPDATE_ACTION,
+    LIST_ACTION,
 ]);
 
-export const MARKER_ACTION_KINDS_VALIDATION = z.union([
-    z.literal(ASSIGN_ACTION),
-    z.literal(UNASSIGN_ACTION),
-    z.literal(GRANT_PERMISSION_ACTION),
-    z.literal(REVOKE_PERMISSION_ACTION),
-    z.literal(READ_ACTION),
+export const MARKER_ACTION_KINDS_VALIDATION = z.enum([
+    ASSIGN_ACTION,
+    UNASSIGN_ACTION,
+    GRANT_PERMISSION_ACTION,
+    REVOKE_PERMISSION_ACTION,
+    READ_ACTION,
 ]);
 
-export const ROLE_ACTION_KINDS_VALIDATION = z.union([
-    z.literal(GRANT_ACTION),
-    z.literal(REVOKE_ACTION),
-    z.literal(READ_ACTION),
-    z.literal(UPDATE_ACTION),
-    z.literal(LIST_ACTION),
+export const ROLE_ACTION_KINDS_VALIDATION = z.enum([
+    GRANT_ACTION,
+    REVOKE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    LIST_ACTION,
 ]);
 
-export const INST_ACTION_KINDS_VALIDATION = z.union([
-    z.literal(CREATE_ACTION),
-    z.literal(READ_ACTION),
-    z.literal(UPDATE_ACTION),
-    z.literal(UPDATE_DATA_ACTION),
-    z.literal(DELETE_ACTION),
-    z.literal(LIST_ACTION),
-    z.literal(SEND_ACTION_ACTION),
+export const INST_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    UPDATE_DATA_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    SEND_ACTION_ACTION,
 ]);
 
-export const RESOURCE_KIND_VALIDATION = z.union([
-    z.literal(DATA_RESOURCE_KIND),
-    z.literal(FILE_RESOURCE_KIND),
-    z.literal(EVENT_RESOURCE_KIND),
-    z.literal(MARKER_RESOURCE_KIND),
-    z.literal(ROLE_RESOURCE_KIND),
-    z.literal(INST_RESOURCE_KIND),
-    z.literal(PURCHASABLE_ITEM_RESOURCE_KIND),
+export const PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION = z.enum([
+    READ_ACTION,
+    CREATE_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION
 ]);
 
-export const ACTION_KINDS_VALIDATION = z.union([
-    z.literal(CREATE_ACTION),
-    z.literal(READ_ACTION),
-    z.literal(UPDATE_ACTION),
-    z.literal(UPDATE_DATA_ACTION),
-    z.literal(DELETE_ACTION),
-    z.literal(LIST_ACTION),
-    z.literal(SEND_ACTION_ACTION),
+export const RESOURCE_KIND_VALIDATION = z.enum([
+    DATA_RESOURCE_KIND,
+    FILE_RESOURCE_KIND,
+    EVENT_RESOURCE_KIND,
+    MARKER_RESOURCE_KIND,
+    ROLE_RESOURCE_KIND,
+    INST_RESOURCE_KIND,
+    PURCHASABLE_ITEM_RESOURCE_KIND,
+]);
 
-    z.literal(ASSIGN_ACTION),
-    z.literal(UNASSIGN_ACTION),
+export const ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    UPDATE_DATA_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    SEND_ACTION_ACTION,
 
-    z.literal(GRANT_ACTION),
-    z.literal(REVOKE_ACTION),
+    ASSIGN_ACTION,
+    UNASSIGN_ACTION,
 
-    z.literal(INCREMENT_ACTION),
-    z.literal(COUNT_ACTION),
+    GRANT_ACTION,
+    REVOKE_ACTION,
 
-    z.literal(GRANT_PERMISSION_ACTION),
-    z.literal(REVOKE_PERMISSION_ACTION),
+    INCREMENT_ACTION,
+    COUNT_ACTION,
+
+    GRANT_PERMISSION_ACTION,
+    REVOKE_PERMISSION_ACTION,
 ]);
 
 /**
@@ -538,6 +555,34 @@ export const INST_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
 type ZodInstPermission = z.infer<typeof INST_PERMISSION_VALIDATION>;
 type ZodInstPermissionAssertion = HasType<ZodInstPermission, InstPermission>;
 
+/**
+ * Defines an interface that describes common options for all purchasableItem permissions.
+ * 
+ * @dochash types/permissions
+ * @docname PurchasableItemPermission
+ */
+export interface PurchasableItemPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'purchasableItem';
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId: string | null;
+
+    action: PurchasableItemActionKinds | null;
+}
+export const PURCHASABLE_ITEM_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(PURCHASABLE_ITEM_RESOURCE_KIND),
+    action: PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodPurchasableItemPermission = z.infer<typeof PURCHASABLE_ITEM_PERMISSION_VALIDATION>;
+type ZodPurchasableItemPermissionAssertion = HasType<ZodPurchasableItemPermission, PurchasableItemPermission>;
+
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -547,6 +592,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         MARKER_PERMISSION_VALIDATION,
         ROLE_PERMISSION_VALIDATION,
         INST_PERMISSION_VALIDATION,
+        PURCHASABLE_ITEM_PERMISSION_VALIDATION
     ]
 );
 

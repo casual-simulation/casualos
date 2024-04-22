@@ -72,6 +72,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
+import { PurchasableItemRecordsController } from './casualware/PurchasableItemRecordsController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -457,6 +458,7 @@ export class RecordsServer {
     private _rateLimit: RateLimitController;
     private _websocketRateLimit: RateLimitController;
     private _policyController: PolicyController;
+    private _purchasableItems: PurchasableItemRecordsController;
 
     /**
      * The map of paths to routes that they match.
@@ -502,7 +504,8 @@ export class RecordsServer {
         aiController: AIController | null,
         websocketController: WebsocketController | null,
         moderationController: ModerationController | null,
-        websocketRateLimitController: RateLimitController | null = null
+        websocketRateLimitController: RateLimitController | null = null,
+        purchasableItemsController: PurchasableItemRecordsController | null = null,
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -521,6 +524,7 @@ export class RecordsServer {
         this._aiController = aiController;
         this._websocketController = websocketController;
         this._moderationController = moderationController;
+        this._purchasableItems = purchasableItemsController;
         this._procedures = this._createProcedures();
         this._setupRoutes();
     }
@@ -3011,6 +3015,32 @@ export class RecordsServer {
                             typeof GIT_HASH === 'string' ? GIT_HASH : undefined,
                     };
                 }),
+        
+            getPurchasableItem: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/records/purchasableItems')
+                .inputs(z.object({
+                    recordName: RECORD_NAME_VALIDATION,
+                    address: z.string({
+                        required_error: 'address is required.',
+                        invalid_type_error: 'address must be a string.',
+                    }).nonempty('address must not be empty'),
+                    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                }))
+                .handler(async ({ recordName, address, instances }, context) => {
+                    const validation = await this._validateSessionKey(context.sessionKey);
+                    if (validation.success === false && validation.errorCode !== 'no_session_key') {
+                        return validation;
+                    }
+
+                    const result = await this._purchasableItems.getItem({
+                        recordName: recordName,
+                        address: address,
+                        userId: validation.userId,
+                        instances: instances ?? [],
+                    });
+                    return result;
+                })
         };
     }
 

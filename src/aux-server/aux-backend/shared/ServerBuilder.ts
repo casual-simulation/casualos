@@ -138,12 +138,9 @@ import {
 
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
-// @ts-ignore
-import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
-    ...casualWareApiPlugins.map((p: any) => p.default),
 ];
 
 export interface BuildReturn {
