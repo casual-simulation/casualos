@@ -1,4 +1,4 @@
-import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '@casual-simulation/aux-records';
+import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '../CrudRecordsStore';
 
 /**
  * Defines a controller that is able to interact with and manage purchasable items.

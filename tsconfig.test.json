@@ -42,7 +42,6 @@
         { "path": "./src/rate-limit-redis" },
         { "path": "./src/aux-websocket" },
         { "path": "./src/aux-websocket-aws" },
-        { "path": "./xpexchange/xp-api" },
-        { "path": "./src/casualware-records" }
+        { "path": "./xpexchange/xp-api" }
     ]
 }

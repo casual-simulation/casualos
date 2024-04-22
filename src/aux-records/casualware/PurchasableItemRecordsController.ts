@@ -1,6 +1,9 @@
-import { AuthorizeUserAndInstancesForResourcesSuccess, CheckSubscriptionMetricsResult, ConfigurationStore, CrudRecordsController, PolicyController } from '@casual-simulation/aux-records';
+
+import { AuthorizeUserAndInstancesForResourcesSuccess, PolicyController } from '../PolicyController';
 import { PurchasableItem, PurchasableItemMetrics, PurchasableItemRecordsStore } from './PurchasableItemRecordsStore';
 import { ActionKinds } from '@casual-simulation/aux-common';
+import { ConfigurationStore } from '../ConfigurationStore';
+import { CheckSubscriptionMetricsResult, CrudRecordsController } from '../CrudRecordsController';
 
 export interface PurchasableItemRecordsConfig {
     store: PurchasableItemRecordsStore;

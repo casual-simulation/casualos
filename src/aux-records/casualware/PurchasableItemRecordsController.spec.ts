@@ -1,11 +1,14 @@
-import { MemoryStore, PolicyController, RecordsController } from '@casual-simulation/aux-records';
-import { TestController } from '@casual-simulation/aux-records/CrudRecordsController.spec';
-import { MemoryCrudRecordsStore } from '@casual-simulation/aux-records/MemoryCrudRecordsStore';
+
+import { TestController } from '../CrudRecordsController.spec';
+import { MemoryCrudRecordsStore } from '../MemoryCrudRecordsStore';
 import { PurchasableItem } from './PurchasableItemRecordsStore';
 import { MemoryPurchasableItemRecordsStore } from './MemoryPurchasableItemRecordsStore';
 import { PurchasableItemRecordsController } from './PurchasableItemRecordsController';
-import { createTestControllers, createTestRecordKey, createTestUser } from '@casual-simulation/aux-records/TestUtils';
+import { createTestControllers, createTestRecordKey, createTestUser } from '../TestUtils';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { MemoryStore } from '../MemoryStore';
+import { PolicyController } from '../PolicyController';
+import { RecordsController } from '../RecordsController';
 
 console.log = jest.fn();
 
