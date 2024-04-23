@@ -16,6 +16,10 @@ export class MemoryCrudRecordsStore<
     private _itemBuckets: Map<string, Map<string, T>> = new Map();
     private _store: MemoryStore;
 
+    protected get store() {
+        return this._store;
+    }
+
     constructor(store: MemoryStore) {
         this._store = store;
     }
