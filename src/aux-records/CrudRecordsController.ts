@@ -362,6 +362,7 @@ export abstract class CrudRecordsController<
 
             const markers = result.markers;
 
+            await this._policies.authorizeUserAndInstancesForResources;
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -379,10 +380,23 @@ export abstract class CrudRecordsController<
                 return authorization;
             }
 
-            await this._store.deleteItem(
-                context.context.recordName,
-                request.address
+            const recordName = context.context.recordName;
+            const metrics =
+                await this._store.getSubscriptionMetricsByRecordName(
+                    recordName
+                );
+
+            const subscriptionResult = await this._checkSubscriptionMetrics(
+                metrics,
+                'delete',
+                authorization
             );
+
+            if (subscriptionResult.success === false) {
+                return subscriptionResult;
+            }
+
+            await this._store.deleteItem(recordName, request.address);
 
             return {
                 success: true,
@@ -546,7 +560,9 @@ export abstract class CrudRecordsController<
     protected abstract _checkSubscriptionMetrics(
         metrics: TMetrics,
         action: ActionKinds,
-        authorization: AuthorizeUserAndInstancesForResourcesSuccess
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
     ): Promise<CheckSubscriptionMetricsResult>;
 
     /**
