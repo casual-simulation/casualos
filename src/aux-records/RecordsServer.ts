@@ -3120,6 +3120,32 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            erasePurchasableItem: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/purchasableItems/erase')
+                .inputs(z.object({
+                    recordName: RECORD_NAME_VALIDATION,
+                    address: ADDRESS_VALIDATION,
+                    instances: INSTANCES_ARRAY_VALIDATION.optional()
+                }))
+                .handler(async ({ recordName, address, instances }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
+                    if (sessionKeyValidation.success === false) {
+                        if (sessionKeyValidation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._purchasableItems.eraseItem({
+                        recordName: recordName,
+                        address: address,
+                        userId: sessionKeyValidation.userId,
+                        instances: instances
+                    });
+                    return result;
+                }),
         };
     }
 

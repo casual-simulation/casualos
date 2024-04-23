@@ -13051,6 +13051,118 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/purchasableItems/erase', () => {
+        beforeEach(async () => {
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address3',
+                    name: 'Item 3',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role3',
+                    roleGrantTimeMs: 1000,
+                    redirectUrl: 'https://example.com',
+                    description: 'description3',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image3'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should delete the given item', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost('/api/v2/records/purchasableItems/erase', JSON.stringify({
+                    recordName,
+                    address: 'address3'
+                }), apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders
+            });
+
+            const item = await purchasableItemsStore.getItemByAddress(recordName, 'address3');
+            expect(item).toBe(null);
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost('/api/v2/records/purchasableItems/erase', JSON.stringify({
+                    recordName,
+                    address: 'address3'
+                }), apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'address3',
+                        action: 'delete',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    }
+                },
+                headers: apiCorsHeaders
+            });
+        });
+
+        it('should reject the request if the inst is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost('/api/v2/records/purchasableItems/erase', JSON.stringify({
+                    recordName,
+                    address: 'address3',
+                    instances: ['inst1']
+                }), apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'address3',
+                        action: 'delete',
+                        subjectType: 'inst',
+                        subjectId: '/inst1',
+                    }
+                },
+                headers: apiCorsHeaders
+            });
+        });
+
+        testUrl('POST', '/api/v2/records/purchasableItems/erase', () => JSON.stringify({
+            recordName,
+            address: 'address3'
+        }), () => apiHeaders);
+    });
+
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);
