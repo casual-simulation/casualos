@@ -83,19 +83,19 @@ export abstract class CrudRecordsController<
     private _allowRecordKeys: boolean;
     private _resourceKind: ResourceKinds;
 
-    protected config() {
+    protected get config() {
         return this._config;
     }
 
-    protected name() {
+    protected get name() {
         return this._name;
     }
 
-    protected policies() {
+    protected get policies() {
         return this._policies;
     }
 
-    protected store() {
+    protected get store() {
         return this._store;
     }
 
