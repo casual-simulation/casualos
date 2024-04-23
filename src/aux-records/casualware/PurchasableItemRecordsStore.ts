@@ -18,9 +18,34 @@ export interface PurchasableItem extends CrudRecord {
     name: string;
 
     /**
-     * The Stripe link that the item can be purchased at.
+     * The description of the item.
      */
-    stripePurchaseLink: string;
+    description: string;
+
+    /**
+     * The list of image URLs that represent the item.
+     */
+    imageUrls: string[];
+
+    /**
+     * The [3-letter ISO currency code](https://www.iso.org/iso-4217-currency-codes.html) that the item is priced in.
+     * 
+     * See https://www.iso.org/iso-4217-currency-codes.html
+     */
+    currency: string;
+
+    /**
+     * The cost of the item in the currency's smallest unit. (e.g. cents, pence, etc.)
+     */
+    cost: number;
+
+    /**
+     * The [tax code](https://docs.stripe.com/tax/tax-codes) for the item.
+     * Currently only stripe tax codes are supported.
+     * 
+     * See https://docs.stripe.com/tax/tax-codes
+     */
+    taxCode?: string | null;
 
     /**
      * The URL that the user should be redirected to after they purchase the item.

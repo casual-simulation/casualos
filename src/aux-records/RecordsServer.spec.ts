@@ -11927,7 +11927,10 @@ describe('RecordsServer', () => {
                     redirectUrl: 'https://example.com',
                     roleName: 'role1',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
+                    description: 'description1',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image1'],
                 },
                 instances: [],
             });
@@ -11951,7 +11954,10 @@ describe('RecordsServer', () => {
                         redirectUrl: 'https://example.com',
                         roleName: 'role1',
                         roleGrantTimeMs: 1000,
-                        stripePurchaseLink: 'https://example.com',
+                        description: 'description1',
+                        currency: 'USD',
+                        cost: 100,
+                        imageUrls: ['image1'],
                         markers: [PUBLIC_READ_MARKER],
                     }
                 },
@@ -11970,7 +11976,10 @@ describe('RecordsServer', () => {
                     redirectUrl: 'https://example.com',
                     roleName: 'role1',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
+                    description: 'description1',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image1'],
                 },
                 instances: [],
             });
@@ -12005,7 +12014,10 @@ describe('RecordsServer', () => {
                     redirectUrl: 'https://example.com',
                     roleName: 'role1',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
+                    description: 'description1',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image1'],
                 },
                 instances: [],
             });
@@ -12053,7 +12065,10 @@ describe('RecordsServer', () => {
                     redirectUrl: 'https://example.com',
                     roleName: 'role1',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
+                    description: 'description1',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image1'],
                 },
                 instances: [],
             });
@@ -12181,8 +12196,11 @@ describe('RecordsServer', () => {
                     markers: [PUBLIC_READ_MARKER],
                     roleName: 'role3',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
                     redirectUrl: 'https://example.com',
+                    description: 'description3',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image3'],
                 },
                 userId: ownerId,
                 instances: [],
@@ -12195,8 +12213,11 @@ describe('RecordsServer', () => {
                     markers: [PUBLIC_READ_MARKER],
                     roleName: 'role1',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
                     redirectUrl: 'https://example.com',
+                    description: 'description1',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image1'],
                 },
                 userId: ownerId,
                 instances: [],
@@ -12209,8 +12230,11 @@ describe('RecordsServer', () => {
                     markers: [PUBLIC_READ_MARKER],
                     roleName: 'role2',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
                     redirectUrl: 'https://example.com',
+                    description: 'description2',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image2'],
                 },
                 userId: ownerId,
                 instances: [],
@@ -12238,8 +12262,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description3',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image3'],
                             },
                             {
                                 address: 'address1',
@@ -12247,8 +12274,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role1',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description1',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image1'],
                             },
                             {
                                 address: 'address2',
@@ -12256,8 +12286,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description2',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image2'],
                             },
                         ],
                         totalCount: 3,
@@ -12286,8 +12319,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description3',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image3'],
                             },
                             {
                                 address: 'address2',
@@ -12295,8 +12331,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description2',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image2'],
                             },
                         ],
                         totalCount: 3,
@@ -12325,8 +12364,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description3',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image3'],
                             },
                             {
                                 address: 'address2',
@@ -12334,8 +12376,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description2',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image2'],
                             },
                             {
                                 address: 'address1',
@@ -12343,8 +12388,11 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role1',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description1',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image1'],
                             },
                         ],
                         totalCount: 3,
@@ -12367,8 +12415,11 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role3',
                         roleGrantTimeMs: 1000,
-                        stripePurchaseLink: 'https://example.com',
                         redirectUrl: 'https://example.com',
+                        description: 'description3',
+                        currency: 'USD',
+                        cost: 100,
+                        imageUrls: ['image3'],
                     },
                     userId: ownerId,
                     instances: [],
@@ -12381,8 +12432,11 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role1',
                         roleGrantTimeMs: 1000,
-                        stripePurchaseLink: 'https://example.com',
                         redirectUrl: 'https://example.com',
+                        description: 'description1',
+                        currency: 'USD',
+                        cost: 100,
+                        imageUrls: ['image1'],
                     },
                     userId: ownerId,
                     instances: [],
@@ -12395,8 +12449,11 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role2',
                         roleGrantTimeMs: 1000,
-                        stripePurchaseLink: 'https://example.com',
                         redirectUrl: 'https://example.com',
+                        description: 'description2',
+                        currency: 'USD',
+                        cost: 100,
+                        imageUrls: ['image2'],
                     },
                     userId: ownerId,
                     instances: [],
@@ -12421,8 +12478,11 @@ describe('RecordsServer', () => {
                                 markers: ['secret'],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description3',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image3'],
                             },
                             {
                                 address: 'address1',
@@ -12430,8 +12490,11 @@ describe('RecordsServer', () => {
                                 markers: ['secret'],
                                 roleName: 'role1',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description1',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image1'],
                             },
                             {
                                 address: 'address2',
@@ -12439,8 +12502,11 @@ describe('RecordsServer', () => {
                                 markers: ['secret'],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                stripePurchaseLink: 'https://example.com',
                                 redirectUrl: 'https://example.com',
+                                description: 'description2',
+                                currency: 'USD',
+                                cost: 100,
+                                imageUrls: ['image2'],
                             },
                         ],
                         totalCount: 3,
@@ -12458,8 +12524,11 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role3',
                         roleGrantTimeMs: 1000,
-                        stripePurchaseLink: 'https://example.com',
                         redirectUrl: 'https://example.com',
+                        description: 'description3',
+                        currency: 'USD',
+                        cost: 100,
+                        imageUrls: ['image3'],
                     },
                     userId: ownerId,
                     instances: [],
@@ -12472,8 +12541,11 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role1',
                         roleGrantTimeMs: 1000,
-                        stripePurchaseLink: 'https://example.com',
                         redirectUrl: 'https://example.com',
+                        description: 'description1',
+                        currency: 'USD',
+                        cost: 100,
+                        imageUrls: ['image1'],
                     },
                     userId: ownerId,
                     instances: [],
@@ -12486,8 +12558,11 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role2',
                         roleGrantTimeMs: 1000,
-                        stripePurchaseLink: 'https://example.com',
                         redirectUrl: 'https://example.com',
+                        description: 'description2',
+                        currency: 'USD',
+                        cost: 100,
+                        imageUrls: ['image2'],
                     },
                     userId: ownerId,
                     instances: [],
@@ -12559,8 +12634,11 @@ describe('RecordsServer', () => {
                     markers: ['secret'],
                     roleName: 'role0',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'https://example.com',
                     redirectUrl: 'https://example.com',
+                    description: 'description0',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['image0'],
                 },
                 userId: ownerId,
                 instances: [],
@@ -12589,9 +12667,11 @@ describe('RecordsServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                             roleName: 'role3',
                             roleGrantTimeMs: 1000,
-                            stripePurchaseLink: 'https://example.com',
                             redirectUrl: 'https://example.com',
-
+                            description: 'description3',
+                            currency: 'USD',
+                            cost: 100,
+                            imageUrls: ['image3'],
                         },
                         {
                             address: 'address1',
@@ -12599,8 +12679,11 @@ describe('RecordsServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                             roleName: 'role1',
                             roleGrantTimeMs: 1000,
-                            stripePurchaseLink: 'https://example.com',
                             redirectUrl: 'https://example.com',
+                            description: 'description1',
+                            currency: 'USD',
+                            cost: 100,
+                            imageUrls: ['image1'],
                         },
                         {
                             address: 'address2',
@@ -12608,8 +12691,11 @@ describe('RecordsServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                             roleName: 'role2',
                             roleGrantTimeMs: 1000,
-                            stripePurchaseLink: 'https://example.com',
                             redirectUrl: 'https://example.com',
+                            description: 'description2',
+                            currency: 'USD',
+                            cost: 100,
+                            imageUrls: ['image2'],
                         },
                         {
                             address: 'address0',
@@ -12617,8 +12703,11 @@ describe('RecordsServer', () => {
                             markers: ['secret'],
                             roleName: 'role0',
                             roleGrantTimeMs: 1000,
-                            stripePurchaseLink: 'https://example.com',
                             redirectUrl: 'https://example.com',
+                            description: 'description0',
+                            currency: 'USD',
+                            cost: 100,
+                            imageUrls: ['image0'],
                         },
                     ],
                     totalCount: 4,
@@ -12662,6 +12751,306 @@ describe('RecordsServer', () => {
             )
         );
     });
+
+    // describe('POST /api/v2/records/purchasableItems', () => {
+    //     it('should save the given item', async () => {
+    //         const result = await server.handleHttpRequest(
+    //             httpPost(
+    //                 `/api/v2/records/purchasableItems`,
+    //                 JSON.stringify({
+    //                     recordKey,
+    //                     item: {
+    //                         address: 'testAddress',
+                            
+    //                     }
+    //                     address: 'testAddress',
+    //                     data: 'hello, world',
+    //                 }),
+    //                 apiHeaders
+    //             )
+    //         );
+
+    //         expectResponseBodyToEqual(result, {
+    //             statusCode: 200,
+    //             body: {
+    //                 success: true,
+    //                 recordName,
+    //                 address: 'testAddress',
+    //             },
+    //             headers: apiCorsHeaders,
+    //         });
+
+    //         const data = await store.getData(recordName, 'testAddress');
+    //         expect(data).toEqual({
+    //             success: true,
+    //             data: 'hello, world',
+    //             subjectId: userId,
+    //             publisherId: userId,
+    //             updatePolicy: true,
+    //             deletePolicy: true,
+    //             markers: [PUBLIC_READ_MARKER],
+    //         });
+    //     });
+
+    //     it('should support subjectless records', async () => {
+    //         const keyResult = await recordsController.createPublicRecordKey(
+    //             recordName,
+    //             'subjectless',
+    //             ownerId
+    //         );
+
+    //         if (!keyResult.success) {
+    //             throw new Error('Unable to create subjectless key');
+    //         }
+
+    //         delete apiHeaders['authorization'];
+    //         const result = await server.handleHttpRequest(
+    //             httpPost(
+    //                 `/api/v2/records/purchasableItems`,
+    //                 JSON.stringify({
+    //                     recordKey: keyResult.recordKey,
+    //                     address: 'testAddress',
+    //                     data: 'hello, world',
+    //                 }),
+    //                 apiHeaders
+    //             )
+    //         );
+
+    //         expectResponseBodyToEqual(result, {
+    //             statusCode: 200,
+    //             body: {
+    //                 success: true,
+    //                 recordName,
+    //                 address: 'testAddress',
+    //             },
+    //             headers: apiCorsHeaders,
+    //         });
+
+    //         const data = await store.getData(recordName, 'testAddress');
+    //         expect(data).toEqual({
+    //             success: true,
+    //             data: 'hello, world',
+    //             subjectId: null,
+    //             publisherId: ownerId,
+    //             updatePolicy: true,
+    //             deletePolicy: true,
+    //             markers: [PUBLIC_READ_MARKER],
+    //         });
+    //     });
+
+    //     it('should reject the request if the user is not authorized', async () => {
+    //         const result = await server.handleHttpRequest(
+    //             httpPost(
+    //                 `/api/v2/records/purchasableItems`,
+    //                 JSON.stringify({
+    //                     recordKey: recordName,
+    //                     address: 'testAddress',
+    //                     data: 'hello, world',
+    //                 }),
+    //                 apiHeaders
+    //             )
+    //         );
+
+    //         expectResponseBodyToEqual(result, {
+    //             statusCode: 403,
+    //             body: {
+    //                 success: false,
+    //                 errorCode: 'not_authorized',
+    //                 errorMessage:
+    //                     'You are not authorized to perform this action.',
+    //                 reason: {
+    //                     type: 'missing_permission',
+    //                     recordName,
+    //                     resourceKind: 'data',
+    //                     resourceId: 'testAddress',
+    //                     action: 'create',
+    //                     subjectType: 'user',
+    //                     subjectId: userId,
+    //                 },
+    //             },
+    //             headers: apiCorsHeaders,
+    //         });
+
+    //         const data = await store.getData(recordName, 'testAddress');
+    //         expect(data).toEqual({
+    //             success: false,
+    //             errorCode: 'data_not_found',
+    //             errorMessage: 'The data was not found.',
+    //         });
+    //     });
+
+    //     it('should reject the request if the inst is not authorized', async () => {
+    //         store.roles[recordName] = {
+    //             [userId]: new Set([ADMIN_ROLE_NAME]),
+    //         };
+
+    //         const result = await server.handleHttpRequest(
+    //             httpPost(
+    //                 `/api/v2/records/purchasableItems`,
+    //                 JSON.stringify({
+    //                     recordKey: recordName,
+    //                     address: 'testAddress',
+    //                     data: 'hello, world',
+    //                     instances: ['inst'],
+    //                 }),
+    //                 apiHeaders
+    //             )
+    //         );
+
+    //         expectResponseBodyToEqual(result, {
+    //             statusCode: 403,
+    //             body: {
+    //                 success: false,
+    //                 errorCode: 'not_authorized',
+    //                 errorMessage:
+    //                     'You are not authorized to perform this action.',
+    //                 reason: {
+    //                     type: 'missing_permission',
+    //                     recordName,
+    //                     resourceKind: 'data',
+    //                     resourceId: 'testAddress',
+    //                     action: 'create',
+    //                     subjectType: 'inst',
+    //                     subjectId: '/inst',
+    //                 },
+    //             },
+    //             headers: apiCorsHeaders,
+    //         });
+
+    //         const data = await store.getData(recordName, 'testAddress');
+    //         expect(data).toEqual({
+    //             success: false,
+    //             errorCode: 'data_not_found',
+    //             errorMessage: 'The data was not found.',
+    //         });
+    //     });
+
+    //     it('should return an unacceptable_request result when given a non-string address', async () => {
+    //         const result = await server.handleHttpRequest(
+    //             httpPost(
+    //                 `/api/v2/records/purchasableItems`,
+    //                 JSON.stringify({
+    //                     recordKey,
+    //                     address: 123,
+    //                     data: 'hello, world',
+    //                 }),
+    //                 apiHeaders
+    //             )
+    //         );
+
+    //         expectResponseBodyToEqual(result, {
+    //             statusCode: 400,
+    //             body: {
+    //                 success: false,
+    //                 errorCode: 'unacceptable_request',
+    //                 errorMessage:
+    //                     'The request was invalid. One or more fields were invalid.',
+    //                 issues: [
+    //                     {
+    //                         code: 'invalid_type',
+    //                         expected: 'string',
+    //                         message: 'address must be a string.',
+    //                         path: ['address'],
+    //                         received: 'number',
+    //                     },
+    //                 ],
+    //             },
+    //             headers: apiCorsHeaders,
+    //         });
+    //     });
+
+    //     it('should return an unacceptable_request result when given a non-string recordKey', async () => {
+    //         const result = await server.handleHttpRequest(
+    //             httpPost(
+    //                 `/api/v2/records/purchasableItems`,
+    //                 JSON.stringify({
+    //                     recordKey: 123,
+    //                     address: 'testAddress',
+    //                     data: 'hello, world',
+    //                 }),
+    //                 apiHeaders
+    //             )
+    //         );
+
+    //         expectResponseBodyToEqual(result, {
+    //             statusCode: 400,
+    //             body: {
+    //                 success: false,
+    //                 errorCode: 'unacceptable_request',
+    //                 errorMessage:
+    //                     'The request was invalid. One or more fields were invalid.',
+    //                 issues: [
+    //                     {
+    //                         code: 'invalid_type',
+    //                         expected: 'string',
+    //                         message: 'recordKey must be a string.',
+    //                         path: ['recordKey'],
+    //                         received: 'number',
+    //                     },
+    //                 ],
+    //             },
+    //             headers: apiCorsHeaders,
+    //         });
+    //     });
+
+    //     it('should return an unacceptable_request result when given undefined data', async () => {
+    //         const result = await server.handleHttpRequest(
+    //             httpPost(
+    //                 `/api/v2/records/purchasableItems`,
+    //                 JSON.stringify({
+    //                     recordKey,
+    //                     address: 'testAddress',
+    //                 }),
+    //                 apiHeaders
+    //             )
+    //         );
+
+    //         expectResponseBodyToEqual(result, {
+    //             statusCode: 400,
+    //             body: {
+    //                 success: false,
+    //                 errorCode: 'unacceptable_request',
+    //                 errorMessage: 'data is required.',
+    //             },
+    //             headers: apiCorsHeaders,
+    //         });
+    //     });
+
+    //     testOrigin('POST', `/api/v2/records/purchasableItems`, () =>
+    //         JSON.stringify({
+    //             recordKey,
+    //             address: 'testAddress',
+    //             data: 'hello, world',
+    //         })
+    //     );
+    //     testAuthorization(
+    //         () =>
+    //             httpPost(
+    //                 '/api/v2/records/purchasableItems',
+    //                 JSON.stringify({
+    //                     recordKey,
+    //                     address: 'testAddress',
+    //                     data: 'hello, world',
+    //                 }),
+    //                 apiHeaders
+    //             ),
+    //         'The user must be logged in in order to record data.'
+    //     );
+    //     testBodyIsJson((body) =>
+    //         httpPost(`/api/v2/records/purchasableItems`, body, apiHeaders)
+    //     );
+    //     testRateLimit(() =>
+    //         httpPost(
+    //             `/api/v2/records/purchasableItems`,
+    //             JSON.stringify({
+    //                 recordKey,
+    //                 address: 'testAddress',
+    //                 data: 'hello, world',
+    //             }),
+    //             defaultHeaders
+    //         )
+    //     );
+    // });
 
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {

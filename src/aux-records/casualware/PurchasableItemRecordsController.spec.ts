@@ -80,7 +80,10 @@ describe('PurchasableItemRecordsController', () => {
                     redirectUrl: 'redirectUrl',
                     roleName: 'roleName',
                     roleGrantTimeMs: 1000,
-                    stripePurchaseLink: 'stripePurchaseLink',
+                    description: 'description',
+                    currency: 'USD',
+                    cost: 100,
+                    imageUrls: ['imageUrl'],
                 },
                 instances: [],
             });
@@ -98,7 +101,10 @@ describe('PurchasableItemRecordsController', () => {
                 redirectUrl: 'redirectUrl',
                 roleName: 'roleName',
                 roleGrantTimeMs: 1000,
-                stripePurchaseLink: 'stripePurchaseLink',
+                description: 'description',
+                currency: 'USD',
+                cost: 100,
+                imageUrls: ['imageUrl'],
             });
         });
     });
