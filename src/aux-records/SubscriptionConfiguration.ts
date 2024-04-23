@@ -231,6 +231,27 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: false,
             // allowCustomComId: false,
         }),
+
+    purchasableItems: z
+        .object({
+            allowed: z.boolean().describe('Whether purchasable items features are granted to the studio.'),
+
+            maxPurchasableItems: z
+                .number()
+                .describe(
+                    'The maximum number of purchasable items that can be created. If omitted, then there is no limit.'
+                )
+                .positive()
+                .int()
+                .optional(),
+        })
+        .describe(
+            'The configuration for purchasable items features for studios. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false
+        }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -655,6 +676,11 @@ export interface FeaturesConfiguration {
      * The configuration for comId features.
      */
     comId?: StudioComIdFeaturesConfiguration;
+
+    /**
+     * The configuration for purchasable items features.
+     */
+    purchasableItems?: PurchasableItemFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -848,6 +874,19 @@ export interface StudioComIdFeaturesConfiguration {
     maxStudios?: number;
 }
 
+export interface PurchasableItemFeaturesConfiguration {
+    /**
+     * Whether purchasable items features are granted to the studio.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of purchasable items that are allowed to be created.
+     * If not specified, then there is no limit.
+     */
+    maxPurchasableItems?: number;
+}
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -900,6 +939,30 @@ export function getComIdFeatures(
         features.comId ?? {
             allowed: false,
             // allowCustomComId: false,
+        }
+    );
+}
+
+/**
+ * Gets the purchasableItems features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ */
+export function getPurchasableItemsFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string
+): PurchasableItemFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        'studio'
+    );
+    return (
+        features.purchasableItems ?? {
+            allowed: false,
         }
     );
 }

@@ -67,4 +67,9 @@ export interface PurchasableItem extends CrudRecord {
 /**
  * Defines the subscription metrics for a purchasable item.
  */
-export interface PurchasableItemMetrics extends CrudSubscriptionMetrics {}
+export interface PurchasableItemMetrics extends CrudSubscriptionMetrics {
+    /**
+     * The total number of purchasable items that have been recorded.
+     */
+    totalPurchasableItems: number;
+}
