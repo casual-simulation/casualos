@@ -3021,10 +3021,7 @@ export class RecordsServer {
                 .http('GET', '/api/v2/records/purchasableItems')
                 .inputs(z.object({
                     recordName: RECORD_NAME_VALIDATION,
-                    address: z.string({
-                        required_error: 'address is required.',
-                        invalid_type_error: 'address must be a string.',
-                    }).nonempty('address must not be empty'),
+                    address: ADDRESS_VALIDATION,
                     instances: INSTANCES_ARRAY_VALIDATION.optional(),
                 }))
                 .handler(async ({ recordName, address, instances }, context) => {
@@ -3040,6 +3037,47 @@ export class RecordsServer {
                         instances: instances ?? [],
                     });
                     return result;
+                }),
+
+            listPurchasableItems: procedure()
+                .origins(true)
+                .http('GET', '/api/v2/records/purchasableItems/list')
+                .inputs(z.object({
+                    recordName: RECORD_NAME_VALIDATION,
+                    address: ADDRESS_VALIDATION.nullable().optional(),
+                    marker: MARKER_VALIDATION.optional(),
+                    sort: z.enum(['ascending', 'descending']).optional(),
+                    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                }))
+                .handler(async ({ recordName, address, instances, marker, sort }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
+                    if (
+                        sessionKeyValidation.success === false &&
+                        sessionKeyValidation.errorCode !== 'no_session_key'
+                    ) {
+                        return sessionKeyValidation;
+                    }
+
+                    if (!marker) {
+                        const result = await this._purchasableItems.listItems({
+                            recordName,
+                            startingAddress: address || null,
+                            userId: sessionKeyValidation.userId,
+                            instances,
+                        });
+                        return result;
+                    } else {
+                        const result = await this._purchasableItems.listItemsByMarker({
+                            recordName: recordName,
+                            marker: marker,
+                            startingAddress: address || null,
+                            sort: sort,
+                            userId: sessionKeyValidation.userId,
+                            instances,
+                        });
+
+                        return result;
+                    }
                 })
         };
     }

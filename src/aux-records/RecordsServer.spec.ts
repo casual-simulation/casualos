@@ -12171,6 +12171,498 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/purchasableItems/list', () => {
+        beforeEach(async () => {
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address3',
+                    name: 'Item 3',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role3',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                    redirectUrl: 'https://example.com',
+                },
+                userId: ownerId,
+                instances: [],
+            });
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                    redirectUrl: 'https://example.com',
+                },
+                userId: ownerId,
+                instances: [],
+            });
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address2',
+                    name: 'Item 2',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role2',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                    redirectUrl: 'https://example.com',
+                },
+                userId: ownerId,
+                instances: [],
+            });
+        });
+
+        describe('?marker', () => {
+            it('should return a list of data', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                            {
+                                address: 'address1',
+                                name: 'Item 1',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role1',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to list data by address', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&address=address1&marker=${PUBLIC_READ_MARKER}`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to sort by address', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}&sort=descending`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                            {
+                                address: 'address1',
+                                name: 'Item 1',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role1',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to list custom markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['/inst']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address3',
+                        name: 'Item 3',
+                        markers: ['secret'],
+                        roleName: 'role3',
+                        roleGrantTimeMs: 1000,
+                        stripePurchaseLink: 'https://example.com',
+                        redirectUrl: 'https://example.com',
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address1',
+                        name: 'Item 1',
+                        markers: ['secret'],
+                        roleName: 'role1',
+                        roleGrantTimeMs: 1000,
+                        stripePurchaseLink: 'https://example.com',
+                        redirectUrl: 'https://example.com',
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address2',
+                        name: 'Item 2',
+                        markers: ['secret'],
+                        roleName: 'role2',
+                        roleGrantTimeMs: 1000,
+                        stripePurchaseLink: 'https://example.com',
+                        redirectUrl: 'https://example.com',
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&marker=${'secret'}&instances=${'inst'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: ['secret'],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                            {
+                                address: 'address1',
+                                name: 'Item 1',
+                                markers: ['secret'],
+                                roleName: 'role1',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: ['secret'],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                stripePurchaseLink: 'https://example.com',
+                                redirectUrl: 'https://example.com',
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(apiHeaders['origin']),
+                });
+            });
+
+            it('return a not_authorized error if the user is not authorized to access the marker', async () => {
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address3',
+                        name: 'Item 3',
+                        markers: ['secret'],
+                        roleName: 'role3',
+                        roleGrantTimeMs: 1000,
+                        stripePurchaseLink: 'https://example.com',
+                        redirectUrl: 'https://example.com',
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address1',
+                        name: 'Item 1',
+                        markers: ['secret'],
+                        roleName: 'role1',
+                        roleGrantTimeMs: 1000,
+                        stripePurchaseLink: 'https://example.com',
+                        redirectUrl: 'https://example.com',
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address2',
+                        name: 'Item 2',
+                        markers: ['secret'],
+                        roleName: 'role2',
+                        roleGrantTimeMs: 1000,
+                        stripePurchaseLink: 'https://example.com',
+                        redirectUrl: 'https://example.com',
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&instances=${'inst'}&marker=${'secret'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'purchasableItem',
+                            action: 'list',
+                            subjectType: 'user',
+                            subjectId: userId,
+                        },
+                    },
+                    headers: corsHeaders(apiHeaders['origin']),
+                });
+            });
+
+            it('should return an unacceptable_request result when not given a recordName', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?address=testAddress`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'recordName is required.',
+                                path: ['recordName'],
+                                received: 'undefined',
+                            },
+                        ],
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+        });
+
+        it('should be able to list all items', async () => {
+            await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address0',
+                    name: 'Item 0',
+                    markers: ['secret'],
+                    roleName: 'role0',
+                    roleGrantTimeMs: 1000,
+                    stripePurchaseLink: 'https://example.com',
+                    redirectUrl: 'https://example.com',
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address3',
+                            name: 'Item 3',
+                            markers: [PUBLIC_READ_MARKER],
+                            roleName: 'role3',
+                            roleGrantTimeMs: 1000,
+                            stripePurchaseLink: 'https://example.com',
+                            redirectUrl: 'https://example.com',
+
+                        },
+                        {
+                            address: 'address1',
+                            name: 'Item 1',
+                            markers: [PUBLIC_READ_MARKER],
+                            roleName: 'role1',
+                            roleGrantTimeMs: 1000,
+                            stripePurchaseLink: 'https://example.com',
+                            redirectUrl: 'https://example.com',
+                        },
+                        {
+                            address: 'address2',
+                            name: 'Item 2',
+                            markers: [PUBLIC_READ_MARKER],
+                            roleName: 'role2',
+                            roleGrantTimeMs: 1000,
+                            stripePurchaseLink: 'https://example.com',
+                            redirectUrl: 'https://example.com',
+                        },
+                        {
+                            address: 'address0',
+                            name: 'Item 0',
+                            markers: ['secret'],
+                            roleName: 'role0',
+                            roleGrantTimeMs: 1000,
+                            stripePurchaseLink: 'https://example.com',
+                            redirectUrl: 'https://example.com',
+                        },
+                    ],
+                    totalCount: 4,
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return 403 not_authorized if the user does not have access to the account marker', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/purchasableItems/list?recordName=${recordName}`,
+                authenticatedHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);

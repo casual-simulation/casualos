@@ -2622,6 +2622,48 @@ Object {
       "name": "getPurchasableItem",
       "origins": true,
     },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/purchasableItems/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPurchasableItems",
+      "origins": true,
+    },
   ],
   "success": true,
 }
@@ -5247,6 +5289,48 @@ Object {
         "type": "object",
       },
       "name": "getPurchasableItem",
+      "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/purchasableItems/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPurchasableItems",
       "origins": true,
     },
   ],
