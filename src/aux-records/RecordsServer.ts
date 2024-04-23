@@ -73,6 +73,7 @@ import {
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import { PurchasableItemRecordsController } from './casualware/PurchasableItemRecordsController';
+import { PurchasableItem } from './casualware/PurchasableItemRecordsStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -3078,7 +3079,47 @@ export class RecordsServer {
 
                         return result;
                     }
-                })
+                }),
+        
+            recordPurchasableItem: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/purchasableItems')
+                .inputs(z.object({
+                    recordName: RECORD_NAME_VALIDATION,
+                    item: z.object({
+                        address: ADDRESS_VALIDATION,
+                        name: z.string().min(1).max(128),
+                        description: z.string().min(1).max(1024),
+                        imageUrls: z.array(
+                            z.string().min(1).max(512)
+                        ).max(8),
+                        currency: z.string().min(3).max(3),
+                        cost: z.number().positive().int(),
+                        roleName: z.string().min(1),
+                        roleGrantTimeMs: z.number().positive().int().nullable().optional(),
+                        redirectUrl: z.string().url().nullable().optional(),
+                        markers: MARKERS_VALIDATION,
+                    }),
+                    instances: INSTANCES_ARRAY_VALIDATION.optional()
+                }))
+                .handler(async ({ recordName, item, instances }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
+                    if (sessionKeyValidation.success === false) {
+                        if (sessionKeyValidation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._purchasableItems.recordItem({
+                        recordKeyOrRecordName: recordName,
+                        item: item as PurchasableItem,
+                        userId: sessionKeyValidation.userId,
+                        instances: instances
+                    });
+
+                    return result;
+                }),
         };
     }
 
