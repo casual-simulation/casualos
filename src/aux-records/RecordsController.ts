@@ -32,8 +32,10 @@ import { v4 as uuid } from 'uuid';
 import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
+    PurchasableItemFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     getComIdFeatures,
+    getPurchasableItemsFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
@@ -1112,7 +1114,10 @@ export class RecordsController {
                 };
             }
 
-            let features: StudioComIdFeaturesConfiguration = {
+            let comIdFeatures: StudioComIdFeaturesConfiguration = {
+                allowed: false,
+            };
+            let storeFeatures: PurchasableItemFeaturesConfiguration = {
                 allowed: false,
             };
 
@@ -1122,7 +1127,12 @@ export class RecordsController {
             ) {
                 const config =
                     await this._config.getSubscriptionConfiguration();
-                features = getComIdFeatures(
+                comIdFeatures = getComIdFeatures(
+                    config,
+                    studio.subscriptionStatus,
+                    studio.subscriptionId
+                );
+                storeFeatures = getPurchasableItemsFeatures(
                     config,
                     studio.subscriptionStatus,
                     studio.subscriptionId
@@ -1139,7 +1149,8 @@ export class RecordsController {
                     ownerStudioComId: studio.ownerStudioComId,
                     comIdConfig: studio.comIdConfig,
                     playerConfig: studio.playerConfig,
-                    comIdFeatures: features,
+                    comIdFeatures: comIdFeatures,
+                    storeFeatures: storeFeatures,
                 },
             };
         } catch (err) {
@@ -2169,6 +2180,11 @@ export interface StudioData {
      * The comId features that this studio has access to.
      */
     comIdFeatures: StudioComIdFeaturesConfiguration;
+
+    /**
+     * The store features that this studio has access to.
+     */
+    storeFeatures: PurchasableItemFeaturesConfiguration;
 }
 
 export interface GetStudioFailure {

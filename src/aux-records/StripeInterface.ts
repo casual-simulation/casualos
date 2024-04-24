@@ -165,6 +165,11 @@ export interface StripeCheckoutResponse {
      * The URL that the user should be redirected to.
      */
     url: string;
+
+    /**
+     * The ID of the checkout session.
+     */
+    checkoutSessionId: string;
 }
 
 export interface StripePortalRequest {

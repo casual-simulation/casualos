@@ -2609,6 +2609,9 @@ describe('RecordsController', () => {
                     comIdFeatures: {
                         allowed: false,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    }
                 },
             });
         });
@@ -2658,6 +2661,73 @@ describe('RecordsController', () => {
                         allowed: true,
                         maxStudios: 100,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    }
+                },
+            });
+        });
+
+        it('should include the configured store features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                purchasableItems: {
+                                    allowed: true,
+                                    maxPurchasableItems: 100,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10
+                                        }
+                                    }
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    storeFeatures: {
+                        allowed: true,
+                        maxPurchasableItems: 100,
+                        currencyLimits: {
+                            usd: {
+                                maxCost: 10000,
+                                minCost: 10
+                            }
+                        }
+                    }
                 },
             });
         });

@@ -13787,6 +13787,9 @@ describe('RecordsServer', () => {
                         comIdFeatures: {
                             allowed: false,
                         },
+                        storeFeatures: {
+                            allowed: false,
+                        }
                     },
                 },
                 headers: accountCorsHeaders,
