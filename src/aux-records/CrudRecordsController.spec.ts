@@ -254,9 +254,14 @@ describe('CrudRecordsController', () => {
             it('should reject the request if the subscription check fails', async () => {
                 manager.checkSubscriptionMetrics = async (
                     action,
-                    authorization
+                    authorization,
+                    item
                 ) => {
                     expect(action).toBe('create');
+                    expect(item).toEqual({
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    });
                     return {
                         success: false,
                         errorCode: 'subscription_limit_reached',
@@ -474,9 +479,14 @@ describe('CrudRecordsController', () => {
 
                 manager.checkSubscriptionMetrics = async (
                     action,
-                    authorization
+                    authorization,
+                    item
                 ) => {
                     expect(action).toBe('update');
+                    expect(item).toEqual({
+                        address: 'address',
+                        markers: [PRIVATE_MARKER],
+                    });
                     return {
                         success: false,
                         errorCode: 'subscription_limit_reached',
@@ -973,13 +983,15 @@ export interface TestItem extends CrudRecord {}
 export class TestController extends CrudRecordsController<TestItem> {
     private __checkSubscriptionMetrics: (
         action: ActionKinds,
-        authorization: AuthorizeUserAndInstancesForResourcesSuccess
+        authorization: AuthorizeUserAndInstancesForResourcesSuccess,
+        item?: TestItem
     ) => Promise<CheckSubscriptionMetricsResult>;
 
     set checkSubscriptionMetrics(
         value: (
             action: ActionKinds,
-            authorization: AuthorizeUserAndInstancesForResourcesSuccess
+            authorization: AuthorizeUserAndInstancesForResourcesSuccess,
+            item?: TestItem
         ) => Promise<CheckSubscriptionMetricsResult>
     ) {
         this.__checkSubscriptionMetrics = value;
@@ -989,7 +1001,8 @@ export class TestController extends CrudRecordsController<TestItem> {
         config: CrudRecordsConfiguration<TestItem, CrudSubscriptionMetrics>,
         checkSubscriptionMetrics?: (
             action: ActionKinds,
-            authorization: AuthorizeUserAndInstancesForResourcesSuccess
+            authorization: AuthorizeUserAndInstancesForResourcesSuccess,
+            item?: TestItem
         ) => Promise<CheckSubscriptionMetricsResult>
     ) {
         super(config);
@@ -998,10 +1011,15 @@ export class TestController extends CrudRecordsController<TestItem> {
 
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
-        authorization: AuthorizeUserAndInstancesForResourcesSuccess
+        authorization: AuthorizeUserAndInstancesForResourcesSuccess,
+        item?: TestItem
     ): Promise<CheckSubscriptionMetricsResult> {
         if (this.__checkSubscriptionMetrics) {
-            return await this.__checkSubscriptionMetrics(action, authorization);
+            return await this.__checkSubscriptionMetrics(
+                action,
+                authorization,
+                item
+            );
         }
         return {
             success: true,

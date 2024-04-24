@@ -223,20 +223,22 @@ export abstract class CrudRecordsController<
                 };
             }
 
+            const item = request.item;
             const subscriptionResult = await this._checkSubscriptionMetrics(
                 action,
-                authorization
+                authorization,
+                item
             );
 
             if (subscriptionResult.success === false) {
                 return subscriptionResult;
             }
 
-            await this._store.putItem(recordName, request.item);
+            await this._store.putItem(recordName, item);
             return {
                 success: true,
                 recordName,
-                address: request.item.address,
+                address: item.address,
             };
         } catch (err) {
             console.error(`[${this._name}] Error recording item:`, err);
