@@ -3093,7 +3093,7 @@ export class RecordsServer {
                         imageUrls: z.array(
                             z.string().min(1).max(512)
                         ).max(8),
-                        currency: z.string().min(3).max(3).toLowerCase(),
+                        currency: z.string().min(1).max(15).toLowerCase(),
                         cost: z.number().positive().int(),
                         roleName: z.string().min(1),
                         roleGrantTimeMs: z.number().positive().int().nullable().optional(),
