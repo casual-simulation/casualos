@@ -5,6 +5,7 @@ import { ActionKinds } from '@casual-simulation/aux-common';
 import { ConfigurationStore } from '../ConfigurationStore';
 import { CheckSubscriptionMetricsResult, CrudRecordsController } from '../CrudRecordsController';
 import { getPurchasableItemsFeatures, getSubscriptionFeatures } from '../SubscriptionConfiguration';
+import { z } from 'zod';
 
 export interface PurchasableItemRecordsConfig {
     store: PurchasableItemRecordsStore;
@@ -23,7 +24,8 @@ export class PurchasableItemRecordsController extends CrudRecordsController<Purc
         });
     }
 
-    protected async _checkSubscriptionMetrics(metrics: PurchasableItemMetrics, action: ActionKinds, authorization: AuthorizeUserAndInstancesSuccess | AuthorizeUserAndInstancesForResourcesSuccess): Promise<CheckSubscriptionMetricsResult> {
+    protected async _checkSubscriptionMetrics(action: ActionKinds, authorization: AuthorizeUserAndInstancesSuccess | AuthorizeUserAndInstancesForResourcesSuccess, item: PurchasableItem): Promise<CheckSubscriptionMetricsResult> {
+        const metrics = await this.store.getSubscriptionMetricsByRecordName(authorization.recordName);
         const config = await this.config.getSubscriptionConfiguration();
         const features = getPurchasableItemsFeatures(config, metrics.subscriptionStatus, metrics.subscriptionId);
         
@@ -42,6 +44,45 @@ export class PurchasableItemRecordsController extends CrudRecordsController<Purc
                     success: false,
                     errorCode: 'subscription_limit_reached',
                     errorMessage: 'The maximum number of purchasable items has been reached for your subscription.',
+                };
+            }
+        }
+
+        if (item && (action === 'create' || action === 'update')) {
+            const currencyLimits = features.currencyLimits;
+            const allowedCurrencies = Object.keys(currencyLimits);
+
+            const currenciesSchema = z.object({
+                currency: z.enum(allowedCurrencies as any)
+            });
+            const currencyResult = currenciesSchema.safeParse(item);
+
+            if (currencyResult.success === false) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'The currency is not allowed for this subscription. Please choose a different currency.',
+                    issues: currencyResult.error.issues,
+                };
+            }
+
+            const limit = currencyLimits[item.currency];
+
+            const schema = z.object({
+                cost: z.number()
+                    .int()
+                    .min(limit.minCost)
+                    .max(limit.maxCost)
+            });
+
+            const result = schema.safeParse(item);
+
+            if (result.success === false) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'The cost is not allowed for this subscription. Please choose a different cost.',
+                    issues: result.error.issues,
                 };
             }
         }

@@ -244,6 +244,26 @@ export const subscriptionFeaturesSchema = z.object({
                 .positive()
                 .int()
                 .optional(),
+
+            currencyLimits: z.object({})
+                .catchall(z.object({
+                    maxCost: z.number()
+                        .describe('The maximum cost that items can have in this currency.')
+                        .positive()
+                        .int(),
+                    minCost: z.number()
+                        .describe('The minimum cost that items can have in this currency. Note that this doesn\'t prevent free items, it only sets the minimum cost for a non-free item.')
+                        .positive()
+                        .int(),
+                }))
+                .describe('The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed')
+                .optional()
+                .default({
+                    usd: {
+                        maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
+                        minCost: 50, // $0.50 US Dollars (USD)
+                    },
+                })
         })
         .describe(
             'The configuration for purchasable items features for studios. Defaults to not allowed.'
@@ -885,6 +905,27 @@ export interface PurchasableItemFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxPurchasableItems?: number;
+
+    /**
+     * The limits for each currency that can be used for purchasable items.
+     * 
+     * Each key should be a ISO currency code in lowercase. (e.g. "usd")
+     */
+    currencyLimits?: {
+        [currency: string]: CurrencyLimit;
+    }
+}
+
+export interface CurrencyLimit {
+    /**
+     * The maximum allowed cost for the currency. (inclusive)
+     */
+    maxCost: number;
+
+    /**
+     * The minimum allowed cost for the currency. (inclusive)
+     */
+    minCost: number;
 }
 
 export function allowAllFeatures(): FeaturesConfiguration {

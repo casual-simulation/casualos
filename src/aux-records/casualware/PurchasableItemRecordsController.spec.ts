@@ -84,7 +84,13 @@ describe('PurchasableItemRecordsController', () => {
                     tier1: {
                         features: merge(allowAllFeatures(), {
                             purchasableItems: {
-                                allowed: true
+                                allowed: true,
+                                currencyLimits: {
+                                    usd: {
+                                        maxCost: 1000,
+                                        minCost: 1,
+                                    }
+                                }
                             }
                         } as Partial<FeaturesConfiguration>),
                     },
@@ -116,7 +122,7 @@ describe('PurchasableItemRecordsController', () => {
                     roleName: 'roleName',
                     roleGrantTimeMs: 1000,
                     description: 'description',
-                    currency: 'USD',
+                    currency: 'usd',
                     cost: 100,
                     imageUrls: ['imageUrl'],
                 },
@@ -137,7 +143,7 @@ describe('PurchasableItemRecordsController', () => {
                 roleName: 'roleName',
                 roleGrantTimeMs: 1000,
                 description: 'description',
-                currency: 'USD',
+                currency: 'usd',
                 cost: 100,
                 imageUrls: ['imageUrl'],
             });
@@ -179,7 +185,7 @@ describe('PurchasableItemRecordsController', () => {
                     roleName: 'roleName',
                     roleGrantTimeMs: 1000,
                     description: 'description',
-                    currency: 'USD',
+                    currency: 'usd',
                     cost: 100,
                     imageUrls: ['imageUrl'],
                 },
@@ -213,7 +219,13 @@ describe('PurchasableItemRecordsController', () => {
                             features: merge(allowAllFeatures(), {
                                 purchasableItems: {
                                     allowed: true,
-                                    maxPurchasableItems: 0
+                                    maxPurchasableItems: 0,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
                                 }
                             } as Partial<FeaturesConfiguration>),
                         },
@@ -232,7 +244,7 @@ describe('PurchasableItemRecordsController', () => {
                     roleName: 'roleName',
                     roleGrantTimeMs: 1000,
                     description: 'description',
-                    currency: 'USD',
+                    currency: 'usd',
                     cost: 100,
                     imageUrls: ['imageUrl'],
                 },
@@ -247,6 +259,326 @@ describe('PurchasableItemRecordsController', () => {
 
             await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toBe(null);
         });
+
+        it('should return unacceptable_request if the currency is not allowed', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                purchasableItems: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.recordItem({
+                recordKeyOrRecordName: 'testRecord',
+                userId: userId,
+                item: {
+                    address: 'address',
+                    name: 'name',
+                    markers: [PUBLIC_READ_MARKER],
+                    redirectUrl: 'redirectUrl',
+                    roleName: 'roleName',
+                    roleGrantTimeMs: 1000,
+                    description: 'description',
+                    currency: 'WRONG',
+                    cost: 100,
+                    imageUrls: ['imageUrl'],
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The currency is not allowed for this subscription. Please choose a different currency.',
+                issues: [
+                    {
+                        code: 'invalid_enum_value',
+                        message: 'Invalid enum value. Expected \'usd\', received \'WRONG\'',
+                        options: ['usd',],
+                        path: ['currency'],
+                        received: 'WRONG'
+                    }
+                ]
+            });
+
+            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toBe(null);
+        });
+
+        it('should return unacceptable_request if the cost is too much', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                purchasableItems: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.recordItem({
+                recordKeyOrRecordName: 'testRecord',
+                userId: userId,
+                item: {
+                    address: 'address',
+                    name: 'name',
+                    markers: [PUBLIC_READ_MARKER],
+                    redirectUrl: 'redirectUrl',
+                    roleName: 'roleName',
+                    roleGrantTimeMs: 1000,
+                    description: 'description',
+                    currency: 'usd',
+                    cost: 1000000,
+                    imageUrls: ['imageUrl'],
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The cost is not allowed for this subscription. Please choose a different cost.',
+                issues: [
+                    {
+                        code: 'too_big',
+                        exact: false,
+                        inclusive: true,
+                        message: 'Number must be less than or equal to 1000',
+                        maximum: 1000,
+                        path: ['cost'],
+                        type: "number"
+                    }
+                ]
+            });
+
+            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toBe(null);
+        });
+
+        it('should return unacceptable_request if the currency is not allowed when updating an item', async () => {
+            await itemsStore.putItem('testRecord', {
+                address: 'address',
+                name: 'name',
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'redirectUrl',
+                roleName: 'roleName',
+                roleGrantTimeMs: 1000,
+                description: 'description',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['imageUrl'],
+            });
+
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                purchasableItems: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.recordItem({
+                recordKeyOrRecordName: 'testRecord',
+                userId: userId,
+                item: {
+                    address: 'address',
+                    name: 'name',
+                    markers: [PUBLIC_READ_MARKER],
+                    redirectUrl: 'redirectUrl',
+                    roleName: 'roleName',
+                    roleGrantTimeMs: 1000,
+                    description: 'description',
+                    currency: 'WRONG',
+                    cost: 100,
+                    imageUrls: ['imageUrl'],
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The currency is not allowed for this subscription. Please choose a different currency.',
+                issues: [
+                    {
+                        code: 'invalid_enum_value',
+                        message: 'Invalid enum value. Expected \'usd\', received \'WRONG\'',
+                        options: ['usd',],
+                        path: ['currency'],
+                        received: 'WRONG'
+                    }
+                ]
+            });
+
+            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+                address: 'address',
+                name: 'name',
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'redirectUrl',
+                roleName: 'roleName',
+                roleGrantTimeMs: 1000,
+                description: 'description',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['imageUrl'],
+            });
+        });
+
+        it('should return unacceptable_request if the cost is too much when updating an item', async () => {
+            await itemsStore.putItem('testRecord', {
+                address: 'address',
+                name: 'name',
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'redirectUrl',
+                roleName: 'roleName',
+                roleGrantTimeMs: 1000,
+                description: 'description',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['imageUrl'],
+            });
+
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                purchasableItems: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.recordItem({
+                recordKeyOrRecordName: 'testRecord',
+                userId: userId,
+                item: {
+                    address: 'address',
+                    name: 'name',
+                    markers: [PUBLIC_READ_MARKER],
+                    redirectUrl: 'redirectUrl',
+                    roleName: 'roleName',
+                    roleGrantTimeMs: 1000,
+                    description: 'description',
+                    currency: 'usd',
+                    cost: 100000000,
+                    imageUrls: ['imageUrl'],
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The cost is not allowed for this subscription. Please choose a different cost.',
+                issues: [
+                    {
+                        code: 'too_big',
+                        exact: false,
+                        inclusive: true,
+                        message: 'Number must be less than or equal to 1000',
+                        maximum: 1000,
+                        path: ['cost'],
+                        type: "number"
+                    }
+                ]
+            });
+
+            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+                address: 'address',
+                name: 'name',
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'redirectUrl',
+                roleName: 'roleName',
+                roleGrantTimeMs: 1000,
+                description: 'description',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['imageUrl'],
+            });
+        });
     });
 
     describe('getItem()', () => {
@@ -259,7 +591,7 @@ describe('PurchasableItemRecordsController', () => {
                 roleName: 'roleName',
                 roleGrantTimeMs: 1000,
                 description: 'description',
-                currency: 'USD',
+                currency: 'usd',
                 cost: 100,
                 imageUrls: ['imageUrl'],
             });
@@ -281,7 +613,7 @@ describe('PurchasableItemRecordsController', () => {
                     roleName: 'roleName',
                     roleGrantTimeMs: 1000,
                     description: 'description',
-                    currency: 'USD',
+                    currency: 'usd',
                     cost: 100,
                     imageUrls: ['imageUrl'],
                 }
@@ -299,7 +631,7 @@ describe('PurchasableItemRecordsController', () => {
                 roleName: 'roleName',
                 roleGrantTimeMs: 1000,
                 description: 'description',
-                currency: 'USD',
+                currency: 'usd',
                 cost: 100,
                 imageUrls: ['imageUrl'],
             });
