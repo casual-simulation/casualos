@@ -27,6 +27,7 @@ import {
     ServerError,
 } from '@casual-simulation/aux-common';
 import { ValidatePublicRecordKeyFailure } from './RecordsController';
+import { ZodIssue } from 'zod';
 
 export interface CrudRecordsConfiguration<
     T extends CrudRecord,
@@ -97,6 +98,14 @@ export abstract class CrudRecordsController<
 
     protected get store() {
         return this._store;
+    }
+
+    protected get allowRecordKeys() {
+        return this._allowRecordKeys;
+    }
+
+    protected get resourceKind() {
+        return this._resourceKind;
     }
 
     constructor(config: CrudRecordsConfiguration<T, TMetrics, TStore>) {
@@ -214,13 +223,7 @@ export abstract class CrudRecordsController<
                 };
             }
 
-            const metrics =
-                await this._store.getSubscriptionMetricsByRecordName(
-                    recordName
-                );
-
             const subscriptionResult = await this._checkSubscriptionMetrics(
-                metrics,
                 action,
                 authorization
             );
@@ -362,7 +365,6 @@ export abstract class CrudRecordsController<
 
             const markers = result.markers;
 
-            await this._policies.authorizeUserAndInstancesForResources;
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -381,13 +383,7 @@ export abstract class CrudRecordsController<
             }
 
             const recordName = context.context.recordName;
-            const metrics =
-                await this._store.getSubscriptionMetricsByRecordName(
-                    recordName
-                );
-
             const subscriptionResult = await this._checkSubscriptionMetrics(
-                metrics,
                 'delete',
                 authorization
             );
@@ -556,13 +552,14 @@ export abstract class CrudRecordsController<
      * @param metrics The metrics that were fetched from the database.
      * @param action The action that is being performed.
      * @param authorization The authorization for the user and instances.
+     * @param item The item that should be checked. Omitted for delete actions.
      */
     protected abstract _checkSubscriptionMetrics(
-        metrics: TMetrics,
         action: ActionKinds,
         authorization:
             | AuthorizeUserAndInstancesSuccess
-            | AuthorizeUserAndInstancesForResourcesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess,
+        item?: T
     ): Promise<CheckSubscriptionMetricsResult>;
 
     /**
@@ -634,8 +631,13 @@ export interface CheckSubscriptionMetricsSuccess {
 
 export interface CheckSubscriptionMetricsFailure {
     success: false;
-    errorCode: ServerError | 'subscription_limit_reached' | NotAuthorizedError;
+    errorCode:
+        | ServerError
+        | 'subscription_limit_reached'
+        | NotAuthorizedError
+        | 'unacceptable_request';
     errorMessage: string;
+    issues?: ZodIssue[];
 }
 
 export interface CrudGetItemRequest {
