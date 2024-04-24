@@ -253,7 +253,6 @@ describe('CrudRecordsController', () => {
 
             it('should reject the request if the subscription check fails', async () => {
                 manager.checkSubscriptionMetrics = async (
-                    metrics,
                     action,
                     authorization
                 ) => {
@@ -474,7 +473,6 @@ describe('CrudRecordsController', () => {
                 });
 
                 manager.checkSubscriptionMetrics = async (
-                    metrics,
                     action,
                     authorization
                 ) => {
@@ -974,14 +972,12 @@ export interface TestItem extends CrudRecord {}
 
 export class TestController extends CrudRecordsController<TestItem> {
     private __checkSubscriptionMetrics: (
-        metrics: CrudSubscriptionMetrics,
         action: ActionKinds,
         authorization: AuthorizeUserAndInstancesForResourcesSuccess
     ) => Promise<CheckSubscriptionMetricsResult>;
 
     set checkSubscriptionMetrics(
         value: (
-            metrics: CrudSubscriptionMetrics,
             action: ActionKinds,
             authorization: AuthorizeUserAndInstancesForResourcesSuccess
         ) => Promise<CheckSubscriptionMetricsResult>
@@ -992,7 +988,6 @@ export class TestController extends CrudRecordsController<TestItem> {
     constructor(
         config: CrudRecordsConfiguration<TestItem, CrudSubscriptionMetrics>,
         checkSubscriptionMetrics?: (
-            metrics: CrudSubscriptionMetrics,
             action: ActionKinds,
             authorization: AuthorizeUserAndInstancesForResourcesSuccess
         ) => Promise<CheckSubscriptionMetricsResult>
@@ -1002,16 +997,11 @@ export class TestController extends CrudRecordsController<TestItem> {
     }
 
     protected async _checkSubscriptionMetrics(
-        metrics: CrudSubscriptionMetrics,
         action: ActionKinds,
         authorization: AuthorizeUserAndInstancesForResourcesSuccess
     ): Promise<CheckSubscriptionMetricsResult> {
         if (this.__checkSubscriptionMetrics) {
-            return await this.__checkSubscriptionMetrics(
-                metrics,
-                action,
-                authorization
-            );
+            return await this.__checkSubscriptionMetrics(action, authorization);
         }
         return {
             success: true,
