@@ -2664,6 +2664,107 @@ Object {
       "name": "listPurchasableItems",
       "origins": true,
     },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "cost": Object {
+                "type": "number",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "description": Object {
+                "type": "string",
+              },
+              "imageUrls": Object {
+                "maxLength": 8,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "name": Object {
+                "type": "string",
+              },
+              "redirectUrl": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "roleGrantTimeMs": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "roleName": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPurchasableItem",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems/erase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePurchasableItem",
+      "origins": "api",
+    },
   ],
   "success": true,
 }
@@ -5332,6 +5433,107 @@ Object {
       },
       "name": "listPurchasableItems",
       "origins": true,
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "cost": Object {
+                "type": "number",
+              },
+              "currency": Object {
+                "type": "string",
+              },
+              "description": Object {
+                "type": "string",
+              },
+              "imageUrls": Object {
+                "maxLength": 8,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "name": Object {
+                "type": "string",
+              },
+              "redirectUrl": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "roleGrantTimeMs": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "roleName": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPurchasableItem",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/purchasableItems/erase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePurchasableItem",
+      "origins": "api",
     },
   ],
   "success": true,

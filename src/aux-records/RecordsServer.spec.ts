@@ -11917,22 +11917,17 @@ describe('RecordsServer', () => {
 
     describe('GET /api/v2/records/purchasableItems', () => {
         beforeEach(async () => {
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                userId: ownerId,
-                item: {
-                    address: 'item1',
-                    name: 'Item 1',
-                    markers: [PUBLIC_READ_MARKER],
-                    redirectUrl: 'https://example.com',
-                    roleName: 'role1',
-                    roleGrantTimeMs: 1000,
-                    description: 'description1',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image1'],
-                },
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'https://example.com',
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
             });
         });
 
@@ -11955,7 +11950,7 @@ describe('RecordsServer', () => {
                         roleName: 'role1',
                         roleGrantTimeMs: 1000,
                         description: 'description1',
-                        currency: 'USD',
+                        currency: 'usd',
                         cost: 100,
                         imageUrls: ['image1'],
                         markers: [PUBLIC_READ_MARKER],
@@ -11966,22 +11961,17 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 401 when the user needs to be logged in', async () => {
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                userId: ownerId,
-                item: {
-                    address: 'item1',
-                    name: 'Item 1',
-                    markers: ['secret'],
-                    redirectUrl: 'https://example.com',
-                    roleName: 'role1',
-                    roleGrantTimeMs: 1000,
-                    description: 'description1',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image1'],
-                },
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: ['secret'],
+                redirectUrl: 'https://example.com',
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
             });
 
             const result = await server.handleHttpRequest(
@@ -12004,22 +11994,17 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 403 when the user is not authorized', async () => {
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                userId: ownerId,
-                item: {
-                    address: 'item1',
-                    name: 'Item 1',
-                    markers: ['secret'],
-                    redirectUrl: 'https://example.com',
-                    roleName: 'role1',
-                    roleGrantTimeMs: 1000,
-                    description: 'description1',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image1'],
-                },
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: ['secret'],
+                redirectUrl: 'https://example.com',
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
             });
 
             const result = await server.handleHttpRequest(
@@ -12055,22 +12040,17 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                userId: ownerId,
-                item: {
-                    address: 'item1',
-                    name: 'Item 1',
-                    markers: ['secret'],
-                    redirectUrl: 'https://example.com',
-                    roleName: 'role1',
-                    roleGrantTimeMs: 1000,
-                    description: 'description1',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image1'],
-                },
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: ['secret'],
+                redirectUrl: 'https://example.com',
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
             });
 
             const result = await server.handleHttpRequest(
@@ -12188,56 +12168,41 @@ describe('RecordsServer', () => {
 
     describe('GET /api/v2/records/purchasableItems/list', () => {
         beforeEach(async () => {
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                item: {
-                    address: 'address3',
-                    name: 'Item 3',
-                    markers: [PUBLIC_READ_MARKER],
-                    roleName: 'role3',
-                    roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
-                    description: 'description3',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image3'],
-                },
-                userId: ownerId,
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address3',
+                name: 'Item 3',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'role3',
+                roleGrantTimeMs: 1000,
+                redirectUrl: 'https://example.com',
+                description: 'description3',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image3'],
             });
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                item: {
-                    address: 'address1',
-                    name: 'Item 1',
-                    markers: [PUBLIC_READ_MARKER],
-                    roleName: 'role1',
-                    roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
-                    description: 'description1',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image1'],
-                },
-                userId: ownerId,
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address1',
+                name: 'Item 1',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                redirectUrl: 'https://example.com',
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
             });
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                item: {
-                    address: 'address2',
-                    name: 'Item 2',
-                    markers: [PUBLIC_READ_MARKER],
-                    roleName: 'role2',
-                    roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
-                    description: 'description2',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image2'],
-                },
-                userId: ownerId,
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address2',
+                name: 'Item 2',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'role2',
+                roleGrantTimeMs: 1000,
+                redirectUrl: 'https://example.com',
+                description: 'description2',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image2'],
             });
         });
 
@@ -12264,7 +12229,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description3',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image3'],
                             },
@@ -12276,7 +12241,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description1',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image1'],
                             },
@@ -12288,7 +12253,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description2',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image2'],
                             },
@@ -12321,7 +12286,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description3',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image3'],
                             },
@@ -12333,7 +12298,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description2',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image2'],
                             },
@@ -12366,7 +12331,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description3',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image3'],
                             },
@@ -12378,7 +12343,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description2',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image2'],
                             },
@@ -12390,7 +12355,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description1',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image1'],
                             },
@@ -12407,56 +12372,41 @@ describe('RecordsServer', () => {
                     ['/inst']: new Set([ADMIN_ROLE_NAME]),
                 };
 
-                await purchasableItemsController.recordItem({
-                    recordKeyOrRecordName: recordName,
-                    item: {
-                        address: 'address3',
-                        name: 'Item 3',
-                        markers: ['secret'],
-                        roleName: 'role3',
-                        roleGrantTimeMs: 1000,
-                        redirectUrl: 'https://example.com',
-                        description: 'description3',
-                        currency: 'USD',
-                        cost: 100,
-                        imageUrls: ['image3'],
-                    },
-                    userId: ownerId,
-                    instances: [],
+                await purchasableItemsStore.putItem(recordName, {
+                    address: 'address3',
+                    name: 'Item 3',
+                    markers: ['secret'],
+                    roleName: 'role3',
+                    roleGrantTimeMs: 1000,
+                    redirectUrl: 'https://example.com',
+                    description: 'description3',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image3'],
                 });
-                await purchasableItemsController.recordItem({
-                    recordKeyOrRecordName: recordName,
-                    item: {
-                        address: 'address1',
-                        name: 'Item 1',
-                        markers: ['secret'],
-                        roleName: 'role1',
-                        roleGrantTimeMs: 1000,
-                        redirectUrl: 'https://example.com',
-                        description: 'description1',
-                        currency: 'USD',
-                        cost: 100,
-                        imageUrls: ['image1'],
-                    },
-                    userId: ownerId,
-                    instances: [],
+                await purchasableItemsStore.putItem(recordName, {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: ['secret'],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    redirectUrl: 'https://example.com',
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
                 });
-                await purchasableItemsController.recordItem({
-                    recordKeyOrRecordName: recordName,
-                    item: {
-                        address: 'address2',
-                        name: 'Item 2',
-                        markers: ['secret'],
-                        roleName: 'role2',
-                        roleGrantTimeMs: 1000,
-                        redirectUrl: 'https://example.com',
-                        description: 'description2',
-                        currency: 'USD',
-                        cost: 100,
-                        imageUrls: ['image2'],
-                    },
-                    userId: ownerId,
-                    instances: [],
+                await purchasableItemsStore.putItem(recordName, {
+                    address: 'address2',
+                    name: 'Item 2',
+                    markers: ['secret'],
+                    roleName: 'role2',
+                    roleGrantTimeMs: 1000,
+                    redirectUrl: 'https://example.com',
+                    description: 'description2',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image2'],
                 });
 
                 const result = await server.handleHttpRequest(
@@ -12480,7 +12430,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description3',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image3'],
                             },
@@ -12492,7 +12442,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description1',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image1'],
                             },
@@ -12504,7 +12454,7 @@ describe('RecordsServer', () => {
                                 roleGrantTimeMs: 1000,
                                 redirectUrl: 'https://example.com',
                                 description: 'description2',
-                                currency: 'USD',
+                                currency: 'usd',
                                 cost: 100,
                                 imageUrls: ['image2'],
                             },
@@ -12526,7 +12476,7 @@ describe('RecordsServer', () => {
                         roleGrantTimeMs: 1000,
                         redirectUrl: 'https://example.com',
                         description: 'description3',
-                        currency: 'USD',
+                        currency: 'usd',
                         cost: 100,
                         imageUrls: ['image3'],
                     },
@@ -12543,7 +12493,7 @@ describe('RecordsServer', () => {
                         roleGrantTimeMs: 1000,
                         redirectUrl: 'https://example.com',
                         description: 'description1',
-                        currency: 'USD',
+                        currency: 'usd',
                         cost: 100,
                         imageUrls: ['image1'],
                     },
@@ -12560,7 +12510,7 @@ describe('RecordsServer', () => {
                         roleGrantTimeMs: 1000,
                         redirectUrl: 'https://example.com',
                         description: 'description2',
-                        currency: 'USD',
+                        currency: 'usd',
                         cost: 100,
                         imageUrls: ['image2'],
                     },
@@ -12626,22 +12576,17 @@ describe('RecordsServer', () => {
         });
 
         it('should be able to list all items', async () => {
-            await purchasableItemsController.recordItem({
-                recordKeyOrRecordName: recordName,
-                item: {
-                    address: 'address0',
-                    name: 'Item 0',
-                    markers: ['secret'],
-                    roleName: 'role0',
-                    roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
-                    description: 'description0',
-                    currency: 'USD',
-                    cost: 100,
-                    imageUrls: ['image0'],
-                },
-                userId: ownerId,
-                instances: [],
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address0',
+                name: 'Item 0',
+                markers: ['secret'],
+                roleName: 'role0',
+                roleGrantTimeMs: 1000,
+                redirectUrl: 'https://example.com',
+                description: 'description0',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image0'],
             });
 
             store.roles[recordName] = {
@@ -12669,7 +12614,7 @@ describe('RecordsServer', () => {
                             roleGrantTimeMs: 1000,
                             redirectUrl: 'https://example.com',
                             description: 'description3',
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             imageUrls: ['image3'],
                         },
@@ -12681,7 +12626,7 @@ describe('RecordsServer', () => {
                             roleGrantTimeMs: 1000,
                             redirectUrl: 'https://example.com',
                             description: 'description1',
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             imageUrls: ['image1'],
                         },
@@ -12693,7 +12638,7 @@ describe('RecordsServer', () => {
                             roleGrantTimeMs: 1000,
                             redirectUrl: 'https://example.com',
                             description: 'description2',
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             imageUrls: ['image2'],
                         },
@@ -12705,7 +12650,7 @@ describe('RecordsServer', () => {
                             roleGrantTimeMs: 1000,
                             redirectUrl: 'https://example.com',
                             description: 'description0',
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             imageUrls: ['image0'],
                         },
@@ -12753,7 +12698,44 @@ describe('RecordsServer', () => {
     });
 
     describe('POST /api/v2/records/purchasableItems', () => {
-        beforeEach(() => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                purchasableItems: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
@@ -12770,7 +12752,7 @@ describe('RecordsServer', () => {
                             name: 'name',
                             description: 'description',
                             imageUrls: ['image1', 'image2'],
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
@@ -12798,7 +12780,7 @@ describe('RecordsServer', () => {
                 name: 'name',
                 description: 'description',
                 imageUrls: ['image1', 'image2'],
-                currency: 'USD',
+                currency: 'usd',
                 cost: 100,
                 roleName: 'role',
                 roleGrantTimeMs: 1000,
@@ -12822,7 +12804,7 @@ describe('RecordsServer', () => {
                             name: 'name',
                             description: 'description',
                             imageUrls: ['image1', 'image2'],
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
@@ -12873,7 +12855,7 @@ describe('RecordsServer', () => {
                             name: 'name',
                             description: 'description',
                             imageUrls: ['image1', 'image2'],
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
@@ -12921,7 +12903,7 @@ describe('RecordsServer', () => {
                             name: 'name',
                             description: 'description',
                             imageUrls: ['image1', 'image2'],
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
@@ -12994,7 +12976,7 @@ describe('RecordsServer', () => {
                     name: 'name',
                     description: 'description',
                     imageUrls: ['image1', 'image2'],
-                    currency: 'USD',
+                    currency: 'usd',
                     cost: 100,
                     roleName: 'role',
                     roleGrantTimeMs: 1000,
@@ -13014,7 +12996,7 @@ describe('RecordsServer', () => {
                             name: 'name',
                             description: 'description',
                             imageUrls: ['image1', 'image2'],
-                            currency: 'USD',
+                            currency: 'usd',
                             cost: 100,
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
@@ -13038,7 +13020,7 @@ describe('RecordsServer', () => {
                         name: 'name',
                         description: 'description',
                         imageUrls: ['image1', 'image2'],
-                        currency: 'USD',
+                        currency: 'usd',
                         cost: 100,
                         roleName: 'role',
                         roleGrantTimeMs: 1000,
@@ -13053,6 +13035,43 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/records/purchasableItems/erase', () => {
         beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                purchasableItems: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
             await purchasableItemsController.recordItem({
                 recordKeyOrRecordName: recordName,
                 item: {
@@ -13063,7 +13082,7 @@ describe('RecordsServer', () => {
                     roleGrantTimeMs: 1000,
                     redirectUrl: 'https://example.com',
                     description: 'description3',
-                    currency: 'USD',
+                    currency: 'usd',
                     cost: 100,
                     imageUrls: ['image3'],
                 },
