@@ -271,6 +271,31 @@ export interface Studio {
     stripeCustomerId?: string;
 
     /**
+     * The ID of the stripe account for this studio.
+     */
+    stripeAccountId?: string;
+
+    /**
+     * The status of the stripe account requirements for this studio.
+     * 
+     * If null, then the studio does not have a stripe account.
+     * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+     * If 'complete', then the studio has a stripe account that is fully set up.
+     */
+    stripeAccountRequirementsStatus?: 'incomplete' | 'complete' | null;
+
+    /**
+     * The status of the stripe account that is associated with this studio.
+     * 
+     * If null, then the studio does not have a stripe account.
+     * If 'active', then the stripe account has been approved and is active.
+     * If 'pending', then the stripe account is waiting approval.
+     * If 'rejected', then the stripe account was rejected.
+     * If 'disabled', then the stripe account was disabled but not because it was rejected.
+     */
+    stripeAccountStatus?: 'active' | 'pending' | 'rejected' | 'disabled' | null;
+
+    /**
      * The current subscription status for this studio.
      */
     subscriptionStatus?: string;
