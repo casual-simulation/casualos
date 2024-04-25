@@ -8,6 +8,10 @@
 
 -   Added `classifyImages()` function.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to use some records functions with `?sessionKey` and `connectionKey` in the URL.
+
 ## V3.3.0
 
 #### Date: 4/15/2024
