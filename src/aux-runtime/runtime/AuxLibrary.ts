@@ -6095,6 +6095,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             state[bot.id] = bot;
         }
 
+        if (!filename) {
+            throw new Error('Filename must be provided. Try again.');
+        }
+
         let data = JSON.stringify(getVersion1DownloadState(state));
         if (isPdf(filename)) {
             const encoder = new TextEncoder();

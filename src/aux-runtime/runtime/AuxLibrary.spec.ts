@@ -3814,8 +3814,16 @@ describe('AuxLibrary', () => {
                 ]);
                 expect(bots).toEqual(bots2);
             });
-        });
 
+            it('should throw error when filename is undefined', () => {
+                const action = () =>
+                    library.api.os.downloadBots([bot1, bot2], undefined);
+
+                expect(action).toThrowError(
+                    new Error('Filename must be provided. Try again.')
+                );
+            });
+        });
         describe('os.downloadBotsAsInitalizationUpdate()', () => {
             let dateNowMock: jest.Mock<number>;
             let originalDateNow: (typeof Date)['now'];
