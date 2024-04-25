@@ -138,6 +138,9 @@ import {
 
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+import { PurchasableItemRecordsController } from '@casual-simulation/aux-records/casualware/PurchasableItemRecordsController';
+import { PurchasableItemRecordsStore } from '@casual-simulation/aux-records/casualware/PurchasableItemRecordsStore';
+import { PrismaPurchasableItemRecordsStore } from '../prisma/casualware/PrismaPurchasableItemsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -236,7 +239,10 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _moderationStore: ModerationStore = null;
     private _moderationController: ModerationController;
-
+    
+    private _purchasableItemsStore: PurchasableItemRecordsStore | null = null;
+    private _purchasableItemsController: PurchasableItemRecordsController | null = null;
+    
     private _notificationMessenger: MultiNotificationMessenger;
 
     private _redis: RedisClientType | null = null;
@@ -459,7 +465,7 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             options
         );
-        this._metricsStore = new PrismaMetricsStore(
+        const metrics = this._metricsStore = new PrismaMetricsStore(
             prismaClient,
             this._configStore
         );
@@ -486,6 +492,7 @@ export class ServerBuilder implements SubscriptionLike {
         );
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
+        this._purchasableItemsStore = new PrismaPurchasableItemRecordsStore(prismaClient, metrics);
 
         return this;
     }
@@ -511,7 +518,7 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             options
         );
-        this._metricsStore = new PrismaMetricsStore(
+        const metrics = this._metricsStore = new PrismaMetricsStore(
             prismaClient,
             this._configStore
         );
@@ -528,6 +535,7 @@ export class ServerBuilder implements SubscriptionLike {
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
+        this._purchasableItemsStore = new PrismaPurchasableItemRecordsStore(prismaClient, metrics);
 
         this._actions.push({
             priority: 0,
@@ -1217,6 +1225,14 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
+        if (this._purchasableItemsStore) {
+            this._purchasableItemsController = new PurchasableItemRecordsController({
+                store: this._purchasableItemsStore,
+                config: this._configStore,
+                policies: this._policyController,
+            });
+        }
+
         if (
             this._websocketConnectionStore &&
             this._websocketMessenger &&
@@ -1252,7 +1268,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._aiController,
             this._websocketController,
             this._moderationController,
-            this._websocketRateLimitController
+            this._websocketRateLimitController,
+            this._purchasableItemsController,
         );
 
         const buildReturn: BuildReturn = {

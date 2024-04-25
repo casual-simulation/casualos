@@ -468,6 +468,16 @@ export class PrismaMetricsStore implements MetricsStore {
         }
     }
 
+    /**
+     * Gets the period for a subscription with the given status, start time, and end time.
+     * @param status The status of the subscription.
+     * @param startMs The start time of the subscription in unix time in miliseconds.
+     * @param endMs The end time of the subscription in unix time in miliseconds.
+     */
+    getSubscriptionPeriod(status: string, startMs: number, endMs: number) {
+        return this._getSubscriptionPeriod(status, startMs, endMs);
+    }
+
     private async _getSubscriptionPeriod(
         status: string,
         startMs: number,
@@ -502,6 +512,10 @@ export class PrismaMetricsStore implements MetricsStore {
             currentPeriodStartMs,
             currentPeriodEndMs,
         };
+    }
+
+    findSubscriptionInfoByRecordName(recordName: string) {
+        return this._findSubscriptionInfoByRecordName(recordName);
     }
 
     private async _findSubscriptionInfoByRecordName(recordName: string) {
