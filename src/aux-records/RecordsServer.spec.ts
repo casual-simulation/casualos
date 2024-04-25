@@ -12714,7 +12714,7 @@ describe('RecordsServer', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     currencyLimits: {
                                         usd: {
@@ -13050,7 +13050,7 @@ describe('RecordsServer', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     currencyLimits: {
                                         usd: {

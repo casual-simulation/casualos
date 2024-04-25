@@ -2688,7 +2688,7 @@ describe('RecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     maxPurchasableItems: 100,
                                     currencyLimits: {

@@ -83,7 +83,7 @@ describe('PurchasableItemRecordsController', () => {
                 tiers: {
                     tier1: {
                         features: merge(allowAllFeatures(), {
-                            purchasableItems: {
+                            store: {
                                 allowed: true,
                                 currencyLimits: {
                                     usd: {
@@ -165,7 +165,7 @@ describe('PurchasableItemRecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: false
                                 }
                             } as Partial<FeaturesConfiguration>),
@@ -217,7 +217,7 @@ describe('PurchasableItemRecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     maxPurchasableItems: 0,
                                     currencyLimits: {
@@ -276,7 +276,7 @@ describe('PurchasableItemRecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     currencyLimits: {
                                         usd: {
@@ -343,7 +343,7 @@ describe('PurchasableItemRecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     currencyLimits: {
                                         usd: {
@@ -425,7 +425,7 @@ describe('PurchasableItemRecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     currencyLimits: {
                                         usd: {
@@ -516,7 +516,7 @@ describe('PurchasableItemRecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: true,
                                     currencyLimits: {
                                         usd: {
@@ -666,7 +666,7 @@ describe('PurchasableItemRecordsController', () => {
                     tiers: {
                         tier1: {
                             features: merge(allowAllFeatures(), {
-                                purchasableItems: {
+                                store: {
                                     allowed: false
                                 }
                             } as Partial<FeaturesConfiguration>),
