@@ -1173,9 +1173,19 @@ export class WebsocketController {
             connectionId
         );
         if (!connection) {
-            throw new Error(
-                'Unable to watch_branch_devices. The connection was not found!'
+            console.error(
+                `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Unable to watch_branch_devices. Connection not found!`
             );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_connection_state',
+                errorMessage: `A server error occurred. (namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId})`,
+                recordName: recordName,
+                inst: inst,
+                branch: branch,
+            });
+            await this.messenger.disconnect(connectionId);
+            return;
         }
 
         if (connection.token && recordName) {
@@ -1484,9 +1494,19 @@ export class WebsocketController {
             connectionId
         );
         if (!connection) {
-            throw new Error(
-                'Unable to get_updates. The connection was not found!'
+            console.error(
+                `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Unable to get_updates. Connection not found!`
             );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_connection_state',
+                errorMessage: `A server error occurred. (namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId})`,
+                recordName: recordName,
+                inst: inst,
+                branch: branch,
+            });
+            await this.messenger.disconnect(connectionId);
+            return;
         }
 
         if (connection.token && recordName) {
@@ -1713,7 +1733,16 @@ export class WebsocketController {
             connectionId
         );
         if (!connection) {
-            throw new Error('The connection was not found!');
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to request permission. Connection not found!`
+            );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_connection_state',
+                errorMessage: `A server error occurred. (connectionId: ${connectionId})`,
+            });
+            await this.messenger.disconnect(connectionId);
+            return;
         }
 
         if (event.reason.type !== 'missing_permission') {
@@ -1835,7 +1864,16 @@ export class WebsocketController {
             connectionId
         );
         if (!connection) {
-            throw new Error('The connection was not found!');
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to respond to permission request. Connection not found!`
+            );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_connection_state',
+                errorMessage: `A server error occurred. (connectionId: ${connectionId})`,
+            });
+            await this.messenger.disconnect(connectionId);
+            return;
         }
         const inst = `${event.resourceKind}/${event.resourceId}`;
         const branch = `${event.subjectType}/${event.subjectId}`;
