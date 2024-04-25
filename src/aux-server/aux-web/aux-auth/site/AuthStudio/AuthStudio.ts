@@ -9,8 +9,11 @@ import {
     AllowedStudioCreators,
     FormError,
     ListedStudioMember,
+    PurchasableItemFeaturesConfiguration,
     StudioAssignmentRole,
     StudioComIdFeaturesConfiguration,
+    StudioStripeAccountStatus,
+    StudioStripeRequirementsStatus,
     UpdateStudioRequest,
     getFormErrors,
 } from '@casual-simulation/aux-records';
@@ -62,6 +65,11 @@ export default class AuthStudio extends Vue {
     comIdFeatures: StudioComIdFeaturesConfiguration = {
         allowed: false,
     };
+    storeFeatures: PurchasableItemFeaturesConfiguration = {
+        allowed: false
+    };
+    stripeAccountStatus: StudioStripeAccountStatus = null;
+    stripeRequirementsStatus: StudioStripeRequirementsStatus = null;
 
     originalAllowedStudioCreators: AllowedStudioCreators = 'anyone';
     allowedStudioCreators: AllowedStudioCreators = 'anyone';
@@ -89,11 +97,13 @@ export default class AuthStudio extends Vue {
 
     isLoadingInfo: boolean = false;
     isSavingStudio: boolean = false;
+    isManagingStore: boolean = false;
 
     showUpdatePlayerConfig: boolean = false;
     showUpdateComIdConfig: boolean = false;
     showUpdateStudioInfo: boolean = false;
     showRequestComId: boolean = false;
+    showUpdateStoreConfig: boolean = false;
 
     errors: FormError[] = [];
 
@@ -178,6 +188,10 @@ export default class AuthStudio extends Vue {
 
     get allowComId() {
         return this.comIdFeatures?.allowed;
+    }
+
+    get allowStore() {
+        return this.storeFeatures?.allowed;
     }
 
     get hasStudioChange() {
@@ -343,6 +357,7 @@ export default class AuthStudio extends Vue {
         this.showUpdateComIdConfig = false;
         this.showUpdatePlayerConfig = false;
         this.showUpdateStudioInfo = false;
+        this.showUpdateStoreConfig = false;
     }
 
     private async _loadPageInfo() {
@@ -364,6 +379,9 @@ export default class AuthStudio extends Vue {
                 this.requestedComId = this.comId = result.studio.comId;
                 this.ownerStudioComId = result.studio.ownerStudioComId;
                 this.comIdFeatures = result.studio.comIdFeatures;
+                this.storeFeatures = result.studio.storeFeatures ?? {
+                    allowed: false
+                };
                 this.originalAllowedStudioCreators =
                     this.allowedStudioCreators =
                         result.studio.comIdConfig?.allowedStudioCreators ??
@@ -487,6 +505,15 @@ export default class AuthStudio extends Vue {
 
     updateStudioInfo() {
         this.showUpdateStudioInfo = true;
+    }
+
+    updateStoreConfig() {
+        this.showUpdateStoreConfig = true;
+    }
+
+    manageStore() {
+        this.isManagingStore = true;
+        // TODO: Implement store management
     }
 
     // TODO: Support uploading logos

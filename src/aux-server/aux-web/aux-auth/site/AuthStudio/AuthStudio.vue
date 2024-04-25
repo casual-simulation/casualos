@@ -149,6 +149,20 @@
                     <md-table-cell>comID.what3WordsApiKey</md-table-cell>
                     <md-table-cell>{{ originalWhat3WordsApiKey || '(default)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row v-if="allowStore" @click="updateStoreConfig()">
+                    <md-tooltip
+                        >The status of the Stripe account that is attached to this studio.</md-tooltip
+                    >
+                    <md-table-cell>store.account</md-table-cell>
+                    <md-table-cell>{{ stripeAccountStatus || '(not setup)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowStore" @click="updateStoreConfig()">
+                    <md-tooltip
+                        >The status of the requirements for the stripe account.</md-tooltip
+                    >
+                    <md-table-cell>store.requirements</md-table-cell>
+                    <md-table-cell>{{ stripeRequirementsStatus || '(not setup)' }}</md-table-cell>
+                </md-table-row>
             </md-table>
         </div>
 
@@ -379,6 +393,50 @@
                     >
                     </md-progress-spinner>
                     <span v-else>Save</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showUpdateStoreConfig" @md-closed="cancelUpdateStudio()">
+            <md-dialog-title>Store</md-dialog-title>
+            <md-dialog-content>
+
+                <div v-if="!stripeAccountStatus">
+                    <p>Your store account is not setup.</p>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'active'">
+                    <div v-if="stripeRequirementsStatus === 'complete'">
+                        <p>Your store account is active.</p>
+                    </div>
+                    <div v-else>
+                        <p>Your store account has been created, but we need some additional information before it can be fully activated.</p>
+                    </div>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'pending'">
+                    <div v-if="stripeRequirementsStatus === 'complete'">
+                        <p>Your store account is awaiting approval.</p>
+                    </div>
+                    <div v-else>
+                        <p>Your store account has been created, but we need some additional information before it can be fully approved.</p>
+                    </div>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'rejected'">
+                    <p>Your store account has been rejected.</p>
+                </div>
+                <div v-else-if="stripeAccountStatus === 'disabled'">
+                    <p>Your store account is disabled.</p>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="manageStore()">
+                    <md-progress-spinner
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        v-if="isManagingStore"
+                    >
+                    </md-progress-spinner>
+                    <span v-else>Manage</span>
                 </md-button>
             </md-dialog-actions>
         </md-dialog>
