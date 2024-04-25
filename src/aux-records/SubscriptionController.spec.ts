@@ -4,14 +4,16 @@ import { AuthStore, AuthUser } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import { StripeInterface, StripeProduct } from './StripeInterface';
+import { StripeAccountLink, StripeInterface, StripeProduct } from './StripeInterface';
 import {
+    FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
 import { Studio } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
-import { createTestUser } from './TestUtils';
+import { createTestSubConfiguration, createTestUser } from './TestUtils';
+import { merge } from 'lodash';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
@@ -32,6 +34,7 @@ describe('SubscriptionController', () => {
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
+        createAccountLink: jest.Mock<Promise<StripeAccountLink>>,
     };
 
     let stripe: StripeInterface;
@@ -91,6 +94,7 @@ describe('SubscriptionController', () => {
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
             getSubscriptionById: jest.fn(),
+            createAccountLink: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -4242,6 +4246,84 @@ describe('SubscriptionController', () => {
                     errorCode: 'not_supported',
                     errorMessage: 'This method is not supported.',
                 });
+            });
+        });
+    });
+
+    describe('createManageStoreAccountLink()', () => {
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete'
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should create a link to manage the studio account and return it', async () => {
+            stripeMock.createAccountLink.mockReturnValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                url: 'account_link',
             });
         });
     });

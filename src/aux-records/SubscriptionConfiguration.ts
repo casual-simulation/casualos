@@ -968,13 +968,19 @@ export function allowAllFeatures(): FeaturesConfiguration {
 export function getComIdFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
-    subscriptionId: string
+    subscriptionId: string,
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
 ): StudioComIdFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,
         subscriptionId,
-        'studio'
+        'studio',
+        periodStartMs,
+        periodEndMs,
+        nowMs
     );
     return (
         features.comId ?? {
@@ -993,13 +999,19 @@ export function getComIdFeatures(
 export function getPurchasableItemsFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
-    subscriptionId: string
+    subscriptionId: string,
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
 ): PurchasableItemFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,
         subscriptionId,
-        'studio'
+        'studio',
+        periodStartMs,
+        periodEndMs,
+        nowMs
     );
     return (
         features.store ?? {

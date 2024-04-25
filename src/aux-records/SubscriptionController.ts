@@ -14,6 +14,7 @@ import {
 import {
     STRIPE_EVENT_INVOICE_PAID_SCHEMA,
     StripeCheckoutResponse,
+    StripeCreateAccountLinkRequest,
     StripeEvent,
     StripeInterface,
     StripeInvoice,
@@ -24,10 +25,11 @@ import {
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { SubscriptionConfiguration, getPurchasableItemsFeatures, getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
+import { ADMIN_ROLE_NAME } from '@casual-simulation/aux-common';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -783,6 +785,84 @@ export class SubscriptionController {
                 success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async createManageStoreAccountLink(request: CreateManageAccountLinkRequest): Promise<CreateManageAccountLinkResult> {
+        if (!this._stripe) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            };
+        }
+
+        try {
+            let studio = await this._recordsStore.getStudioById(request.studioId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._recordsStore.listStudioAssignments(
+                studio.id,
+                {
+                    userId: request.userId,
+                    role: ADMIN_ROLE_NAME
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.'
+                };
+            }
+
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getPurchasableItemsFeatures(config, 
+                studio.subscriptionStatus,
+                studio.subscriptionId,
+                studio.subscriptionPeriodStartMs,
+                studio.subscriptionPeriodEndMs);
+            
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.'
+                };
+            }
+
+            let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
+            if (!studio.stripeAccountId) {
+                type = 'account_onboarding';
+
+            }
+
+            const session = await this._stripe.createAccountLink({
+                account: studio.stripeAccountId,
+                refresh_url: config.returnUrl,
+                return_url: config.returnUrl,
+                type
+            });
+
+            return {
+                success: true,
+                url: session.url
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while creating a manage store account link:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
             };
         }
     }
@@ -1556,5 +1636,33 @@ export interface UpdateSubscriptionFailure {
         | 'user_not_found'
         | 'studio_not_found'
         | 'invalid_request';
+    errorMessage: string;
+}
+
+export interface CreateManageAccountLinkRequest {
+    /**
+     * The ID of the studio that the link should be created for.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+}
+
+export type CreateManageAccountLinkResult = CreateManageAccountLinkSuccess | CreateManageAccountLinkFailure;
+
+export interface CreateManageAccountLinkSuccess {
+    success: true;
+    /**
+     * The URl that the user can visit to manage their account.
+     */
+    url: string;
+}
+
+export interface CreateManageAccountLinkFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_request' | 'not_supported' | NotLoggedInError | NotAuthorizedError | 'studio_not_found';
     errorMessage: string;
 }

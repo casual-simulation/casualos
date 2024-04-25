@@ -1137,7 +1137,7 @@ export class RecordsController {
                 storeFeatures = getPurchasableItemsFeatures(
                     config,
                     studio.subscriptionStatus,
-                    studio.subscriptionId
+                    studio.subscriptionId,
                 );
             }
 

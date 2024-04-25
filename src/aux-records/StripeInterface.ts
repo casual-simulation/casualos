@@ -71,6 +71,12 @@ export interface StripeInterface {
      * @param id The ID of the subscription.
      */
     getSubscriptionById(id: string): Promise<Omit<StripeSubscription, 'items'>>;
+
+    /**
+     * Creates a new account link for the given account ID.
+     * @param accountId 
+     */
+    createAccountLink(request: StripeCreateAccountLinkRequest): Promise<StripeAccountLink>;
 }
 
 export interface StripePrice {
@@ -467,6 +473,37 @@ export interface StripeProduct {
      * The default price for the product.
      */
     default_price: StripePrice;
+}
+
+export interface StripeCreateAccountLinkRequest {
+    /**
+     * The ID of the account.
+     */
+    account: string;
+
+    /**
+     * The type of account link the user is requesting.
+     */
+    type: 'account_onboarding' | 'account_update';
+
+    /**
+     * The URL the user will be redirected to if the account link is expired, has been previously-visited, or is otherwise invalid.
+     * The URL you specify should attempt to generate a new account link with the same parameters used to create the original account link, then redirect the user to the new account link’s URL so they can continue with Connect Onboarding. If a new account link cannot be generated or the redirect fails you should display a useful error to the user.
+     */
+    refresh_url: string;
+
+    /**
+     * The URL that the user will be redirected to upon leaving or completing the linked flow.
+     */
+    return_url: string;
+}
+
+
+export interface StripeAccountLink {
+    /**
+     * The URL that the user can visit to open their account.
+     */
+    url: string;
 }
 
 export const STRIPE_INVOICE_SCHEMA = z.object({
