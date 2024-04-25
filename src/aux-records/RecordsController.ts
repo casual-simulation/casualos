@@ -6,6 +6,8 @@ import {
     Studio,
     StudioAssignmentRole,
     StudioComIdRequest,
+    StudioStripeAccountStatus,
+    StudioStripeRequirementsStatus,
 } from './RecordsStore';
 import {
     toBase64String,
@@ -1151,6 +1153,8 @@ export class RecordsController {
                     playerConfig: studio.playerConfig,
                     comIdFeatures: comIdFeatures,
                     storeFeatures: storeFeatures,
+                    stripeAccountStatus: studio.stripeAccountStatus ?? null,
+                    stripeRequirementsStatus: studio.stripeAccountRequirementsStatus ?? null,
                 },
             };
         } catch (err) {
@@ -2185,6 +2189,16 @@ export interface StudioData {
      * The store features that this studio has access to.
      */
     storeFeatures: PurchasableItemFeaturesConfiguration;
+
+    /**
+     * The status of the studio's stripe requirements.
+     */
+    stripeRequirementsStatus: StudioStripeRequirementsStatus;
+
+    /**
+     * The status of the studio's stripe account.
+     */
+    stripeAccountStatus: StudioStripeAccountStatus;
 }
 
 export interface GetStudioFailure {

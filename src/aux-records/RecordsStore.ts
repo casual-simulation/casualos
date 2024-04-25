@@ -247,6 +247,26 @@ export interface ListedRecord {
 }
 
 /**
+ * The status of the stripe account that is associated with a studio.
+ * 
+ * If null, then the studio does not have a stripe account.
+ * If 'active', then the stripe account has been approved and is active.
+ * If 'pending', then the stripe account is waiting approval.
+ * If 'rejected', then the stripe account was rejected.
+ * If 'disabled', then the stripe account was disabled but not because it was rejected.
+ */
+export type StudioStripeAccountStatus = 'active' | 'pending' | 'rejected' | 'disabled' | null;
+
+/**
+ * The status of the stripe account requirements for a studio.
+ * 
+ * If null, then the studio does not have a stripe account.
+ * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+ * If 'complete', then the studio has a stripe account that is fully set up.
+ */
+export type StudioStripeRequirementsStatus = 'incomplete' | 'complete' | null;
+
+/**
  * Defines an interface for studio objects.
  */
 export interface Studio {
@@ -282,7 +302,7 @@ export interface Studio {
      * If 'incomplete', then the studio has a stripe account but it is not fully set up.
      * If 'complete', then the studio has a stripe account that is fully set up.
      */
-    stripeAccountRequirementsStatus?: 'incomplete' | 'complete' | null;
+    stripeAccountRequirementsStatus?: StudioStripeRequirementsStatus;
 
     /**
      * The status of the stripe account that is associated with this studio.
@@ -293,7 +313,7 @@ export interface Studio {
      * If 'rejected', then the stripe account was rejected.
      * If 'disabled', then the stripe account was disabled but not because it was rejected.
      */
-    stripeAccountStatus?: 'active' | 'pending' | 'rejected' | 'disabled' | null;
+    stripeAccountStatus?: StudioStripeAccountStatus;
 
     /**
      * The current subscription status for this studio.
