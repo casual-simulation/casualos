@@ -700,7 +700,7 @@ export interface FeaturesConfiguration {
     /**
      * The configuration for purchasable items features.
      */
-    purchasableItems?: PurchasableItemFeaturesConfiguration;
+    store?: PurchasableItemFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1002,7 +1002,7 @@ export function getPurchasableItemsFeatures(
         'studio'
     );
     return (
-        features.purchasableItems ?? {
+        features.store ?? {
             allowed: false,
         }
     );

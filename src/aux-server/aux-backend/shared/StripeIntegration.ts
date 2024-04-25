@@ -58,6 +58,7 @@ export class StripeIntegration implements StripeInterface {
 
         return {
             url: result.url,
+            checkoutSessionId: result.id,
         };
     }
 
