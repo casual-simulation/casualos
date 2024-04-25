@@ -130,6 +130,12 @@ export const AI_NOT_SUPPORTED_RESULT = {
     errorMessage: 'AI features are not supported by this server.',
 };
 
+export const STORE_NOT_SUPPORTED_RESULT = {
+    success: false as const,
+    errorCode: 'not_supported' as const,
+    errorMessage: 'Store features are not supported by this server.',
+};
+
 export const INSTS_NOT_SUPPORTED_RESULT = {
     success: false as const,
     errorCode: 'not_supported' as const,
@@ -3026,6 +3032,10 @@ export class RecordsServer {
                     instances: INSTANCES_ARRAY_VALIDATION.optional(),
                 }))
                 .handler(async ({ recordName, address, instances }, context) => {
+                    if (!this._purchasableItems) {
+                        return STORE_NOT_SUPPORTED_RESULT;
+                    }
+
                     const validation = await this._validateSessionKey(context.sessionKey);
                     if (validation.success === false && validation.errorCode !== 'no_session_key') {
                         return validation;
@@ -3051,6 +3061,10 @@ export class RecordsServer {
                     instances: INSTANCES_ARRAY_VALIDATION.optional(),
                 }))
                 .handler(async ({ recordName, address, instances, marker, sort }, context) => {
+                    if (!this._purchasableItems) {
+                        return STORE_NOT_SUPPORTED_RESULT;
+                    }
+
                     const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
                     if (
                         sessionKeyValidation.success === false &&
@@ -3095,6 +3109,7 @@ export class RecordsServer {
                         ).max(8),
                         currency: z.string().min(1).max(15).toLowerCase(),
                         cost: z.number().positive().int(),
+                        taxCode: z.string().min(1).max(64).nullable().optional(),
                         roleName: z.string().min(1),
                         roleGrantTimeMs: z.number().positive().int().nullable().optional(),
                         redirectUrl: z.string().url().nullable().optional(),
@@ -3103,6 +3118,10 @@ export class RecordsServer {
                     instances: INSTANCES_ARRAY_VALIDATION.optional()
                 }))
                 .handler(async ({ recordName, item, instances }, context) => {
+                    if (!this._purchasableItems) {
+                        return STORE_NOT_SUPPORTED_RESULT;
+                    }
+
                     const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
                     if (sessionKeyValidation.success === false) {
                         if (sessionKeyValidation.errorCode === 'no_session_key') {
@@ -3130,6 +3149,10 @@ export class RecordsServer {
                     instances: INSTANCES_ARRAY_VALIDATION.optional()
                 }))
                 .handler(async ({ recordName, address, instances }, context) => {
+                    if (!this._purchasableItems) {
+                        return STORE_NOT_SUPPORTED_RESULT;
+                    }
+                    
                     const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
                     if (sessionKeyValidation.success === false) {
                         if (sessionKeyValidation.errorCode === 'no_session_key') {
