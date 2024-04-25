@@ -232,11 +232,11 @@ export const subscriptionFeaturesSchema = z.object({
             // allowCustomComId: false,
         }),
 
-    purchasableItems: z
+    store: z
         .object({
             allowed: z.boolean().describe('Whether purchasable items features are granted to the studio.'),
 
-            maxPurchasableItems: z
+            maxItems: z
                 .number()
                 .describe(
                     'The maximum number of purchasable items that can be created. If omitted, then there is no limit.'
@@ -904,7 +904,7 @@ export interface PurchasableItemFeaturesConfiguration {
      * The maximum number of purchasable items that are allowed to be created.
      * If not specified, then there is no limit.
      */
-    maxPurchasableItems?: number;
+    maxItems?: number;
 
     /**
      * The limits for each currency that can be used for purchasable items.

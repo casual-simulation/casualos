@@ -39,7 +39,7 @@ export class PurchasableItemRecordsController extends CrudRecordsController<Purc
         }
 
         if (action === 'create') {
-            if (typeof features.maxPurchasableItems === 'number' && metrics.totalPurchasableItems >= features.maxPurchasableItems) {
+            if (typeof features.maxItems === 'number' && metrics.totalPurchasableItems >= features.maxItems) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
