@@ -7,6 +7,14 @@
 ### :rocket: Features
 
 -   Added `classifyImages()` function.
+-   Exposed the following properties from `HTMLVideoElement`:
+    -   `currentTime`
+    -   `ended`
+    -   `paused`
+    -   `muted`
+    -   `volume`
+    -   `playbackRate`
+    -   Note that these properties are only updated when an event is received from the element. (e.g. `currentTime` will be exposed if you are listening to `onTimeUpdate`)
 
 ### :bug: Bug Fixes
 
