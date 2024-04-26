@@ -293,7 +293,7 @@ export interface Studio {
     /**
      * The ID of the stripe account for this studio.
      */
-    stripeAccountId?: string;
+    stripeAccountId?: string | null;
 
     /**
      * The status of the stripe account requirements for this studio.

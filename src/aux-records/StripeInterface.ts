@@ -77,6 +77,18 @@ export interface StripeInterface {
      * @param accountId 
      */
     createAccountLink(request: StripeCreateAccountLinkRequest): Promise<StripeAccountLink>;
+
+    /**
+     * Creates a new stripe account.
+     * @param request The request.
+     */
+    createAccount(request: StripeCreateAccountRequest): Promise<StripeAccount>;
+
+    /**
+     * Gets the stripe account with the given ID.
+     * @param id The ID of the account.
+     */
+    getAccountById(id: string): Promise<StripeAccount | null>;
 }
 
 export interface StripePrice {
@@ -498,6 +510,144 @@ export interface StripeCreateAccountLinkRequest {
     return_url: string;
 }
 
+export interface StripeCreateAccountRequest {
+    /**
+     * The type of stripe account to create.
+     */
+    type?: 'custom' | 'express' | 'standard';
+
+    /**
+     * Information about how the account is controlled.
+     */
+    controller: {
+        /**
+         * A value indicating the responsible payer of Stripe fees on this account. Defaults to account. Learn more about [fee behavior on connected accounts](https://docs.stripe.com/connect/direct-charges-fee-payer-behavior).
+         */
+        fees: {
+            /**
+             * Who pays Stripe fees?
+             * 
+             * - `account`: The account pays the fees.
+             * - `application`: Our application pays the fees.
+             */
+            payer: 'account' | 'application';
+        };
+
+        /**
+         * A hash of configuration for products that have negative balance liability, and whether Stripe or a Connect application is responsible for them.
+         */
+        losses?: {
+            /**
+             * A value indicating who is liable when this account can’t pay back negative balances resulting from payments. Defaults to `stripe`.
+             * 
+             * - `application`: The Connect application is liable when this account can’t pay back negative balances resulting from payments.
+             * - `stripe`: Stripe is liable when this account can’t pay back negative balances resulting from payments.
+             */
+            payments?: 'application' | 'stripe';
+        }
+
+        /**
+         * A value indicating responsibility for collecting updated information when requirements on the account are due or change. Defaults to `stripe`.
+         * 
+         * - `application`: The Connect application is responsible for collecting updated information when requirements on the account are due or change.
+         * - `none`: No one is responsible for collecting updated information when requirements on the account are due or change.
+         */
+        requirement_collection?: 'stripe' | 'application';
+
+        /**
+         * A hash of configuration for Stripe-hosted dashboards.
+         */
+        stripe_dashboard?: {
+            /**
+             * Whether this account should have access to the full Stripe Dashboard (`full`), to the Express Dashboard (`express`), or to no Stripe-hosted dashboard (`none`). Defaults to `full`.
+             */
+            type?: 'express' | 'full' | 'none';
+        }
+    };
+
+    /**
+     * Metadata about the account.
+     */
+    metadata?: {
+        [key: string]: string;
+    };
+}
+
+export interface StripeAccount {
+    /**
+     * The ID of the account.
+     */
+    id: string;
+
+    /**
+     * The requirements that stripe needs for the account.
+     */
+    requirements: StripeAccountRequirements | null;
+
+    /**
+     * Whether the account can create live charges.
+     */
+    charges_enabled: boolean;
+
+    /**
+     * Metadata about the account.
+     */
+    metadata?: {
+        [key: string]: string;
+    };
+}
+
+export interface StripeAccountRequirements {
+    /**
+     * The requirements that are currently due.
+     */
+    currently_due: string[] | null;
+
+    /**
+     * The requirements that are eventually due.
+     */
+    eventually_due: string[] | null;
+
+    /**
+     * The requirements that are past due.
+     */
+    past_due: string[] | null;
+
+    /**
+     * The requirements that are pending verification.
+     */
+    pending_verification: string[] | null;
+
+    /**
+     * The reason why the account is disabled.
+     */
+    disabled_reason: string | null;
+
+    /**
+     * The timestamp of the deadline for the requirements.
+     */
+    current_deadline: number | null;
+
+    /**
+     * Fields that are currently_due and need to be collected again because validation or verification failed.
+     */
+    errors: {
+        /**
+         * The code of the error.
+         */
+        code: string;
+
+        /**
+         * The informative message about the error.
+         */
+        reason: string;
+
+        /**
+         * The field that the error is related to.
+         */
+        requirement: string;
+    }[] | null;
+}
 
 export interface StripeAccountLink {
     /**

@@ -13,6 +13,7 @@ import {
 } from './AuthStore';
 import {
     STRIPE_EVENT_INVOICE_PAID_SCHEMA,
+    StripeAccount,
     StripeCheckoutResponse,
     StripeCreateAccountLinkRequest,
     StripeEvent,
@@ -26,7 +27,7 @@ import {
 } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration, getPurchasableItemsFeatures, getSubscriptionFeatures } from './SubscriptionConfiguration';
-import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
+import { ListedStudioAssignment, RecordsStore, Studio, StudioStripeAccountStatus, StudioStripeRequirementsStatus } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
 import { ADMIN_ROLE_NAME } from '@casual-simulation/aux-common';
@@ -830,7 +831,8 @@ export class SubscriptionController {
                 studio.subscriptionStatus,
                 studio.subscriptionId,
                 studio.subscriptionPeriodStartMs,
-                studio.subscriptionPeriodEndMs);
+                studio.subscriptionPeriodEndMs
+            );
             
             if (!features.allowed) {
                 return {
@@ -843,7 +845,35 @@ export class SubscriptionController {
             let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
             if (!studio.stripeAccountId) {
                 type = 'account_onboarding';
+                const account = await this._stripe.createAccount({
+                    controller: {
+                        fees: {
+                            payer: 'application'
+                        },
+                        losses: {
+                            payments: 'stripe'
+                        },
+                        requirement_collection: 'stripe',
+                        stripe_dashboard: {
+                            type: 'full'
+                        }
+                    },
+                    metadata: {
+                        studioId: studio.id
+                    }
+                });
 
+                studio = {
+                    ...studio,
+                    stripeAccountId: account.id,
+                    stripeAccountStatus: getAccountStatus(account),
+                    stripeAccountRequirementsStatus: getAccountRequirementsStatus(account)
+                };
+                await this._recordsStore.updateStudio(studio);
+            }
+
+            if (studio.stripeAccountRequirementsStatus === 'incomplete') {
+                type = 'account_onboarding';
             }
 
             const session = await this._stripe.createAccountLink({
@@ -1244,6 +1274,50 @@ export class SubscriptionController {
         }
     }
 }
+
+/**
+ * Gets the account status for the given stripe account.
+ * @param account The account that the status should be retrieved for.
+ */
+export function getAccountStatus(account: StripeAccount): StudioStripeAccountStatus {
+    const disabledReason = account?.requirements?.disabled_reason;
+    if (disabledReason === 'under_review' || disabledReason === 'requirements.pending_verification') {
+        return 'pending';
+    } else if (
+        disabledReason === 'rejected.fraud' ||
+        disabledReason === 'rejected.incomplete_verification' ||
+        disabledReason === 'rejected.listed' ||
+        disabledReason === 'rejected.other' ||
+        disabledReason === 'rejected.terms_of_service'
+    ) {
+        return 'rejected';
+    } else if (disabledReason) {
+        return 'disabled';
+    } else if (account.charges_enabled) {
+        return 'active';
+    }
+
+    return 'pending';
+}
+
+/**
+ * Gets the requirements status for the given stripe account.
+ * @param account The account.
+ */
+export function getAccountRequirementsStatus(account: StripeAccount): StudioStripeRequirementsStatus {
+    const requirements = account?.requirements;
+    if (!requirements) {
+        return 'incomplete';
+    }
+
+    if (requirements.currently_due?.length > 0 ||
+        requirements.past_due?.length > 0) {
+        return 'incomplete';
+    }
+
+    return 'complete';
+}
+
 
 function returnRoute(basePath: string, user: AuthUser, studio: Studio) {
     if (user) {

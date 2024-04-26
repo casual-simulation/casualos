@@ -1,16 +1,16 @@
-import { SubscriptionController } from './SubscriptionController';
+import { SubscriptionController, getAccountStatus } from './SubscriptionController';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { AuthStore, AuthUser } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import { StripeAccountLink, StripeInterface, StripeProduct } from './StripeInterface';
+import { StripeAccount, StripeAccountLink, StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
-import { Studio } from './RecordsStore';
+import { Studio, StudioStripeAccountStatus } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
 import { createTestSubConfiguration, createTestUser } from './TestUtils';
 import { merge } from 'lodash';
@@ -35,6 +35,8 @@ describe('SubscriptionController', () => {
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
         createAccountLink: jest.Mock<Promise<StripeAccountLink>>,
+        createAccount: jest.Mock<Promise<StripeAccount>>,
+        getAccountById: jest.Mock<Promise<StripeAccount>>,
     };
 
     let stripe: StripeInterface;
@@ -95,6 +97,8 @@ describe('SubscriptionController', () => {
             constructWebhookEvent: jest.fn(),
             getSubscriptionById: jest.fn(),
             createAccountLink: jest.fn(),
+            createAccount: jest.fn(),
+            getAccountById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -4251,7 +4255,6 @@ describe('SubscriptionController', () => {
     });
 
     describe('createManageStoreAccountLink()', () => {
-
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
@@ -4283,13 +4286,7 @@ describe('SubscriptionController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await store.saveNewUser({
-                id: 'userId',
-                email: 'test@example.com',
-                phoneNumber: null,
-                allSessionRevokeTimeMs: null,
-                currentLoginRequestId: null,
-            });
+            nowMock.mockReturnValue(101);
 
             await store.addStudio({
                 id: 'studioId',
@@ -4301,6 +4298,8 @@ describe('SubscriptionController', () => {
                 },
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
                 stripeAccountRequirementsStatus: 'complete'
@@ -4308,23 +4307,278 @@ describe('SubscriptionController', () => {
 
             await store.addStudioAssignment({
                 studioId: 'studioId',
-                userId: 'userId',
+                userId: userId,
                 isPrimaryContact: true,
                 role: 'admin',
             });
         });
 
         it('should create a link to manage the studio account and return it', async () => {
-            stripeMock.createAccountLink.mockReturnValueOnce({
+            stripeMock.createAccountLink.mockResolvedValueOnce({
                 url: 'account_link',
             });
 
-            const result = await controller.createManageStoreAccountLink('studioId', 'userId');
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId
+            });
 
             expect(result).toEqual({
                 success: true,
                 url: 'account_link',
             });
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'return-url',
+                return_url: 'return-url',
+                type: 'account_update',
+            });
+        });
+
+        it('should create a link to onboard the studio if the requirements are incomplete', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            await store.updateStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'incomplete'
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'account_link',
+            });
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'return-url',
+                return_url: 'return-url',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should create a new account for the studio if it doesnt have one', async () => {
+            stripeMock.createAccount.mockResolvedValueOnce({
+                id: 'accountId',
+                requirements: {
+                    currently_due: [
+                        'requirement1'
+                    ],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: []
+                },
+                charges_enabled: false,
+            });
+
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            await store.updateStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: null,
+                stripeAccountStatus: null,
+                stripeAccountRequirementsStatus: null
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'account_link',
+            });
+
+            await expect(store.getStudioById('studioId')).resolves.toEqual({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'incomplete'
+            });
+
+            expect(stripeMock.createAccount).toHaveBeenCalledWith({
+                controller: {
+                    fees: {
+                        payer: 'application'
+                    },
+                    losses: {
+                        payments: 'stripe'
+                    },
+                    requirement_collection: 'stripe',
+                    stripe_dashboard: {
+                        type: 'full'
+                    }
+                },
+                metadata: {
+                    studioId: 'studioId'
+                }
+            });
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'return-url',
+                return_url: 'return-url',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should return not_authorized if store features are not allowed', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: false,
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.'
+            });
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+
+        it('should return not_authorized if the user is not a member of the studio', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: 'wrongUserId'
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.'
+            });
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+
+        it('should return not_authorized if the user is not an admin in the studio', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            await store.saveNewUser({
+                id: 'wrongUserId',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'wrongUserId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: 'wrongUserId'
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.'
+            });
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+
+        it('should return studio_not_found if the studio does not exist', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'missingStudio',
+                userId: userId
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.'
+            });
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
         });
     });
 
@@ -4971,5 +5225,70 @@ describe('SubscriptionController', () => {
                 errorMessage: 'This method is not supported.',
             });
         });
+    });
+});
+
+describe('getAccountStatus()', () => {
+    const disabledReasonCases: [string, StudioStripeAccountStatus][] = [
+        ['action_required.requested_capabilities', 'disabled'],
+        ['requirements.past_due', 'disabled'],
+        ['requirements.pending_verification', 'pending'],
+        ['listed', 'disabled'],
+        ['platform_paused', 'disabled'],
+        ['rejected.fraud', 'rejected'],
+        ['rejected.incomplete_verification', 'rejected'],
+        ['rejected.listed', 'rejected'],
+        ['rejected.other', 'rejected'],
+        ['rejected.terms_of_service', 'rejected'],
+        ['under_review', 'pending'],
+        ['other', 'disabled'],
+    ];
+
+    it.each(disabledReasonCases)('should return %s for %s', (reason, expected) => {
+        expect(getAccountStatus({
+            id: 'account_id',
+            charges_enabled: false,
+            requirements: {
+                currently_due: [],
+                current_deadline: null,
+                disabled_reason: reason,
+                errors: [],
+                eventually_due: [],
+                past_due: [],
+                pending_verification: []
+            }
+        })).toBe(expected);
+    });
+
+    it('should return pending if there is no disabled reason but charges are also not enabled', () => {
+        expect(getAccountStatus({
+            id: 'account_id',
+            charges_enabled: false,
+            requirements: {
+                currently_due: [],
+                current_deadline: null,
+                disabled_reason: null,
+                errors: [],
+                eventually_due: [],
+                past_due: [],
+                pending_verification: []
+            },
+        })).toBe('pending');
+    });
+
+    it('should return active if charges are enabled', () => {
+        expect(getAccountStatus({
+            id: 'account_id',
+            charges_enabled: true,
+            requirements: {
+                currently_due: [],
+                current_deadline: null,
+                disabled_reason: null,
+                errors: [],
+                eventually_due: [],
+                past_due: [],
+                pending_verification: []
+            }
+        })).toBe('active');
     });
 });
