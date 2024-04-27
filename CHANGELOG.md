@@ -1,5 +1,25 @@
 # CasualOS Changelog
 
+## V3.3.1
+
+#### Date: 4/27/2024
+
+### :rocket: Features
+
+-   Added `classifyImages()` function.
+-   Exposed the following properties from `HTMLVideoElement`:
+    -   `currentTime`
+    -   `ended`
+    -   `paused`
+    -   `muted`
+    -   `volume`
+    -   `playbackRate`
+    -   Note that these properties are only updated when an event is received from the element. (e.g. `currentTime` will be exposed if you are listening to `onTimeUpdate`)
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to use some records functions with `?sessionKey` and `connectionKey` in the URL.
+
 ## V3.3.0
 
 #### Date: 4/15/2024

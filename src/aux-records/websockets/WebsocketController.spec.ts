@@ -2014,6 +2014,36 @@ describe('WebsocketController', () => {
                 ]);
             });
 
+            it('should return a invalid_connection_state error if the connection cannot be found in Redis', async () => {
+                await server.getUpdates(
+                    device1Info.serverConnectionId,
+                    null,
+                    inst,
+                    'testBranch'
+                );
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'invalid_connection_state',
+                            errorMessage: `A server error occurred. (namespace: null/${inst}/${'testBranch'}, connectionId: ${
+                                device1Info.serverConnectionId
+                            })`,
+                            recordName: null,
+                            inst: inst,
+                            branch: 'testBranch',
+                        },
+                    ],
+                ]);
+                expect(
+                    messenger.isDisconnected(device1Info.serverConnectionId)
+                ).toBe(true);
+            });
+
             describe('records', () => {
                 it('should return a inst_not_found error if the record does not exist', async () => {
                     await server.login(serverConnectionId, 1, {
@@ -6353,6 +6383,36 @@ describe('WebsocketController', () => {
                         },
                     ]);
                 });
+
+                it('should return a invalid_connection_state error if the connection cannot be found in Redis', async () => {
+                    await server.watchBranchDevices(
+                        device1Info.serverConnectionId,
+                        null,
+                        inst,
+                        'testBranch'
+                    );
+                    expect(
+                        messenger.getEvents(device1Info.serverConnectionId)
+                    ).toEqual([
+                        [
+                            WebsocketEventTypes.Error,
+                            -1,
+                            {
+                                success: false,
+                                errorCode: 'invalid_connection_state',
+                                errorMessage: `A server error occurred. (namespace: null/${inst}/${'testBranch'}, connectionId: ${
+                                    device1Info.serverConnectionId
+                                })`,
+                                recordName: null,
+                                inst: inst,
+                                branch: 'testBranch',
+                            },
+                        ],
+                    ]);
+                    expect(
+                        messenger.isDisconnected(device1Info.serverConnectionId)
+                    ).toBe(true);
+                });
             });
 
             describe('records', () => {
@@ -7510,6 +7570,40 @@ describe('WebsocketController', () => {
                     messenger.getMessages(serverConnectionId).slice(3)
                 ).toEqual([]);
             });
+
+            it('should return a invalid_connection_state error if the connection cannot be found in Redis', async () => {
+                await server.requestMissingPermission(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            action: 'read',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                        },
+                    }
+                );
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'invalid_connection_state',
+                            errorMessage: `A server error occurred. (connectionId: ${device1Info.serverConnectionId})`,
+                        },
+                    ],
+                ]);
+                expect(
+                    messenger.isDisconnected(device1Info.serverConnectionId)
+                ).toBe(true);
+            });
         });
 
         describe('permission/request/missing/response', () => {
@@ -7571,6 +7665,38 @@ describe('WebsocketController', () => {
                     `${'user'}/${device1Info.userId}`
                 );
                 expect(connection).toBeUndefined();
+            });
+
+            it('should return a invalid_connection_state error if the connection cannot be found in Redis', async () => {
+                await server.respondToPermissionRequest(
+                    device1Info.serverConnectionId,
+                    {
+                        type: 'permission/request/missing/response',
+                        success: true,
+                        recordName: recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                    } as RequestMissingPermissionResponseSuccessMessage
+                );
+
+                expect(
+                    messenger.getEvents(device1Info.serverConnectionId)
+                ).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        -1,
+                        {
+                            success: false,
+                            errorCode: 'invalid_connection_state',
+                            errorMessage: `A server error occurred. (connectionId: ${device1Info.serverConnectionId})`,
+                        },
+                    ],
+                ]);
+                expect(
+                    messenger.isDisconnected(device1Info.serverConnectionId)
+                ).toBe(true);
             });
         });
 

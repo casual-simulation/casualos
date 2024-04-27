@@ -3104,9 +3104,24 @@ export class RecordsServer {
         name: string,
         procedure: Procedure<TInput, TOutput>
     ) {
+        if (name in this._procedures) {
+            throw new Error(
+                `A procedure already exists with the name: ${name}`
+            );
+        }
         (this._procedures as any)[name] = procedure;
         if (procedure.http) {
             this._addProcedureRoute(procedure);
+        }
+    }
+
+    /**
+     * Adds the given procedures to the server.
+     * @param procedures The procedures that should be added.
+     */
+    addProcedures(procedures: Procedures) {
+        for (let name of Object.keys(procedures)) {
+            this.addProcedure(name, procedures[name]);
         }
     }
 

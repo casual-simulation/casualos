@@ -2045,7 +2045,10 @@ export class AuthController {
                 };
             }
 
-            if (now >= session.expireTimeMs) {
+            if (
+                typeof session.expireTimeMs === 'number' &&
+                now >= session.expireTimeMs
+            ) {
                 console.log(
                     '[AuthController] [validateConnectionToken] Session has expired.'
                 );
