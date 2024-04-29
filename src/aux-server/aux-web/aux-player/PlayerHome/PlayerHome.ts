@@ -107,7 +107,8 @@ const BiosOptionComponent = MdOption.extend({
                 return el.textContent;
             }
             const slot = this.$slots.default;
-            return slot ? slot[0].text.trim() : '';
+            const slotText = slot ? slot[0]?.text?.trim() : '';
+            return slotText ?? '';
         },
     },
 });
