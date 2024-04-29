@@ -434,6 +434,7 @@ export function getSchemaMetadata(schema: z.ZodType): SchemaMetadata {
             description: schema._def.description,
         };
     } else {
+        console.error('Unsupported schema type', schema);
         throw new Error(`Unsupported schema type: ${schema}`);
     }
 }

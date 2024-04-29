@@ -7,6 +7,8 @@ import {
     ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
     ON_IMAGE_CLASSIFIED_ACTION_NAME,
     OpenImageClassifierAction,
+    ClassifyImagesAction,
+    Image,
     action,
     asyncResult,
     asyncError,
@@ -55,6 +57,7 @@ export default class ImageClassifier extends Vue {
     modelJsonUrl: string = null;
     modelMetadataUrl: string = null;
     cameraType: CameraType = null;
+    image: Image[] = null;
 
     private _openEvent: OpenImageClassifierAction;
 
@@ -156,7 +159,7 @@ export default class ImageClassifier extends Vue {
         this._simulations.set(sim, sub);
 
         sub.add(
-            sim.localEvents.subscribe((e) => {
+            sim.localEvents.subscribe(async (e) => {
                 if (e.type === 'show_image_classifier') {
                     this.showImageClassifier = !!e.open;
                     if (this.showImageClassifier) {
@@ -197,6 +200,47 @@ export default class ImageClassifier extends Vue {
                             ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME
                         );
                     }
+                } else if (e.type === 'classify_images') {
+                    const tmImage = await import('@teachablemachine/image');
+                    const urls = getImageClassifierUrls(e);
+                    const model = await tmImage.load(urls.json, urls.metadata);
+
+                    const imagesPromises: Promise<
+                        ImageBitmap | HTMLImageElement
+                    >[] = [];
+                    for (let i of e.images) {
+                        if (i.file) {
+                            const bitMap = createImageBitmap(
+                                new Blob([i.file.data], {
+                                    type: i.file.mimeType,
+                                })
+                            );
+                            imagesPromises.push(bitMap);
+                        } else if (i.url) {
+                            const img = document.createElement('img');
+                            img.src = i.url;
+                            imagesPromises.push(Promise.resolve(img));
+                        }
+                    }
+                    const images = await Promise.all(imagesPromises);
+                    const predictions = [];
+                    for (let i of images) {
+                        const prediction = await model.predict(i);
+                        predictions.push(prediction);
+                    }
+                    const arg = {
+                        model: {
+                            ...pick(
+                                e,
+                                'modelUrl',
+                                'modelJsonUrl',
+                                'modelMetadataUrl'
+                            ),
+                            classLabels: model.getClassLabels(),
+                        },
+                        predictions: predictions,
+                    };
+                    sim.helper.transaction(asyncResult(e.taskId, arg));
                 }
             })
         );

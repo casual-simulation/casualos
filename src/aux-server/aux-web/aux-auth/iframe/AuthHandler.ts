@@ -168,6 +168,9 @@ export class AuthHandler implements AuxAuth {
         await this._init();
         if (this._loggedIn) {
             const expiry = this._getTokenExpirationTime(this._token);
+            if (expiry < 0 || !isFinite(expiry)) {
+                return true; // Token does not expire.
+            }
             if (Date.now() < expiry) {
                 return true;
             }
@@ -713,7 +716,11 @@ export class AuthHandler implements AuxAuth {
             }
 
             return userId;
-        } catch {
+        } catch (err) {
+            console.error(
+                '[AuthHandler] Error logging in with custom UI.',
+                err
+            );
             this._loginUIStatus.next({
                 page: false,
             });
