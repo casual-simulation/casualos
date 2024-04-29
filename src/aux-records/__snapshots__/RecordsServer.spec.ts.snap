@@ -2313,6 +2313,22 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/store/manage",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManageStudioStoreLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/player/config",
       },
@@ -2723,6 +2739,11 @@ Object {
                 "type": "number",
               },
               "roleName": Object {
+                "type": "string",
+              },
+              "taxCode": Object {
+                "nullable": true,
+                "optional": true,
                 "type": "string",
               },
             },
@@ -5083,6 +5104,22 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/studios/store/manage",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getManageStudioStoreLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/player/config",
       },
@@ -5493,6 +5530,11 @@ Object {
                 "type": "number",
               },
               "roleName": Object {
+                "type": "string",
+              },
+              "taxCode": Object {
+                "nullable": true,
+                "optional": true,
                 "type": "string",
               },
             },

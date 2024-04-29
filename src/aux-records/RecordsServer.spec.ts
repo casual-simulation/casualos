@@ -43,7 +43,7 @@ import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
-import { StripeInterface, StripeProduct } from './StripeInterface';
+import { StripeAccount, StripeAccountLink, StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
@@ -308,6 +308,9 @@ describe('RecordsServer', () => {
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
+        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
+        createAccount: jest.Mock<Promise<StripeAccount>>;
+        getAccountById: jest.Mock<Promise<StripeAccount>>;
     };
 
     let aiController: AIController;
@@ -537,6 +540,9 @@ describe('RecordsServer', () => {
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
             getSubscriptionById: jest.fn(),
+            createAccountLink: jest.fn(),
+            createAccount: jest.fn(),
+            getAccountById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -13789,7 +13795,9 @@ describe('RecordsServer', () => {
                         },
                         storeFeatures: {
                             allowed: false,
-                        }
+                        },
+                        stripeAccountStatus: null,
+                        stripeRequirementsStatus: null,
                     },
                 },
                 headers: accountCorsHeaders,
@@ -14818,6 +14826,120 @@ describe('RecordsServer', () => {
                 removedUserId: 'userId2',
             })
         );
+    });
+
+    describe('POST /api/v2/studios/store/manage', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: Date.now(),
+                subscriptionPeriodEndMs: Date.now() + 1000 * 60 * 60 * 24 * 365,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete'
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            stripeMock.createAccountLink.mockResolvedValue({
+                url: 'https://example.com/account-link',
+            });
+        });
+
+        it('should create an account link', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'https://example.com/account-link',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost('/api/v2/studios/store/manage', JSON.stringify({
+                    studioId: 'studioId',
+                }), authenticatedHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    url: 'https://example.com/account-link',
+                },
+                headers: accountCorsHeaders
+            });
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'return-url',
+                return_url: 'return-url',
+                type: 'account_update',
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost('/api/v2/studios/store/manage', JSON.stringify({
+                    studioId: 'studioId'
+                }), {
+                    origin: accountOrigin
+                })
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders
+            });
+        });
+
+        testUrl('POST', '/api/v2/studios/store/manage', () => JSON.stringify({
+            studioId: 'studioId'
+        }), () => authenticatedHeaders);
     });
 
     describe('GET /api/v2/player/config', () => {

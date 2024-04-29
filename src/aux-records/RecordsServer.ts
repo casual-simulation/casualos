@@ -2583,6 +2583,46 @@ export class RecordsServer {
                     return result;
                 }),
 
+            getManageStudioStoreLink: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/studios/store/manage')
+                .inputs(z.object({
+                    studioId: z
+                        .string({
+                            invalid_type_error:
+                                'studioId must be a string.',
+                            required_error: 'studioId is required.',
+                        })
+                        .min(1),
+                }))
+                .handler(async ({ studioId }, context) => {
+                    if (!this._purchasableItems) {
+                        return STORE_NOT_SUPPORTED_RESULT;
+                    }
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._subscriptions.createManageStoreAccountLink({
+                        studioId,
+                        userId: sessionKeyValidation.userId,
+                    });
+
+                    return result;
+                }),
+
             getPlayerConfig: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/player/config')
@@ -3152,7 +3192,7 @@ export class RecordsServer {
                     if (!this._purchasableItems) {
                         return STORE_NOT_SUPPORTED_RESULT;
                     }
-                    
+
                     const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
                     if (sessionKeyValidation.success === false) {
                         if (sessionKeyValidation.errorCode === 'no_session_key') {
