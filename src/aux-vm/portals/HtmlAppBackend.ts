@@ -33,7 +33,18 @@ export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
  */
 export const ELEMENT_SPECIFIC_PROPERTIES: { [nodeName: string]: string[] } = {
     IMG: ['width', 'height', 'naturalWidth', 'naturalHeight', 'currentSrc'],
-    VIDEO: ['videoWidth', 'videoHeight', 'duration', 'currentSrc'],
+    VIDEO: [
+        'videoWidth',
+        'videoHeight',
+        'duration',
+        'currentSrc',
+        'currentTime',
+        'ended',
+        'paused',
+        'muted',
+        'volume',
+        'playbackRate',
+    ],
     SECTION: ['scrollTop', 'offsetHeight'],
     CANVAS: ['height', 'width'],
 };

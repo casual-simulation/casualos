@@ -168,6 +168,9 @@ export class AuthHandler implements AuxAuth {
         await this._init();
         if (this._loggedIn) {
             const expiry = this._getTokenExpirationTime(this._token);
+            if (expiry < 0 || !isFinite(expiry)) {
+                return true; // Token does not expire.
+            }
             if (Date.now() < expiry) {
                 return true;
             }
