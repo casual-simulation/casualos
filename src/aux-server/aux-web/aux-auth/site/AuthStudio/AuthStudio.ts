@@ -511,9 +511,19 @@ export default class AuthStudio extends Vue {
         this.showUpdateStoreConfig = true;
     }
 
-    manageStore() {
+    async manageStore() {
         this.isManagingStore = true;
-        // TODO: Implement store management
+        try {
+            const result = await authManager.client.getManageStudioStoreLink({
+                studioId: this.studioId,
+            });
+            
+            if (result.success === true) {
+                window.open(result.url, '_blank');
+            }
+        } finally {
+            this.isManagingStore = false;
+        }
     }
 
     // TODO: Support uploading logos

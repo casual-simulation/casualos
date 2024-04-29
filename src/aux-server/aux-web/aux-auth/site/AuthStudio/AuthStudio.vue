@@ -436,6 +436,7 @@
                         v-if="isManagingStore"
                     >
                     </md-progress-spinner>
+                    <span v-else-if="!stripeAccountStatus">Setup</span>
                     <span v-else>Manage</span>
                 </md-button>
             </md-dialog-actions>
