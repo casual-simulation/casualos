@@ -848,7 +848,7 @@ export class SubscriptionController {
                 const account = await this._stripe.createAccount({
                     controller: {
                         fees: {
-                            payer: 'application'
+                            payer: 'account'
                         },
                         losses: {
                             payments: 'stripe'

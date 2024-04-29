@@ -1,6 +1,10 @@
 import {
+    StripeAccount,
+    StripeAccountLink,
     StripeCheckoutRequest,
     StripeCheckoutResponse,
+    StripeCreateAccountLinkRequest,
+    StripeCreateAccountRequest,
     StripeCreateCustomerRequest,
     StripeCreateCustomerResponse,
     StripeEvent,
@@ -31,6 +35,33 @@ export class StripeIntegration implements StripeInterface {
         this._stripe = stripe;
         this._publishableKey = publishableKey;
         this._testClock = testClock;
+    }
+
+    async createAccountLink(request: StripeCreateAccountLinkRequest): Promise<StripeAccountLink> {
+        const link = await this._stripe.accountLinks.create({
+            account: request.account,
+            refresh_url: request.refresh_url,
+            return_url: request.return_url,
+            type: request.type,
+        });
+
+        return {
+            url: link.url,
+        };
+    }
+    
+    async createAccount(request: StripeCreateAccountRequest): Promise<StripeAccount> {
+        const account = await this._stripe.accounts.create({
+            controller: request.controller,
+            type: request.type,
+            metadata: request.metadata,
+        });
+        return this._convertToAccount(account);
+    }
+    
+    async getAccountById(id: string): Promise<StripeAccount> {
+        const account = await this._stripe.accounts.retrieve(id);
+        return this._convertToAccount(account);
     }
 
     async listPricesForProduct(product: string): Promise<StripePrice[]> {
@@ -153,5 +184,14 @@ export class StripeIntegration implements StripeInterface {
         id: string
     ): Promise<Omit<StripeSubscription, 'items'>> {
         return await this._stripe.subscriptions.retrieve(id);
+    }
+
+    private _convertToAccount(account: Stripe.Response<Stripe.Account>): StripeAccount {
+        return {
+            id: account.id,
+            charges_enabled: account.charges_enabled,
+            metadata: account.metadata,
+            requirements: account.requirements,
+        };
     }
 }
