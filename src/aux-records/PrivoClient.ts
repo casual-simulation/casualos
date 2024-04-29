@@ -493,7 +493,7 @@ export class PrivoClient implements PrivoClientInterface {
             permissions: z.array(
                 z.object({
                     on: z.boolean(),
-                    consent_time: z.number(),
+                    consent_time: z.number().nullable().optional(),
                     request_time: z.number(),
                     feature_identifier: z.string(),
                     feature_category: z.string(),
