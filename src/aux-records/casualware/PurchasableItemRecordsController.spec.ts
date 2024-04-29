@@ -219,7 +219,7 @@ describe('PurchasableItemRecordsController', () => {
                             features: merge(allowAllFeatures(), {
                                 store: {
                                     allowed: true,
-                                    maxPurchasableItems: 0,
+                                    maxItems: 0,
                                     currencyLimits: {
                                         usd: {
                                             maxCost: 1000,
