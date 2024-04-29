@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.2
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS didn't understand the contents of a response from Privo servers during login.
+
 ## V3.3.1
 
 #### Date: 4/27/2024
