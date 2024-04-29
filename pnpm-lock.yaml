@@ -1112,8 +1112,8 @@ importers:
         specifier: 0.5.21
         version: 0.5.21
       stripe:
-        specifier: 11.13.0
-        version: 11.13.0
+        specifier: 15.4.0
+        version: 15.4.0
       three-mesh-ui:
         specifier: 6.4.4
         version: 6.4.4(three@0.159.0)
@@ -20728,11 +20728,11 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  /stripe@11.13.0:
-    resolution: {integrity: sha512-Jx0nDbdvRsTtDSX5OFQ+4rLmYIftoiOE9HAXWIgyhAz1QjRFI3UIiJ/kCyhkdJBoHu019O5Ya6EmQ5Zf635XDw==}
+  /stripe@15.4.0:
+    resolution: {integrity: sha512-o3STlHYUmJh1ogAem434As7hCMEGG43R1fFkX0NuxabnmZoOQ9Ytxuu+e5Tq5NSE3LPUIV64jbjQebHoZvLTKw==}
     engines: {node: '>=12.*'}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
       qs: 6.11.2
     dev: false
 
