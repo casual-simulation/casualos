@@ -12,6 +12,7 @@ import {
     UserRole,
 } from './AuthStore';
 import {
+    STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA,
     STRIPE_EVENT_INVOICE_PAID_SCHEMA,
     StripeAccount,
     StripeCheckoutResponse,
@@ -844,6 +845,7 @@ export class SubscriptionController {
 
             let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
             if (!studio.stripeAccountId) {
+                console.log('[SubscriptionController] [createManageStoreAccountLink] Studio does not have a stripe account. Creating one.');
                 type = 'account_onboarding';
                 const account = await this._stripe.createAccount({
                     controller: {
@@ -862,6 +864,8 @@ export class SubscriptionController {
                         studioId: studio.id
                     }
                 });
+
+                console.log('[SubscriptionController] [createManageStoreAccountLink] Created account:', account.id);
 
                 studio = {
                     ...studio,
@@ -1256,6 +1260,55 @@ export class SubscriptionController {
 
                     return { item, sub };
                 }
+            } else if (event.type === 'account.updated') {
+                const parseResult =
+                    STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA.safeParse(event);
+
+                if (parseResult.success === false) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Unable to parse stripe event!`,
+                        parseResult.error
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The request was not able to be parsed.'
+                    };
+                }
+
+                const e = parseResult.data;
+                const accountId = e.data.object.id;
+                const account = await this._stripe.getAccountById(accountId);
+                let studio = await this._recordsStore.getStudioByStripeAccountId(accountId);
+
+                if (!studio) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No studio found for account ID (${accountId}).`
+                    );
+                    return {
+                        success: true
+                    };
+                }
+
+                const newStatus = getAccountStatus(account);
+                const newRequirementsStatus = getAccountRequirementsStatus(account);
+
+                if (studio.stripeAccountStatus !== newStatus || studio.stripeAccountRequirementsStatus !== newRequirementsStatus) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] Updating studio (${studio.id}) account status to ${newStatus} and requirements status to ${newRequirementsStatus}.`
+                    );
+                    studio = {
+                        ...studio,
+                        stripeAccountStatus: newStatus,
+                        stripeAccountRequirementsStatus: newRequirementsStatus
+                    };
+
+                    await this._recordsStore.updateStudio(studio);
+                }
+
+                return {
+                    success: true
+                };
             }
 
             return {

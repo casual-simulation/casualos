@@ -698,3 +698,13 @@ export const STRIPE_EVENT_INVOICE_PAID_SCHEMA = z.object({
 });
 
 export type StripeInvoice = z.infer<typeof STRIPE_INVOICE_SCHEMA>;
+
+export const STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA = z.object({
+    type: z.literal('account.updated'),
+    data: z.object({
+        object: z.object({
+            id: z.string(),
+            object: z.literal('account'),
+        })
+    }),
+});

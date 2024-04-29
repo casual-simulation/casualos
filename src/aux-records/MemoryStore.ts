@@ -605,6 +605,10 @@ export class MemoryStore
         return this._studios.find((s) => s.stripeCustomerId === customerId);
     }
 
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        return this._studios.find(s => s.stripeAccountId === accountId);
+    }
+
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const assignments = await this.listUserAssignments(userId);
         const studios = await Promise.all(

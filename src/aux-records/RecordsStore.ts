@@ -178,6 +178,12 @@ export interface RecordsStore {
      * @param request The request.
      */
     saveComIdRequest(request: StudioComIdRequest): Promise<void>;
+
+    /**
+     * Gets the studio with the given stripe account ID. Returns null if no studio has that stripe account ID.
+     * @param accountId The ID of the stripe account.
+     */
+    getStudioByStripeAccountId(accountId: string): Promise<Studio | null>;
 }
 
 export interface CountRecordsFilter {

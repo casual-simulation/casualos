@@ -4444,7 +4444,7 @@ describe('SubscriptionController', () => {
             expect(stripeMock.createAccount).toHaveBeenCalledWith({
                 controller: {
                     fees: {
-                        payer: 'application'
+                        payer: 'account'
                     },
                     losses: {
                         payments: 'stripe'
@@ -5223,6 +5223,210 @@ describe('SubscriptionController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'This method is not supported.',
+            });
+        });
+
+        describe('store', () => {
+            let studio: Studio;
+            let studioId: string;
+
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    store: {
+                                        allowed: true,
+                                        currencyLimits: {
+                                            usd: {
+                                                maxCost: 10000,
+                                                minCost: 10
+                                            }
+                                        }
+                                    }
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                studioId = 'studioId';
+                studio = {
+                    id: studioId,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 1000,
+                    displayName: 'my studio',
+                    stripeCustomerId: 'customer_id',
+                    stripeAccountId: 'account_id',
+                    stripeAccountRequirementsStatus: null,
+                    stripeAccountStatus: null,
+                };
+
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
+                    userId,
+                    studioId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+
+                nowMock.mockReturnValue(200);
+            });
+
+            describe('account.updated', () => {
+                it('should update account statuses', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                "id": "account_id",
+                                "object": "account",
+                            }
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: []
+                        }
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.getStudioById(studioId);
+                    expect(studio?.stripeAccountStatus).toBe('active');
+                    expect(studio?.stripeAccountRequirementsStatus).toBe('complete');
+                });
+
+                it('should do nothing if no studio matches the account', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                "id": "missing",
+                                "object": "account",
+                            }
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: []
+                        }
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.getStudioById(studioId);
+                    expect(studio?.stripeAccountStatus).toBe(null);
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(null);
+                });
+
+                it('should be able to ', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                "id": "account_id",
+                                "object": "account",
+                            }
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: []
+                        }
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.getStudioById(studioId);
+                    expect(studio?.stripeAccountStatus).toBe('active');
+                    expect(studio?.stripeAccountRequirementsStatus).toBe('complete');
+                });
             });
         });
     });
