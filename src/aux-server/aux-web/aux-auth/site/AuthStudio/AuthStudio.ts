@@ -519,7 +519,7 @@ export default class AuthStudio extends Vue {
             });
             
             if (result.success === true) {
-                window.open(result.url, '_blank');
+                location.href = result.url;
             }
         } finally {
             this.isManagingStore = false;
