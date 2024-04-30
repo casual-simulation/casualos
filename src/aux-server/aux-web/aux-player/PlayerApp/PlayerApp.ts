@@ -432,8 +432,6 @@ export default class PlayerApp extends Vue {
                     })
                 );
 
-                if (window.sa_pageview) window.sa_pageview(`/${sim.id}`);
-
                 return subs;
             })
         );
