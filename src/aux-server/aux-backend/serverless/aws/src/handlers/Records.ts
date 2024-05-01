@@ -9,9 +9,12 @@ import type {
     EventBridgeEvent,
     S3Event,
 } from 'aws-lambda';
-import { constructServerBuilder, FILES_BUCKET } from '../LoadServer';
+import {
+    constructServerlessAwsServerBuilder,
+    FILES_BUCKET,
+} from '../../../../shared/LoadServer';
 
-const builder = constructServerBuilder();
+const builder = constructServerlessAwsServerBuilder();
 
 const { server, filesStore, websocketController } = builder.build();
 
