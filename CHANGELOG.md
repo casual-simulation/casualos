@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.3
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Improved server deployments to support the same configuration options as serverless deployments.
+
 ## V3.3.2
 
 #### Date: 4/29/2024
