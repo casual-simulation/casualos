@@ -425,7 +425,16 @@
                 </div>
                 <div v-else-if="stripeAccountStatus === 'disabled'">
                     <p>Your store account is disabled.</p>
+
+                    <div v-if="stripeRequirementsStatus === 'complete'"></div>
+                    <div v-else>
+                        <p>
+                            Your store account has been created, but we need some additional information before it can be fully activated.
+                        </p>
+                        <p>Click "Manage" below to provide the required information.</p>
+                    </div>
                 </div>
+
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="manageStore()">

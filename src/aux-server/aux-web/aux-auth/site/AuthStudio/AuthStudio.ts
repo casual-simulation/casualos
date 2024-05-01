@@ -382,6 +382,8 @@ export default class AuthStudio extends Vue {
                 this.storeFeatures = result.studio.storeFeatures ?? {
                     allowed: false
                 };
+                this.stripeAccountStatus = result.studio.stripeAccountStatus;
+                this.stripeRequirementsStatus = result.studio.stripeRequirementsStatus;
                 this.originalAllowedStudioCreators =
                     this.allowedStudioCreators =
                         result.studio.comIdConfig?.allowedStudioCreators ??
