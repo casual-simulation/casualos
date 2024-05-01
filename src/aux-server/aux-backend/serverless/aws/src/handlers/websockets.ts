@@ -4,10 +4,10 @@ import {
     APIGatewayProxyStructuredResultV2,
     Context,
 } from 'aws-lambda';
-import { constructServerBuilder } from '../LoadServer';
+import { constructServerlessAwsServerBuilder } from '../../../../shared/LoadServer';
 import { GenericHttpHeaders } from '@casual-simulation/aux-common';
 
-const builder = constructServerBuilder();
+const builder = constructServerlessAwsServerBuilder();
 
 const { server, redisClient } = builder.build();
 
