@@ -688,6 +688,14 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    get allowedApiOrigins() {
+        return this._allowedApiOrigins;
+    }
+
+    get allowedAccountOrigins() {
+        return this._allowedAccountOrigins;
+    }
+
     useAllowedApiOrigins(origins: Set<string>): this {
         console.log('[ServerBuilder] Using API origins:', origins);
         this._allowedApiOrigins = origins;

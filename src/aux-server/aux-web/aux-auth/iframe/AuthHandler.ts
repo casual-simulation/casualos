@@ -716,7 +716,11 @@ export class AuthHandler implements AuxAuth {
             }
 
             return userId;
-        } catch {
+        } catch (err) {
+            console.error(
+                '[AuthHandler] Error logging in with custom UI.',
+                err
+            );
             this._loginUIStatus.next({
                 page: false,
             });
