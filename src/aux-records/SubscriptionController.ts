@@ -32,6 +32,8 @@ import { ListedStudioAssignment, RecordsStore, Studio, StudioStripeAccountStatus
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
 import { ADMIN_ROLE_NAME } from '@casual-simulation/aux-common';
+import { PurchasableItemRecordsStore } from 'casualware';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -42,19 +44,22 @@ export class SubscriptionController {
     private _authStore: AuthStore;
     private _recordsStore: RecordsStore;
     private _config: ConfigurationStore;
+    private _purchasableItems: PurchasableItemRecordsStore;
 
     constructor(
         stripe: StripeInterface,
         auth: AuthController,
         authStore: AuthStore,
         recordsStore: RecordsStore,
-        config: ConfigurationStore
+        config: ConfigurationStore,
+        purchasableItems: PurchasableItemRecordsStore
     ) {
         this._stripe = stripe;
         this._auth = auth;
         this._authStore = authStore;
         this._recordsStore = recordsStore;
         this._config = config;
+        this._purchasableItems = purchasableItems;
     }
 
     private async _getConfig() {
@@ -989,6 +994,193 @@ export class SubscriptionController {
         };
     }
 
+    async createPurchaseItemLink(request: CreatePurchaseItemLinkRequest): Promise<CreatePurchaseItemLinkResult> {
+        try {
+
+            const item = await this._purchasableItems.getItemByAddress(request.item.recordName, request.item.address);
+
+            if (!item) {
+                return {
+                    success: false,
+                    errorCode: 'item_not_found',
+                    errorMessage: 'The item could not be found.'
+                };
+            }
+
+            if (item.currency !== request.item.currency || item.cost !== request.item.expectedCost) {
+                return {
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage: 'The expected price does not match the actual price of the item.'
+                };
+            }
+
+            // TODO: Check item policy permissions
+            
+
+            let customerId: string = null;
+            if (request.userId) {
+                const user = await this._authStore.findUser(request.userId);
+
+                if (!user) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The user could not be found.'
+                    };
+                }
+
+                if (!user.stripeCustomerId) {
+                    const customer = await this._stripe.createCustomer({
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phoneNumber,
+                        metadata: {
+                            role: 'user',
+                            userId: user.id
+                        }
+                    });
+
+                    customerId = user.stripeCustomerId = customer.id;
+                    await this._authStore.saveUser(user);
+                }
+            }
+
+            const metrics = await this._purchasableItems.getSubscriptionMetricsByRecordName(request.item.recordName);
+            const config = await this._getConfig();
+            const features = getPurchasableItemsFeatures(config, metrics.subscriptionStatus, metrics.subscriptionId, metrics.currentPeriodStartMs, metrics.currentPeriodEndMs);
+
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: 'Store features are not allowed for the subscription.'
+                };
+            }
+
+            if (!metrics.stripeAccountId || !metrics.stripeAccountStatus) {
+                return {
+                    success: false,
+                    errorCode: 'account_not_ready',
+                    errorMessage: 'The store account has not been set up yet.'
+                };
+            }
+
+            if (metrics.stripeAccountStatus !== 'active') {
+                return {
+                    success: false,
+                    errorCode: 'account_not_ready',
+                    errorMessage: 'The store account has not been set up yet.'
+                };
+            }
+
+            const limits = features.currencyLimits[item.currency];
+
+            if (!limits) {
+                return {
+                    success: false,
+                    errorCode: 'currency_not_supported',
+                    errorMessage: 'The currency is not supported.'
+                };
+            }
+
+            if (item.cost < limits.minCost || item.cost > limits.maxCost) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The cost of the item is not valid.'
+                };
+            }
+
+            let applicationFee = 0;
+            if (limits.fee) {
+                if (limits.fee.type === 'percent') {
+                    // calculate percent when fee is between 1 - 100
+                    applicationFee = Math.ceil(item.cost * (limits.fee.percent / 100));
+                } else {
+                    if (limits.fee.amount > item.cost) {
+                        return {
+                            success: false,
+                            errorCode: 'invalid_request',
+                            errorMessage: 'The application fee is greater than the cost of the item.'
+                        };
+                    }
+                    applicationFee = limits.fee.amount;
+                }
+            }
+
+            const sessionId = uuid();
+            const session = await this._stripe.createCheckoutSession({
+                customer: customerId,
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: item.currency,
+                            unit_amount: item.cost,
+                            product_data: {
+                                name: item.name,
+                                description: item.description,
+                                images: item.imageUrls,
+                                metadata: {
+                                    recordName: request.item.recordName,
+                                    address: item.address,
+                                },
+                                tax_code: item.taxCode,
+                            },
+                        }
+                    }
+                ],
+                success_url: request.successUrl,
+                cancel_url: request.returnUrl,
+                client_reference_id: sessionId,
+                metadata: {
+                    userId: request.userId,
+                    checkoutSessionId: sessionId,
+                },
+                payment_intent_data: {
+                    application_fee_amount: applicationFee,
+                },
+                connect: {
+                    stripeAccount: metrics.stripeAccountId,
+                }
+            });
+
+            await this._authStore.updateCheckoutSessionInfo({
+                id: sessionId,
+                stripeCheckoutSessionId: session.id,
+                invoice: session.invoice ? {
+                    currency: session.invoice.currency,
+                    paid: session.invoice.paid,
+                    description: session.invoice.description,
+                    status: session.invoice.status,
+                    stripeInvoiceId: session.invoice.id,
+                    stripeHostedInvoiceUrl: session.invoice.hosted_invoice_url,
+                    stripeInvoicePdfUrl: session.invoice.invoice_pdf,
+                    tax: session.invoice.tax,
+                    total: session.invoice.total,
+                    subtotal: session.invoice.subtotal,
+                } : null,
+                userId: request.userId,
+                status: session.status,
+                paymentStatus: session.payment_status,
+                paid: session.payment_status === 'paid' || session.payment_status === 'no_payment_required',
+            });
+
+            return {
+                success: true,
+                url: session.url,
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while creating a purchase item link:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
+    }
+
     /**
      * Handles the webhook from Stripe for updating the internal database.
      */
@@ -1791,5 +1983,72 @@ export interface CreateManageAccountLinkSuccess {
 export interface CreateManageAccountLinkFailure {
     success: false;
     errorCode: ServerError | 'invalid_request' | 'not_supported' | NotLoggedInError | NotAuthorizedError | 'studio_not_found';
+    errorMessage: string;
+}
+
+export interface CreatePurchaseItemLinkRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The item that is being purchased.
+     */
+    item: {
+        /**
+         * The name of the record that the item is stored in.
+         */
+        recordName: string;
+
+        /**
+         * The address of the item.
+         */
+        address: string;
+
+        /**
+         * The expected cost of the item.
+         */
+        expectedCost: number;
+
+        /**
+         * The currency that the cost is in.
+         */
+        currency: string;
+    };
+
+    /**
+     * The URL that the user should be redirected to if the purchase is canceled.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be redirected to if the purchase is unsuccessful.
+     */
+    successUrl: string;
+}
+
+export type CreatePurchaseItemLinkResult = CreatePurchaseItemLinkSuccess | CreatePurchaseItemLinkFailure;
+
+export interface CreatePurchaseItemLinkSuccess {
+    success: true;
+
+    /**
+     * The URL that the user should be redirected to.
+     */
+    url: string;
+}
+
+export interface CreatePurchaseItemLinkFailure {
+    success: false;
+    errorCode: ServerError 
+        | 'invalid_request'
+        | 'not_supported'
+        | 'item_not_found'
+        | 'price_does_not_match'
+        | 'subscription_limit_reached'
+        | 'account_not_ready'
+        | 'currency_not_supported';
     errorMessage: string;
 }

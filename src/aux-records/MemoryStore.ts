@@ -13,8 +13,10 @@ import {
     AuthUserAuthenticator,
     AuthUserAuthenticatorWithUser,
     AuthWebAuthnLoginRequest,
+    AuthCheckoutSession,
     ListSessionsDataResult,
     SaveNewUserResult,
+    UpdateCheckoutSessionRequest,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
 } from './AuthStore';
@@ -168,6 +170,7 @@ export class MemoryStore
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
     private _invoices: AuthInvoice[] = [];
+    private _checkoutSessions: AuthCheckoutSession[] = [];
 
     private _records: Record[] = [];
     private _recordKeys: RecordKey[] = [];
@@ -310,6 +313,10 @@ export class MemoryStore
 
     get comIdRequests() {
         return this._comIdRequests;
+    }
+
+    get checkoutSessions() {
+        return this._checkoutSessions;
     }
 
     constructor(config: MemoryConfiguration) {
@@ -1649,6 +1656,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1699,6 +1707,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1709,6 +1718,60 @@ export class MemoryStore
                 periodEndMs: request.currentPeriodEndMs,
                 periodStartMs: request.currentPeriodStartMs,
             });
+        }
+    }
+
+    async updateCheckoutSessionInfo(request: UpdateCheckoutSessionRequest): Promise<void> {
+        let sessionIndex = this._checkoutSessions.findIndex((s) => s.id === request.id);
+
+        let invoiceId: string = null;
+        if (request.invoice) {
+            let invoice = this._invoices.find(i => i.stripeInvoiceId === request.invoice.stripeInvoiceId);
+
+            if (!invoice) {
+                invoice = {
+                    id: uuid(),
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                    subscriptionId: null,
+                    periodId: null,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            } else {
+                invoice = {
+                    ...invoice,
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            }
+        }
+
+        if (sessionIndex < 0) {
+            const session = {
+                id: request.id,
+                paid: request.paid,
+                paymentStatus: request.paymentStatus,
+                status: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                userId: request.userId,
+                invoiceId
+            };
+            this._checkoutSessions.push(session);
+        } else {
+            let session = this._checkoutSessions[sessionIndex];
+            session = {
+                ...session,
+                paid: request.paid,
+                paymentStatus: request.paymentStatus,
+                status: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                invoiceId,
+                userId: request.userId,
+            };
+            this._checkoutSessions[sessionIndex] = session;
         }
     }
 

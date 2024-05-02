@@ -4,7 +4,7 @@ import { AuthStore, AuthUser } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import { StripeAccount, StripeAccountLink, StripeInterface, StripeProduct } from './StripeInterface';
+import { StripeAccount, StripeAccountLink, StripeCheckoutResponse, StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
@@ -14,6 +14,8 @@ import { Studio, StudioStripeAccountStatus } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
 import { createTestSubConfiguration, createTestUser } from './TestUtils';
 import { merge } from 'lodash';
+import { MemoryPurchasableItemRecordsStore } from './casualware/MemoryPurchasableItemRecordsStore';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
@@ -23,12 +25,13 @@ describe('SubscriptionController', () => {
     let auth: AuthController;
     let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
+    let purchasableItemsStore: MemoryPurchasableItemRecordsStore;
 
     let stripeMock: {
         publishableKey: string;
         getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
         listPricesForProduct: jest.Mock<any>;
-        createCheckoutSession: jest.Mock<any>;
+        createCheckoutSession: jest.Mock<Promise<StripeCheckoutResponse>>;
         createPortalSession: jest.Mock<any>;
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
@@ -85,6 +88,7 @@ describe('SubscriptionController', () => {
         });
         authMessenger = new MemoryAuthMessenger();
         auth = new AuthController(store, authMessenger, store);
+        purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -141,7 +145,8 @@ describe('SubscriptionController', () => {
             auth,
             store,
             store,
-            store
+            store,
+            purchasableItemsStore
         );
 
         const request = await auth.requestLogin({
@@ -4579,6 +4584,165 @@ describe('SubscriptionController', () => {
             });
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('createPurchaseItemLink()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10
+                                            }
+                                        }
+                                    },
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete'
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                studioId: 'studioId',
+                ownerId: null,
+                secretHashes: [],
+                secretSalt: 'secret',
+            });
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should create a new checkout session', () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).resolves.toEqual({
+                success: true,
+                url: 'checkout_url',
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: 'success-url',
+                return_url: 'return-url',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                payment_intent_data: {
+                    application_fee_amount: 10,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                }
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    status: 'open',
+                    paid: false,
+                    returnUrl: 'return-url',
+                    successUrl: 'success-url',
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                }
+            ]);
         });
     });
 

@@ -1,3 +1,4 @@
+import { StudioStripeAccountStatus } from '../RecordsStore';
 import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '../CrudRecordsStore';
 
 /**
@@ -48,11 +49,6 @@ export interface PurchasableItem extends CrudRecord {
     taxCode?: string | null;
 
     /**
-     * The URL that the user should be redirected to after they purchase the item.
-     */
-    redirectUrl: string;
-
-    /**
      * The name of the role that the item grants.
      */
     roleName: string;
@@ -72,4 +68,16 @@ export interface PurchasableItemMetrics extends CrudSubscriptionMetrics {
      * The total number of purchasable items that have been recorded.
      */
     totalPurchasableItems: number;
+
+    /**
+     * The ID of the stripe account that the record is associated with.
+     * Null if the stripe account is not associated with the record.
+     */
+    stripeAccountId: string | null;
+
+    /**
+     * The status of the stripe account that the record is associated with.
+     * Null if the stripe account is not associated with the record.
+     */
+    stripeAccountStatus: StudioStripeAccountStatus | null;
 }

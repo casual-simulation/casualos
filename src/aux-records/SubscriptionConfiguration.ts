@@ -255,6 +255,26 @@ export const subscriptionFeaturesSchema = z.object({
                         .describe('The minimum cost that items can have in this currency. Note that this doesn\'t prevent free items, it only sets the minimum cost for a non-free item.')
                         .positive()
                         .int(),
+                    fee: z.discriminatedUnion('type', [
+                        z.object({
+                            type: z.literal('percent'),
+                            percent: z.number()
+                                .describe('The integer percentage of the cost that should be charged as a fee. Must be between 0 and 100')
+                                .int()
+                                .min(0)
+                                .max(100),
+                        }),
+                        z.object({
+                            type: z.literal('fixed'),
+                            amount: z.number()
+                                .describe('The fixed amount in cents that should be charged as a fee. Must be a positive integer.')
+                                .int()
+                                .positive(),
+                        })
+                    ])
+                    .describe('The fee that should be charged for purchases in this currency. If omitted, then there is no fee.')
+                    .optional()
+                    .nullable()
                 }))
                 .describe('The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed')
                 .optional()
@@ -913,7 +933,7 @@ export interface PurchasableItemFeaturesConfiguration {
      */
     currencyLimits?: {
         [currency: string]: CurrencyLimit;
-    }
+    };
 }
 
 export interface CurrencyLimit {
@@ -926,6 +946,24 @@ export interface CurrencyLimit {
      * The minimum allowed cost for the currency. (inclusive)
      */
     minCost: number;
+
+    /**
+     * The fee for using the currency.
+     * If not specified, then there is no fee.
+     */
+    fee?: CurrencyFee | null;
+}
+
+export type CurrencyFee = PercentageFee | FixedFee;
+
+export interface PercentageFee {
+    type: 'percent';
+    percent: number;
+}
+
+export interface FixedFee {
+    type: 'fixed';
+    amount: number;
 }
 
 export function allowAllFeatures(): FeaturesConfiguration {

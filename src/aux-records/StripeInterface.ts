@@ -134,7 +134,54 @@ export interface StripeCheckoutRequest {
         /**
          * The ID of the price for the line item.
          */
-        price: string;
+        price?: string;
+
+        /**
+         * The data for the price.
+         */
+        price_data?: {
+            /**
+             * The currency of the price.
+             */
+            currency: string;
+
+            /**
+             * The cost in cents of the price.
+             */
+            unit_amount: number;
+
+            /**
+             * The ID of the product.
+             */
+            product?: string;
+
+            product_data?: {
+                /**
+                 * The name of the product.
+                 */
+                name: string;
+
+                /**
+                 * The description for the product.
+                 */
+                description: string;
+
+                /**
+                 * The list of image URLs for the product.
+                 */
+                images: string[];
+
+                /**
+                 * The metadata for the product.
+                 */
+                metadata: any;
+
+                /**
+                 * The tax code for the product.
+                 */
+                tax_code?: string | null;
+            }
+        };
 
         /**
          * The quantity to purchase.
@@ -145,7 +192,7 @@ export interface StripeCheckoutRequest {
     /**
      * The mode that the checkout should use.
      */
-    mode: 'subscription';
+    mode: 'subscription' | 'payment';
 
     /**
      * The ID of the customer that the checkout request should be used.
@@ -176,6 +223,26 @@ export interface StripeCheckoutRequest {
      * The metadata to use.
      */
     metadata?: any;
+
+    /**
+     * Data about the payment intent.
+     */
+    payment_intent_data?: {
+        /**
+         * The fee that should be charged for the application.
+         */
+        application_fee_amount?: number;
+    }
+
+    /**
+     * Stripe connect information.
+     */
+    connect?: {
+        /**
+         * The ID of the stripe account that the checkout session should be connected to.
+         */
+        stripeAccount: string;
+    }
 }
 
 export interface StripeCheckoutResponse {
@@ -187,8 +254,30 @@ export interface StripeCheckoutResponse {
     /**
      * The ID of the checkout session.
      */
-    checkoutSessionId: string;
+    id: string;
+
+    /**
+     * The invoice that was created for the checkout session.
+     */
+    invoice?: StripeInvoice | null;
+
+    /**
+     * The payment status of the checkout session.
+     */
+    payment_status: StripePaymentStatus;
+
+    /**
+     * The status of the checkout session.
+     */
+    status: StripeCheckoutStatus;
 }
+
+/**
+ * The payment status of a stripe payment.
+ */
+export type StripePaymentStatus = 'no_payment_required' | 'paid' | 'unpaid';
+
+export type StripeCheckoutStatus = 'open' | 'complete' | 'expired';
 
 export interface StripePortalRequest {
     /**
