@@ -3,13 +3,7 @@ import {
     AuthController,
     ValidateSessionKeyResult,
 } from '@casual-simulation/aux-records/AuthController';
-
-export const allowedOrigins = new Set([
-    'http://localhost:3002',
-    'https://casualos.me',
-    'https://ab1.link',
-    ...getAllowedOrigins(),
-]);
+import { allowedOrigins } from '../../../shared/EnvUtils';
 
 export function findHeader(request: APIGatewayProxyEvent, header: string) {
     let headerKey = Object.keys(request.headers).find(
@@ -109,30 +103,4 @@ export function parseAuthorization(authorization: string) {
         return authToken;
     }
     return null;
-}
-
-/**
- * Gets the list of API origins that are allowed to make requests.
- */
-export function getAllowedAPIOrigins(): string[] {
-    const origins = process.env.ALLOWED_API_ORIGINS;
-    if (origins) {
-        const values = origins.split(' ');
-        return values.filter((v) => !!v);
-    }
-
-    return [];
-}
-
-/**
- * Gets the list of API origins that are allowed to make requests.
- */
-function getAllowedOrigins(): string[] {
-    const origins = process.env.ALLOWED_ORIGINS;
-    if (origins) {
-        const values = origins.split(' ');
-        return values.filter((v) => !!v);
-    }
-
-    return [];
 }

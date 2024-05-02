@@ -1,23 +1,24 @@
-import { MESSAGES_BUCKET_NAME } from './WebsocketUtils';
-import { BuilderOptions, ServerBuilder } from '../../../shared/ServerBuilder';
-import { getAllowedAPIOrigins, allowedOrigins } from './utils';
+import { BuilderOptions, ServerBuilder } from './ServerBuilder';
+import { getAllowedAPIOrigins, allowedOrigins } from './EnvUtils';
 import { merge } from 'lodash';
-import { loadConfig } from '../../../shared/ConfigUtils';
+import { loadConfig } from './ConfigUtils';
 
 declare var S3_ENDPOINT: string;
 declare var DEVELOPMENT: boolean;
 
 // Get the DynamoDB table name from environment variables
+export const MESSAGES_BUCKET_NAME = process.env.MESSAGES_BUCKET;
 export const FILES_BUCKET = process.env.FILES_BUCKET;
 export const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 export const REGION = process.env.AWS_REGION;
 export const WEBSOCKET_URL = process.env.WEBSOCKET_URL;
 
 /**
- * Loads the server and configures it.
+ * Creates a new server builder that uses environment variables that are specific to the serverless environment.
+ * See GettingStarted-aws.md for more information.
+ * @returns
  */
-export function constructServerBuilder() {
-    const staticConfig = loadConfig();
+export function constructServerlessAwsServerBuilder() {
     const dynamicConfig: BuilderOptions = {
         s3: {
             region: REGION,
@@ -41,6 +42,14 @@ export function constructServerBuilder() {
             endpoint: DEVELOPMENT ? 'http://localhost:4001' : WEBSOCKET_URL,
         },
     };
+    return constructServerBuilder(dynamicConfig);
+}
+
+/**
+ * Loads the server and configures it.
+ */
+export function constructServerBuilder(dynamicConfig: BuilderOptions = {}) {
+    const staticConfig = loadConfig();
 
     const config = merge({}, staticConfig, dynamicConfig);
 
@@ -71,6 +80,10 @@ export function constructServerBuilder() {
 
     if (config.prisma && config.s3) {
         builder.usePrismaWithS3();
+    } else if (config.prisma && config.mongodb) {
+        builder.usePrismaWithMongoDBFileStore();
+    } else if (config.mongodb) {
+        builder.useMongoDB();
     }
 
     if (config.livekit) {
@@ -99,7 +112,11 @@ export function constructServerBuilder() {
         config.rateLimit.windowMs &&
         config.rateLimit.maxHits
     ) {
-        builder.useRedisRateLimit();
+        if (config.redis) {
+            builder.useRedisRateLimit();
+        } else if (config.mongodb) {
+            builder.useMongoDBRateLimit();
+        }
     }
 
     if (config.websocketRateLimit && config.redis) {
@@ -112,6 +129,8 @@ export function constructServerBuilder() {
 
     if (config.ws && config.apiGateway && config.s3) {
         builder.useApiGatewayWebsocketMessenger();
+    } else if (config.ws) {
+        builder.useWSWebsocketMessenger();
     }
 
     if (
