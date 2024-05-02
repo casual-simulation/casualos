@@ -32,7 +32,7 @@ import { ListedStudioAssignment, RecordsStore, Studio, StudioStripeAccountStatus
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
 import { ADMIN_ROLE_NAME } from '@casual-simulation/aux-common';
-import { PurchasableItemRecordsStore } from 'casualware';
+import { PurchasableItemRecordsStore } from './casualware/PurchasableItemRecordsStore';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -1017,6 +1017,74 @@ export class SubscriptionController {
 
             // TODO: Check item policy permissions
             
+            const metrics = await this._purchasableItems.getSubscriptionMetricsByRecordName(request.item.recordName);
+            const config = await this._getConfig();
+            const features = getPurchasableItemsFeatures(config, metrics.subscriptionStatus, metrics.subscriptionId, metrics.currentPeriodStartMs, metrics.currentPeriodEndMs);
+
+            if (!features.allowed) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`);
+                return {
+                    success: false,
+                    errorCode: 'store_disabled',
+                    errorMessage: 'The store you are trying to purchase from is disabled.'
+                };
+            }
+
+            if (!metrics.stripeAccountId || !metrics.stripeAccountStatus) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store has no stripe account.`);
+                return {
+                    success: false,
+                    errorCode: 'store_disabled',
+                    errorMessage: 'The store you are trying to purchase from is disabled.'
+                };
+            }
+
+            if (metrics.stripeAccountStatus !== 'active') {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store stripe account is not active.`);
+                return {
+                    success: false,
+                    errorCode: 'store_disabled',
+                    errorMessage: 'The store you are trying to purchase from is disabled.'
+                };
+            }
+
+            const limits = features.currencyLimits[item.currency];
+
+            if (!limits) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.item.currency}] Currency not supported.`)
+                return {
+                    success: false,
+                    errorCode: 'currency_not_supported',
+                    errorMessage: 'The currency is not supported.'
+                };
+            }
+
+            if (item.cost !== 0 && (item.cost < limits.minCost || item.cost > limits.maxCost)) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.item.currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} cost: ${item.cost}] Cost not valid.`)
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: 'The item you are trying to purchase has a price that is not allowed.'
+                };
+            }
+
+            let applicationFee = 0;
+            if (item.cost !== 0 && limits.fee) {
+                if (limits.fee.type === 'percent') {
+                    // calculate percent when fee is between 1 - 100
+                    applicationFee = Math.ceil(item.cost * (limits.fee.percent / 100));
+                } else {
+                    if (limits.fee.amount > item.cost) {
+                        console.warn(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.item.currency} fee: ${limits.fee.amount} cost: ${item.cost}] Fee greater than cost.`);
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage: 'The application fee is greater than the cost of the item.'
+                        };
+                    }
+                    applicationFee = limits.fee.amount;
+                }
+            }
 
             let customerId: string = null;
             if (request.userId) {
@@ -1043,73 +1111,13 @@ export class SubscriptionController {
 
                     customerId = user.stripeCustomerId = customer.id;
                     await this._authStore.saveUser(user);
-                }
-            }
-
-            const metrics = await this._purchasableItems.getSubscriptionMetricsByRecordName(request.item.recordName);
-            const config = await this._getConfig();
-            const features = getPurchasableItemsFeatures(config, metrics.subscriptionStatus, metrics.subscriptionId, metrics.currentPeriodStartMs, metrics.currentPeriodEndMs);
-
-            if (!features.allowed) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage: 'Store features are not allowed for the subscription.'
-                };
-            }
-
-            if (!metrics.stripeAccountId || !metrics.stripeAccountStatus) {
-                return {
-                    success: false,
-                    errorCode: 'account_not_ready',
-                    errorMessage: 'The store account has not been set up yet.'
-                };
-            }
-
-            if (metrics.stripeAccountStatus !== 'active') {
-                return {
-                    success: false,
-                    errorCode: 'account_not_ready',
-                    errorMessage: 'The store account has not been set up yet.'
-                };
-            }
-
-            const limits = features.currencyLimits[item.currency];
-
-            if (!limits) {
-                return {
-                    success: false,
-                    errorCode: 'currency_not_supported',
-                    errorMessage: 'The currency is not supported.'
-                };
-            }
-
-            if (item.cost < limits.minCost || item.cost > limits.maxCost) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage: 'The cost of the item is not valid.'
-                };
-            }
-
-            let applicationFee = 0;
-            if (limits.fee) {
-                if (limits.fee.type === 'percent') {
-                    // calculate percent when fee is between 1 - 100
-                    applicationFee = Math.ceil(item.cost * (limits.fee.percent / 100));
                 } else {
-                    if (limits.fee.amount > item.cost) {
-                        return {
-                            success: false,
-                            errorCode: 'invalid_request',
-                            errorMessage: 'The application fee is greater than the cost of the item.'
-                        };
-                    }
-                    applicationFee = limits.fee.amount;
+                    customerId = user.stripeCustomerId;
                 }
             }
 
             const sessionId = uuid();
+            console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.item.currency} cost: ${item.cost} applicationFee: ${applicationFee}] Creating checkout session.`);
             const session = await this._stripe.createCheckoutSession({
                 customer: customerId,
                 mode: 'payment',
@@ -1126,7 +1134,7 @@ export class SubscriptionController {
                                     recordName: request.item.recordName,
                                     address: item.address,
                                 },
-                                tax_code: item.taxCode,
+                                tax_code: item.taxCode ?? undefined,
                             },
                         }
                     }
@@ -2047,8 +2055,8 @@ export interface CreatePurchaseItemLinkFailure {
         | 'not_supported'
         | 'item_not_found'
         | 'price_does_not_match'
-        | 'subscription_limit_reached'
-        | 'account_not_ready'
-        | 'currency_not_supported';
+        | 'store_disabled'
+        | 'currency_not_supported'
+        | 'subscription_limit_reached';
     errorMessage: string;
 }

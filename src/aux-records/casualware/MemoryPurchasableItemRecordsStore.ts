@@ -5,11 +5,14 @@ export class MemoryPurchasableItemRecordsStore extends MemoryCrudRecordsStore<Pu
 
     async getSubscriptionMetricsByRecordName(recordName: string): Promise<PurchasableItemMetrics> {
         const info = await this.store.getSubscriptionInfoForRecord(recordName);
+        const studio = await this.store.getStudioById(info.studioId);
         const records = await this.listItems(recordName, null);
 
         return {
             ...info,
-            totalPurchasableItems: records.totalCount
+            totalPurchasableItems: records.totalCount,
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus: studio.stripeAccountStatus,
         };
     }
 

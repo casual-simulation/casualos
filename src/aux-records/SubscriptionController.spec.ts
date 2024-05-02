@@ -4,7 +4,7 @@ import { AuthStore, AuthUser } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import { StripeAccount, StripeAccountLink, StripeCheckoutResponse, StripeInterface, StripeProduct } from './StripeInterface';
+import { StripeAccount, StripeAccountLink, StripeCheckoutResponse, StripeCreateCustomerResponse, StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
@@ -19,6 +19,7 @@ import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
+console.warn = jest.fn();
 
 describe('SubscriptionController', () => {
     let controller: SubscriptionController;
@@ -33,7 +34,7 @@ describe('SubscriptionController', () => {
         listPricesForProduct: jest.Mock<any>;
         createCheckoutSession: jest.Mock<Promise<StripeCheckoutResponse>>;
         createPortalSession: jest.Mock<any>;
-        createCustomer: jest.Mock<any>;
+        createCustomer: jest.Mock<Promise<StripeCreateCustomerResponse>>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
@@ -1706,6 +1707,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -1841,6 +1845,9 @@ describe('SubscriptionController', () => {
                     );
                     stripeMock.createCheckoutSession.mockResolvedValueOnce({
                         url: 'checkout_url',
+                        id: 'session_id',
+                        status: 'open',
+                        payment_status: 'unpaid',
                     });
 
                     await store.saveUser({
@@ -2085,6 +2092,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2169,6 +2179,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2253,6 +2266,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2337,6 +2353,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2392,6 +2411,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -3014,6 +3036,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 const result = await controller.createManageSubscriptionLink({
@@ -3150,6 +3175,9 @@ describe('SubscriptionController', () => {
                     );
                     stripeMock.createCheckoutSession.mockResolvedValueOnce({
                         url: 'checkout_url',
+                        id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                     });
                 });
 
@@ -3334,6 +3362,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3422,6 +3453,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3510,6 +3544,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3598,6 +3635,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3657,6 +3697,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 store.subscriptionConfiguration = {
@@ -4671,7 +4714,7 @@ describe('SubscriptionController', () => {
             });
         });
 
-        it('should create a new checkout session', () => {
+        it('should create a new checkout session', async () => {
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
                 url: 'checkout_url',
                 id: 'checkout_id',
@@ -4679,7 +4722,13 @@ describe('SubscriptionController', () => {
                 status: 'open',
             });
 
-            const result = controller.createPurchaseItemLink({
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const user = await store.findUser(userId);
+
+            const result = await controller.createPurchaseItemLink({
                 userId: userId,
                 item: {
                     recordName: 'studioId',
@@ -4691,14 +4740,13 @@ describe('SubscriptionController', () => {
                 successUrl: 'success-url',
             });
 
-            expect(result).resolves.toEqual({
+            expect(result).toEqual({
                 success: true,
                 url: 'checkout_url',
             });
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'payment',
-                payment_method_types: ['card'],
                 line_items: [
                     {
                         price_data: {
@@ -4714,15 +4762,110 @@ describe('SubscriptionController', () => {
                                 },
                             },
                         },
-                        quantity: 1,
                     },
                 ],
                 success_url: 'success-url',
-                return_url: 'return-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
                 },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 10,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                }
+            });
+
+            expect(stripeMock.createCustomer).toHaveBeenCalledWith({
+                name: user.name,
+                email: user.email,
+                phone: user.phoneNumber,
+                metadata: {
+                    role: 'user',
+                    userId: userId,
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    status: 'open',
+                    paymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                }
+            ]);
+
+            await expect(store.findUser(userId)).resolves.toEqual({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+        });
+
+        it('should use the existing customer for the user', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                    },
+                ],
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
                 payment_intent_data: {
                     application_fee_amount: 10,
                 },
@@ -4735,14 +4878,795 @@ describe('SubscriptionController', () => {
                 {
                     id: expect.any(String),
                     status: 'open',
+                    paymentStatus: 'unpaid',
                     paid: false,
-                    returnUrl: 'return-url',
-                    successUrl: 'success-url',
                     stripeCheckoutSessionId: 'checkout_id',
                     invoiceId: null,
                     userId: userId,
                 }
             ]);
+        });
+
+        it('should be able to charge fixed application fees', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10
+                                            }
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                    },
+                ],
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 10,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                }
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    status: 'open',
+                    paymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                }
+            ]);
+        });
+
+        it('should be able to charge percentage application fees', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'percent',
+                                                percent: 15
+                                            }
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                    },
+                ],
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 15,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                }
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    status: 'open',
+                    paymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                }
+            ]);
+        });
+
+        it('should round partial cents from the application fee up', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'percent',
+                                                percent: 15
+                                            }
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                cost: 49,
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 49,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 49,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                    },
+                ],
+                success_url: 'success-url',
+                cancel_url: 'return-url',
+                customer: 'customer_id',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    // 49 * 0.15 = 7.35 rounds up 8
+                    application_fee_amount: 8,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                }
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    status: 'open',
+                    paymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                }
+            ]);
+        });
+
+        it('should return price_does_not_match if the expected cost doesnt match the item cost', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 999,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'price_does_not_match',
+                errorMessage: 'The expected price does not match the actual price of the item.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return price_does_not_match if the currency doesnt match the item currency', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'wrong',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'price_does_not_match',
+                errorMessage: 'The expected price does not match the actual price of the item.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return store_disabled if store subscription doesnt allow store features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: false,
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'store_disabled',
+                errorMessage: 'The store you are trying to purchase from is disabled.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return store_disabled if the store doesnt have a stripe account', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const studio = await store.getStudioById('studioId');
+            await store.updateStudio({
+                ...studio,
+                stripeAccountId: null,
+                stripeAccountStatus: null,
+                stripeAccountRequirementsStatus: null,
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'store_disabled',
+                errorMessage: 'The store you are trying to purchase from is disabled.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return store_disabled if the store doesnt have an active status', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const studio = await store.getStudioById('studioId');
+            await store.updateStudio({
+                ...studio,
+                stripeAccountId: 'account_id',
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'store_disabled',
+                errorMessage: 'The store you are trying to purchase from is disabled.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return currency_not_supported if the subscription doesnt have limits for it', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                currency: 'eur'
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'eur',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'currency_not_supported',
+                errorMessage: 'The currency is not supported.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return subscription_limit_reached if the item cost is greater than the max cost for the subscription', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                cost: 10001,
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 10001,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage: 'The item you are trying to purchase has a price that is not allowed.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return server_error if the application fee is greater than the item cost', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 100
+                                            }
+                                        }
+                                    },
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                cost: 10,
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+            
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id'
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 10,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'The application fee is greater than the cost of the item.'
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
         });
     });
 
