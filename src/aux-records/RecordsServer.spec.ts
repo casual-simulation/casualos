@@ -529,6 +529,12 @@ describe('RecordsServer', () => {
             store,
             store
         );
+        purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
+        purchasableItemsController = new PurchasableItemRecordsController({
+            config: store,
+            policies: policyController,
+            store: purchasableItemsStore,
+        });
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -570,7 +576,8 @@ describe('RecordsServer', () => {
             authController,
             store,
             store,
-            store
+            store,
+            purchasableItemsStore
         );
 
         chatInterface = {
@@ -633,12 +640,6 @@ describe('RecordsServer', () => {
             policies: store,
         });
         moderationController = new ModerationController(store, store, store);
-        purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
-        purchasableItemsController = new PurchasableItemRecordsController({
-            config: store,
-            policies: policyController,
-            store: purchasableItemsStore,
-        });
 
         server = new RecordsServer(
             allowedAccountOrigins,
@@ -11927,7 +11928,6 @@ describe('RecordsServer', () => {
                 address: 'item1',
                 name: 'Item 1',
                 markers: [PUBLIC_READ_MARKER],
-                redirectUrl: 'https://example.com',
                 roleName: 'role1',
                 roleGrantTimeMs: 1000,
                 description: 'description1',
@@ -11952,7 +11952,6 @@ describe('RecordsServer', () => {
                     item: {
                         address: 'item1',
                         name: 'Item 1',
-                        redirectUrl: 'https://example.com',
                         roleName: 'role1',
                         roleGrantTimeMs: 1000,
                         description: 'description1',
@@ -11971,7 +11970,6 @@ describe('RecordsServer', () => {
                 address: 'item1',
                 name: 'Item 1',
                 markers: ['secret'],
-                redirectUrl: 'https://example.com',
                 roleName: 'role1',
                 roleGrantTimeMs: 1000,
                 description: 'description1',
@@ -12004,7 +12002,6 @@ describe('RecordsServer', () => {
                 address: 'item1',
                 name: 'Item 1',
                 markers: ['secret'],
-                redirectUrl: 'https://example.com',
                 roleName: 'role1',
                 roleGrantTimeMs: 1000,
                 description: 'description1',
@@ -12050,7 +12047,6 @@ describe('RecordsServer', () => {
                 address: 'item1',
                 name: 'Item 1',
                 markers: ['secret'],
-                redirectUrl: 'https://example.com',
                 roleName: 'role1',
                 roleGrantTimeMs: 1000,
                 description: 'description1',
@@ -12180,7 +12176,6 @@ describe('RecordsServer', () => {
                 markers: [PUBLIC_READ_MARKER],
                 roleName: 'role3',
                 roleGrantTimeMs: 1000,
-                redirectUrl: 'https://example.com',
                 description: 'description3',
                 currency: 'usd',
                 cost: 100,
@@ -12192,7 +12187,6 @@ describe('RecordsServer', () => {
                 markers: [PUBLIC_READ_MARKER],
                 roleName: 'role1',
                 roleGrantTimeMs: 1000,
-                redirectUrl: 'https://example.com',
                 description: 'description1',
                 currency: 'usd',
                 cost: 100,
@@ -12204,7 +12198,6 @@ describe('RecordsServer', () => {
                 markers: [PUBLIC_READ_MARKER],
                 roleName: 'role2',
                 roleGrantTimeMs: 1000,
-                redirectUrl: 'https://example.com',
                 description: 'description2',
                 currency: 'usd',
                 cost: 100,
@@ -12233,7 +12226,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description3',
                                 currency: 'usd',
                                 cost: 100,
@@ -12245,7 +12237,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role1',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description1',
                                 currency: 'usd',
                                 cost: 100,
@@ -12257,7 +12248,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description2',
                                 currency: 'usd',
                                 cost: 100,
@@ -12290,7 +12280,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description3',
                                 currency: 'usd',
                                 cost: 100,
@@ -12302,7 +12291,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description2',
                                 currency: 'usd',
                                 cost: 100,
@@ -12335,7 +12323,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description3',
                                 currency: 'usd',
                                 cost: 100,
@@ -12347,7 +12334,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description2',
                                 currency: 'usd',
                                 cost: 100,
@@ -12359,7 +12345,6 @@ describe('RecordsServer', () => {
                                 markers: [PUBLIC_READ_MARKER],
                                 roleName: 'role1',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description1',
                                 currency: 'usd',
                                 cost: 100,
@@ -12384,7 +12369,6 @@ describe('RecordsServer', () => {
                     markers: ['secret'],
                     roleName: 'role3',
                     roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
                     description: 'description3',
                     currency: 'usd',
                     cost: 100,
@@ -12396,7 +12380,6 @@ describe('RecordsServer', () => {
                     markers: ['secret'],
                     roleName: 'role1',
                     roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
                     description: 'description1',
                     currency: 'usd',
                     cost: 100,
@@ -12408,7 +12391,6 @@ describe('RecordsServer', () => {
                     markers: ['secret'],
                     roleName: 'role2',
                     roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
                     description: 'description2',
                     currency: 'usd',
                     cost: 100,
@@ -12434,7 +12416,6 @@ describe('RecordsServer', () => {
                                 markers: ['secret'],
                                 roleName: 'role3',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description3',
                                 currency: 'usd',
                                 cost: 100,
@@ -12446,7 +12427,6 @@ describe('RecordsServer', () => {
                                 markers: ['secret'],
                                 roleName: 'role1',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description1',
                                 currency: 'usd',
                                 cost: 100,
@@ -12458,7 +12438,6 @@ describe('RecordsServer', () => {
                                 markers: ['secret'],
                                 roleName: 'role2',
                                 roleGrantTimeMs: 1000,
-                                redirectUrl: 'https://example.com',
                                 description: 'description2',
                                 currency: 'usd',
                                 cost: 100,
@@ -12480,7 +12459,6 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role3',
                         roleGrantTimeMs: 1000,
-                        redirectUrl: 'https://example.com',
                         description: 'description3',
                         currency: 'usd',
                         cost: 100,
@@ -12497,7 +12475,6 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role1',
                         roleGrantTimeMs: 1000,
-                        redirectUrl: 'https://example.com',
                         description: 'description1',
                         currency: 'usd',
                         cost: 100,
@@ -12514,7 +12491,6 @@ describe('RecordsServer', () => {
                         markers: ['secret'],
                         roleName: 'role2',
                         roleGrantTimeMs: 1000,
-                        redirectUrl: 'https://example.com',
                         description: 'description2',
                         currency: 'usd',
                         cost: 100,
@@ -12588,7 +12564,6 @@ describe('RecordsServer', () => {
                 markers: ['secret'],
                 roleName: 'role0',
                 roleGrantTimeMs: 1000,
-                redirectUrl: 'https://example.com',
                 description: 'description0',
                 currency: 'usd',
                 cost: 100,
@@ -12618,7 +12593,6 @@ describe('RecordsServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                             roleName: 'role3',
                             roleGrantTimeMs: 1000,
-                            redirectUrl: 'https://example.com',
                             description: 'description3',
                             currency: 'usd',
                             cost: 100,
@@ -12630,7 +12604,6 @@ describe('RecordsServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                             roleName: 'role1',
                             roleGrantTimeMs: 1000,
-                            redirectUrl: 'https://example.com',
                             description: 'description1',
                             currency: 'usd',
                             cost: 100,
@@ -12642,7 +12615,6 @@ describe('RecordsServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                             roleName: 'role2',
                             roleGrantTimeMs: 1000,
-                            redirectUrl: 'https://example.com',
                             description: 'description2',
                             currency: 'usd',
                             cost: 100,
@@ -12654,7 +12626,6 @@ describe('RecordsServer', () => {
                             markers: ['secret'],
                             roleName: 'role0',
                             roleGrantTimeMs: 1000,
-                            redirectUrl: 'https://example.com',
                             description: 'description0',
                             currency: 'usd',
                             cost: 100,
@@ -13078,7 +13049,7 @@ describe('RecordsServer', () => {
                 subscriptionStatus: 'active',
             });
 
-            await purchasableItemsController.recordItem({
+            const result = await purchasableItemsController.recordItem({
                 recordKeyOrRecordName: recordName,
                 item: {
                     address: 'address3',
@@ -13086,7 +13057,6 @@ describe('RecordsServer', () => {
                     markers: [PUBLIC_READ_MARKER],
                     roleName: 'role3',
                     roleGrantTimeMs: 1000,
-                    redirectUrl: 'https://example.com',
                     description: 'description3',
                     currency: 'usd',
                     cost: 100,
@@ -13095,6 +13065,10 @@ describe('RecordsServer', () => {
                 userId: ownerId,
                 instances: [],
             });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
 
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),

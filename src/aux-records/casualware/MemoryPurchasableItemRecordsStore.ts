@@ -11,8 +11,8 @@ export class MemoryPurchasableItemRecordsStore extends MemoryCrudRecordsStore<Pu
         return {
             ...info,
             totalPurchasableItems: records.totalCount,
-            stripeAccountId: studio.stripeAccountId,
-            stripeAccountStatus: studio.stripeAccountStatus,
+            stripeAccountId: studio?.stripeAccountId,
+            stripeAccountStatus: studio?.stripeAccountStatus,
         };
     }
 
