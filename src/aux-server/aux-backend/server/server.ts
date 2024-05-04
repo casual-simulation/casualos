@@ -162,9 +162,6 @@ export class Server {
             ...builder.allowedAccountOrigins,
         ]);
 
-        const filesCollection =
-            mongoDatabase.collection<any>('recordsFilesData');
-
         const dist = this._config.backend.dist;
 
         async function handleRequest(req: Request, res: Response) {
@@ -227,103 +224,116 @@ export class Server {
             })
         );
 
-        app.use(
-            '/api/v2/records/file/*',
-            express.raw({
-                type: () => true,
-                limit: '1GB',
-            })
-        );
+        if (mongoDatabase) {
+            const filesCollection =
+                mongoDatabase.collection<any>('recordsFilesData');
 
-        app.post(
-            '/api/v2/records/file/*',
-            asyncMiddleware(async (req, res) => {
-                // TODO: Secure this endpoint
-                handleRecordsCorsHeaders(req, res);
-                // const recordName = req.headers['record-name'] as string;
-                const recordNameAndFileName = req.path.slice(
-                    '/api/v2/records/file/'.length
-                );
-                const [recordName, fileName] = recordNameAndFileName.split('/');
+            app.use(
+                '/api/v2/records/file/*',
+                express.raw({
+                    type: () => true,
+                    limit: '1GB',
+                })
+            );
 
-                if (!recordName || !fileName) {
-                    res.status(400).send();
-                    return;
-                }
+            app.post(
+                '/api/v2/records/file/*',
+                asyncMiddleware(async (req, res) => {
+                    // TODO: Secure this endpoint
+                    handleRecordsCorsHeaders(req, res);
+                    // const recordName = req.headers['record-name'] as string;
+                    const recordNameAndFileName = req.path.slice(
+                        '/api/v2/records/file/'.length
+                    );
+                    const [recordName, fileName] =
+                        recordNameAndFileName.split('/');
 
-                const mimeType = req.headers['content-type'] as string;
+                    if (!recordName || !fileName) {
+                        res.status(400).send();
+                        return;
+                    }
 
-                await filesCollection.insertOne({
-                    recordName,
-                    fileName,
-                    mimeType,
-                    body: req.body,
-                });
+                    const mimeType = req.headers['content-type'] as string;
 
-                const result = await filesController.markFileAsUploaded(
-                    recordName,
-                    fileName
-                );
+                    await filesCollection.insertOne({
+                        recordName,
+                        fileName,
+                        mimeType,
+                        body: req.body,
+                    });
 
-                return returnResponse(res, result);
-            })
-        );
+                    const result = await filesController.markFileAsUploaded(
+                        recordName,
+                        fileName
+                    );
 
-        app.get(
-            '/api/v2/records/file/:recordName/*',
-            asyncMiddleware(async (req, res) => {
-                // TODO: Secure this endpoint
-                handleRecordsCorsHeaders(req, res);
-                const recordNameAndFileName = req.path.slice(
-                    '/api/v2/records/file/'.length
-                );
-                const [recordName, fileName] = recordNameAndFileName.split('/');
+                    return returnResponse(res, result);
+                })
+            );
 
-                const file = await filesCollection.findOne({
-                    recordName,
-                    fileName,
-                });
+            app.get(
+                '/api/v2/records/file/:recordName/*',
+                asyncMiddleware(async (req, res) => {
+                    // TODO: Secure this endpoint
+                    handleRecordsCorsHeaders(req, res);
+                    const recordNameAndFileName = req.path.slice(
+                        '/api/v2/records/file/'.length
+                    );
+                    const [recordName, fileName] =
+                        recordNameAndFileName.split('/');
 
-                if (!file) {
-                    res.status(404).send();
-                    return;
-                }
+                    const file = await filesCollection.findOne({
+                        recordName,
+                        fileName,
+                    });
 
-                if (file.body instanceof Binary) {
-                    res.status(200)
-                        .contentType(file.mimeType)
-                        .send(file.body.buffer);
-                } else {
-                    res.status(200).contentType(file.mimeType).send(file.body);
-                }
-            })
-        );
+                    if (!file) {
+                        res.status(404).send();
+                        return;
+                    }
 
-        app.get(
-            '/api/v2/records/file/*',
-            asyncMiddleware(async (req, res) => {
-                // TODO: Secure this endpoint
-                handleRecordsCorsHeaders(req, res);
-                const fileName = req.path.slice('/api/v2/records/file/'.length);
+                    if (file.body instanceof Binary) {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body.buffer);
+                    } else {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body);
+                    }
+                })
+            );
 
-                const file = await filesCollection.findOne({
-                    fileName,
-                });
+            app.get(
+                '/api/v2/records/file/*',
+                asyncMiddleware(async (req, res) => {
+                    // TODO: Secure this endpoint
+                    handleRecordsCorsHeaders(req, res);
+                    const fileName = req.path.slice(
+                        '/api/v2/records/file/'.length
+                    );
 
-                if (!file) {
-                    res.status(404).send();
-                    return;
-                }
+                    const file = await filesCollection.findOne({
+                        fileName,
+                    });
 
-                if (file.body instanceof Binary) {
-                    res.status(200)
-                        .contentType(file.mimeType)
-                        .send(file.body.buffer);
-                } else {
-                    res.status(200).contentType(file.mimeType).send(file.body);
-                }
-            })
-        );
+                    if (!file) {
+                        res.status(404).send();
+                        return;
+                    }
+
+                    if (file.body instanceof Binary) {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body.buffer);
+                    } else {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body);
+                    }
+                })
+            );
+        }
 
         app.use(
             '/api/*',
