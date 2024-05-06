@@ -292,6 +292,12 @@ export interface AuthStore {
     getInvoiceById(id: string): Promise<AuthInvoice | null>;
 
     /**
+     * Gets the invoice with the given stripe ID.
+     * @param id The ID of the invoice.
+     */
+    getInvoiceByStripeId(id: string): Promise<AuthInvoice | null>;
+
+    /**
      * Updates the subscription info for a user/studio.
      *
      * This will create/update a subscription object, update the info on the user/studio and subscription, and optionally update the period of the subscription.
@@ -318,6 +324,13 @@ export interface AuthStore {
     updateCheckoutSessionInfo(
         request: UpdateCheckoutSessionRequest
     ): Promise<void>;
+
+    /**
+     * Gets the checkout session with the given ID.
+     * Returns null if the session could not be found.
+     * @param id The ID of the checkout session.
+     */
+    getCheckoutSessionById(id: string): Promise<AuthCheckoutSession | null>;
 
     /**
      * Gets the list of authenticators for the given user.
@@ -1300,6 +1313,7 @@ export interface UpdateCheckoutSessionRequest {
 
     /**
      * The invoice that should be created/updated.
+     * If null, then the invoice will not be created/updated.
      */
     invoice: Omit<AuthInvoice, 'id' | 'subscriptionId' | 'periodId' | 'checkoutSessionId'> | null;
 }

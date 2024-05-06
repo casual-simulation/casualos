@@ -1519,6 +1519,10 @@ export class MemoryStore
         return this._invoices.find((i) => i.id === id);
     }
 
+    async getInvoiceByStripeId(id: string): Promise<AuthInvoice> {
+        return this._invoices.find((i) => i.stripeInvoiceId === id);
+    }
+
     async updateSubscriptionInfo(
         request: UpdateSubscriptionInfoRequest
     ): Promise<void> {
@@ -1768,11 +1772,19 @@ export class MemoryStore
                 paymentStatus: request.paymentStatus,
                 status: request.status,
                 stripeCheckoutSessionId: request.stripeCheckoutSessionId,
-                invoiceId,
                 userId: request.userId,
             };
+
+            if (request.invoice) {
+                session.invoiceId = invoiceId;
+            }
+
             this._checkoutSessions[sessionIndex] = session;
         }
+    }
+
+    async getCheckoutSessionById(id: string): Promise<AuthCheckoutSession> {
+        return this._checkoutSessions.find(s => s.id === id);
     }
 
     private _findUserIndex(id: string): number {

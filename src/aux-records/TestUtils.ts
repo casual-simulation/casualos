@@ -61,7 +61,7 @@ export function createTestControllers(
     config?: SubscriptionConfiguration | null
 ) {
     const subConfig: SubscriptionConfiguration | null =
-        typeof config === 'undefined' ? createTestSubConfiguration() : null;
+        typeof config === 'undefined' ? createTestSubConfiguration() : config;
 
     const store = new MemoryStore({
         subscriptions: subConfig,

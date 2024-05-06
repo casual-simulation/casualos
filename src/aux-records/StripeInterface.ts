@@ -750,7 +750,7 @@ export const STRIPE_INVOICE_SCHEMA = z.object({
     currency: z.string(),
     customer: z.string(),
     description: z.string().nullable(),
-    subscription: z.string(),
+    subscription: z.string().nullable().optional(),
     hosted_invoice_url: z.string(),
     invoice_pdf: z.string(),
     total: z.number(),
@@ -794,6 +794,26 @@ export const STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA = z.object({
         object: z.object({
             id: z.string(),
             object: z.literal('account'),
+        })
+    }),
+});
+
+export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
+    data: z.object({
+        object: z.object({
+            id: z.string(),
+            client_reference_id: z.string(),
+            object: z.literal('checkout.session'),
+            status: z.enum([
+                'complete',
+                'expired',
+                'open'
+            ]),
+            payment_status: z.enum([
+                'no_payment_required',
+                'paid',
+                'unpaid',
+            ]),
         })
     }),
 });
