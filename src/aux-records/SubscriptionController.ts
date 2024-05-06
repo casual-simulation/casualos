@@ -31,9 +31,10 @@ import { SubscriptionConfiguration, getPurchasableItemsFeatures, getSubscription
 import { ListedStudioAssignment, RecordsStore, Studio, StudioStripeAccountStatus, StudioStripeRequirementsStatus } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
-import { ADMIN_ROLE_NAME } from '@casual-simulation/aux-common';
+import { ADMIN_ROLE_NAME, DenialReason } from '@casual-simulation/aux-common';
 import { PurchasableItemRecordsStore } from './casualware/PurchasableItemRecordsStore';
 import { v4 as uuid } from 'uuid';
+import { AuthorizeSubjectFailure, ConstructAuthorizationContextFailure, PolicyController } from './PolicyController';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -45,6 +46,7 @@ export class SubscriptionController {
     private _recordsStore: RecordsStore;
     private _config: ConfigurationStore;
     private _purchasableItems: PurchasableItemRecordsStore;
+    private _policies: PolicyController;
 
     constructor(
         stripe: StripeInterface,
@@ -52,7 +54,8 @@ export class SubscriptionController {
         authStore: AuthStore,
         recordsStore: RecordsStore,
         config: ConfigurationStore,
-        purchasableItems: PurchasableItemRecordsStore
+        purchasableItems: PurchasableItemRecordsStore,
+        policies: PolicyController
     ) {
         this._stripe = stripe;
         this._auth = auth;
@@ -60,6 +63,7 @@ export class SubscriptionController {
         this._recordsStore = recordsStore;
         this._config = config;
         this._purchasableItems = purchasableItems;
+        this._policies = policies;
     }
 
     private async _getConfig() {
@@ -996,6 +1000,14 @@ export class SubscriptionController {
 
     async createPurchaseItemLink(request: CreatePurchaseItemLinkRequest): Promise<CreatePurchaseItemLinkResult> {
         try {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.item.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
 
             const item = await this._purchasableItems.getItemByAddress(request.item.recordName, request.item.address);
 
@@ -1015,9 +1027,21 @@ export class SubscriptionController {
                 };
             }
 
-            // TODO: Check item policy permissions
+            const recordName = context.context.recordName;
+            const authorization = await this._policies.authorizeUserAndInstances(context.context, {
+                userId: request.userId,
+                resourceKind: 'purchasableItem',
+                resourceId: item.address,
+                markers: item.markers,
+                action: 'purchase',
+                instances: request.instances,
+            });
+
+            if (authorization.success === false) {
+                return authorization;
+            }
             
-            const metrics = await this._purchasableItems.getSubscriptionMetricsByRecordName(request.item.recordName);
+            const metrics = await this._purchasableItems.getSubscriptionMetricsByRecordName(recordName);
             const config = await this._getConfig();
             const features = getPurchasableItemsFeatures(config, metrics.subscriptionStatus, metrics.subscriptionId, metrics.currentPeriodStartMs, metrics.currentPeriodEndMs);
 

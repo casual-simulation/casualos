@@ -12,10 +12,12 @@ import {
 } from './SubscriptionConfiguration';
 import { Studio, StudioStripeAccountStatus } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
-import { createTestSubConfiguration, createTestUser } from './TestUtils';
+import { createTestControllers, createTestSubConfiguration, createTestUser } from './TestUtils';
 import { merge } from 'lodash';
 import { MemoryPurchasableItemRecordsStore } from './casualware/MemoryPurchasableItemRecordsStore';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { PRIVATE_MARKER, PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { PolicyController } from './PolicyController';
+import { RecordsController } from './RecordsController';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
@@ -50,46 +52,46 @@ describe('SubscriptionController', () => {
 
     beforeEach(async () => {
         nowMock = Date.now = jest.fn();
-        store = new MemoryStore({
-            subscriptions: {
-                subscriptions: [
-                    {
-                        id: 'sub_1',
-                        product: 'product_99_id',
-                        eligibleProducts: [
-                            'product_99_id',
-                            'product_1_id',
-                            'product_2_id',
-                            'product_3_id',
-                        ],
-                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                    },
-                    {
-                        id: 'sub_2',
-                        product: 'product_1000_id',
-                        eligibleProducts: ['product_1000_id'],
-                        featureList: [
-                            'Feature 1000',
-                            'Feature 2000',
-                            'Feature 3000',
-                        ],
-                        purchasable: false,
-                    },
-                ],
-                webhookSecret: 'webhook_secret',
-                cancelUrl: 'http://cancel_url/',
-                returnUrl: 'http://return_url/',
-                successUrl: 'http://success_url/',
-                tiers: {},
-                defaultFeatures: {
-                    user: allowAllFeatures(),
-                    studio: allowAllFeatures(),
+        const services = createTestControllers({
+            subscriptions: [
+                {
+                    id: 'sub_1',
+                    product: 'product_99_id',
+                    eligibleProducts: [
+                        'product_99_id',
+                        'product_1_id',
+                        'product_2_id',
+                        'product_3_id',
+                    ],
+                    featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
                 },
+                {
+                    id: 'sub_2',
+                    product: 'product_1000_id',
+                    eligibleProducts: ['product_1000_id'],
+                    featureList: [
+                        'Feature 1000',
+                        'Feature 2000',
+                        'Feature 3000',
+                    ],
+                    purchasable: false,
+                },
+            ],
+            webhookSecret: 'webhook_secret',
+            cancelUrl: 'http://cancel_url/',
+            returnUrl: 'http://return_url/',
+            successUrl: 'http://success_url/',
+            tiers: {},
+            defaultFeatures: {
+                user: allowAllFeatures(),
+                studio: allowAllFeatures(),
             },
         });
-        authMessenger = new MemoryAuthMessenger();
-        auth = new AuthController(store, authMessenger, store);
+
+        store = services.store;
+        authMessenger = services.authMessenger;
         purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
+        auth = services.auth;
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -147,7 +149,8 @@ describe('SubscriptionController', () => {
             store,
             store,
             store,
-            purchasableItemsStore
+            purchasableItemsStore,
+            services.policies
         );
 
         const request = await auth.requestLogin({
@@ -4685,13 +4688,6 @@ describe('SubscriptionController', () => {
                 stripeAccountRequirementsStatus: 'complete'
             });
 
-            await store.addStudioAssignment({
-                studioId: 'studioId',
-                userId: userId,
-                isPrimaryContact: true,
-                role: 'admin',
-            });
-
             await store.addRecord({
                 name: 'studioId',
                 studioId: 'studioId',
@@ -4738,6 +4734,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -4832,6 +4829,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -4945,6 +4943,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5058,6 +5057,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5176,6 +5176,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5256,6 +5257,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5292,6 +5294,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5352,6 +5355,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5396,6 +5400,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5440,6 +5445,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5511,6 +5517,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5582,6 +5589,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5657,6 +5665,7 @@ describe('SubscriptionController', () => {
                 },
                 returnUrl: 'return-url',
                 successUrl: 'success-url',
+                instances: [],
             });
 
             expect(result).toEqual({
@@ -5666,6 +5675,128 @@ describe('SubscriptionController', () => {
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return not_authorized if the user does not have the purchase permission for the item', async () => {
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PRIVATE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'studioId',
+                    resourceKind: 'purchasableItem',
+                    resourceId: 'item1',
+                    action: 'purchase',
+                    subjectType: 'user',
+                    subjectId: userId,
+                }
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return not_authorized if the inst does not have the purchase permission for the item', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PRIVATE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'studioId',
+                    resourceKind: 'purchasableItem',
+                    resourceId: 'item1',
+                    action: 'purchase',
+                    subjectType: 'inst',
+                    subjectId: '/myInst',
+                }
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
             expect(store.checkoutSessions).toEqual([]);
         });
     });
