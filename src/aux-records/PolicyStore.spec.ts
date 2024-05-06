@@ -15,6 +15,7 @@ describe('getPublicReadPermission()', () => {
         ['file', ['read']] as const,
         ['event', ['count']] as const,
         ['inst', ['read']] as const,
+        ['purchasableItem', ['read', 'list', 'purchase']] as const,
     ];
 
     describe.each(allowedResourceKinds)(
@@ -55,6 +56,10 @@ describe('getPublicReadPermission()', () => {
             'role',
             ['create', 'update', 'delete', 'read', 'list', 'grant', 'revoke'],
         ] as const,
+        [
+            'purchasableItem',
+            ['create', 'update', 'delete'],
+        ] as const,
     ];
 
     describe.each(deniedResourceKinds)(
@@ -78,6 +83,7 @@ describe('getPublicWritePermission()', () => {
             'inst',
             ['read', 'create', 'updateData', 'sendAction', 'delete'],
         ] as const,
+        ['purchasableItem', ['read', 'list', 'purchase']] as const,
     ];
 
     describe.each(allowedResourceKinds)(
@@ -113,6 +119,10 @@ describe('getPublicWritePermission()', () => {
         [
             'role',
             ['create', 'update', 'delete', 'read', 'list', 'grant', 'revoke'],
+        ] as const,
+        [
+            'purchasableItem',
+            ['create', 'update', 'delete'],
         ] as const,
     ];
 

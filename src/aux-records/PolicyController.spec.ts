@@ -2532,6 +2532,7 @@ describe('PolicyController', () => {
             ['revokePermission', 'resourceId'],
             ['grant', 'resourceId'],
             ['revoke', 'resourceId'],
+            ['purchase', 'resourceId'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -3405,6 +3406,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ]
         ];
@@ -3834,6 +3836,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -3847,6 +3850,7 @@ describe('PolicyController', () => {
                     ['revokePermission', 'resourceId'],
                     ['updateData', 'resourceId'],
                     ['sendAction', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -3860,6 +3864,7 @@ describe('PolicyController', () => {
                     ['revokePermission', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -3880,6 +3885,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -3900,6 +3906,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -3920,6 +3927,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ]
         ];
@@ -3990,7 +3998,8 @@ describe('PolicyController', () => {
             ['inst', [['read', 'resourceId']]],
             ['purchasableItem', [
                 ['read', 'resourceId'],
-                ['list', null]
+                ['list', null],
+                ['purchase', 'resourceId'],
             ]],
         ];
 
@@ -4102,6 +4111,11 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                 ],
             ],
+            ['purchasableItem', [
+                ['read', 'resourceId'],
+                ['list', null],
+                ['purchase', 'resourceId'],
+            ]],
         ];
 
         const publicWriteSubjectTypeCases: [

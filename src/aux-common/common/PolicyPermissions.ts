@@ -53,6 +53,7 @@ export const GRANT_ACTION = 'grant';
 export const REVOKE_ACTION = 'revoke';
 export const SEND_ACTION_ACTION = 'sendAction';
 export const UPDATE_DATA_ACTION = 'updateData';
+export const PURCHASE_ACTION = 'purchase';
 
 /**
  * The possible types of actions that can be performed on resources.
@@ -75,7 +76,8 @@ export type ActionKinds =
     | 'grant'
     | 'revoke'
     | 'sendAction'
-    | 'updateData';
+    | 'updateData'
+    | 'purchase';
 
 /**
  * The possible types of actions that can be performed on data resources.
@@ -143,7 +145,7 @@ export type InstActionKinds =
  * @dochash types/permissions
  * @docname PurchasableItemActionKinds
  */
-export type PurchasableItemActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list';
+export type PurchasableItemActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list' | 'purchase';
 
 /**
  * The possible types of permissions that can be added to policies.
@@ -223,7 +225,8 @@ export const PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION = z.enum([
     CREATE_ACTION,
     UPDATE_ACTION,
     DELETE_ACTION,
-    LIST_ACTION
+    LIST_ACTION,
+    PURCHASE_ACTION,
 ]);
 
 export const RESOURCE_KIND_VALIDATION = z.enum([
@@ -256,6 +259,8 @@ export const ACTION_KINDS_VALIDATION = z.enum([
 
     GRANT_PERMISSION_ACTION,
     REVOKE_PERMISSION_ACTION,
+
+    PURCHASE_ACTION
 ]);
 
 /**

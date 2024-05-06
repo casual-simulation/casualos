@@ -775,7 +775,7 @@ export function getPublicReadPermission(
         }
     } else if(resourceKind === 'purchasableItem') {
         // purchasableItem.read and purchasableItem.list
-        if (action === 'read' || action === 'list') {
+        if (action === 'read' || action === 'list' || action === 'purchase') {
             return {
                 resourceKind,
                 action,
@@ -838,6 +838,13 @@ export function getPublicWritePermission(
             return {
                 resourceKind,
                 action,
+            };
+        }
+    } else if(resourceKind === 'purchasableItem') {
+        if (action === 'read' || action === 'list' || action === 'purchase') {
+            return {
+                resourceKind,
+                action
             };
         }
     }
