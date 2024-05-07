@@ -19,6 +19,7 @@ import {
     UpdateCheckoutSessionRequest,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    PurchasedItem,
 } from './AuthStore';
 import {
     ListStudioAssignmentFilters,
@@ -201,6 +202,8 @@ export class MemoryStore
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+
+    private _purchasedItems: PurchasedItem[] = [];
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
 
@@ -317,6 +320,10 @@ export class MemoryStore
 
     get checkoutSessions() {
         return this._checkoutSessions;
+    }
+
+    get purchasedItems() {
+        return this._purchasedItems;
     }
 
     constructor(config: MemoryConfiguration) {
@@ -1754,12 +1761,13 @@ export class MemoryStore
         }
 
         if (sessionIndex < 0) {
-            const session = {
+            const session: AuthCheckoutSession = {
                 id: request.id,
                 paid: request.paid,
-                paymentStatus: request.paymentStatus,
-                status: request.status,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
                 stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
                 userId: request.userId,
                 invoiceId
             };
@@ -1769,9 +1777,10 @@ export class MemoryStore
             session = {
                 ...session,
                 paid: request.paid,
-                paymentStatus: request.paymentStatus,
-                status: request.status,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
                 stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
                 userId: request.userId,
             };
 
@@ -3407,6 +3416,19 @@ export class MemoryStore
             }
         }
         return record;
+    }
+
+    async savePurchasedItem(item: PurchasedItem): Promise<void> {
+        const index = this._purchasedItems.findIndex(i => i.id === item.id);
+        if (index >= 0) {
+            this._purchasedItems[index] = {
+                ...item
+            };
+        } else {
+            this._purchasedItems.push({
+                ...item
+            });
+        }
     }
 }
 

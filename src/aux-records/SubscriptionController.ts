@@ -1198,6 +1198,7 @@ export class SubscriptionController {
                 status: session.status,
                 paymentStatus: session.payment_status,
                 paid: session.payment_status === 'paid' || session.payment_status === 'no_payment_required',
+                fulfilledAtMs: null,
             });
 
             return {
@@ -1206,6 +1207,23 @@ export class SubscriptionController {
             };
         } catch(err) {
             console.error('[SubscriptionController] An error occurred while creating a purchase item link:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
+    }
+
+    async fulfillCheckoutSession(request: FulfillCheckoutSessionRequest): Promise<FulfillCheckoutSessionResult> {
+        try {
+            
+
+            return {
+                success: true
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while fulfilling a checkout session:', err);
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -2180,4 +2198,36 @@ export interface CreatePurchaseItemLinkFailure {
         | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
+}
+
+export interface FulfillCheckoutSessionRequest {
+    /**
+     * The ID of the session that should be fulfilled.
+     */
+    sessionId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * How the session should be fulfilled.
+     * - `now` indicates that the items should be granted to the user and activated imediately.
+     *    Only valid if the user is logged in.
+     * - `deferred` indicates that an access key should be granted for the user to activate later.
+     */
+    activation: 'now' | 'deferred';
+}
+
+export type FulfillCheckoutSessionResult = FulfillCheckoutSessionSuccess | FulfillCheckoutSessionFailure;
+
+export interface FulfillCheckoutSessionSuccess {
+    success: true;
+}
+
+export interface FulfillCheckoutSessionFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_request' | 'not_supported' | 'not_authorized';
+    errorMessage: string;
 }

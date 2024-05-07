@@ -723,11 +723,14 @@ model PurchasableItemRecord {
 model AuthCheckoutSession {
     id String @id @db.Uuid
 
-    status String
     paid Boolean
+    fulfilledAtMs Int?
+
     returnUrl String @db.String(2048)
     successUrl String @db.String(2048)
     
+    stripeStatus String
+    stripePaymentStatus String
     stripeCheckoutSessionId String @unique
 
     invoiceId String? @unique @db.Uuid

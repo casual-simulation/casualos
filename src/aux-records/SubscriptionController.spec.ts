@@ -5801,6 +5801,196 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('fulfillCheckoutSession()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10
+                                            }
+                                        }
+                                    },
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete'
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                studioId: 'studioId',
+                ownerId: null,
+                secretHashes: [],
+                secretSalt: 'secret',
+            });
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'open',
+                paymentStatus: 'unpaid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: {
+                    currency: 'usd',
+                    paid: false,
+                    status: 'open',
+                    description: 'description',
+                    stripeInvoiceId: 'invoice1',
+                    tax: 0,
+                    subtotal: 100,
+                    total: 100,
+                    stripeHostedInvoiceUrl: 'hosted-url',
+                    stripeInvoicePdfUrl: 'pdf-url',
+                },
+                fulfilledAtMs: null,
+            });
+        });
+
+        it('should return not_found if the checkout session does not exist', async () => {
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now'
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_found',
+                errorMessage: 'The checkout session does not exist.'
+            });
+        });
+
+        it('should return not_authorized if the user ID doesnt match the session', async () => {
+            const result = await controller.fulfillCheckoutSession({
+                userId: 'different',
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to accept fulfillment of this checkout session.'
+            });
+        });
+
+        it('should return invalid_request if the session has expired', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'expired',
+                paymentStatus: 'unpaid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: 'different',
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The checkout session has expired.'
+            });
+        });
+
+        it('should return info for the purchased items if personally accepting fulfilment', async () => {
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now'
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null
+                }
+            ]);
+
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTime: null,
+                    activatedTimeMs: 200,
+                    secretHash: null,
+                }
+            ]);
+        });
+    });
+
     describe('handleStripeWebhook()', () => {
         describe('user', () => {
             let user: AuthUser;
@@ -6680,6 +6870,7 @@ describe('SubscriptionController', () => {
                         status: 'open',
                         paymentStatus: 'unpaid',
                         invoice: null,
+                        fulfilledAtMs: null,
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -6736,6 +6927,7 @@ describe('SubscriptionController', () => {
                         status: 'open',
                         paymentStatus: 'unpaid',
                         invoice: null,
+                        fulfilledAtMs: null,
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -6821,6 +7013,7 @@ describe('SubscriptionController', () => {
                             stripeHostedInvoiceUrl: 'invoiceUrl',
                             stripeInvoicePdfUrl: 'pdfUrl',
                         },
+                        fulfilledAtMs: null,
                     });
 
                     const result = await controller.handleStripeWebhook({

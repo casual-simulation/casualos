@@ -372,6 +372,12 @@ export interface AuthStore {
         userId: string,
         authenticatorId: string
     ): Promise<number>;
+
+    /**
+     * Creates or updates the given purchased item.
+     * @param item The item.
+     */
+    savePurchasedItem(item: PurchasedItem): Promise<void>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -1185,19 +1191,25 @@ export interface AuthCheckoutSession {
     id: string;
 
     /**
+     * Whether the checkout session has been paid for or not.
+     */
+    paid: boolean;
+
+    /**
+     * The unix time in miliseconds that the checkout session has been fulfilled at by
+     * granting the user access to their items.
+     */
+    fulfilledAtMs: number | null;
+
+    /**
      * The status of the checkout session.
      */
-    status: CheckoutSessionStatus;
+    stripeStatus: CheckoutSessionStatus;
 
     /**
      * The payment status of the checkout session.
      */
-    paymentStatus: CheckoutSessionPaymentStatus;
-
-    /**
-     * Whether the checkout session has been paid for or not.
-     */
-    paid: boolean;
+    stripePaymentStatus: CheckoutSessionPaymentStatus;
 
     /**
      * The ID of the stripe checkout session that is associated with this session.
@@ -1310,6 +1322,11 @@ export interface UpdateCheckoutSessionRequest {
      * The ID of the user that the checkout session is for.
      */
     userId: string | null;
+
+    /**
+     * The unix time in miliseconds that the checkout session was fulfilled at.
+     */
+    fulfilledAtMs: number | null;
 
     /**
      * The invoice that should be created/updated.
