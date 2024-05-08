@@ -189,6 +189,7 @@
         <footer>
             <ul class="footer-links">
                 <li><a href="/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/code-of-conduct">Code of Conduct</a></li>
                 <li><a href="/terms">Terms of Service</a></li>
                 <li v-if="comId">
                     <a href="/">Back to {{ hostname }}</a>
