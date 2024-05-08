@@ -43,6 +43,7 @@ describe('SubscriptionController', () => {
         createAccountLink: jest.Mock<Promise<StripeAccountLink>>,
         createAccount: jest.Mock<Promise<StripeAccount>>,
         getAccountById: jest.Mock<Promise<StripeAccount>>,
+        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>,
     };
 
     let stripe: StripeInterface;
@@ -106,6 +107,7 @@ describe('SubscriptionController', () => {
             createAccountLink: jest.fn(),
             createAccount: jest.fn(),
             getAccountById: jest.fn(),
+            getCheckoutSessionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -150,7 +152,8 @@ describe('SubscriptionController', () => {
             store,
             store,
             purchasableItemsStore,
-            services.policies
+            services.policies,
+            store,
         );
 
         const request = await auth.requestLogin({
@@ -4790,12 +4793,22 @@ describe('SubscriptionController', () => {
             expect(store.checkoutSessions).toEqual([
                 {
                     id: expect.any(String),
-                    status: 'open',
-                    paymentStatus: 'unpaid',
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
                     paid: false,
                     stripeCheckoutSessionId: 'checkout_id',
                     invoiceId: null,
                     userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
                 }
             ]);
 
@@ -4875,12 +4888,22 @@ describe('SubscriptionController', () => {
             expect(store.checkoutSessions).toEqual([
                 {
                     id: expect.any(String),
-                    status: 'open',
-                    paymentStatus: 'unpaid',
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
                     paid: false,
                     stripeCheckoutSessionId: 'checkout_id',
                     invoiceId: null,
                     userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
                 }
             ]);
         });
@@ -4989,12 +5012,22 @@ describe('SubscriptionController', () => {
             expect(store.checkoutSessions).toEqual([
                 {
                     id: expect.any(String),
-                    status: 'open',
-                    paymentStatus: 'unpaid',
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
                     paid: false,
                     stripeCheckoutSessionId: 'checkout_id',
                     invoiceId: null,
                     userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
                 }
             ]);
         });
@@ -5103,12 +5136,22 @@ describe('SubscriptionController', () => {
             expect(store.checkoutSessions).toEqual([
                 {
                     id: expect.any(String),
-                    status: 'open',
-                    paymentStatus: 'unpaid',
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
                     paid: false,
                     stripeCheckoutSessionId: 'checkout_id',
                     invoiceId: null,
                     userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
                 }
             ]);
         });
@@ -5223,12 +5266,22 @@ describe('SubscriptionController', () => {
             expect(store.checkoutSessions).toEqual([
                 {
                     id: expect.any(String),
-                    status: 'open',
-                    paymentStatus: 'unpaid',
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
                     paid: false,
                     stripeCheckoutSessionId: 'checkout_id',
                     invoiceId: null,
                     userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
                 }
             ]);
         });
@@ -5897,13 +5950,22 @@ describe('SubscriptionController', () => {
                     stripeInvoicePdfUrl: 'pdf-url',
                 },
                 fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
             });
         });
 
         it('should return not_found if the checkout session does not exist', async () => {
             const result = await controller.fulfillCheckoutSession({
                 userId: userId,
-                sessionId: 'session1',
+                sessionId: 'missing',
                 activation: 'now'
             });
 
@@ -5938,10 +6000,19 @@ describe('SubscriptionController', () => {
                 userId: userId,
                 invoice: null,
                 fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
             });
 
             const result = await controller.fulfillCheckoutSession({
-                userId: 'different',
+                userId: userId,
                 sessionId: 'session1',
                 activation: 'now',
             });
@@ -5953,7 +6024,132 @@ describe('SubscriptionController', () => {
             });
         });
 
-        it('should return info for the purchased items if personally accepting fulfilment', async () => {
+        it('should return invalid_request if the session is still open', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'open',
+                paymentStatus: 'paid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The checkout session has not been completed.'
+            });
+        });
+
+        it('should return invalid_request if the session is complete but not paid', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'unpaid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The checkout session has not been paid for.'
+            });
+        });
+
+        it('should return success if the session has already been fulfilled', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: 199,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+            expect(store.purchasedItems).toEqual([]);
+        });
+
+        it('should grant the purchased items if personally accepting fulfilment', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
             nowMock.mockReturnValue(200);
 
             const result = await controller.fulfillCheckoutSession({
@@ -5983,7 +6179,7 @@ describe('SubscriptionController', () => {
                     purchasableItemAddress: 'item1',
                     checkoutSessionId: 'session1',
                     roleName: 'myRole',
-                    roleGrantTime: null,
+                    roleGrantTimeMs: null,
                     activatedTimeMs: 200,
                     secretHash: null,
                 }
@@ -6871,6 +7067,15 @@ describe('SubscriptionController', () => {
                         paymentStatus: 'unpaid',
                         invoice: null,
                         fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'role',
+                                recordName: 'studioId',
+                                purchasableItemAddress: 'item1',
+                                role: 'myRole',
+                                roleGrantTimeMs: null
+                            }
+                        ]
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -6888,9 +7093,10 @@ describe('SubscriptionController', () => {
                             userId,
                             stripeCheckoutSessionId: 'checkout_id',
                             paid: true,
-                            status: 'complete',
-                            paymentStatus: 'paid',
-                            invoiceId: null
+                            stripeStatus: 'complete',
+                            stripePaymentStatus: 'paid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
                         }
                     ]);
                 });
@@ -6928,6 +7134,15 @@ describe('SubscriptionController', () => {
                         paymentStatus: 'unpaid',
                         invoice: null,
                         fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'role',
+                                recordName: 'studioId',
+                                purchasableItemAddress: 'item1',
+                                role: 'myRole',
+                                roleGrantTimeMs: null
+                            }
+                        ]
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -6945,9 +7160,10 @@ describe('SubscriptionController', () => {
                             userId,
                             stripeCheckoutSessionId: 'checkout_id',
                             paid: false,
-                            status: 'expired',
-                            paymentStatus: 'unpaid',
-                            invoiceId: null
+                            stripeStatus: 'expired',
+                            stripePaymentStatus: 'unpaid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
                         }
                     ]);
                 });
@@ -7014,6 +7230,15 @@ describe('SubscriptionController', () => {
                             stripeInvoicePdfUrl: 'pdfUrl',
                         },
                         fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'role',
+                                recordName: 'studioId',
+                                purchasableItemAddress: 'item1',
+                                role: 'myRole',
+                                roleGrantTimeMs: null
+                            }
+                        ]
                     });
 
                     const result = await controller.handleStripeWebhook({

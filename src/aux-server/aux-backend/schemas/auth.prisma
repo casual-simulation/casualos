@@ -725,6 +725,7 @@ model AuthCheckoutSession {
 
     paid Boolean
     fulfilledAtMs Int?
+    items Json
 
     returnUrl String @db.String(2048)
     successUrl String @db.String(2048)

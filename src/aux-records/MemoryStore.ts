@@ -1769,7 +1769,8 @@ export class MemoryStore
                 stripeCheckoutSessionId: request.stripeCheckoutSessionId,
                 fulfilledAtMs: request.fulfilledAtMs,
                 userId: request.userId,
-                invoiceId
+                invoiceId,
+                items: request.items,
             };
             this._checkoutSessions.push(session);
         } else {
@@ -1782,6 +1783,7 @@ export class MemoryStore
                 stripeCheckoutSessionId: request.stripeCheckoutSessionId,
                 fulfilledAtMs: request.fulfilledAtMs,
                 userId: request.userId,
+                items: request.items,
             };
 
             if (request.invoice) {
@@ -1789,6 +1791,16 @@ export class MemoryStore
             }
 
             this._checkoutSessions[sessionIndex] = session;
+        }
+    }
+
+    async markCheckoutSessionFulfilled(sessionId: string, fulfilledAtMs: number): Promise<void> {
+        const session = this._checkoutSessions.find(s => s.id === sessionId);
+        if (session) {
+            this._checkoutSessions[this._checkoutSessions.indexOf(session)] = {
+                ...session,
+                fulfilledAtMs,
+            };
         }
     }
 

@@ -30,6 +30,12 @@ export interface StripeInterface {
     ): Promise<StripeCheckoutResponse>;
 
     /**
+     * Gets the checkout session with the given ID.
+     * @param id The ID of the checkout session.
+     */
+    getCheckoutSessionById(id: string): Promise<StripeCheckoutResponse>;
+
+    /**
      * Creates a new portal session for a user.
      * @param request The create portal session request.
      */

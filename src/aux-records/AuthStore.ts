@@ -326,6 +326,13 @@ export interface AuthStore {
     ): Promise<void>;
 
     /**
+     * Marks the checkout session with the given ID as fulfilled.
+     * @param sessionId The ID of the checkout session.
+     * @param fulfilledAtMs The unix time in miliseconds that the session was fulfilled at.
+     */
+    markCheckoutSessionFulfilled(sessionId: string, fulfilledAtMs: number): Promise<void>;
+
+    /**
      * Gets the checkout session with the given ID.
      * Returns null if the session could not be found.
      * @param id The ID of the checkout session.
@@ -1196,6 +1203,11 @@ export interface AuthCheckoutSession {
     paid: boolean;
 
     /**
+     * The items that are in the checkout session.
+     */
+    items: AuthCheckoutSessionItem[];
+
+    /**
      * The unix time in miliseconds that the checkout session has been fulfilled at by
      * granting the user access to their items.
      */
@@ -1226,6 +1238,35 @@ export interface AuthCheckoutSession {
      * Null if no invoice was created for the checkout session.
      */
     invoiceId: string | null;
+}
+
+export type AuthCheckoutSessionItem = AuthCheckoutSessionRoleItem;
+
+export interface AuthCheckoutSessionRoleItem {
+    /**
+     * The type of the item.
+     */
+    type: 'role';
+
+    /**
+     * The name of the record that the role is being purchased in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the purchasable item.
+     */
+    purchasableItemAddress: string;
+
+    /**
+     * The role that is being purchased.
+     */
+    role: string;
+
+    /**
+     * The number of miliseconds that the role is being purchased for.
+     */
+    roleGrantTimeMs: number | null;
 }
 
 /**
@@ -1312,6 +1353,11 @@ export interface UpdateCheckoutSessionRequest {
      * Whether the checkout session has been paid for or not.
      */
     paid: boolean;
+
+    /**
+     * The items in the session.
+     */
+    items: AuthCheckoutSessionItem[];
 
     /**
      * The ID of the stripe checkout session that is associated with this session.

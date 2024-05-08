@@ -36,6 +36,7 @@ import { ADMIN_ROLE_NAME, DenialReason } from '@casual-simulation/aux-common';
 import { PurchasableItemRecordsStore } from './casualware/PurchasableItemRecordsStore';
 import { v4 as uuid } from 'uuid';
 import { AuthorizeSubjectFailure, ConstructAuthorizationContextFailure, PolicyController } from './PolicyController';
+import { PolicyStore } from './PolicyStore';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -48,6 +49,7 @@ export class SubscriptionController {
     private _config: ConfigurationStore;
     private _purchasableItems: PurchasableItemRecordsStore;
     private _policies: PolicyController;
+    private _policyStore: PolicyStore;
 
     constructor(
         stripe: StripeInterface,
@@ -56,7 +58,8 @@ export class SubscriptionController {
         recordsStore: RecordsStore,
         config: ConfigurationStore,
         purchasableItems: PurchasableItemRecordsStore,
-        policies: PolicyController
+        policies: PolicyController,
+        policyStore: PolicyStore
     ) {
         this._stripe = stripe;
         this._auth = auth;
@@ -65,6 +68,7 @@ export class SubscriptionController {
         this._config = config;
         this._purchasableItems = purchasableItems;
         this._policies = policies;
+        this._policyStore = policyStore;
     }
 
     private async _getConfig() {
@@ -1156,7 +1160,7 @@ export class SubscriptionController {
                                 description: item.description,
                                 images: item.imageUrls,
                                 metadata: {
-                                    recordName: request.item.recordName,
+                                    recordName: recordName,
                                     address: item.address,
                                 },
                                 tax_code: item.taxCode ?? undefined,
@@ -1199,11 +1203,21 @@ export class SubscriptionController {
                 paymentStatus: session.payment_status,
                 paid: session.payment_status === 'paid' || session.payment_status === 'no_payment_required',
                 fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: item.address,
+                        role: item.roleName,
+                        roleGrantTimeMs: item.roleGrantTimeMs,
+                    }
+                ]
             });
 
             return {
                 success: true,
                 url: session.url,
+                sessionId: sessionId,
             };
         } catch(err) {
             console.error('[SubscriptionController] An error occurred while creating a purchase item link:', err);
@@ -1217,7 +1231,82 @@ export class SubscriptionController {
 
     async fulfillCheckoutSession(request: FulfillCheckoutSessionRequest): Promise<FulfillCheckoutSessionResult> {
         try {
-            
+            const session = await this._authStore.getCheckoutSessionById(request.sessionId);
+
+            if (!session) {
+                return {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The checkout session does not exist.',
+                };
+            }
+
+            if (!!session.userId && session.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to accept fulfillment of this checkout session.',
+                };
+            }
+
+            if (session.stripeStatus === 'expired') {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The checkout session has expired.',
+                };
+            } else if (session.stripeStatus === 'open') {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The checkout session has not been completed.'
+                };
+            } else if (session.stripePaymentStatus === 'unpaid') {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The checkout session has not been paid for.'
+                };
+            } else if (session.fulfilledAtMs > 0) {
+                return {
+                    success: true
+                };
+            }
+
+            // grant user access to the items
+            for (let item of session.items) {
+                if (item.type === 'role') {
+                    const result = await this._policyStore.assignSubjectRole(item.recordName, session.userId, 'user', {
+                        role: item.role,
+                        expireTimeMs: item.roleGrantTimeMs ? Date.now() + item.roleGrantTimeMs : null,
+                    });
+
+                    if (result.success === false) {
+                        console.error(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unable to grant role to user:`, result);
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage: 'A server error occurred.'
+                        };
+                    }
+
+                    await this._authStore.savePurchasedItem({
+                        id: uuid(),
+                        activatedTimeMs: Date.now(),
+                        recordName: item.recordName,
+                        purchasableItemAddress: item.purchasableItemAddress,
+                        roleName: item.role,
+                        roleGrantTimeMs: item.roleGrantTimeMs,
+                        secretHash: null,
+                        userId: session.userId,
+                        checkoutSessionId: session.id,
+                    });
+                } else {
+                    console.warn(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`);
+                }
+            }
+
+            await this._authStore.markCheckoutSessionFulfilled(session.id, Date.now());
 
             return {
                 success: true
@@ -2182,6 +2271,11 @@ export interface CreatePurchaseItemLinkSuccess {
      * The URL that the user should be redirected to.
      */
     url: string;
+
+    /**
+     * The ID of the checkout session.
+     */
+    sessionId: string;
 }
 
 export interface CreatePurchaseItemLinkFailure {
@@ -2228,6 +2322,6 @@ export interface FulfillCheckoutSessionSuccess {
 
 export interface FulfillCheckoutSessionFailure {
     success: false;
-    errorCode: ServerError | 'invalid_request' | 'not_supported' | 'not_authorized';
+    errorCode: ServerError | 'invalid_request' | 'not_supported' | 'not_authorized' | 'not_found';
     errorMessage: string;
 }
