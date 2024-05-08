@@ -187,7 +187,7 @@ export class LivekitManager implements SubscriptionLike {
             ];
 
             // Send initial ON_ROOM_REMOTE_JOINED events
-            for (let participant of room.participants.values()) {
+            for (let participant of room.remoteParticipants.values()) {
                 actions.push({
                     eventName: ON_ROOM_REMOTE_JOINED,
                     bots: null,
@@ -217,7 +217,7 @@ export class LivekitManager implements SubscriptionLike {
 
                 if (room) {
                     // Send ON_ROOM_REMOTE_LEAVE events
-                    for (let participant of room.participants.values()) {
+                    for (let participant of room.remoteParticipants.values()) {
                         actions.push({
                             eventName: ON_ROOM_REMOTE_LEAVE,
                             bots: null,
@@ -360,7 +360,7 @@ export class LivekitManager implements SubscriptionLike {
         };
 
         if (this._livekit) {
-            for (let [id, pub] of participant.tracks) {
+            for (let [id, pub] of participant.trackPublications) {
                 if (!pub.isMuted && pub.isEnabled) {
                     if (
                         pub.kind === this._livekit.Track.Kind.Audio &&
@@ -496,14 +496,14 @@ export class LivekitManager implements SubscriptionLike {
             if ('videoQuality' in event.options) {
                 if (pub instanceof this._livekit.RemoteTrackPublication) {
                     let quality = this._livekit.VideoQuality.HIGH;
-                    if (event.options.videoQuality === 'off') {
-                        quality = this._livekit.VideoQuality.OFF;
-                    } else if (event.options.videoQuality === 'medium') {
+                    if (event.options.videoQuality === 'medium') {
                         quality = this._livekit.VideoQuality.MEDIUM;
                     } else if (event.options.videoQuality === 'low') {
                         quality = this._livekit.VideoQuality.LOW;
-                    } else {
+                    } else if (event.options.videoQuality === 'high') {
                         quality = this._livekit.VideoQuality.HIGH;
+                    } else if (event.options.videoQuality === 'off') {
+                        pub.setEnabled(false);
                     }
                     pub.setVideoQuality(quality);
                 }
@@ -536,8 +536,8 @@ export class LivekitManager implements SubscriptionLike {
         }
     }
 
-    private _findParticipant(room: Room, identity: string): Participant {
-        for (let p of room.participants.values()) {
+    private _findRemoteParticipant(room: Room, identity: string): Participant {
+        for (let p of room.remoteParticipants.values()) {
             if (p.identity === identity) {
                 return p;
             }
@@ -559,7 +559,10 @@ export class LivekitManager implements SubscriptionLike {
                 );
                 return;
             }
-            const participant = this._findParticipant(room, event.remoteId);
+            const participant = this._findRemoteParticipant(
+                room,
+                event.remoteId
+            );
             if (!participant) {
                 this._helper.transaction(
                     asyncResult(event.taskId, {
@@ -878,6 +881,9 @@ export class LivekitManager implements SubscriptionLike {
 
     private _getTrackQuality(publication: TrackPublication): TrackVideoQuality {
         if (publication instanceof this._livekit.RemoteTrackPublication) {
+            if (publication.isMuted || !publication.isEnabled) {
+                return 'off';
+            }
             const quality = publication.videoQuality;
             if (quality === this._livekit.VideoQuality.HIGH) {
                 return 'high';
@@ -886,10 +892,12 @@ export class LivekitManager implements SubscriptionLike {
             } else if (quality === this._livekit.VideoQuality.LOW) {
                 return 'low';
             } else {
-                return 'off';
+                return 'high';
             }
         } else if (publication.videoTrack) {
-            return publication.isMuted ? 'off' : 'high';
+            return publication.isMuted || !publication.isEnabled
+                ? 'off'
+                : 'high';
         }
         return null;
     }
