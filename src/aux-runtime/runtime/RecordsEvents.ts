@@ -984,7 +984,7 @@ export interface RoomRemoteOptions {
     /**
      * Gets the connection quality of the remote user.
      */
-    connectionQuality: 'excellent' | 'good' | 'poor' | 'unknown';
+    connectionQuality: 'excellent' | 'good' | 'poor' | 'lost' | 'unknown';
 
     /**
      * Whether the remote user has enabled their camera video.
