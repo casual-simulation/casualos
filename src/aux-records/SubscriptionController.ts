@@ -32,11 +32,24 @@ import { SubscriptionConfiguration, getPurchasableItemsFeatures, getSubscription
 import { ListedStudioAssignment, RecordsStore, Studio, StudioStripeAccountStatus, StudioStripeRequirementsStatus } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
-import { ADMIN_ROLE_NAME, DenialReason } from '@casual-simulation/aux-common';
+import { ADMIN_ROLE_NAME, DenialReason, fromBase64String, toBase64String } from '@casual-simulation/aux-common';
 import { PurchasableItemRecordsStore } from './casualware/PurchasableItemRecordsStore';
 import { v4 as uuid } from 'uuid';
 import { AuthorizeSubjectFailure, ConstructAuthorizationContextFailure, PolicyController } from './PolicyController';
 import { PolicyStore } from './PolicyStore';
+import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
+import { randomBytes } from 'tweetnacl';
+import { fromByteArray } from 'base64-js';
+
+/**
+ * The number of bytes that the access key secret should be.
+ */
+export const ACCESS_KEY_SECRET_BYTE_LENGTH = 16; // 128-bit
+
+/**
+ * The number of bytes that the access key ID should be.
+ */
+export const ACCESS_KEY_ID_BYTE_LENGTH = 16; // 128-bit
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -1157,6 +1170,7 @@ export class SubscriptionController {
             }
 
             const sessionId = uuid();
+
             console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.item.currency} cost: ${item.cost} applicationFee: ${applicationFee}] Creating checkout session.`);
             const session = await this._stripe.createCheckoutSession({
                 customer: customerId,
@@ -1283,45 +1297,104 @@ export class SubscriptionController {
                     success: true
                 };
             }
+            console.log(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Fulfilling checkout session.`);
 
-            // grant user access to the items
-            for (let item of session.items) {
-                if (item.type === 'role') {
-                    const result = await this._policyStore.assignSubjectRole(item.recordName, session.userId, 'user', {
-                        role: item.role,
-                        expireTimeMs: item.roleGrantTimeMs ? Date.now() + item.roleGrantTimeMs : null,
-                    });
-
-                    if (result.success === false) {
-                        console.error(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unable to grant role to user:`, result);
-                        return {
-                            success: false,
-                            errorCode: 'server_error',
-                            errorMessage: 'A server error occurred.'
-                        };
-                    }
-
-                    await this._authStore.savePurchasedItem({
-                        id: uuid(),
-                        activatedTimeMs: Date.now(),
-                        recordName: item.recordName,
-                        purchasableItemAddress: item.purchasableItemAddress,
-                        roleName: item.role,
-                        roleGrantTimeMs: item.roleGrantTimeMs,
-                        secretHash: null,
-                        userId: session.userId,
-                        checkoutSessionId: session.id,
-                    });
-                } else {
-                    console.warn(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`);
+            if (request.activation === 'now') {
+                if (!request.userId) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'Guests cannot accept immediate fulfillment of a checkout session.'
+                    };
                 }
+
+                console.log(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Activating checkout session.`);
+
+                // grant user access to the items
+                for (let item of session.items) {
+                    if (item.type === 'role') {
+                        const result = await this._policyStore.assignSubjectRole(item.recordName, session.userId, 'user', {
+                            role: item.role,
+                            expireTimeMs: item.roleGrantTimeMs ? Date.now() + item.roleGrantTimeMs : null,
+                        });
+
+                        if (result.success === false) {
+                            console.error(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unable to grant role to user:`, result);
+                            return {
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage: 'A server error occurred.'
+                            };
+                        }
+
+                        await this._authStore.savePurchasedItem({
+                            id: uuid(),
+                            activatedTimeMs: Date.now(),
+                            recordName: item.recordName,
+                            purchasableItemAddress: item.purchasableItemAddress,
+                            roleName: item.role,
+                            roleGrantTimeMs: item.roleGrantTimeMs,
+                            userId: session.userId,
+                            activationKeyId: null,
+                            checkoutSessionId: session.id,
+                        });
+                    } else {
+                        console.warn(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`);
+                    }
+                }
+
+                await this._authStore.markCheckoutSessionFulfilled(session.id, Date.now());
+
+                return {
+                    success: true
+                };
+            } else {
+                console.log(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Deferring activation for checkout session.`);
+
+                const secret = fromByteArray(
+                    randomBytes(ACCESS_KEY_SECRET_BYTE_LENGTH)
+                );
+                const keyId = fromByteArray(
+                    randomBytes(ACCESS_KEY_SECRET_BYTE_LENGTH)
+                );
+                const hash = hashHighEntropyPasswordWithSalt(
+                    secret,
+                    keyId
+                );
+
+                await this._authStore.createActivationKey({
+                    id: keyId,
+                    secretHash: hash
+                });
+
+                const key = formatV1ActivationKey(keyId, secret);
+
+                // grant user access to the items
+                for (let item of session.items) {
+                    if (item.type === 'role') {
+                        await this._authStore.savePurchasedItem({
+                            id: uuid(),
+                            activatedTimeMs: null,
+                            recordName: item.recordName,
+                            purchasableItemAddress: item.purchasableItemAddress,
+                            roleName: item.role,
+                            roleGrantTimeMs: item.roleGrantTimeMs,
+                            userId: null,
+                            activationKeyId: keyId,
+                            checkoutSessionId: session.id,
+                        });
+                    } else {
+                        console.warn(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`);
+                    }
+                }
+
+                await this._authStore.markCheckoutSessionFulfilled(session.id, Date.now());
+
+                return {
+                    success: true,
+                    activationKey: key
+                };
             }
-
-            await this._authStore.markCheckoutSessionFulfilled(session.id, Date.now());
-
-            return {
-                success: true
-            };
         } catch(err) {
             console.error('[SubscriptionController] An error occurred while fulfilling a checkout session:', err);
             return {
@@ -1821,6 +1894,52 @@ function studiosRoute(basePath: string, studioId: string, studioName: string) {
 }
 
 /**
+ * Formats a V1 access key.
+ * @param itemId The ID of the purchased item.
+ * @param secret The secret that should be used to access the purchased item.
+ */
+export function formatV1ActivationKey(itemId: string, secret: string): string {
+    return `vAK1.${toBase64String(itemId)}.${toBase64String(secret)}`;
+}
+
+/**
+ * Parses the given access key.
+ * Returns null if the access key is invalid.
+ * @param key The key to parse.
+ */
+export function parseActivationKey(key: string): [itemId: string, secret: string] {
+    if (!key) {
+        return null;
+    }
+
+    if (!key.startsWith('vAK1.')) {
+        return null;
+    }
+
+    const withoutVersion = key.slice('vAK1.'.length);
+    let periodAfterId = withoutVersion.indexOf('.');
+    if (periodAfterId < 0) {
+        return null;
+    }
+
+    const idBase64 = withoutVersion.slice(0, periodAfterId);
+    const secretBase64 = withoutVersion.slice(periodAfterId + 1);
+
+    if (idBase64.length <= 0 || secretBase64.length <= 0) {
+        return null;
+    }
+
+    try {
+        const name = fromBase64String(idBase64);
+        const secret = fromBase64String(secretBase64);
+
+        return [name, secret];
+    } catch (err) {
+        return null;
+    }
+}
+
+/**
  * Defines a request for managing a user's subscription.
  */
 export interface CreateManageSubscriptionRequest {
@@ -2299,6 +2418,7 @@ export interface CreatePurchaseItemLinkFailure {
         | 'store_disabled'
         | 'currency_not_supported'
         | 'subscription_limit_reached'
+        | 'item_already_purchased'
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
@@ -2320,15 +2440,20 @@ export interface FulfillCheckoutSessionRequest {
      * How the session should be fulfilled.
      * - `now` indicates that the items should be granted to the user and activated imediately.
      *    Only valid if the user is logged in.
-     * - `deferred` indicates that an access key should be granted for the user to activate later.
+     * - `later` indicates that an access key should be granted for the user to activate later.
      */
-    activation: 'now' | 'deferred';
+    activation: 'now' | 'later';
 }
 
 export type FulfillCheckoutSessionResult = FulfillCheckoutSessionSuccess | FulfillCheckoutSessionFailure;
 
 export interface FulfillCheckoutSessionSuccess {
     success: true;
+
+    /**
+     * The activation key that the user can use to activate the items later.
+     */
+    activationKey?: string;
 }
 
 export interface FulfillCheckoutSessionFailure {

@@ -385,6 +385,12 @@ export interface AuthStore {
      * @param item The item.
      */
     savePurchasedItem(item: PurchasedItem): Promise<void>;
+
+    /**
+     * Creates the given activation key.
+     * @param key The key.
+     */
+    createActivationKey(key: ActivationKey): Promise<void>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -1323,14 +1329,30 @@ export interface PurchasedItem {
 
     /**
      * The unix timestamp in miliseconds when the item was activated.
+     * Null if the item has not been activated.
      */
     activatedTimeMs: number | null;
 
     /**
-     * The hash of the secret that can be used to activate the item.
+     * The ID of the activation key that was used to activate the item.
      * Null if the item is associated with a user.
      */
-    secretHash: string | null;
+    activationKeyId: string | null;
+}
+
+/**
+ * Defines an interface for a key that can be used to activate a purchased item.
+ */
+export interface ActivationKey {
+    /**
+     * The ID of the activation key.
+     */
+    id: string;
+
+    /**
+     * The hash of the secret for the key.
+     */
+    secretHash: string;
 }
 
 export interface UpdateCheckoutSessionRequest {

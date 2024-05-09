@@ -20,6 +20,7 @@ import {
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     PurchasedItem,
+    ActivationKey,
 } from './AuthStore';
 import {
     ListStudioAssignmentFilters,
@@ -204,6 +205,7 @@ export class MemoryStore
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
 
     private _purchasedItems: PurchasedItem[] = [];
+    private _activationKeys: ActivationKey[] = [];
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
 
@@ -324,6 +326,10 @@ export class MemoryStore
 
     get purchasedItems() {
         return this._purchasedItems;
+    }
+
+    get activationKeys() {
+        return this._activationKeys;
     }
 
     constructor(config: MemoryConfiguration) {
@@ -3441,6 +3447,12 @@ export class MemoryStore
                 ...item
             });
         }
+    }
+
+    async createActivationKey(key: ActivationKey): Promise<void> {
+        this._activationKeys.push({
+            ...key
+        });
     }
 }
 

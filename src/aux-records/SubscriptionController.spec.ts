@@ -6175,7 +6175,7 @@ describe('SubscriptionController', () => {
             expect(store.purchasedItems).toEqual([]);
         });
 
-        it('should grant the purchased items if personally accepting fulfilment', async () => {
+        it('should grant the purchased items if personally accepting fulfillment', async () => {
             await store.updateCheckoutSessionInfo({
                 id: 'session1',
                 status: 'complete',
@@ -6227,7 +6227,165 @@ describe('SubscriptionController', () => {
                     roleName: 'myRole',
                     roleGrantTimeMs: null,
                     activatedTimeMs: 200,
-                    secretHash: null,
+                    activationKeyId: null,
+                }
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
+                }
+            ]);
+        });
+
+        it('should return invalid_request if trying to personally accept fulfillment as a guest', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: null,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: null,
+                sessionId: 'session1',
+                activation: 'now'
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'Guests cannot accept immediate fulfillment of a checkout session.'
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+
+            expect(store.purchasedItems).toEqual([]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: null,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
+                }
+            ]);
+        });
+
+        it('should return an access key if not personally accepting fulfillment', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'later'
+            });
+
+            expect(result).toEqual({
+                success: true,
+                activationKey: expect.any(String)
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: null,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: null,
+                    activationKeyId: expect.any(String),
+                }
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
                 }
             ]);
         });
@@ -7380,5 +7538,48 @@ describe('getAccountStatus()', () => {
                 pending_verification: []
             }
         })).toBe('active');
+    });
+});
+
+describe.only('formatV1ActivationKey()', () => {
+    it('should format an access key', () => {
+        const result = formatV1ActivationKey('id', 'password');
+
+        const [version, id, password] = result.split('.');
+
+        expect(version).toBe('vAK1');
+        expect(id).toBe(toBase64String('id'));
+        expect(password).toBe(toBase64String('password'));
+    });
+});
+
+describe.only('parseActivationKey()', () => {
+    it('should be able to parse the given access key', () => {
+        const result = formatV1ActivationKey('id', 'password');
+        const parsed = parseActivationKey(result);
+        expect(parsed).toEqual([
+            'id',
+            'password'
+        ]);
+    });
+
+    it('should return null if given null', () => {
+        expect(parseActivationKey(null)).toBeNull();
+    });
+
+    it('should return null if given a string without a version', () => {
+        expect(parseActivationKey('')).toBeNull();
+    });
+
+    it('should return null if given a string without an id', () => {
+        expect(parseActivationKey('vAK1.')).toBeNull();
+    });
+
+    it('should return null if given a string without a password', () => {
+        expect(parseActivationKey('vAK1.id')).toBeNull();
+    });
+
+    it('should return null if given a string with invalid base64', () => {
+        expect(parseActivationKey('vAK1.id.password')).toBeNull();
     });
 });

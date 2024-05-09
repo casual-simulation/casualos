@@ -2324,7 +2324,7 @@ export function formatV2RecordKey(
 export function parseRecordKey(
     key: string
 ): [name: string, password: string, policy: PublicRecordKeyPolicy] {
-    return parseV2RecordKey(key) ?? parseV1RecordKey(key);
+return parseV2RecordKey(key) ?? parseV1RecordKey(key);
 }
 
 /**

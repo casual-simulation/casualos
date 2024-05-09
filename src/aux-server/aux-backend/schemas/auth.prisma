@@ -767,8 +767,21 @@ model PurchasedItem {
     // The time that the item was activated
     activatedTime DateTime?
     
+    // The activation key that was used to activate the item
+    activationKeyId String?
+    activationKey ActivationKey? @relation(fields: [activationKeyId], references: [id], onDelete: SetNull, map: "PurchasedItem_activationKeyId_fkey1")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model ActivationKey {
+    id String @id
+
     // The hash that can be used to associate the item with a user account
-    secretHash String?
+    secretHash String
+
+    purchasedItems PurchasedItem[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
