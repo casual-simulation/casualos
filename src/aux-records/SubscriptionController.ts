@@ -1127,6 +1127,17 @@ export class SubscriptionController {
                     };
                 }
 
+                const roles = await this._policyStore.listRolesForUser(recordName, user.id);
+                const hasRole = roles.some(r => r.role === item.roleName && (!r.expireTimeMs || r.expireTimeMs > Date.now()));
+
+                if (hasRole) {
+                    return {
+                        success: false,
+                        errorCode: 'item_already_purchased',
+                        errorMessage: 'You already have the role that the item would grant.'
+                    };
+                }
+
                 if (!user.stripeCustomerId) {
                     const customer = await this._stripe.createCustomer({
                         name: user.name,

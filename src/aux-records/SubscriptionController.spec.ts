@@ -1,4 +1,4 @@
-import { SubscriptionController, getAccountStatus } from './SubscriptionController';
+import { SubscriptionController, formatV1ActivationKey, getAccountStatus, parseActivationKey } from './SubscriptionController';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { AuthStore, AuthUser } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
@@ -15,7 +15,7 @@ import { MemoryStore } from './MemoryStore';
 import { createTestControllers, createTestSubConfiguration, createTestUser } from './TestUtils';
 import { merge } from 'lodash';
 import { MemoryPurchasableItemRecordsStore } from './casualware/MemoryPurchasableItemRecordsStore';
-import { PRIVATE_MARKER, PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { PRIVATE_MARKER, PUBLIC_READ_MARKER, toBase64String } from '@casual-simulation/aux-common';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
 
@@ -4743,6 +4743,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 url: 'checkout_url',
+                sessionId: expect.any(String),
             });
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
@@ -4848,6 +4849,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 url: 'checkout_url',
+                sessionId: expect.any(String),
             });
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
@@ -4972,6 +4974,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 url: 'checkout_url',
+                sessionId: expect.any(String),
             });
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
@@ -5096,6 +5099,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 url: 'checkout_url',
+                sessionId: expect.any(String),
             });
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
@@ -5225,6 +5229,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 url: 'checkout_url',
+                sessionId: expect.any(String),
             });
 
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
@@ -5846,6 +5851,47 @@ describe('SubscriptionController', () => {
                     subjectType: 'inst',
                     subjectId: '/myInst',
                 }
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return item_already_purchased if the user already has the role', async () => {
+            await store.assignSubjectRole('studioId', userId, 'user', {
+                role: 'myRole',
+                expireTimeMs: null
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'item_already_purchased',
+                errorMessage: 'You already have the role that the item would grant.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
