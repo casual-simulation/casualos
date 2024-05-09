@@ -19,6 +19,7 @@ import { getStatusCode } from '@casual-simulation/aux-common';
 import { Server as WebsocketServer } from 'ws';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { concatMap, interval } from 'rxjs';
+import { constructServerBuilder } from 'aux-backend/shared/LoadServer';
 
 /**
  * Defines a class that represents a fully featured SO4 server.
@@ -144,103 +145,7 @@ export class Server {
             return;
         }
 
-        const allowedRecordsOrigins = new Set([
-            'http://localhost:3000',
-            'http://localhost:3002',
-            'http://player.localhost:3000',
-            'https://localhost:3000',
-            'https://localhost:3002',
-            'https://player.localhost:3000',
-            'https://casualos.com',
-            'https://casualos.me',
-            'https://ab1.link',
-            'https://publicos.com',
-            'https://alpha.casualos.com',
-            'https://static.casualos.com',
-            'https://stable.casualos.com',
-            ...getAllowedAPIOrigins(),
-        ]);
-
-        const builder = new ServerBuilder(options)
-            .useAllowedAccountOrigins(allowedRecordsOrigins)
-            .useAllowedApiOrigins(allowedRecordsOrigins);
-
-        if (options.redis && options.redis.cacheNamespace) {
-            builder.useRedisCache();
-        }
-
-        if (options.prisma && options.mongodb) {
-            builder.usePrismaWithMongoDBFileStore();
-        } else {
-            builder.useMongoDB();
-        }
-
-        if (options.textIt && options.textIt.apiKey && options.textIt.flowId) {
-            builder.useTextItAuthMessenger();
-        } else if (options.ses) {
-            builder.useSesAuthMessenger();
-        } else {
-            builder.useConsoleAuthMessenger();
-        }
-
-        if (
-            options.stripe &&
-            options.stripe.secretKey &&
-            options.stripe.publishableKey
-        ) {
-            builder.useStripeSubscriptions();
-        }
-
-        if (
-            options.rateLimit &&
-            options.rateLimit.windowMs &&
-            options.rateLimit.maxHits
-        ) {
-            if (options.redis) {
-                builder.useRedisRateLimit();
-            } else {
-                builder.useMongoDBRateLimit();
-            }
-        }
-
-        if (options.websocketRateLimit && options.redis) {
-            builder.useRedisWebsocketRateLimit();
-        }
-
-        if (options.redis && options.redis.websocketConnectionNamespace) {
-            builder.useRedisWebsocketConnectionStore();
-        }
-
-        if (options.ws) {
-            builder.useWSWebsocketMessenger();
-        }
-
-        if (
-            options.redis &&
-            options.redis.tempInstRecordsStoreNamespace &&
-            options.redis.instRecordsStoreNamespace &&
-            options.prisma
-        ) {
-            builder.usePrismaAndRedisInstRecords();
-        }
-
-        if (options.ai) {
-            builder.useAI();
-        }
-
-        if (options.privo) {
-            builder.usePrivo();
-        }
-
-        if (options.notifications) {
-            builder.useNotifications();
-        }
-
-        if (options.webauthn) {
-            builder.useWebAuthn();
-        }
-
-        builder.useAutomaticPlugins();
+        const builder = constructServerBuilder(options);
 
         const {
             server,
@@ -252,8 +157,10 @@ export class Server {
 
         await builder.ensureInitialized();
 
-        const filesCollection =
-            mongoDatabase.collection<any>('recordsFilesData');
+        const allowedRecordsOrigins = new Set([
+            ...builder.allowedApiOrigins,
+            ...builder.allowedAccountOrigins,
+        ]);
 
         const dist = this._config.backend.dist;
 
@@ -317,103 +224,116 @@ export class Server {
             })
         );
 
-        app.use(
-            '/api/v2/records/file/*',
-            express.raw({
-                type: () => true,
-                limit: '1GB',
-            })
-        );
+        if (mongoDatabase) {
+            const filesCollection =
+                mongoDatabase.collection<any>('recordsFilesData');
 
-        app.post(
-            '/api/v2/records/file/*',
-            asyncMiddleware(async (req, res) => {
-                // TODO: Secure this endpoint
-                handleRecordsCorsHeaders(req, res);
-                // const recordName = req.headers['record-name'] as string;
-                const recordNameAndFileName = req.path.slice(
-                    '/api/v2/records/file/'.length
-                );
-                const [recordName, fileName] = recordNameAndFileName.split('/');
+            app.use(
+                '/api/v2/records/file/*',
+                express.raw({
+                    type: () => true,
+                    limit: '1GB',
+                })
+            );
 
-                if (!recordName || !fileName) {
-                    res.status(400).send();
-                    return;
-                }
+            app.post(
+                '/api/v2/records/file/*',
+                asyncMiddleware(async (req, res) => {
+                    // TODO: Secure this endpoint
+                    handleRecordsCorsHeaders(req, res);
+                    // const recordName = req.headers['record-name'] as string;
+                    const recordNameAndFileName = req.path.slice(
+                        '/api/v2/records/file/'.length
+                    );
+                    const [recordName, fileName] =
+                        recordNameAndFileName.split('/');
 
-                const mimeType = req.headers['content-type'] as string;
+                    if (!recordName || !fileName) {
+                        res.status(400).send();
+                        return;
+                    }
 
-                await filesCollection.insertOne({
-                    recordName,
-                    fileName,
-                    mimeType,
-                    body: req.body,
-                });
+                    const mimeType = req.headers['content-type'] as string;
 
-                const result = await filesController.markFileAsUploaded(
-                    recordName,
-                    fileName
-                );
+                    await filesCollection.insertOne({
+                        recordName,
+                        fileName,
+                        mimeType,
+                        body: req.body,
+                    });
 
-                return returnResponse(res, result);
-            })
-        );
+                    const result = await filesController.markFileAsUploaded(
+                        recordName,
+                        fileName
+                    );
 
-        app.get(
-            '/api/v2/records/file/:recordName/*',
-            asyncMiddleware(async (req, res) => {
-                // TODO: Secure this endpoint
-                handleRecordsCorsHeaders(req, res);
-                const recordNameAndFileName = req.path.slice(
-                    '/api/v2/records/file/'.length
-                );
-                const [recordName, fileName] = recordNameAndFileName.split('/');
+                    return returnResponse(res, result);
+                })
+            );
 
-                const file = await filesCollection.findOne({
-                    recordName,
-                    fileName,
-                });
+            app.get(
+                '/api/v2/records/file/:recordName/*',
+                asyncMiddleware(async (req, res) => {
+                    // TODO: Secure this endpoint
+                    handleRecordsCorsHeaders(req, res);
+                    const recordNameAndFileName = req.path.slice(
+                        '/api/v2/records/file/'.length
+                    );
+                    const [recordName, fileName] =
+                        recordNameAndFileName.split('/');
 
-                if (!file) {
-                    res.status(404).send();
-                    return;
-                }
+                    const file = await filesCollection.findOne({
+                        recordName,
+                        fileName,
+                    });
 
-                if (file.body instanceof Binary) {
-                    res.status(200)
-                        .contentType(file.mimeType)
-                        .send(file.body.buffer);
-                } else {
-                    res.status(200).contentType(file.mimeType).send(file.body);
-                }
-            })
-        );
+                    if (!file) {
+                        res.status(404).send();
+                        return;
+                    }
 
-        app.get(
-            '/api/v2/records/file/*',
-            asyncMiddleware(async (req, res) => {
-                // TODO: Secure this endpoint
-                handleRecordsCorsHeaders(req, res);
-                const fileName = req.path.slice('/api/v2/records/file/'.length);
+                    if (file.body instanceof Binary) {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body.buffer);
+                    } else {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body);
+                    }
+                })
+            );
 
-                const file = await filesCollection.findOne({
-                    fileName,
-                });
+            app.get(
+                '/api/v2/records/file/*',
+                asyncMiddleware(async (req, res) => {
+                    // TODO: Secure this endpoint
+                    handleRecordsCorsHeaders(req, res);
+                    const fileName = req.path.slice(
+                        '/api/v2/records/file/'.length
+                    );
 
-                if (!file) {
-                    res.status(404).send();
-                    return;
-                }
+                    const file = await filesCollection.findOne({
+                        fileName,
+                    });
 
-                if (file.body instanceof Binary) {
-                    res.status(200)
-                        .contentType(file.mimeType)
-                        .send(file.body.buffer);
-                } else {
-                    res.status(200).contentType(file.mimeType).send(file.body);
-                }
-            })
-        );
+                    if (!file) {
+                        res.status(404).send();
+                        return;
+                    }
+
+                    if (file.body instanceof Binary) {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body.buffer);
+                    } else {
+                        res.status(200)
+                            .contentType(file.mimeType)
+                            .send(file.body);
+                    }
+                })
+            );
+        }
 
         app.use(
             '/api/*',
@@ -524,16 +444,6 @@ export class Server {
         function returnResponse(res: Response, result: any) {
             const statusCode = getStatusCode(result);
             return res.status(statusCode).send(result);
-        }
-
-        function getAllowedAPIOrigins(): string[] {
-            const origins = process.env.ALLOWED_API_ORIGINS;
-            if (origins) {
-                const values = origins.split(' ');
-                return values.filter((v) => !!v);
-            }
-
-            return [];
         }
     }
 

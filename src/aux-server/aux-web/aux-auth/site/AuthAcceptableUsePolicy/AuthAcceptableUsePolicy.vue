@@ -11,7 +11,8 @@
                 </p>
                 <p>
                     By using our products or services, you agree to this Acceptable Use Policy as
-                    well as our <router-link to="/terms">Terms of Service</router-link> and
+                    well as our <router-link to="/code-of-conduct">Code of Conduct</router-link>,
+                    <router-link to="/terms">Terms of Service</router-link> and
                     <router-link to="/privacy-policy">Privacy Policy</router-link>.
                 </p>
                 <div v-html="acceptableUsePolicyHtml"></div>

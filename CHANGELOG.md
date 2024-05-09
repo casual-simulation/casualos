@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.3.3
+
+#### Date: 5/9/2024
+
+### :rocket: Features
+
+-   Improved server deployments to support the same configuration options as serverless deployments.
+-   Updated `livekit-client` to `v2.1.3`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where joining a room on MacOS Chrome might not include the video track for the current session.
+
 ## V3.3.2
 
 #### Date: 4/29/2024
