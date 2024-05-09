@@ -2,7 +2,7 @@ _Date: March 20th 2024_
 
 You can find a plain-text version of this policy <a href="/children-privacy-policy.txt">here</a>.
 
-Here are links to our full [Privacy Policy](/privacy-policy), [Acceptable Use Policy](/acceptable-use-policy), and [Terms of Service](/terms).
+Here are links to our full [Privacy Policy](/privacy-policy), [Code of Conduct](/code-of-conduct), [Acceptable Use Policy](/acceptable-use-policy), and [Terms of Service](/terms).
 
 <h2 id="table-of-contents">Table of Contents</h2>
 
