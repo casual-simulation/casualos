@@ -85,11 +85,11 @@ import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
 import AuthStudio from './AuthStudio/AuthStudio';
 import AuthRecordsInsts from './AuthRecordsInsts/AuthRecordsInsts';
 import './global.css';
-import { appManager } from 'aux-web/shared/AppManager';
 import OAuthRedirect from './OAuthRedirect/OAuthRedirect';
 import PrivoRegistrationCard from './PrivoRegistrationCard/PrivoRegistrationCard';
 import AuthChildrenPrivacyPolicy from './AuthChildrenPrivacyPolicy/AuthChildrenPrivacyPolicy';
 import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
+import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -158,6 +158,11 @@ const routes: RouteConfig[] = [
         path: '/acceptable-use-policy',
         name: 'acceptable-use-policy',
         component: AuthAcceptableUsePolicy,
+    },
+    {
+        path: '/code-of-conduct',
+        name: 'code-of-conduct',
+        component: AuthCodeOfConduct,
     },
     {
         path: '/olx-terms-of-service',
@@ -326,6 +331,7 @@ const publicPages = new Set([
     'acceptable-use-policy',
     'olx-terms-of-service',
     'oauth-redirect',
+    'code-of-conduct',
 ]);
 
 router.beforeEach(async (to, from, next) => {

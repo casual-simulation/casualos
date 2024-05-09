@@ -191,6 +191,7 @@ Use the following environment variables to configure infrastructure-related opti
 -   `PRIVACY_POLICY`: The Markdown of the privacy policy that the sites should use.
 -   `CHILDREN_PRIVACY_POLICY`: The Markdown of the children's privacy policy that the sites should use.
 -   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
+-   `CODE_OF_CONDUCT`: The Markdown of the code of conduct that the sites should use.
 
 ## Security Note
 
