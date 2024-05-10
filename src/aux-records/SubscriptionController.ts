@@ -1193,7 +1193,7 @@ export class SubscriptionController {
                         }
                     }
                 ],
-                success_url: request.successUrl,
+                success_url: fulfillmentRoute(config.returnUrl, sessionId),
                 cancel_url: request.returnUrl,
                 client_reference_id: sessionId,
                 metadata: {
@@ -1294,7 +1294,7 @@ export class SubscriptionController {
                 };
             } else if (session.fulfilledAtMs > 0) {
                 return {
-                    success: true
+                    success: true,
                 };
             }
             console.log(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Fulfilling checkout session.`);
@@ -1891,6 +1891,10 @@ function studiosRoute(basePath: string, studioId: string, studioName: string) {
         )}`,
         basePath
     ).href;
+}
+
+function fulfillmentRoute(basePath: string, sessionId: string) {
+    return new URL(`/store/fulfillment/${sessionId}`, basePath).href;
 }
 
 /**

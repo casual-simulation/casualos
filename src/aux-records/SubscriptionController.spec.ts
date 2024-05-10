@@ -4765,7 +4765,7 @@ describe('SubscriptionController', () => {
                         },
                     },
                 ],
-                success_url: 'success-url',
+                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
                 customer: 'customer_id',
                 metadata: {
@@ -4871,7 +4871,7 @@ describe('SubscriptionController', () => {
                         },
                     },
                 ],
-                success_url: 'success-url',
+                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
                 customer: 'customer_id',
                 metadata: {
@@ -4996,7 +4996,7 @@ describe('SubscriptionController', () => {
                         },
                     },
                 ],
-                success_url: 'success-url',
+                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
                 customer: 'customer_id',
                 metadata: {
@@ -5121,7 +5121,7 @@ describe('SubscriptionController', () => {
                         },
                     },
                 ],
-                success_url: 'success-url',
+                success_url: expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
                 customer: 'customer_id',
                 metadata: {
@@ -5251,7 +5251,7 @@ describe('SubscriptionController', () => {
                         },
                     },
                 ],
-                success_url: 'success-url',
+                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
                 customer: 'customer_id',
                 metadata: {
