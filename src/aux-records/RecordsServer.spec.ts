@@ -43,7 +43,7 @@ import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
-import { StripeAccount, StripeAccountLink, StripeInterface, StripeProduct } from './StripeInterface';
+import { StripeAccount, StripeAccountLink, StripeCheckoutResponse, StripeCreateCustomerResponse, StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
@@ -302,15 +302,16 @@ describe('RecordsServer', () => {
         publishableKey: string;
         getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
         listPricesForProduct: jest.Mock<any>;
-        createCheckoutSession: jest.Mock<any>;
+        createCheckoutSession: jest.Mock<Promise<StripeCheckoutResponse>>;
         createPortalSession: jest.Mock<any>;
-        createCustomer: jest.Mock<any>;
+        createCustomer: jest.Mock<Promise<StripeCreateCustomerResponse>>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
-        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
-        createAccount: jest.Mock<Promise<StripeAccount>>;
-        getAccountById: jest.Mock<Promise<StripeAccount>>;
+        createAccountLink: jest.Mock<Promise<StripeAccountLink>>,
+        createAccount: jest.Mock<Promise<StripeAccount>>,
+        getAccountById: jest.Mock<Promise<StripeAccount>>,
+        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>,
     };
 
     let aiController: AIController;
@@ -549,6 +550,7 @@ describe('RecordsServer', () => {
             createAccountLink: jest.fn(),
             createAccount: jest.fn(),
             getAccountById: jest.fn(),
+            getCheckoutSessionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -577,7 +579,9 @@ describe('RecordsServer', () => {
             store,
             store,
             store,
-            purchasableItemsStore
+            purchasableItemsStore,
+            policyController,
+            store
         );
 
         chatInterface = {
@@ -1515,6 +1519,9 @@ describe('RecordsServer', () => {
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
                 url: 'http://create_url',
+                id: 'session_id',
+                status: 'open',
+                payment_status: 'unpaid',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -1558,6 +1565,9 @@ describe('RecordsServer', () => {
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
                 url: 'http://create_url',
+                id: 'session_id',
+                status: 'open',
+                payment_status: 'unpaid',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -14885,8 +14895,8 @@ describe('RecordsServer', () => {
 
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
                 account: 'accountId',
-                refresh_url: 'return-url',
-                return_url: 'return-url',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
                 type: 'account_update',
             });
         });
@@ -15764,6 +15774,9 @@ describe('RecordsServer', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -15808,6 +15821,9 @@ describe('RecordsServer', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -16064,6 +16080,9 @@ describe('RecordsServer', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -16108,6 +16127,9 @@ describe('RecordsServer', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({

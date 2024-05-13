@@ -1478,6 +1478,7 @@ Object {
                       "update",
                       "delete",
                       "list",
+                      "purchase",
                     ],
                   },
                   "expireTimeMs": Object {
@@ -4269,6 +4270,7 @@ Object {
                       "update",
                       "delete",
                       "list",
+                      "purchase",
                     ],
                   },
                   "expireTimeMs": Object {
