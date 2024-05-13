@@ -1389,10 +1389,12 @@ export class SubscriptionController {
                 }
 
                 await this._authStore.markCheckoutSessionFulfilled(session.id, Date.now());
+                const config = await this._getConfig();
 
                 return {
                     success: true,
-                    activationKey: key
+                    activationKey: key,
+                    activationUrl: activationRoute(config.returnUrl, key)
                 };
             }
         } catch(err) {
@@ -1895,6 +1897,12 @@ function studiosRoute(basePath: string, studioId: string, studioName: string) {
 
 function fulfillmentRoute(basePath: string, sessionId: string) {
     return new URL(`/store/fulfillment/${sessionId}`, basePath).href;
+}
+
+function activationRoute(basePath: string, key: string) {
+    const url = new URL(`/store/activate`, basePath);
+    url.searchParams.set('key', key);
+    return url.href;
 }
 
 /**
@@ -2458,6 +2466,11 @@ export interface FulfillCheckoutSessionSuccess {
      * The activation key that the user can use to activate the items later.
      */
     activationKey?: string;
+
+    /**
+     * The URL that the user can visit to activate the items.
+     */
+    activationUrl?: string;
 }
 
 export interface FulfillCheckoutSessionFailure {

@@ -15,9 +15,9 @@ export type TestServices = ReturnType<typeof createTestControllers>;
 
 export function createTestSubConfiguration(): SubscriptionConfiguration {
     return {
-        cancelUrl: 'cancel-url',
-        returnUrl: 'return-url',
-        successUrl: 'success-url',
+        cancelUrl: 'https://cancel-url/',
+        returnUrl: 'https://return-url/',
+        successUrl: 'https://success-url/',
         webhookSecret: 'webhook-secret',
         subscriptions: [],
         tiers: {},

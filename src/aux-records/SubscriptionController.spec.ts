@@ -6347,7 +6347,8 @@ describe('SubscriptionController', () => {
 
             expect(result).toEqual({
                 success: true,
-                activationKey: expect.any(String)
+                activationKey: expect.any(String),
+                activationUrl: expect.stringMatching(/^https:\/\/return-url\/store\/activate\?key=/)
             });
 
             const roles = await store.listRolesForUser('studioId', userId);
