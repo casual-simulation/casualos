@@ -567,6 +567,152 @@ describe('PurchasableItemRecordsController', () => {
                 imageUrls: ['imageUrl'],
             });
         });
+
+        it('should allow updating to a free item that dont match the currency limits', async () => {
+            await itemsStore.putItem('testRecord', {
+                address: 'address',
+                name: 'name',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'roleName',
+                roleGrantTimeMs: 1000,
+                description: 'description',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['imageUrl'],
+            });
+
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 10,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.recordItem({
+                recordKeyOrRecordName: 'testRecord',
+                userId: userId,
+                item: {
+                    address: 'address',
+                    name: 'name',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'roleName',
+                    roleGrantTimeMs: 1000,
+                    description: 'description',
+                    currency: 'usd',
+                    cost: 0,
+                    imageUrls: ['imageUrl'],
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                address: 'address'
+            });
+
+            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+                address: 'address',
+                name: 'name',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'roleName',
+                roleGrantTimeMs: 1000,
+                description: 'description',
+                currency: 'usd',
+                cost: 0,
+                imageUrls: ['imageUrl'],
+            });
+        });
+
+        it('should allow creating free items that dont match the currency limits', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 10,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.recordItem({
+                recordKeyOrRecordName: 'testRecord',
+                userId: userId,
+                item: {
+                    address: 'address',
+                    name: 'name',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'roleName',
+                    roleGrantTimeMs: 1000,
+                    description: 'description',
+                    currency: 'usd',
+                    cost: 0,
+                    imageUrls: ['imageUrl'],
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                address: 'address'
+            });
+
+            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+                address: 'address',
+                name: 'name',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'roleName',
+                roleGrantTimeMs: 1000,
+                description: 'description',
+                currency: 'usd',
+                cost: 0,
+                imageUrls: ['imageUrl'],
+            });
+        });
     });
 
     describe('getItem()', () => {

@@ -12776,6 +12776,54 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should support items that are free', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            name: 'name',
+                            description: 'description',
+                            imageUrls: ['image1', 'image2'],
+                            currency: 'usd',
+                            cost: 0,
+                            roleName: 'role',
+                            roleGrantTimeMs: 1000,
+                            markers: [PUBLIC_READ_MARKER],
+                            redirectUrl: 'http://example.com'
+                        }
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await purchasableItemsStore.getItemByAddress(recordName, 'testAddress');
+            expect(item).toEqual({
+                address: 'testAddress',
+                name: 'name',
+                description: 'description',
+                imageUrls: ['image1', 'image2'],
+                currency: 'usd',
+                cost: 0,
+                roleName: 'role',
+                roleGrantTimeMs: 1000,
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'http://example.com'
+            });
+        });
+
         it('should reject the request if the user is not authorized', async () => {
             store.roles[recordName] = {
                 [userId]: new Set([]),

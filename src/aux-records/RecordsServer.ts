@@ -3148,7 +3148,7 @@ export class RecordsServer {
                             z.string().min(1).max(512)
                         ).max(8),
                         currency: z.string().min(1).max(15).toLowerCase(),
-                        cost: z.number().positive().int(),
+                        cost: z.number().gte(0).int(),
                         taxCode: z.string().min(1).max(64).nullable().optional(),
                         roleName: z.string().min(1),
                         roleGrantTimeMs: z.number().positive().int().nullable().optional(),
@@ -3217,7 +3217,7 @@ export class RecordsServer {
                     recordName: RECORD_NAME_VALIDATION,
                     item: z.object({
                         address: ADDRESS_VALIDATION,
-                        expectedCost: z.number().min(0).int(),
+                        expectedCost: z.number().gte(0).int(),
                         currency: z.string().min(1).max(15).toLowerCase(),
                     }),
                     instances: INSTANCES_ARRAY_VALIDATION.optional(),

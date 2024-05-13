@@ -66,24 +66,26 @@ export class PurchasableItemRecordsController extends CrudRecordsController<Purc
                 };
             }
 
-            const limit = currencyLimits[item.currency];
+            if (item.cost > 0) {
+                const limit = currencyLimits[item.currency];
 
-            const schema = z.object({
-                cost: z.number()
-                    .int()
-                    .min(limit.minCost)
-                    .max(limit.maxCost)
-            });
+                const schema = z.object({
+                    cost: z.number()
+                        .int()
+                        .min(limit.minCost)
+                        .max(limit.maxCost)
+                });
 
-            const result = schema.safeParse(item);
+                const result = schema.safeParse(item);
 
-            if (result.success === false) {
-                return {
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage: 'The cost is not allowed for this subscription. Please choose a different cost.',
-                    issues: result.error.issues,
-                };
+                if (result.success === false) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage: 'The cost is not allowed for this subscription. Please choose a different cost.',
+                        issues: result.error.issues,
+                    };
+                }
             }
         }
 
