@@ -3209,6 +3209,42 @@ export class RecordsServer {
                     });
                     return result;
                 }),
+
+            purchaseItem: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/purchasableItems/purchase')
+                .inputs(z.object({
+                    recordName: RECORD_NAME_VALIDATION,
+                    item: z.object({
+                        address: ADDRESS_VALIDATION,
+                        expectedCost: z.number().min(0).int(),
+                        currency: z.string().min(1).max(15).toLowerCase(),
+                    }),
+                    instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    returnUrl: z.string().url(),
+                    successUrl: z.string().url(),
+                }))
+                .handler(async ({ recordName, item, instances, returnUrl, successUrl }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
+                    if (sessionKeyValidation.success === false && sessionKeyValidation.errorCode !== 'no_session_key') {
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._subscriptions.createPurchaseItemLink({
+                        userId: sessionKeyValidation.userId,
+                        item: {
+                            recordName: recordName,
+                            address: item.address,
+                            currency: item.currency,
+                            expectedCost: item.expectedCost,
+                        },
+                        returnUrl,
+                        successUrl,
+                        instances,
+                    });
+
+                    return result;
+                }),
         };
     }
 

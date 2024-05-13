@@ -13172,6 +13172,208 @@ describe('RecordsServer', () => {
         }), () => apiHeaders);
     });
 
+    describe('POST /api/v2/records/purchasableItems/purchase', () => {
+        const recordName = 'studioId';
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId'
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: recordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should return the checkout URL', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems/purchase`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address1',
+                            expectedCost: 100,
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: expect.any(String),
+                    url: 'checkoutUrl',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to checkout as a guest', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems/purchase`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address1',
+                            expectedCost: 100,
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: expect.any(String),
+                    url: 'checkoutUrl',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/purchasableItems/purchase`, () =>
+            JSON.stringify({
+                recordName,
+                item: {
+                    address: 'address1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'http://example.com',
+                successUrl: 'http://example.com/success',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/purchasableItems/purchase`, body, authenticatedHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/purchasableItems/purchase`,
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'address1',
+                        expectedCost: 100,
+                        currency: 'usd',
+                    },
+                    returnUrl: 'http://example.com',
+                    successUrl: 'http://example.com/success',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);

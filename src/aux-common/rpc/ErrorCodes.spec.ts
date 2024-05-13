@@ -80,6 +80,10 @@ describe('getStatusCode()', () => {
         ['invalid_connection_state', 500] as const,
         ['user_already_exists', 400] as const,
         ['session_is_not_revokable', 400] as const,
+        ['item_already_purchased', 400] as const,
+        ['item_not_found', 404] as const,
+        ['store_disabled', 400] as const,
+        ['currency_not_supported', 400] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {

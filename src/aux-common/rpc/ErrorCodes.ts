@@ -70,7 +70,11 @@ export type KnownErrorCodes =
     | 'not_found'
     | 'invalid_connection_state'
     | 'user_already_exists'
-    | 'session_is_not_revokable';
+    | 'session_is_not_revokable'
+    | 'item_already_purchased'
+    | 'item_not_found'
+    | 'store_disabled'
+    | 'currency_not_supported';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -176,6 +180,8 @@ export function getStatusCode(
             return 500;
         } else if (response.errorCode === 'user_already_exists') {
             return 400;
+        } else if (response.errorCode === 'item_not_found') {
+            return 404;
         } else {
             return 400;
         }
