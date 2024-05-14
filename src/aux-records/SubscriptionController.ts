@@ -1151,29 +1151,28 @@ export class SubscriptionController {
                     };
                 }
 
-                if (!user.stripeCustomerId) {
-                    const customer = await this._stripe.createCustomer({
-                        name: user.name,
-                        email: user.email,
-                        phone: user.phoneNumber,
-                        metadata: {
-                            role: 'user',
-                            userId: user.id
-                        }
-                    });
+                // if (!user.stripeCustomerId) {
+                //     const customer = await this._stripe.createCustomer({
+                //         name: user.name,
+                //         email: user.email,
+                //         phone: user.phoneNumber,
+                //         metadata: {
+                //             role: 'user',
+                //             userId: user.id
+                //         }
+                //     });
 
-                    customerId = user.stripeCustomerId = customer.id;
-                    await this._authStore.saveUser(user);
-                } else {
-                    customerId = user.stripeCustomerId;
-                }
+                //     customerId = user.stripeCustomerId = customer.id;
+                //     await this._authStore.saveUser(user);
+                // } else {
+                //     customerId = user.stripeCustomerId;
+                // }
             }
 
             const sessionId = uuid();
 
             console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.item.currency} cost: ${item.cost} applicationFee: ${applicationFee}] Creating checkout session.`);
             const session = await this._stripe.createCheckoutSession({
-                customer: customerId,
                 mode: 'payment',
                 line_items: [
                     {
@@ -1190,7 +1189,8 @@ export class SubscriptionController {
                                 },
                                 tax_code: item.taxCode ?? undefined,
                             },
-                        }
+                        },
+                        quantity: 1,
                     }
                 ],
                 success_url: fulfillmentRoute(config.returnUrl, sessionId),

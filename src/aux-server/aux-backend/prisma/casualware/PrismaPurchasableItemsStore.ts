@@ -1,4 +1,4 @@
-import { CrudRecordsStore, ListCrudStoreByMarkerRequest, ListCrudStoreSuccess } from '@casual-simulation/aux-records';
+import { CrudRecordsStore, ListCrudStoreByMarkerRequest, ListCrudStoreSuccess, StudioStripeAccountStatus } from '@casual-simulation/aux-records';
 import { PurchasableItem, PurchasableItemMetrics } from '@casual-simulation/aux-records/casualware/PurchasableItemRecordsStore';
 import { PrismaClient, Prisma } from '../generated';
 import { PrismaMetricsStore } from '../PrismaMetricsStore';
@@ -27,7 +27,6 @@ export class PrismaPurchasableItemRecordsStore implements CrudRecordsStore<Purch
                 taxCode: item.taxCode,
                 roleName: item.roleName,
                 roleGrantTimeMs: item.roleGrantTimeMs,
-                redirectUrl: item.redirectUrl,
                 markers: item.markers,
             }
         });
@@ -63,7 +62,6 @@ export class PrismaPurchasableItemRecordsStore implements CrudRecordsStore<Purch
                 taxCode: item.taxCode,
                 roleName: item.roleName,
                 roleGrantTimeMs: item.roleGrantTimeMs,
-                redirectUrl: item.redirectUrl,
                 markers: item.markers,
             }
         });
@@ -88,7 +86,6 @@ export class PrismaPurchasableItemRecordsStore implements CrudRecordsStore<Purch
                 taxCode: item.taxCode,
                 roleName: item.roleName,
                 roleGrantTimeMs: item.roleGrantTimeMs,
-                redirectUrl: item.redirectUrl,
                 markers: item.markers,
             },
             update: {
@@ -100,7 +97,6 @@ export class PrismaPurchasableItemRecordsStore implements CrudRecordsStore<Purch
                 taxCode: item.taxCode,
                 roleName: item.roleName,
                 roleGrantTimeMs: item.roleGrantTimeMs,
-                redirectUrl: item.redirectUrl,
                 markers: item.markers,
             }
         });
@@ -217,6 +213,8 @@ export class PrismaPurchasableItemRecordsStore implements CrudRecordsStore<Purch
                 info.studio?.subscriptionStatus,
             subscriptionType: info.owner ? 'user' : 'studio',
             totalPurchasableItems: totalPurchasableItems,
+            stripeAccountId: info.studio?.stripeAccountId,
+            stripeAccountStatus: info.studio?.stripeAccountStatus as StudioStripeAccountStatus,
             ...(await this._metrics.getSubscriptionPeriod(
                 info.owner?.subscriptionStatus ||
                     info.studio?.subscriptionStatus,

@@ -1211,13 +1211,24 @@ export class ServerBuilder implements SubscriptionLike {
             metrics: this._metricsStore,
         });
 
+        if (this._purchasableItemsStore) {
+            this._purchasableItemsController = new PurchasableItemRecordsController({
+                store: this._purchasableItemsStore,
+                config: this._configStore,
+                policies: this._policyController,
+            });
+        }
+
         if (this._stripe && this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
                 this._stripe,
                 this._authController,
                 this._authStore,
                 this._recordsStore,
-                this._configStore
+                this._configStore,
+                this._purchasableItemsStore,
+                this._policyController,
+                this._policyStore,
             );
         }
 
@@ -1231,14 +1242,6 @@ export class ServerBuilder implements SubscriptionLike {
                 this._configStore,
                 this._notificationMessenger
             );
-        }
-
-        if (this._purchasableItemsStore) {
-            this._purchasableItemsController = new PurchasableItemRecordsController({
-                store: this._purchasableItemsStore,
-                config: this._configStore,
-                policies: this._policyController,
-            });
         }
 
         if (

@@ -4,6 +4,13 @@ import { z } from 'zod';
  * Defines an interface that represents the high-level Stripe-like functions that the SubscriptionController uses.
  */
 export interface StripeInterface {
+
+    /**
+     * Gets the stripe interface that can be used for testing.
+     * Null if testing is not supported.
+     */
+    test?: StripeInterface | null;
+
     /**
      * Gets the publishable key.
      */
@@ -203,7 +210,7 @@ export interface StripeCheckoutRequest {
     /**
      * The ID of the customer that the checkout request should be used.
      */
-    customer: string;
+    customer?: string;
 
     /**
      * The email address that should be used for the customer.
@@ -808,7 +815,7 @@ export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
     data: z.object({
         object: z.object({
             id: z.string(),
-            client_reference_id: z.string(),
+            client_reference_id: z.string().nullable(),
             object: z.literal('checkout.session'),
             status: z.enum([
                 'complete',

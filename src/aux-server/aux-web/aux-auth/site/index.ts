@@ -90,6 +90,7 @@ import PrivoRegistrationCard from './PrivoRegistrationCard/PrivoRegistrationCard
 import AuthChildrenPrivacyPolicy from './AuthChildrenPrivacyPolicy/AuthChildrenPrivacyPolicy';
 import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
+import AuthStoreFulfillment from './AuthStoreFulfillment/AuthStoreFulfillment';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -246,6 +247,14 @@ const routes: RouteConfig[] = [
             after: route.query['after'],
         }),
     },
+    {
+        path: '/store/fulfillment/:sessionId',
+        name: 'store-fulfillment',
+        component: AuthStoreFulfillment,
+        props: (route) => ({
+            sessionId: route.params.sessionId,
+        }),
+    }
 ];
 
 const router = new VueRouter({
@@ -332,6 +341,7 @@ const publicPages = new Set([
     'olx-terms-of-service',
     'oauth-redirect',
     'code-of-conduct',
+    'store-fulfillment',
 ]);
 
 router.beforeEach(async (to, from, next) => {

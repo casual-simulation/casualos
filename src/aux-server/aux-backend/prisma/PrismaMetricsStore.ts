@@ -540,6 +540,8 @@ export class PrismaMetricsStore implements MetricsStore {
                         subscriptionStatus: true,
                         subscriptionPeriodStart: true,
                         subscriptionPeriodEnd: true,
+                        stripeAccountId: true,
+                        stripeAccountStatus: true,
                     },
                 },
             },
