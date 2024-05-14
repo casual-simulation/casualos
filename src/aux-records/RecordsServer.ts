@@ -3245,6 +3245,28 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            fulfillCheckoutSession: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/checkoutSession/fulfill')
+                .inputs(z.object({
+                    sessionId: z.string().nonempty(),
+                    activation: z.enum(['now', 'later']),
+                }))
+                .handler(async ({ sessionId, activation }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
+                    if (sessionKeyValidation.success === false && sessionKeyValidation.errorCode !== 'no_session_key') {
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._subscriptions.fulfillCheckoutSession({
+                        userId: sessionKeyValidation.userId,
+                        sessionId,
+                        activation
+                    });
+
+                    return result;
+                }),
         };
     }
 

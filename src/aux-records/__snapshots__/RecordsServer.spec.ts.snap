@@ -2832,6 +2832,29 @@ Object {
       "name": "purchaseItem",
       "origins": "account",
     },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/checkoutSession/fulfill",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activation": Object {
+            "type": "enum",
+            "values": Array [
+              "now",
+              "later",
+            ],
+          },
+          "sessionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "fulfillCheckoutSession",
+      "origins": "account",
+    },
   ],
   "success": true,
 }
@@ -5667,6 +5690,29 @@ Object {
         "type": "object",
       },
       "name": "purchaseItem",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/checkoutSession/fulfill",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activation": Object {
+            "type": "enum",
+            "values": Array [
+              "now",
+              "later",
+            ],
+          },
+          "sessionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "fulfillCheckoutSession",
       "origins": "account",
     },
   ],

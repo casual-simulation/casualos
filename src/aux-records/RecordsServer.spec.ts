@@ -13422,6 +13422,251 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/checkoutSession/fulfill', () => {
+        const recordName = 'studioId';
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId'
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: recordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should fulfill the checkout session', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'sessionId',
+                fulfilledAtMs: null,
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: 'address1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    }
+                ],
+                stripeCheckoutSessionId: 'session_id',
+                userId: userId,
+                invoice: null,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/checkoutSession/fulfill`,
+                    JSON.stringify({
+                        sessionId: 'sessionId',
+                        activation: 'now'
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should fulfill the checkout session with an activation key', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'sessionId',
+                fulfilledAtMs: null,
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: 'address1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    }
+                ],
+                stripeCheckoutSessionId: 'session_id',
+                userId: userId,
+                invoice: null,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/checkoutSession/fulfill`,
+                    JSON.stringify({
+                        sessionId: 'sessionId',
+                        activation: 'later'
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    activationKey: expect.any(String),
+                    activationUrl: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to fulfill a session as a guest', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'sessionId',
+                fulfilledAtMs: null,
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: 'address1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    }
+                ],
+                stripeCheckoutSessionId: 'session_id',
+                userId: null,
+                invoice: null,
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/checkoutSession/fulfill`,
+                    JSON.stringify({
+                        sessionId: 'sessionId',
+                        activation: 'later'
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    activationKey: expect.any(String),
+                    activationUrl: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/checkoutSession/fulfill`, () =>
+            JSON.stringify({
+                sessionId: 'sessionId',
+                activation: 'now'
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/checkoutSession/fulfill`, body, authenticatedHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/checkoutSession/fulfill`,
+                JSON.stringify({
+                    sessionId: 'sessionId',
+                    activation: 'now'
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);
