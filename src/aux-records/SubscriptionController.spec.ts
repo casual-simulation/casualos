@@ -4384,8 +4384,8 @@ describe('SubscriptionController', () => {
 
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
                 account: 'accountId',
-                refresh_url: 'return-url',
-                return_url: 'return-url',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
                 type: 'account_update',
             });
         });
@@ -4424,8 +4424,8 @@ describe('SubscriptionController', () => {
 
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
                 account: 'accountId',
-                refresh_url: 'return-url',
-                return_url: 'return-url',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
                 type: 'account_onboarding',
             });
         });
@@ -4514,8 +4514,8 @@ describe('SubscriptionController', () => {
             });
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
                 account: 'accountId',
-                refresh_url: 'return-url',
-                return_url: 'return-url',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
                 type: 'account_onboarding',
             });
         });
@@ -4721,10 +4721,6 @@ describe('SubscriptionController', () => {
                 status: 'open',
             });
 
-            stripeMock.createCustomer.mockResolvedValueOnce({
-                id: 'customer_id',
-            });
-
             const user = await store.findUser(userId);
 
             const result = await controller.createPurchaseItemLink({
@@ -4763,11 +4759,11 @@ describe('SubscriptionController', () => {
                                 },
                             },
                         },
+                        quantity: 1,
                     },
                 ],
                 success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
-                customer: 'customer_id',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
@@ -4779,16 +4775,6 @@ describe('SubscriptionController', () => {
                 connect: {
                     stripeAccount: 'accountId',
                 }
-            });
-
-            expect(stripeMock.createCustomer).toHaveBeenCalledWith({
-                name: user.name,
-                email: user.email,
-                phone: user.phoneNumber,
-                metadata: {
-                    role: 'user',
-                    userId: userId,
-                },
             });
 
             expect(store.checkoutSessions).toEqual([
@@ -4815,99 +4801,7 @@ describe('SubscriptionController', () => {
 
             await expect(store.findUser(userId)).resolves.toEqual({
                 ...user,
-                stripeCustomerId: 'customer_id',
             });
-        });
-
-        it('should use the existing customer for the user', async () => {
-            stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                url: 'checkout_url',
-                id: 'checkout_id',
-                payment_status: 'unpaid',
-                status: 'open',
-            });
-            
-            const user = await store.findUser(userId);
-            await store.saveUser({
-                ...user,
-                stripeCustomerId: 'customer_id'
-            });
-
-            const result = await controller.createPurchaseItemLink({
-                userId: userId,
-                item: {
-                    recordName: 'studioId',
-                    address: 'item1',
-                    expectedCost: 100,
-                    currency: 'usd',
-                },
-                returnUrl: 'return-url',
-                successUrl: 'success-url',
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: true,
-                url: 'checkout_url',
-                sessionId: expect.any(String),
-            });
-
-            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
-                mode: 'payment',
-                line_items: [
-                    {
-                        price_data: {
-                            currency: 'usd',
-                            unit_amount: 100,
-                            product_data: {
-                                name: 'Item 1',
-                                description: 'Description 1',
-                                images: [],
-                                metadata: {
-                                    recordName: 'studioId',
-                                    address: 'item1',
-                                },
-                            },
-                        },
-                    },
-                ],
-                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
-                cancel_url: 'return-url',
-                customer: 'customer_id',
-                metadata: {
-                    userId: userId,
-                    checkoutSessionId: expect.any(String),
-                },
-                client_reference_id: expect.any(String),
-                payment_intent_data: {
-                    application_fee_amount: 10,
-                },
-                connect: {
-                    stripeAccount: 'accountId',
-                }
-            });
-
-            expect(store.checkoutSessions).toEqual([
-                {
-                    id: expect.any(String),
-                    stripeStatus: 'open',
-                    stripePaymentStatus: 'unpaid',
-                    paid: false,
-                    stripeCheckoutSessionId: 'checkout_id',
-                    invoiceId: null,
-                    userId: userId,
-                    fulfilledAtMs: null,
-                    items: [
-                        {
-                            type: 'role',
-                            recordName: 'studioId',
-                            purchasableItemAddress: 'item1',
-                            role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
-            ]);
         });
 
         it('should be able to charge fixed application fees', async () => {
@@ -4994,11 +4888,11 @@ describe('SubscriptionController', () => {
                                 },
                             },
                         },
+                        quantity: 1,
                     },
                 ],
                 success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
-                customer: 'customer_id',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
@@ -5119,11 +5013,11 @@ describe('SubscriptionController', () => {
                                 },
                             },
                         },
+                        quantity: 1,
                     },
                 ],
                 success_url: expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
-                customer: 'customer_id',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
@@ -5207,12 +5101,6 @@ describe('SubscriptionController', () => {
                 cost: 49,
             });
 
-            const user = await store.findUser(userId);
-            await store.saveUser({
-                ...user,
-                stripeCustomerId: 'customer_id'
-            });
-
             const result = await controller.createPurchaseItemLink({
                 userId: userId,
                 item: {
@@ -5249,11 +5137,11 @@ describe('SubscriptionController', () => {
                                 },
                             },
                         },
+                        quantity: 1,
                     },
                 ],
                 success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
-                customer: 'customer_id',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
@@ -7302,6 +7190,15 @@ describe('SubscriptionController', () => {
                             stripePaymentStatus: 'paid',
                             invoiceId: null,
                             fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'role',
+                                    recordName: 'studioId',
+                                    purchasableItemAddress: 'item1',
+                                    role: 'myRole',
+                                    roleGrantTimeMs: null
+                                }
+                            ]
                         }
                     ]);
                 });
@@ -7369,6 +7266,15 @@ describe('SubscriptionController', () => {
                             stripePaymentStatus: 'unpaid',
                             invoiceId: null,
                             fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'role',
+                                    recordName: 'studioId',
+                                    purchasableItemAddress: 'item1',
+                                    role: 'myRole',
+                                    roleGrantTimeMs: null
+                                }
+                            ]
                         }
                     ]);
                 });
@@ -7542,7 +7448,7 @@ describe('getAccountStatus()', () => {
     });
 });
 
-describe.only('formatV1ActivationKey()', () => {
+describe('formatV1ActivationKey()', () => {
     it('should format an access key', () => {
         const result = formatV1ActivationKey('id', 'password');
 
@@ -7554,7 +7460,7 @@ describe.only('formatV1ActivationKey()', () => {
     });
 });
 
-describe.only('parseActivationKey()', () => {
+describe('parseActivationKey()', () => {
     it('should be able to parse the given access key', () => {
         const result = formatV1ActivationKey('id', 'password');
         const parsed = parseActivationKey(result);
