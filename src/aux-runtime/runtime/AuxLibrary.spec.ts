@@ -175,9 +175,15 @@ import {
     getFile,
     listUserStudios,
     listDataRecordByMarker,
+    recordStoreItem,
+    getStoreItem,
+    eraseStoreItem,
+    listStoreItems,
+    listStoreItemsByMarker,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
+    PUBLIC_READ_MARKER,
     remote,
     reportInst,
     showAccountInfo,
@@ -7376,6 +7382,143 @@ describe('AuxLibrary', () => {
                 const action = result[ORIGINAL_OBJECT];
                 const expected = getRecordsEndpoint(context.tasks.size);
                 expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordStoreItem()', () => {
+            it('should emit a RecordStoreItemAction', async () => {
+                const action: any = library.api.os.recordStoreItem(
+                    'recordKey',
+                    'address',
+                    {
+                        name: 'item',
+                        description: 'description',
+                        cost: 100,
+                        currency: 'usd',
+                        imageUrls: [],
+                        roleName: 'roleName',
+                        roleGrantTimeMs: null,
+                        markers: [PUBLIC_READ_MARKER],
+                    }
+                );
+                const expected = recordStoreItem(
+                    'recordKey',
+                    'address',
+                    { 
+                        name: 'item',
+                        description: 'description',
+                        cost: 100,
+                        currency: 'usd',
+                        imageUrls: [],
+                        roleName: 'roleName',
+                        roleGrantTimeMs: null,
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getStoreItem()', () => {
+            it('should emit a GetStoreItemAction', async () => {
+                const action: any = library.api.os.getStoreItem(
+                    'recordKey',
+                    'address',
+                );
+                const expected = getStoreItem(
+                    'recordKey',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseStoreItem()', () => {
+            it('should emit a EraseStoreItemAction', async () => {
+                const action: any = library.api.os.eraseStoreItem(
+                    'recordKey',
+                    'address',
+                );
+                const expected = eraseStoreItem(
+                    'recordKey',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listStoreItems()', () => {
+            it('should emit a ListStoreItemsAction', async () => {
+                const action: any = library.api.os.listStoreItems(
+                    'recordKey'
+                );
+                const expected = listStoreItems(
+                    'recordKey',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to start listing after an address', async () => {
+                const action: any = library.api.os.listStoreItems(
+                    'recordKey',
+                    'address'
+                );
+                const expected = listStoreItems(
+                    'recordKey',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listStoreItemsByMarker()', () => {
+            it('should emit a ListStoreItemsByMarkerAction', async () => {
+                const action: any = library.api.os.listStoreItemsByMarker(
+                    'recordKey',
+                    'marker'
+                );
+                const expected = listStoreItemsByMarker(
+                    'recordKey',
+                    'marker',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to start listing after an address', async () => {
+                const action: any = library.api.os.listStoreItemsByMarker(
+                    'recordKey',
+                    'marker',
+                    'address'
+                );
+                const expected = listStoreItemsByMarker(
+                    'recordKey',
+                    'marker',
+                    'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

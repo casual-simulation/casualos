@@ -37,6 +37,11 @@ import {
     ListRecordDataByMarkerAction,
     GrantRecordPermissionAction,
     RevokeRecordPermissionAction,
+    RecordStoreItemAction,
+    GetStoreItemAction,
+    EraseStoreItemAction,
+    ListStoreItemsAction,
+    ListStoreItemsByMarkerAction,
 } from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -76,6 +81,10 @@ import {
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
 import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import {
+    RecordsClientInputs,
+    createRecordsClient,
+} from '@casual-simulation/aux-records/RecordsClient';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -117,6 +126,7 @@ export class RecordsManager {
     private _axiosOptions: AxiosRequestConfig<any>;
     private _skipTimers: boolean = false;
     private _httpRequestId: number = 0;
+    private _client: ReturnType<typeof createRecordsClient>;
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -174,6 +184,7 @@ export class RecordsManager {
         };
         this._skipTimers = skipTimers;
         this._connectionClientFactory = connectionClientFactory;
+        this._client = createRecordsClient(config.recordsOrigin);
     }
 
     handleEvents(events: RuntimeActions[]): void {
@@ -226,6 +237,16 @@ export class RecordsManager {
                 this._listUserStudios(event);
             } else if (event.type === 'get_records_endpoint') {
                 this._getRecordsEndpoint(event);
+            } else if(event.type === 'record_store_item') {
+                this._recordStoreItem(event);
+            } else if (event.type === 'get_store_item') {
+                this._getStoreItem(event);
+            } else if (event.type === 'erase_store_item') {
+                this._eraseStoreItem(event);
+            } else if (event.type === 'list_store_items') {
+                this._listStoreItems(event);
+            } else if (event.type === 'list_store_items_by_marker') {
+                this._listStoreItemsByMarker(event);
             }
         }
     }
@@ -234,6 +255,176 @@ export class RecordsManager {
         if (hasValue(event.taskId)) {
             this._helper.transaction(
                 asyncResult(event.taskId, this._config.recordsOrigin)
+            );
+        }
+    }
+
+    private async _recordStoreItem(event: RecordStoreItemAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.recordPurchasableItem({
+            recordName: event.recordName,
+            item: {
+                ...event.item,
+                address: event.address,
+                markers: event.item.markers as [string, ...string[]],
+            },
+            instances
+        }, {
+            endpoint: await info.auth.getRecordsOrigin(),
+            headers: info.headers,
+        });
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, result)
+            );
+        }
+    }
+
+    private async _getStoreItem(event: GetStoreItemAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.getPurchasableItem({
+            recordName: event.recordName,
+            address: event.address,
+            instances
+        }, {
+            endpoint: await info.auth.getRecordsOrigin(),
+            headers: info.headers,
+        });
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, result)
+            );
+        }
+    }
+
+    private async _eraseStoreItem(event: EraseStoreItemAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.erasePurchasableItem({
+            recordName: event.recordName,
+            address: event.address,
+            instances
+        }, {
+            endpoint: await info.auth.getRecordsOrigin(),
+            headers: info.headers,
+        });
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, result)
+            );
+        }
+    }
+
+    private async _listStoreItems(event: ListStoreItemsAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.listPurchasableItems({
+            recordName: event.recordName,
+            address: event.address,
+            instances
+        }, {
+            endpoint: await info.auth.getRecordsOrigin(),
+            headers: info.headers,
+        });
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, result)
+            );
+        }
+    }
+
+    private async _listStoreItemsByMarker(event: ListStoreItemsByMarkerAction) {
+        const info = await this._resolveInfoForEvent(event, false);
+
+        if (info.error) {
+            return;
+        }
+
+        let instances: string[];
+        if (hasValue(this._helper.origin)) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.listPurchasableItems({
+            recordName: event.recordName,
+            address: event.address,
+            marker: event.marker,
+            instances
+        }, {
+            endpoint: await info.auth.getRecordsOrigin(),
+            headers: info.headers,
+        });
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(
+                asyncResult(event.taskId, result)
             );
         }
     }
@@ -1838,7 +2029,12 @@ export class RecordsManager {
             | AIChatAction
             | AIGenerateSkyboxAction
             | AIGenerateImageAction
-            | ListUserStudiosAction,
+            | ListUserStudiosAction
+            | RecordStoreItemAction
+            | GetStoreItemAction
+            | EraseStoreItemAction
+            | ListStoreItemsAction
+            | ListStoreItemsByMarkerAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<{
         error: boolean;

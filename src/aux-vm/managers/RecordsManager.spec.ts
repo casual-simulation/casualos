@@ -37,6 +37,11 @@ import {
     listDataRecordByMarker,
     grantRecordPermission,
     revokeRecordPermission,
+    recordStoreItem,
+    getStoreItem,
+    eraseStoreItem,
+    listStoreItems,
+    listStoreItemsByMarker,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -8077,6 +8082,676 @@ describe('RecordsManager', () => {
                 expect(vm.events).toEqual([
                     asyncResult(1, 'http://localhost:3002'),
                 ]);
+            });
+        });
+
+        describe('record_store_item', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server record the item', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {
+                            name: 'item',
+                            description: 'description',
+                            cost: 100,
+                            currency: 'usd',
+                            imageUrls: [],
+                            roleName: 'roleName',
+                            roleGrantTimeMs: null,
+                            markers: ['publicRead'],
+                        },
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            item: {
+                                address: 'myAddress',
+                                name: 'item',
+                                description: 'description',
+                                cost: 100,
+                                currency: 'usd',
+                                imageUrls: [],
+                                roleName: 'roleName',
+                                roleGrantTimeMs: null,
+                                markers: ['publicRead'],
+                            }
+                        },
+                        procedure: 'recordPurchasableItem'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    recordStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {
+                            name: 'item',
+                            description: 'description',
+                            cost: 100,
+                            currency: 'usd',
+                            imageUrls: [],
+                            roleName: 'roleName',
+                            roleGrantTimeMs: null,
+                            markers: ['publicRead'],
+                        },
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            item: {
+                                address: 'myAddress',
+                                name: 'item',
+                                description: 'description',
+                                cost: 100,
+                                currency: 'usd',
+                                imageUrls: [],
+                                roleName: 'roleName',
+                                roleGrantTimeMs: null,
+                                markers: ['publicRead'],
+                            },
+                            instances: ['/myInst'],
+                        },
+                        procedure: 'recordPurchasableItem'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('get_store_item', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server get the item', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        item: {
+                            name: 'item',
+                        }
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            address: 'myAddress',
+                        },
+                        procedure: 'getPurchasableItem'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        item: {
+                            name: 'item',
+                        }
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        item: {
+                            name: 'item',
+                        }
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    getStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            address: 'myAddress',
+                            instances: ['/myInst'],
+                        },
+                        procedure: 'getPurchasableItem'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        item: {
+                            name: 'item',
+                        }
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('erase_store_item', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server erase the item', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    eraseStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            address: 'myAddress',
+                        },
+                        procedure: 'erasePurchasableItem'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    eraseStoreItem(
+                        'recordName',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            address: 'myAddress',
+                            instances: ['/myInst'],
+                        },
+                        procedure: 'erasePurchasableItem'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('list_store_items', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server list the items', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listStoreItems(
+                        'recordName',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            address: 'myAddress',
+                        },
+                        procedure: 'listPurchasableItems'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    listStoreItems(
+                        'recordName',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            address: 'myAddress',
+                            instances: ['/myInst'],
+                        },
+                        procedure: 'listPurchasableItems'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('list_store_items_by_marker', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should request that the server list the items', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listStoreItemsByMarker(
+                        'recordName',
+                        'marker',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            marker: 'marker',
+                            address: 'myAddress',
+                        },
+                        procedure: 'listPurchasableItems'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                records.handleEvents([
+                    listStoreItemsByMarker(
+                        'recordName',
+                        'marker',
+                        'myAddress',
+                        {},
+                        1
+                    )
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        input: {
+                            recordName: 'recordName',
+                            marker: 'marker',
+                            address: 'myAddress',
+                            instances: ['/myInst'],
+                        },
+                        procedure: 'listPurchasableItems'
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        items: [
+                            {
+                                name: 'item1',
+                            },
+                            {
+                                name: 'item2',
+                            }
+                        ]
+                    }),
+                ]);
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
             });
         });
 
