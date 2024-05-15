@@ -1128,7 +1128,7 @@ export class SubscriptionController {
                 }
             }
 
-            let customerId: string = null;
+            let customerEmail: string = null;
             if (request.userId) {
                 const user = await this._authStore.findUser(request.userId);
 
@@ -1151,22 +1151,7 @@ export class SubscriptionController {
                     };
                 }
 
-                // if (!user.stripeCustomerId) {
-                //     const customer = await this._stripe.createCustomer({
-                //         name: user.name,
-                //         email: user.email,
-                //         phone: user.phoneNumber,
-                //         metadata: {
-                //             role: 'user',
-                //             userId: user.id
-                //         }
-                //     });
-
-                //     customerId = user.stripeCustomerId = customer.id;
-                //     await this._authStore.saveUser(user);
-                // } else {
-                //     customerId = user.stripeCustomerId;
-                // }
+                customerEmail = user.email ?? null;
             }
 
             const sessionId = uuid();
@@ -1196,6 +1181,7 @@ export class SubscriptionController {
                 success_url: fulfillmentRoute(config.returnUrl, sessionId),
                 cancel_url: request.returnUrl,
                 client_reference_id: sessionId,
+                customer_email: customerEmail,
                 metadata: {
                     userId: request.userId,
                     checkoutSessionId: sessionId,

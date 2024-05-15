@@ -4764,6 +4764,7 @@ describe('SubscriptionController', () => {
                 ],
                 success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
+                customer_email: 'test@example.com',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
@@ -4802,6 +4803,92 @@ describe('SubscriptionController', () => {
             await expect(store.findUser(userId)).resolves.toEqual({
                 ...user,
             });
+        });
+
+        it('should support users that are not logged in', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: null,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+                sessionId: expect.any(String),
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
+                cancel_url: 'return-url',
+                customer_email: null,
+                metadata: {
+                    userId: null,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 10,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                }
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: null,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
+                }
+            ]);
         });
 
         it('should be able to charge fixed application fees', async () => {
@@ -4893,6 +4980,7 @@ describe('SubscriptionController', () => {
                 ],
                 success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
+                customer_email: 'test@example.com',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
@@ -5018,6 +5106,7 @@ describe('SubscriptionController', () => {
                 ],
                 success_url: expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
+                customer_email: 'test@example.com',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
@@ -5142,6 +5231,7 @@ describe('SubscriptionController', () => {
                 ],
                 success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
                 cancel_url: 'return-url',
+                customer_email: 'test@example.com',
                 metadata: {
                     userId: userId,
                     checkoutSessionId: expect.any(String),
