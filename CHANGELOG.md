@@ -8,6 +8,7 @@
 
 -   Improved server deployments to support the same configuration options as serverless deployments.
 -   Updated `livekit-client` to `v2.1.3`.
+-   Made `systemPortal` panel resizable.
 
 ### :bug: Bug Fixes
 
