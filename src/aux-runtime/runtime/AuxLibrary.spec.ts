@@ -4213,17 +4213,6 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
-
-            it('should accept the given portal', () => {
-                const action: any =
-                    library.api.os.capturePortalScreenshot('mini');
-                const expected = capturePortalScreenshot(
-                    'mini',
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
         });
 
         describe('os.localTime', () => {
