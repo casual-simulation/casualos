@@ -1,8 +1,18 @@
 # CasualOS Changelog
 
+## V3.3.4
+
+#### Date: 5/16/2024
+
+### :rocket: Features
+
+-   Added the `os.capturePortalScreenshot()` function.
+    -   This function can be used to get a screenshot of the gridPortal.
+-   Made `systemPortal` panel resizable.
+
 ## V3.3.3
 
-#### Date: 5/8/2024
+#### Date: 5/9/2024
 
 ### :rocket: Features
 

@@ -83,6 +83,9 @@ import {
     CalculateViewportCoordinatesFromPositionAction,
     CalculateScreenCoordinatesFromViewportCoordinatesAction,
     CalculateViewportCoordinatesFromScreenCoordinatesAction,
+    CapturePortalScreenshotAction,
+    CameraPortal,
+    Photo,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -190,6 +193,11 @@ export class PlayerGame extends Game {
     private _currentResizeClientPos: Vector2 = null;
     private _startMiniPortalHeight: number;
     private _currentMiniHDRAddress: string;
+    private _screenshotTasks: {
+        taskId: number | string;
+        sim: BrowserSimulation;
+        portal: CameraPortal;
+    }[] = [];
 
     private get slider() {
         if (!this._slider) {
@@ -894,9 +902,28 @@ export class PlayerGame extends Game {
                     this._listFormAnimations(sim, e);
                 } else if (e.type === 'ldraw_count_build_steps') {
                     this._countLDrawBuildSteps(sim, e);
+                } else if (e.type === 'capture_portal_screenshot') {
+                    this._capturePortalScreenshot(sim, e);
                 }
             })
         );
+    }
+
+    private _capturePortalScreenshot(
+        sim: BrowserSimulation,
+        e: CapturePortalScreenshotAction
+    ) {
+        if (e.portal === 'grid') {
+            this._screenshotTasks.push({
+                taskId: e.taskId,
+                sim: sim,
+                portal: 'grid',
+            });
+        } else {
+            sim.helper.transaction(
+                asyncError(e.taskId, 'Portal type not supported!')
+            );
+        }
     }
 
     private _raycastFromCamera(sim: Simulation, e: RaycastFromCameraAction) {
@@ -1384,6 +1411,36 @@ export class PlayerGame extends Game {
             this.renderMiniViewport();
         } else {
             this.renderMiniMapViewport();
+        }
+
+        if (this._screenshotTasks.length > 0) {
+            this._capturePortalScreenshots();
+        }
+    }
+
+    private async _capturePortalScreenshots() {
+        const tasks = this._screenshotTasks.splice(
+            0,
+            this._screenshotTasks.length
+        );
+        const screenshot = await new Promise<Blob>((resolve, reject) => {
+            try {
+                this.renderer.domElement.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/png');
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        const photo: Photo = {
+            data: screenshot,
+            height: this.renderer.domElement.height,
+            width: this.renderer.domElement.width,
+        };
+
+        for (let task of tasks) {
+            task.sim.helper.transaction(asyncResult(task.taskId, photo));
         }
     }
 
