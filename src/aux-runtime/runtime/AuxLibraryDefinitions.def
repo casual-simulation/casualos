@@ -11168,6 +11168,21 @@ interface Os {
     capturePhoto(options?: OpenPhotoCameraOptions): Promise<Photo>;
 
     /**
+     * Captures a screenshot (i.e. photo/picture) from the grid portal.
+     * 
+     * Returns a promise that resolves with the captured photo.
+     * 
+     * @param portal the portal to capture the screenshot from. Defaults to the grid portal.
+     * 
+     * @example Capture a screenshot from the grid portal.
+     * const screenshot = await os.capturePortalScreenshot();
+     * 
+     * @dochash actions/os/portals
+     * @docname os.capturePortalScreenshot
+     */
+    capturePortalScreenshot(): Promise<Photo>;
+
+    /**
      * Shows the given barcode.
      * @param code The code that should be shown.
      * @param format The format that the barcode should be shown in.

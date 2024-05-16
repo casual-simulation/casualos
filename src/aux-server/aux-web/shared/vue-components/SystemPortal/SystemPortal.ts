@@ -164,6 +164,7 @@ export default class SystemPortal extends Vue {
 
     isSettingSheetPortal: boolean = false;
     sheetPortalValue: string = '';
+    sliderDown: boolean;
 
     private _showQuickAccessAfterModelLoad: boolean = false;
     private _focusEditorOnSelectionUpdate: boolean = false;
@@ -664,6 +665,27 @@ export default class SystemPortal extends Vue {
         });
     }
 
+    onSliderPointerDown(event: PointerEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        let target = event.target as HTMLElement;
+        target.setPointerCapture(event.pointerId);
+        this.sliderDown = true;
+    }
+    onSliderPointerMove(event: PointerEvent) {
+        if (this.sliderDown) {
+            event.preventDefault();
+            event.stopPropagation();
+            let areas = this.$refs.areas as HTMLElement;
+            let rect = areas.getBoundingClientRect();
+            areas.style.width = `${event.clientX - rect.left}px`;
+        }
+    }
+    onSliderPointerUp(event: PointerEvent) {
+        let target = event.target as HTMLElement;
+        target.releasePointerCapture(event.pointerId);
+        this.sliderDown = false;
+    }
     onFocusSearchTags() {
         this.isFocusingTagsSearch = true;
     }
