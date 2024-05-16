@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.3.4
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added the `os.capturePortalScreenshot()` function.
+    -   This function can be used to get a screenshot of the gridPortal.
+-   Made `systemPortal` panel resizable.
+
 ## V3.3.3
 
 #### Date: 5/9/2024
@@ -8,7 +18,6 @@
 
 -   Improved server deployments to support the same configuration options as serverless deployments.
 -   Updated `livekit-client` to `v2.1.3`.
--   Made `systemPortal` panel resizable.
 
 ### :bug: Bug Fixes
 
