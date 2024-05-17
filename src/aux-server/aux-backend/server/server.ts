@@ -76,7 +76,11 @@ export class Server {
         // this._frontendApplyCSP();
         this._frontendApp.use(cors());
         this._frontendApp.use(compression());
-        this._frontendApp.use(bodyParser.json());
+        this._frontendApp.use(
+            bodyParser.json({
+                limit: '5mb',
+            })
+        );
 
         this._frontendApp.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
@@ -339,6 +343,7 @@ export class Server {
             '/api/*',
             express.text({
                 type: 'application/json',
+                limit: '5mb',
             })
         );
 
