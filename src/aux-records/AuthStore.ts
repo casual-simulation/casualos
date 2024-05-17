@@ -387,10 +387,23 @@ export interface AuthStore {
     savePurchasedItem(item: PurchasedItem): Promise<void>;
 
     /**
+     * Gets the list of purchased items that are associated with the given activation key.
+     * @param keyId The ID of the key.
+     */
+    listPurchasedItemsByActivationKeyId(keyId: string): Promise<PurchasedItem[]>;
+
+    /**
      * Creates the given activation key.
      * @param key The key.
      */
     createActivationKey(key: ActivationKey): Promise<void>;
+
+    /**
+     * Gets the activation key with the given ID.
+     * Returns null if the key could not be found.
+     * @param keyId The ID of the key.
+     */
+    getActivationKeyById(keyId: string): Promise<ActivationKey | null>;
 }
 
 export type AddressType = 'email' | 'phone';

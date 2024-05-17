@@ -1,9 +1,9 @@
-import { SubscriptionController, formatV1ActivationKey, getAccountStatus, parseActivationKey } from './SubscriptionController';
+import { ClaimActivationKeySuccess, FulfillCheckoutSessionSuccess, SubscriptionController, formatV1ActivationKey, getAccountStatus, parseActivationKey } from './SubscriptionController';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { AuthStore, AuthUser } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
-import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
+import { formatV1SessionKey, generateV1ConnectionToken, parseSessionKey } from './AuthUtils';
 import { StripeAccount, StripeAccountLink, StripeCheckoutResponse, StripeCreateCustomerResponse, StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
@@ -6352,6 +6352,359 @@ describe('SubscriptionController', () => {
                     stripeStatus: 'complete',
                     stripePaymentStatus: 'paid',
                     paid: false,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
+                }
+            ]);
+        });
+    });
+
+    describe('claimActivationKey()', () => {
+        let activationKey: string;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10
+                                            }
+                                        }
+                                    },
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete'
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                studioId: 'studioId',
+                ownerId: null,
+                secretHashes: [],
+                secretSalt: 'secret',
+            });
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: {
+                    currency: 'usd',
+                    paid: false,
+                    status: 'open',
+                    description: 'description',
+                    stripeInvoiceId: 'invoice1',
+                    tax: 0,
+                    subtotal: 100,
+                    total: 100,
+                    stripeHostedInvoiceUrl: 'hosted-url',
+                    stripeInvoicePdfUrl: 'pdf-url',
+                },
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'later',
+            }) as FulfillCheckoutSessionSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                activationKey: expect.any(String),
+                activationUrl: expect.any(String),
+            });
+
+            activationKey = result.activationKey;
+
+            nowMock.mockReturnValue(300);
+        });
+
+        it('should grant the purchased items to the user if the activation key is valid', async () => {
+            const result = await controller.claimActivationKey({
+                userId,
+                activationKey,
+                target: 'self',
+                ipAddress: '127.0.0.1'
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null
+                }
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: 300,
+                    activationKeyId: expect.any(String),
+                }
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
+                }
+            ]);
+        });
+
+        it('should create a new user account when the target is a guest', async () => {
+            const result = await controller.claimActivationKey({
+                userId,
+                activationKey,
+                target: 'guest',
+                ipAddress: '127.0.0.1'
+            }) as ClaimActivationKeySuccess;
+
+            expect(result).toEqual({
+                success: true,
+                userId: expect.any(String),
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: null,
+            });
+
+            const roles = await store.listRolesForUser('studioId', result.userId);
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null
+                }
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: result.userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: 300,
+                    activationKeyId: expect.any(String),
+                }
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null
+                        }
+                    ]
+                }
+            ]);
+
+            const validation = await auth.validateSessionKey(result.sessionKey);
+            expect(validation).toMatchObject({
+                success: true,
+                userId: result.userId,
+                sessionId: expect.any(String),
+            });
+
+            const token = generateV1ConnectionToken(result.connectionKey, 'connectionId', 'recordName', 'inst');
+
+            const validation2 = await auth.validateConnectionToken(token);
+            expect(validation2).toMatchObject({
+                success: true,
+                userId: result.userId,
+                sessionId: expect.any(String),
+                connectionId: 'connectionId',
+                recordName: 'recordName',
+                inst: 'inst'
+            });
+        });
+
+        it('should return invalid_request if given an invalid activation key', async () => {
+            const result = await controller.claimActivationKey({
+                userId,
+                activationKey: 'invalid',
+                target: 'self',
+                ipAddress: '127.0.0.1'
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The activation key is invalid.'
+            });
+        });
+
+        it('should return not_logged_in if given a null user when self activating', async () => {
+            const result = await controller.claimActivationKey({
+                userId: null,
+                activationKey: activationKey,
+                target: 'self',
+                ipAddress: '127.0.0.1'
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage: 'You need to be logged in to use target = self.'
+            });
+        });
+
+        it('should do nothing if the items have already been activated', async () => {
+            const item = store.purchasedItems[0];
+            await store.savePurchasedItem({
+                ...item,
+                activatedTimeMs: 100,
+            });
+
+            const result = await controller.claimActivationKey({
+                userId,
+                activationKey,
+                target: 'self',
+                ipAddress: '127.0.0.1'
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: null,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: 100,
+                    activationKeyId: expect.any(String),
+                }
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
                     stripeCheckoutSessionId: 'checkout1',
                     userId: userId,
                     invoiceId: expect.any(String),

@@ -1393,6 +1393,132 @@ export class SubscriptionController {
         }
     }
 
+    async claimActivationKey(request: ClaimActivationKeyRequest): Promise<ClaimActivationKeyResult> {
+        try {
+
+            if (!request.userId && request.target === 'self') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'You need to be logged in to use target = self.'
+                };
+            }
+
+            const key = parseActivationKey(request.activationKey);
+
+            if (!key) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            const [keyId, secret] = key;
+
+            const activationKey = await this._authStore.getActivationKeyById(keyId);
+
+            if (!activationKey) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            const hash = hashHighEntropyPasswordWithSalt(secret, keyId);
+
+            if (activationKey.secretHash !== hash) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            let userId: string;
+            let sessionKey: string;
+            let connectionKey: string;
+            let expireTimeMs: number;
+            if (request.target === 'self') {
+                userId = request.userId;
+            } else if (request.target === 'guest') {
+                console.log('[SubscriptionController] [claimActivationKey] Creating user for guest activation key.');
+
+                const accountResult = await this._auth.createAccount({
+                    userRole: 'superUser',
+                    ipAddress: request.ipAddress,
+                });
+
+                if (accountResult.success === false) {
+                    console.error(`[SubscriptionController] [claimActivationKey keyId: ${keyId}] Unable to create user for guest activation key:`, accountResult);
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.'
+                    };
+                }
+
+                userId = accountResult.userId;
+                sessionKey = accountResult.sessionKey;
+                connectionKey = accountResult.connectionKey;
+                expireTimeMs = accountResult.expireTimeMs;
+            }
+            
+            console.log(`[SubscriptionController] [claimActivationKey keyId: ${keyId} userId: ${request.userId}] Claiming activation key.`);
+            if (!userId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            const items = await this._authStore.listPurchasedItemsByActivationKeyId(keyId);
+
+            for (let item of items) {
+                if (item.activatedTimeMs || item.userId) {
+                    continue;
+                }
+
+                const result = await this._policyStore.assignSubjectRole(item.recordName, userId, 'user', {
+                    role: item.roleName,
+                    expireTimeMs: item.roleGrantTimeMs ? Date.now() + item.roleGrantTimeMs : null,
+                });
+
+                if (result.success === false) {
+                    console.error(`[SubscriptionController] [claimActivationKey keyId: ${keyId} userId: ${userId}] Unable to grant role to user:`, result);
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.'
+                    };
+                }
+
+                await this._authStore.savePurchasedItem({
+                    ...item,
+                    activatedTimeMs: Date.now(),
+                    userId,
+                });
+            }
+
+            return {
+                success: true,
+                userId,
+                sessionKey,
+                connectionKey,
+                expireTimeMs,
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while claiming an activation key:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
+    }
+
     /**
      * Handles the webhook from Stripe for updating the internal database.
      */
@@ -1905,7 +2031,7 @@ export function formatV1ActivationKey(itemId: string, secret: string): string {
  * Returns null if the access key is invalid.
  * @param key The key to parse.
  */
-export function parseActivationKey(key: string): [itemId: string, secret: string] {
+export function parseActivationKey(key: string): [keyId: string, secret: string] {
     if (!key) {
         return null;
     }
@@ -2462,5 +2588,62 @@ export interface FulfillCheckoutSessionSuccess {
 export interface FulfillCheckoutSessionFailure {
     success: false;
     errorCode: ServerError | 'invalid_request' | 'not_supported' | 'not_authorized' | 'not_found';
+    errorMessage: string;
+}
+
+export interface ClaimActivationKeyRequest {
+    /**
+     * The key that should be claimed.
+     */
+    activationKey: string;
+
+    /**
+     * The target of the activation key.
+     * 
+     * - `guest` indicates that the key should be claimed for a guest user.
+     * - `self` indicates that the key should be claimed for the user that is currently logged in.
+     */
+    target: 'guest' | 'self';
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The IP Address that the request is coming from.
+     */
+    ipAddress: string;
+}
+
+export type ClaimActivationKeyResult = ClaimActivationKeySuccess | ClaimActivationKeyFailure;
+
+export interface ClaimActivationKeySuccess {
+    success: true;
+
+    /**
+     * The ID of the user that the key was claimed for.
+     */
+    userId: string;
+
+    /**
+     * The session key that was granted to the new user.
+     */
+    sessionKey?: string;
+
+    /**
+     * The connection key that was granted to the new user.
+     */
+    connectionKey?: string;
+
+    /**
+     * The time that the session key will expire.
+     */
+    expireTimeMs?: number;
+}
+
+export interface ClaimActivationKeyFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_request' | 'not_supported' | 'not_authorized' | 'not_found' | 'not_logged_in';
     errorMessage: string;
 }

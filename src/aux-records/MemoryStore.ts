@@ -3454,6 +3454,14 @@ export class MemoryStore
             ...key
         });
     }
+
+    async getActivationKeyById(id: string): Promise<ActivationKey> {
+        return this._activationKeys.find(k => k.id === id);
+    }
+
+    async listPurchasedItemsByActivationKeyId(keyId: string): Promise<PurchasedItem[]> {
+        return this._purchasedItems.filter(i => i.activationKeyId === keyId);
+    }
 }
 
 interface RecordData {
