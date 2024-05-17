@@ -9632,6 +9632,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param item the item that should be stored in the record.
      * @param options the options that should be used to store the item.
      * 
+     * @example Record an item that can be purchased by anyone
+     * await os.recordStoreItem('myRecord', 'myItem', {
+     *    name: 'My Item',
+     *    description: 'Description of my item!'
+     *    imageUrls: [],
+     *    currency: 'usd',
+     *    cost: 100, // $1.00
+     *    roleName: 'roleToBeGranted',
+     *    roleGrantTimeMs: null,
+     *    markers: ['publicRead']
+     * });
+     * 
      * @dochash actions/os/records
      * @docgroup 01-store
      * @docname os.recordStoreItem
@@ -9650,6 +9662,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName the name of the record that the store item should be retrieved from.
      * @param address the address of the item in the record.
      * @param options the options that should be used to get the item.
+     * 
+     * @example Get an item by address
+     * const item = await os.getStoreItem('myRecord', 'myItem');
      * 
      * @dochash actions/os/records
      * @docgroup 01-store
@@ -9670,6 +9685,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param address the address of the item that should be deleted.
      * @param options the options that should be used to get the item.
      * 
+     * @example Delete an item by address
+     * const result = await os.eraseStoreItem('myRecord', 'myItem');
+     * 
      * @dochash actions/os/records
      * @docgroup 01-store
      * @docname os.eraseStoreItem
@@ -9682,12 +9700,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets a partial list of store items from the given record.
+     * You must have permission to access all items in the record to list them.
      * 
      * Returns a promise that contains the items in the list.
      * 
      * @param recordName the name of the record that the store item should be deleted from.
      * @param startingAddress the address that the items should be listed after.
      * @param options the options that should be used to get the item.
+     * 
+     * @example List all items in the record
+     * const result = await os.listStoreItems('myRecord');
      * 
      * @dochash actions/os/records
      * @docgroup 01-store
@@ -9701,6 +9723,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets a partial list of store items that have the given marker from the given record.
+     * You must have permission to access the given marker in the record to list them.
      * 
      * Returns a promise that contains the items in the list.
      * 
@@ -9708,6 +9731,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param marker the marker that the items should have.
      * @param startingAddress the address that the items should be listed after.
      * @param options the options that should be used to get the item.
+     * 
+     * @example List all items in the record with the 'publicRead' marker
+     * const result = await os.listStoreItemsByMarker('myRecord', 'publicRead');
      * 
      * @dochash actions/os/records
      * @docgroup 01-store
