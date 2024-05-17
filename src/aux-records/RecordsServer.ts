@@ -3267,6 +3267,29 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            claimActivationKey: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/activationKey/claim')
+                .inputs(z.object({
+                    activationKey: z.string().min(1),
+                    target: z.enum(['self', 'guest']),
+                }))
+                .handler(async ({ activationKey, target }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
+                    if (sessionKeyValidation.success === false && sessionKeyValidation.errorCode !== 'no_session_key') {
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._subscriptions.claimActivationKey({
+                        userId: sessionKeyValidation.userId,
+                        activationKey,
+                        target,
+                        ipAddress: context.ipAddress
+                    });
+
+                    return result;
+                }),
         };
     }
 

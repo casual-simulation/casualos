@@ -2855,6 +2855,29 @@ Object {
       "name": "fulfillCheckoutSession",
       "origins": "account",
     },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/activationKey/claim",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activationKey": Object {
+            "type": "string",
+          },
+          "target": Object {
+            "type": "enum",
+            "values": Array [
+              "self",
+              "guest",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "claimActivationKey",
+      "origins": "account",
+    },
   ],
   "success": true,
 }
@@ -5713,6 +5736,29 @@ Object {
         "type": "object",
       },
       "name": "fulfillCheckoutSession",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/activationKey/claim",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "activationKey": Object {
+            "type": "string",
+          },
+          "target": Object {
+            "type": "enum",
+            "values": Array [
+              "self",
+              "guest",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "claimActivationKey",
       "origins": "account",
     },
   ],

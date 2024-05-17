@@ -42,7 +42,7 @@ import { DataRecordsStore } from './DataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
-import { SubscriptionController } from './SubscriptionController';
+import { FulfillCheckoutSessionSuccess, SubscriptionController } from './SubscriptionController';
 import { StripeAccount, StripeAccountLink, StripeCheckoutResponse, StripeCreateCustomerResponse, StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
@@ -13661,6 +13661,259 @@ describe('RecordsServer', () => {
                 JSON.stringify({
                     sessionId: 'sessionId',
                     activation: 'now'
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/activationKey/claim', () => {
+        const recordName = 'studioId';
+        let activationKey: string;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        }
+                                    }
+                                }
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId'
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: recordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: {
+                    currency: 'usd',
+                    paid: false,
+                    status: 'open',
+                    description: 'description',
+                    stripeInvoiceId: 'invoice1',
+                    tax: 0,
+                    subtotal: 100,
+                    total: 100,
+                    stripeHostedInvoiceUrl: 'hosted-url',
+                    stripeInvoicePdfUrl: 'pdf-url',
+                },
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null
+                    }
+                ]
+            });
+
+            const checkoutResult = await subscriptionController.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'later',
+            }) as FulfillCheckoutSessionSuccess;
+
+            expect(checkoutResult).toEqual({
+                success: true,
+                activationKey: expect.any(String),
+                activationUrl: expect.any(String),
+            });
+
+            activationKey = checkoutResult.activationKey;
+        });
+
+        it('should claim the activation key', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/activationKey/claim', 
+                    JSON.stringify({
+                        activationKey: activationKey,
+                        target: 'self',
+                    }),
+                    authenticatedHeaders
+                ));
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: userId,
+                },
+                headers: accountCorsHeaders
+            });
+
+            const roles = (await store.listRolesForUser('studioId', userId)).filter(r => r.role === 'myRole');
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null
+                }
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: expect.any(Number),
+                    activationKeyId: expect.any(String),
+                }
+            ]);
+        });
+
+        it('should generate a user account for guests', async () => {
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/activationKey/claim', 
+                    JSON.stringify({
+                        activationKey: activationKey,
+                        target: 'guest',
+                    }),
+                    authenticatedHeaders
+                ));
+
+            const body = expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: null,
+                },
+                headers: accountCorsHeaders
+            });
+
+            const roles = (await store.listRolesForUser('studioId', body.userId)).filter(r => r.role === 'myRole');
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null
+                }
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: body.userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: expect.any(Number),
+                    activationKeyId: expect.any(String),
+                }
+            ]);
+        });
+
+        testOrigin('POST', `/api/v2/records/activationKey/claim`, () =>
+            JSON.stringify({
+                activationKey: activationKey,
+                target: 'self',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/activationKey/claim`, body, authenticatedHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/activationKey/claim`,
+                JSON.stringify({
+                    activationKey: activationKey,
+                    target: 'self',
                 }),
                 defaultHeaders
             )
