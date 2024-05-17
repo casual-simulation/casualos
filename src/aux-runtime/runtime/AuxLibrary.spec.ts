@@ -142,6 +142,7 @@ import {
     calculateViewportCoordinatesFromPosition,
     calculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates,
+    capturePortalScreenshot,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -4195,6 +4196,18 @@ describe('AuxLibrary', () => {
                     false,
                     false,
                     undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.capturePortalScreenshot()', () => {
+            it('should emit a CapturePortalScreenshotAction', () => {
+                const action: any = library.api.os.capturePortalScreenshot();
+                const expected = capturePortalScreenshot(
+                    'grid',
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);

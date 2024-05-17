@@ -68,7 +68,7 @@
                     <!-- <div class="search">
 
                     </div> -->
-                    <div class="search" v-if="selectedPane === 'search'">
+                    <div class="search" v-if="selectedPane === 'search'" ref="areas">
                         <div class="search-input-container">
                             <input
                                 ref="searchTagsInput"
@@ -157,7 +157,7 @@
                         </div>
                         <div class="search-extra"></div>
                     </div>
-                    <div class="areas" v-else-if="selectedPane === 'diff'">
+                    <div class="areas" v-else-if="selectedPane === 'diff'" ref="areas">
                         <div class="filter">
                             <md-field class="filter-field">
                                 <label>System</label>
@@ -227,7 +227,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="areas" v-else>
+                    <div class="areas" v-else ref="areas">
                         <div class="filter">
                             <md-field class="filter-field">
                                 <label>Filter</label>
@@ -269,6 +269,13 @@
                             </md-button>
                         </div>
                     </div>
+                    <div
+                        class="slider"
+                        id="slider"
+                        @pointerdown="onSliderPointerDown"
+                        @pointermove="onSliderPointerMove"
+                        @pointerup="onSliderPointerUp"
+                    ></div>
                     <div class="tags" v-if="selectedPane === 'bots' && hasSelection">
                         <div class="tags-list">
                             <div @click="toggleTags()" class="tags-toggle">

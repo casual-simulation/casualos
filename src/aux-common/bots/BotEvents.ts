@@ -178,7 +178,8 @@ export type AsyncActions =
     | LDrawCountBuildStepsAction
     | CalculateViewportCoordinatesFromPositionAction
     | CalculateScreenCoordinatesFromViewportCoordinatesAction
-    | CalculateViewportCoordinatesFromScreenCoordinatesAction;
+    | CalculateViewportCoordinatesFromScreenCoordinatesAction
+    | CapturePortalScreenshotAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3341,6 +3342,18 @@ export interface CalculateViewportCoordinatesFromScreenCoordinatesAction
 }
 
 /**
+ * Defines an event that captures a screenshot from the given portal.
+ */
+export interface CapturePortalScreenshotAction extends AsyncAction {
+    type: 'capture_portal_screenshot';
+
+    /**
+     * The portal that should be captured.
+     */
+    portal: CameraPortal;
+}
+
+/**
  * Defines an event that requests the pre-caching of a GLTF mesh.
  *
  * @dochash types/os/portals
@@ -5591,6 +5604,22 @@ export function getRecordsEndpoint(
 ): GetRecordsEndpointAction {
     return {
         type: 'get_records_endpoint',
+        taskId,
+    };
+}
+
+/**
+ * Creates a CapturePortalScreenshotAction.
+ * @param portal The portal that the screenshot should be captured from.
+ * @param taskId The ID of the task.
+ */
+export function capturePortalScreenshot(
+    portal: CameraPortal,
+    taskId?: number | string
+): CapturePortalScreenshotAction {
+    return {
+        type: 'capture_portal_screenshot',
+        portal,
         taskId,
     };
 }

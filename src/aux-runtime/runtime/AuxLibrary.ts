@@ -243,6 +243,8 @@ import {
     calculateScreenCoordinatesFromViewportCoordinates as calcCalculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates as calcCalculateViewportCoordinatesFromScreenCoordinates,
     Point2D,
+    CameraPortal,
+    capturePortalScreenshot as calcCapturePortalScreenshot,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3043,6 +3045,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 openPhotoCamera,
                 capturePhoto,
                 closePhotoCamera,
+
+                capturePortalScreenshot,
 
                 /**
                  * Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch). This is what your device's clock thinks the current time is.
@@ -6533,6 +6537,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             undefined,
             task.taskId
         );
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Captures a screenshot (i.e. photo/picture) from the grid portal.
+     *
+     * Returns a promise that resolves with the captured photo.
+     *
+     * @param portal the portal to capture the screenshot from. Defaults to the grid portal.
+     *
+     * @example Capture a screenshot from the grid portal.
+     * const screenshot = await os.capturePortalScreenshot();
+     *
+     * @example Display a screenshot from the grid portal on a bot.
+     * const screenshot = await os.capturePortalScreenshot();
+     * masks.formAddress = bytes.toBase64Url(await screenshot.data.arrayBuffer());
+     *
+     * @dochash actions/os/portals
+     * @docname os.capturePortalScreenshot
+     */
+    function capturePortalScreenshot(): Promise<Photo> {
+        const task = context.createTask();
+        const action = calcCapturePortalScreenshot('grid', task.taskId);
         return addAsyncAction(task, action);
     }
 
