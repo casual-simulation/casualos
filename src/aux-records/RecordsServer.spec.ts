@@ -11975,7 +11975,9 @@ describe('RecordsServer', () => {
                     errorMessage:
                         'AI features are not supported by this server.',
                 },
-                headers: apiCorsHeaders,
+                headers: {
+                    ...apiCorsHeaders,
+                },
             });
         });
 
@@ -12173,7 +12175,9 @@ describe('RecordsServer', () => {
                     errorMessage:
                         'AI features are not supported by this server.',
                 },
-                headers: apiCorsHeaders,
+                headers: {
+                    ...apiCorsHeaders,
+                },
             });
         });
 
@@ -12209,7 +12213,10 @@ describe('RecordsServer', () => {
                         success: true,
                     },
                 ],
-                headers: apiCorsHeaders,
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/x-ndjson',
+                },
             });
         });
 
@@ -12254,7 +12261,10 @@ describe('RecordsServer', () => {
                         success: true,
                     },
                 ],
-                headers: apiCorsHeaders,
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/x-ndjson',
+                },
             });
             expect(chatInterface.chatStream).toHaveBeenCalledWith({
                 model: 'default-model',
@@ -17078,7 +17088,7 @@ describe('RecordsServer', () => {
             const result = await unwindAndCaptureAsync(
                 response.body[Symbol.asyncIterator]()
             );
-            body = result.states.map((s) => JSON.parse(s));
+            body = result.states.map((s) => JSON.parse(s.trim()));
         } else {
             body = response.body
                 ? JSON.parse(response.body as string)

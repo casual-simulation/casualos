@@ -6638,16 +6638,19 @@ export function returnProcedureOutputStream(
         while (true) {
             const { done, value } = await result.next();
             if (done) {
-                yield JSON.stringify(value);
+                yield JSON.stringify(value) + '\n';
                 return;
             }
-            yield JSON.stringify(value);
+            yield JSON.stringify(value) + '\n';
         }
     }
 
     return {
         statusCode: 200,
         body: generateBody(),
+        headers: {
+            'content-type': 'application/x-ndjson',
+        },
     };
 }
 
