@@ -174,7 +174,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                     functionCall: c.delta
                         .function_call as unknown as AIFunctionCall,
                 })),
-                totalTokens: chunk.usage.total_tokens,
+                totalTokens: chunk.usage?.total_tokens ?? 0,
             };
         }
     }
