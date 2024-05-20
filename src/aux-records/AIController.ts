@@ -411,7 +411,7 @@ export class AIController {
 
     async *chatStream(
         request: AIChatRequest
-    ): AsyncIterator<
+    ): AsyncGenerator<
         Pick<AIChatInterfaceStreamResponse, 'choices'>,
         AIChatStreamResponse
     > {

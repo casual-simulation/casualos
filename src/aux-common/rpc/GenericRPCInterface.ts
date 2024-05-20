@@ -27,7 +27,10 @@ export interface RPCContext {
     origin: string | null;
 }
 
-export type ProcedureOutput = ProcedureOutputSuccess | ProcedureOutputError;
+export type ProcedureOutput =
+    | ProcedureOutputSuccess
+    | ProcedureOutputError
+    | ProcedureOutputStream;
 
 export interface ProcedureOutputSuccess {
     success: true;
@@ -37,6 +40,12 @@ export interface ProcedureOutputError {
     success: false;
     errorCode: KnownErrorCodes;
 }
+
+export interface ProcedureOutputStream
+    extends AsyncGenerator<
+        any,
+        ProcedureOutputSuccess | ProcedureOutputError
+    > {}
 
 /**
  * Defines a basic interface for a single RPC call.

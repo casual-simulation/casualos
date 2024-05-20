@@ -62,8 +62,11 @@ export interface GenericHttpResponse {
 
     /**
      * The body of the response.
+     *
+     * If given a string, then the body will be set to that string.
+     * If given an AsyncIterable, then each chunk will be written to the stream as a separate chunk.
      */
-    body?: string | null;
+    body?: string | null | AsyncIterable<string>;
 }
 
 export interface GenericHttpHeaders {
