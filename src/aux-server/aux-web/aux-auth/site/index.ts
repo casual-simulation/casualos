@@ -91,6 +91,7 @@ import AuthChildrenPrivacyPolicy from './AuthChildrenPrivacyPolicy/AuthChildrenP
 import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 import AuthStoreFulfillment from './AuthStoreFulfillment/AuthStoreFulfillment';
+import AuthStoreActivation from './AuthStoreActivation/AuthStoreActivation.vue';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -253,6 +254,14 @@ const routes: RouteConfig[] = [
         component: AuthStoreFulfillment,
         props: (route) => ({
             sessionId: route.params.sessionId,
+        }),
+    }
+    {
+        path: '/store/activate',
+        name: 'store-activation',
+        component: AuthStoreActivation,
+        props: (route) => ({
+            activationKey: route.query.key,
         }),
     }
 ];
