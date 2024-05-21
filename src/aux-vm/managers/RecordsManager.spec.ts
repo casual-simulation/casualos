@@ -9,6 +9,9 @@ import {
     WebsocketHttpResponseMessage,
     WebsocketHttpRequestMessage,
     getRecordsEndpoint,
+    WebsocketHttpPartialResponseMessage,
+    iterableNext,
+    iterableComplete,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -37,6 +40,7 @@ import {
     listDataRecordByMarker,
     grantRecordPermission,
     revokeRecordPermission,
+    aiChatStream,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -6827,6 +6831,141 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toBeCalled();
                 expect(authMock.authenticate).toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('ai_chat_stream', () => {
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+            });
+
+            it('should make a websocket request', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses =
+                    new Subject<WebsocketHttpPartialResponseMessage>();
+                client.events.set('http_partial_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    authFactory,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChatStream(
+                        [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(client.sentMessages).toEqual([
+                    {
+                        type: 'http_request',
+                        id: 0,
+                        request: {
+                            path: '/api/v2/ai/chat/stream',
+                            method: 'POST',
+                            body: expect.any(String),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                            query: {},
+                            pathParams: {},
+                        },
+                    },
+                ]);
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body as string
+                );
+                expect(body).toEqual({
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                });
+
+                responses.next({
+                    type: 'http_partial_response',
+                    id: 0,
+                    index: 0,
+                    response: {
+                        statusCode: 200,
+                        body:
+                            JSON.stringify({
+                                choices: [
+                                    {
+                                        role: 'assistant',
+                                        content: 'Hello!',
+                                    },
+                                ],
+                            }) + '\n',
+                        headers: {
+                            'content-type': 'application/x-ndjson',
+                        },
+                    },
+                });
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                    iterableNext(1, {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                            },
+                        ],
+                    }),
+                ]);
+
+                responses.next({
+                    type: 'http_partial_response',
+                    id: 0,
+                    index: 0,
+                    response: {
+                        statusCode: 200,
+                        body:
+                            JSON.stringify({
+                                success: true,
+                            }) + '\n',
+                        headers: {
+                            'content-type': 'application/x-ndjson',
+                        },
+                    },
+                    final: true,
+                });
+
+                expect(vm.events.slice(2)).toEqual([iterableComplete(1)]);
             });
         });
 

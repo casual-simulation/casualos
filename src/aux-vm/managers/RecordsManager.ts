@@ -8,6 +8,9 @@ import {
     RemoteCausalRepoProtocol,
     GenericHttpRequest,
     GetRecordsEndpointAction,
+    iterableNext,
+    iterableThrow,
+    iterableComplete,
 } from '@casual-simulation/aux-common';
 import {
     ListRecordDataAction,
@@ -37,6 +40,7 @@ import {
     ListRecordDataByMarkerAction,
     GrantRecordPermissionAction,
     RevokeRecordPermissionAction,
+    AIChatStreamAction,
 } from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -67,7 +71,18 @@ import {
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
-import { Observable, Subject, filter, firstValueFrom } from 'rxjs';
+import {
+    Observable,
+    ReplaySubject,
+    Subject,
+    connectable,
+    filter,
+    firstValueFrom,
+    map,
+    share,
+    takeUntil,
+    takeWhile,
+} from 'rxjs';
 import { DateTime } from 'luxon';
 import {
     AIChatResponse,
@@ -218,6 +233,8 @@ export class RecordsManager {
                 this._revokeRole(event);
             } else if (event.type === 'ai_chat') {
                 this._aiChat(event);
+            } else if (event.type === 'ai_chat_stream') {
+                this._aiChatStream(event);
             } else if (event.type === 'ai_generate_skybox') {
                 this._aiGenerateSkybox(event);
             } else if (event.type === 'ai_generate_image') {
@@ -1501,6 +1518,102 @@ export class RecordsManager {
         }
     }
 
+    private async _aiChatStream(event: AIChatStreamAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const { endpoint, preferredModel, ...rest } = event.options;
+            let requestData: any = {
+                ...rest,
+                model: preferredModel,
+                messages: event.messages,
+            };
+
+            if (hasValue(this._helper.origin)) {
+                requestData.instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
+            const client = await this._getWebsocketClient(info.auth);
+            if (!client) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Streaming AI chat is not supported on this inst.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const result = await this._sendWebsocketStreamRequest(
+                client,
+                'POST',
+                '/api/v2/ai/chat/stream',
+                {},
+                requestData,
+                info.headers
+            );
+
+            if (hasValue(event.taskId)) {
+                result.subscribe({
+                    next: (data) => {
+                        this._helper.transaction(
+                            iterableNext(event.taskId, data)
+                        );
+                    },
+                    complete: () => {
+                        this._helper.transaction(
+                            iterableComplete(event.taskId)
+                        );
+                    },
+                    error: (error) => {
+                        this._helper.transaction(
+                            iterableThrow(event.taskId, error.toString())
+                        );
+                    },
+                });
+
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: true,
+                    })
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error sending chat message:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _aiGenerateSkybox(event: AIGenerateSkyboxAction) {
         try {
             const info = await this._resolveInfoForEvent(event);
@@ -1739,10 +1852,69 @@ export class RecordsManager {
 
             const response = await promise;
             if (response.response.body) {
-                return JSON.parse(response.response.body);
+                return JSON.parse(response.response.body as string);
             }
             return null;
         }
+    }
+
+    private async _getWebsocketClient(
+        auth: AuthHelperInterface
+    ): Promise<ConnectionClient> {
+        const websocketOrigin = await auth.getWebsocketOrigin();
+        const websocketProtocol = await auth.getWebsocketProtocol();
+        const client = this._getConnectionClient(
+            websocketOrigin,
+            websocketProtocol
+        );
+
+        return client;
+    }
+
+    private async _sendWebsocketStreamRequest<TResponse>(
+        client: ConnectionClient,
+        method: GenericHttpRequest['method'],
+        path: string,
+        query: any,
+        data: any,
+        headers: any
+    ): Promise<Observable<TResponse>> {
+        await firstValueFrom(
+            client.connectionState.pipe(filter((c) => c.connected))
+        );
+
+        const id = this._httpRequestId++;
+        const responses = client.event('http_partial_response').pipe(
+            filter((response) => response.id === id),
+            takeWhile((response) => !response.final),
+            map((response) => {
+                if (response.response.body) {
+                    return JSON.parse(response.response.body as string);
+                }
+                return null;
+            }),
+            share({
+                connector: () => new ReplaySubject(),
+                resetOnError: false,
+                resetOnComplete: false,
+                resetOnRefCountZero: false,
+            })
+        );
+
+        client.send({
+            type: 'http_request',
+            id,
+            request: {
+                path,
+                method,
+                headers,
+                pathParams: {},
+                query: query,
+                body: JSON.stringify(data),
+            },
+        });
+
+        return responses;
     }
 
     private _getConnectionClient(
@@ -1836,6 +2008,7 @@ export class RecordsManager {
             | GrantRoleAction
             | RevokeRoleAction
             | AIChatAction
+            | AIChatStreamAction
             | AIGenerateSkyboxAction
             | AIGenerateImageAction
             | ListUserStudiosAction,
