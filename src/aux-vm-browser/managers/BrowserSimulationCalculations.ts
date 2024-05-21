@@ -6,7 +6,7 @@ import {
     registerBuiltinPortal,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
-import { NEVER, never, Observable, of } from 'rxjs';
+import { NEVER, Observable, of } from 'rxjs';
 import {
     switchMap,
     first,

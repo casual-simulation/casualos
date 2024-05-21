@@ -208,14 +208,14 @@ export abstract class Game {
         this.setupRendering();
         this.setupScenes();
         this.input = new Input(this);
-        this.input.controllerAdded.subscribe(
-            (controller) => this.handleControllerAdded(controller),
-            (err) => console.error(err)
-        );
-        this.input.controllerRemoved.subscribe(
-            (controller) => this.handleControllerRemoved(controller),
-            (err) => console.error(err)
-        );
+        this.input.controllerAdded.subscribe({
+            next: (controller) => this.handleControllerAdded(controller),
+            error: (err) => console.error(err),
+        });
+        this.input.controllerRemoved.subscribe({
+            next: (controller) => this.handleControllerRemoved(controller),
+            error: (err) => console.error(err),
+        });
         this.interaction = this.setupInteraction();
 
         this.onCenterCamera = this.onCenterCamera.bind(this);
