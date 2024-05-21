@@ -105,7 +105,7 @@ export class AuxHelper extends BaseHelper<Bot> {
                     await this._sendEvents(e);
                 })
             )
-            .subscribe(null, (e: any) => console.error(e));
+            .subscribe({ error: (e: any) => console.error(e) });
 
         this._runtime.onErrors
             .pipe(
@@ -129,7 +129,7 @@ export class AuxHelper extends BaseHelper<Bot> {
                     }
                 })
             )
-            .subscribe(null, (e: any) => console.error(e));
+            .subscribe({ error: (e: any) => console.error(e) });
     }
 
     /**

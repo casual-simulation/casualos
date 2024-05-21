@@ -12,17 +12,17 @@ import {
     getTagValueForSpace,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { Subject, Observable, SubscriptionLike, never } from 'rxjs';
+import { Subject, Observable, SubscriptionLike } from 'rxjs';
 import {
-    flatMap,
+    mergeMap,
     filter,
     startWith,
     tap,
     takeUntil,
     first,
     endWith,
-    merge as rxMerge,
     map,
+    mergeWith,
 } from 'rxjs/operators';
 import { values } from 'lodash';
 import { BotHelper } from './BotHelper';
@@ -157,8 +157,8 @@ export class BotWatcher implements SubscriptionLike {
                         );
                     })
                 )
-                .subscribe(
-                    (update) => {
+                .subscribe({
+                    next: (update) => {
                         const added = update.addedBots.map(
                             (id) => this._helper.botsState[id]
                         );
@@ -260,14 +260,14 @@ export class BotWatcher implements SubscriptionLike {
                             }
                         });
                     },
-                    (err) => console.error(err)
-                ),
-            versionUpdated.subscribe(
-                (v) => {
+                    error: (err) => console.error(err),
+                }),
+            versionUpdated.subscribe({
+                next: (v) => {
                     this._lastVersion = v;
                 },
-                (err) => console.error(err)
-            )
+                error: (err) => console.error(err),
+            })
         );
     }
 
@@ -278,14 +278,14 @@ export class BotWatcher implements SubscriptionLike {
     botChanged(id: string): Observable<PrecalculatedBot> {
         const bot = this._helper.botsState ? this._helper.botsState[id] : null;
         const added = this._botsDiscoveredObservable.pipe(
-            flatMap((bots) => bots)
+            mergeMap((bots) => bots)
         );
-        const updated = this.botsUpdated.pipe(flatMap((bots) => bots));
+        const updated = this.botsUpdated.pipe(mergeMap((bots) => bots));
         return updated.pipe(
-            rxMerge(added),
+            mergeWith(added),
             takeUntil(
                 this.botsRemoved.pipe(
-                    flatMap((botIds) => botIds),
+                    mergeMap((botIds) => botIds),
                     first((botId) => botId === id)
                 )
             ),
@@ -303,18 +303,18 @@ export class BotWatcher implements SubscriptionLike {
     botTagsChanged(id: string): Observable<UpdatedBotInfo> {
         const bot = this._helper.botsState ? this._helper.botsState[id] : null;
         const added = this._botsDiscoveredObservable.pipe(
-            flatMap((bots) => bots),
+            mergeMap((bots) => bots),
             map((bot) => ({
                 bot,
                 tags: new Set(tagsOnBot(bot)),
             }))
         );
-        const updated = this.botTagsUpdated.pipe(flatMap((bots) => bots));
+        const updated = this.botTagsUpdated.pipe(mergeMap((bots) => bots));
         return updated.pipe(
-            rxMerge(added),
+            mergeWith(added),
             takeUntil(
                 this.botsRemoved.pipe(
-                    flatMap((botIds) => botIds),
+                    mergeMap((botIds) => botIds),
                     first((botId) => botId === id)
                 )
             ),
@@ -369,7 +369,7 @@ export class BotWatcher implements SubscriptionLike {
             return subject.pipe(
                 takeUntil(
                     _this.botsRemoved.pipe(
-                        flatMap((botIds) => botIds),
+                        mergeMap((botIds) => botIds),
                         first((botId) => botId === id)
                     )
                 ),

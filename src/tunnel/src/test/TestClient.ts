@@ -21,7 +21,7 @@ export class TestClient implements TunnelClient {
     }
 
     open(request: TunnelRequest): Observable<TunnelMessage> {
-        return Observable.create((observer: Observer<TunnelMessage>) => {
+        return new Observable((observer: Observer<TunnelMessage>) => {
             const req: TestRequest = {
                 request: request,
                 accept() {

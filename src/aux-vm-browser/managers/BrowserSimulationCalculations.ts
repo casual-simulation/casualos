@@ -13,7 +13,7 @@ import {
     map,
     distinctUntilChanged,
     filter,
-    flatMap,
+    mergeMap,
 } from 'rxjs/operators';
 import {
     LoginManager,
@@ -121,7 +121,7 @@ export function watchPortalConfigBotCore(
         helper.transaction(registerBuiltinPortal(portal));
     }
     return portals.portalBotIdUpdated.pipe(
-        flatMap((p) => p),
+        mergeMap((p) => p),
         filter((p) => p.portalId === portal),
         map((p) => p.botId),
         distinctUntilChanged(),

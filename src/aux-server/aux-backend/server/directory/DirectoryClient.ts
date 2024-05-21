@@ -15,7 +15,7 @@ import {
     Observable,
     defer,
     throwError,
-    empty,
+    EMPTY,
     NEVER,
 } from 'rxjs';
 import {
@@ -24,7 +24,7 @@ import {
     finalize,
     tap,
     repeatWhen,
-    flatMap,
+    mergeMap,
 } from 'rxjs/operators';
 import { TunnelClient } from '@casual-simulation/tunnel';
 
@@ -154,15 +154,17 @@ export class DirectoryClient {
 
         this._tunnelSub = deferred
             .pipe(
-                tap(
-                    (x) => {},
-                    (err) => console.error(err)
-                ),
+                tap({
+                    next: (x) => {},
+                    error: (err) => console.error(err),
+                }),
                 (o) => retryUntilFailedTimes(o, 5),
                 finalize(() => (this._tunnelSub = null))
             )
-            .subscribe(null, (err) => {
-                console.log(err);
+            .subscribe({
+                error: (err) => {
+                    console.log(err);
+                },
             });
     }
 }
@@ -179,12 +181,12 @@ function retryUntilFailedTimes<T>(
         }),
         retryWhen((errors) =>
             errors.pipe(
-                tap((x) =>
+                tap(() =>
                     console.log(
                         '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'
                     )
                 ),
-                flatMap((error) => {
+                mergeMap((error) => {
                     currentCount += 1;
                     if (currentCount >= times) {
                         return throwError(error);
@@ -201,10 +203,10 @@ function retryUntilFailedTimes<T>(
                         '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'
                     )
                 ),
-                flatMap((x) => {
+                mergeMap(() => {
                     currentCount += 1;
                     if (currentCount >= times) {
-                        return empty();
+                        return EMPTY;
                     }
 
                     return timer(5000);

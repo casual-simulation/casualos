@@ -31,7 +31,7 @@ import { Viewport } from '../../shared/scene/Viewport';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
-import { tap, mergeMap, first } from 'rxjs/operators';
+import { tap, mergeMap, first, map } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import {
@@ -685,12 +685,11 @@ export class PlayerGame extends Game {
         this.subs.push(
             appManager.simulationManager.simulationAdded
                 .pipe(
-                    mergeMap(
-                        (sim) =>
-                            sim.connection.syncStateChanged.pipe(
-                                first((sync) => sync)
-                            ),
-                        (sim, sync) => sim
+                    mergeMap((sim) =>
+                        sim.connection.syncStateChanged.pipe(
+                            first((sync) => sync),
+                            map(() => sim)
+                        )
                     ),
                     tap((sim) => {
                         this.simulationAdded(sim);

@@ -97,7 +97,7 @@ describe('CustomAppHelper', () => {
                             runtime.stateUpdated(e);
                         })
                     )
-                    .subscribe(null, (e: any) => console.error(e))
+                    .subscribe({ error: (e: any) => console.error(e) })
             );
         }
 

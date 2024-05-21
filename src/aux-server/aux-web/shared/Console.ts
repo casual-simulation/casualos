@@ -32,7 +32,7 @@ export function recordMessage(message: ConsoleMessages) {
 function createMessagesObservable(
     type: ConsoleMessages['type']
 ): Observable<ConsoleMessages> {
-    return Observable.create((observer: Observer<ConsoleMessages>) => {
+    return new Observable((observer: Observer<ConsoleMessages>) => {
         let prev = console[type];
         console[type] = function () {
             observer.next(<any>{

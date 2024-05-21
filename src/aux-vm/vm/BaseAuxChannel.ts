@@ -1,4 +1,10 @@
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
+import {
+    Observable,
+    Subject,
+    Subscription,
+    SubscriptionLike,
+    firstValueFrom,
+} from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
 import { AuxChannel, AuxSubChannel, ChannelActionResult } from './AuxChannel';
 import {
@@ -174,29 +180,37 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             vector: {},
         };
 
-        this._onConnectionStateChanged.subscribe(null, (err) => {
-            this._onError.next({
-                type: 'general',
-                message: err.toString(),
-            });
+        this._onConnectionStateChanged.subscribe({
+            error: (err) => {
+                this._onError.next({
+                    type: 'general',
+                    message: err.toString(),
+                });
+            },
         });
-        this._onStateUpdated.subscribe(null, (err) => {
-            this._onError.next({
-                type: 'general',
-                message: err.toString(),
-            });
+        this._onStateUpdated.subscribe({
+            error: (err) => {
+                this._onError.next({
+                    type: 'general',
+                    message: err.toString(),
+                });
+            },
         });
-        this._onLocalEvents.subscribe(null, (err) => {
-            this._onError.next({
-                type: 'general',
-                message: err.toString(),
-            });
+        this._onLocalEvents.subscribe({
+            error: (err) => {
+                this._onError.next({
+                    type: 'general',
+                    message: err.toString(),
+                });
+            },
         });
-        this._onDeviceEvents.subscribe(null, (err) => {
-            this._onError.next({
-                type: 'general',
-                message: err.toString(),
-            });
+        this._onDeviceEvents.subscribe({
+            error: (err) => {
+                this._onError.next({
+                    type: 'general',
+                    message: err.toString(),
+                });
+            },
         });
 
         addDebugApi('getChannel', () => this);
@@ -257,9 +271,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onSubChannelRemoved?: (channelId: string) => void,
         onAuthMessage?: (message: PartitionAuthMessage) => void
     ) {
-        const promise = this.onConnectionStateChanged
-            .pipe(first((s) => s.type === 'init'))
-            .toPromise();
+        const promise = firstValueFrom(
+            this.onConnectionStateChanged.pipe(first((s) => s.type === 'init'))
+        );
         await this.init(
             onLocalEvents,
             onDeviceEvents,
@@ -379,7 +393,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         this._handleStatusUpdated(statusMapper(state))
                     )
                 )
-                .subscribe(null, (e: any) => console.error(e)),
+                .subscribe({ error: (e: any) => console.error(e) }),
             ...flatMap(partitions, (p) =>
                 this._getCleanupSubscriptionsForPartition(p)
             )
@@ -404,7 +418,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             partition.onError.subscribe((err) => this._handleError(err)),
             partition.onEvents
                 .pipe(tap((events) => this._handlePartitionEvents(events)))
-                .subscribe(null, (e: any) => console.error(e)),
+                .subscribe({ error: (e: any) => console.error(e) }),
         ];
     }
 
@@ -577,14 +591,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected _registerSubscriptions() {
         this._subs.push(
-            this._helper.localEvents.subscribe(
-                (e) => this._handleLocalEvents(e),
-                (e: any) => console.error(e)
-            ),
-            this._helper.deviceEvents.subscribe(
-                (e) => this._handleDeviceEvents(e),
-                (e: any) => console.error(e)
-            ),
+            this._helper.localEvents.subscribe({
+                next: (e) => this._handleLocalEvents(e),
+                error: (e: any) => console.error(e),
+            }),
+            this._helper.deviceEvents.subscribe({
+                next: (e) => this._handleDeviceEvents(e),
+                error: (e: any) => console.error(e),
+            }),
             this._helper.remoteEvents.subscribe((e) => {
                 this._sendRemoteEvents(e);
             })
@@ -640,7 +654,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         this._handleStateUpdated(finalState);
                     })
                 )
-                .subscribe(null, (e: any) => console.error(e)),
+                .subscribe({ error: (e: any) => console.error(e) }),
             partition.onVersionUpdated
                 .pipe(
                     tap((v) => {
@@ -648,7 +662,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         this._onVersionUpdated.next(this._version);
                     })
                 )
-                .subscribe(null, (e: any) => console.error(e))
+                .subscribe({ error: (e: any) => console.error(e) })
         );
     }
 

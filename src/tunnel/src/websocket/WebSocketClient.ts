@@ -1,15 +1,12 @@
 import { TunnelClient } from '../TunnelClient';
-import { Observable, Observer, ConnectableObservable } from 'rxjs';
+import { Observable } from 'rxjs';
 import {
     map,
-    flatMap,
+    mergeMap,
     tap,
     filter,
     retry,
     share,
-    takeUntil,
-    last,
-    publish,
     startWith,
 } from 'rxjs/operators';
 import { TunnelMessage } from '../TunnelResponse';
@@ -64,14 +61,14 @@ function reverseRequest(
     }).pipe(share());
 
     return web.pipe(
-        flatMap(ws => {
+        mergeMap((ws) => {
             return messages(ws).pipe(
                 filter(
-                    message =>
+                    (message) =>
                         typeof message === 'string' &&
                         message.startsWith('NewConnection:')
                 ),
-                map(message => {
+                map((message) => {
                     const id = (<string>message).substring(
                         'NewConnection:'.length
                     );
@@ -79,30 +76,25 @@ function reverseRequest(
                     url.search = `id=${encodeURIComponent(id)}`;
                     return url;
                 }),
-                flatMap(
-                    () =>
-                        connect({
-                            host: request.localHost,
-                            port: request.localPort,
-                        }),
-                    (url, connection) => ({ url, connection })
+                mergeMap(() =>
+                    connect({
+                        host: request.localHost,
+                        port: request.localPort,
+                    }).pipe(map((connection) => ({ url, connection } as const)))
                 ),
-                flatMap(
-                    ({ url }) => {
-                        return websocket(url.href, {
-                            headers: {
-                                Authorization: 'Bearer ' + request.token,
-                            },
-                        });
-                    },
-                    (extra, ws) => ({ ...extra, ws })
-                ),
+                mergeMap((extra) => {
+                    return websocket(extra.url.href, {
+                        headers: {
+                            Authorization: 'Bearer ' + request.token,
+                        },
+                    }).pipe(map((ws) => ({ ...extra, ws })));
+                }),
                 tap(({ connection, ws }) => {
                     const wsStream = wrap(ws);
                     wsStream.pipe(connection).pipe(wsStream);
                 }),
                 map(
-                    _ =>
+                    (_) =>
                         <TunnelMessage>{
                             type: 'connected',
                         }
@@ -134,22 +126,20 @@ function forwardRequest(
     const conn = listen(server, request.localPort).pipe(share());
 
     return conn.pipe(
-        flatMap(connection => cleanup(connection)),
-        flatMap(
-            _ =>
-                websocket(url.href, {
-                    headers: {
-                        Authorization: 'Bearer ' + request.token,
-                    },
-                }),
-            (connection, ws) => ({ connection, ws })
+        mergeMap((connection) => cleanup(connection)),
+        mergeMap((connection) =>
+            websocket(url.href, {
+                headers: {
+                    Authorization: 'Bearer ' + request.token,
+                },
+            }).pipe(map((ws) => ({ connection, ws })))
         ),
         tap(({ connection, ws }) => {
             const wsStream = wrap(ws);
             wsStream.pipe(connection).pipe(wsStream);
         }),
         map(
-            _ =>
+            (_) =>
                 <TunnelMessage>{
                     type: 'connected',
                 }
