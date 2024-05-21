@@ -16985,6 +16985,78 @@ describe('RecordsServer', () => {
                 });
             });
 
+            it('should handle streamed responses', async () => {
+                const u = await store.findUser(userId);
+                await store.saveUser({
+                    ...u,
+                    subscriptionId: 'sub_id',
+                    subscriptionStatus: 'active',
+                });
+
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'assistant',
+                                    content: 'hi!',
+                                },
+                            ],
+                            totalTokens: 0,
+                        }),
+                    ])
+                );
+
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'http_request',
+                            id: 1,
+                            request: httpPost(
+                                `/api/v2/ai/chat/stream`,
+                                JSON.stringify({
+                                    model: 'model-1',
+                                    messages: [
+                                        {
+                                            role: 'user',
+                                            content: 'hello',
+                                        },
+                                    ],
+                                }),
+                                apiHeaders
+                            ),
+                        }),
+                        undefined,
+                        apiHeaders['origin']
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const response = getWebsocketHttpResponse(connectionId, 1);
+                expectWebsocketHttpResponseBodyToEqual(response, {
+                    statusCode: 200,
+                    body: [
+                        {
+                            choices: [
+                                {
+                                    role: 'assistant',
+                                    content: 'hi!',
+                                },
+                            ],
+                        },
+                        {
+                            success: true,
+                        },
+                    ],
+                    headers: {
+                        ...apiCorsHeaders,
+                        'content-type': 'application/x-ndjson',
+                    },
+                });
+            });
+
             it('should force the origin header to be the one in the websocket request', async () => {
                 await server.handleWebsocketRequest(
                     wsMessage(
@@ -17108,9 +17180,19 @@ describe('RecordsServer', () => {
         expected: any
     ) {
         const response = message.response;
-        const json = response.body
-            ? JSON.parse(response.body as string)
-            : undefined;
+
+        let json: any;
+        if (response.headers?.['content-type'] === 'application/x-ndjson') {
+            const lines = (response.body as string).split('\n');
+            json = lines
+                .map((l) => l.trim())
+                .filter((l) => !!l)
+                .map((l) => JSON.parse(l.trim()));
+        } else {
+            json = response.body
+                ? JSON.parse(response.body as string)
+                : undefined;
+        }
 
         expect({
             ...response,

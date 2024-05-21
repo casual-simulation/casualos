@@ -3659,7 +3659,20 @@ export class RecordsServer {
                 ipAddress: request.ipAddress,
             };
 
-            const result = await this.handleHttpRequest(httpRequest);
+            let result = await this.handleHttpRequest(httpRequest);
+            if (
+                typeof result.body === 'object' &&
+                Symbol.asyncIterator in result.body
+            ) {
+                let body = '';
+                for await (const chunk of result.body) {
+                    body += chunk;
+                }
+                result = {
+                    ...result,
+                    body,
+                };
+            }
 
             await this._websocketController.messenger.sendMessage(
                 [request.connectionId],
@@ -6638,7 +6651,7 @@ export function returnProcedureOutputStream(
         while (true) {
             const { done, value } = await result.next();
             if (done) {
-                yield JSON.stringify(value) + '\n';
+                yield JSON.stringify(value);
                 return;
             }
             yield JSON.stringify(value) + '\n';
