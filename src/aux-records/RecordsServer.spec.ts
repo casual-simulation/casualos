@@ -17059,7 +17059,7 @@ describe('RecordsServer', () => {
                         'content-type': 'application/x-ndjson',
                     },
                 });
-                expect(responses).toHaveLength(3);
+                expect(responses).toHaveLength(2);
             });
 
             it('should force the origin header to be the one in the websocket request', async () => {
@@ -17165,7 +17165,10 @@ describe('RecordsServer', () => {
             const result = await unwindAndCaptureAsync(
                 response.body[Symbol.asyncIterator]()
             );
-            body = result.states.map((s) => JSON.parse(s.trim()));
+            body = [
+                ...result.states.map((s) => JSON.parse(s.trim())),
+                JSON.parse(result.result.trim()),
+            ];
         } else {
             body = response.body
                 ? JSON.parse(response.body as string)

@@ -3666,32 +3666,29 @@ export class RecordsServer {
             ) {
                 let response: Partial<GenericHttpResponse> = result;
                 let index = 0;
-                for await (const chunk of result.body) {
+                const i = result.body[Symbol.asyncIterator]();
+                while (true) {
+                    let { value, done } = await i.next();
                     await this._websocketController.messenger.sendMessage(
                         [request.connectionId],
                         {
                             type: 'http_partial_response',
                             id: data.id,
                             index: index,
+                            final: done ? true : undefined,
                             response: {
                                 ...response,
-                                body: chunk,
+                                body: value,
                             },
                         }
                     );
                     response = {};
                     index += 1;
-                }
 
-                await this._websocketController.messenger.sendMessage(
-                    [request.connectionId],
-                    {
-                        type: 'http_partial_response',
-                        id: data.id,
-                        index: index,
-                        final: true,
+                    if (done) {
+                        break;
                     }
-                );
+                }
             } else {
                 await this._websocketController.messenger.sendMessage(
                     [request.connectionId],
@@ -6667,12 +6664,11 @@ export function returnResult<
 export function returnProcedureOutputStream(
     result: ProcedureOutputStream
 ): GenericHttpResponse {
-    async function* generateBody(): AsyncGenerator<string> {
+    async function* generateBody(): AsyncGenerator<string, string> {
         while (true) {
             const { done, value } = await result.next();
             if (done) {
-                yield JSON.stringify(value);
-                return;
+                return JSON.stringify(value);
             }
             yield JSON.stringify(value) + '\n';
         }
