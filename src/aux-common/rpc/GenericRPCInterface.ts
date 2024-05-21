@@ -109,8 +109,26 @@ export interface CallProcedureOptions {
     headers?: Record<string, string>;
 }
 
+export type AsyncIteratorToArray<T> = T extends AsyncIterator<
+    infer U,
+    infer R,
+    any
+>
+    ? [...U[], R]
+    : T;
+
+export type MapPromise<T> = T extends Promise<infer U>
+    ? Promise<AsyncIteratorToArray<U>>
+    : T;
+
+// export type Returns = Promise<AsyncGenerator<number, string> | string>
+// export type Func = (input: number, options?: CallProcedureOptions) => Returns;
+
+// export type RetType = ReturnType<Func>
+// export type Result = MapPromise<RetType>;
+
 export type OnlyFirstArg<T> = T extends (input: infer U, ...args: any[]) => any
-    ? (input: U, options?: CallProcedureOptions) => ReturnType<T>
+    ? (input: U, options?: CallProcedureOptions) => MapPromise<ReturnType<T>>
     : never;
 
 export type RemoteProcedures<T extends Procedures> = {

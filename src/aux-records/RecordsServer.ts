@@ -3659,29 +3659,49 @@ export class RecordsServer {
                 ipAddress: request.ipAddress,
             };
 
-            let result = await this.handleHttpRequest(httpRequest);
+            const result = await this.handleHttpRequest(httpRequest);
             if (
                 typeof result.body === 'object' &&
                 Symbol.asyncIterator in result.body
             ) {
-                let body = '';
+                let response: Partial<GenericHttpResponse> = result;
+                let index = 0;
                 for await (const chunk of result.body) {
-                    body += chunk;
+                    await this._websocketController.messenger.sendMessage(
+                        [request.connectionId],
+                        {
+                            type: 'http_partial_response',
+                            id: data.id,
+                            index: index,
+                            response: {
+                                ...response,
+                                body: chunk,
+                            },
+                        }
+                    );
+                    response = {};
+                    index += 1;
                 }
-                result = {
-                    ...result,
-                    body,
-                };
-            }
 
-            await this._websocketController.messenger.sendMessage(
-                [request.connectionId],
-                {
-                    type: 'http_response',
-                    id: data.id,
-                    response: result,
-                }
-            );
+                await this._websocketController.messenger.sendMessage(
+                    [request.connectionId],
+                    {
+                        type: 'http_partial_response',
+                        id: data.id,
+                        index: index,
+                        final: true,
+                    }
+                );
+            } else {
+                await this._websocketController.messenger.sendMessage(
+                    [request.connectionId],
+                    {
+                        type: 'http_response',
+                        id: data.id,
+                        response: result,
+                    }
+                );
+            }
         }
     }
 

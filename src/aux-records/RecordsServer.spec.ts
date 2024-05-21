@@ -95,6 +95,7 @@ import {
     LoginMessage,
     WebsocketDownloadRequestEvent,
     WebsocketEventTypes,
+    WebsocketHttpPartialResponseMessage,
     WebsocketHttpResponseMessage,
     WebsocketMessage,
     WebsocketMessageEvent,
@@ -17034,8 +17035,11 @@ describe('RecordsServer', () => {
 
                 expectNoWebSocketErrors(connectionId);
 
-                const response = getWebsocketHttpResponse(connectionId, 1);
-                expectWebsocketHttpResponseBodyToEqual(response, {
+                const responses = getWebsocketHttpPartialResponses(
+                    connectionId,
+                    1
+                );
+                expectWebsocketHttpPartialResponseBodiesToEqual(responses, {
                     statusCode: 200,
                     body: [
                         {
@@ -17055,6 +17059,7 @@ describe('RecordsServer', () => {
                         'content-type': 'application/x-ndjson',
                     },
                 });
+                expect(responses).toHaveLength(3);
             });
 
             it('should force the origin header to be the one in the websocket request', async () => {
@@ -17200,6 +17205,24 @@ describe('RecordsServer', () => {
         }).toEqual(expected);
     }
 
+    function expectWebsocketHttpPartialResponseBodiesToEqual(
+        messages: WebsocketHttpPartialResponseMessage[],
+        expected: any
+    ) {
+        let bodies = [] as any[];
+        for (let m of messages) {
+            if (m.response) {
+                bodies.push(JSON.parse(m.response.body as string));
+            }
+        }
+        const response = messages[0].response;
+
+        expect({
+            ...response,
+            body: bodies,
+        }).toEqual(expected);
+    }
+
     function getWebsocketHttpResponse(
         connectionId: string,
         id: number
@@ -17208,6 +17231,19 @@ describe('RecordsServer', () => {
         return messages.find(
             (m) => m.type === 'http_response' && m.id === id
         ) as WebsocketHttpResponseMessage;
+    }
+
+    function getWebsocketHttpPartialResponses(
+        connectionId: string,
+        id: number
+    ): WebsocketHttpPartialResponseMessage[] {
+        const messages = websocketMessenger.getMessages(connectionId);
+        return sortBy(
+            messages.filter(
+                (m) => m.type === 'http_partial_response' && m.id === id
+            ) as WebsocketHttpPartialResponseMessage[],
+            (m) => m.index
+        );
     }
 
     function testUrl(

@@ -70,6 +70,23 @@ export class RecordsClient {
             }
         );
 
+        if (typeof response.data === 'object') {
+            return response.data;
+        } else if (
+            typeof response.data === 'string' &&
+            response.headers['Content-Type'] === 'application/x-ndjson'
+        ) {
+            const lines = response.data.split('\n');
+            let results: any[] = [];
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                if (line.length > 0) {
+                    results.push(JSON.parse(line));
+                }
+            }
+            return results;
+        }
+
         return response.data;
     }
 
