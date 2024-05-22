@@ -607,7 +607,36 @@ describe('streamJsonLines()', () => {
                 streamJsonLines(stream, new TextDecoder())
             );
             expect(results).toEqual({
-                states: [{ test: true }, { num: 123 }, { value: 'string' }],
+                states: [{ test: true }, { num: 123 }],
+                // The last value after the newline is the result
+                result: {
+                    value: 'string',
+                },
+            });
+        });
+
+        it('should correctly handle when the last chunk has a newline in it', async () => {
+            const stream = readableFromAsyncIterable(
+                asyncIterable([
+                    Promise.resolve(Buffer.from(`{"test":true}${newline}`)),
+                    Promise.resolve(Buffer.from(`{"num": 123}${newline}`)),
+                    Promise.resolve(
+                        Buffer.from(
+                            `{"abc": "def"}${newline}{"value": "string"}`
+                        )
+                    ),
+                ])
+            );
+
+            const results = await unwindAndCaptureAsync(
+                streamJsonLines(stream, new TextDecoder())
+            );
+            expect(results).toEqual({
+                states: [{ test: true }, { num: 123 }, { abc: 'def' }],
+                // The last value after the newline is the result
+                result: {
+                    value: 'string',
+                },
             });
         });
 

@@ -91,6 +91,10 @@ import {
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
 import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import {
+    RecordsClientInputs,
+    createRecordsClient,
+} from '@casual-simulation/aux-records/RecordsClient';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -132,6 +136,7 @@ export class RecordsManager {
     private _axiosOptions: AxiosRequestConfig<any>;
     private _skipTimers: boolean = false;
     private _httpRequestId: number = 0;
+    private _client: ReturnType<typeof createRecordsClient>;
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -189,6 +194,7 @@ export class RecordsManager {
         };
         this._skipTimers = skipTimers;
         this._connectionClientFactory = connectionClientFactory;
+        this._client = createRecordsClient(config.recordsOrigin);
     }
 
     handleEvents(events: RuntimeActions[]): void {
@@ -1555,54 +1561,61 @@ export class RecordsManager {
                 ];
             }
 
-            const client = await this._getWebsocketClient(info.auth);
-            if (!client) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Streaming AI chat is not supported on this inst.',
-                        })
-                    );
-                }
-                return;
-            }
+            const result = await this._client.aiChatStream(requestData, {
+                sessionKey: info.token,
+                endpoint: await info.auth.getRecordsOrigin(),
+            });
 
-            const result = await this._sendWebsocketStreamRequest(
-                client,
-                'POST',
-                '/api/v2/ai/chat/stream',
-                {},
-                requestData,
-                info.headers
-            );
+            // const client = await this._getWebsocketClient(info.auth);
+            // if (!client) {
+            //     if (hasValue(event.taskId)) {
+            //         this._helper.transaction(
+            //             asyncResult(event.taskId, {
+            //                 success: false,
+            //                 errorCode: 'not_supported',
+            //                 errorMessage:
+            //                     'Streaming AI chat is not supported on this inst.',
+            //             })
+            //         );
+            //     }
+            //     return;
+            // }
+
+            // const result = await this._sendWebsocketStreamRequest(
+            //     client,
+            //     'POST',
+            //     '/api/v2/ai/chat/stream',
+            //     {},
+            //     requestData,
+            //     info.headers
+            // );
 
             if (hasValue(event.taskId)) {
-                result.subscribe({
-                    next: (data) => {
-                        this._helper.transaction(
-                            iterableNext(event.taskId, data)
-                        );
-                    },
-                    complete: () => {
+                if (Symbol.asyncIterator in result) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: true,
+                        })
+                    );
+
+                    try {
+                        for await (let data of result) {
+                            this._helper.transaction(
+                                iterableNext(event.taskId, data)
+                            );
+                        }
+
                         this._helper.transaction(
                             iterableComplete(event.taskId)
                         );
-                    },
-                    error: (error) => {
+                    } catch (err) {
                         this._helper.transaction(
-                            iterableThrow(event.taskId, error.toString())
+                            iterableThrow(event.taskId, err)
                         );
-                    },
-                });
-
-                this._helper.transaction(
-                    asyncResult(event.taskId, {
-                        success: true,
-                    })
-                );
+                    }
+                } else {
+                    this._helper.transaction(asyncResult(event.taskId, result));
+                }
             }
         } catch (e) {
             console.error('[RecordsManager] Error sending chat message:', e);

@@ -63,6 +63,10 @@ import {
     formatInstId,
     formatV2RecordKey,
 } from '@casual-simulation/aux-records';
+import {
+    asyncIterable,
+    readableFromAsyncIterable,
+} from '@casual-simulation/aux-records/TestUtils';
 
 jest.mock('axios');
 
@@ -6835,12 +6839,124 @@ describe('RecordsManager', () => {
         });
 
         describe('ai_chat_stream', () => {
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    headers?: Headers;
+                    json?: () => Promise<any>;
+                    text?: () => Promise<string>;
+                    body?: ReadableStream;
+                }>
+            >;
+
+            const originalFetch = globalThis.fetch;
+
             beforeEach(() => {
                 authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
                 require('axios').__reset();
+                fetch = globalThis.fetch = jest.fn();
             });
 
-            it('should make a websocket request', async () => {
+            afterAll(() => {
+                globalThis.fetch = originalFetch;
+            });
+
+            it('should make a POST request to /api/v2/ai/chat/stream', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    headers: new Headers({
+                        'Content-Type': 'application/x-ndjson',
+                    }),
+                    body: readableFromAsyncIterable(
+                        asyncIterable([
+                            Promise.resolve(
+                                Buffer.from(
+                                    JSON.stringify({
+                                        choices: [
+                                            {
+                                                role: 'assistant',
+                                                content: 'Hello!',
+                                                finishReason: 'stop',
+                                            },
+                                        ],
+                                    }) + '\n'
+                                )
+                            ),
+                            Promise.resolve(
+                                Buffer.from(
+                                    JSON.stringify({
+                                        success: true,
+                                    })
+                                )
+                            ),
+                        ])
+                    ),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChatStream(
+                        [
+                            {
+                                role: 'user',
+                                content: 'Hello!',
+                            },
+                        ],
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json;charset=UTF-8',
+                            Accept: 'application/json,application/x-ndjson',
+                            Authorization: 'Bearer authToken',
+                        },
+                        body: JSON.stringify({
+                            procedure: 'aiChatStream',
+                            input: {
+                                messages: [
+                                    {
+                                        role: 'user',
+                                        content: 'Hello!',
+                                    },
+                                ],
+                            },
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                    iterableNext(1, {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    }),
+                    iterableComplete(1),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it.skip('should make a websocket request', async () => {
                 const client = new MemoryConnectionClient();
 
                 let responses =

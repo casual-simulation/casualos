@@ -5,7 +5,6 @@ import type {
     RemoteProcedures,
 } from '@casual-simulation/aux-common';
 import type { RecordsServer } from './RecordsServer';
-import axios from 'axios';
 
 export type RecordsClientType = RemoteProcedures<RecordsServer['procedures']>;
 export type RecordsClientInputs = ProcedureInputs<RecordsServer['procedures']>;
@@ -139,7 +138,7 @@ export async function* streamJsonLines(
         const { done, value } = await reader.read();
         if (done) {
             if (buffer.length > 0) {
-                yield JSON.parse(buffer);
+                return JSON.parse(buffer);
             }
             break;
         }
