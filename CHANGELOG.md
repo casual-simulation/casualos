@@ -9,6 +9,10 @@
 -   Added the `os.capturePortalScreenshot()` function.
     -   This function can be used to get a screenshot of the gridPortal.
 -   Made `systemPortal` panel resizable.
+-   Added the `ai.stream.chat()` function.
+    -   Works exactly like `ai.chat()`, except that it returns a promise that resolves with an [`AsyncIterable`](https://javascript.info/async-iterators-generators) object that can be iterated using a [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) expression.
+    -   Each value is part of the response from the chat model.
+    -   Useful for displaying the partial results from an AI chat model to the user so they can see the model working.
 
 ## V3.3.3
 
