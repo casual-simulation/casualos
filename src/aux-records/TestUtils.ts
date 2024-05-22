@@ -226,3 +226,16 @@ export async function* asyncIterable<T>(
         yield state;
     }
 }
+
+export function readableFromAsyncIterable<T>(
+    iterator: AsyncIterable<T>
+): ReadableStream {
+    return new ReadableStream({
+        async start(controller) {
+            for await (let value of iterator) {
+                controller.enqueue(value);
+            }
+            controller.close();
+        },
+    });
+}

@@ -58,36 +58,29 @@ export class RecordsClient {
         input: any,
         options?: CallProcedureOptions
     ): Promise<any> {
-        const response = await axios.post(
+        const response = await fetch(
             `${options?.endpoint ?? this._endpoint}/api/v3/callProcedure`,
-            { procedure: name, input },
             {
+                method: 'POST',
+                body: JSON.stringify({ procedure: name, input }),
                 headers: {
+                    'Content-Type': 'application/json;charset=UTF-8',
+                    Accept: 'application/json,application/x-ndjson',
                     ...(options?.headers ?? {}),
                     ...this._authenticationHeaders(options),
                 },
-                validateStatus: () => true,
             }
         );
 
-        if (typeof response.data === 'object') {
-            return response.data;
-        } else if (
-            typeof response.data === 'string' &&
-            response.headers['Content-Type'] === 'application/x-ndjson'
+        if (
+            response.headers
+                ?.get('Content-Type')
+                ?.indexOf('application/x-ndjson') >= 0
         ) {
-            const lines = response.data.split('\n');
-            let results: any[] = [];
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                if (line.length > 0) {
-                    results.push(JSON.parse(line));
-                }
-            }
-            return results;
+            return streamJsonLines(response.body, new TextDecoder());
+        } else {
+            return await response.json();
         }
-
-        return response.data;
     }
 
     private _authenticationHeaders(
@@ -128,4 +121,67 @@ export function createRecordsClient(
             return Reflect.get(target, prop, reciever);
         },
     });
+}
+
+/**
+ * Parses the given stream and produces a sequence of JSON objects.
+ * The stream should be in the [application/x-ndjson format](https://github.com/ndjson/ndjson-spec).
+ * @param reader The reader to read from.
+ * @param decoder The decoder to use to decode the stream into text.
+ */
+export async function* streamJsonLines(
+    stream: ReadableStream,
+    decoder: TextDecoder
+): AsyncGenerator<any> {
+    let buffer = '';
+    const reader = stream.getReader();
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            if (buffer.length > 0) {
+                yield JSON.parse(buffer);
+            }
+            break;
+        }
+
+        let chunk = decoder.decode(value, { stream: true });
+
+        let newlinePosition: number;
+        while ((newlinePosition = chunk.indexOf('\n')) >= 0) {
+            let carriageReturnPosition = chunk.indexOf(
+                '\r',
+                newlinePosition - 1
+            );
+
+            if (carriageReturnPosition >= 0) {
+                const beforeCarriageReturn = chunk.substring(
+                    0,
+                    carriageReturnPosition
+                );
+                if (buffer.length + beforeCarriageReturn.length > 0) {
+                    const jsonLine = buffer + beforeCarriageReturn;
+
+                    yield JSON.parse(jsonLine);
+                }
+
+                const afterNewline = chunk.substring(
+                    carriageReturnPosition + 2
+                );
+                chunk = afterNewline;
+                buffer = '';
+            } else {
+                const beforeNewline = chunk.substring(0, newlinePosition);
+                if (buffer.length + beforeNewline.length > 0) {
+                    const jsonLine = buffer + beforeNewline;
+                    yield JSON.parse(jsonLine);
+                }
+
+                const afterNewline = chunk.substring(newlinePosition + 1);
+                chunk = afterNewline;
+                buffer = '';
+            }
+        }
+
+        buffer += chunk;
+    }
 }
