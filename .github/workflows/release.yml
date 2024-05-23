@@ -44,12 +44,31 @@ jobs:
             - name: Build
               run: |
                   npm run build
-            - name: Publish NPM Packages
+            - name: Publish Master NPM Packages
+              if: ${{ github.ref == 'refs/heads/master' }}
               run: |
                   npm whoami
                   echo "Publishing NPM Packages..."
                   ls -la
                   npx lerna publish from-package --yes --no-verify-access
+
+                  echo "Updating package-lock.json..."
+                  # Sleep for 5 seconds to hopefully give NPM time to update the package listing
+                  sleep 5
+                  cd ./src/aux-server
+
+                  for i in {1..5}; do 
+                      npm install --package-lock-only && break || sleep 5;
+                  done
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            - name: Publish Alpha NPM Packages
+              if: ${{ github.ref != 'refs/heads/master' }}
+              run: |
+                  npm whoami
+                  echo "Publishing NPM Packages..."
+                  ls -la
+                  npx lerna publish from-package --yes --no-verify-access --canary
 
                   echo "Updating package-lock.json..."
                   # Sleep for 5 seconds to hopefully give NPM time to update the package listing
