@@ -38,7 +38,6 @@ import {
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
-import { AuxVMImpl } from '../vm/AuxVMImpl';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/aux-common';

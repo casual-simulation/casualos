@@ -17,6 +17,7 @@
         "vite": "vite serve ./aux-web/aux-player",
         "build": "npm run build:clean && npm run build:server && npm run build:web",
         "build:web": "npm run build:interpreter && node --max_old_space_size=6144 ./node_modules/vite/bin/vite.js build ./aux-web/aux-player && node --max_old_space_size=6144 ./node_modules/vite/bin/vite.js build ./aux-web/aux-auth",
+        "build:web:player:static": "node --max_old_space_size=6144 ./node_modules/vite/bin/vite.js build ./aux-web/aux-player --mode static",
         "build:server": "node --max_old_space_size=6144 ./script/build-server.mjs",
         "build:server:dev": "node --max_old_space_size=6144 ./script/build-server.mjs dev",
         "build:interpreter": "node --max_old_space_size=6144 ./script/build-interpreter.mjs",
@@ -174,7 +175,8 @@
         "workbox-precaching": "^7.0.0",
         "workbox-routing": "^7.0.0",
         "workbox-strategies": "^7.0.0",
-        "workbox-window": "^7.0.0"
+        "workbox-window": "^7.0.0",
+        "vite-plugin-singlefile": "2.0.1"
     },
     "prisma": {
         "schema": "./aux-backend/schemas/auth.prisma"

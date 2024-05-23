@@ -31,11 +31,11 @@ import {
 import {
     AuthCoordinator,
     AuthHelper,
-    AuxVMImpl,
     BotManager,
     BrowserSimulation,
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
+import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
 import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
@@ -897,11 +897,20 @@ export class AppManager {
     }
 
     private async _getBaseConfig(): Promise<WebConfig> {
-        const serverConfig = await this._fetchConfigFromServer();
-        if (serverConfig) {
-            return serverConfig;
+        if (import.meta.env.MODE === 'static' || import.meta.env.SSR) {
+            return {
+                version: null,
+                causalRepoConnectionProtocol: 'websocket',
+                disableCollaboration: true,
+                staticRepoLocalPersistence: true,
+            };
         } else {
-            return await this._fetchConfigFromLocalStorage();
+            const serverConfig = await this._fetchConfigFromServer();
+            if (serverConfig) {
+                return serverConfig;
+            } else {
+                return await this._fetchConfigFromLocalStorage();
+            }
         }
     }
 
