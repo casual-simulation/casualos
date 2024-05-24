@@ -6861,7 +6861,7 @@ describe('RecordsManager', () => {
                 globalThis.fetch = originalFetch;
             });
 
-            it('should make a POST request to /api/v2/ai/chat/stream', async () => {
+            it.skip('should make a POST request to /api/v2/ai/chat/stream', async () => {
                 fetch.mockResolvedValueOnce({
                     status: 200,
                     headers: new Headers({
@@ -6956,7 +6956,7 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
-            it.skip('should make a websocket request', async () => {
+            it('should make a websocket request', async () => {
                 const client = new MemoryConnectionClient();
 
                 let responses =
