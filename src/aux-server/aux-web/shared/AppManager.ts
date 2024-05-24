@@ -1,11 +1,14 @@
 import Axios from 'axios';
-import Vue from 'vue';
+import Vue, { inject } from 'vue';
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from 'rxjs';
 import { filter, first, map, scan, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
 import {
+    AuxPartitionConfig,
+    BotsState,
     ConnectionIndicator,
     ProgressMessage,
+    getUploadState,
     remapProgressPercent,
     remote,
 } from '@casual-simulation/aux-common';
@@ -46,6 +49,7 @@ import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUt
 import {
     ComIdConfig,
     GetPlayerConfigSuccess,
+    tryParseJson,
 } from '@casual-simulation/aux-records';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
 
@@ -166,12 +170,27 @@ export class AppManager {
         this._updateAvailable = new BehaviorSubject<boolean>(false);
         this._simulationFactory = async (id, origin, config, isStatic) => {
             const configBotId = uuid();
+
+            let initialState: BotsState = undefined;
+            if (import.meta.env.MODE === 'static') {
+                const injectedAux = document.querySelector(
+                    'script[type="text/aux"]'
+                )?.textContent;
+                if (injectedAux) {
+                    const parseResult = tryParseJson(injectedAux.trim());
+                    if (parseResult.success) {
+                        initialState = getUploadState(parseResult.value);
+                    }
+                }
+            }
+
             const partitions = isStatic
                 ? BotManager.createStaticPartitions(
                       id,
                       configBotId,
                       origin,
-                      config
+                      config,
+                      initialState
                   )
                 : BotManager.createPartitions(
                       id,

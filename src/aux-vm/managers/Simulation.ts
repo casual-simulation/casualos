@@ -4,6 +4,7 @@ import {
     BotIndex,
     StoredAux,
     PartitionAuthMessage,
+    BotsState,
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';

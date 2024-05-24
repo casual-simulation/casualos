@@ -26,6 +26,7 @@ import {
     ConnectionIndicator,
     getConnectionId,
     DEFAULT_BRANCH_NAME,
+    BotsState,
 } from '@casual-simulation/aux-common';
 import {
     AuxVM,
@@ -242,7 +243,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         id: string,
         configBotId: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config']
+        config: AuxConfig['config'],
+        initialSharedState: BotsState = {}
     ): AuxPartitionConfig {
         const localPersistence = config.staticRepoLocalPersistence ?? true;
         console.log('[BotManager] Using static partitions');
@@ -261,7 +263,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         let partitions: AuxPartitionConfig = {
             shared: {
                 type: 'memory',
-                initialState: {},
+                initialState: initialSharedState,
             },
             [TEMPORARY_SHARED_PARTITION_ID]: {
                 type: 'memory',
