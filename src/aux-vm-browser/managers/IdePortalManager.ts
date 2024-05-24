@@ -6,7 +6,7 @@ import {
     from,
     SubscriptionLike,
 } from 'rxjs';
-import { flatMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
+import { mergeMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import {
     isBot,
@@ -176,7 +176,7 @@ export class IdePortalManager implements SubscriptionLike {
             ? allBotsSelectedUpdatedAddedAndRemoved.pipe(bufferTime(10))
             : allBotsSelectedUpdatedAddedAndRemoved;
         return bufferedEvents.pipe(
-            flatMap(async () => {
+            mergeMap(async () => {
                 const items = this._findMatchingItems();
                 return items;
             })

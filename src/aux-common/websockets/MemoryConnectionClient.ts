@@ -1,5 +1,5 @@
 import { ConnectionClient, ClientConnectionState } from './ConnectionClient';
-import { Observable, Subject, never, BehaviorSubject } from 'rxjs';
+import { Observable, Subject, NEVER, BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { ConnectionInfo } from '../common/ConnectionInfo';
 import { WebsocketErrorInfo, WebsocketMessage } from './WebsocketEvents';
@@ -45,7 +45,7 @@ export class MemoryConnectionClient implements ConnectionClient {
     origin: string;
 
     event<T>(name: WebsocketMessage['type']): Observable<T> {
-        return (this.events.get(name) as any) || never();
+        return (this.events.get(name) as any) || NEVER;
     }
 
     send(message: WebsocketMessage): void {

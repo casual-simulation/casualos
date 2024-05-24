@@ -57,14 +57,7 @@ import {
     SimulationManager,
     UpdatedBotInfo,
 } from '@casual-simulation/aux-vm';
-import {
-    indexOf,
-    isEqual,
-    sortBy,
-    union,
-    unionBy,
-    flatMap as lodashFlatMap,
-} from 'lodash';
+import { indexOf, isEqual, sortBy, union, unionBy } from 'lodash';
 import {
     BehaviorSubject,
     combineLatest,
@@ -82,7 +75,7 @@ import {
     combineLatestWith,
     distinctUntilChanged,
     filter,
-    flatMap,
+    mergeMap,
     map,
     scan,
     startWith,
@@ -306,7 +299,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
     private _calculateItemsUpdated(): Observable<SystemPortalUpdate> {
         const allBotsUpdatedAddedAndRemoved =
             this._simulationManager.simulationAdded.pipe(
-                flatMap((sim) => {
+                mergeMap((sim) => {
                     return merge(
                         sim.watcher.botsDiscovered,
                         sim.watcher.botsUpdated,
@@ -446,7 +439,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         return combineLatest([
             itemsUpdated,
             this._simulationManager.simulationAdded.pipe(
-                flatMap((sim) =>
+                mergeMap((sim) =>
                     sim.watcher.botTagsChanged(sim.helper.userId).pipe(
                         filter(
                             (change) =>
@@ -633,7 +626,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
 
     private _calculateRecentsUpdated(): Observable<SystemPortalRecentsUpdate> {
         const changes = this._simulationManager.simulationAdded.pipe(
-            flatMap((sim) =>
+            mergeMap((sim) =>
                 sim.watcher.botTagsChanged(sim.helper.userId).pipe(
                     filter(
                         (c) =>
@@ -780,7 +773,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
             return this._recentsUpdated.value;
         }
 
-        this._recentTags = lodashFlatMap(newRecentTags);
+        this._recentTags = newRecentTags.flatMap((t) => t);
         if (this._recentTags.length > 0) {
             return {
                 hasRecents: true,
@@ -849,7 +842,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         return combineLatest([
             itemsUpdated,
             this._simulationManager.simulationAdded.pipe(
-                flatMap((sim) =>
+                mergeMap((sim) =>
                     sim.watcher.botTagsChanged(sim.helper.userId).pipe(
                         filter(
                             (change) =>
@@ -1083,7 +1076,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         return combineLatest([
             diffUpdated,
             this._simulationManager.simulationAdded.pipe(
-                flatMap((sim) =>
+                mergeMap((sim) =>
                     sim.watcher.botTagsChanged(sim.helper.userId).pipe(
                         filter(
                             (change) =>
@@ -1241,7 +1234,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
 
     private _calculateSearchResults(): Observable<SystemPortalSearchUpdate> {
         const changes = this._simulationManager.simulationAdded.pipe(
-            flatMap((sim) =>
+            mergeMap((sim) =>
                 sim.watcher.botTagsChanged(sim.helper.userId).pipe(
                     filter(
                         (c) =>

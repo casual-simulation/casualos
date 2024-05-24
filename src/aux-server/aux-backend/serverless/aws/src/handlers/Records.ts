@@ -13,6 +13,7 @@ import {
     constructServerlessAwsServerBuilder,
     FILES_BUCKET,
 } from '../../../../shared/LoadServer';
+import { Writable } from 'stream';
 
 const builder = constructServerlessAwsServerBuilder();
 
@@ -63,8 +64,9 @@ async function handleS3Event(event: S3Event) {
 }
 
 export async function handleApiEvent(
-    event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> {
+    event: APIGatewayProxyEvent,
+    responseStream: Writable
+): Promise<void> {
     const query: GenericHttpRequest['query'] = {
         ...event.queryStringParameters,
     };
@@ -85,25 +87,43 @@ export async function handleApiEvent(
         headers,
     });
 
-    return {
+    responseStream = awslambda.HttpResponseStream.from(responseStream, {
         statusCode: response.statusCode,
-        body: response.body ?? null,
         headers: response.headers,
-    };
+    });
+
+    if (
+        typeof response.body === 'object' &&
+        Symbol.asyncIterator in response.body
+    ) {
+        for await (let chunk of response.body) {
+            responseStream.write(chunk);
+        }
+        return;
+    }
+
+    responseStream.write(response.body);
 }
 
-export async function handleRecords(
-    event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>
-) {
-    await builder.ensureInitialized();
-    if ('httpMethod' in event) {
-        return handleApiEvent(event);
-    } else if ('source' in event) {
-        return handleEventBridgeEvent(event);
-    } else {
-        return handleS3Event(event);
+declare const awslambda: any;
+
+export const handleRecords: any = awslambda.streamifyResponse(
+    async (
+        event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>,
+        responseStream: Writable
+    ) => {
+        await builder.ensureInitialized();
+        if ('httpMethod' in event) {
+            await handleApiEvent(event, responseStream);
+        } else if ('source' in event) {
+            await handleEventBridgeEvent(event);
+        } else {
+            await handleS3Event(event);
+        }
+
+        responseStream.end();
     }
-}
+);
 
 export async function savePermanentBranches() {
     await builder.ensureInitialized();

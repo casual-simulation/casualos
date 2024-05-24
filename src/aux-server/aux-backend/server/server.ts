@@ -210,7 +210,17 @@ export class Server {
             res.status(response.statusCode);
 
             if (response.body) {
-                res.send(response.body);
+                if (
+                    typeof response.body === 'object' &&
+                    Symbol.asyncIterator in response.body
+                ) {
+                    for await (let chunk of response.body) {
+                        res.write(chunk);
+                    }
+                    res.end();
+                } else {
+                    res.send(response.body);
+                }
             } else {
                 res.send();
             }

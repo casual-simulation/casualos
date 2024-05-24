@@ -110,6 +110,9 @@ export type ExtraActions =
 export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
+    | IterableNextAction
+    | IterableCompleteAction
+    | IterableThrowAction
     | ShowInputAction
     | ShowConfirmAction
     | ShareAction
@@ -228,6 +231,43 @@ export interface AsyncResultAction extends AsyncAction {
  */
 export interface AsyncErrorAction extends AsyncAction {
     type: 'async_error';
+
+    /**
+     * The error.
+     */
+    error: any;
+}
+
+/**
+ * Defines an action that supplies a next iterable value for an AsyncAction.
+ */
+export interface IterableNextAction extends AsyncAction {
+    type: 'iterable_next';
+
+    /**
+     * The value.
+     */
+    value: any;
+
+    /**
+     * Whether to map any bots found in the result to their actual bot counterparts.
+     * Defaults to false.
+     */
+    mapBotsInValue?: boolean;
+}
+
+/**
+ * Defines an action that completes an iterable.
+ */
+export interface IterableCompleteAction extends AsyncAction {
+    type: 'iterable_complete';
+}
+
+/**
+ * Defines an action that supplies an error for an iterable.
+ */
+export interface IterableThrowAction extends AsyncAction {
+    type: 'iterable_throw';
 
     /**
      * The error.
@@ -4820,6 +4860,52 @@ export function asyncError(
 ): AsyncErrorAction {
     return {
         type: 'async_error',
+        taskId,
+        error,
+    };
+}
+
+/**
+ * Creates an action that provides a next value to an iterable.
+ * @param taskId The ID of the task for the iterable.
+ * @param value The value.
+ */
+export function iterableNext(
+    taskId: number | string,
+    value: any
+): IterableNextAction {
+    return {
+        type: 'iterable_next',
+        taskId,
+        value,
+    };
+}
+
+/**
+ * Creates an action that completes an iterable.
+ * @param taskId The ID of the task for the iterable.
+ * @returns
+ */
+export function iterableComplete(
+    taskId: number | string
+): IterableCompleteAction {
+    return {
+        type: 'iterable_complete',
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that throws an error for an iterable.
+ * @param taskId The ID of the task for the iterable.
+ * @param error The error to throw from the iterable.
+ */
+export function iterableThrow(
+    taskId: number | string,
+    error: any
+): IterableThrowAction {
+    return {
+        type: 'iterable_throw',
         taskId,
         error,
     };

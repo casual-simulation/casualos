@@ -30,6 +30,9 @@ import {
     AVAILABLE_PERMISSIONS_VALIDATION,
     Procedure,
     ProcedureOutput,
+    ProcedureOutputError,
+    ProcedureOutputStream,
+    ProcedureOutputSuccess,
     Procedures,
     RESOURCE_KIND_VALIDATION,
     RPCContext,
@@ -2046,6 +2049,50 @@ export class RecordsServer {
                     }
                 ),
 
+            aiChatStream: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/ai/chat/stream')
+                .inputs(
+                    z.object({
+                        model: z.string().nonempty().optional(),
+                        messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        temperature: z.number().min(0).max(2).optional(),
+                        topP: z.number().optional(),
+                        presencePenalty: z.number().min(-2).max(2).optional(),
+                        frequencyPenalty: z.number().min(-2).max(2).optional(),
+                        stopWords: z.array(z.string()).max(4).optional(),
+                    })
+                )
+                .handler(async ({ model, messages, ...options }, context) => {
+                    if (!this._aiController) {
+                        return AI_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = this._aiController.chatStream({
+                        ...options,
+                        model,
+                        messages: messages as AIChatMessage[],
+                        userId: sessionKeyValidation.userId,
+                        userSubscriptionTier:
+                            sessionKeyValidation.subscriptionTier,
+                    });
+
+                    return result;
+                }),
+
             createAiSkybox: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/ai/skybox')
@@ -3067,6 +3114,7 @@ export class RecordsServer {
                     origin: request.headers.origin ?? null,
                 };
 
+                let result: ProcedureOutput;
                 if (proc.schema) {
                     const parseResult = proc.schema.safeParse(input);
                     if (parseResult.success === false) {
@@ -3076,14 +3124,12 @@ export class RecordsServer {
                             origins
                         );
                     }
-                    const result = await proc.handler(
-                        parseResult.data,
-                        context
-                    );
-                    return returnResult(result);
+                    result = await proc.handler(parseResult.data, context);
                 } else {
-                    return returnResult(await proc.handler(undefined, context));
+                    result = await proc.handler(input, context);
                 }
+
+                return returnProcedureOutput(result);
             },
         });
 
@@ -3129,7 +3175,9 @@ export class RecordsServer {
      * Adds the given procedural route to the server.
      * @param route The route that should be added.
      */
-    private _addProcedureRoute<T>(procedure: Procedure<T, any>): void {
+    private _addProcedureRoute<T>(
+        procedure: Procedure<T, ProcedureOutput>
+    ): void {
         if (!procedure.http) {
             throw new Error('Procedure must have an http route defined.');
         }
@@ -3147,7 +3195,7 @@ export class RecordsServer {
                     origin: request.headers.origin ?? null,
                 };
                 const result = await procedure.handler(data, context);
-                return returnResult(result);
+                return returnProcedureOutput(result);
             },
             allowedOrigins: procedure.allowedOrigins,
         };
@@ -3612,15 +3660,45 @@ export class RecordsServer {
             };
 
             const result = await this.handleHttpRequest(httpRequest);
+            if (
+                typeof result.body === 'object' &&
+                Symbol.asyncIterator in result.body
+            ) {
+                let response: Partial<GenericHttpResponse> = result;
+                let index = 0;
+                const i = result.body[Symbol.asyncIterator]();
+                while (true) {
+                    let { value, done } = await i.next();
+                    await this._websocketController.messenger.sendMessage(
+                        [request.connectionId],
+                        {
+                            type: 'http_partial_response',
+                            id: data.id,
+                            index: index,
+                            final: done ? true : undefined,
+                            response: {
+                                ...response,
+                                body: value,
+                            },
+                        }
+                    );
+                    response = {};
+                    index += 1;
 
-            await this._websocketController.messenger.sendMessage(
-                [request.connectionId],
-                {
-                    type: 'http_response',
-                    id: data.id,
-                    response: result,
+                    if (done) {
+                        break;
+                    }
                 }
-            );
+            } else {
+                await this._websocketController.messenger.sendMessage(
+                    [request.connectionId],
+                    {
+                        type: 'http_response',
+                        id: data.id,
+                        response: result,
+                    }
+                );
+            }
         }
     }
 
@@ -6581,6 +6659,38 @@ export function returnResult<
         statusCode: getStatusCode(result),
         body: JSON.stringify(result),
     };
+}
+
+export function returnProcedureOutputStream(
+    result: ProcedureOutputStream
+): GenericHttpResponse {
+    async function* generateBody(): AsyncGenerator<string, string> {
+        while (true) {
+            const { done, value } = await result.next();
+            if (done) {
+                return JSON.stringify(value);
+            }
+            yield JSON.stringify(value) + '\n';
+        }
+    }
+
+    return {
+        statusCode: 200,
+        body: generateBody(),
+        headers: {
+            'content-type': 'application/x-ndjson',
+        },
+    };
+}
+
+export function returnProcedureOutput(
+    result: ProcedureOutput
+): GenericHttpResponse {
+    if (Symbol.asyncIterator in result) {
+        return returnProcedureOutputStream(result);
+    } else {
+        return returnResult(result);
+    }
 }
 
 /**

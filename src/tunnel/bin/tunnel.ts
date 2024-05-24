@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 
 program.version('0.0.1');
 
-program.command('serve <listenPort>').action(listenPort => {
+program.command('serve <listenPort>').action((listenPort) => {
     const http = new Server();
     const server = new WebSocketServer(http);
 
@@ -50,16 +50,16 @@ program
             });
         }
 
-        o.subscribe(
-            m => {},
-            err => {
+        o.subscribe({
+            next: (m) => {},
+            error: (err) => {
                 console.error(
                     'Client disconnected from server with error: ',
                     err
                 );
                 console.log('Done.');
-            }
-        );
+            },
+        });
     });
 
 program.parse(process.argv);

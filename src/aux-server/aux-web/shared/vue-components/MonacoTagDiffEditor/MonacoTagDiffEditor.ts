@@ -25,7 +25,7 @@ import {
     watchEditor,
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
-import { filter, flatMap, tap } from 'rxjs/operators';
+import { filter, mergeMap, tap } from 'rxjs/operators';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
 
 setup();
@@ -178,7 +178,7 @@ export default class MonacoTagDiffEditor extends Vue {
 
                 sub.add(
                     sim.portals.prefixesDiscovered
-                        .pipe(flatMap((a) => a))
+                        .pipe(mergeMap((a) => a))
                         .subscribe((portal) => {
                             this.scriptPrefixes =
                                 sim.portals.scriptPrefixes.filter(
@@ -189,7 +189,7 @@ export default class MonacoTagDiffEditor extends Vue {
 
                 sub.add(
                     sim.portals.prefixesRemoved
-                        .pipe(flatMap((a) => a))
+                        .pipe(mergeMap((a) => a))
                         .subscribe((portal) => {
                             this.scriptPrefixes =
                                 sim.portals.scriptPrefixes.filter(

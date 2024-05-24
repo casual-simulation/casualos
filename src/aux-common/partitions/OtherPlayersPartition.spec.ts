@@ -1,6 +1,6 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { OtherPlayersPartitionImpl } from './OtherPlayersPartition';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
 import {
     Bot,
     UpdatedBot,
@@ -119,12 +119,12 @@ describe('OtherPlayersPartition', () => {
                 });
 
                 it('should issue connection, authentication, authorization, and sync events in that order', async () => {
-                    const promise = partition.onStatusUpdated
-                        .pipe(
+                    const promise = firstValueFrom(
+                        partition.onStatusUpdated.pipe(
                             takeWhile((update) => update.type !== 'sync', true),
                             bufferCount(4)
                         )
-                        .toPromise();
+                    );
 
                     partition.connect();
 
@@ -1929,15 +1929,15 @@ describe('OtherPlayersPartition', () => {
                             skipInitialLoad: true,
                         });
 
-                        const promise = partition.onStatusUpdated
-                            .pipe(
+                        const promise = firstValueFrom(
+                            partition.onStatusUpdated.pipe(
                                 takeWhile(
                                     (update) => update.type !== 'sync',
                                     true
                                 ),
                                 bufferCount(4)
                             )
-                            .toPromise();
+                        );
 
                         partition.connect();
 
