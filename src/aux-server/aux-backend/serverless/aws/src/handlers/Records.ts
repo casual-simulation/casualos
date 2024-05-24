@@ -67,42 +67,46 @@ export async function handleApiEvent(
     event: APIGatewayProxyEvent,
     responseStream: Writable
 ): Promise<void> {
-    const query: GenericHttpRequest['query'] = {
-        ...event.queryStringParameters,
-    };
+    try {
+        const query: GenericHttpRequest['query'] = {
+            ...event.queryStringParameters,
+        };
 
-    const headers: GenericHttpHeaders = {};
-    for (let key in event.headers) {
-        const value = event.headers[key];
-        headers[key.toLowerCase()] = value;
-    }
-
-    const response = await server.handleHttpRequest({
-        method: event.httpMethod as GenericHttpRequest['method'],
-        path: event.path,
-        pathParams: event.pathParameters,
-        ipAddress: event.requestContext.identity.sourceIp,
-        body: event.body,
-        query,
-        headers,
-    });
-
-    responseStream = awslambda.HttpResponseStream.from(responseStream, {
-        statusCode: response.statusCode,
-        headers: response.headers,
-    });
-
-    if (
-        typeof response.body === 'object' &&
-        Symbol.asyncIterator in response.body
-    ) {
-        for await (let chunk of response.body) {
-            responseStream.write(chunk);
+        const headers: GenericHttpHeaders = {};
+        for (let key in event.headers) {
+            const value = event.headers[key];
+            headers[key.toLowerCase()] = value;
         }
-        return;
-    }
 
-    responseStream.write(response.body);
+        const response = await server.handleHttpRequest({
+            method: event.httpMethod as GenericHttpRequest['method'],
+            path: event.path,
+            pathParams: event.pathParameters,
+            ipAddress: event.requestContext.identity.sourceIp,
+            body: event.body,
+            query,
+            headers,
+        });
+
+        responseStream = awslambda.HttpResponseStream.from(responseStream, {
+            statusCode: response.statusCode,
+            headers: response.headers,
+        });
+
+        if (
+            typeof response.body === 'object' &&
+            Symbol.asyncIterator in response.body
+        ) {
+            for await (let chunk of response.body) {
+                responseStream.write(chunk);
+            }
+            return;
+        }
+
+        responseStream.write(response.body);
+    } finally {
+        responseStream.end();
+    }
 }
 
 declare const awslambda: any;
