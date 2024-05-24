@@ -219,6 +219,36 @@ export default defineConfig(({ command, mode }) => ({
                       ),
                       '@casual-simulation/aux-vm-browser/vm/AuxVMImpl':
                           '@casual-simulation/aux-vm-browser/vm/StaticAuxVMImpl.ts',
+                      '../../MonacoHelpers': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'StaticMonacoHelpers.ts'
+                      ),
+                      '../../MonacoLibs': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'StaticMonacoHelpers.ts'
+                      ),
+                      '@teachablemachine/image': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      jsbarcode: path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      'livekit-client': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
                   }
                 : {}),
         },
