@@ -25,7 +25,7 @@ import {
     waitAsync,
     wait,
 } from '@casual-simulation/aux-common/test/TestHelpers';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 
 console.log = jest.fn();
 
@@ -69,9 +69,9 @@ describe('BrowserSimulationCalculations', () => {
                 },
             });
 
-            const update = await userBotChangedCore(userId, watcher)
-                .pipe(first())
-                .toPromise();
+            const update = await firstValueFrom(
+                userBotChangedCore(userId, watcher).pipe(first())
+            );
 
             expect(update).toEqual({
                 bot: createPrecalculatedBot(userId, {
@@ -163,14 +163,14 @@ describe('BrowserSimulationCalculations', () => {
 
             localEvents.next([defineGlobalBot('auxPortal', 'test')]);
 
-            const update = await watchPortalConfigBotCore(
-                watcher,
-                portals,
-                helper,
-                'auxPortal'
-            )
-                .pipe(first())
-                .toPromise();
+            const update = await firstValueFrom(
+                watchPortalConfigBotCore(
+                    watcher,
+                    portals,
+                    helper,
+                    'auxPortal'
+                ).pipe(first())
+            );
 
             expect(update).toEqual(
                 createPrecalculatedBot('test', {

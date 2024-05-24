@@ -781,10 +781,10 @@ describe('BotWatcher', () => {
 
             let bots: Bot[] = [];
             let err: any;
-            watcher.botChanged('test').subscribe(
-                (f) => bots.push(f),
-                (e) => (err = e)
-            );
+            watcher.botChanged('test').subscribe({
+                next: (f) => bots.push(f),
+                error: (e) => (err = e),
+            });
 
             let secondState = {};
             vm.sendState({
@@ -930,10 +930,10 @@ describe('BotWatcher', () => {
 
             let bots: UpdatedBotInfo[] = [];
             let err: any;
-            watcher.botTagsChanged('test').subscribe(
-                (f) => bots.push(f),
-                (e) => (err = e)
-            );
+            watcher.botTagsChanged('test').subscribe({
+                next: (f) => bots.push(f),
+                error: (e) => (err = e),
+            });
 
             let secondState = {};
             vm.sendState({

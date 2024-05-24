@@ -129,7 +129,7 @@
         "pify": "5.0.0",
         "prisma": "^5.7.0",
         "redis": "4.6.10",
-        "rxjs": "7.5.7",
+        "rxjs": "8.0.0-alpha.14",
         "seedrandom": "3.0.5",
         "source-map-support": "0.5.21",
         "stripe": "11.13.0",

@@ -443,8 +443,8 @@ importers:
         specifier: 10.19.6
         version: 10.19.6
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -576,8 +576,8 @@ importers:
         specifier: 3.6.2
         version: 3.6.2
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -658,8 +658,8 @@ importers:
         specifier: ^3.2.7
         version: link:../timesync
       '@google/generative-ai':
-        specifier: 0.2.1
-        version: 0.2.1
+        specifier: 0.11.3
+        version: 0.11.3
       '@simplewebauthn/server':
         specifier: 9.0.3
         version: 9.0.3
@@ -684,6 +684,9 @@ importers:
       mime:
         specifier: 2.4.6
         version: 2.4.6
+      openai:
+        specifier: 4.47.1
+        version: 4.47.1
       openid-client:
         specifier: 5.6.1
         version: 5.6.1
@@ -826,8 +829,8 @@ importers:
         specifier: 10.19.6
         version: 10.19.6
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       seedrandom:
         specifier: 3.0.5
         version: 3.0.5
@@ -1091,8 +1094,8 @@ importers:
         specifier: 4.6.10
         version: 4.6.10
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       seedrandom:
         specifier: 3.0.5
         version: 3.0.5
@@ -1269,8 +1272,8 @@ importers:
         specifier: 10.19.6
         version: 10.19.6
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -1323,8 +1326,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -1365,8 +1368,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -1401,8 +1404,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -1431,8 +1434,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -1446,8 +1449,8 @@ importers:
         specifier: ^3.2.7
         version: link:../websocket
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
 
   src/aux-websocket-aws:
     dependencies:
@@ -1461,8 +1464,8 @@ importers:
         specifier: 1.6.2
         version: 1.6.2
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
 
   src/casualos-cli:
     dependencies:
@@ -1610,8 +1613,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
 
   src/tunnel:
     dependencies:
@@ -1619,8 +1622,8 @@ importers:
         specifier: 4.0.1
         version: 4.0.1
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
       uuid:
         specifier: ^8.3.2
         version: 8.3.2
@@ -1639,8 +1642,8 @@ importers:
   src/websocket:
     dependencies:
       rxjs:
-        specifier: 7.5.7
-        version: 7.5.7
+        specifier: 8.0.0-alpha.14
+        version: 8.0.0-alpha.14
 
 packages:
 
@@ -5105,8 +5108,8 @@ packages:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: true
 
-  /@google/generative-ai@0.2.1:
-    resolution: {integrity: sha512-gNmMFadfwi7qf/6M9gImgyGJXY1jKQ/de8vGOqgJ0PPYgQ7WwzZDavbKrIuXS2zdqZZaYtxW3EFN6aG9x5wtFw==}
+  /@google/generative-ai@0.11.3:
+    resolution: {integrity: sha512-QtQ1hz6rcybbw35uxXlFF26KNnaTVr2oWwnmDkC1M35KdzN4tVc4wakgJp8uXbY9KDCNHksyp11DbFg0HPckZQ==}
     engines: {node: '>=18.0.0'}
     dev: false
 
@@ -8018,7 +8021,7 @@ packages:
   /@types/through@0.0.33:
     resolution: {integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 18.19.3
     dev: true
 
   /@types/tough-cookie@4.0.5:
@@ -8351,6 +8354,13 @@ packages:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
     dev: true
 
+  /abort-controller@3.0.0:
+    resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
+    engines: {node: '>=6.5'}
+    dependencies:
+      event-target-shim: 5.0.1
+    dev: false
+
   /accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
     engines: {node: '>= 0.6'}
@@ -8447,7 +8457,6 @@ packages:
     engines: {node: '>= 8.0.0'}
     dependencies:
       humanize-ms: 1.2.1
-    dev: true
 
   /aggregate-error@3.1.0:
     resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
@@ -11729,6 +11738,11 @@ packages:
       through: 2.3.8
     dev: false
 
+  /event-target-shim@5.0.1:
+    resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
+    engines: {node: '>=6'}
+    dev: false
+
   /eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
 
@@ -12194,6 +12208,10 @@ packages:
       webpack: 5.89.0(esbuild@0.19.8)
     dev: false
 
+  /form-data-encoder@1.7.2:
+    resolution: {integrity: sha512-qfqtYan3rxrnCk1VYaA4H+Ms9xdpPqvLZa6xmMgFvhO32x7/3J/ExcTd6qpxM0vH2GdMI+poehyBZvqfMTto8A==}
+    dev: false
+
   /form-data-encoder@2.1.4:
     resolution: {integrity: sha512-yDYSgNMraqvnxiEXO4hi88+YZxaHC6QKzb5N84iRCTDeRO7ZALpir/lVmf/uXUhnwUr2O4HU8s/n6x+yNjQkHw==}
     engines: {node: '>= 14.17'}
@@ -12224,6 +12242,14 @@ packages:
   /format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
     engines: {node: '>=0.4.x'}
+    dev: false
+
+  /formdata-node@4.4.1:
+    resolution: {integrity: sha512-0iirZp3uVDjVGt9p49aTaqjk84TrglENEDuqfdlZQ1roC9CWlPk6Avf8EEnZNcAqPonwkG35x4n3ww/1THYAeQ==}
+    engines: {node: '>= 12.20'}
+    dependencies:
+      node-domexception: 1.0.0
+      web-streams-polyfill: 4.0.0-beta.3
     dev: false
 
   /forwarded@0.2.0:
@@ -13375,7 +13401,6 @@ packages:
     resolution: {integrity: sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==}
     dependencies:
       ms: 2.1.3
-    dev: true
 
   /husky@7.0.4:
     resolution: {integrity: sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==}
@@ -13582,7 +13607,7 @@ packages:
       mute-stream: 0.0.8
       ora: 5.4.1
       run-async: 2.4.1
-      rxjs: 7.5.7
+      rxjs: 7.8.1
       string-width: 4.2.3
       strip-ansi: 6.0.1
       through: 2.3.8
@@ -16699,6 +16724,11 @@ packages:
     engines: {node: '>=v0.6.5'}
     dev: false
 
+  /node-domexception@1.0.0:
+    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
+    engines: {node: '>=10.5.0'}
+    dev: false
+
   /node-emoji@2.1.3:
     resolution: {integrity: sha512-E2WEOVsgs7O16zsURJ/eH8BqhF029wGpEOnv7Urwdo2wmQanOACwJQh0devF9D9RhoZru0+9JXIS0dBXIAz+lA==}
     engines: {node: '>=18'}
@@ -17162,6 +17192,22 @@ packages:
       define-lazy-prop: 2.0.0
       is-docker: 2.2.1
       is-wsl: 2.2.0
+
+  /openai@4.47.1:
+    resolution: {integrity: sha512-WWSxhC/69ZhYWxH/OBsLEirIjUcfpQ5+ihkXKp06hmeYXgBBIUCa9IptMzYx6NdkiOCsSGYCnTIsxaic3AjRCQ==}
+    hasBin: true
+    dependencies:
+      '@types/node': 18.19.3
+      '@types/node-fetch': 2.6.9
+      abort-controller: 3.0.0
+      agentkeepalive: 4.5.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0
+      web-streams-polyfill: 3.3.3
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /opencollective-postinstall@2.0.3:
     resolution: {integrity: sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q==}
@@ -19491,16 +19537,14 @@ packages:
     dependencies:
       queue-microtask: 1.2.3
 
-  /rxjs@7.5.7:
-    resolution: {integrity: sha512-z9MzKh/UcOqB3i20H6rtrlaE/CgjLOvheWK/9ILrbhROGTweAi1BaFsTT9FbwZi5Trr1qNRs+MXkhmR06awzQA==}
-    dependencies:
-      tslib: 2.6.2
-
   /rxjs@7.8.1:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
     dependencies:
       tslib: 2.6.2
-    dev: true
+
+  /rxjs@8.0.0-alpha.14:
+    resolution: {integrity: sha512-oRCzFwbAMbo0+dVUeGUCCEf339mW7CESFvVDG3RTncD6yMtV2XoubFMpKEhBd2a9d04EpHl8QSz84/V/agG6bw==}
+    dev: false
 
   /safe-array-concat@1.0.1:
     resolution: {integrity: sha512-6XbUAseYE2KtOuGueyeobCySj9L4+66Tn6KQMOPQJrAJEowYKW/YR/MGJZl7FdydUdaFu4LYyDZjxf4/Nmo23Q==}
@@ -21061,7 +21105,7 @@ packages:
   /typed-emitter@2.1.0:
     resolution: {integrity: sha512-g/KzbYKbH5C2vPkaXGu8DJlHrGKHLsM25Zg9WuC9pMGfuvT+X25tZQWo5fK1BjBm8+UrVE9LDCvaY0CQk+fXDA==}
     optionalDependencies:
-      rxjs: 7.5.7
+      rxjs: 7.8.1
     dev: false
 
   /typedarray-to-buffer@3.1.5:
@@ -21852,6 +21896,16 @@ packages:
 
   /web-namespaces@2.0.1:
     resolution: {integrity: sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ==}
+
+  /web-streams-polyfill@3.3.3:
+    resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
+    engines: {node: '>= 8'}
+    dev: false
+
+  /web-streams-polyfill@4.0.0-beta.3:
+    resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
+    engines: {node: '>= 14'}
+    dev: false
 
   /webgl-sdf-generator@1.1.1:
     resolution: {integrity: sha512-9Z0JcMTFxeE+b2x1LJTdnaT8rT8aEp7MVxkNwoycNmJWwPdzoXzMh0BjJSh/AEFP+KPYZUli814h8bJZFIZ2jA==}

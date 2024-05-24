@@ -10,7 +10,7 @@ import {
 import { first, skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { CurrentVersion } from '@casual-simulation/aux-common';
-import { Subscription } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 
 console.error = jest.fn();
 console.warn = jest.fn();
@@ -69,9 +69,9 @@ describe('LocalStoragePartition', () => {
                 namespace: 'namespace',
             });
 
-            const version = await mem.onVersionUpdated
-                .pipe(first())
-                .toPromise();
+            const version = await firstValueFrom(
+                mem.onVersionUpdated.pipe(first())
+            );
 
             expect(version.currentSite).not.toBe(null);
             expect(version.currentSite).toBeDefined();

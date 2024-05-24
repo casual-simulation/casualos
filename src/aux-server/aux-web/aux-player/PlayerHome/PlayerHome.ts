@@ -229,24 +229,24 @@ export default class PlayerHome extends Vue {
             await this._setServer(recordName, inst, false);
         }
         for (let [sim, sub] of this._simulations) {
-            getUserBotAsync(sim).subscribe(
-                (bot) => {
+            getUserBotAsync(sim).subscribe({
+                next: (bot) => {
                     this._updatePlayerTags(sim, bot, Object.keys(oldQuery));
                 },
-                (err) => console.error(err)
-            );
+                error: (err) => console.error(err),
+            });
         }
     }
 
     @Watch('url')
     async onUrlChanged() {
         for (let [sim, sub] of this._simulations) {
-            getUserBotAsync(sim).subscribe(
-                (bot) => {
+            getUserBotAsync(sim).subscribe({
+                next: (bot) => {
                     this._updateUrlTag(sim, bot);
                 },
-                (err) => console.error(err)
-            );
+                error: (err) => console.error(err),
+            });
         }
     }
 
@@ -576,8 +576,8 @@ export default class PlayerHome extends Vue {
 
     private _setupSimulation(sim: BrowserSimulation): Subscription {
         let setInitialValues = false;
-        return userBotTagsChanged(sim).subscribe(
-            (update) => {
+        return userBotTagsChanged(sim).subscribe({
+            next: (update) => {
                 if (!setInitialValues) {
                     setInitialValues = true;
                     this._updatePlayerTags(sim, update.bot);
@@ -674,8 +674,8 @@ export default class PlayerHome extends Vue {
 
                 this._sendPortalChangedEvents(sim, update);
             },
-            (err) => console.log(err)
-        );
+            error: (err) => console.log(err),
+        });
     }
 
     private async _sendPortalChangedEvents(

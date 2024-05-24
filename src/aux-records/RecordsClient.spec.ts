@@ -1,80 +1,137 @@
-import { RecordsClient, createRecordsClient } from './RecordsClient';
+import {
+    RecordsClient,
+    createRecordsClient,
+    streamJsonLines,
+} from './RecordsClient';
+import {
+    asyncIterable,
+    readableFromAsyncIterable,
+    unwindAndCaptureAsync,
+} from './TestUtils';
 
 jest.mock('axios');
 
+const originalFetch = globalThis.fetch;
+
 describe('RecordsClient', () => {
     let client: RecordsClient;
+    let fetch: jest.Mock<
+        Promise<{
+            status: number;
+            headers?: Headers;
+            json?: () => Promise<any>;
+            text?: () => Promise<string>;
+            body?: ReadableStream;
+        }>
+    >;
 
     beforeEach(() => {
         client = new RecordsClient('http://localhost:3000');
+        fetch = globalThis.fetch = jest.fn();
     });
 
-    function setResponse(response: any) {
-        require('axios').__setResponse(response);
-    }
-
-    function setNextResponse(response: any) {
-        require('axios').__setNextResponse(response);
-    }
-
-    function getLastPost() {
-        return require('axios').__getLastPost();
-    }
-
-    function getLastGet() {
-        return require('axios').__getLastGet();
-    }
-
-    function getRequests() {
-        return require('axios').__getRequests();
-    }
+    afterAll(() => {
+        globalThis.fetch = originalFetch;
+    });
 
     describe('callProcedure()', () => {
         it('should call the procedure with the given name and input', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
 
             const response = await client.callProcedure('test', { test: true });
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://localhost:3000/api/v3/callProcedure',
-                { procedure: 'test', input: { test: true } },
                 {
-                    headers: {},
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'test',
+                        input: { test: true },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
+                    },
+                }
+            );
         });
 
         it('should include the session key', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
             client.sessionKey = 'sessionKey';
 
             const response = await client.callProcedure('test', { test: true });
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://localhost:3000/api/v3/callProcedure',
-                { procedure: 'test', input: { test: true } },
                 {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'test',
+                        input: { test: true },
+                    }),
                     headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
                         Authorization: 'Bearer sessionKey',
                     },
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                }
+            );
+        });
+
+        it('should support streaming responses', async () => {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                headers: new Headers({
+                    'Content-Type': 'application/x-ndjson',
+                }),
+                body: readableFromAsyncIterable(
+                    asyncIterable([
+                        Promise.resolve(
+                            Buffer.from(`{"success":true,"test":true}\n`)
+                        ),
+                        Promise.resolve(Buffer.from(`{"value": 123}\n`)),
+                    ])
+                ),
+            });
+
+            const response = await client.callProcedure('test', { test: true });
+
+            expect(Symbol.asyncIterator in response).toBe(true);
+
+            const result = await unwindAndCaptureAsync(response);
+            expect(result).toEqual({
+                states: [{ success: true, test: true }, { value: 123 }],
+            });
+
+            expect(fetch).toHaveBeenCalledWith(
+                'http://localhost:3000/api/v3/callProcedure',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'test',
+                        input: { test: true },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
+                    },
+                }
+            );
         });
 
         const statusCodes = [[400], [401], [402], [403], [404], [500]];
@@ -82,13 +139,13 @@ describe('RecordsClient', () => {
         it.each(statusCodes)(
             'should return the response even if the status code is %s',
             async (code) => {
-                setResponse({
-                    statusCode: code,
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: code,
+                    json: async () => ({
                         success: false,
                         errorCode: 'invalid_request',
                         errorMessage: 'error message',
-                    },
+                    }),
                 });
 
                 const response = await client.callProcedure('test', {
@@ -100,14 +157,20 @@ describe('RecordsClient', () => {
                     errorMessage: 'error message',
                 });
 
-                expect(getLastPost()).toEqual([
+                expect(fetch).toHaveBeenCalledWith(
                     'http://localhost:3000/api/v3/callProcedure',
-                    { procedure: 'test', input: { test: true } },
                     {
-                        headers: {},
-                        validateStatus: expect.any(Function),
-                    },
-                ]);
+                        method: 'POST',
+                        body: JSON.stringify({
+                            procedure: 'test',
+                            input: { test: true },
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json;charset=UTF-8',
+                            Accept: 'application/json,application/x-ndjson',
+                        },
+                    }
+                );
             }
         );
     });
@@ -115,86 +178,92 @@ describe('RecordsClient', () => {
 
 describe('createRecordsClient()', () => {
     let client: ReturnType<typeof createRecordsClient>;
+    let fetch: jest.Mock<
+        Promise<{
+            status: number;
+            headers?: Headers;
+            json?: () => Promise<any>;
+            text?: () => Promise<string>;
+            body?: ReadableStream;
+        }>
+    >;
 
     beforeEach(() => {
         client = createRecordsClient('http://localhost:3000');
+        fetch = globalThis.fetch = jest.fn();
     });
 
-    function setResponse(response: any) {
-        require('axios').__setResponse(response);
-    }
-
-    function setNextResponse(response: any) {
-        require('axios').__setNextResponse(response);
-    }
-
-    function getLastPost() {
-        return require('axios').__getLastPost();
-    }
-
-    function getLastGet() {
-        return require('axios').__getLastGet();
-    }
-
-    function getRequests() {
-        return require('axios').__getRequests();
-    }
+    afterAll(() => {
+        globalThis.fetch = originalFetch;
+    });
 
     describe('callProcedure()', () => {
         it('should call the procedure with the given name and input', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
 
             const response = await client.callProcedure('test', { test: true });
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://localhost:3000/api/v3/callProcedure',
-                { procedure: 'test', input: { test: true } },
                 {
-                    headers: {},
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'test',
+                        input: { test: true },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
+                    },
+                }
+            );
         });
 
         it('should include the session key', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
+
             client.sessionKey = 'sessionKey';
 
             const response = await client.callProcedure('test', { test: true });
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://localhost:3000/api/v3/callProcedure',
-                { procedure: 'test', input: { test: true } },
                 {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'test',
+                        input: { test: true },
+                    }),
                     headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
                         Authorization: 'Bearer sessionKey',
                     },
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                }
+            );
         });
 
         it('should support custom options', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
             client.sessionKey = 'sessionKey';
 
@@ -208,16 +277,62 @@ describe('createRecordsClient()', () => {
             );
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://example.com/api/v3/callProcedure',
-                { procedure: 'test', input: { test: true } },
                 {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'test',
+                        input: { test: true },
+                    }),
                     headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
                         Authorization: 'Bearer customSessionKey',
                     },
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                }
+            );
+        });
+
+        it('should support streaming responses', async () => {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                headers: new Headers({
+                    'Content-Type': 'application/x-ndjson',
+                }),
+                body: readableFromAsyncIterable(
+                    asyncIterable([
+                        Promise.resolve(
+                            Buffer.from(`{"success":true,"test":true}\n`)
+                        ),
+                        Promise.resolve(Buffer.from(`{"value": 123}\n`)),
+                    ])
+                ),
+            });
+
+            const response = await client.callProcedure('test', { test: true });
+
+            expect(Symbol.asyncIterator in response).toBe(true);
+
+            const result = await unwindAndCaptureAsync(response);
+            expect(result).toEqual({
+                states: [{ success: true, test: true }, { value: 123 }],
+            });
+
+            expect(fetch).toHaveBeenCalledWith(
+                'http://localhost:3000/api/v3/callProcedure',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'test',
+                        input: { test: true },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
+                    },
+                }
+            );
         });
 
         const statusCodes = [[400], [401], [402], [403], [404], [500]];
@@ -225,13 +340,13 @@ describe('createRecordsClient()', () => {
         it.each(statusCodes)(
             'should return the response even if the status code is %s',
             async (code) => {
-                setResponse({
-                    statusCode: code,
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: code,
+                    json: async () => ({
                         success: false,
                         errorCode: 'invalid_request',
                         errorMessage: 'error message',
-                    },
+                    }),
                 });
 
                 const response = await client.callProcedure('test', {
@@ -243,14 +358,20 @@ describe('createRecordsClient()', () => {
                     errorMessage: 'error message',
                 });
 
-                expect(getLastPost()).toEqual([
+                expect(fetch).toHaveBeenCalledWith(
                     'http://localhost:3000/api/v3/callProcedure',
-                    { procedure: 'test', input: { test: true } },
                     {
-                        headers: {},
-                        validateStatus: expect.any(Function),
-                    },
-                ]);
+                        method: 'POST',
+                        body: JSON.stringify({
+                            procedure: 'test',
+                            input: { test: true },
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json;charset=UTF-8',
+                            Accept: 'application/json,application/x-ndjson',
+                        },
+                    }
+                );
             }
         );
     });
@@ -270,12 +391,12 @@ describe('createRecordsClient()', () => {
         });
 
         it('should call the procedure', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
 
             const response = await client.getData({
@@ -284,26 +405,29 @@ describe('createRecordsClient()', () => {
             });
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://localhost:3000/api/v3/callProcedure',
                 {
-                    procedure: 'getData',
-                    input: { recordName: 'test', address: 'address' },
-                },
-                {
-                    headers: {},
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'getData',
+                        input: { recordName: 'test', address: 'address' },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
+                    },
+                }
+            );
         });
 
         it('should include the session key', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
             client.sessionKey = 'sessionKey';
 
@@ -313,28 +437,30 @@ describe('createRecordsClient()', () => {
             });
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://localhost:3000/api/v3/callProcedure',
                 {
-                    procedure: 'getData',
-                    input: { recordName: 'test', address: 'address' },
-                },
-                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'getData',
+                        input: { recordName: 'test', address: 'address' },
+                    }),
                     headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
                         Authorization: 'Bearer sessionKey',
                     },
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                }
+            );
         });
 
         it('should support custom options', async () => {
-            setResponse({
-                statusCode: 200,
-                data: {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () => ({
                     success: true,
                     test: true,
-                },
+                }),
             });
             client.sessionKey = 'sessionKey';
 
@@ -347,19 +473,76 @@ describe('createRecordsClient()', () => {
             );
             expect(response).toEqual({ success: true, test: true });
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://localhost:3000/api/v3/callProcedure',
                 {
-                    procedure: 'getData',
-                    input: { recordName: 'test', address: 'address' },
-                },
-                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'getData',
+                        input: { recordName: 'test', address: 'address' },
+                    }),
                     headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
                         Authorization: 'Bearer customSessionKey',
                     },
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                }
+            );
+        });
+
+        it('should support streaming responses', async () => {
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                headers: new Headers({
+                    'Content-Type': 'application/x-ndjson',
+                }),
+                body: readableFromAsyncIterable(
+                    asyncIterable([
+                        Promise.resolve(
+                            Buffer.from(`{"success":true,"test":true}\n`)
+                        ),
+                        Promise.resolve(Buffer.from(`{"value": 123}\n`)),
+                    ])
+                ),
+            });
+
+            const response = await client.aiChatStream({
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+            });
+
+            expect(Symbol.asyncIterator in response).toBe(true);
+
+            const result = await unwindAndCaptureAsync(response as any);
+            expect(result).toEqual({
+                states: [{ success: true, test: true }, { value: 123 }],
+            });
+
+            expect(fetch).toHaveBeenCalledWith(
+                'http://localhost:3000/api/v3/callProcedure',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'aiChatStream',
+                        input: {
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: 'hello',
+                                },
+                            ],
+                        },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                        Accept: 'application/json,application/x-ndjson',
+                    },
+                }
+            );
         });
 
         const statusCodes = [[400], [401], [402], [403], [404], [500]];
@@ -367,15 +550,14 @@ describe('createRecordsClient()', () => {
         it.each(statusCodes)(
             'should return the response even if the status code is %s',
             async (code) => {
-                setResponse({
-                    statusCode: code,
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: code,
+                    json: async () => ({
                         success: false,
                         errorCode: 'invalid_request',
                         errorMessage: 'error message',
-                    },
+                    }),
                 });
-
                 const response = await client.getData({
                     recordName: 'test',
                     address: 'address',
@@ -386,18 +568,156 @@ describe('createRecordsClient()', () => {
                     errorMessage: 'error message',
                 });
 
-                expect(getLastPost()).toEqual([
+                expect(fetch).toHaveBeenCalledWith(
                     'http://localhost:3000/api/v3/callProcedure',
                     {
-                        procedure: 'getData',
-                        input: { recordName: 'test', address: 'address' },
-                    },
-                    {
-                        headers: {},
-                        validateStatus: expect.any(Function),
-                    },
-                ]);
+                        method: 'POST',
+                        body: JSON.stringify({
+                            procedure: 'getData',
+                            input: { recordName: 'test', address: 'address' },
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json;charset=UTF-8',
+                            Accept: 'application/json,application/x-ndjson',
+                        },
+                    }
+                );
             }
         );
+    });
+});
+
+describe('streamJsonLines()', () => {
+    let newlineCases = [
+        ['\\n', '\n'],
+        ['\\r\\n', '\r\n'],
+    ];
+
+    describe.each(newlineCases)('%s', (desc, newline) => {
+        it('should parse the lines', async () => {
+            const stream = readableFromAsyncIterable(
+                asyncIterable([
+                    Promise.resolve(Buffer.from(`{"test":true}${newline}`)),
+                    Promise.resolve(Buffer.from(`{"num": 123}${newline}`)),
+                    Promise.resolve(Buffer.from('{"value": "string"}')),
+                ])
+            );
+
+            const results = await unwindAndCaptureAsync(
+                streamJsonLines(stream, new TextDecoder())
+            );
+            expect(results).toEqual({
+                states: [{ test: true }, { num: 123 }],
+                // The last value after the newline is the result
+                result: {
+                    value: 'string',
+                },
+            });
+        });
+
+        it('should correctly handle when the last chunk has a newline in it', async () => {
+            const stream = readableFromAsyncIterable(
+                asyncIterable([
+                    Promise.resolve(Buffer.from(`{"test":true}${newline}`)),
+                    Promise.resolve(Buffer.from(`{"num": 123}${newline}`)),
+                    Promise.resolve(
+                        Buffer.from(
+                            `{"abc": "def"}${newline}{"value": "string"}`
+                        )
+                    ),
+                ])
+            );
+
+            const results = await unwindAndCaptureAsync(
+                streamJsonLines(stream, new TextDecoder())
+            );
+            expect(results).toEqual({
+                states: [{ test: true }, { num: 123 }, { abc: 'def' }],
+                // The last value after the newline is the result
+                result: {
+                    value: 'string',
+                },
+            });
+        });
+
+        it(`should correctly buffer and parse lines that come in separate chunks`, async () => {
+            const stream = readableFromAsyncIterable(
+                asyncIterable([
+                    Promise.resolve(Buffer.from('{"test":t')),
+                    Promise.resolve(Buffer.from(`rue}${newline}{`)),
+                    Promise.resolve(Buffer.from('"num":12')),
+                    Promise.resolve(Buffer.from(`3}${newline}`)),
+                ])
+            );
+
+            const results = await unwindAndCaptureAsync(
+                streamJsonLines(stream, new TextDecoder())
+            );
+            expect(results).toEqual({
+                states: [{ test: true }, { num: 123 }],
+            });
+        });
+
+        it('should correctly process multiple lines in one chunk', async () => {
+            const stream = readableFromAsyncIterable(
+                asyncIterable([
+                    Promise.resolve(
+                        Buffer.from(
+                            `{"test":true}${newline}{"num": 123}${newline}`
+                        )
+                    ),
+                ])
+            );
+
+            const results = await unwindAndCaptureAsync(
+                streamJsonLines(stream, new TextDecoder())
+            );
+            expect(results).toEqual({
+                states: [{ test: true }, { num: 123 }],
+            });
+        });
+
+        it('should ignore empty lines', async () => {
+            const stream = readableFromAsyncIterable(
+                asyncIterable([
+                    Promise.resolve(Buffer.from(`${newline}${newline}`)),
+                    Promise.resolve(Buffer.from(`{"test":t`)),
+                    Promise.resolve(
+                        Buffer.from(`rue}${newline}${newline}${newline}{`)
+                    ),
+                    Promise.resolve(Buffer.from(`"num":12`)),
+                    Promise.resolve(
+                        Buffer.from(`3}${newline}${newline}${newline}`)
+                    ),
+                ])
+            );
+
+            const results = await unwindAndCaptureAsync(
+                streamJsonLines(stream, new TextDecoder())
+            );
+            expect(results).toEqual({
+                states: [{ test: true }, { num: 123 }],
+            });
+        });
+    });
+
+    describe('\\r\\n', () => {
+        it('should handle when \\r and \\n come in different chunks', async () => {
+            const stream = readableFromAsyncIterable(
+                asyncIterable([
+                    Promise.resolve(Buffer.from('{"test":t')),
+                    Promise.resolve(Buffer.from(`rue}\r`)),
+                    Promise.resolve(Buffer.from('\n{"num":12')),
+                    Promise.resolve(Buffer.from(`3}\r\n`)),
+                ])
+            );
+
+            const results = await unwindAndCaptureAsync(
+                streamJsonLines(stream, new TextDecoder())
+            );
+            expect(results).toEqual({
+                states: [{ test: true }, { num: 123 }],
+            });
+        });
     });
 });

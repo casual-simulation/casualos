@@ -6,7 +6,7 @@ import {
     from,
     SubscriptionLike,
 } from 'rxjs';
-import { flatMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
+import { mergeMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import {
     isBot,
@@ -88,7 +88,7 @@ export class BotPanelManager implements SubscriptionLike {
             ? allBotsSelectedUpdatedAddedAndRemoved.pipe(bufferTime(10))
             : allBotsSelectedUpdatedAddedAndRemoved;
         return bufferedEvents.pipe(
-            flatMap(async () => {
+            mergeMap(async () => {
                 if (this._helper.userBot) {
                     const dimension = this._helper.userBot.values[SHEET_PORTAL];
                     if (!!dimension && dimension !== true) {
