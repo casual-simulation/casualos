@@ -13,7 +13,6 @@ import {
     constructServerlessAwsServerBuilder,
     FILES_BUCKET,
 } from '../../../../shared/LoadServer';
-import { Writable } from 'stream';
 
 const builder = constructServerlessAwsServerBuilder();
 
@@ -64,70 +63,62 @@ async function handleS3Event(event: S3Event) {
 }
 
 export async function handleApiEvent(
-    event: APIGatewayProxyEvent,
-    responseStream: Writable
-): Promise<void> {
-    try {
-        const query: GenericHttpRequest['query'] = {
-            ...event.queryStringParameters,
-        };
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> {
+    const query: GenericHttpRequest['query'] = {
+        ...event.queryStringParameters,
+    };
 
-        const headers: GenericHttpHeaders = {};
-        for (let key in event.headers) {
-            const value = event.headers[key];
-            headers[key.toLowerCase()] = value;
+    const headers: GenericHttpHeaders = {};
+    for (let key in event.headers) {
+        const value = event.headers[key];
+        headers[key.toLowerCase()] = value;
+    }
+
+    const response = await server.handleHttpRequest({
+        method: event.httpMethod as GenericHttpRequest['method'],
+        path: event.path,
+        pathParams: event.pathParameters,
+        ipAddress: event.requestContext.identity.sourceIp,
+        body: event.body,
+        query,
+        headers,
+    });
+
+    if (
+        typeof response.body === 'object' &&
+        Symbol.asyncIterator in response.body
+    ) {
+        let buffer = '';
+        for await (const chunk of response.body) {
+            buffer += chunk;
         }
-
-        const response = await server.handleHttpRequest({
-            method: event.httpMethod as GenericHttpRequest['method'],
-            path: event.path,
-            pathParams: event.pathParameters,
-            ipAddress: event.requestContext.identity.sourceIp,
-            body: event.body,
-            query,
-            headers,
-        });
-
-        responseStream = awslambda.HttpResponseStream.from(responseStream, {
+        return {
             statusCode: response.statusCode,
+            body: buffer,
             headers: response.headers,
-        });
-
-        if (
-            typeof response.body === 'object' &&
-            Symbol.asyncIterator in response.body
-        ) {
-            for await (let chunk of response.body) {
-                responseStream.write(chunk);
-            }
-            return;
-        }
-
-        responseStream.write(response.body);
-    } finally {
-        responseStream.end();
+        };
+    } else {
+        return {
+            statusCode: response.statusCode,
+            body: response.body ?? null,
+            headers: response.headers,
+        };
     }
 }
 
-declare const awslambda: any;
-
-export const handleRecords: any = awslambda.streamifyResponse(
-    async (
-        event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>,
-        responseStream: Writable
-    ) => {
-        await builder.ensureInitialized();
-        if ('httpMethod' in event) {
-            await handleApiEvent(event, responseStream);
-        } else if ('source' in event) {
-            await handleEventBridgeEvent(event);
-        } else {
-            await handleS3Event(event);
-        }
-
-        responseStream.end();
+export async function handleRecords(
+    event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>
+) {
+    await builder.ensureInitialized();
+    if ('httpMethod' in event) {
+        return handleApiEvent(event);
+    } else if ('source' in event) {
+        return handleEventBridgeEvent(event);
+    } else {
+        return handleS3Event(event);
     }
-);
+}
 
 export async function savePermanentBranches() {
     await builder.ensureInitialized();

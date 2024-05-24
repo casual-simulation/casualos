@@ -116,6 +116,13 @@ export const UNSAFE_HEADERS = new Set([
 ]);
 
 /**
+ * Whether to use HTTP requests for streaming AI chat.
+ * If true, then the client will send HTTP requests for ai_chat_stream requests.
+ * If false, then the client will use the WebSocket connection to stream AI chat.
+ */
+const USE_HTTP_STREAMING = false;
+
+/**
  * Defines a class that provides capabilities for storing and retrieving records.
  */
 export class RecordsManager {
@@ -1561,61 +1568,93 @@ export class RecordsManager {
                 ];
             }
 
-            const result = await this._client.aiChatStream(requestData, {
-                sessionKey: info.token,
-                endpoint: await info.auth.getRecordsOrigin(),
-            });
+            if (USE_HTTP_STREAMING) {
+                const result = await this._client.aiChatStream(requestData, {
+                    sessionKey: info.token,
+                    endpoint: await info.auth.getRecordsOrigin(),
+                });
 
-            // const client = await this._getWebsocketClient(info.auth);
-            // if (!client) {
-            //     if (hasValue(event.taskId)) {
-            //         this._helper.transaction(
-            //             asyncResult(event.taskId, {
-            //                 success: false,
-            //                 errorCode: 'not_supported',
-            //                 errorMessage:
-            //                     'Streaming AI chat is not supported on this inst.',
-            //             })
-            //         );
-            //     }
-            //     return;
-            // }
+                if (hasValue(event.taskId)) {
+                    if (Symbol.asyncIterator in result) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                            })
+                        );
 
-            // const result = await this._sendWebsocketStreamRequest(
-            //     client,
-            //     'POST',
-            //     '/api/v2/ai/chat/stream',
-            //     {},
-            //     requestData,
-            //     info.headers
-            // );
+                        try {
+                            for await (let data of result) {
+                                this._helper.transaction(
+                                    iterableNext(event.taskId, data)
+                                );
+                            }
 
-            if (hasValue(event.taskId)) {
-                if (Symbol.asyncIterator in result) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: true,
-                        })
-                    );
-
-                    try {
-                        for await (let data of result) {
                             this._helper.transaction(
-                                iterableNext(event.taskId, data)
+                                iterableComplete(event.taskId)
+                            );
+                        } catch (err) {
+                            this._helper.transaction(
+                                iterableThrow(event.taskId, err)
                             );
                         }
-
+                    } else {
                         this._helper.transaction(
-                            iterableComplete(event.taskId)
+                            asyncResult(event.taskId, result)
                         );
-                    } catch (err) {
+                    }
+                }
+
+                return;
+            }
+
+            const client = await this._getWebsocketClient(info.auth);
+            if (!client) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Streaming AI chat is not supported on this inst.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const result = await this._sendWebsocketStreamRequest(
+                client,
+                'POST',
+                '/api/v2/ai/chat/stream',
+                {},
+                requestData,
+                info.headers
+            );
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: true,
+                    })
+                );
+
+                result.subscribe({
+                    next: (data) => {
+                        this._helper.transaction(
+                            iterableNext(event.taskId, data)
+                        );
+                    },
+                    error: (err) => {
                         this._helper.transaction(
                             iterableThrow(event.taskId, err)
                         );
-                    }
-                } else {
-                    this._helper.transaction(asyncResult(event.taskId, result));
-                }
+                    },
+                    complete: () => {
+                        this._helper.transaction(
+                            iterableComplete(event.taskId)
+                        );
+                    },
+                });
             }
         } catch (e) {
             console.error('[RecordsManager] Error sending chat message:', e);
