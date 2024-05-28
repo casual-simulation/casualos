@@ -251,9 +251,12 @@ import {
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
 import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
+import { JSDOM } from 'jsdom';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
+
+console.error = jest.fn();
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -10795,6 +10798,124 @@ describe('AuxLibrary', () => {
                     });
                 }
             );
+        });
+
+        describe('experiment.createStaticHtmlFromBots()', () => {
+            const originalFetch = global.fetch;
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    ok: boolean;
+                    text: () => Promise<string>;
+                }>
+            >;
+
+            beforeEach(() => {
+                fetch = global.fetch = jest.fn();
+                context.device.ab1BootstrapUrl =
+                    'https://auxplayer.com/ab1/bootstrap.aux';
+                global.DOMParser = new JSDOM().window.DOMParser;
+            });
+
+            afterAll(() => {
+                global.fetch = originalFetch;
+                delete (global as any).DOMParser;
+            });
+
+            it('should create a static HTML string from the given bots', async () => {
+                fetch.mockResolvedValue({
+                    status: 200,
+                    ok: true,
+                    text: async () => `<html><body>test</body></html>`,
+                });
+
+                const result =
+                    await library.api.experiment.createStaticHtmlFromBots([
+                        bot1,
+                        bot2,
+                    ]);
+
+                const state = {
+                    [bot1.id]: bot1,
+                    [bot2.id]: bot2,
+                };
+                const json = JSON.stringify({
+                    version: 1,
+                    state,
+                });
+                expect(result).toEqual(
+                    `<!DOCTYPE html>\n<html><head></head><body>test<script type="text/aux">${json}</script></body></html>`
+                );
+                expect(fetch).toHaveBeenCalledWith(
+                    'https://auxplayer.com/static.html'
+                );
+            });
+
+            it('should use the given URL', async () => {
+                fetch.mockResolvedValue({
+                    status: 200,
+                    ok: true,
+                    text: async () => `<html><body>test</body></html>`,
+                });
+
+                const result =
+                    await library.api.experiment.createStaticHtmlFromBots(
+                        [bot1, bot2],
+                        'https://auxplayer.com/static2.html'
+                    );
+
+                const state = {
+                    [bot1.id]: bot1,
+                    [bot2.id]: bot2,
+                };
+                const json = JSON.stringify({
+                    version: 1,
+                    state,
+                });
+                expect(result).toEqual(
+                    `<!DOCTYPE html>\n<html><head></head><body>test<script type="text/aux">${json}</script></body></html>`
+                );
+                expect(fetch).toHaveBeenCalledWith(
+                    'https://auxplayer.com/static2.html'
+                );
+            });
+
+            it('should return null if the fetch fails', async () => {
+                fetch.mockResolvedValue({
+                    status: 200,
+                    ok: false,
+                    text: async () => `<html><body>test</body></html>`,
+                });
+
+                const result =
+                    await library.api.experiment.createStaticHtmlFromBots([
+                        bot1,
+                        bot2,
+                    ]);
+
+                expect(result).toBe(null);
+                expect(fetch).toHaveBeenCalledWith(
+                    'https://auxplayer.com/static.html'
+                );
+            });
+
+            it('should return null if unable to construct a URL', async () => {
+                context.device.ab1BootstrapUrl = 'wrongUrl';
+                fetch.mockResolvedValue({
+                    status: 200,
+                    ok: true,
+                    text: async () => `<html><body>test</body></html>`,
+                });
+
+                const result =
+                    await library.api.experiment.createStaticHtmlFromBots([
+                        bot1,
+                        bot2,
+                    ]);
+
+                expect(result).toBe(null);
+                expect(fetch).not.toHaveBeenCalled();
+            });
         });
 
         describe('os.beginAudioRecording()', () => {

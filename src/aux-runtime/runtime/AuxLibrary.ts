@@ -3311,6 +3311,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 localPositionTween,
                 localRotationTween,
                 getAnchorPointPosition,
+                createStaticHtmlFromBots,
                 beginAudioRecording,
                 endAudioRecording,
                 beginRecording,
@@ -11608,6 +11609,66 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             y: position.y + offset.y * scale.y,
             z: position.z + offset.z * scale.z,
         };
+    }
+
+    /**
+     * Creates a HTML file that, when loaded, will display the given bots in a static version of CasualOS.
+     *
+     * Returns a promise that resolves with a string containing the HTML file.
+     * Resolves with null if the HTML file could not be created.
+     *
+     * @param bots the bots that should be displayed in the static version of CasualOS.
+     * @param templateUrl the URL that the static HTML template file can be found at. If omitted, then the template from the server will be used.
+     *
+     * @example Create a static HTML file and download it.
+     * const bots = getBots(inDimension('home'));
+     * const html = await experiment.createStaticHtmlFromBots(bots);
+     * await os.download(html, 'static.html');
+     *
+     * @dochash actions/experimental
+     * @docname experiment.createStaticHtmlFromBots
+     */
+    async function createStaticHtmlFromBots(
+        bots: Bot[],
+        templateUrl?: string
+    ): Promise<string> {
+        try {
+            const state: BotsState = {};
+            for (let bot of bots) {
+                state[bot.id] = bot;
+            }
+
+            const json = JSON.stringify(getVersion1DownloadState(state));
+
+            const url = templateUrl
+                ? templateUrl
+                : new URL('/static.html', context.device.ab1BootstrapUrl).href;
+            const result = await fetch(url);
+
+            if (result.ok) {
+                const html = await result.text();
+                const parsed = new DOMParser().parseFromString(
+                    html,
+                    'text/html'
+                );
+
+                const script = parsed.createElement('script');
+                script.setAttribute('type', 'text/aux');
+                script.textContent = json;
+                parsed.body.appendChild(script);
+                return `<!DOCTYPE html>\n` + parsed.documentElement.outerHTML;
+            } else {
+                console.error(`Unable to fetch`, url);
+                console.error(result);
+                console.error(
+                    'It is possible that static HTML builds are not supported on this server.'
+                );
+                return null;
+            }
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
     }
 
     /**
