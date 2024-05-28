@@ -49,7 +49,7 @@ import {
 } from 'rxjs';
 import {
     skip,
-    flatMap,
+    mergeMap,
     filter,
     first,
     takeWhile,
@@ -229,7 +229,7 @@ export function watchSimulation(
     getEditor: () => monaco.editor.IEditor
 ) {
     let sub = simulation.watcher.botsDiscovered
-        .pipe(flatMap((f) => f))
+        .pipe(mergeMap((f) => f))
         .subscribe((f) => {
             for (let tag of tagsOnBot(f)) {
                 if (
@@ -403,7 +403,7 @@ export function watchSimulation(
     sub.add(
         simulation.portals.portalBotIdUpdated
             .pipe(
-                flatMap((b) => b),
+                mergeMap((b) => b),
                 tap((data) => {
                     addDefinitionsForPortalBot(
                         data.portalId,
@@ -1585,7 +1585,7 @@ function watchModel(
     sub.add(
         simulation.watcher.botsRemoved
             .pipe(
-                flatMap((f) => f),
+                mergeMap((f) => f),
                 first((id) => id === bot.id)
             )
             .subscribe((f) => {

@@ -40,7 +40,7 @@ import {
 import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
-import { filter, flatMap, tap, map } from 'rxjs/operators';
+import { filter, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/aux-common';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';

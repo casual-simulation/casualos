@@ -85,11 +85,26 @@ export async function handleApiEvent(
         headers,
     });
 
-    return {
-        statusCode: response.statusCode,
-        body: response.body ?? null,
-        headers: response.headers,
-    };
+    if (
+        typeof response.body === 'object' &&
+        Symbol.asyncIterator in response.body
+    ) {
+        let buffer = '';
+        for await (const chunk of response.body) {
+            buffer += chunk;
+        }
+        return {
+            statusCode: response.statusCode,
+            body: buffer,
+            headers: response.headers,
+        };
+    } else {
+        return {
+            statusCode: response.statusCode,
+            body: response.body ?? null,
+            headers: response.headers,
+        };
+    }
 }
 
 export async function handleRecords(

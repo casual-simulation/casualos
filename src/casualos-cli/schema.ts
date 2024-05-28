@@ -9,6 +9,18 @@ import type {
     UnionSchemaMetadata,
 } from '../aux-common';
 
+export interface PromptState {
+    aborted: boolean;
+}
+
+export function onState(state: PromptState) {
+    if (state.aborted) {
+        process.nextTick(() => {
+            process.exit(1);
+        });
+    }
+}
+
 export async function askForInputs(
     inputs: SchemaMetadata,
     name: string,
@@ -23,6 +35,7 @@ export async function askForInputs(
                 name: 'value',
                 message: `Enter a value for ${name}.`,
                 initial: inputs.defaultValue ?? undefined,
+                onState,
             });
 
             return evalResult(response.value || undefined, repl, String);
@@ -32,6 +45,7 @@ export async function askForInputs(
                 name: 'value',
                 message: `Enter a number for ${name}.`,
                 initial: inputs.defaultValue ?? undefined,
+                onState,
             });
 
             return typeof response.value === 'number'
@@ -47,6 +61,7 @@ export async function askForInputs(
                 initial: inputs.defaultValue ?? undefined,
                 active: 'yes',
                 inactive: 'no',
+                onState,
             });
 
             return typeof response.value === 'boolean'
@@ -60,6 +75,7 @@ export async function askForInputs(
                 name: 'value',
                 message: `Enter a date for ${name}.`,
                 initial: inputs.defaultValue ?? undefined,
+                onState,
             });
 
             return response.value instanceof Date
@@ -144,6 +160,7 @@ async function askForArrayInputs(
             type: 'confirm',
             name: 'continue',
             message: `Do you want to enter an array for ${name}?`,
+            onState,
         });
 
         if (!response.continue) {
@@ -165,6 +182,7 @@ async function askForArrayInputs(
             message: `Enter the length of the array for ${name}.`,
             min: inputs.minLength ?? undefined,
             max: inputs.maxLength ?? undefined,
+            onState,
         });
         length = response.length;
     }
@@ -209,6 +227,7 @@ async function askForEnumInputs(
         name: 'value',
         message: `Select a value for ${name}.`,
         choices: choices,
+        onState,
     });
 
     if (response.value === '') {
@@ -243,7 +262,7 @@ async function askForUnionInputs(
                     return {
                         title: `(${option.value})`,
                         description: option.description,
-                        value: option.value,
+                        value: option,
                     };
                 } else if (option.type === 'null') {
                     return {
@@ -259,6 +278,7 @@ async function askForUnionInputs(
                     value: option,
                 };
             }),
+            onState,
         });
 
         return await askForInputs(kind.kind, name, repl);
@@ -290,6 +310,7 @@ async function askForDiscriminatedUnionInputs(
                 value: option,
             };
         }),
+        onState,
     });
 
     return await askForInputs(kind.kind, name, repl);
@@ -330,6 +351,7 @@ async function askForAnyInputs(
                 value: 'null',
             },
         ],
+        onState,
     });
 
     if (kind.kind === 'null') {
@@ -341,6 +363,7 @@ async function askForAnyInputs(
                     type: 'text',
                     name: 'value',
                     message: `Enter a JSON value for ${name}.`,
+                    onState,
                 });
 
                 if (response.value === '' || response.value === undefined) {

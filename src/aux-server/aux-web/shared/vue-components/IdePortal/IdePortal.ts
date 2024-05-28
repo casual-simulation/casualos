@@ -25,7 +25,7 @@ import {
 import { appManager } from '../../AppManager';
 import { Subject, SubscriptionLike } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
-import { flatMap, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { IdePortalConfig } from './IdePortalConfig';
 import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';

@@ -61,7 +61,7 @@
         "luxon": "3.4.4",
         "mime": "2.4.6",
         "preact": "10.19.6",
-        "rxjs": "7.5.7",
+        "rxjs": "8.0.0-alpha.14",
         "seedrandom": "3.0.5",
         "stackframe": "^1.2.0",
         "uuid": "^8.3.2",

@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { Simulation } from './Simulation';
 import { first } from 'rxjs/operators';
 
@@ -10,7 +11,7 @@ import { first } from 'rxjs/operators';
  * @param simulation The simulation.
  */
 export function waitForSync(simulation: Simulation): Promise<boolean> {
-    return simulation.connection.syncStateChanged
-        .pipe(first((synced) => synced))
-        .toPromise();
+    return firstValueFrom(
+        simulation.connection.syncStateChanged.pipe(first((synced) => synced))
+    );
 }

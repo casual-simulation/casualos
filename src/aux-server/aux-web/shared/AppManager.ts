@@ -815,15 +815,15 @@ export class AppManager {
 
         const sim = this.simulationManager.primary;
 
-        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe(
-            (m: ProgressMessage) => {
+        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe({
+            next: (m: ProgressMessage) => {
                 this._progress.next(m);
                 if (m.error) {
                     this._progress.complete();
                 }
             },
-            (err) => console.error(err),
-            () => {
+            error: (err) => console.error(err),
+            complete: () => {
                 this._progress.next({
                     type: 'progress',
                     message: 'Done.',
@@ -838,8 +838,8 @@ export class AppManager {
                         this.initOffline();
                     }, INIT_OFFLINE_TIMEOUT_MILISECONDS);
                 }
-            }
-        );
+            },
+        });
 
         return sim;
     }

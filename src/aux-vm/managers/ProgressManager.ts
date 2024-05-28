@@ -55,18 +55,17 @@ export class ProgressManager implements SubscriptionLike {
                     }
                 })
             )
-            .subscribe(
-                null,
-                (err) => console.error(err),
-                () => {
+            .subscribe({
+                error: (err) => console.error(err),
+                complete: () => {
                     this._progress.next({
                         type: 'progress',
                         message: 'Done.',
                         progress: 1,
                         done: true,
                     });
-                }
-            );
+                },
+            });
     }
 
     unsubscribe() {

@@ -94,6 +94,9 @@ import {
     IdentifiedBotModule,
     ExportsModule,
     PartialPrecalculatedBotsState,
+    iterableNext,
+    iterableComplete,
+    iterableThrow,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import {
@@ -144,6 +147,7 @@ import { Interpreter } from '@casual-simulation/js-interpreter';
 import { RuntimeStop } from './CompiledBot';
 import { DynamicImports } from './AuxRuntimeDynamicImports';
 import { RuntimeActions } from './RuntimeEvents';
+import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
 
 registerInterpreterModule(DynamicImports);
 
@@ -5652,6 +5656,66 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(events.slice(1)).toEqual([[toast('abc')]]);
+            });
+
+            it('should support resolving async iterators', async () => {
+                const task = runtime.context.createIterable();
+
+                runtime.process([asyncResult(task.taskId, 'abc')]);
+
+                await waitAsync();
+                const result = await task.promise;
+                expect(result.result).toEqual('abc');
+                expect(Symbol.asyncIterator in result.iterable).toBe(true);
+            });
+
+            it('should support providing next values to iterators', async () => {
+                const task = runtime.context.createIterable();
+
+                runtime.process([
+                    asyncResult(task.taskId, 'abc'),
+                    iterableNext(task.taskId, 'def'),
+                    iterableNext(task.taskId, 'ghi'),
+                    iterableComplete(task.taskId),
+                ]);
+
+                await waitAsync();
+                const result = await task.promise;
+                expect(result.result).toEqual('abc');
+                expect(Symbol.asyncIterator in result.iterable).toBe(true);
+
+                const results = await unwindAndCaptureAsync(
+                    result.iterable[Symbol.asyncIterator]()
+                );
+
+                expect(results).toEqual({
+                    states: ['def', 'ghi'],
+                });
+            });
+
+            it('should support throwing values in iterators', async () => {
+                const task = runtime.context.createIterable();
+
+                runtime.process([
+                    asyncResult(task.taskId, 'abc'),
+                    iterableNext(task.taskId, 'def'),
+                    iterableNext(task.taskId, 'ghi'),
+                    iterableThrow(task.taskId, 'error'),
+                ]);
+
+                await waitAsync();
+                const result = await task.promise;
+                expect(result.result).toEqual('abc');
+                expect(Symbol.asyncIterator in result.iterable).toBe(true);
+
+                let states: any[] = [];
+                await expect(async () => {
+                    for await (const state of result.iterable) {
+                        states.push(state);
+                    }
+                }).rejects.toEqual('error');
+
+                expect(states).toEqual(['def', 'ghi']);
             });
 
             it('should not crash if given a run_script that doesnt compile', async () => {

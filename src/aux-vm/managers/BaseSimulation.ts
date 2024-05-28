@@ -10,7 +10,7 @@ import {
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
-import { flatMap } from 'rxjs/operators';
+import { mergeMap } from 'rxjs/operators';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
 import { AuxVM } from '../vm/AuxVM';
@@ -115,7 +115,7 @@ export class BaseSimulation implements Simulation {
 
     get localEvents(): Observable<RuntimeActions> {
         return this._vm.localEvents.pipe(
-            flatMap((e) => e)
+            mergeMap((e) => e)
         ) as Observable<RuntimeActions>;
     }
 
@@ -124,7 +124,7 @@ export class BaseSimulation implements Simulation {
     }
 
     get deviceEvents(): Observable<DeviceAction> {
-        return this._vm.deviceEvents.pipe(flatMap((e) => e));
+        return this._vm.deviceEvents.pipe(mergeMap((e) => e));
     }
 
     /**

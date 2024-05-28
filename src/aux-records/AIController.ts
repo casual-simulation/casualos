@@ -7,7 +7,12 @@ import {
     ServerError,
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
-import { AIChatInterface, AIChatMessage } from './AIChatInterface';
+import {
+    AIChatInterface,
+    AIChatInterfaceStreamResponse,
+    AIChatMessage,
+    AIChatStreamMessage,
+} from './AIChatInterface';
 import {
     AIGenerateSkyboxInterface,
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
@@ -396,6 +401,208 @@ export class AIController {
             };
         } catch (err) {
             console.error('[AIController] Error handling chat request:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async *chatStream(
+        request: AIChatRequest
+    ): AsyncGenerator<
+        Pick<AIChatInterfaceStreamResponse, 'choices'>,
+        AIChatStreamResponse
+    > {
+        try {
+            if (!this._chatProviders) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            if (
+                !this._matchesSubscriptionTiers(
+                    request.userSubscriptionTier,
+                    this._allowedChatSubscriptionTiers
+                )
+            ) {
+                if (!request.userSubscriptionTier) {
+                    return {
+                        success: false,
+                        errorCode: 'not_subscribed',
+                        errorMessage:
+                            'The user must be subscribed in order to use this operation.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedChatSubscriptionTiers as Set<string>),
+                        ],
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_subscription_tier',
+                        errorMessage:
+                            'This operation is not available to the user at their current subscription tier.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedChatSubscriptionTiers as Set<string>),
+                        ],
+                        currentSubscriptionTier: request.userSubscriptionTier,
+                    };
+                }
+            }
+
+            if (
+                !!request.model &&
+                !this._allowedChatModels.has(request.model)
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_model',
+                    errorMessage: `The given model is not allowed for chats.`,
+                };
+            }
+
+            const model = request.model ?? this._chatOptions.defaultModel;
+            const provider =
+                this._allowedChatModels.get(request.model) ??
+                this._chatOptions.defaultModelProvider;
+            const chat = this._chatProviders[provider];
+
+            if (!chat) {
+                console.error(
+                    '[AIController] No chat provider found for model:',
+                    model
+                );
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given model is not supported.',
+                };
+            } else if (!chat.chatStream) {
+                console.error(
+                    '[AIController] Chat provider does not support chatStream for model:',
+                    model
+                );
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'The given model does not support streaming.',
+                };
+            } else {
+                console.log(
+                    '[AIController] Using chat provider:',
+                    provider,
+                    'for model:',
+                    model
+                );
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!allowedFeatures.ai.chat.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Chat features.',
+                };
+            }
+
+            let maxTokens: number = undefined;
+            if (allowedFeatures.ai.chat.maxTokensPerPeriod) {
+                maxTokens =
+                    allowedFeatures.ai.chat.maxTokensPerPeriod -
+                    metrics.totalTokensInCurrentPeriod;
+            }
+
+            if (maxTokens <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The user has reached their limit for the current subscription period.`,
+                };
+            }
+
+            if (allowedFeatures.ai.chat.maxTokensPerRequest) {
+                if (maxTokens) {
+                    maxTokens = Math.min(
+                        maxTokens,
+                        allowedFeatures.ai.chat.maxTokensPerRequest
+                    );
+                } else {
+                    maxTokens = allowedFeatures.ai.chat.maxTokensPerRequest;
+                }
+            }
+
+            if (this._policies) {
+                const privacyFeatures =
+                    await this._policies.getUserPrivacyFeatures(request.userId);
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
+            }
+
+            const result = chat.chatStream({
+                messages: request.messages,
+                model: model,
+                temperature: request.temperature,
+                topP: request.topP,
+                frequencyPenalty: request.frequencyPenalty,
+                presencePenalty: request.presencePenalty,
+                stopWords: request.stopWords,
+                userId: request.userId,
+                maxTokens,
+            });
+
+            for await (let chunk of result) {
+                if (chunk.totalTokens > 0) {
+                    await this._metrics.recordChatMetrics({
+                        userId: request.userId,
+                        createdAtMs: Date.now(),
+                        tokens: chunk.totalTokens,
+                    });
+                }
+
+                yield {
+                    choices: chunk.choices,
+                };
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling chat stream request:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -861,6 +1068,12 @@ export interface AIChatFailure {
 
     allowedSubscriptionTiers?: string[];
     currentSubscriptionTier?: string;
+}
+
+export type AIChatStreamResponse = AIChatStreamSuccess | AIChatFailure;
+
+export interface AIChatStreamSuccess {
+    success: true;
 }
 
 export interface AIGenerateSkyboxRequest {

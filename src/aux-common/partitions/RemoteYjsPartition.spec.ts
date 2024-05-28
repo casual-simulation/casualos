@@ -3,6 +3,7 @@ import {
     Subject,
     Subscription,
     bufferCount,
+    firstValueFrom,
     takeWhile,
 } from 'rxjs';
 import {
@@ -1993,12 +1994,12 @@ describe('RemoteYjsPartition', () => {
                         userId: 'testUserId',
                     };
 
-                    const promise = partition.onStatusUpdated
-                        .pipe(
+                    const promise = firstValueFrom(
+                        partition.onStatusUpdated.pipe(
                             takeWhile((update) => update.type !== 'sync', true),
                             bufferCount(4)
                         )
-                        .toPromise();
+                    );
 
                     partition.connect();
 
@@ -2043,12 +2044,12 @@ describe('RemoteYjsPartition', () => {
                         connectionId: 'testConnectionId',
                     };
 
-                    const promise = partition.onStatusUpdated
-                        .pipe(
+                    const promise = firstValueFrom(
+                        partition.onStatusUpdated.pipe(
                             takeWhile((update) => update.type !== 'sync', true),
                             bufferCount(4)
                         )
-                        .toPromise();
+                    );
 
                     partition.connect();
 
@@ -2091,12 +2092,12 @@ describe('RemoteYjsPartition', () => {
 
                     connection.indicator = null;
 
-                    const promise = partition.onStatusUpdated
-                        .pipe(
+                    const promise = firstValueFrom(
+                        partition.onStatusUpdated.pipe(
                             takeWhile((update) => update.type !== 'sync', true),
                             bufferCount(4)
                         )
-                        .toPromise();
+                    );
 
                     partition.connect();
 

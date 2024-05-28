@@ -559,8 +559,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     private _requestBranch() {
         this._client
             .getBranchUpdates(this._recordName, this._inst, this._branch)
-            .subscribe(
-                (updates) => {
+            .subscribe({
+                next: (updates) => {
                     this._onStatusUpdated.next({
                         type: 'connection',
                         connected: true,
@@ -579,8 +579,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         this._watchBranch();
                     }
                 },
-                (err) => this._onError.next(err)
-            );
+                error: (err) => this._onError.next(err),
+            });
     }
 
     private _watchBranch() {
@@ -589,8 +589,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         }
         this._watchingBranch = true;
         this._sub.add(
-            this._client.connection.connectionState.subscribe(
-                (state) => {
+            this._client.connection.connectionState.subscribe({
+                next: (state) => {
                     const connected = state.connected;
                     this._onStatusUpdated.next({
                         type: 'connection',
@@ -606,8 +606,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         this._updateSynced(false);
                     }
                 },
-                (err) => this._onError.next(err)
-            )
+                error: (err) => this._onError.next(err),
+            })
         );
         this._sub.add(
             this._client
@@ -618,8 +618,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     branch: this._branch,
                     temporary: this._temporary,
                 })
-                .subscribe(
-                    (event) => {
+                .subscribe({
+                    next: (event) => {
                         // The partition should become synced if it was not synced
                         // and it just got some new data.
                         if (!this._synced && event.type === 'updates') {
@@ -791,8 +791,8 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                             }
                         }
                     },
-                    (err) => this._onError.next(err)
-                )
+                    error: (err) => this._onError.next(err),
+                })
         );
         this._sub.add(
             this._client.watchRateLimitExceeded().subscribe((event) => {
