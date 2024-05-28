@@ -136,7 +136,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         id: string,
         configBotId: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config']
+        config: AuxConfig['config'],
+        initialTempState: BotsState = {}
     ): Partial<AuxPartitionConfig> {
         const defaultPartitions: Partial<AuxPartitionConfig> = {
             [TEMPORARY_BOT_PARTITION_ID]: {
@@ -146,6 +147,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     [configBotId]: createBot(configBotId, {
                         inst: origin.inst ?? id,
                     }),
+                    ...initialTempState,
                 },
             },
             [COOKIE_BOT_PARTITION_ID]: {
@@ -244,7 +246,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         configBotId: string,
         origin: SimulationOrigin,
         config: AuxConfig['config'],
-        initialSharedState: BotsState = {}
+        initialTempState: BotsState = {}
     ): AuxPartitionConfig {
         const localPersistence = config.staticRepoLocalPersistence ?? true;
         console.log('[BotManager] Using static partitions');
@@ -257,13 +259,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             id,
             configBotId,
             origin,
-            config
+            config,
+            initialTempState
         );
 
         let partitions: AuxPartitionConfig = {
             shared: {
                 type: 'memory',
-                initialState: initialSharedState,
+                initialState: {},
             },
             [TEMPORARY_SHARED_PARTITION_ID]: {
                 type: 'memory',

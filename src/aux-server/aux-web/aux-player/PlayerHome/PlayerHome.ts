@@ -292,9 +292,7 @@ export default class PlayerHome extends Vue {
 
         if (import.meta.env.MODE === 'static') {
             this.executeBiosOption('local inst', null, null, null);
-        }
-
-        if (this.query) {
+        } else if (this.query) {
             const params = getInstParameters(this.query);
 
             if (params) {

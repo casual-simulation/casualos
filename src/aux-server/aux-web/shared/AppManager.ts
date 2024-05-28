@@ -177,9 +177,14 @@ export class AppManager {
                     'script[type="text/aux"]'
                 )?.textContent;
                 if (injectedAux) {
+                    console.log('[AppManager] Injecting AUX.');
                     const parseResult = tryParseJson(injectedAux.trim());
                     if (parseResult.success) {
                         initialState = getUploadState(parseResult.value);
+                        console.log(
+                            '[AppManager] Initial State:',
+                            initialState
+                        );
                     }
                 }
             }
@@ -690,6 +695,9 @@ export class AppManager {
     }
 
     initOffline() {
+        if (import.meta.env.MODE === 'static') {
+            return;
+        }
         if ('serviceWorker' in navigator && !this._updateServiceWorker) {
             console.log('[AppManager] Registering Service Worker');
             this._updateServiceWorker = registerSW({
@@ -705,6 +713,9 @@ export class AppManager {
     }
 
     updateServiceWorker() {
+        if (import.meta.env.MODE === 'static') {
+            return;
+        }
         if (this._updateServiceWorker) {
             this._updateServiceWorker(true);
         }
