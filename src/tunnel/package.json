@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/tunnel",
-    "version": "3.3.4-alpha.9230094984",
+    "version": "3.3.4-alpha.9289538794",
     "description": "An WebSockets-based TCP tunnel.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
