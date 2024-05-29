@@ -37,7 +37,6 @@ import {
 import {
     BotPanelManager,
     BrowserSimulation,
-    AuxVMImpl,
     LocalStoragePartitionImpl,
     IdePortalManager,
     AuthHelper,

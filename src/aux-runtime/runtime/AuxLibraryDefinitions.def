@@ -13319,6 +13319,28 @@ interface Experiment {
     ): { x: number, y: number, z: number };
 
     /**
+     * Creates a HTML file that, when loaded, will display the given bots in a static version of CasualOS.
+     *
+     * Returns a promise that resolves with a string containing the HTML file.
+     * Resolves with null if the HTML file could not be created.
+     *
+     * @param bots the bots that should be displayed in the static version of CasualOS.
+     * @param templateUrl the URL that the static HTML template file can be found at. If omitted, then the template from the server will be used.
+     *
+     * @example Create a static HTML file and download it.
+     * const bots = getBots(inDimension('home'));
+     * const html = await experiment.createStaticHtmlFromBots(bots);
+     * await os.download(html, 'static.html');
+     *
+     * @dochash actions/experimental
+     * @docname experiment.createStaticHtmlFromBots
+     */
+    createStaticHtmlFromBots(
+        bots: Bot[],
+        templateUrl?: string
+    ): Promise<string>;
+
+    /**
      * Starts a new recording.
      * @param options The options for the recording.
      * @returns A promise that resolves when the recording has started.

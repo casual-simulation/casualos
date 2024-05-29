@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
+import * as monaco from '../../MonacoLibs';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { ResizeObserverEntry } from '@juggle/resize-observer/lib/ResizeObserverEntry';
