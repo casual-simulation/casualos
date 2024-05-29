@@ -1,4 +1,4 @@
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import {
     InstUpdate,
     applyUpdatesToInst,
@@ -39,7 +39,9 @@ describe('YjsPartition', () => {
             type: 'yjs',
         });
 
-        const version = await mem.onVersionUpdated.pipe(first()).toPromise();
+        const version = await firstValueFrom(
+            mem.onVersionUpdated.pipe(first())
+        );
 
         expect(version?.currentSite).not.toBe(null);
         expect(version?.currentSite).toBeDefined();

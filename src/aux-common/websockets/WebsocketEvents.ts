@@ -213,6 +213,7 @@ export type WebsocketResponseMessage =
     | DisconnectedFromBranchMessage
     | RateLimitExceededMessage
     | WebsocketHttpResponseMessage
+    | WebsocketHttpPartialResponseMessage
     | RequestMissingPermissionResponseMessage;
 
 export type WebsocketRequestMessage =
@@ -650,6 +651,31 @@ export interface WebsocketHttpResponseMessage {
      * The response.
      */
     response: GenericHttpResponse;
+}
+
+export interface WebsocketHttpPartialResponseMessage {
+    type: 'http_partial_response';
+
+    /**
+     * The ID of the request that this response is for.
+     */
+    id: number;
+
+    /**
+     * The index of the partial response.
+     */
+    index: number;
+
+    /**
+     * Whether this message is the final message.
+     * If true, then the response will be omitted.
+     */
+    final?: boolean;
+
+    /**
+     * The response.
+     */
+    response?: Partial<GenericHttpResponse>;
 }
 
 /**

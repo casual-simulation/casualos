@@ -42,7 +42,7 @@ export default defineConfig(({ command, mode }) => {
     let websocketEndpoint: string | null = null;
     if (process.env.AUTH_WEBSOCKET_ENDPOINT) {
         websocketEndpoint = process.env.AUTH_WEBSOCKET_ENDPOINT;
-    } else if (mode === 'serve') {
+    } else if (mode === 'development') {
         websocketEndpoint = 'http://localhost:3002';
     }
     let websocketProtocol: RemoteCausalRepoProtocol | null = 'websocket';

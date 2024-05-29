@@ -27,7 +27,7 @@ export function requestUrl(request: IncomingMessage, protocol: string): URL {
  * @param options The options.
  */
 export function connect(options: NetConnectOpts): Observable<Socket> {
-    return Observable.create((observer: Observer<Socket>) => {
+    return new Observable((observer: Observer<Socket>) => {
         const tcp = netConnect(options, () => {
             observer.next(tcp);
         });
@@ -36,7 +36,7 @@ export function connect(options: NetConnectOpts): Observable<Socket> {
             observer.complete();
         });
 
-        tcp.on('error', err => {
+        tcp.on('error', (err) => {
             observer.error(err);
         });
 
@@ -52,12 +52,12 @@ export function connect(options: NetConnectOpts): Observable<Socket> {
  * @param port The port to listen on.
  */
 export function listen(server: Server, port?: number): Observable<Socket> {
-    return Observable.create((observer: Observer<Socket>) => {
-        server.on('connection', socket => {
+    return new Observable((observer: Observer<Socket>) => {
+        server.on('connection', (socket) => {
             observer.next(socket);
         });
 
-        server.on('error', err => {
+        server.on('error', (err) => {
             server.close();
             observer.error(err);
         });
@@ -75,12 +75,12 @@ export function listen(server: Server, port?: number): Observable<Socket> {
  * @param connection The socket to wrap.
  */
 export function cleanup(socket: Socket): Observable<Socket> {
-    return Observable.create((observer: Observer<Socket>) => {
+    return new Observable((observer: Observer<Socket>) => {
         socket.on('close', () => {
             observer.complete();
         });
 
-        socket.on('error', err => {
+        socket.on('error', (err) => {
             socket.destroy();
             observer.error(err);
         });
@@ -102,7 +102,7 @@ export function websocket(
     address: string,
     options?: WebSocket.ClientOptions
 ): Observable<WebSocket> {
-    return Observable.create((observer: Observer<WebSocket>) => {
+    return new Observable((observer: Observer<WebSocket>) => {
         const socket = new WebSocket(address, options);
 
         socket.on('open', () => {
@@ -113,7 +113,7 @@ export function websocket(
             observer.complete();
         });
 
-        socket.on('error', err => {
+        socket.on('error', (err) => {
             observer.error(err);
         });
 
@@ -129,11 +129,11 @@ export function handleUpgrade(
     socket: Socket,
     head: Buffer
 ): Observable<WebSocket> {
-    return Observable.create((observer: Observer<WebSocket>) => {
+    return new Observable((observer: Observer<WebSocket>) => {
         let websocket: WebSocket;
         let closed = false;
 
-        server.handleUpgrade(req, socket, head, ws => {
+        server.handleUpgrade(req, socket, head, (ws) => {
             websocket = ws;
             if (closed) {
                 ws.close();
@@ -146,7 +146,7 @@ export function handleUpgrade(
                 observer.complete();
             });
 
-            ws.on('error', err => {
+            ws.on('error', (err) => {
                 observer.error(err);
             });
         });
@@ -166,8 +166,8 @@ export function handleUpgrade(
  */
 export function messages(websocket: WebSocket): Observable<WebSocket.Data> {
     return fromEventPattern(
-        h => websocket.on('message', h),
-        h => websocket.off('message', h)
+        (h) => websocket.on('message', h),
+        (h) => websocket.off('message', h)
     );
 }
 

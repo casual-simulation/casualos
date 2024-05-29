@@ -60,15 +60,18 @@ import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
+    asyncIterable,
     createTestControllers,
     createTestRecordKey,
     createTestSubConfiguration,
     createTestUser,
+    unwindAndCaptureAsync,
 } from './TestUtils';
 import { AIController } from './AIController';
 import {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
+    AIChatInterfaceStreamResponse,
 } from './AIChatInterface';
 import {
     AIGenerateSkyboxInterfaceRequest,
@@ -92,6 +95,7 @@ import {
     LoginMessage,
     WebsocketDownloadRequestEvent,
     WebsocketEventTypes,
+    WebsocketHttpPartialResponseMessage,
     WebsocketHttpResponseMessage,
     WebsocketMessage,
     WebsocketMessageEvent,
@@ -318,6 +322,10 @@ describe('RecordsServer', () => {
     let chatInterface: {
         chat: jest.Mock<
             Promise<AIChatInterfaceResponse>,
+            [AIChatInterfaceRequest]
+        >;
+        chatStream: jest.Mock<
+            AsyncIterable<AIChatInterfaceStreamResponse>,
             [AIChatInterfaceRequest]
         >;
     };
@@ -586,6 +594,7 @@ describe('RecordsServer', () => {
 
         chatInterface = {
             chat: jest.fn(),
+            chatStream: jest.fn(),
         };
         skyboxInterface = {
             generateSkybox: jest.fn(),
@@ -691,7 +700,7 @@ describe('RecordsServer', () => {
                 httpGet('/api/v2/procedures', defaultHeaders)
             );
 
-            const body = expectResponseBodyToEqual(result, {
+            const body = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -708,7 +717,7 @@ describe('RecordsServer', () => {
                 procedureRequest('listProcedures', {}, defaultHeaders)
             );
 
-            const body = expectResponseBodyToEqual(result, {
+            const body = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -730,7 +739,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -803,7 +812,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -837,7 +846,7 @@ describe('RecordsServer', () => {
                 query: {},
             });
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -949,7 +958,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -1086,7 +1095,7 @@ describe('RecordsServer', () => {
                 query: {},
             });
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -1178,7 +1187,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -1255,7 +1264,7 @@ describe('RecordsServer', () => {
                 })
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -1298,7 +1307,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -1339,7 +1348,7 @@ describe('RecordsServer', () => {
                 query: {},
             });
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -1590,7 +1599,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 412,
                 body: {
                     success: false,
@@ -1617,7 +1626,7 @@ describe('RecordsServer', () => {
                 query: {},
             });
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -1798,7 +1807,7 @@ describe('RecordsServer', () => {
                         })
                     );
 
-                    expectResponseBodyToEqual(response, {
+                    await expectResponseBodyToEqual(response, {
                         statusCode: 200,
                         body: {
                             success: true,
@@ -1830,7 +1839,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/emailRules`, defaultHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 404,
                 body: {
                     success: false,
@@ -1864,7 +1873,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/smsRules`, defaultHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 404,
                 body: {
                     success: false,
@@ -1900,7 +1909,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -1921,7 +1930,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -1965,7 +1974,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -1986,7 +1995,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2029,7 +2038,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2047,7 +2056,7 @@ describe('RecordsServer', () => {
                 procedureRequest('createAccount', {}, authenticatedHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2104,7 +2113,7 @@ describe('RecordsServer', () => {
                 })
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2455,7 +2464,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2488,7 +2497,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -2514,7 +2523,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -2540,7 +2549,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2744,7 +2753,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2775,7 +2784,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2874,7 +2883,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -2951,7 +2960,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3084,7 +3093,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3155,7 +3164,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3243,7 +3252,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(response, {
+            await expectResponseBodyToEqual(response, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3283,7 +3292,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(response, {
+            await expectResponseBodyToEqual(response, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -3329,7 +3338,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(response, {
+            await expectResponseBodyToEqual(response, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -3375,7 +3384,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(response, {
+            await expectResponseBodyToEqual(response, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -3435,7 +3444,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(response, {
+            await expectResponseBodyToEqual(response, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3481,7 +3490,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            const response = expectResponseBodyToEqual(result, {
+            const response = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3542,7 +3551,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            const response = expectResponseBodyToEqual(result, {
+            const response = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3651,7 +3660,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3722,7 +3731,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3810,7 +3819,7 @@ describe('RecordsServer', () => {
                 httpGet('/api/v2/webauthn/login/options', authenticatedHeaders)
             );
 
-            const response = expectResponseBodyToEqual(result, {
+            const response = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3848,7 +3857,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            const response = expectResponseBodyToEqual(result, {
+            const response = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -3939,7 +3948,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4005,7 +4014,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4108,7 +4117,7 @@ describe('RecordsServer', () => {
                 httpGet('/api/v2/webauthn/authenticators', authenticatedHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4200,7 +4209,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4302,7 +4311,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4383,7 +4392,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4438,7 +4447,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4482,7 +4491,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4515,7 +4524,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4541,7 +4550,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -4565,7 +4574,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -4598,7 +4607,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4634,7 +4643,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4659,7 +4668,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -4693,7 +4702,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -4727,7 +4736,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -4795,7 +4804,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4816,7 +4825,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4837,7 +4846,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -4866,7 +4875,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -4921,7 +4930,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4944,7 +4953,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4968,7 +4977,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -4992,7 +5001,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5011,7 +5020,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -5043,7 +5052,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -5095,7 +5104,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5123,7 +5132,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5164,7 +5173,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5191,7 +5200,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -5224,7 +5233,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -5278,7 +5287,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5312,7 +5321,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5349,7 +5358,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5393,7 +5402,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -5456,7 +5465,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -5504,7 +5513,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -5537,7 +5546,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -5607,7 +5616,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5641,7 +5650,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 401,
                 body: {
                     success: false,
@@ -5671,7 +5680,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -5714,7 +5723,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -5743,7 +5752,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -5772,7 +5781,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -5801,7 +5810,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 404,
                 body: {
                     success: false,
@@ -5833,7 +5842,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5882,7 +5891,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -5920,7 +5929,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -5966,7 +5975,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -6007,7 +6016,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6041,7 +6050,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6074,7 +6083,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6152,7 +6161,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6192,7 +6201,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6227,7 +6236,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -6265,7 +6274,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6298,7 +6307,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6366,7 +6375,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6423,7 +6432,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6475,7 +6484,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6527,7 +6536,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -6569,7 +6578,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6606,7 +6615,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6643,7 +6652,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6681,7 +6690,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6718,7 +6727,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6827,7 +6836,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6866,7 +6875,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6900,7 +6909,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -6919,7 +6928,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/records/file?fileName=${fileName}`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6939,7 +6948,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -6956,7 +6965,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/records/file`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -7026,7 +7035,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7075,7 +7084,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7136,7 +7145,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7198,7 +7207,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7235,7 +7244,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -7263,7 +7272,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -7374,7 +7383,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7420,7 +7429,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7456,7 +7465,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -7490,7 +7499,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -7524,7 +7533,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -7587,7 +7596,7 @@ describe('RecordsServer', () => {
                 })
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 204,
                 headers: {
                     'Access-Control-Allow-Methods': 'POST',
@@ -7624,7 +7633,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7665,7 +7674,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7710,7 +7719,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7751,7 +7760,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -7811,7 +7820,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -7856,7 +7865,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -7889,7 +7898,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -7962,7 +7971,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -7996,7 +8005,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 401,
                 body: {
                     success: false,
@@ -8026,7 +8035,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -8069,7 +8078,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -8098,7 +8107,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -8127,7 +8136,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -8156,7 +8165,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 404,
                 body: {
                     success: false,
@@ -8212,7 +8221,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -8249,7 +8258,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -8281,7 +8290,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -8351,7 +8360,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -8415,7 +8424,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -8443,7 +8452,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 400,
                     body: {
                         success: false,
@@ -8487,7 +8496,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -8523,7 +8532,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -8565,7 +8574,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -8611,7 +8620,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -8646,7 +8655,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -8692,7 +8701,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -8733,7 +8742,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -8767,7 +8776,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -8800,7 +8809,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -8860,7 +8869,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -8898,7 +8907,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -8936,7 +8945,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -9035,7 +9044,7 @@ describe('RecordsServer', () => {
                 httpGet('/api/v2/records/list', apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -9121,7 +9130,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -9170,7 +9179,7 @@ describe('RecordsServer', () => {
                     })
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -9204,7 +9213,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -9228,7 +9237,7 @@ describe('RecordsServer', () => {
                 })
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 204,
                 body: undefined,
                 headers: {
@@ -9269,7 +9278,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -9318,7 +9327,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -9366,7 +9375,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -9413,7 +9422,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 400,
                     body: {
                         success: false,
@@ -9456,7 +9465,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -9506,7 +9515,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -9555,7 +9564,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -9603,7 +9612,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 400,
                     body: {
                         success: false,
@@ -9645,7 +9654,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -9678,7 +9687,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -9803,7 +9812,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -9829,7 +9838,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -9858,7 +9867,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -9952,7 +9961,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -10020,7 +10029,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10049,7 +10058,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -10082,7 +10091,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -10151,7 +10160,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -10180,7 +10189,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10208,7 +10217,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10236,7 +10245,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -10265,7 +10274,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -10333,7 +10342,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -10362,7 +10371,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10390,7 +10399,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10418,7 +10427,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -10447,7 +10456,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -10523,7 +10532,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -10583,7 +10592,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -10613,7 +10622,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10641,7 +10650,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10666,7 +10675,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/records/role/assignments/list`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -10715,7 +10724,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -10752,7 +10761,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -10780,7 +10789,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -10808,7 +10817,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 400,
                     body: {
                         success: false,
@@ -10870,7 +10879,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -10901,7 +10910,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -10934,7 +10943,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -10973,7 +10982,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -11013,7 +11022,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11043,7 +11052,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -11076,7 +11085,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -11111,7 +11120,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -11196,7 +11205,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11224,7 +11233,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -11268,7 +11277,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -11311,7 +11320,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11336,7 +11345,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -11369,7 +11378,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -11468,7 +11477,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 501,
                 body: {
                     success: false,
@@ -11492,7 +11501,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11524,7 +11533,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/records/insts/list`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11558,7 +11567,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11590,7 +11599,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -11654,7 +11663,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11676,7 +11685,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11701,7 +11710,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -11759,7 +11768,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -11805,7 +11814,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 501,
                 body: {
                     success: false,
@@ -11839,7 +11848,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 401,
                 body: {
                     success: false,
@@ -11874,7 +11883,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -13976,7 +13985,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 501,
                 body: {
                     success: false,
@@ -13984,7 +13993,9 @@ describe('RecordsServer', () => {
                     errorMessage:
                         'AI features are not supported by this server.',
                 },
-                headers: apiCorsHeaders,
+                headers: {
+                    ...apiCorsHeaders,
+                },
             });
         });
 
@@ -14005,7 +14016,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14046,7 +14057,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14114,6 +14125,220 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/ai/chat/stream', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'hi!',
+                            },
+                        ],
+                        totalTokens: 0,
+                    }),
+                ])
+            );
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null,
+                null,
+                null,
+                null
+            );
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/chat/stream`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: {
+                    ...apiCorsHeaders,
+                },
+            });
+        });
+
+        it('should call the AI chat interface', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/chat/stream`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: [
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'hi!',
+                            },
+                        ],
+                    },
+                    {
+                        success: true,
+                    },
+                ],
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/x-ndjson',
+                },
+            });
+        });
+
+        it('should support using a default model', async () => {
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+                totalTokens: 0,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/chat/stream`,
+                    JSON.stringify({
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: [
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'hi!',
+                            },
+                        ],
+                    },
+                    {
+                        success: true,
+                    },
+                ],
+                headers: {
+                    ...apiCorsHeaders,
+                    'content-type': 'application/x-ndjson',
+                },
+            });
+            expect(chatInterface.chatStream).toHaveBeenCalledWith({
+                model: 'default-model',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+                userId,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/chat/stream`, () =>
+            JSON.stringify({
+                model: 'model-1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/chat/stream`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/chat/stream`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+    });
+
     describe('POST /api/v2/ai/skybox', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);
@@ -14159,7 +14384,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 501,
                 body: {
                     success: false,
@@ -14188,7 +14413,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14224,7 +14449,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
                 body: {
                     success: false,
@@ -14315,7 +14540,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/ai/skybox?skyboxId=id`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 501,
                 body: {
                     success: false,
@@ -14332,7 +14557,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/ai/skybox?skyboxId=${'skybox-id'}`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14403,7 +14628,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 501,
                 body: {
                     success: false,
@@ -14427,7 +14652,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14507,7 +14732,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14563,7 +14788,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14634,7 +14859,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -14644,7 +14869,7 @@ describe('RecordsServer', () => {
                 });
 
                 const resultBody = JSON.parse(
-                    result.body
+                    result.body as string
                 ) as CreateStudioSuccess;
                 const studio = await store.getStudioById(resultBody.studioId);
 
@@ -14722,7 +14947,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14811,7 +15036,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -14915,7 +15140,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/studios/list`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15004,7 +15229,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -15051,7 +15276,7 @@ describe('RecordsServer', () => {
                         )
                     );
 
-                    expectResponseBodyToEqual(result, {
+                    await expectResponseBodyToEqual(result, {
                         statusCode: 200,
                         body: {
                             success: true,
@@ -15095,7 +15320,7 @@ describe('RecordsServer', () => {
                         )
                     );
 
-                    expectResponseBodyToEqual(result, {
+                    await expectResponseBodyToEqual(result, {
                         statusCode: 403,
                         body: {
                             success: false,
@@ -15126,7 +15351,7 @@ describe('RecordsServer', () => {
                     })
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -15165,7 +15390,7 @@ describe('RecordsServer', () => {
                     })
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -15222,7 +15447,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15272,7 +15497,7 @@ describe('RecordsServer', () => {
                 })
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15369,7 +15594,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15409,7 +15634,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15449,7 +15674,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15537,7 +15762,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15694,7 +15919,7 @@ describe('RecordsServer', () => {
                 httpGet(`/api/v2/player/config?comId=${'comId'}`, apiHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -15769,7 +15994,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -15812,7 +16037,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -15869,7 +16094,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -16043,7 +16268,7 @@ describe('RecordsServer', () => {
                     })
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -16136,7 +16361,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -16179,7 +16404,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -16236,7 +16461,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -16410,7 +16635,7 @@ describe('RecordsServer', () => {
                     })
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -16595,7 +16820,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 412,
                     body: {
                         success: false,
@@ -16622,7 +16847,7 @@ describe('RecordsServer', () => {
                     query: {},
                 });
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 400,
                     body: {
                         success: false,
@@ -16901,7 +17126,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 412,
                     body: {
                         success: false,
@@ -16928,7 +17153,7 @@ describe('RecordsServer', () => {
                     query: {},
                 });
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 400,
                     body: {
                         success: false,
@@ -17077,7 +17302,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -17114,7 +17339,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -17181,7 +17406,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 200,
                     body: {
                         success: true,
@@ -17215,7 +17440,7 @@ describe('RecordsServer', () => {
                     )
                 );
 
-                expectResponseBodyToEqual(result, {
+                await expectResponseBodyToEqual(result, {
                     statusCode: 403,
                     body: {
                         success: false,
@@ -17274,7 +17499,7 @@ describe('RecordsServer', () => {
                 httpGet('/instData?inst=inst&branch=branch', defaultHeaders)
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -17337,7 +17562,7 @@ describe('RecordsServer', () => {
                 )
             );
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -17382,7 +17607,7 @@ describe('RecordsServer', () => {
             const request = httpGet('/api/custom-route', defaultHeaders);
             const result = await server.handleHttpRequest(request);
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -17422,7 +17647,7 @@ describe('RecordsServer', () => {
             );
             const result = await server.handleHttpRequest(request);
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -17463,7 +17688,7 @@ describe('RecordsServer', () => {
             );
             const result = await server.handleHttpRequest(request);
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -17504,7 +17729,7 @@ describe('RecordsServer', () => {
             );
             const result = await server.handleHttpRequest(request);
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -17524,7 +17749,7 @@ describe('RecordsServer', () => {
             );
             const result2 = await server.handleHttpRequest(request2);
 
-            expectResponseBodyToEqual(result2, {
+            await expectResponseBodyToEqual(result2, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -17563,7 +17788,7 @@ describe('RecordsServer', () => {
             );
             const result = await server.handleHttpRequest(request);
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
                 body: {
                     success: false,
@@ -17583,7 +17808,7 @@ describe('RecordsServer', () => {
             );
             const result2 = await server.handleHttpRequest(request2);
 
-            expectResponseBodyToEqual(result2, {
+            await expectResponseBodyToEqual(result2, {
                 statusCode: 200,
                 body: {
                     success: true,
@@ -17618,7 +17843,7 @@ describe('RecordsServer', () => {
             );
             const result = await server.handleHttpRequest(request);
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 500,
                 body: {
                     success: false,
@@ -18909,6 +19134,82 @@ describe('RecordsServer', () => {
                 });
             });
 
+            it('should handle streamed responses', async () => {
+                const u = await store.findUser(userId);
+                await store.saveUser({
+                    ...u,
+                    subscriptionId: 'sub_id',
+                    subscriptionStatus: 'active',
+                });
+
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'assistant',
+                                    content: 'hi!',
+                                },
+                            ],
+                            totalTokens: 0,
+                        }),
+                    ])
+                );
+
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'http_request',
+                            id: 1,
+                            request: httpPost(
+                                `/api/v2/ai/chat/stream`,
+                                JSON.stringify({
+                                    model: 'model-1',
+                                    messages: [
+                                        {
+                                            role: 'user',
+                                            content: 'hello',
+                                        },
+                                    ],
+                                }),
+                                apiHeaders
+                            ),
+                        }),
+                        undefined,
+                        apiHeaders['origin']
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const responses = getWebsocketHttpPartialResponses(
+                    connectionId,
+                    1
+                );
+                expectWebsocketHttpPartialResponseBodiesToEqual(responses, {
+                    statusCode: 200,
+                    body: [
+                        {
+                            choices: [
+                                {
+                                    role: 'assistant',
+                                    content: 'hi!',
+                                },
+                            ],
+                        },
+                        {
+                            success: true,
+                        },
+                    ],
+                    headers: {
+                        ...apiCorsHeaders,
+                        'content-type': 'application/x-ndjson',
+                    },
+                });
+                expect(responses).toHaveLength(2);
+            });
+
             it('should force the origin header to be the one in the websocket request', async () => {
                 await server.handleWebsocketRequest(
                     wsMessage(
@@ -18999,20 +19300,35 @@ describe('RecordsServer', () => {
         return errors;
     }
 
-    function expectResponseBodyToEqual(
+    async function expectResponseBodyToEqual<T = any>(
         response: GenericHttpResponse,
         expected: any
-    ) {
-        const json = response.body
-            ? JSON.parse(response.body as string)
-            : undefined;
+    ): Promise<T> {
+        let body: any;
+        if (
+            response.body &&
+            typeof response.body === 'object' &&
+            Symbol.asyncIterator in response.body
+        ) {
+            const result = await unwindAndCaptureAsync(
+                response.body[Symbol.asyncIterator]()
+            );
+            body = [
+                ...result.states.map((s) => JSON.parse(s.trim())),
+                JSON.parse(result.result.trim()),
+            ];
+        } else {
+            body = response.body
+                ? JSON.parse(response.body as string)
+                : undefined;
+        }
 
         expect({
             ...response,
-            body: json,
+            body,
         }).toEqual(expected);
 
-        return json;
+        return body;
     }
 
     function expectWebsocketHttpResponseBodyToEqual(
@@ -19020,13 +19336,41 @@ describe('RecordsServer', () => {
         expected: any
     ) {
         const response = message.response;
-        const json = response.body
-            ? JSON.parse(response.body as string)
-            : undefined;
+
+        let json: any;
+        if (response.headers?.['content-type'] === 'application/x-ndjson') {
+            const lines = (response.body as string).split('\n');
+            json = lines
+                .map((l) => l.trim())
+                .filter((l) => !!l)
+                .map((l) => JSON.parse(l.trim()));
+        } else {
+            json = response.body
+                ? JSON.parse(response.body as string)
+                : undefined;
+        }
 
         expect({
             ...response,
             body: json,
+        }).toEqual(expected);
+    }
+
+    function expectWebsocketHttpPartialResponseBodiesToEqual(
+        messages: WebsocketHttpPartialResponseMessage[],
+        expected: any
+    ) {
+        let bodies = [] as any[];
+        for (let m of messages) {
+            if (m.response) {
+                bodies.push(JSON.parse(m.response.body as string));
+            }
+        }
+        const response = messages[0].response;
+
+        expect({
+            ...response,
+            body: bodies,
         }).toEqual(expected);
     }
 
@@ -19038,6 +19382,19 @@ describe('RecordsServer', () => {
         return messages.find(
             (m) => m.type === 'http_response' && m.id === id
         ) as WebsocketHttpResponseMessage;
+    }
+
+    function getWebsocketHttpPartialResponses(
+        connectionId: string,
+        id: number
+    ): WebsocketHttpPartialResponseMessage[] {
+        const messages = websocketMessenger.getMessages(connectionId);
+        return sortBy(
+            messages.filter(
+                (m) => m.type === 'http_partial_response' && m.id === id
+            ) as WebsocketHttpPartialResponseMessage[],
+            (m) => m.index
+        );
     }
 
     function testUrl(
@@ -19102,7 +19459,7 @@ describe('RecordsServer', () => {
             delete request.headers.authorization;
             const result = await server.handleHttpRequest(request);
 
-            expectResponseBodyToEqual(result, {
+            await expectResponseBodyToEqual(result, {
                 statusCode: 401,
                 body: {
                     success: false,

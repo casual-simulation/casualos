@@ -1881,6 +1881,133 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/ai/chat/stream",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "frequencyPenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "messages": Object {
+            "minLength": 1,
+            "schema": Object {
+              "schema": Object {
+                "author": Object {
+                  "optional": true,
+                  "type": "string",
+                },
+                "content": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "schema": Object {
+                        "options": Array [
+                          Object {
+                            "schema": Object {
+                              "text": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "base64": Object {
+                                "type": "string",
+                              },
+                              "mimeType": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "url": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "type": "array",
+                    },
+                  ],
+                  "type": "union",
+                },
+                "role": Object {
+                  "options": Array [
+                    Object {
+                      "type": "literal",
+                      "value": "system",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "user",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "assistant",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "function",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "model": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "presencePenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "stopWords": Object {
+            "maxLength": 4,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "temperature": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "topP": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "aiChatStream",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/ai/skybox",
       },
       "inputs": Object {
@@ -4759,6 +4886,133 @@ Object {
         "type": "object",
       },
       "name": "aiChat",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/chat/stream",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "frequencyPenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "messages": Object {
+            "minLength": 1,
+            "schema": Object {
+              "schema": Object {
+                "author": Object {
+                  "optional": true,
+                  "type": "string",
+                },
+                "content": Object {
+                  "options": Array [
+                    Object {
+                      "type": "string",
+                    },
+                    Object {
+                      "schema": Object {
+                        "options": Array [
+                          Object {
+                            "schema": Object {
+                              "text": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "base64": Object {
+                                "type": "string",
+                              },
+                              "mimeType": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                          Object {
+                            "schema": Object {
+                              "url": Object {
+                                "type": "string",
+                              },
+                            },
+                            "type": "object",
+                          },
+                        ],
+                        "type": "union",
+                      },
+                      "type": "array",
+                    },
+                  ],
+                  "type": "union",
+                },
+                "role": Object {
+                  "options": Array [
+                    Object {
+                      "type": "literal",
+                      "value": "system",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "user",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "assistant",
+                    },
+                    Object {
+                      "type": "literal",
+                      "value": "function",
+                    },
+                  ],
+                  "type": "union",
+                },
+              },
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "model": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "presencePenalty": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "stopWords": Object {
+            "maxLength": 4,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "temperature": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "topP": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "aiChatStream",
       "origins": "api",
     },
     Object {

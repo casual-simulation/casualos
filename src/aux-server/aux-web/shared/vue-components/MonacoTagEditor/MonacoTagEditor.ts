@@ -39,7 +39,7 @@ import {
     getModelInfoFromUri,
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
-import { filter, flatMap, tap } from 'rxjs/operators';
+import { filter, mergeMap, tap } from 'rxjs/operators';
 import { ScriptPrefix } from '@casual-simulation/aux-vm';
 import { getActiveTheme } from '../utils';
 import CodeToolsPortal from '../CodeToolsPortal/CodeToolsPortal';
@@ -197,7 +197,7 @@ export default class MonacoTagEditor extends Vue {
 
             sub.add(
                 sim.portals.prefixesDiscovered
-                    .pipe(flatMap((a) => a))
+                    .pipe(mergeMap((a) => a))
                     .subscribe((portal) => {
                         this.scriptPrefixes = union(
                             ...[...this._simulations.values()].map((s) =>
@@ -211,7 +211,7 @@ export default class MonacoTagEditor extends Vue {
 
             sub.add(
                 sim.portals.prefixesRemoved
-                    .pipe(flatMap((a) => a))
+                    .pipe(mergeMap((a) => a))
                     .subscribe((portal) => {
                         this.scriptPrefixes = union(
                             ...[...this._simulations.values()].map((s) =>

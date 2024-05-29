@@ -5,6 +5,7 @@ import {
     TimeoutOrIntervalTimer,
     DEBUG_STRING,
     debugStringifyFunction,
+    AsyncIterableTask,
 } from './AuxGlobalContext';
 import {
     hasValue,
@@ -245,10 +246,12 @@ import {
     Point2D,
     CameraPortal,
     capturePortalScreenshot as calcCapturePortalScreenshot,
+    createStaticHtml as calcCreateStaticHtmlFromBots,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
     aiChat,
+    aiChatStream,
     AIGenerateSkyboxOptions,
     aiGenerateSkybox,
     AIGenerateSkyboxAction,
@@ -393,6 +396,7 @@ import {
     RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import type {
+    AIChatInterfaceStreamResponse,
     AIChatMessage,
     CrudEraseItemResult,
     CrudGetItemResult,
@@ -2988,6 +2992,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 chat,
                 generateSkybox,
                 generateImage,
+
+                stream: {
+                    chat: chatStream,
+                },
             },
 
             os: {
@@ -3327,6 +3335,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 localPositionTween,
                 localRotationTween,
                 getAnchorPointPosition,
+                createStaticHtmlFromBots,
                 beginAudioRecording,
                 endAudioRecording,
                 beginRecording,
@@ -4900,6 +4909,226 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         });
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
+    }
+
+    /**
+     * Sends a chat message to the AI and streams the response back.
+     * Returns a promise that resolves with an [async iterable](https://javascript.info/async-iterators-generators#async-iterables) that contains the responses from the AI.
+     *
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.stream.chat("Hello!");
+     *
+     * for await (let message of response) {
+     *    console.log(message);
+     * }
+     *
+     * @dochash actions/ai
+     * @doctitle AI Actions
+     * @docsidebar AI
+     * @docdescription AI actions are functions that make it easier to work with the AI.
+     * @docname ai.stream.chat
+     * @docid ai.stream.chat-string
+     */
+    function chatStream(
+        message: string,
+        options?: AIChatOptions
+    ): Promise<AsyncIterable<string>>;
+
+    /**
+     * Sends a chat message to the AI and streams the response back.
+     * Returns a promise that resolves with an [async iterable](https://javascript.info/async-iterators-generators#async-iterables) that contains the responses from the AI.
+     * 
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat({
+     *     role: "user",
+     *     content: "Hello!"
+     * });
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @example Ask the AI to describe an uploaded image.
+     * const files = await os.showUploadFiles();
+     * const firstFile = files[0];
+     * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+     * const response = await ai.stream.chat({
+     *    role: 'user',
+     *    content: [
+     *        {
+     *            base64: base64,
+     *            mimeType: firstFile.mimeType,
+     *        },
+     *        {
+     *            text: 'please describe the image'
+     *        }
+     *    ]
+     * }, {
+     *    preferredModel: 'gemini-pro-vision'
+     * });
+     * 
+     * for await (let message of response) {
+          os.toast(message.content);
+     * }
+     *
+     * @dochash actions/ai
+     * @docname ai.stream.chat
+     * @docid ai.stream.chat-message
+     */
+    function chatStream(
+        message: AIChatMessage,
+        options?: AIChatOptions
+    ): Promise<AsyncIterable<AIChatMessage>>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that resolves with an [async iterable](https://javascript.info/async-iterators-generators#async-iterables) that contains the responses from the AI.
+     * 
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.stream.chat([
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     *     {
+     *          role: "user",
+     *          content: "Hello!"
+     *     }
+     * ]);
+     * 
+     * for await (let message of response) {
+     *    console.log(`${message.role}: ${message.content}`);
+     * }
+     *
+     * @example Build a basic chat bot.
+     * const messages = [
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     * ];
+     *
+     * while(true) {
+     *      const userInput = await os.showInput();
+     *      if (!userInput) {
+     *          break;
+     *      }
+     *      messages.push({
+     *          role: "user",
+     *          content: userInput
+     *      });
+     *
+     *      const response = await ai.stream.chat(messages);
+     * 
+     *      for await (let message of response) {
+     *          messages.push(message);
+     *          os.toast(message.content);
+     *      }
+     * }
+     *
+     * os.toast("Goodbye!");
+     *
+     * @example Ask the AI to describe an uploaded image.
+     * const files = await os.showUploadFiles();
+     * const firstFile = files[0];
+     * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+     * const response = await ai.stream.chat([{
+     *    role: 'user',
+     *    content: [
+     *        {
+     *            base64: base64,
+     *            mimeType: firstFile.mimeType,
+     *        },
+     *        {
+     *            text: 'please describe the image'
+     *        }
+     *    ]
+     * }], {
+     *    preferredModel: 'gemini-pro-vision'
+     * });
+     *
+     * for await (let message of response) {
+          os.toast(message.content);
+     * }
+     *
+     * @dochash actions/ai
+     * @docname ai.stream.chat
+     * @docid ai.stream.chat-messages
+     */
+    function chatStream(
+        messages: AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AsyncIterable<AIChatMessage>>;
+
+    function chatStream(
+        messages: string | AIChatMessage | AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AsyncIterable<AIChatMessage | string>> {
+        const task = context.createIterable();
+
+        const returnString = typeof messages === 'string';
+        const inputMessages: AIChatMessage[] = [];
+        if (typeof messages === 'string') {
+            inputMessages.push({
+                role: 'user',
+                content: messages,
+            });
+        } else if (Array.isArray(messages)) {
+            inputMessages.push(...messages);
+        } else if (typeof messages === 'object') {
+            inputMessages.push(messages);
+        }
+
+        const action = aiChatStream(inputMessages, options, task.taskId);
+        const promise = addAsyncResultIterableAction(task, action).then(
+            (iterable: AsyncIterable<AIChatInterfaceStreamResponse>) => {
+                async function* generator(): AsyncGenerator<
+                    AIChatMessage | string
+                > {
+                    for await (let result of iterable) {
+                        if (result.choices.length <= 0) {
+                            continue;
+                        }
+                        const choice = result.choices[0];
+                        if (!hasValue(choice)) {
+                            continue;
+                        }
+                        if (returnString) {
+                            const content = choice?.content;
+                            if (!hasValue(content)) {
+                                continue;
+                            }
+                            yield content;
+                        } else {
+                            yield choice;
+                        }
+                    }
+                }
+
+                return generator();
+            }
+        );
+
+        (promise as any)[ORIGINAL_OBJECT] = action;
+        return promise;
     }
 
     /**
@@ -11750,6 +11979,77 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a HTML file that, when loaded, will display the given bots in a static version of CasualOS.
+     *
+     * Returns a promise that resolves with a string containing the HTML file.
+     * Resolves with null if the HTML file could not be created.
+     *
+     * @param bots the bots that should be displayed in the static version of CasualOS.
+     * @param templateUrl the URL that the static HTML template file can be found at. If omitted, then the template from the server will be used.
+     *
+     * @example Create a static HTML file and download it.
+     * const bots = getBots(inDimension('home'));
+     * const html = await experiment.createStaticHtmlFromBots(bots);
+     * await os.download(html, 'static.html');
+     *
+     * @dochash actions/experimental
+     * @docname experiment.createStaticHtmlFromBots
+     */
+    function createStaticHtmlFromBots(
+        bots: Bot[],
+        templateUrl?: string
+    ): Promise<string> {
+        const state: BotsState = {};
+        for (let bot of bots) {
+            state[bot.id] = createBot(bot.id, bot.tags.toJSON());
+        }
+        const task = context.createTask();
+        const action = calcCreateStaticHtmlFromBots(
+            state,
+            templateUrl,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+        // try {
+        //     const state: BotsState = {};
+        //     for (let bot of bots) {
+        //         state[bot.id] = bot;
+        //     }
+
+        //     const json = JSON.stringify(getVersion1DownloadState(state));
+
+        //     const url = templateUrl
+        //         ? templateUrl
+        //         : new URL('/static.html', context.device.ab1BootstrapUrl).href;
+        //     const result = await fetch(url);
+
+        //     if (result.ok) {
+        //         const html = await result.text();
+        //         const parsed = new DOMParser().parseFromString(
+        //             html,
+        //             'text/html'
+        //         );
+
+        //         const script = parsed.createElement('script');
+        //         script.setAttribute('type', 'text/aux');
+        //         script.textContent = json;
+        //         parsed.body.appendChild(script);
+        //         return `<!DOCTYPE html>\n` + parsed.documentElement.outerHTML;
+        //     } else {
+        //         console.error(`Unable to fetch`, url);
+        //         console.error(result);
+        //         console.error(
+        //             'It is possible that static HTML builds are not supported on this server.'
+        //         );
+        //         return null;
+        //     }
+        // } catch (err) {
+        //     console.error(err);
+        //     return null;
+        // }
+    }
+
+    /**
      * Starts a new audio recording.
      * Returns a promise that resolves when recording has started.
      * The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
@@ -15556,6 +15856,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new CasualOSError(result);
         }
         return result;
+    }
+
+    function addAsyncIterableAction<T extends RuntimeAsyncActions>(
+        task: AsyncIterableTask,
+        action: T
+    ) {
+        addAction(action);
+        const iterable = task.iterable;
+        (<any>iterable)[ORIGINAL_OBJECT] = action;
+        return iterable;
+    }
+
+    async function addAsyncResultIterableAction<T extends RuntimeAsyncActions>(
+        task: AsyncIterableTask,
+        action: T
+    ) {
+        addAsyncIterableAction(task, action);
+        const result = await task.promise;
+        if (!result.result.success) {
+            throw new CasualOSError(result.result);
+        }
+        return result.iterable;
     }
 
     function getVersion1DownloadState(state: BotsState): StoredAuxVersion1 {

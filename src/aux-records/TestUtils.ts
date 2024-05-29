@@ -158,3 +158,84 @@ export async function createTestRecordKey(
         recordKey,
     };
 }
+
+/**
+ * Unwinds the given async iterator and returns the resulting value from it.
+ * @param iterator The iterator that should be unwound.
+ */
+export async function unwindAsync<T>(
+    iterator: AsyncIterator<any, T, any>
+): Promise<T> {
+    while (true) {
+        let { done, value } = await iterator.next();
+        if (done) {
+            return value;
+        }
+    }
+}
+
+/**
+ * Unwinds the given async iterator and returns the resulting value from it.
+ * @param iterator The iterator that should be unwound.
+ */
+export async function unwindAndCaptureAsync<T, TReturn>(
+    iterator: AsyncIterator<T, TReturn, any>
+): Promise<{
+    result: TReturn;
+    states: T[];
+}> {
+    let states = [] as T[];
+    while (true) {
+        let { done, value } = await iterator.next();
+        if (done) {
+            return {
+                result: value as TReturn,
+                states,
+            };
+        } else {
+            states.push(value as T);
+        }
+    }
+}
+
+/**
+ * Creates an async iterator that will return the given states in order.
+ * @param states The states that should be returned.
+ * @param ret The value that should be returned when the iterator is done.
+ */
+export function asyncIterator<T, TReturn = any>(
+    states: Promise<T>[],
+    ret?: TReturn
+): AsyncIterator<T, TReturn, any> {
+    let i = 0;
+    return {
+        next: async () => {
+            if (i >= states.length) {
+                return { done: true, value: ret };
+            } else {
+                return { done: false, value: await states[i++] };
+            }
+        },
+    };
+}
+
+export async function* asyncIterable<T>(
+    states: Promise<T>[]
+): AsyncGenerator<T> {
+    for (let state of states) {
+        yield state;
+    }
+}
+
+export function readableFromAsyncIterable<T>(
+    iterator: AsyncIterable<T>
+): ReadableStream {
+    return new ReadableStream({
+        async start(controller) {
+            for await (let value of iterator) {
+                controller.enqueue(value);
+            }
+            controller.close();
+        },
+    });
+}

@@ -4,7 +4,7 @@ import {
     RecordsClient,
     createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
-import { askForInputs } from './schema';
+import { askForInputs, onState } from './schema';
 import repl from 'node:repl';
 
 // @ts-ignore
@@ -79,6 +79,7 @@ program
                 name: 'confirm',
                 message: `The origin for the endpoint (${origin}) is different from the endpoint (${endpoint}) itself. Do you want to keep it?`,
                 initial: true,
+                onState,
             });
 
             if (response.confirm) {
@@ -91,6 +92,7 @@ program
             name: 'origin',
             message: 'Enter the origin to use for requests to this endpoint.',
             initial: endpoint,
+            onState,
         });
 
         saveOrigin(endpoint, originResponse.origin);
@@ -216,6 +218,7 @@ async function query(
                 title: op.name,
                 value: op.name,
             })),
+            onState,
         });
         procedure = response.procedure;
     }
@@ -245,6 +248,7 @@ async function query(
             name: 'continue',
             message: 'Do you want to continue?',
             initial: true,
+            onState,
         });
 
         continueRequest = confirm.continue;
@@ -253,7 +257,17 @@ async function query(
     if (continueRequest) {
         const result = await callProcedure(client, operation.name, input);
         if (shouldConfirm) {
-            console.log('Result:', result);
+            if (typeof result === 'object' && Symbol.asyncIterator in result) {
+                console.log('Result:');
+                async function logResult() {
+                    for await (let item of result) {
+                        console.log(item);
+                    }
+                }
+                logResult();
+            } else {
+                console.log('Result:', result);
+            }
         }
         return result;
     } else {
@@ -278,6 +292,7 @@ async function callProcedure(
                 message:
                     'You are not logged in. Do you want to log in and try again?',
                 initial: true,
+                onState,
             });
 
             if (loginResponse.login) {
@@ -297,6 +312,7 @@ async function callProcedure(
                 name: 'origin',
                 message:
                     'The endpoint does not allow itself as an origin. Enter the origin to use for the request.',
+                onState,
             });
 
             saveOrigin(client.endpoint, originResponse.origin);
@@ -393,6 +409,7 @@ async function login(client: ReturnType<typeof createRecordsClient>) {
                     value: 'privo',
                 },
             ],
+            onState,
         },
     ]);
 
@@ -403,6 +420,7 @@ async function login(client: ReturnType<typeof createRecordsClient>) {
             type: 'text',
             name: 'address',
             message: 'Enter your address.',
+            onState,
         });
 
         const addressType = response.type;
@@ -432,6 +450,7 @@ async function loginWithCode(
             type: 'text',
             name: 'code',
             message: 'Enter the code that was sent to your address.',
+            onState,
         });
 
         const code = response.code;
@@ -559,6 +578,7 @@ async function updateEndpoint() {
         type: 'text',
         name: 'endpoint',
         message: 'Enter the endpoint to use for queries.',
+        onState,
     });
 
     const savedEndpoint = response.endpoint;

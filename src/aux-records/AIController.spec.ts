@@ -2,6 +2,7 @@ import {
     AIChatInterface,
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
+    AIChatInterfaceStreamResponse,
 } from './AIChatInterface';
 import {
     AIGenerateSkyboxInterfaceResponse,
@@ -14,13 +15,20 @@ import {
 } from './AIImageInterface';
 import { AIController } from './AIController';
 import { MemoryStore } from './MemoryStore';
-import { createTestSubConfiguration } from './TestUtils';
+import {
+    asyncIterable,
+    asyncIterator,
+    createTestSubConfiguration,
+    unwindAndCaptureAsync,
+} from './TestUtils';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
 import { merge } from 'lodash';
+import { unwind } from '../js-interpreter/InterpreterUtils';
+import { state } from 'esri/widgets/TableList/TableListViewModel';
 
 console.log = jest.fn();
 
@@ -31,10 +39,18 @@ describe('AIController', () => {
             Promise<AIChatInterfaceResponse>,
             [AIChatInterfaceRequest]
         >;
+        chatStream: jest.Mock<
+            AsyncIterable<AIChatInterfaceStreamResponse>,
+            [AIChatInterfaceRequest]
+        >;
     };
     let chatInterface2: {
         chat: jest.Mock<
             Promise<AIChatInterfaceResponse>,
+            [AIChatInterfaceRequest]
+        >;
+        chatStream: jest.Mock<
+            AsyncIterable<AIChatInterfaceStreamResponse>,
             [AIChatInterfaceRequest]
         >;
     };
@@ -60,9 +76,11 @@ describe('AIController', () => {
         userSubscriptionTier = 'test-tier';
         chatInterface = {
             chat: jest.fn(),
+            chatStream: jest.fn(),
         };
         chatInterface2 = {
             chat: jest.fn(),
+            chatStream: jest.fn(),
         };
         generateSkyboxInterface = {
             generateSkybox: jest.fn(),
@@ -139,7 +157,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                     totalTokens: 1,
@@ -165,7 +183,7 @@ describe('AIController', () => {
                     {
                         role: 'user',
                         content: 'test',
-                        stopReason: 'stop',
+                        finishReason: 'stop',
                     },
                 ],
             });
@@ -189,7 +207,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                     totalTokens: 1,
@@ -215,7 +233,7 @@ describe('AIController', () => {
                     {
                         role: 'user',
                         content: 'test',
-                        stopReason: 'stop',
+                        finishReason: 'stop',
                     },
                 ],
             });
@@ -239,7 +257,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                     totalTokens: 1,
@@ -264,7 +282,7 @@ describe('AIController', () => {
                     {
                         role: 'user',
                         content: 'test',
-                        stopReason: 'stop',
+                        finishReason: 'stop',
                     },
                 ],
             });
@@ -382,7 +400,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                     totalTokens: 1,
@@ -436,7 +454,7 @@ describe('AIController', () => {
                     {
                         role: 'user',
                         content: 'test',
-                        stopReason: 'stop',
+                        finishReason: 'stop',
                     },
                 ],
             });
@@ -490,7 +508,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                     totalTokens: 123,
@@ -516,7 +534,7 @@ describe('AIController', () => {
                     {
                         role: 'user',
                         content: 'test',
-                        stopReason: 'stop',
+                        finishReason: 'stop',
                     },
                 ],
             });
@@ -594,7 +612,7 @@ describe('AIController', () => {
                             {
                                 role: 'user',
                                 content: 'test',
-                                stopReason: 'stop',
+                                finishReason: 'stop',
                             },
                         ],
                         totalTokens: 25,
@@ -626,7 +644,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                 });
@@ -663,7 +681,7 @@ describe('AIController', () => {
                             {
                                 role: 'user',
                                 content: 'test',
-                                stopReason: 'stop',
+                                finishReason: 'stop',
                             },
                         ],
                         totalTokens: 25,
@@ -695,7 +713,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                 });
@@ -732,7 +750,7 @@ describe('AIController', () => {
                             {
                                 role: 'user',
                                 content: 'test',
-                                stopReason: 'stop',
+                                finishReason: 'stop',
                             },
                         ],
                         totalTokens: 123,
@@ -786,7 +804,7 @@ describe('AIController', () => {
                             {
                                 role: 'user',
                                 content: 'test',
-                                stopReason: 'stop',
+                                finishReason: 'stop',
                             },
                         ],
                         totalTokens: 123,
@@ -900,7 +918,7 @@ describe('AIController', () => {
                         {
                             role: 'user',
                             content: 'test',
-                            stopReason: 'stop',
+                            finishReason: 'stop',
                         },
                     ],
                     totalTokens: 1,
@@ -941,6 +959,935 @@ describe('AIController', () => {
                 errorMessage: 'AI Access is not allowed',
             });
             expect(chatInterface.chat).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('chatStream()', () => {
+        it('should return the result from the chat interface', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface.chatStream).toBeCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+        });
+
+        it('should support using another provider based on the chosen model', async () => {
+            chatInterface2.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model3',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface2.chatStream).toBeCalledWith({
+                model: 'test-model3',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+        });
+
+        it('should use the default model if none is specified', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface.chatStream).toBeCalledWith({
+                model: 'default-model',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+        });
+
+        it('should return an invalid_model result if the given model is not allowed', async () => {
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'wrong-model',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: false,
+                    errorCode: 'invalid_model',
+                    errorMessage: 'The given model is not allowed for chats.',
+                },
+                states: [],
+            });
+            expect(chatInterface.chatStream).not.toBeCalled();
+        });
+
+        it('should return an not_logged_in result if the given a null userId', async () => {
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: null as any,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                states: [],
+            });
+            expect(chatInterface.chatStream).not.toBeCalled();
+        });
+
+        it('should return an not_subscribed result if the given a null userSubscriptionTier', async () => {
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier: null as any,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: false,
+                    errorCode: 'not_subscribed',
+                    errorMessage:
+                        'The user must be subscribed in order to use this operation.',
+                    allowedSubscriptionTiers: ['test-tier'],
+                },
+                states: [],
+            });
+            expect(chatInterface.chatStream).not.toBeCalled();
+        });
+
+        it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier: 'wrong-tier',
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: false,
+                    errorCode: 'invalid_subscription_tier',
+                    errorMessage:
+                        'This operation is not available to the user at their current subscription tier.',
+                    currentSubscriptionTier: 'wrong-tier',
+                    allowedSubscriptionTiers: ['test-tier'],
+                },
+                states: [],
+            });
+            expect(chatInterface.chatStream).not.toBeCalled();
+        });
+
+        it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: true,
+                    },
+                },
+                generateSkybox: null,
+                images: null,
+                metrics: store,
+                config: store,
+                policies: null,
+            });
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier: null as any,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface.chatStream).toBeCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+        });
+
+        it('should return a not_supported result if no chat configuration is provided', async () => {
+            controller = new AIController({
+                chat: null,
+                generateSkybox: null,
+                images: null,
+                metrics: store,
+                config: store,
+                policies: null,
+            });
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier: null as any,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                },
+                states: [],
+            });
+        });
+
+        it('should track metrics for chat operations', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 123,
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface.chatStream).toBeCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+
+            const metrics = await store.getSubscriptionAiChatMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                subscriptionType: 'user',
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalTokensInCurrentPeriod: 123,
+            });
+        });
+
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        chat: {
+                                            maxTokensPerPeriod: 100,
+                                            maxTokensPerRequest: 75,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 25,
+                        }),
+                    ])
+                );
+
+                await store.recordChatMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    tokens: 50,
+                });
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: true,
+                    },
+                    states: [
+                        {
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                        },
+                    ],
+                });
+                expect(chatInterface.chatStream).toBeCalledWith({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: 'test-user',
+                    maxTokens: 50,
+                });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toEqual({
+                    ownerId: userId,
+                    subscriptionStatus: 'active',
+                    subscriptionId: 'sub1',
+                    subscriptionType: 'user',
+                    totalTokensInCurrentPeriod: 75,
+                });
+            });
+
+            it('should specify the maximum number of tokens allowed based on the maximum number of tokens per request', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 25,
+                        }),
+                    ])
+                );
+
+                await store.recordChatMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    tokens: 10,
+                });
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: true,
+                    },
+                    states: [
+                        {
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                        },
+                    ],
+                });
+                expect(chatInterface.chatStream).toBeCalledWith({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: 'test-user',
+                    maxTokens: 75,
+                });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toEqual({
+                    ownerId: userId,
+                    subscriptionStatus: 'active',
+                    subscriptionId: 'sub1',
+                    subscriptionType: 'user',
+                    totalTokensInCurrentPeriod: 35,
+                });
+            });
+
+            it('should deny the request if the user has run out of available tokens in the period', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 123,
+                        }),
+                    ])
+                );
+
+                await store.recordChatMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    tokens: 100,
+                });
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The user has reached their limit for the current subscription period.',
+                    },
+                    states: [],
+                });
+                expect(chatInterface.chatStream).not.toBeCalled();
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toEqual({
+                    ownerId: userId,
+                    subscriptionStatus: 'active',
+                    subscriptionId: 'sub1',
+                    subscriptionType: 'user',
+                    totalTokensInCurrentPeriod: 100,
+                });
+            });
+
+            it('should deny the request if the feature is not allowed', async () => {
+                chatInterface.chatStream.mockReturnValueOnce(
+                    asyncIterable<AIChatInterfaceStreamResponse>([
+                        Promise.resolve({
+                            choices: [
+                                {
+                                    role: 'user',
+                                    content: 'test',
+                                    finishReason: 'stop',
+                                },
+                            ],
+                            totalTokens: 123,
+                        }),
+                    ])
+                );
+
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        chat: {
+                                            allowed: false,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                const result = await unwindAndCaptureAsync(
+                    controller.chatStream({
+                        model: 'test-model1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                            },
+                        ],
+                        temperature: 0.5,
+                        userId,
+                        userSubscriptionTier,
+                    })
+                );
+
+                expect(result).toEqual({
+                    result: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'The subscription does not permit AI Chat features.',
+                    },
+                    states: [],
+                });
+                expect(chatInterface.chatStream).not.toBeCalled();
+            });
+        });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                metrics: store,
+                config: store,
+                policies: store,
+            });
+
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    }),
+                ])
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'AI Access is not allowed',
+                },
+                states: [],
+            });
+            expect(chatInterface.chatStream).not.toHaveBeenCalled();
         });
     });
 

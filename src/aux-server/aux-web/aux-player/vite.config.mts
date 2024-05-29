@@ -16,6 +16,7 @@ import writeFilesPlugin from '../../plugins/write-files-plugin';
 import md from '../../plugins/markdown-plugin';
 import { visualizer } from 'rollup-plugin-visualizer';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
@@ -48,19 +49,28 @@ export default defineConfig(({ command, mode }) => ({
         '..',
         'node_modules',
         '.vite',
-        '.aux-player'
+        mode === 'static' ? '.aux-player-static' : '.aux-player'
     ),
     build: {
         outDir: distDir,
         emptyOutDir: false,
         rollupOptions: {
-            input: {
-                main: path.resolve(__dirname, 'index.html'),
-                player: path.resolve(__dirname, 'player.html'),
-                vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
-                playwright: path.resolve(__dirname, 'playwright.html'),
-                'loading-oauth': path.resolve(__dirname, 'loading-oauth.html'),
-            },
+            input:
+                mode === 'static'
+                    ? path.resolve(__dirname, 'static.html')
+                    : {
+                          main: path.resolve(__dirname, 'index.html'),
+                          player: path.resolve(__dirname, 'player.html'),
+                          vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
+                          playwright: path.resolve(
+                              __dirname,
+                              'playwright.html'
+                          ),
+                          'loading-oauth': path.resolve(
+                              __dirname,
+                              'loading-oauth.html'
+                          ),
+                      },
         },
         sourcemap: true,
         target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
@@ -71,9 +81,6 @@ export default defineConfig(({ command, mode }) => ({
     plugins: [
         md(),
         vue(),
-        virtual({
-            ...policies.virtualModules,
-        }),
         createSvgIconsPlugin({
             iconDirs: [
                 path.resolve(
@@ -106,32 +113,39 @@ export default defineConfig(({ command, mode }) => ({
             }),
             enforce: 'pre',
         } as any,
-        VitePWA({
-            strategies: 'injectManifest',
-            srcDir: '.',
-            filename: 'sw.ts',
-            injectManifest: {
-                maximumFileSizeToCacheInBytes: 15728640, // 5MiB
-                globDirectory: distDir,
-                globPatterns: [
-                    '**/*.{html,css,js,json,png,glb,ico,ttf,webp}',
-                    '**/roboto-v18-latin-*.woff2',
-                ],
-                globIgnores: [
-                    '**/webxr-profiles/**',
-                    '**/deno.js',
-                    '**/*.map*',
-                    '**/NotoSansKR*',
-                    '**/*.md',
-                ],
-            },
-        }),
-        writeFilesPlugin({
-            files: {
-                ...policies.files,
-            },
-        }),
-        splitVendorChunkPlugin(),
+        ...(mode === 'static'
+            ? [viteSingleFile({})]
+            : [
+                  virtual({
+                      ...policies.virtualModules,
+                  }),
+                  VitePWA({
+                      strategies: 'injectManifest',
+                      srcDir: '.',
+                      filename: 'sw.ts',
+                      injectManifest: {
+                          maximumFileSizeToCacheInBytes: 15728640, // 5MiB
+                          globDirectory: distDir,
+                          globPatterns: [
+                              '**/*.{html,css,js,json,png,glb,ico,ttf,webp}',
+                              '**/roboto-v18-latin-*.woff2',
+                          ],
+                          globIgnores: [
+                              '**/webxr-profiles/**',
+                              '**/deno.js',
+                              '**/*.map*',
+                              '**/NotoSansKR*',
+                              '**/*.md',
+                          ],
+                      },
+                  }),
+                  writeFilesPlugin({
+                      files: {
+                          ...policies.files,
+                      },
+                  }),
+                  splitVendorChunkPlugin(),
+              ]),
         ...(command === 'build'
             ? [generateDependencyGraphRollupPlugin(distDir), visualizer()]
             : []),
@@ -196,6 +210,61 @@ export default defineConfig(({ command, mode }) => ({
             three: '@casual-simulation/three',
             esbuild: 'esbuild-wasm',
             'monaco-editor': '@casual-simulation/monaco-editor',
+
+            ...(mode === 'static'
+                ? {
+                      'virtual:pwa-register': path.resolve(
+                          __dirname,
+                          'static/pwa-register.ts'
+                      ),
+                      '@casual-simulation/aux-vm-browser/vm/AuxVMImpl':
+                          '@casual-simulation/aux-vm-browser/vm/StaticAuxVMImpl.ts',
+                      '../../MonacoHelpers': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'StaticMonacoHelpers.ts'
+                      ),
+                      '../../MonacoLibs': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'StaticMonacoHelpers.ts'
+                      ),
+                      '@teachablemachine/image': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      jsbarcode: path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      'livekit-client': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      '@casual-simulation/aux-components/fonts/MaterialIcons/MaterialIcons.css':
+                          path.resolve(
+                              __dirname,
+                              '..',
+                              'shared',
+                              'EmptyModule.ts'
+                          ),
+                      '@casual-simulation/aux-components/fonts/Roboto/Roboto.css':
+                          path.resolve(
+                              __dirname,
+                              '..',
+                              'shared',
+                              'EmptyModule.ts'
+                          ),
+                  }
+                : {}),
         },
     },
     server: {

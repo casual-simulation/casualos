@@ -10,11 +10,20 @@ import { AuthManager } from './AuthManager';
 
 jest.mock('axios');
 
+const originalFetch = globalThis.fetch;
+
 describe('AuthManager', () => {
     let manager: AuthManager;
+    let fetch: jest.Mock<
+        Promise<{
+            status: number;
+            json: () => Promise<any>;
+        }>
+    >;
 
     beforeEach(() => {
         mockLocalStorage();
+        globalThis.fetch = fetch = jest.fn();
         manager = new AuthManager(
             'http://myendpoint.localhost',
             'http://myendpoint.localhost',
@@ -25,6 +34,10 @@ describe('AuthManager', () => {
 
     afterEach(() => {
         resetLocalStorage();
+    });
+
+    afterAll(() => {
+        globalThis.fetch = originalFetch;
     });
 
     function setResponse(response: any) {
@@ -49,15 +62,17 @@ describe('AuthManager', () => {
 
     describe('loginWithEmail()', () => {
         it('should send a login request with the given email', async () => {
-            setResponse({
-                data: {
-                    success: true,
-                    userId: 'myuserid',
-                    requestId: 'myrequestid',
-                    address: 'myAddress',
-                    addressType: 'email',
-                    expireTimeMs: 1234,
-                } as LoginRequestSuccess,
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () =>
+                    ({
+                        success: true,
+                        userId: 'myuserid',
+                        requestId: 'myrequestid',
+                        address: 'myAddress',
+                        addressType: 'email',
+                        expireTimeMs: 1234,
+                    } as LoginRequestSuccess),
             });
 
             const response = await manager.loginWithEmail('myAddress');
@@ -70,28 +85,33 @@ describe('AuthManager', () => {
                 addressType: 'email',
                 expireTimeMs: 1234,
             });
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://myendpoint.localhost/api/v3/callProcedure',
                 {
-                    procedure: 'requestLogin',
-                    input: { address: 'myAddress', addressType: 'email' },
-                },
-                expect.any(Object),
-            ]);
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'requestLogin',
+                        input: { address: 'myAddress', addressType: 'email' },
+                    }),
+                    headers: expect.objectContaining({}),
+                }
+            );
         });
     });
 
     describe('loginWithPhoneNumber()', () => {
         it('should send a login request with the given phone number', async () => {
-            setResponse({
-                data: {
-                    success: true,
-                    userId: 'myuserid',
-                    requestId: 'myrequestid',
-                    address: 'myAddress',
-                    addressType: 'phone',
-                    expireTimeMs: 1234,
-                } as LoginRequestSuccess,
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () =>
+                    ({
+                        success: true,
+                        userId: 'myuserid',
+                        requestId: 'myrequestid',
+                        address: 'myAddress',
+                        addressType: 'phone',
+                        expireTimeMs: 1234,
+                    } as LoginRequestSuccess),
             });
 
             const response = await manager.loginWithPhoneNumber('myAddress');
@@ -104,28 +124,33 @@ describe('AuthManager', () => {
                 addressType: 'phone',
                 expireTimeMs: 1234,
             });
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://myendpoint.localhost/api/v3/callProcedure',
                 {
-                    procedure: 'requestLogin',
-                    input: { address: 'myAddress', addressType: 'phone' },
-                },
-                expect.any(Object),
-            ]);
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'requestLogin',
+                        input: { address: 'myAddress', addressType: 'phone' },
+                    }),
+                    headers: expect.objectContaining({}),
+                }
+            );
         });
     });
 
     describe('completeLogin()', () => {
         it('should send a complete login request with the given values', async () => {
-            setResponse({
-                data: {
-                    success: true,
-                    userId: 'myuserid',
-                    requestId: 'myrequestid',
-                    expireTimeMs: 1234,
-                    sessionKey: 'sessionKey',
-                    connectionKey: 'connectionKey',
-                } as CompleteLoginSuccess,
+            fetch.mockResolvedValueOnce({
+                status: 200,
+                json: async () =>
+                    ({
+                        success: true,
+                        userId: 'myuserid',
+                        requestId: 'myrequestid',
+                        expireTimeMs: 1234,
+                        sessionKey: 'sessionKey',
+                        connectionKey: 'connectionKey',
+                    } as CompleteLoginSuccess),
             });
 
             const response = await manager.completeLogin(
@@ -142,18 +167,21 @@ describe('AuthManager', () => {
                 sessionKey: 'sessionKey',
                 connectionKey: 'connectionKey',
             });
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://myendpoint.localhost/api/v3/callProcedure',
                 {
-                    procedure: 'completeLogin',
-                    input: {
-                        userId: 'myuserid',
-                        requestId: 'myrequestid',
-                        code: 'mycode',
-                    },
-                },
-                expect.any(Object),
-            ]);
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'completeLogin',
+                        input: {
+                            userId: 'myuserid',
+                            requestId: 'myrequestid',
+                            code: 'mycode',
+                        },
+                    }),
+                    headers: expect.objectContaining({}),
+                }
+            );
 
             expect(manager.userId).toBe('myuserid');
             expect(globalThis.localStorage.getItem('sessionKey')).toEqual(
@@ -170,21 +198,21 @@ describe('AuthManager', () => {
 
             await manager.logout();
 
-            expect(getLastPost()).toEqual([
+            expect(fetch).toHaveBeenCalledWith(
                 'http://myendpoint.localhost/api/v3/callProcedure',
                 {
-                    procedure: 'revokeSession',
-                    input: {
-                        sessionKey: 'mysessionkey',
-                    },
-                },
-                {
-                    headers: {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        procedure: 'revokeSession',
+                        input: {
+                            sessionKey: 'mysessionkey',
+                        },
+                    }),
+                    headers: expect.objectContaining({
                         Authorization: 'Bearer mysessionkey',
-                    },
-                    validateStatus: expect.any(Function),
-                },
-            ]);
+                    }),
+                }
+            );
 
             expect(manager.userId).toBe(null);
             expect(manager.savedSessionKey).toBe(null);

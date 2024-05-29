@@ -143,6 +143,7 @@ import {
     calculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates,
     capturePortalScreenshot,
+    createStaticHtml,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -181,6 +182,7 @@ import {
     eraseStoreItem,
     listStoreItems,
     listStoreItemsByMarker,
+    aiChatStream,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -227,6 +229,8 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
 import {
+    AIChatInterfaceStreamResponse,
+    AIChatMessage,
     formatV1RecordKey,
     formatV2RecordKey,
 } from '@casual-simulation/aux-records';
@@ -257,9 +261,13 @@ import {
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
 import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
+import { JSDOM } from 'jsdom';
+import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
+
+console.error = jest.fn();
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -2553,6 +2561,661 @@ describe('AuxLibrary', () => {
                     ],
                     undefined,
                     context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBeUndefined();
+                expect(error).toEqual(
+                    new CasualOSError({
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    })
+                );
+            });
+        });
+
+        describe('ai.stream.chat()', () => {
+            it('should emit a AIChatStreamAction', () => {
+                const promise: any =
+                    library.api.ai.stream.chat('hello, world!');
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.ai.stream.chat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    }
+                );
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    },
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve messages as they arrive', async () => {
+                const promise: any =
+                    library.api.ai.stream.chat('hello, world!');
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                let resolved: any;
+                promise.then((r: any) => (resolved = r));
+                expect(resolved).toBeUndefined();
+
+                context.resolveTask(
+                    context.iterableTasks.size,
+                    { success: true },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(Symbol.asyncIterator in resolved).toBe(true);
+
+                const iterator = resolved[Symbol.asyncIterator]();
+                const nextPromise = iterator.next();
+
+                let nextValue: any;
+                nextPromise.then((r: any) => (nextValue = r));
+
+                expect(nextValue).toBeUndefined();
+
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                content: 'Hello!',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+
+                await waitAsync();
+
+                expect(nextValue).toEqual({
+                    done: false,
+                    value: 'Hello!',
+                });
+            });
+
+            it('should resolve strings when given a string', async () => {
+                const promise: any =
+                    library.api.ai.stream.chat('hello, world!');
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                let resolved: any;
+                promise.then((r: any) => (resolved = r));
+                expect(resolved).toBeUndefined();
+
+                context.resolveTask(
+                    context.iterableTasks.size,
+                    { success: true },
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                content: 'Hello!',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                content: 'How are you?',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                content: 'This is fun!',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableComplete(context.iterableTasks.size, false);
+
+                await waitAsync();
+
+                expect(Symbol.asyncIterator in resolved).toBe(true);
+
+                const iterator = resolved[Symbol.asyncIterator]();
+
+                const result = await unwindAndCaptureAsync(iterator);
+
+                expect(result).toEqual({
+                    states: ['Hello!', 'How are you?', 'This is fun!'],
+                });
+            });
+
+            it('should support message objects', async () => {
+                const promise: any = library.api.ai.stream.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                let resolved: any;
+                promise.then((r: any) => (resolved = r));
+                expect(resolved).toBeUndefined();
+
+                context.resolveTask(
+                    context.iterableTasks.size,
+                    { success: true },
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'How are you?',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'This is fun!',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableComplete(context.iterableTasks.size, false);
+
+                await waitAsync();
+
+                expect(Symbol.asyncIterator in resolved).toBe(true);
+
+                const iterator = resolved[Symbol.asyncIterator]();
+
+                const result = await unwindAndCaptureAsync(iterator);
+
+                expect(result).toEqual({
+                    states: [
+                        {
+                            role: 'assistant',
+                            content: 'Hello!',
+                        },
+                        {
+                            role: 'assistant',
+                            content: 'How are you?',
+                        },
+                        {
+                            role: 'assistant',
+                            content: 'This is fun!',
+                        },
+                    ],
+                });
+            });
+
+            it('should support message arrays', async () => {
+                const promise: any = library.api.ai.stream.chat([
+                    {
+                        role: 'user',
+                        content: 'hello, world!',
+                    },
+                    {
+                        role: 'user',
+                        content: 'goodbye, world!',
+                    },
+                ]);
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                        {
+                            role: 'user',
+                            content: 'goodbye, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                let resolved: any;
+                promise.then((r: any) => (resolved = r));
+                expect(resolved).toBeUndefined();
+
+                context.resolveTask(
+                    context.iterableTasks.size,
+                    { success: true },
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'How are you?',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'This is fun!',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableComplete(context.iterableTasks.size, false);
+
+                await waitAsync();
+
+                expect(Symbol.asyncIterator in resolved).toBe(true);
+
+                const iterator = resolved[Symbol.asyncIterator]();
+
+                const result = await unwindAndCaptureAsync(iterator);
+
+                expect(result).toEqual({
+                    states: [
+                        {
+                            role: 'assistant',
+                            content: 'Hello!',
+                        },
+                        {
+                            role: 'assistant',
+                            content: 'How are you?',
+                        },
+                        {
+                            role: 'assistant',
+                            content: 'This is fun!',
+                        },
+                    ],
+                });
+            });
+
+            it('should resolve the first chat choice', async () => {
+                const promise: any = library.api.ai.stream.chat([
+                    {
+                        role: 'user',
+                        content: 'hello, world!',
+                    },
+                    {
+                        role: 'user',
+                        content: 'goodbye, world!',
+                    },
+                ]);
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                        {
+                            role: 'user',
+                            content: 'goodbye, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                let resolved: any;
+                promise.then((r: any) => (resolved = r));
+                expect(resolved).toBeUndefined();
+
+                context.resolveTask(
+                    context.iterableTasks.size,
+                    { success: true },
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                            },
+                            {
+                                role: 'assistant',
+                                content: 'other',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'How are you?',
+                            },
+                            {
+                                role: 'assistant',
+                                content: 'second',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'This is fun!',
+                            },
+                            {
+                                role: 'assistant',
+                                content: 'third',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableComplete(context.iterableTasks.size, false);
+
+                await waitAsync();
+
+                expect(Symbol.asyncIterator in resolved).toBe(true);
+
+                const iterator = resolved[Symbol.asyncIterator]();
+
+                const result = await unwindAndCaptureAsync(iterator);
+
+                expect(result).toEqual({
+                    states: [
+                        {
+                            role: 'assistant',
+                            content: 'Hello!',
+                        },
+                        {
+                            role: 'assistant',
+                            content: 'How are you?',
+                        },
+                        {
+                            role: 'assistant',
+                            content: 'This is fun!',
+                        },
+                    ],
+                });
+            });
+
+            it('should ignore when there is no choice', async () => {
+                const promise: any = library.api.ai.stream.chat([
+                    {
+                        role: 'user',
+                        content: 'hello, world!',
+                    },
+                    {
+                        role: 'user',
+                        content: 'goodbye, world!',
+                    },
+                ]);
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                        {
+                            role: 'user',
+                            content: 'goodbye, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                let resolved: any;
+                promise.then((r: any) => (resolved = r));
+                expect(resolved).toBeUndefined();
+
+                context.resolveTask(
+                    context.iterableTasks.size,
+                    { success: true },
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [] as any[],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'How are you?',
+                            },
+                            {
+                                role: 'assistant',
+                                content: 'second',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableNext(
+                    context.iterableTasks.size,
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'This is fun!',
+                            },
+                            {
+                                role: 'assistant',
+                                content: 'third',
+                            },
+                        ],
+                    } as AIChatInterfaceStreamResponse,
+                    false
+                );
+                context.iterableComplete(context.iterableTasks.size, false);
+
+                await waitAsync();
+
+                expect(Symbol.asyncIterator in resolved).toBe(true);
+
+                const iterator = resolved[Symbol.asyncIterator]();
+
+                const result = await unwindAndCaptureAsync(iterator);
+
+                expect(result).toEqual({
+                    states: [
+                        {
+                            role: 'assistant',
+                            content: 'How are you?',
+                        },
+                        {
+                            role: 'assistant',
+                            content: 'This is fun!',
+                        },
+                    ],
+                });
+            });
+
+            it('should throw a CasualOSError when not successful', async () => {
+                let result: any;
+                let error: any;
+                const promise: any =
+                    library.api.ai.stream.chat('hello, world!');
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiChatStream(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.iterableTasks.size
                 );
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
@@ -10938,6 +11601,48 @@ describe('AuxLibrary', () => {
                     });
                 }
             );
+        });
+
+        describe('experiment.createStaticHtmlFromBots()', () => {
+            it('should emit a CreateStaticHtmlFromBotsAction', () => {
+                const result: any =
+                    library.api.experiment.createStaticHtmlFromBots([
+                        bot1,
+                        bot2,
+                    ]);
+
+                const expected = createStaticHtml(
+                    {
+                        [bot1.id]: bot1.toJSON(),
+                        [bot2.id]: bot2.toJSON(),
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(result[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given template URL', () => {
+                const result: any =
+                    library.api.experiment.createStaticHtmlFromBots(
+                        [bot1, bot2],
+                        'https://example.com'
+                    );
+
+                const expected = createStaticHtml(
+                    {
+                        [bot1.id]: bot1.toJSON(),
+                        [bot2.id]: bot2.toJSON(),
+                    },
+                    'https://example.com',
+                    context.tasks.size
+                );
+
+                expect(result[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.beginAudioRecording()', () => {

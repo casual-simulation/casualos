@@ -81,11 +81,10 @@ describe('ProgressManager', () => {
     it('should emit an error progress event when not authorized', () => {
         let messages: ProgressMessage[] = [];
         let completed: boolean = false;
-        subject.updates.subscribe(
-            (m) => messages.push(m),
-            null,
-            () => (completed = true)
-        );
+        subject.updates.subscribe({
+            next: (m) => messages.push(m),
+            complete: () => (completed = true),
+        });
 
         vm.connectionStateChanged.next({
             type: 'authorization',

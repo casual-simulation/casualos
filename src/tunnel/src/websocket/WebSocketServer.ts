@@ -21,16 +21,14 @@ import {
     handleUpgrade,
     completeWith,
 } from './utils';
-import { Observable, Subject, Subscription, ConnectableObservable } from 'rxjs';
 import {
-    flatMap,
-    tap,
-    finalize,
-    share,
-    takeUntil,
-    last,
-    publish,
-} from 'rxjs/operators';
+    Observable,
+    Subject,
+    Subscription,
+    Connectable,
+    connectable,
+} from 'rxjs';
+import { mergeMap, tap, finalize, map } from 'rxjs/operators';
 
 export interface ServerOptions {
     autoUpgrade?: boolean;
@@ -156,9 +154,13 @@ export class WebSocketServer implements TunnelServer {
             socket.destroy();
         }
 
-        const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
-            publish()
-        ) as ConnectableObservable<WebSocket>;
+        const upgrade = connectable(
+            handleUpgrade(this._server, req, socket, head),
+            {
+                connector: () => new Subject(),
+                resetOnDisconnect: false,
+            }
+        );
 
         const observable = upgrade.pipe(
             tap((ws) => {
@@ -174,8 +176,10 @@ export class WebSocketServer implements TunnelServer {
             completeWith(upgrade)
         );
 
-        observable.subscribe(null, (err) => {
-            console.error('Connection error:', err);
+        observable.subscribe({
+            error: (err) => {
+                console.error('Connection error:', err);
+            },
         });
 
         upgrade.connect();
@@ -196,14 +200,18 @@ export class WebSocketServer implements TunnelServer {
             request.localPort = 0;
         }
 
-        const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
-            // Make the observable connectable so we can
-            // ensure that everything gets subscribed before letting it run.
-            publish<WebSocket>()
-        ) as ConnectableObservable<WebSocket>;
+        // Make the observable connectable so we can
+        // ensure that everything gets subscribed before letting it run.
+        const upgrade = connectable(
+            handleUpgrade(this._server, req, socket, head),
+            {
+                connector: () => new Subject(),
+                resetOnDisconnect: false,
+            }
+        );
 
         const observable = upgrade.pipe(
-            flatMap((ws) => {
+            mergeMap((ws) => {
                 const server = createServer();
 
                 server.on('listening', () => {
@@ -232,8 +240,10 @@ export class WebSocketServer implements TunnelServer {
             completeWith(upgrade)
         );
 
-        observable.subscribe(null, (err) => {
-            console.error('Server error:', err);
+        observable.subscribe({
+            error: (err: any) => {
+                console.error('Server error:', err);
+            },
         });
 
         upgrade.connect();
@@ -249,16 +259,23 @@ export class WebSocketServer implements TunnelServer {
             `[WSS] Connecting to remote host at ${request.forwardHost}:${request.forwardPort}...`
         );
 
-        const connection = connect({
-            host: request.forwardHost,
-            port: request.forwardPort,
-        }).pipe(publish()) as ConnectableObservable<Socket>;
+        const connection = connectable(
+            connect({
+                host: request.forwardHost,
+                port: request.forwardPort,
+            }),
+            {
+                connector: () => new Subject(),
+                resetOnDisconnect: false,
+            }
+        );
 
         const observable = connection.pipe(
             tap((_) => console.log('[WSS] Connected!')),
-            flatMap(
-                (connection) => handleUpgrade(this._server, req, socket, head),
-                (connection, ws) => ({ connection, ws })
+            mergeMap((connection) =>
+                handleUpgrade(this._server, req, socket, head).pipe(
+                    map((ws) => ({ connection, ws } as const))
+                )
             ),
             tap(({ connection, ws }) => {
                 const wsStream = wrap(ws);
@@ -273,8 +290,10 @@ export class WebSocketServer implements TunnelServer {
             completeWith(connection)
         );
 
-        observable.subscribe(null, (err) => {
-            console.error('Connection error:', err);
+        observable.subscribe({
+            error: (err: any) => {
+                console.error('Connection error:', err);
+            },
         });
 
         connection.connect();

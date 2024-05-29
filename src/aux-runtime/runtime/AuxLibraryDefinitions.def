@@ -10589,6 +10589,177 @@ interface Ai {
         negativePrompt?: string | RecordActionOptions,
         options?: RecordActionOptions
     ): Promise<string | AIGenerateImageSuccess>;
+
+    stream: {
+        /**
+         * Sends a chat message to the AI and streams the response back.
+         * Returns a promise that resolves with an [async iterable](https://javascript.info/async-iterators-generators#async-iterables) that contains the responses from the AI.
+         * 
+         * Throws a {@link CasualOSError} if an error occurs while sending the message.
+         *
+         * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+         *
+         * @param message The message that should be sent to the AI.
+         * @param options The options that should be used.
+         *
+         * @example Send a message to the AI and log the response.
+         * const response = await ai.stream.chat("Hello!");
+         * 
+         * for await (let message of response) {
+         *    console.log(message);
+         * }
+         *
+         * @dochash actions/ai
+         * @doctitle AI Actions
+         * @docsidebar AI
+         * @docdescription AI actions are functions that make it easier to work with the AI.
+         * @docname ai.stream.chat
+         * @docid ai.stream.chat-string
+         */
+        chat(message: string, options?: AIChatOptions): Promise<AsyncIterable<string>>;
+
+        /**
+         * Sends a chat message to the AI and streams the response back.
+         * Returns a promise that resolves with an [async iterable](https://javascript.info/async-iterators-generators#async-iterables) that contains the responses from the AI.
+         * 
+         * Throws a {@link CasualOSError} if an error occurs while sending the message.
+         *
+         * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+         *
+         * @param message The message that should be sent to the AI.
+         * @param options The options that should be used.
+         *
+         * @example Send a message to the AI and log the response.
+         * const response = await ai.chat({
+         *     role: "user",
+         *     content: "Hello!"
+         * });
+         * console.log(`${response.role}: ${response.content}`);
+         *
+         * @example Ask the AI to describe an uploaded image.
+         * const files = await os.showUploadFiles();
+         * const firstFile = files[0];
+         * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+         * const response = await ai.stream.chat({
+         *    role: 'user',
+         *    content: [
+         *        {
+         *            base64: base64,
+         *            mimeType: firstFile.mimeType,
+         *        },
+         *        {
+         *            text: 'please describe the image'
+         *        }
+         *    ]
+         * }, {
+         *    preferredModel: 'gemini-pro-vision'
+         * });
+         * 
+         * for await (let message of response) {
+             os.toast(message.content);
+        * }
+        *
+        * @dochash actions/ai
+        * @docname ai.stream.chat
+        * @docid ai.stream.chat-message
+        */
+        chat(
+            message: AIChatMessage,
+            options?: AIChatOptions
+        ): Promise<AsyncIterable<AIChatMessage>>;
+
+        /**
+         * Sends a chat message to the AI.
+         * Returns a promise that resolves with an [async iterable](https://javascript.info/async-iterators-generators#async-iterables) that contains the responses from the AI.
+         * 
+         * Throws a {@link CasualOSError} if an error occurs while sending the message.
+         *
+         * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+         *
+         * @param message The message that should be sent to the AI.
+         * @param options The options that should be used.
+         *
+         * @example Send a message to the AI and log the response.
+         * const response = await ai.stream.chat([
+         *      {
+         *          role: "system",
+         *          content: "You are a helpful assistant."
+         *      },
+         *     {
+         *          role: "user",
+         *          content: "Hello!"
+         *     }
+         * ]);
+         * 
+         * for await (let message of response) {
+         *    console.log(`${message.role}: ${message.content}`);
+         * }
+         *
+         * @example Build a basic chat bot.
+         * const messages = [
+         *      {
+         *          role: "system",
+         *          content: "You are a helpful assistant."
+         *      },
+         * ];
+         *
+         * while(true) {
+         *      const userInput = await os.showInput();
+         *      if (!userInput) {
+         *          break;
+         *      }
+         *      messages.push({
+         *          role: "user",
+         *          content: userInput
+         *      });
+         *
+         *      const response = await ai.stream.chat(messages);
+         * 
+         *      for await (let message of response) {
+         *          messages.push(message);
+         *          os.toast(message.content);
+         *      }
+         * }
+         *
+         * os.toast("Goodbye!");
+         *
+         * @example Ask the AI to describe an uploaded image.
+         * const files = await os.showUploadFiles();
+         * const firstFile = files[0];
+         * const base64 = bytes.toBase64String(new Uint8Array(firstFile.data));
+         * const response = await ai.stream.chat([{
+         *    role: 'user',
+         *    content: [
+         *        {
+         *            base64: base64,
+         *            mimeType: firstFile.mimeType,
+         *        },
+         *        {
+         *            text: 'please describe the image'
+         *        }
+         *    ]
+         * }], {
+         *    preferredModel: 'gemini-pro-vision'
+         * });
+         *
+         * for await (let message of response) {
+             os.toast(message.content);
+        * }
+        *
+        * @dochash actions/ai
+        * @docname ai.stream.chat
+        * @docid ai.stream.chat-messages
+        */
+        chat(
+            messages: AIChatMessage[],
+            options?: AIChatOptions
+        ): Promise<AsyncIterable<AIChatMessage>>;
+
+        chat(
+            messages: string | AIChatMessage | AIChatMessage[],
+            options?: AIChatOptions
+        ): Promise<AsyncIterable<AIChatMessage | string>>;
+    }
 }
 
 interface Os {
@@ -13146,6 +13317,28 @@ interface Experiment {
         dimension: string,
         anchorPoint: BotAnchorPoint
     ): { x: number, y: number, z: number };
+
+    /**
+     * Creates a HTML file that, when loaded, will display the given bots in a static version of CasualOS.
+     *
+     * Returns a promise that resolves with a string containing the HTML file.
+     * Resolves with null if the HTML file could not be created.
+     *
+     * @param bots the bots that should be displayed in the static version of CasualOS.
+     * @param templateUrl the URL that the static HTML template file can be found at. If omitted, then the template from the server will be used.
+     *
+     * @example Create a static HTML file and download it.
+     * const bots = getBots(inDimension('home'));
+     * const html = await experiment.createStaticHtmlFromBots(bots);
+     * await os.download(html, 'static.html');
+     *
+     * @dochash actions/experimental
+     * @docname experiment.createStaticHtmlFromBots
+     */
+    createStaticHtmlFromBots(
+        bots: Bot[],
+        templateUrl?: string
+    ): Promise<string>;
 
     /**
      * Starts a new recording.
