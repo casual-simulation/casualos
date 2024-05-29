@@ -106,8 +106,20 @@ describe('RecordsManager', () => {
         protocol: RemoteCausalRepoProtocol
     ) => ConnectionClient;
     let sub: Subscription;
+    let fetch: jest.Mock<
+        Promise<{
+            status: number;
+            headers?: Headers;
+            json?: () => Promise<any>;
+            text?: () => Promise<string>;
+            body?: ReadableStream;
+        }>
+    >;
+
+    const originalFetch = globalThis.fetch;
 
     beforeEach(async () => {
+        fetch = globalThis.fetch = jest.fn();
         actions = [];
         sub = new Subscription();
         helper = createHelper();
@@ -221,6 +233,10 @@ describe('RecordsManager', () => {
             authFactory,
             true
         );
+    });
+
+    afterAll(() => {
+        globalThis.fetch = originalFetch;
     });
 
     function createHelper() {
@@ -8342,14 +8358,16 @@ describe('RecordsManager', () => {
 
         describe('record_store_item', () => {
             beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
                 require('axios').__reset();
             });
 
             it('should request that the server record the item', async () => {
-                setResponse({
-                    data: {
-                        success: true,
-                    },
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8376,9 +8394,9 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             item: {
@@ -8395,13 +8413,10 @@ describe('RecordsManager', () => {
                         },
                         procedure: 'recordPurchasableItem'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -8415,10 +8430,11 @@ describe('RecordsManager', () => {
             });
 
             it('should include the inst', async () => {
-                setResponse({
-                    data: {
-                        success: true,
-                    },
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8450,9 +8466,9 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             item: {
@@ -8470,13 +8486,10 @@ describe('RecordsManager', () => {
                         },
                         procedure: 'recordPurchasableItem'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -8496,13 +8509,14 @@ describe('RecordsManager', () => {
             });
 
             it('should request that the server get the item', async () => {
-                setResponse({
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
                         success: true,
                         item: {
                             name: 'item',
                         }
-                    },
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8519,22 +8533,19 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             address: 'myAddress',
                         },
                         procedure: 'getPurchasableItem'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken',
+                    })
+                });
 
                 await waitAsync();
 
@@ -8551,13 +8562,14 @@ describe('RecordsManager', () => {
             });
 
             it('should include the inst', async () => {
-                setResponse({
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
                         success: true,
                         item: {
                             name: 'item',
                         }
-                    },
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8579,9 +8591,9 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             address: 'myAddress',
@@ -8589,13 +8601,10 @@ describe('RecordsManager', () => {
                         },
                         procedure: 'getPurchasableItem'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken',
+                    })
+                });
 
                 await waitAsync();
 
@@ -8618,10 +8627,11 @@ describe('RecordsManager', () => {
             });
 
             it('should request that the server erase the item', async () => {
-                setResponse({
-                    data: {
-                        success: true,
-                    },
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8638,22 +8648,19 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             address: 'myAddress',
                         },
                         procedure: 'erasePurchasableItem'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -8667,10 +8674,11 @@ describe('RecordsManager', () => {
             });
 
             it('should include the inst', async () => {
-                setResponse({
-                    data: {
-                        success: true,
-                    },
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8692,9 +8700,9 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             address: 'myAddress',
@@ -8702,13 +8710,10 @@ describe('RecordsManager', () => {
                         },
                         procedure: 'erasePurchasableItem'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -8728,8 +8733,9 @@ describe('RecordsManager', () => {
             });
 
             it('should request that the server list the items', async () => {
-                setResponse({
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
                         success: true,
                         items: [
                             {
@@ -8739,7 +8745,7 @@ describe('RecordsManager', () => {
                                 name: 'item2',
                             }
                         ]
-                    },
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8756,22 +8762,19 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             address: 'myAddress',
                         },
                         procedure: 'listPurchasableItems'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -8793,8 +8796,9 @@ describe('RecordsManager', () => {
             });
 
             it('should include the inst', async () => {
-                setResponse({
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
                         success: true,
                         items: [
                             {
@@ -8804,7 +8808,7 @@ describe('RecordsManager', () => {
                                 name: 'item2',
                             }
                         ]
-                    },
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8826,9 +8830,9 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             address: 'myAddress',
@@ -8836,13 +8840,10 @@ describe('RecordsManager', () => {
                         },
                         procedure: 'listPurchasableItems'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -8870,8 +8871,9 @@ describe('RecordsManager', () => {
             });
 
             it('should request that the server list the items', async () => {
-                setResponse({
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
                         success: true,
                         items: [
                             {
@@ -8881,7 +8883,7 @@ describe('RecordsManager', () => {
                                 name: 'item2',
                             }
                         ]
-                    },
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8899,9 +8901,9 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             marker: 'marker',
@@ -8909,13 +8911,10 @@ describe('RecordsManager', () => {
                         },
                         procedure: 'listPurchasableItems'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -8937,8 +8936,9 @@ describe('RecordsManager', () => {
             });
 
             it('should include the inst', async () => {
-                setResponse({
-                    data: {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
                         success: true,
                         items: [
                             {
@@ -8948,7 +8948,7 @@ describe('RecordsManager', () => {
                                 name: 'item2',
                             }
                         ]
-                    },
+                    })
                 });
 
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
@@ -8971,9 +8971,9 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v3/callProcedure',
-                    {
+                expectFetchCalledWith('http://localhost:3002/api/v3/callProcedure', {
+                    method: 'POST',
+                    body: {
                         input: {
                             recordName: 'recordName',
                             marker: 'marker',
@@ -8982,13 +8982,10 @@ describe('RecordsManager', () => {
                         },
                         procedure: 'listPurchasableItems'
                     },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
-                        },
-                    },
-                ]);
+                    headers: expect.objectContaining({
+                        Authorization: 'Bearer authToken'
+                    })
+                });
 
                 await waitAsync();
 
@@ -9213,3 +9210,21 @@ describe('RecordsManager', () => {
         });
     });
 });
+
+function expectFetchCalledWith(url: string, options: any) {
+    const m = globalThis.fetch as jest.Mock;
+    expect(m).toHaveBeenCalled();
+    expect(m.mock.calls[0][0]).toEqual(url);
+    const opt = m.mock.calls[0][1];
+
+    if (!opt) {
+        expect(opt).toEqual(options);
+    } else {
+        const {body, ...rest} = opt;
+        const json = body ? JSON.parse(body) : null;
+        expect({
+            ...rest,
+            body: json
+        }).toEqual(options);
+    }
+}

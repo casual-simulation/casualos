@@ -13873,7 +13873,7 @@ describe('RecordsServer', () => {
                     authenticatedHeaders
                 ));
 
-            const body = expectResponseBodyToEqual(result, {
+            const body = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
                 body: {
                     success: true,
