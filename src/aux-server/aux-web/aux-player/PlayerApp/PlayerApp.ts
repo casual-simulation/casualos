@@ -40,6 +40,7 @@ import {
     ON_BEGIN_AUDIO_RECORDING,
     ON_END_AUDIO_RECORDING,
     action,
+    CreateStaticHtmlAction,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -56,7 +57,7 @@ import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
-import { sendWebhook } from '../../../shared/WebhookUtils';
+import { createStaticHtml, sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import ClipboardModal from '../../shared/vue-components/ClipboardModal/ClipboardModal';
 import UploadServerModal from '../../shared/vue-components/UploadServerModal/UploadServerModal';
@@ -1222,6 +1223,8 @@ export default class PlayerApp extends Vue {
                             );
                         }
                     }
+                } else if (e.type === 'create_static_html') {
+                    this._createStaticHtml(e, simulation);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1412,6 +1415,21 @@ export default class PlayerApp extends Vue {
 
     async newInst() {
         location.href = location.origin;
+    }
+
+    private async _createStaticHtml(
+        e: CreateStaticHtmlAction,
+        sim: Simulation
+    ) {
+        try {
+            const url = e.templateUrl
+                ? e.templateUrl
+                : new URL('/static.html', window.location.href).href;
+            const html = await createStaticHtml(e.bots, url);
+            sim.helper.transaction(asyncResult(e.taskId, html));
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
     }
 
     private _showQRCode(code: string) {

@@ -2,7 +2,7 @@
 
 ## V3.3.4
 
-#### Date: 5/24/2024
+#### Date: 5/29/2024
 
 ### :rocket: Features
 
@@ -13,6 +13,8 @@
     -   Works exactly like `ai.chat()`, except that it returns a promise that resolves with an [`AsyncIterable`](https://javascript.info/async-iterators-generators) object that can be iterated using a [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) expression.
     -   Each value is part of the response from the chat model.
     -   Useful for displaying the partial results from an AI chat model to the user so they can see the model working.
+-   Added the `experiment.createStaticHtmlFromBots()` function.
+    -   Useful for creating a static HTML file that has an AUX file embeded in it.
 
 ## V3.3.3
 

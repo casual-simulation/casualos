@@ -143,6 +143,7 @@ import {
     calculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates,
     capturePortalScreenshot,
+    createStaticHtml,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -254,10 +255,13 @@ import {
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
 import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
+import { JSDOM } from 'jsdom';
 import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
+
+console.error = jest.fn();
 
 describe('AuxLibrary', () => {
     let library: ReturnType<typeof createDefaultLibrary>;
@@ -11454,6 +11458,48 @@ describe('AuxLibrary', () => {
                     });
                 }
             );
+        });
+
+        describe('experiment.createStaticHtmlFromBots()', () => {
+            it('should emit a CreateStaticHtmlFromBotsAction', () => {
+                const result: any =
+                    library.api.experiment.createStaticHtmlFromBots([
+                        bot1,
+                        bot2,
+                    ]);
+
+                const expected = createStaticHtml(
+                    {
+                        [bot1.id]: bot1.toJSON(),
+                        [bot2.id]: bot2.toJSON(),
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(result[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given template URL', () => {
+                const result: any =
+                    library.api.experiment.createStaticHtmlFromBots(
+                        [bot1, bot2],
+                        'https://example.com'
+                    );
+
+                const expected = createStaticHtml(
+                    {
+                        [bot1.id]: bot1.toJSON(),
+                        [bot2.id]: bot2.toJSON(),
+                    },
+                    'https://example.com',
+                    context.tasks.size
+                );
+
+                expect(result[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.beginAudioRecording()', () => {

@@ -134,3 +134,21 @@ declare module '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.w
 
     export { ts };
 }
+
+interface ImportMeta {
+    /**
+     * The vite environment variables.
+     * See https://vitejs.dev/guide/env-and-mode.html for more info.
+     */
+    env: {
+        /**
+         * The mode that the app is running in.
+         */
+        MODE: string;
+
+        /**
+         * Whether the app is running on the server.
+         */
+        SSR: boolean;
+    };
+}
