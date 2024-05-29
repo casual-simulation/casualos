@@ -44,7 +44,8 @@ export type RecordsAsyncActions =
     | GetStoreItemAction
     | EraseStoreItemAction
     | ListStoreItemsAction
-    | ListStoreItemsByMarkerAction;
+    | ListStoreItemsByMarkerAction
+    | PurchaseStoreItemAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -659,6 +660,44 @@ export interface ListStoreItemsByMarkerAction
      * The marker that should be used to filter the list.
      */
     marker: string;
+}
+
+export interface PurchaseStoreItemAction extends RecordsAction {
+    type: 'purchase_store_item';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The item that should be purchased.
+     */
+    item: PurchasableItemReference;
+}
+
+/**
+ * Defines an interface that represents a reference to a store item.
+ * 
+ * @dochash types/records/store
+ * @docname PurchasableItemReference
+ * @docid PurchasableItemReference
+ */
+export interface PurchasableItemReference {
+    /**
+         * The address of the item.
+         */
+    address: string;
+
+    /**
+     * The currency that the item is priced in.
+     */
+    currency: string;
+
+    /**
+     * The expected cost of the item in the currency's smallest unit (cents, etc.).
+     */
+    cost: number;
 }
 
 /**
@@ -1809,6 +1848,23 @@ export function listStoreItemsByMarker(
         recordName,
         address,
         marker,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a PurchaseStoreItemAction.
+ * @param recordName The name of the record.
+ * @param item The item to purchase.
+ * @param options The options to use.
+ * @param taskId The ID of the task.
+ */
+export function purchaseStoreItem(recordName: string, item: PurchasableItemReference, options: RecordActionOptions, taskId?: number | string): PurchaseStoreItemAction {
+    return {
+        type: 'purchase_store_item',
+        recordName,
+        item,
         options,
         taskId,
     };

@@ -183,6 +183,7 @@ import {
     listStoreItems,
     listStoreItemsByMarker,
     aiChatStream,
+    purchaseStoreItem,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -8191,6 +8192,31 @@ describe('AuxLibrary', () => {
                     'recordKey',
                     'marker',
                     'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.purchaseStoreItem()', () => {
+            it('should emit a PurchaseStoreItemAction', async () => {
+                const action: any = library.api.os.purchaseStoreItem(
+                    'recordName',
+                    {
+                        address: 'address',
+                        cost: 100,
+                        currency: 'usd'
+                    }
+                );
+                const expected = purchaseStoreItem(
+                    'recordName',
+                    {
+                        address: 'address',
+                        cost: 100,
+                        currency: 'usd'
+                    },
                     {},
                     context.tasks.size
                 );

@@ -299,6 +299,8 @@ import {
     eraseStoreItem as calcEraseStoreItem,
     listStoreItems as calcListStoreItems,
     listStoreItemsByMarker as calcListStoreItemsByMarker,
+    PurchasableItemReference,
+    purchaseStoreItem as calcPurchaseStoreItem,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -400,6 +402,7 @@ import type {
     AIChatMessage,
     CrudEraseItemResult,
     CrudGetItemResult,
+    CrudListItemsResult,
     CrudRecordItemResult,
     GrantResourcePermissionResult,
     ListStudiosResult,
@@ -3265,6 +3268,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseStoreItem,
                 listStoreItems,
                 listStoreItemsByMarker,
+                purchaseStoreItem,
 
                 convertGeolocationToWhat3Words,
 
@@ -9971,7 +9975,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docgroup 01-store
      * @docname os.listStoreItems
      */
-    function listStoreItems(recordName: string, startingAddress: string = null, options: RecordActionOptions = {}): Promise<CrudEraseItemResult> {
+    function listStoreItems(recordName: string, startingAddress: string = null, options: RecordActionOptions = {}): Promise<CrudListItemsResult<PurchasableItem>> {
         const task = context.createTask();
         const event = calcListStoreItems(recordName, startingAddress, options, task.taskId);
         return addAsyncAction(task, event);
@@ -9995,9 +9999,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docgroup 01-store
      * @docname os.listStoreItemsByMarker
      */
-    function listStoreItemsByMarker(recordName: string, marker: string, startingAddress: string = null, options: RecordActionOptions = {}): Promise<CrudEraseItemResult> {
+    function listStoreItemsByMarker(recordName: string, marker: string, startingAddress: string = null, options: RecordActionOptions = {}): Promise<CrudListItemsResult<PurchasableItem>> {
         const task = context.createTask();
         const event = calcListStoreItemsByMarker(recordName, marker, startingAddress, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to purchase the given store item from the specified record.
+     * 
+     * Returns a promise that resolves when the 
+     * 
+     * @param recordName the name of the record that the store item should be purchased from.
+     * @param item the item that should be purchased from the store.
+     * @param options the options that should be used to purchase the item.
+     * 
+     * @example Purchase an item from the store
+     * const item = await os.getStoreItem('myRecord', 'myItem');
+     * const result = await os.purchaseStoreItem('myRecord', item);
+     * 
+     * console.log(result);
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.purchaseStoreItem
+     */
+    function purchaseStoreItem(recordName: string, item: PurchasableItemReference, options: RecordActionOptions = {}): Promise<void> {
+        const task = context.createTask();
+        const event = calcPurchaseStoreItem(recordName, item, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
