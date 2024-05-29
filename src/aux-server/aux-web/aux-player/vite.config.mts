@@ -249,6 +249,20 @@ export default defineConfig(({ command, mode }) => ({
                           'shared',
                           'EmptyModule.ts'
                       ),
+                      '@casual-simulation/aux-components/fonts/MaterialIcons/MaterialIcons.css':
+                          path.resolve(
+                              __dirname,
+                              '..',
+                              'shared',
+                              'EmptyModule.ts'
+                          ),
+                      '@casual-simulation/aux-components/fonts/Roboto/Roboto.css':
+                          path.resolve(
+                              __dirname,
+                              '..',
+                              'shared',
+                              'EmptyModule.ts'
+                          ),
                   }
                 : {}),
         },
