@@ -23,6 +23,7 @@ export type RecordsAsyncActions =
     | RecordEventAction
     | GetEventCountAction
     | AIChatAction
+    | AIChatStreamAction
     | AIGenerateImageAction
     | AIGenerateSkyboxAction
     | ListUserStudiosAction
@@ -45,6 +46,23 @@ export type RecordsAsyncActions =
  */
 export interface AIChatAction extends AsyncAction {
     type: 'ai_chat';
+
+    /**
+     * The options for the action.
+     */
+    options: AIChatOptions;
+
+    /**
+     * The list of messages comprising the conversation so far.
+     */
+    messages: AIChatMessage[];
+}
+
+/**
+ * An event that is used to chat with an AI.
+ */
+export interface AIChatStreamAction extends AsyncAction {
+    type: 'ai_chat_stream';
 
     /**
      * The options for the action.
@@ -1022,6 +1040,26 @@ export function aiChat(
 ): AIChatAction {
     return {
         type: 'ai_chat',
+        messages,
+        options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AIChatStreamAction.
+ *
+ * @param messages The messages to include in the chat.
+ * @param options The options for the chat.
+ * @param taskId The ID of the async task.
+ */
+export function aiChatStream(
+    messages: AIChatMessage[],
+    options?: AIChatOptions,
+    taskId?: number | string
+): AIChatStreamAction {
+    return {
+        type: 'ai_chat_stream',
         messages,
         options: options ?? {},
         taskId,

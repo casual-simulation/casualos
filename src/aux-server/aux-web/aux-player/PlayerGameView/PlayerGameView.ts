@@ -7,7 +7,7 @@ import MenuBot from '../MenuBot/MenuBot';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { PlayerGame } from '../scene/PlayerGame';
 import { Game } from '../../shared/scene/Game';
-import { map, tap, combineLatest } from 'rxjs/operators';
+import { map, tap, combineLatestWith } from 'rxjs/operators';
 import { DimensionItem } from '../DimensionItem';
 import { MenuPortal } from '../MenuPortal';
 import { appManager } from '../../shared/AppManager';
@@ -243,14 +243,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             this._subscriptions.push(
                 this._game.mainViewport.onUpdated
                     .pipe(
-                        combineLatest(
-                            this._game.miniViewport.onUpdated,
-                            (first, second) => ({
-                                main: first,
-                                mini: second,
-                            })
-                        ),
-                        map(({ main, mini }) => ({
+                        combineLatestWith(this._game.miniViewport.onUpdated),
+                        map(([main, mini]) => ({
                             bottom: mini.height + 'px',
                             left: main.x + 'px',
                             width: main.width + 'px',

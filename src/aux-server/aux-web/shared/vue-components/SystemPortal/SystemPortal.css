@@ -153,6 +153,11 @@
     flex-direction: column;
 }
 
+.slider {
+    flex: 0 0 8px;
+    cursor: ew-resize;
+}
+
 .tags {
     flex: 0 0 160px;
     border-right: 1px solid #000;

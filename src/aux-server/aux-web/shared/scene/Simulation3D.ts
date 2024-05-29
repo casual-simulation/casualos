@@ -241,7 +241,7 @@ export abstract class Simulation3D
                     this._filterDimensionBot(bot)
                 )
                 .pipe(tap((update) => this._dimensionsUpdated(update)))
-                .subscribe(null, (err) => console.log(err))
+                .subscribe({ error: (err) => console.log(err) })
         );
 
         // Subscriptions to bot events.
@@ -295,7 +295,7 @@ export abstract class Simulation3D
         let sub = this.simulation.dimensions
             .watchDimensions([portalTag], (bot) => bot === bot3D.bot)
             .pipe(tap((update) => this._dimensionsUpdated(update)))
-            .subscribe(null, (err) => console.log(err));
+            .subscribe({ error: (err) => console.log(err) });
         this._subs.push(sub);
         return new Subscription(() => {
             sub.unsubscribe();

@@ -28,8 +28,6 @@ import {
     DeviceAction,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import Bowser from 'bowser';
-import axios from 'axios';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import {
@@ -48,30 +46,30 @@ export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
  * Defines an interface for an AUX that is run inside a virtual machine.
  * That is, the AUX is run inside a web worker.
  */
-export class AuxVMImpl implements AuxVM {
-    private _localEvents: Subject<RuntimeActions[]>;
-    private _deviceEvents: Subject<DeviceAction[]>;
-    private _connectionStateChanged: Subject<StatusUpdate>;
-    private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _versionUpdated: Subject<RuntimeStateVersion>;
-    private _onError: Subject<AuxChannelErrorType>;
-    private _subVMAdded: Subject<AuxSubVM>;
-    private _subVMRemoved: Subject<AuxSubVM>;
-    private _subVMMap: Map<
+export default class AuxVMImpl implements AuxVM {
+    protected _localEvents: Subject<RuntimeActions[]>;
+    protected _deviceEvents: Subject<DeviceAction[]>;
+    protected _connectionStateChanged: Subject<StatusUpdate>;
+    protected _stateUpdated: Subject<StateUpdatedEvent>;
+    protected _versionUpdated: Subject<RuntimeStateVersion>;
+    protected _onError: Subject<AuxChannelErrorType>;
+    protected _subVMAdded: Subject<AuxSubVM>;
+    protected _subVMRemoved: Subject<AuxSubVM>;
+    protected _subVMMap: Map<
         string,
         AuxSubVM & {
             channel: Remote<AuxChannel>;
         }
     >;
-    private _onAuthMessage: Subject<PartitionAuthMessage>;
+    protected _onAuthMessage: Subject<PartitionAuthMessage>;
 
-    private _config: AuxConfig;
-    private _iframe: HTMLIFrameElement;
-    private _channel: MessageChannel;
-    private _proxy: Remote<AuxChannel>;
-    private _id: string;
-    private _relaxOrigin: boolean;
-    private _origin: SimulationOrigin;
+    protected _config: AuxConfig;
+    protected _iframe: HTMLIFrameElement;
+    protected _channel: MessageChannel;
+    protected _proxy: Remote<AuxChannel>;
+    protected _id: string;
+    protected _relaxOrigin: boolean;
+    protected _origin: SimulationOrigin;
 
     closed: boolean;
 
@@ -146,7 +144,7 @@ export class AuxVMImpl implements AuxVM {
         return await this._init();
     }
 
-    private async _init(): Promise<void> {
+    protected async _init(): Promise<void> {
         let origin = getVMOrigin(
             this._config.config.vmOrigin,
             location.origin,
@@ -351,7 +349,7 @@ export class AuxVMImpl implements AuxVM {
         return new RemoteAuxVM(id, origin, configBotId, channel);
     }
 
-    private async _handleAddedSubChannel(subChannel: AuxSubChannel) {
+    protected async _handleAddedSubChannel(subChannel: AuxSubChannel) {
         const { id, configBotId } = await subChannel.getInfo();
         const channel =
             (await subChannel.getChannel()) as unknown as Remote<AuxChannel>;
@@ -366,7 +364,7 @@ export class AuxVMImpl implements AuxVM {
         this._subVMAdded.next(subVM);
     }
 
-    private async _handleRemovedSubChannel(channelId: string) {
+    protected async _handleRemovedSubChannel(channelId: string) {
         const vm = this._subVMMap.get(channelId);
         if (vm) {
             this._subVMMap.delete(channelId);
@@ -375,7 +373,7 @@ export class AuxVMImpl implements AuxVM {
     }
 }
 
-function processPartitions(config: AuxConfig): AuxConfig {
+export function processPartitions(config: AuxConfig): AuxConfig {
     let transferrables = [] as any[];
     for (let key in config.partitions) {
         const partition = config.partitions[key];
@@ -395,23 +393,4 @@ function processPartitions(config: AuxConfig): AuxConfig {
         }
     }
     return transfer(config, transferrables);
-}
-
-/**
- * Loads the script at the given URL into the given iframe window.
- * @param iframeWindow The iframe.
- * @param id The ID of the script.
- * @param url The URL to load.
- */
-async function loadScriptFromUrl(
-    iframeWindow: Window,
-    id: string,
-    url: string
-) {
-    const source = await axios.get(url);
-    if (source.status === 200 && typeof source.data === 'string') {
-        return await loadScript(iframeWindow, id, source.data);
-    } else {
-        throw new Error('Unable to load script: ' + url);
-    }
 }

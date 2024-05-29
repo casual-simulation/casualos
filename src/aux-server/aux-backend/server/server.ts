@@ -76,7 +76,11 @@ export class Server {
         // this._frontendApplyCSP();
         this._frontendApp.use(cors());
         this._frontendApp.use(compression());
-        this._frontendApp.use(bodyParser.json());
+        this._frontendApp.use(
+            bodyParser.json({
+                limit: '5mb',
+            })
+        );
 
         this._frontendApp.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
@@ -206,7 +210,17 @@ export class Server {
             res.status(response.statusCode);
 
             if (response.body) {
-                res.send(response.body);
+                if (
+                    typeof response.body === 'object' &&
+                    Symbol.asyncIterator in response.body
+                ) {
+                    for await (let chunk of response.body) {
+                        res.write(chunk);
+                    }
+                    res.end();
+                } else {
+                    res.send(response.body);
+                }
             } else {
                 res.send();
             }
@@ -339,6 +353,7 @@ export class Server {
             '/api/*',
             express.text({
                 type: 'application/json',
+                limit: '5mb',
             })
         );
 

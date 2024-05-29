@@ -6,14 +6,14 @@ import {
     registerBuiltinPortal,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
-import { NEVER, never, Observable, of } from 'rxjs';
+import { NEVER, Observable, of } from 'rxjs';
 import {
     switchMap,
     first,
     map,
     distinctUntilChanged,
     filter,
-    flatMap,
+    mergeMap,
 } from 'rxjs/operators';
 import {
     LoginManager,
@@ -121,7 +121,7 @@ export function watchPortalConfigBotCore(
         helper.transaction(registerBuiltinPortal(portal));
     }
     return portals.portalBotIdUpdated.pipe(
-        flatMap((p) => p),
+        mergeMap((p) => p),
         filter((p) => p.portalId === portal),
         map((p) => p.botId),
         distinctUntilChanged(),

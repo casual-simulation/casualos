@@ -2,6 +2,7 @@ import { testPartitionImplementation } from './test/PartitionTests';
 import { createMemoryPartition } from './MemoryPartition';
 import { Bot, createBot } from '../bots';
 import { first } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 describe('MemoryPartition', () => {
     testPartitionImplementation(async () => {
@@ -48,9 +49,9 @@ describe('MemoryPartition', () => {
                 },
             });
 
-            const version = await mem.onVersionUpdated
-                .pipe(first())
-                .toPromise();
+            const version = await firstValueFrom(
+                mem.onVersionUpdated.pipe(first())
+            );
 
             expect(version?.currentSite).not.toBe(null);
             expect(version?.currentSite).toBeDefined();

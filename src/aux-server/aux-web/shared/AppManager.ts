@@ -1,11 +1,14 @@
 import Axios from 'axios';
-import Vue from 'vue';
+import Vue, { inject } from 'vue';
 import { BehaviorSubject, Observable, Subject, SubscriptionLike } from 'rxjs';
 import { filter, first, map, scan, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
 import {
+    AuxPartitionConfig,
+    BotsState,
     ConnectionIndicator,
     ProgressMessage,
+    getUploadState,
     remapProgressPercent,
     remote,
 } from '@casual-simulation/aux-common';
@@ -31,11 +34,11 @@ import {
 import {
     AuthCoordinator,
     AuthHelper,
-    AuxVMImpl,
     BotManager,
     BrowserSimulation,
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
+import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
 import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
@@ -46,6 +49,7 @@ import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUt
 import {
     ComIdConfig,
     GetPlayerConfigSuccess,
+    tryParseJson,
 } from '@casual-simulation/aux-records';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
 
@@ -166,12 +170,32 @@ export class AppManager {
         this._updateAvailable = new BehaviorSubject<boolean>(false);
         this._simulationFactory = async (id, origin, config, isStatic) => {
             const configBotId = uuid();
+
+            let initialState: BotsState = undefined;
+            if (import.meta.env.MODE === 'static') {
+                const injectedAux = document.querySelector(
+                    'script[type="text/aux"]'
+                )?.textContent;
+                if (injectedAux) {
+                    console.log('[AppManager] Injecting AUX.');
+                    const parseResult = tryParseJson(injectedAux.trim());
+                    if (parseResult.success) {
+                        initialState = getUploadState(parseResult.value);
+                        console.log(
+                            '[AppManager] Initial State:',
+                            initialState
+                        );
+                    }
+                }
+            }
+
             const partitions = isStatic
                 ? BotManager.createStaticPartitions(
                       id,
                       configBotId,
                       origin,
-                      config
+                      config,
+                      initialState
                   )
                 : BotManager.createPartitions(
                       id,
@@ -671,6 +695,9 @@ export class AppManager {
     }
 
     initOffline() {
+        if (import.meta.env.MODE === 'static') {
+            return;
+        }
         if ('serviceWorker' in navigator && !this._updateServiceWorker) {
             console.log('[AppManager] Registering Service Worker');
             this._updateServiceWorker = registerSW({
@@ -686,6 +713,9 @@ export class AppManager {
     }
 
     updateServiceWorker() {
+        if (import.meta.env.MODE === 'static') {
+            return;
+        }
         if (this._updateServiceWorker) {
             this._updateServiceWorker(true);
         }
@@ -785,15 +815,15 @@ export class AppManager {
 
         const sim = this.simulationManager.primary;
 
-        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe(
-            (m: ProgressMessage) => {
+        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe({
+            next: (m: ProgressMessage) => {
                 this._progress.next(m);
                 if (m.error) {
                     this._progress.complete();
                 }
             },
-            (err) => console.error(err),
-            () => {
+            error: (err) => console.error(err),
+            complete: () => {
                 this._progress.next({
                     type: 'progress',
                     message: 'Done.',
@@ -808,8 +838,8 @@ export class AppManager {
                         this.initOffline();
                     }, INIT_OFFLINE_TIMEOUT_MILISECONDS);
                 }
-            }
-        );
+            },
+        });
 
         return sim;
     }
@@ -897,11 +927,20 @@ export class AppManager {
     }
 
     private async _getBaseConfig(): Promise<WebConfig> {
-        const serverConfig = await this._fetchConfigFromServer();
-        if (serverConfig) {
-            return serverConfig;
+        if (import.meta.env.MODE === 'static' || import.meta.env.SSR) {
+            return {
+                version: null,
+                causalRepoConnectionProtocol: 'websocket',
+                disableCollaboration: true,
+                staticRepoLocalPersistence: true,
+            };
         } else {
-            return await this._fetchConfigFromLocalStorage();
+            const serverConfig = await this._fetchConfigFromServer();
+            if (serverConfig) {
+                return serverConfig;
+            } else {
+                return await this._fetchConfigFromLocalStorage();
+            }
         }
     }
 
