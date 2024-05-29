@@ -143,6 +143,7 @@ import {
     calculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates,
     capturePortalScreenshot,
+    createStaticHtml,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -11460,120 +11461,44 @@ describe('AuxLibrary', () => {
         });
 
         describe('experiment.createStaticHtmlFromBots()', () => {
-            const originalFetch = global.fetch;
-            let fetch: jest.Mock<
-                Promise<{
-                    status: number;
-                    ok: boolean;
-                    text: () => Promise<string>;
-                }>
-            >;
-
-            beforeEach(() => {
-                fetch = global.fetch = jest.fn();
-                context.device.ab1BootstrapUrl =
-                    'https://auxplayer.com/ab1/bootstrap.aux';
-                global.DOMParser = new JSDOM().window.DOMParser;
-            });
-
-            afterAll(() => {
-                global.fetch = originalFetch;
-                delete (global as any).DOMParser;
-            });
-
-            it('should create a static HTML string from the given bots', async () => {
-                fetch.mockResolvedValue({
-                    status: 200,
-                    ok: true,
-                    text: async () => `<html><body>test</body></html>`,
-                });
-
-                const result =
-                    await library.api.experiment.createStaticHtmlFromBots([
+            it('should emit a CreateStaticHtmlFromBotsAction', () => {
+                const result: any =
+                    library.api.experiment.createStaticHtmlFromBots([
                         bot1,
                         bot2,
                     ]);
 
-                const state = {
-                    [bot1.id]: bot1,
-                    [bot2.id]: bot2,
-                };
-                const json = JSON.stringify({
-                    version: 1,
-                    state,
-                });
-                expect(result).toEqual(
-                    `<!DOCTYPE html>\n<html><head></head><body>test<script type="text/aux">${json}</script></body></html>`
+                const expected = createStaticHtml(
+                    {
+                        [bot1.id]: bot1.toJSON(),
+                        [bot2.id]: bot2.toJSON(),
+                    },
+                    undefined,
+                    context.tasks.size
                 );
-                expect(fetch).toHaveBeenCalledWith(
-                    'https://auxplayer.com/static.html'
-                );
+
+                expect(result[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
 
-            it('should use the given URL', async () => {
-                fetch.mockResolvedValue({
-                    status: 200,
-                    ok: true,
-                    text: async () => `<html><body>test</body></html>`,
-                });
-
-                const result =
-                    await library.api.experiment.createStaticHtmlFromBots(
+            it('should use the given template URL', () => {
+                const result: any =
+                    library.api.experiment.createStaticHtmlFromBots(
                         [bot1, bot2],
-                        'https://auxplayer.com/static2.html'
+                        'https://example.com'
                     );
 
-                const state = {
-                    [bot1.id]: bot1,
-                    [bot2.id]: bot2,
-                };
-                const json = JSON.stringify({
-                    version: 1,
-                    state,
-                });
-                expect(result).toEqual(
-                    `<!DOCTYPE html>\n<html><head></head><body>test<script type="text/aux">${json}</script></body></html>`
+                const expected = createStaticHtml(
+                    {
+                        [bot1.id]: bot1.toJSON(),
+                        [bot2.id]: bot2.toJSON(),
+                    },
+                    'https://example.com',
+                    context.tasks.size
                 );
-                expect(fetch).toHaveBeenCalledWith(
-                    'https://auxplayer.com/static2.html'
-                );
-            });
 
-            it('should return null if the fetch fails', async () => {
-                fetch.mockResolvedValue({
-                    status: 200,
-                    ok: false,
-                    text: async () => `<html><body>test</body></html>`,
-                });
-
-                const result =
-                    await library.api.experiment.createStaticHtmlFromBots([
-                        bot1,
-                        bot2,
-                    ]);
-
-                expect(result).toBe(null);
-                expect(fetch).toHaveBeenCalledWith(
-                    'https://auxplayer.com/static.html'
-                );
-            });
-
-            it('should return null if unable to construct a URL', async () => {
-                context.device.ab1BootstrapUrl = 'wrongUrl';
-                fetch.mockResolvedValue({
-                    status: 200,
-                    ok: true,
-                    text: async () => `<html><body>test</body></html>`,
-                });
-
-                const result =
-                    await library.api.experiment.createStaticHtmlFromBots([
-                        bot1,
-                        bot2,
-                    ]);
-
-                expect(result).toBe(null);
-                expect(fetch).not.toHaveBeenCalled();
+                expect(result[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

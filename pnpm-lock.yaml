@@ -1172,6 +1172,9 @@ importers:
       '@types/aws-lambda':
         specifier: ^8.10.17
         version: 8.10.130
+      '@types/jsdom':
+        specifier: 21.1.6
+        version: 21.1.6
       '@types/pify':
         specifier: 5.0.4
         version: 5.0.4
@@ -1187,6 +1190,9 @@ importers:
       fast-glob:
         specifier: ^3.2.5
         version: 3.3.2
+      jsdom:
+        specifier: 24.1.0
+        version: 24.1.0
       prompts:
         specifier: 2.4.2
         version: 2.4.2

@@ -246,6 +246,7 @@ import {
     Point2D,
     CameraPortal,
     capturePortalScreenshot as calcCapturePortalScreenshot,
+    createStaticHtml as calcCreateStaticHtmlFromBots,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -11855,47 +11856,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/experimental
      * @docname experiment.createStaticHtmlFromBots
      */
-    async function createStaticHtmlFromBots(
+    function createStaticHtmlFromBots(
         bots: Bot[],
         templateUrl?: string
     ): Promise<string> {
-        try {
-            const state: BotsState = {};
-            for (let bot of bots) {
-                state[bot.id] = bot;
-            }
-
-            const json = JSON.stringify(getVersion1DownloadState(state));
-
-            const url = templateUrl
-                ? templateUrl
-                : new URL('/static.html', context.device.ab1BootstrapUrl).href;
-            const result = await fetch(url);
-
-            if (result.ok) {
-                const html = await result.text();
-                const parsed = new DOMParser().parseFromString(
-                    html,
-                    'text/html'
-                );
-
-                const script = parsed.createElement('script');
-                script.setAttribute('type', 'text/aux');
-                script.textContent = json;
-                parsed.body.appendChild(script);
-                return `<!DOCTYPE html>\n` + parsed.documentElement.outerHTML;
-            } else {
-                console.error(`Unable to fetch`, url);
-                console.error(result);
-                console.error(
-                    'It is possible that static HTML builds are not supported on this server.'
-                );
-                return null;
-            }
-        } catch (err) {
-            console.error(err);
-            return null;
+        const state: BotsState = {};
+        for (let bot of bots) {
+            state[bot.id] = createBot(bot.id, bot.tags.toJSON());
         }
+        const task = context.createTask();
+        const action = calcCreateStaticHtmlFromBots(
+            state,
+            templateUrl,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+        // try {
+        //     const state: BotsState = {};
+        //     for (let bot of bots) {
+        //         state[bot.id] = bot;
+        //     }
+
+        //     const json = JSON.stringify(getVersion1DownloadState(state));
+
+        //     const url = templateUrl
+        //         ? templateUrl
+        //         : new URL('/static.html', context.device.ab1BootstrapUrl).href;
+        //     const result = await fetch(url);
+
+        //     if (result.ok) {
+        //         const html = await result.text();
+        //         const parsed = new DOMParser().parseFromString(
+        //             html,
+        //             'text/html'
+        //         );
+
+        //         const script = parsed.createElement('script');
+        //         script.setAttribute('type', 'text/aux');
+        //         script.textContent = json;
+        //         parsed.body.appendChild(script);
+        //         return `<!DOCTYPE html>\n` + parsed.documentElement.outerHTML;
+        //     } else {
+        //         console.error(`Unable to fetch`, url);
+        //         console.error(result);
+        //         console.error(
+        //             'It is possible that static HTML builds are not supported on this server.'
+        //         );
+        //         return null;
+        //     }
+        // } catch (err) {
+        //     console.error(err);
+        //     return null;
+        // }
     }
 
     /**

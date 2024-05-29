@@ -182,7 +182,8 @@ export type AsyncActions =
     | CalculateViewportCoordinatesFromPositionAction
     | CalculateScreenCoordinatesFromViewportCoordinatesAction
     | CalculateViewportCoordinatesFromScreenCoordinatesAction
-    | CapturePortalScreenshotAction;
+    | CapturePortalScreenshotAction
+    | CreateStaticHtmlAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3394,6 +3395,23 @@ export interface CapturePortalScreenshotAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that captures a screenshot from the given viewport coordinates.
+ */
+export interface CreateStaticHtmlAction extends AsyncAction {
+    type: 'create_static_html';
+
+    /**
+     * The bots that should be injected.
+     */
+    bots: BotsState;
+
+    /**
+     * The URL of the HTML that the static HTML should be created from.
+     */
+    templateUrl?: string;
+}
+
+/**
  * Defines an event that requests the pre-caching of a GLTF mesh.
  *
  * @dochash types/os/portals
@@ -5706,6 +5724,25 @@ export function capturePortalScreenshot(
     return {
         type: 'capture_portal_screenshot',
         portal,
+        taskId,
+    };
+}
+
+/**
+ * Creates a CreateStaticHtmlAction.
+ * @param bots The bots that should be used to render the template.
+ * @param templateUrl The URL of the template.
+ * @param taskId The ID of the task.
+ */
+export function createStaticHtml(
+    bots: BotsState,
+    templateUrl: string,
+    taskId?: number | string
+): CreateStaticHtmlAction {
+    return {
+        type: 'create_static_html',
+        bots,
+        templateUrl,
         taskId,
     };
 }
