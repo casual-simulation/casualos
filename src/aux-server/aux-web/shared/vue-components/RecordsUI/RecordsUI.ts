@@ -37,8 +37,6 @@ import {
     parseRecordKey,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
-import { AddressType } from '@casual-simulation/aux-records/AuthStore';
-import { DateTime } from 'luxon';
 
 @Component({
     components: {},

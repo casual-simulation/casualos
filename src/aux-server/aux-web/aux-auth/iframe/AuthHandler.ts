@@ -690,12 +690,12 @@ export class AuthHandler implements AuxAuth {
 
     private async _loginWithCustomUI(hint: LoginHint): Promise<string> {
         try {
-            let canceled = this._canceledLogins
-                .pipe(
+            let canceled = firstValueFrom(
+                this._canceledLogins.pipe(
                     first(),
                     map(() => null as string)
                 )
-                .toPromise();
+            );
             let cancelSignal = {
                 canceled: false,
             };
@@ -861,7 +861,7 @@ export class AuthHandler implements AuxAuth {
             first((result) => result.success)
         );
 
-        const login = await logins.toPromise();
+        const login = await firstValueFrom(logins);
 
         if (login.success === false) {
             return null;

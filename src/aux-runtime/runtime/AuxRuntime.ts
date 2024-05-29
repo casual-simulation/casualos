@@ -1632,6 +1632,36 @@ export class AuxRuntime
             } else {
                 this._scheduleJobQueueCheck();
             }
+        } else if (action.type === 'iterable_next') {
+            if (
+                !this._globalContext.iterableNext(
+                    action.taskId,
+                    action.value,
+                    false
+                )
+            ) {
+                this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
+            }
+        } else if (action.type === 'iterable_complete') {
+            if (!this._globalContext.iterableComplete(action.taskId, false)) {
+                this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
+            }
+        } else if (action.type === 'iterable_throw') {
+            if (
+                !this._globalContext.iterableThrow(
+                    action.taskId,
+                    action.error,
+                    false
+                )
+            ) {
+                this._actionBatch.push(action);
+            } else {
+                this._scheduleJobQueueCheck();
+            }
         } else if (action.type === 'register_custom_app') {
             this._registerPortalBot(action.appId, action.botId);
             this._actionBatch.push(action);

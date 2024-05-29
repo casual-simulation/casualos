@@ -11,7 +11,7 @@ import {
     hasValue,
     BotSpace,
 } from '../../bots';
-import { Subscription, never } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { waitAsync, allDataTypeCases } from '../../test/TestHelpers';
 import {
     first,
@@ -2380,12 +2380,12 @@ export function testPartitionImplementation(
 
     describe('connect()', () => {
         it('should issue connection, authentication, authorization, and sync events in that order', async () => {
-            const promise = partition.onStatusUpdated
-                .pipe(
+            const promise = firstValueFrom(
+                partition.onStatusUpdated.pipe(
                     takeWhile((update) => update.type !== 'sync', true),
                     bufferCount(4)
                 )
-                .toPromise();
+            );
 
             partition.connect();
 

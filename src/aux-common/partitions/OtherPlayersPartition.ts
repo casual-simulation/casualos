@@ -445,33 +445,33 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         sub.add(partition);
 
         sub.add(
-            partition.onBotsAdded.subscribe(
-                (added) => {
+            partition.onBotsAdded.subscribe({
+                next: (added) => {
                     this._onBotsAdded.next(added);
                 },
-                (err) => this._onBotsAdded.error(err)
-            )
+                error: (err) => this._onBotsAdded.error(err),
+            })
         );
         sub.add(
-            partition.onBotsRemoved.subscribe(
-                (removed) => {
+            partition.onBotsRemoved.subscribe({
+                next: (removed) => {
                     this._onBotsRemoved.next(removed);
                 },
-                (err) => this._onBotsRemoved.error(err)
-            )
+                error: (err) => this._onBotsRemoved.error(err),
+            })
         );
         sub.add(
-            partition.onBotsUpdated.subscribe(
-                (updated) => {
+            partition.onBotsUpdated.subscribe({
+                next: (updated) => {
                     this._onBotsUpdated.next(updated);
                 },
-                (err) => this._onBotsUpdated.error(err)
-            )
+                error: (err) => this._onBotsUpdated.error(err),
+            })
         );
         sub.add(partition.onError.subscribe(this._onError));
         sub.add(
-            partition.onStateUpdated.pipe(skip(1)).subscribe(
-                (update) => {
+            partition.onStateUpdated.pipe(skip(1)).subscribe({
+                next: (update) => {
                     this._state = applyUpdates(
                         this._state as PrecalculatedBotsState,
                         update
@@ -481,8 +481,8 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                         version: null,
                     });
                 },
-                (err) => this._onStateUpdated.error(err)
-            )
+                error: (err) => this._onStateUpdated.error(err),
+            })
         );
 
         partition.space = this.space;

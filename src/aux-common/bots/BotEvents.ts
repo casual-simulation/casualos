@@ -110,6 +110,9 @@ export type ExtraActions =
 export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
+    | IterableNextAction
+    | IterableCompleteAction
+    | IterableThrowAction
     | ShowInputAction
     | ShowConfirmAction
     | ShareAction
@@ -179,7 +182,8 @@ export type AsyncActions =
     | CalculateViewportCoordinatesFromPositionAction
     | CalculateScreenCoordinatesFromViewportCoordinatesAction
     | CalculateViewportCoordinatesFromScreenCoordinatesAction
-    | CapturePortalScreenshotAction;
+    | CapturePortalScreenshotAction
+    | CreateStaticHtmlAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -228,6 +232,43 @@ export interface AsyncResultAction extends AsyncAction {
  */
 export interface AsyncErrorAction extends AsyncAction {
     type: 'async_error';
+
+    /**
+     * The error.
+     */
+    error: any;
+}
+
+/**
+ * Defines an action that supplies a next iterable value for an AsyncAction.
+ */
+export interface IterableNextAction extends AsyncAction {
+    type: 'iterable_next';
+
+    /**
+     * The value.
+     */
+    value: any;
+
+    /**
+     * Whether to map any bots found in the result to their actual bot counterparts.
+     * Defaults to false.
+     */
+    mapBotsInValue?: boolean;
+}
+
+/**
+ * Defines an action that completes an iterable.
+ */
+export interface IterableCompleteAction extends AsyncAction {
+    type: 'iterable_complete';
+}
+
+/**
+ * Defines an action that supplies an error for an iterable.
+ */
+export interface IterableThrowAction extends AsyncAction {
+    type: 'iterable_throw';
 
     /**
      * The error.
@@ -3354,6 +3395,23 @@ export interface CapturePortalScreenshotAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that captures a screenshot from the given viewport coordinates.
+ */
+export interface CreateStaticHtmlAction extends AsyncAction {
+    type: 'create_static_html';
+
+    /**
+     * The bots that should be injected.
+     */
+    bots: BotsState;
+
+    /**
+     * The URL of the HTML that the static HTML should be created from.
+     */
+    templateUrl?: string;
+}
+
+/**
  * Defines an event that requests the pre-caching of a GLTF mesh.
  *
  * @dochash types/os/portals
@@ -4826,6 +4884,52 @@ export function asyncError(
 }
 
 /**
+ * Creates an action that provides a next value to an iterable.
+ * @param taskId The ID of the task for the iterable.
+ * @param value The value.
+ */
+export function iterableNext(
+    taskId: number | string,
+    value: any
+): IterableNextAction {
+    return {
+        type: 'iterable_next',
+        taskId,
+        value,
+    };
+}
+
+/**
+ * Creates an action that completes an iterable.
+ * @param taskId The ID of the task for the iterable.
+ * @returns
+ */
+export function iterableComplete(
+    taskId: number | string
+): IterableCompleteAction {
+    return {
+        type: 'iterable_complete',
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that throws an error for an iterable.
+ * @param taskId The ID of the task for the iterable.
+ * @param error The error to throw from the iterable.
+ */
+export function iterableThrow(
+    taskId: number | string,
+    error: any
+): IterableThrowAction {
+    return {
+        type: 'iterable_throw',
+        taskId,
+        error,
+    };
+}
+
+/**
  * Creates an action that shares some data via the device's social share capabilities.
  * @param options The options for sharing.
  * @param taskId The ID of the task.
@@ -5620,6 +5724,25 @@ export function capturePortalScreenshot(
     return {
         type: 'capture_portal_screenshot',
         portal,
+        taskId,
+    };
+}
+
+/**
+ * Creates a CreateStaticHtmlAction.
+ * @param bots The bots that should be used to render the template.
+ * @param templateUrl The URL of the template.
+ * @param taskId The ID of the task.
+ */
+export function createStaticHtml(
+    bots: BotsState,
+    templateUrl: string,
+    taskId?: number | string
+): CreateStaticHtmlAction {
+    return {
+        type: 'create_static_html',
+        bots,
+        templateUrl,
         taskId,
     };
 }

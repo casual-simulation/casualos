@@ -31,7 +31,13 @@ import {
     transform,
 } from 'lodash';
 import './PerformanceNowPolyfill';
-import { Observable, Subscription, SubscriptionLike } from 'rxjs';
+import {
+    Observable,
+    ReplaySubject,
+    Subject,
+    Subscription,
+    SubscriptionLike,
+} from 'rxjs';
 import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -44,6 +50,7 @@ import type {
 import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { RuntimeActions } from './RuntimeEvents';
 import seedrandom from 'seedrandom';
+import { GenericError } from './CasualOSError';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().
@@ -286,13 +293,23 @@ export interface AuxGlobalContext {
 
     /**
      * Creates a new task.
-     * @param Whether to use an unguessable task ID. Defaults to false.
-     * @param Whether the task is allowed to be resolved via a remote action result. Defaults to false.
+     * @param unguessableId Whether to use an unguessable task ID. Defaults to false.
+     * @param allowRemoteResolution Whether the task is allowed to be resolved via a remote action result. Defaults to false.
      */
     createTask(
         unguessableId?: boolean,
         allowRemoteResolution?: boolean
     ): AsyncTask;
+
+    /**
+     * Creates a new iterable task.
+     * @param unguessableId Whether to use an unguessable task ID. Defaults to false.
+     * @param allowRemoteResolution Whether the task is allowed to be resolved via a remote action result. Defaults to false.
+     */
+    createIterable(
+        unguessableId?: boolean,
+        allowRemoteResolution?: boolean
+    ): AsyncIterableTask;
 
     /**
      * Completes the task with the given task ID with the given result.
@@ -313,6 +330,36 @@ export interface AuxGlobalContext {
      *               This should be true if resolveTask() is being called in response to a remote or device action.
      */
     rejectTask(taskId: number | string, error: any, remote: boolean): boolean;
+
+    /**
+     * Provides the next value for the given iterable task.
+     * @param taskId The ID of the task.
+     * @param value The value to provide.
+     * @param remote Whether this call is being triggered from a remote device.
+     *               This should be true if resolveTask() is being called in response to a remote or device action.
+     */
+    iterableNext(taskId: number | string, value: any, remote: boolean): boolean;
+
+    /**
+     * Completes the iterable task.
+     * @param taskId The ID of the task.
+     * @param remote Whether this call is being triggered from a remote device.
+     *               This should be true if resolveTask() is being called in response to a remote or device action.
+     */
+    iterableComplete(taskId: number | string, remote: boolean): boolean;
+
+    /**
+     * Instructs the iterable task to throw the given error.
+     * @param taskId The ID of the task.
+     * @param value The value to provide.
+     * @param remote Whether this call is being triggered from a remote device.
+     *               This should be true if resolveTask() is being called in response to a remote or device action.
+     */
+    iterableThrow(
+        taskId: number | string,
+        value: any,
+        remote: boolean
+    ): boolean;
 
     /**
      * Gets a list of timers that contains the amount of time a tag has run for in miliseconds.
@@ -403,6 +450,60 @@ export interface AsyncTask {
      * The function that is used to reject the task with an error.
      */
     reject: (err: any) => void;
+}
+
+export type AsyncIterableTaskPromiseResult = {
+    iterable: AsyncIterable<any>;
+    result: any;
+};
+
+/**
+ * Defines an interface for an asynchronous iterable task.
+ * The task can be used in one of two ways:
+ *
+ * 1. The task can be used to provide an async iterable that can be used to stream values to the caller.
+ *    In this case, the caller will be provided with the iterable directly and values can be sent to it via the next(), complete(), and throw() functions.
+ * 2. The task can be used to provide a promise that resolves with an async iterable that can be used to stream values to the caller.
+ *    In this case, the caller will be provided with the promise and it will be resolved with the iterable either when the resolve() function is called or when the next() function is called.
+ */
+export interface AsyncIterableTask extends AsyncTask {
+    /**
+     * The promise that the task contains.
+     */
+    promise: Promise<AsyncIterableTaskPromiseResult>;
+
+    /**
+     * The iterable that the task contains.
+     */
+    iterable: AsyncIterable<any>;
+
+    /**
+     * The subject that the iterable uses to provide values.
+     */
+    subject: ReplaySubject<any>;
+
+    /**
+     * Resolves the promise of the task.
+     * @param value The value to resolve with.
+     */
+    resolve: (value: any) => void;
+
+    /**
+     * The next value to provide to the iterablwe.
+     * @param val The value to provide.
+     */
+    next: (val: any) => void;
+
+    /**
+     * Completes the iterable.
+     */
+    complete: () => void;
+
+    /**
+     * Throws the given error.
+     * @param err The error to throw.
+     */
+    throw: (err: any) => void;
 }
 
 /**
@@ -619,6 +720,11 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * The map of task IDs to tasks.
      */
     tasks: Map<number | string, AsyncTask> = new Map();
+
+    /**
+     * The map of task IDs to iterable tasks.
+     */
+    iterableTasks: Map<number | string, AsyncIterableTask> = new Map();
 
     /**
      * The version.
@@ -1078,6 +1184,93 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         return task;
     }
 
+    createIterable(
+        unguessableId?: boolean,
+        allowRemoteResolution?: boolean
+    ): AsyncIterableTask {
+        const subject = new ReplaySubject();
+        let resolved = false;
+        let resolve: AsyncIterableTask['resolve'];
+        let reject: AsyncIterableTask['reject'];
+        const promise = new Promise<AsyncIterableTaskPromiseResult>(
+            (res, rej) => {
+                resolve = (value) => {
+                    resolved = true;
+                    res({
+                        iterable: subject,
+                        result: value,
+                    });
+                };
+                reject = rej;
+            }
+        );
+        const task: AsyncIterableTask = {
+            taskId:
+                !unguessableId && !this.forceUnguessableTaskIds
+                    ? (this._taskCounter += 1)
+                    : !this.forceUnguessableTaskIds
+                    ? this.uuid()
+                    : uuidv4(),
+            allowRemoteResolution: allowRemoteResolution || false,
+            resolve,
+            reject,
+            promise,
+            iterable: subject,
+            subject,
+            next: (val) => {
+                if (!resolved) {
+                    resolve({ success: true });
+                }
+                subject.next(val);
+            },
+            complete: () => subject.complete(),
+            throw: (err) => subject.error(err),
+        };
+
+        this.iterableTasks.set(task.taskId, task);
+        return task;
+    }
+
+    iterableNext(
+        taskId: string | number,
+        value: any,
+        remote: boolean
+    ): boolean {
+        const task = this.iterableTasks.get(taskId);
+        if (task && (task.allowRemoteResolution || remote === false)) {
+            task.next(value);
+            return true;
+        }
+
+        return false;
+    }
+
+    iterableComplete(taskId: string | number, remote: boolean): boolean {
+        const task = this.iterableTasks.get(taskId);
+        if (task && (task.allowRemoteResolution || remote === false)) {
+            this.iterableTasks.delete(taskId);
+            task.complete();
+            return true;
+        }
+
+        return false;
+    }
+
+    iterableThrow(
+        taskId: string | number,
+        value: any,
+        remote: boolean
+    ): boolean {
+        const task = this.iterableTasks.get(taskId);
+        if (task && (task.allowRemoteResolution || remote === false)) {
+            this.iterableTasks.delete(taskId);
+            task.throw(value);
+            return true;
+        }
+
+        return false;
+    }
+
     resolveTask(
         taskId: number | string,
         result: any,
@@ -1087,6 +1280,15 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         if (task && (task.allowRemoteResolution || remote === false)) {
             this.tasks.delete(taskId);
             task.resolve(result);
+            return true;
+        }
+
+        const iterableTask = this.iterableTasks.get(taskId);
+        if (
+            iterableTask &&
+            (iterableTask.allowRemoteResolution || remote === false)
+        ) {
+            iterableTask.resolve(result);
             return true;
         }
 

@@ -3,6 +3,7 @@ import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { first } from 'rxjs/operators';
 import { ConnectionInfo } from '@casual-simulation/aux-common';
 import { Bot } from '@casual-simulation/aux-common';
+import { firstValueFrom } from 'rxjs';
 
 describe('LoginManager', () => {
     let subject: LoginManager;
@@ -15,9 +16,9 @@ describe('LoginManager', () => {
 
     describe('loginStateChanged', () => {
         it('should default to not authenticated or authorized', async () => {
-            const state = await subject.loginStateChanged
-                .pipe(first())
-                .toPromise();
+            const state = await firstValueFrom(
+                subject.loginStateChanged.pipe(first())
+            );
 
             expect(state).toEqual({
                 authenticated: false,
@@ -37,9 +38,9 @@ describe('LoginManager', () => {
                 },
             });
 
-            const state = await subject.loginStateChanged
-                .pipe(first())
-                .toPromise();
+            const state = await firstValueFrom(
+                subject.loginStateChanged.pipe(first())
+            );
 
             expect(state).toEqual({
                 authenticated: true,
@@ -59,9 +60,9 @@ describe('LoginManager', () => {
                 authorized: true,
             });
 
-            const state = await subject.loginStateChanged
-                .pipe(first())
-                .toPromise();
+            const state = await firstValueFrom(
+                subject.loginStateChanged.pipe(first())
+            );
 
             expect(state).toEqual({
                 authenticated: false,
@@ -76,9 +77,9 @@ describe('LoginManager', () => {
                 info: null,
             });
 
-            const state = await subject.loginStateChanged
-                .pipe(first())
-                .toPromise();
+            const state = await firstValueFrom(
+                subject.loginStateChanged.pipe(first())
+            );
 
             expect(state).toEqual({
                 authenticated: true,
@@ -98,9 +99,9 @@ describe('LoginManager', () => {
                 },
             });
 
-            const state = await subject.loginStateChanged
-                .pipe(first())
-                .toPromise();
+            const state = await firstValueFrom(
+                subject.loginStateChanged.pipe(first())
+            );
 
             expect(state).toEqual({
                 authenticated: false,
@@ -127,9 +128,9 @@ describe('LoginManager', () => {
                 },
             });
 
-            const device = await subject.deviceChanged
-                .pipe(first())
-                .toPromise();
+            const device = await firstValueFrom(
+                subject.deviceChanged.pipe(first())
+            );
 
             expect(device).toEqual({
                 userId: 'username',
