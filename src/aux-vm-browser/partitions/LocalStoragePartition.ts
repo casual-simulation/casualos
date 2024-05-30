@@ -197,16 +197,20 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
 
     private _loadExistingBots() {
         let events = [] as (AddBotAction | UpdateBotAction)[];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith(this._botsNamespace + '/')) {
-                // it is a bot
-                const stored = getStoredBot(key);
-                if (stored.id) {
-                    events.push(botAdded(stored));
-                } else {
-                    const id = key.substring(this._botsNamespace.length + 1);
-                    events.push(botUpdated(id, stored));
+        if (localStorage) {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(this._botsNamespace + '/')) {
+                    // it is a bot
+                    const stored = getStoredBot(key);
+                    if (stored.id) {
+                        events.push(botAdded(stored));
+                    } else {
+                        const id = key.substring(
+                            this._botsNamespace.length + 1
+                        );
+                        events.push(botUpdated(id, stored));
+                    }
                 }
             }
         }
@@ -570,6 +574,9 @@ function botKey(namespace: string, id: string): string {
 }
 
 function getStoredBot(key: string): Bot {
+    if (!localStorage) {
+        return null;
+    }
     const json = localStorage.getItem(key);
     if (json) {
         const bot: Bot = JSON.parse(json);
@@ -582,6 +589,9 @@ function getStoredBot(key: string): Bot {
 const MAX_ATTEMPTS = 4;
 
 function storeBot(key: string, bot: Bot, namespace: string) {
+    if (!localStorage) {
+        return false;
+    }
     let lastError: any;
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
         try {
@@ -615,6 +625,9 @@ function storeBot(key: string, bot: Bot, namespace: string) {
  * @returns
  */
 function clearOldData(namespaceToIgnore: string): boolean {
+    if (!localStorage) {
+        return;
+    }
     console.log('[LocalStoragePartition] Clearing old data');
     let validNamespaces = [] as string[];
     for (let i = 0; i < localStorage.length; i++) {
