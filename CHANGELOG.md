@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.5
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Improve support for environments that do no support local storage or indexedDB.
+
 ## V3.3.4
 
 #### Date: 5/29/2024
