@@ -2,7 +2,7 @@
 
 ## V3.3.5
 
-#### Date: TBD
+#### Date: 5/30/2024
 
 ### :rocket: Features
 
