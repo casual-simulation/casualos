@@ -205,11 +205,13 @@ export class AppManager {
                       this._config.causalRepoConnectionUrl
                   );
 
-            const storedInst = await getItem<StoredInst>(
-                this._db,
-                isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
-                id
-            );
+            const storedInst = this._db
+                ? await getItem<StoredInst>(
+                      this._db,
+                      isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                      id
+                  )
+                : null;
 
             let relaxOrigin = false;
             if (
@@ -223,19 +225,21 @@ export class AppManager {
                 relaxOrigin = true;
             }
 
-            putItem<StoredInst>(
-                this._db,
-                isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
-                {
-                    id: id,
-                    origin,
-                    isStatic: isStatic,
-                    vmOrigin: storedInst
-                        ? storedInst.vmOrigin
-                        : config.vmOrigin,
-                    version: storedInst ? storedInst.version : this.version,
-                }
-            );
+            if (this._db) {
+                putItem<StoredInst>(
+                    this._db,
+                    isStatic ? STATIC_INSTS_STORE : INSTS_STORE,
+                    {
+                        id: id,
+                        origin,
+                        isStatic: isStatic,
+                        vmOrigin: storedInst
+                            ? storedInst.vmOrigin
+                            : config.vmOrigin,
+                        version: storedInst ? storedInst.version : this.version,
+                    }
+                );
+            }
 
             return new BotManager(
                 origin,
@@ -576,22 +580,29 @@ export class AppManager {
     }
 
     private async _initIndexedDBCore() {
-        this._db = await openIDB('Aux', 21, (db, oldVersion) => {
-            if (oldVersion < 20) {
-                let keyval = db.createObjectStore('keyval', { keyPath: 'key' });
-                let users = db.createObjectStore('users', {
-                    keyPath: 'username',
-                });
-            }
-            if (oldVersion < 21) {
-                let staticInsts = db.createObjectStore(STATIC_INSTS_STORE, {
-                    keyPath: 'id',
-                });
-                let insts = db.createObjectStore(INSTS_STORE, {
-                    keyPath: 'id',
-                });
-            }
-        });
+        try {
+            this._db = await openIDB('Aux', 21, (db, oldVersion) => {
+                if (oldVersion < 20) {
+                    let keyval = db.createObjectStore('keyval', {
+                        keyPath: 'key',
+                    });
+                    let users = db.createObjectStore('users', {
+                        keyPath: 'username',
+                    });
+                }
+                if (oldVersion < 21) {
+                    let staticInsts = db.createObjectStore(STATIC_INSTS_STORE, {
+                        keyPath: 'id',
+                    });
+                    let insts = db.createObjectStore(INSTS_STORE, {
+                        keyPath: 'id',
+                    });
+                }
+            });
+        } catch (err) {
+            console.error('Error opening indexedDB', err);
+            this._db = null;
+        }
     }
 
     private async _loadDeviceInfo() {
@@ -876,24 +887,6 @@ export class AppManager {
         }
     }
 
-    // private async _getConnectionKey(): Promise<string> {
-    //     try {
-    //         return await getItem<string>(this._db, 'users', 'connectionKey');
-    //     } catch (err) {
-    //         console.log('Unable to get connectionKey from DB', err);
-    //         return null;
-    //     }
-    // }
-
-    // private async _saveConnectionKey(key: string) {
-    //     try {
-    //         await putItem(this._db, 'users', 'connectionKey');
-    //         // await this._db.users.put(user);
-    //     } catch (err) {
-    //         console.log('Unable to save connectionKey to DB', err);
-    //     }
-    // }
-
     logout() {
         console.log('[AppManager] Logout');
         this.simulationManager.clear();
@@ -903,6 +896,9 @@ export class AppManager {
      * Lists the static insts that have been created.
      */
     async listStaticInsts(): Promise<string[]> {
+        if (!this._db) {
+            return [];
+        }
         const insts = await getItems<StoredInst>(this._db, STATIC_INSTS_STORE);
         return insts.map((i) => i.origin.inst);
     }
@@ -978,6 +974,9 @@ export class AppManager {
     }
 
     private async _saveBaseConfigCore() {
+        if (!this._db) {
+            return;
+        }
         if (this.config) {
             await putItem(this._db, 'keyval', {
                 key: 'config',
@@ -990,6 +989,9 @@ export class AppManager {
 
     private async _fetchConfigFromLocalStorage(): Promise<WebConfig> {
         try {
+            if (!this._db) {
+                return null;
+            }
             const val = await getItem<StoredValue<WebConfig>>(
                 this._db,
                 'keyval',
@@ -1026,6 +1028,9 @@ export class AppManager {
     }
 
     private async _saveComIdConfigCore(comId: string) {
+        if (!this._db) {
+            return;
+        }
         const key = `${comId ?? '(null)'}/config`;
         if (this.config) {
             await putItem(this._db, 'keyval', {
@@ -1046,6 +1051,9 @@ export class AppManager {
         comId: string
     ): Promise<GetPlayerConfigSuccess> {
         try {
+            if (!this._db) {
+                return null;
+            }
             const val = await getItem<StoredValue<GetPlayerConfigSuccess>>(
                 this._db,
                 'keyval',

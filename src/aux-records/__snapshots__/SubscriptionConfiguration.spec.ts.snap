@@ -6,6 +6,9 @@ Object {
     "chat": Object {
       "allowed": true,
     },
+    "hume": Object {
+      "allowed": true,
+    },
     "images": Object {
       "allowed": true,
     },

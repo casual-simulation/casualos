@@ -26,6 +26,7 @@ export type RecordsAsyncActions =
     | AIChatStreamAction
     | AIGenerateImageAction
     | AIGenerateSkyboxAction
+    | AIHumeGetAccessTokenAction
     | ListUserStudiosAction
     | GetPublicRecordKeyAction
     | GrantRecordPermissionAction
@@ -270,6 +271,13 @@ export interface AIGenerateImageOptions {
      * The style preset that should be used to guide the image model torwards a specific style.
      */
     stylePreset?: string;
+}
+
+/**
+ * An event that is used to generate an image using AI.
+ */
+export interface AIHumeGetAccessTokenAction extends RecordsAction {
+    type: 'ai_hume_get_access_token';
 }
 
 /**
@@ -1101,6 +1109,22 @@ export function aiGenerateImage(
     return {
         type: 'ai_generate_image',
         ...parameters,
+        options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AIHumeGetAccessTokenAction.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function aiHumeGetAccessToken(
+    options?: RecordActionOptions,
+    taskId?: number | string
+): AIHumeGetAccessTokenAction {
+    return {
+        type: 'ai_hume_get_access_token',
         options: options ?? {},
         taskId,
     };

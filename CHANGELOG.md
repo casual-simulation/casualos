@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.3.5
+
+#### Date: 5/31/2024
+
+### :rocket: Features
+
+-   Improve support for environments that do no support local storage or indexedDB.
+-   Added the `ai.hume.getAccessToken()` function to allow retrieving an access token for a [Hume.ai](https://www.hume.ai/) session.
+    -   Requires that `humeai` be specified in the server configuration with an `apiKey` and `secretKey` and that the user has a subscription with `ai.hume.allowed` set to true in the subscription tier features.
+
 ## V3.3.4
 
 #### Date: 5/29/2024

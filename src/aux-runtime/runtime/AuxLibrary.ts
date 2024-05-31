@@ -293,6 +293,7 @@ import {
     recordFile as calcRecordFile,
     ListDataOptions,
     listDataRecordByMarker,
+    aiHumeGetAccessToken,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -423,6 +424,7 @@ import { CasualOSError } from './CasualOSError';
 import {
     AIGenerateImageResponse,
     AIGenerateImageSuccess,
+    AIHumeGetAccessTokenResult,
 } from '@casual-simulation/aux-records/AIController';
 import {
     RuntimeActions,
@@ -2982,6 +2984,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 chat,
                 generateSkybox,
                 generateImage,
+                hume: {
+                    getAccessToken: getHumeAccessToken,
+                },
 
                 stream: {
                     chat: chatStream,
@@ -5341,6 +5346,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 }
             }
         );
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Gets an access token for the Hume AI API.
+     * Returns a promise that resolves with the access token.
+     *
+     * @example Get an access token for the Hume AI API.
+     * const accessToken = await ai.hume.getAccessToken();
+     *
+     * @dochash actions/ai
+     * @docname ai.hume.getAccessToken
+     */
+    function getHumeAccessToken(): Promise<AIHumeGetAccessTokenResult> {
+        const task = context.createTask();
+        const action = aiHumeGetAccessToken({}, task.taskId);
+        const final = addAsyncResultAction(task, action);
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
     }

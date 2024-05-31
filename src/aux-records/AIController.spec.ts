@@ -28,7 +28,7 @@ import {
 } from './SubscriptionConfiguration';
 import { merge } from 'lodash';
 import { unwind } from '../js-interpreter/InterpreterUtils';
-import { state } from 'esri/widgets/TableList/TableListViewModel';
+import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
 
 console.log = jest.fn();
 
@@ -67,6 +67,12 @@ describe('AIController', () => {
             [AIGenerateImageInterfaceRequest]
         >;
     };
+    let humeInterface: {
+        getAccessToken: jest.Mock<
+            Promise<AIHumeInterfaceGetAccessTokenResult>,
+            []
+        >;
+    };
     let userId: string;
     let userSubscriptionTier: string;
     let store: MemoryStore;
@@ -88,6 +94,9 @@ describe('AIController', () => {
         };
         generateImageInterface = {
             generateImage: jest.fn(),
+        };
+        humeInterface = {
+            getAccessToken: jest.fn(),
         };
         store = new MemoryStore({
             subscriptions: null,
@@ -142,6 +151,9 @@ describe('AIController', () => {
                     },
                     allowedSubscriptionTiers: ['test-tier'],
                 },
+            },
+            hume: {
+                interface: humeInterface,
             },
             metrics: store,
             config: store,
@@ -432,6 +444,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -478,6 +491,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -907,6 +921,9 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: ['test-tier'],
                     },
                 },
+                hume: {
+                    interface: humeInterface,
+                },
                 metrics: store,
                 config: store,
                 policies: store,
@@ -1297,6 +1314,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -1351,6 +1369,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -1829,6 +1848,9 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: ['test-tier'],
                     },
                 },
+                hume: {
+                    interface: humeInterface,
+                },
                 metrics: store,
                 config: store,
                 policies: store,
@@ -1936,6 +1958,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -2022,6 +2045,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -2194,6 +2218,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -2282,6 +2307,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -2393,6 +2419,7 @@ describe('AIController', () => {
                 },
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -2443,6 +2470,7 @@ describe('AIController', () => {
                 images: null,
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -2546,6 +2574,7 @@ describe('AIController', () => {
                 },
                 metrics: store,
                 config: store,
+                hume: null,
                 policies: null,
             });
 
@@ -2736,6 +2765,118 @@ describe('AIController', () => {
                         'The user has reached their limit for the current subscription period.',
                 });
                 expect(generateImageInterface.generateImage).not.toBeCalled();
+            });
+        });
+    });
+
+    describe('getHumeAccessToken()', () => {
+        beforeEach(() => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    defaultFeatures: {
+                        user: {
+                            ai: {
+                                hume: {
+                                    allowed: true,
+                                },
+                            },
+                        },
+                    },
+                }
+            );
+        });
+
+        it('should return the result from the hume interface', async () => {
+            humeInterface.getAccessToken.mockResolvedValueOnce({
+                success: true,
+                accessToken: 'token',
+                expiresIn: 3600,
+                issuedAt: 1234567890,
+                tokenType: 'Bearer',
+            });
+
+            const result = await controller.getHumeAccessToken({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                accessToken: 'token',
+                expiresIn: 3600,
+                issuedAt: 1234567890,
+                tokenType: 'Bearer',
+            });
+        });
+
+        it('should return errors that the hume interface returns', async () => {
+            humeInterface.getAccessToken.mockResolvedValueOnce({
+                success: false,
+                errorCode: 'hume_api_error',
+                errorMessage: 'Hume API Error',
+            });
+
+            const result = await controller.getHumeAccessToken({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'hume_api_error',
+                errorMessage: 'Hume API Error',
+            });
+        });
+
+        it('should return not_supported if hume isnt implemented', async () => {
+            controller = new AIController({
+                chat: null,
+                generateSkybox: null,
+                images: null,
+                metrics: store,
+                config: store,
+                hume: null,
+                policies: null,
+            });
+
+            const result = await controller.getHumeAccessToken({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should return not_logged_in if the user isnt logged in', async () => {
+            const result = await controller.getHumeAccessToken({
+                userId: null,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in. Please provide a sessionKey.',
+            });
+        });
+
+        it('should return not_authorized if the user isnt allowed to use hume', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+            store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                allowed: false,
+            };
+
+            const result = await controller.getHumeAccessToken({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'The subscription does not permit Hume AI features.',
             });
         });
     });

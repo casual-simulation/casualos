@@ -135,6 +135,7 @@ import {
 } from '@simplewebauthn/types';
 import { fromByteArray } from 'base64-js';
 import { z } from 'zod';
+import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -332,6 +333,9 @@ describe('RecordsServer', () => {
             Promise<AIGenerateImageInterfaceResponse>,
             [AIGenerateImageInterfaceRequest]
         >;
+    };
+    let humeInterface: {
+        getAccessToken: jest.Mock<Promise<AIHumeInterfaceGetAccessTokenResult>>;
     };
 
     let stripe: StripeInterface;
@@ -581,6 +585,9 @@ describe('RecordsServer', () => {
         imageInterface = {
             generateImage: jest.fn(),
         };
+        humeInterface = {
+            getAccessToken: jest.fn(),
+        };
         aiController = new AIController({
             chat: {
                 interfaces: {
@@ -625,6 +632,9 @@ describe('RecordsServer', () => {
                     maxImages: 3,
                     maxSteps: 50,
                 },
+            },
+            hume: {
+                interface: humeInterface,
             },
             config: store,
             metrics: store,
@@ -12683,6 +12693,51 @@ describe('RecordsServer', () => {
                 apiHeaders
             )
         );
+    });
+
+    describe('GET /api/v2/ai/hume/token', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            humeInterface.getAccessToken.mockResolvedValueOnce({
+                success: true,
+                accessToken: 'token',
+                expiresIn: 3600,
+                issuedAt: 1234567890,
+                tokenType: 'Bearer',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/ai/hume/token`, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', `/api/v2/ai/hume/token`, () =>
+            JSON.stringify({
+                prompt: 'test',
+            })
+        );
+        testAuthorization(() => httpGet(`/api/v2/ai/hume/token`, apiHeaders));
+        testRateLimit(() => httpGet(`/api/v2/ai/hume/token`, apiHeaders));
     });
 
     describe('GET /api/v2/studios', () => {
