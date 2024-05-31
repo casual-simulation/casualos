@@ -41,6 +41,7 @@ import {
     grantRecordPermission,
     revokeRecordPermission,
     aiChatStream,
+    aiHumeGetAccessToken,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -8018,6 +8019,73 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
+            });
+        });
+
+        describe('ai_hume_get_access_token', () => {
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    headers?: Headers;
+                    json?: () => Promise<any>;
+                    text?: () => Promise<string>;
+                    body?: ReadableStream;
+                }>
+            >;
+
+            const originalFetch = globalThis.fetch;
+
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+                fetch = globalThis.fetch = jest.fn();
+            });
+
+            afterAll(() => {
+                globalThis.fetch = originalFetch;
+            });
+
+            it('should make a GET request to /api/v2/ai/hume/token', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        accessToken: 'token',
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([aiHumeGetAccessToken({}, 1)]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            procedure: 'getHumeAccessToken',
+                            input: {},
+                        }),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        accessToken: 'token',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
             });
         });
 

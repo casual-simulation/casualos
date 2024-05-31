@@ -178,6 +178,7 @@ import {
     listUserStudios,
     listDataRecordByMarker,
     aiChatStream,
+    aiHumeGetAccessToken,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -3493,6 +3494,16 @@ describe('AuxLibrary', () => {
                         },
                     ],
                 });
+            });
+        });
+
+        describe('ai.hume.getAccessToken()', () => {
+            it('should emit a AIGetHumeAccessTokenAction', () => {
+                const promise: any = library.api.ai.hume.getAccessToken();
+                const expected = aiHumeGetAccessToken({}, context.tasks.size);
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
