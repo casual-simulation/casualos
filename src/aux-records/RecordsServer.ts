@@ -2278,6 +2278,34 @@ export class RecordsServer {
                     }
                 ),
 
+            getHumeAccessToken: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/ai/hume/token')
+                .inputs(z.object({}))
+                .handler(async (_, context) => {
+                    if (!this._aiController) {
+                        return AI_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._aiController.getHumeAccessToken({
+                        userId: sessionKeyValidation.userId,
+                    });
+
+                    return result;
+                }),
+
             getStudio: procedure()
                 .origins('account')
                 .http('GET', '/api/v2/studios')

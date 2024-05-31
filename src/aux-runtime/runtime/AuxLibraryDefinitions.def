@@ -10296,6 +10296,45 @@ export interface AIGeneratedImage {
     seed?: number;
 }
 
+
+export type AIHumeGetAccessTokenResult =
+    | AIHumeGetAccessTokenSuccess
+    | AIHumeGetAccessTokenFailure;
+
+export interface AIHumeGetAccessTokenSuccess {
+    success: true;
+    /**
+     * The access token that was generated.
+     */
+    accessToken: string;
+    /**
+     * The number of seconds that the access token is valid for.
+     */
+    expiresIn: number;
+
+    /**
+     * The unix time in seconds that the token was issued at.
+     */
+    issuedAt: number;
+
+    /**
+     * The type of the token. Always "Bearer" for now.
+     */
+    tokenType: 'Bearer';
+}
+
+export interface AIHumeGetAccessTokenFailure {
+    success: false;
+
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | NotAuthorizedError
+        | 'hume_api_error'
+    errorMessage: string;
+}
+
 interface Ai {
     /**
      * Sends a chat message to the AI.
@@ -10589,6 +10628,20 @@ interface Ai {
         negativePrompt?: string | RecordActionOptions,
         options?: RecordActionOptions
     ): Promise<string | AIGenerateImageSuccess>;
+
+    hume: {
+        /**
+         * Gets an access token for the Hume AI API.
+         * Returns a promise that resolves with the access token.
+         * 
+         * @example Get an access token for the Hume AI API.
+         * const accessToken = await ai.hume.getAccessToken();
+         *
+         * @dochash actions/ai
+         * @docname ai.hume.getAccessToken
+         */
+        getAccessToken(): Promise<AIHumeGetAccessTokenResult>;
+    }
 
     stream: {
         /**
