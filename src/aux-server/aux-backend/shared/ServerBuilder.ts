@@ -140,7 +140,6 @@ import {
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
 // @ts-ignore
 import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
-import { nodeModuleNameResolver } from 'typescript';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
 
 const automaticPlugins: ServerPlugin[] = [
