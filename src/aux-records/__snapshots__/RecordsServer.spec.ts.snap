@@ -2268,6 +2268,18 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/ai/hume/token",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getHumeAccessToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/studios",
       },
       "inputs": Object {
@@ -5109,6 +5121,18 @@ Object {
         "type": "object",
       },
       "name": "createAiImage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/ai/hume/token",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getHumeAccessToken",
       "origins": "api",
     },
     Object {

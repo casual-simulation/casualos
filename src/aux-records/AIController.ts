@@ -20,16 +20,24 @@ import {
 import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
-import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import {
+    getHumeAiFeatures,
+    getSubscriptionFeatures,
+} from './SubscriptionConfiguration';
 import { PolicyStore } from './PolicyStore';
+import {
+    AIHumeInterface,
+    AIHumeInterfaceGetAccessTokenFailure,
+} from './AIHumeInterface';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
     generateSkybox: AIGenerateSkyboxConfiguration | null;
     images: AIGenerateImageConfiguration | null;
+    hume: AIHumeConfiguration | null;
     metrics: MetricsStore;
     config: ConfigurationStore;
-    policies: PolicyStore;
+    policies: PolicyStore | null;
 }
 
 export interface AIChatConfiguration {
@@ -156,6 +164,13 @@ export interface AIChatProviders {
     [provider: string]: AIChatInterface;
 }
 
+export interface AIHumeConfiguration {
+    /**
+     * The interface that should be used for Hume.
+     */
+    interface: AIHumeInterface;
+}
+
 /**
  * Defines a class that is able to handle AI requests.
  */
@@ -176,6 +191,7 @@ export class AIController {
     private _imageProviders: AIImageProviders;
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
+    private _humeInterface: AIHumeInterface | null;
     private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
@@ -225,6 +241,7 @@ export class AIController {
                 }
             }
         }
+        this._humeInterface = configuration.hume?.interface;
         this._metrics = configuration.metrics;
         this._config = configuration.config;
         this._policies = configuration.policies;
@@ -981,6 +998,72 @@ export class AIController {
         }
     }
 
+    async getHumeAccessToken(
+        request: AIHumeGetAccessTokenRequest
+    ): Promise<AIHumeGetAccessTokenResult> {
+        try {
+            if (!this._humeInterface) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey.',
+                };
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getHumeAiFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit Hume AI features.',
+                };
+            }
+
+            const result = await this._humeInterface.getAccessToken();
+
+            if (result.success) {
+                return {
+                    success: true,
+                    accessToken: result.accessToken,
+                    expiresIn: result.expiresIn,
+                    issuedAt: result.issuedAt,
+                    tokenType: result.tokenType,
+                };
+            } else {
+                return result;
+            }
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling get hume access token request:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _matchesSubscriptionTiers(
         tier: string,
         allowedTiers: true | Set<string>
@@ -1272,4 +1355,52 @@ export interface AIGenerateImageFailure {
 
     allowedSubscriptionTiers?: string[];
     currentSubscriptionTier?: string;
+}
+
+export interface AIHumeGetAccessTokenRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+}
+
+export type AIHumeGetAccessTokenResult =
+    | AIHumeGetAccessTokenSuccess
+    | AIHumeGetAccessTokenFailure;
+
+export interface AIHumeGetAccessTokenSuccess {
+    success: true;
+    /**
+     * The access token that was generated.
+     */
+    accessToken: string;
+    /**
+     * The number of seconds that the access token is valid for.
+     */
+    expiresIn: number;
+
+    /**
+     * The unix time in seconds that the token was issued at.
+     */
+    issuedAt: number;
+
+    /**
+     * The type of the token. Always "Bearer" for now.
+     */
+    tokenType: 'Bearer';
+}
+
+export interface AIHumeGetAccessTokenFailure {
+    success: false;
+
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
+        | AIHumeInterfaceGetAccessTokenFailure['errorCode'];
+    errorMessage: string;
 }

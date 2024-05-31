@@ -140,6 +140,8 @@ import {
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
 // @ts-ignore
 import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
+import { nodeModuleNameResolver } from 'typescript';
+import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -975,7 +977,12 @@ export class ServerBuilder implements SubscriptionLike {
     useAI(
         options: Pick<
             BuilderOptions,
-            'openai' | 'ai' | 'blockadeLabs' | 'stabilityai' | 'googleai'
+            | 'openai'
+            | 'ai'
+            | 'blockadeLabs'
+            | 'stabilityai'
+            | 'googleai'
+            | 'humeai'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using AI.');
@@ -1040,6 +1047,7 @@ export class ServerBuilder implements SubscriptionLike {
             chat: null,
             generateSkybox: null,
             images: null,
+            hume: null,
             config: this._configStore,
             metrics: this._metricsStore,
             policies: this._policyStore,
@@ -1094,6 +1102,15 @@ export class ServerBuilder implements SubscriptionLike {
                     maxImages: images.maxImages,
                     maxSteps: images.maxSteps,
                 },
+            };
+        }
+        if (options.humeai) {
+            console.log('[ServerBuilder] Using Hume AI.');
+            this._aiConfiguration.hume = {
+                interface: new HumeInterface(
+                    options.humeai.apiKey,
+                    options.humeai.secretKey
+                ),
             };
         }
         return this;
@@ -1967,6 +1984,17 @@ const stabilityAiSchema = z.object({
         .nonempty(),
 });
 
+const humeAiSchema = z.object({
+    apiKey: z
+        .string()
+        .describe('The Hume AI API Key that should be used.')
+        .min(1),
+    secretKey: z
+        .string()
+        .describe('The Hume AI Secret Key that should be used.')
+        .min(1),
+});
+
 const aiSchema = z.object({
     chat: z
         .object({
@@ -2201,6 +2229,11 @@ export const optionsSchema = z.object({
     googleai: googleAiSchema
         .describe(
             'Google AI options. If omitted, then it will not be possible to use Google AI (i.e. Gemini)'
+        )
+        .optional(),
+    humeai: humeAiSchema
+        .describe(
+            'Hume AI options. If omitted, then it will not be possible to use Hume AI.'
         )
         .optional(),
     ai: aiSchema

@@ -172,6 +172,21 @@ export const subscriptionFeaturesSchema = z.object({
                 .positive()
                 .optional(),
         }),
+        hume: z
+            .object({
+                allowed: z
+                    .boolean()
+                    .describe(
+                        'Whether Hume AI features are allowed for the subscription. If false, then every request to generate Hume AI will be rejected.'
+                    ),
+            })
+            .describe(
+                'The configuration for Hume AI features for the subscription. Defaults to not allowed if omitted.'
+            )
+            .optional()
+            .default({
+                allowed: false,
+            }),
     }),
     insts: z.object({
         allowed: z
@@ -749,6 +764,11 @@ export interface AIFeaturesConfiguration {
      * The configuration for AI skybox features.
      */
     skyboxes: AISkyboxFeaturesConfiguration;
+
+    /**
+     * The configuration for Hume AI features.
+     */
+    hume?: AIHumeFeaturesConfiguration;
 }
 
 export interface AIChatFeaturesConfiguration {
@@ -804,6 +824,13 @@ export interface AISkyboxFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxSkyboxesPerPeriod?: number;
+}
+
+export interface AIHumeFeaturesConfiguration {
+    /**
+     * Whether Hume AI features are allowed.
+     */
+    allowed: boolean;
 }
 
 export interface InstsFeaturesConfiguration {
@@ -863,6 +890,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             skyboxes: {
                 allowed: true,
             },
+            hume: {
+                allowed: true,
+            },
         },
         data: {
             allowed: true,
@@ -902,6 +932,29 @@ export function getComIdFeatures(
             // allowCustomComId: false,
         }
     );
+}
+
+/**
+ * Gets the Hume AI features that are allowed for the given subscription.
+ * If hume ai features are not configured, then they are not allowed.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getHumeAiFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio'
+): AIHumeFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type
+    );
+    return features.ai.hume ?? { allowed: false };
 }
 
 /**
