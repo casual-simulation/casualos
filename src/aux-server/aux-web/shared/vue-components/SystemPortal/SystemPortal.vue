@@ -276,7 +276,11 @@
                         @pointermove="onSliderPointerMove"
                         @pointerup="onSliderPointerUp"
                     ></div>
-                    <div class="tags" v-if="selectedPane === 'bots' && hasSelection">
+                    <div
+                        class="tags"
+                        v-if="selectedPane === 'bots' && hasSelection"
+                        @keyup.enter="openNewTag"
+                    >
                         <div class="tags-list">
                             <div @click="toggleTags()" class="tags-toggle">
                                 <md-icon>{{
