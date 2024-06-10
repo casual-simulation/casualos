@@ -2,7 +2,7 @@
 
 You can find a plain-text version of this privacy policy <a href="/privacy-policy.txt">here</a>.
 
-_Last updated on March 20, 2024_
+_Last updated on June 10, 2024_
 
 Please review this Privacy Policy. When using our products or services the terms of our [Code of Conduct](/code-of-conduct), [Acceptable Use Policy](/acceptable-use-policy) and [Terms of Service](/terms) also apply.
 
