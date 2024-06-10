@@ -151,6 +151,7 @@ export class AuthHandler implements AuxAuth {
         return {
             privacyPolicyUrl: this.privacyPolicyUrl,
             termsOfServiceUrl: this.termsOfServiceUrl,
+            codeOfConductUrl: this.codeOfConductUrl,
         };
     }
 
@@ -407,6 +408,7 @@ export class AuthHandler implements AuxAuth {
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
+                codeOfConductUrl: this.codeOfConductUrl,
                 supportsSms: this._supportsSms,
                 supportsWebAuthn: this._supportsWebAuthn,
                 errors: errors,
@@ -462,6 +464,7 @@ export class AuthHandler implements AuxAuth {
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
+                codeOfConductUrl: this.codeOfConductUrl,
                 supportsSms: this._supportsSms,
                 supportsWebAuthn: this._supportsWebAuthn,
                 errors: errors,
@@ -614,6 +617,7 @@ export class AuthHandler implements AuxAuth {
                 siteName: this.siteName,
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
+                codeOfConductUrl: this.codeOfConductUrl,
                 errors: errors,
             });
             return;
@@ -747,6 +751,7 @@ export class AuthHandler implements AuxAuth {
             page: 'enter_address',
             termsOfServiceUrl: this.termsOfServiceUrl,
             privacyPolicyUrl: this.privacyPolicyUrl,
+            codeOfConductUrl: this.codeOfConductUrl,
             siteName: this.siteName,
             supportsSms: this._supportsSms,
             supportsWebAuthn: this._supportsWebAuthn,
@@ -850,6 +855,7 @@ export class AuthHandler implements AuxAuth {
                         siteName: this.siteName,
                         termsOfServiceUrl: this.termsOfServiceUrl,
                         privacyPolicyUrl: this.privacyPolicyUrl,
+                        codeOfConductUrl: this.codeOfConductUrl,
                         errors: errors,
                         supportsSms: this._supportsSms,
                         supportsWebAuthn: this._supportsWebAuthn,
@@ -906,6 +912,8 @@ export class AuthHandler implements AuxAuth {
             this._loginUIStatus.next({
                 page: 'has_account',
                 privacyPolicyUrl: this.privacyPolicyUrl,
+                codeOfConductUrl: this.codeOfConductUrl,
+                termsOfServiceUrl: this.termsOfServiceUrl,
             });
 
             const hasAccount = await firstValueFrom(
@@ -966,6 +974,7 @@ export class AuthHandler implements AuxAuth {
             page: 'enter_privo_account_info',
             termsOfServiceUrl: this.termsOfServiceUrl,
             privacyPolicyUrl: this.privacyPolicyUrl,
+            codeOfConductUrl: this.codeOfConductUrl,
             siteName: this.siteName,
             errors: [],
         });
@@ -1000,6 +1009,7 @@ export class AuthHandler implements AuxAuth {
                         page: 'enter_privo_account_info',
                         termsOfServiceUrl: this.termsOfServiceUrl,
                         privacyPolicyUrl: this.privacyPolicyUrl,
+                        codeOfConductUrl: this.codeOfConductUrl,
                         siteName: this.siteName,
                         errors: errors,
                     });
@@ -1015,6 +1025,7 @@ export class AuthHandler implements AuxAuth {
                     page: 'enter_privo_account_info',
                     termsOfServiceUrl: this.termsOfServiceUrl,
                     privacyPolicyUrl: this.privacyPolicyUrl,
+                    codeOfConductUrl: this.codeOfConductUrl,
                     siteName: this.siteName,
                     errors: [
                         {
@@ -1133,6 +1144,10 @@ export class AuthHandler implements AuxAuth {
 
     private get privacyPolicyUrl() {
         return new URL('/privacy-policy', location.origin).href;
+    }
+
+    private get codeOfConductUrl() {
+        return new URL('/code-of-conduct', location.origin).href;
     }
 
     private get _supportsSms() {

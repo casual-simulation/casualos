@@ -55,6 +55,10 @@ export default class EnterAddressDialog extends Vue {
         }
     }
 
+    get isPrivoCertified() {
+        return appManager.config.requirePrivoLogin;
+    }
+
     get supportsSms() {
         return !!this.status.supportsSms;
     }
@@ -87,6 +91,10 @@ export default class EnterAddressDialog extends Vue {
 
     get privacyPolicyUrl() {
         return this.status.privacyPolicyUrl;
+    }
+
+    get codeOfConductUrl() {
+        return this.status.codeOfConductUrl;
     }
 
     get formErrors() {
