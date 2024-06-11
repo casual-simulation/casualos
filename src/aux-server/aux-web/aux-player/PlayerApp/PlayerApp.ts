@@ -99,7 +99,7 @@ import EnableXRModal from '../../shared/vue-components/EnableXRModal/EnableXRMod
 import { oembed } from '@loomhq/loom-embed';
 import {
     createInstance as createLoomInstance,
-    setup as setupLoom,
+    SDKResult as LoomSDKResult,
 } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
 
@@ -1449,86 +1449,30 @@ export default class PlayerApp extends Vue {
                 throw new Error(error);
             }
 
+            let result: LoomSDKResult;
             if (hasValue(e.options.publicAppId)) {
-                const { configureButton, teardown } = await createLoomInstance({
+                result = await createLoomInstance({
                     mode: 'standard',
                     publicAppId: e.options.publicAppId,
                     config: {
                         insertButtonText: 'Use Video',
                     },
                 });
-
-                this._loomSubscription = new Subscription(() => {
-                    teardown();
+            } else {
+                const token = await simulation.records.getLoomToken({
+                    recordName: e.options.recordName,
                 });
 
-                const button = document.createElement('button');
-                button.textContent = 'Record Loom';
-                this.$el.appendChild(button);
-                this._recordLoomButton = button;
-                this._recordLoomAction = e;
-                this._recordLoomSimulation = simulation;
-
-                const sdkButton = configureButton({
-                    element: button,
-                    hooks: {
-                        onInsertClicked: (video) => {
-                            console.log(
-                                '[PlayerApp] Using loom recording.',
-                                video
-                            );
-                            this._cleanupLoom();
-                            if (hasValue(e.taskId)) {
-                                simulation.helper.transaction(
-                                    asyncResult(e.taskId, video)
-                                );
-                            }
-                        },
-                        onRecordingComplete: (video) => {
-                            console.log(
-                                '[PlayerApp] Loom recording complete:',
-                                video
-                            );
-                        },
-                        onUploadComplete: (video) => {
-                            console.log(
-                                '[PlayerApp] Loom upload complete:',
-                                video
-                            );
-                        },
-                        onCancel: () => {
-                            console.log(
-                                '[PlayerApp] Loom recording cancelled.'
-                            );
-                            this._cleanupLoom();
-                            if (hasValue(e.taskId)) {
-                                simulation.helper.transaction(
-                                    asyncResult(e.taskId, null)
-                                );
-                            }
-                        },
-                        onLifecycleUpdate: (state) => {
-                            if (state === 'closed') {
-                                console.log(
-                                    '[PlayerApp] Loom recording cancelled.'
-                                );
-                                this._cleanupLoom();
-                                if (hasValue(e.taskId)) {
-                                    simulation.helper.transaction(
-                                        asyncResult(e.taskId, null)
-                                    );
-                                }
-                            }
-                        },
+                result = await createLoomInstance({
+                    mode: 'custom',
+                    jws: token,
+                    config: {
+                        insertButtonText: 'Use Video',
                     },
                 });
-
-                this._recordLoomButton.click();
-            } else {
-                throw new Error(
-                    'Recording looms with a record name is not supported!'
-                );
             }
+
+            this._setupLoomRecording(result, e, simulation);
         } catch (err) {
             console.error('[PlayerApp] Unable to record loom:', err);
             this._cleanupLoom();
@@ -1538,6 +1482,66 @@ export default class PlayerApp extends Vue {
                 );
             }
         }
+    }
+
+    private _setupLoomRecording(
+        { configureButton, teardown }: LoomSDKResult,
+        e: RecordLoomAction,
+        simulation: BrowserSimulation
+    ) {
+        this._loomSubscription = new Subscription(() => {
+            teardown();
+        });
+
+        const button = document.createElement('button');
+        button.textContent = 'Record Loom';
+        this.$el.appendChild(button);
+        this._recordLoomButton = button;
+        this._recordLoomAction = e;
+        this._recordLoomSimulation = simulation;
+
+        const sdkButton = configureButton({
+            element: button,
+            hooks: {
+                onInsertClicked: (video) => {
+                    console.log('[PlayerApp] Using loom recording.', video);
+                    this._cleanupLoom();
+                    if (hasValue(e.taskId)) {
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, video)
+                        );
+                    }
+                },
+                onRecordingComplete: (video) => {
+                    console.log('[PlayerApp] Loom recording complete:', video);
+                },
+                onUploadComplete: (video) => {
+                    console.log('[PlayerApp] Loom upload complete:', video);
+                },
+                onCancel: () => {
+                    console.log('[PlayerApp] Loom recording cancelled.');
+                    this._cleanupLoom();
+                    if (hasValue(e.taskId)) {
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, null)
+                        );
+                    }
+                },
+                onLifecycleUpdate: (state) => {
+                    if (state === 'closed') {
+                        console.log('[PlayerApp] Loom recording cancelled.');
+                        this._cleanupLoom();
+                        if (hasValue(e.taskId)) {
+                            simulation.helper.transaction(
+                                asyncResult(e.taskId, null)
+                            );
+                        }
+                    }
+                },
+            },
+        });
+
+        this._recordLoomButton.click();
     }
 
     private _cleanupLoom() {
