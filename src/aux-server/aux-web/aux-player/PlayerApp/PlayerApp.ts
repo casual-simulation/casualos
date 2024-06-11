@@ -41,6 +41,9 @@ import {
     ON_END_AUDIO_RECORDING,
     action,
     CreateStaticHtmlAction,
+    RecordLoomAction,
+    WatchLoomAction,
+    GetLoomMetadataAction,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -93,6 +96,12 @@ import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
 import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 import ReportInstDialog from '../../shared/vue-components/ReportInstDialog/ReportInstDialog';
 import EnableXRModal from '../../shared/vue-components/EnableXRModal/EnableXRModal';
+import { oembed } from '@loomhq/loom-embed';
+import {
+    createInstance as createLoomInstance,
+    setup as setupLoom,
+} from '@loomhq/record-sdk';
+import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -276,6 +285,13 @@ export default class PlayerApp extends Vue {
 
     loginUIVisible: boolean = false;
     recordsUIVisible: boolean = false;
+    loomEmbedHtml: string = null;
+    showLoom: boolean = false;
+
+    private _loomSubscription: Subscription = null;
+    private _recordLoomAction: RecordLoomAction = null;
+    private _recordLoomSimulation: BrowserSimulation = null;
+    private _recordLoomButton: HTMLButtonElement = null;
 
     get showCustomApps(): boolean {
         return !this.loginUIVisible && !this.recordsUIVisible;
@@ -1225,6 +1241,12 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'create_static_html') {
                     this._createStaticHtml(e, simulation);
+                } else if (e.type === 'record_loom') {
+                    this._recordLoom(e, simulation);
+                } else if (e.type === 'watch_loom') {
+                    this._watchLoom(e, simulation);
+                } else if (e.type === 'get_loom_metadata') {
+                    this._getLoomMetadata(e, simulation);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1377,6 +1399,169 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this.setTitleToID();
+    }
+
+    private async _getLoomMetadata(
+        e: GetLoomMetadataAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            const metadata = await oembed(e.sharedUrl);
+
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(asyncResult(e.taskId, metadata));
+            }
+        } catch (err) {
+            console.error('[PlayerApp] Unable to get loom metadata:', err);
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(e.taskId, err.toString())
+                );
+            }
+        }
+    }
+
+    private async _watchLoom(
+        e: WatchLoomAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            const metadata = await oembed(e.sharedUrl);
+            this.loomEmbedHtml = metadata.html;
+            this.showLoom = true;
+        } catch (err) {
+            console.error('[PlayerApp] Unable to watch loom:', err);
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(e.taskId, err.toString())
+                );
+            }
+        }
+    }
+
+    private async _recordLoom(
+        e: RecordLoomAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            const { supported, error } = isLoomSupported();
+            if (!supported) {
+                throw new Error(error);
+            }
+
+            if (hasValue(e.options.publicAppId)) {
+                const { configureButton, teardown } = await createLoomInstance({
+                    mode: 'standard',
+                    publicAppId: e.options.publicAppId,
+                    config: {
+                        insertButtonText: 'Use Video',
+                    },
+                });
+
+                this._loomSubscription = new Subscription(() => {
+                    teardown();
+                });
+
+                const button = document.createElement('button');
+                button.textContent = 'Record Loom';
+                this.$el.appendChild(button);
+                this._recordLoomButton = button;
+                this._recordLoomAction = e;
+                this._recordLoomSimulation = simulation;
+
+                const sdkButton = configureButton({
+                    element: button,
+                    hooks: {
+                        onInsertClicked: (video) => {
+                            console.log(
+                                '[PlayerApp] Using loom recording.',
+                                video
+                            );
+                            this._cleanupLoom();
+                            if (hasValue(e.taskId)) {
+                                simulation.helper.transaction(
+                                    asyncResult(e.taskId, video)
+                                );
+                            }
+                        },
+                        onRecordingComplete: (video) => {
+                            console.log(
+                                '[PlayerApp] Loom recording complete:',
+                                video
+                            );
+                        },
+                        onUploadComplete: (video) => {
+                            console.log(
+                                '[PlayerApp] Loom upload complete:',
+                                video
+                            );
+                        },
+                        onCancel: () => {
+                            console.log(
+                                '[PlayerApp] Loom recording cancelled.'
+                            );
+                            this._cleanupLoom();
+                            if (hasValue(e.taskId)) {
+                                simulation.helper.transaction(
+                                    asyncResult(e.taskId, null)
+                                );
+                            }
+                        },
+                        onLifecycleUpdate: (state) => {
+                            if (state === 'closed') {
+                                console.log(
+                                    '[PlayerApp] Loom recording cancelled.'
+                                );
+                                this._cleanupLoom();
+                                if (hasValue(e.taskId)) {
+                                    simulation.helper.transaction(
+                                        asyncResult(e.taskId, null)
+                                    );
+                                }
+                            }
+                        },
+                    },
+                });
+
+                this._recordLoomButton.click();
+            } else {
+                throw new Error(
+                    'Recording looms with a record name is not supported!'
+                );
+            }
+        } catch (err) {
+            console.error('[PlayerApp] Unable to record loom:', err);
+            this._cleanupLoom();
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(e.taskId, err.toString())
+                );
+            }
+        }
+    }
+
+    private _cleanupLoom() {
+        if (this._loomSubscription) {
+            const sub = this._loomSubscription;
+            this._loomSubscription = null;
+            sub.unsubscribe();
+        }
+        this._recordLoomAction = null;
+        this._recordLoomSimulation = null;
+        if (this._recordLoomButton) {
+            const b = this._recordLoomButton;
+            this._recordLoomButton = null;
+            this.$el.removeChild(b);
+        }
+    }
+
+    onLoomClosed() {
+        this.hideLoom();
+    }
+
+    hideLoom() {
+        this.loomEmbedHtml = '';
+        this.showLoom = false;
     }
 
     async logout() {
