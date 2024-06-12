@@ -110,8 +110,8 @@ describe('LoomController', () => {
         );
 
         await store.updateStudioLoomConfig(studioId, {
-            loomAppId: 'appId',
-            loomPrivateKey: PRIVATE_KEY,
+            appId: 'appId',
+            privateKey: PRIVATE_KEY,
         });
 
         store.subscriptionConfiguration = merge(createTestSubConfiguration(), {
@@ -218,6 +218,27 @@ describe('LoomController', () => {
                 success: false,
                 errorCode: 'invalid_request',
                 errorMessage: 'The studio does not have a loom configuration.',
+            });
+        });
+
+        it('should return subscription_limit_reached if the studio doesnt have a valid subscription', async () => {
+            await store.updateStudio({
+                id: studioId,
+                displayName: 'myStudio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'inactive',
+            });
+
+            const result = (await controller.getToken({
+                recordName: studioId,
+                userId: userId,
+            })) as LoomGetTokenSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'Loom features are not enabled for this subscription.',
             });
         });
     });

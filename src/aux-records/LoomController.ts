@@ -107,13 +107,13 @@ export class LoomController {
             }
 
             const privateKey = await jose.importPKCS8(
-                loomConfig.loomPrivateKey,
+                loomConfig.privateKey,
                 'RS256'
             );
             const jws = await new jose.SignJWT({})
                 .setProtectedHeader({ alg: 'RS256' })
                 .setIssuedAt(request.nowMs ?? Date.now())
-                .setIssuer(loomConfig.loomAppId)
+                .setIssuer(loomConfig.appId)
                 .setExpirationTime('10m')
                 .sign(privateKey);
 

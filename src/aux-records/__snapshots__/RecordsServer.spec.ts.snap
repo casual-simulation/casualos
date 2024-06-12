@@ -1173,29 +1173,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "create",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "delete",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -1218,21 +1203,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -1241,29 +1217,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "create",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "delete",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -1311,21 +1272,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -1334,25 +1286,13 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "increment",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "count",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "increment",
+                      "count",
+                      "update",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -1374,21 +1314,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -1397,29 +1328,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "assign",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "unassign",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "grantPermission",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "revokePermission",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "assign",
+                      "unassign",
+                      "grantPermission",
+                      "revokePermission",
+                      "read",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -1442,21 +1358,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -1465,29 +1372,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "grant",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "revoke",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "grant",
+                      "revoke",
+                      "read",
+                      "update",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -1519,21 +1411,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -1542,37 +1425,16 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "create",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "updateData",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "delete",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "sendAction",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "updateData",
+                      "delete",
+                      "list",
+                      "sendAction",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -1595,21 +1457,52 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "loom",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
                   },
                 },
                 "type": "object",
@@ -1671,33 +1564,16 @@ Object {
           },
           "resourceKind": Object {
             "optional": true,
-            "options": Array [
-              Object {
-                "type": "literal",
-                "value": "data",
-              },
-              Object {
-                "type": "literal",
-                "value": "file",
-              },
-              Object {
-                "type": "literal",
-                "value": "event",
-              },
-              Object {
-                "type": "literal",
-                "value": "marker",
-              },
-              Object {
-                "type": "literal",
-                "value": "role",
-              },
-              Object {
-                "type": "literal",
-                "value": "inst",
-              },
+            "type": "enum",
+            "values": Array [
+              "data",
+              "file",
+              "event",
+              "marker",
+              "role",
+              "inst",
+              "loom",
             ],
-            "type": "union",
           },
         },
         "type": "object",
@@ -2280,6 +2156,22 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/loom/token",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getLoomAccessToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/studios",
       },
       "inputs": Object {
@@ -2352,6 +2244,21 @@ Object {
             "nullable": true,
             "optional": true,
             "type": "string",
+          },
+          "loomConfig": Object {
+            "description": "The configuration that can be used by studios to setup loom.",
+            "optional": true,
+            "schema": Object {
+              "appId": Object {
+                "description": "The ID of the loom app.",
+                "type": "string",
+              },
+              "privateKey": Object {
+                "description": "The private key for the loom app.",
+                "type": "string",
+              },
+            },
+            "type": "object",
           },
           "playerConfig": Object {
             "description": "The configuration that the comId provides which overrides the default player configuration.",
@@ -4031,29 +3938,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "create",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "delete",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -4076,21 +3968,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -4099,29 +3982,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "create",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "delete",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "read",
+                      "create",
+                      "update",
+                      "delete",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -4169,21 +4037,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -4192,25 +4051,13 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "increment",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "count",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "increment",
+                      "count",
+                      "update",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -4232,21 +4079,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -4255,29 +4093,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "assign",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "unassign",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "grantPermission",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "revokePermission",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "assign",
+                      "unassign",
+                      "grantPermission",
+                      "revokePermission",
+                      "read",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -4300,21 +4123,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -4323,29 +4137,14 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "grant",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "revoke",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "grant",
+                      "revoke",
+                      "read",
+                      "update",
+                      "list",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -4377,21 +4176,12 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
                   },
                 },
                 "type": "object",
@@ -4400,37 +4190,16 @@ Object {
                 "schema": Object {
                   "action": Object {
                     "nullable": true,
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "create",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "read",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "update",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "updateData",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "delete",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "list",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "sendAction",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "updateData",
+                      "delete",
+                      "list",
+                      "sendAction",
                     ],
-                    "type": "union",
                   },
                   "expireTimeMs": Object {
                     "nullable": true,
@@ -4453,21 +4222,52 @@ Object {
                     "type": "string",
                   },
                   "subjectType": Object {
-                    "options": Array [
-                      Object {
-                        "type": "literal",
-                        "value": "user",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "inst",
-                      },
-                      Object {
-                        "type": "literal",
-                        "value": "role",
-                      },
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
                     ],
-                    "type": "union",
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "loom",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
                   },
                 },
                 "type": "object",
@@ -4529,33 +4329,16 @@ Object {
           },
           "resourceKind": Object {
             "optional": true,
-            "options": Array [
-              Object {
-                "type": "literal",
-                "value": "data",
-              },
-              Object {
-                "type": "literal",
-                "value": "file",
-              },
-              Object {
-                "type": "literal",
-                "value": "event",
-              },
-              Object {
-                "type": "literal",
-                "value": "marker",
-              },
-              Object {
-                "type": "literal",
-                "value": "role",
-              },
-              Object {
-                "type": "literal",
-                "value": "inst",
-              },
+            "type": "enum",
+            "values": Array [
+              "data",
+              "file",
+              "event",
+              "marker",
+              "role",
+              "inst",
+              "loom",
             ],
-            "type": "union",
           },
         },
         "type": "object",
@@ -5138,6 +4921,22 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/loom/token",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getLoomAccessToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/studios",
       },
       "inputs": Object {
@@ -5210,6 +5009,21 @@ Object {
             "nullable": true,
             "optional": true,
             "type": "string",
+          },
+          "loomConfig": Object {
+            "description": "The configuration that can be used by studios to setup loom.",
+            "optional": true,
+            "schema": Object {
+              "appId": Object {
+                "description": "The ID of the loom app.",
+                "type": "string",
+              },
+              "privateKey": Object {
+                "description": "The private key for the loom app.",
+                "type": "string",
+              },
+            },
+            "type": "object",
           },
           "playerConfig": Object {
             "description": "The configuration that the comId provides which overrides the default player configuration.",

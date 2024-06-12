@@ -149,6 +149,19 @@
                     <md-table-cell>comID.what3WordsApiKey</md-table-cell>
                     <md-table-cell>{{ originalWhat3WordsApiKey || '(default)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row v-if="allowLoom" @click="updateLoomConfig()">
+                    <md-tooltip
+                        >The public App ID of the Loom app that should be used for the
+                        studio.</md-tooltip
+                    >
+                    <md-table-cell>loom.publicAppId</md-table-cell>
+                    <md-table-cell>{{ originalLoomPublicAppId || '(not set)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowLoom" @click="updateLoomConfig()">
+                    <md-tooltip>The private key that Loom generated for the app.</md-tooltip>
+                    <md-table-cell>loom.privateKey</md-table-cell>
+                    <md-table-cell>{{ '(secret)' }}</md-table-cell>
+                </md-table-row>
             </md-table>
         </div>
 
@@ -366,6 +379,35 @@
                     <label for="displayName">Studio Name</label>
                     <md-input id="displayName" v-model="displayName" type="text"></md-input>
                     <field-errors field="displayName" :errors="errors" />
+                </md-field>
+                <field-errors :field="null" :errors="errors" />
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="saveStudio()">
+                    <md-progress-spinner
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        v-if="isSavingStudio"
+                    >
+                    </md-progress-spinner>
+                    <span v-else>Save</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showUpdateLoomConfig" @md-closed="cancelUpdateStudio()">
+            <md-dialog-title> Update Loom Config</md-dialog-title>
+            <md-dialog-content>
+                <md-field :class="loomPublicAppIdFieldClass">
+                    <label for="loomPublicAppId">Loom Public App ID</label>
+                    <md-input id="loomPublicAppId" v-model="loomPublicAppId" type="text"></md-input>
+                    <field-errors field="loomPublicAppId" :errors="errors" />
+                </md-field>
+                <md-field :class="loomPrivateKeyFieldClass">
+                    <label for="loomPrivateKey">Loom Private Key</label>
+                    <md-textarea id="loomPrivateKey" v-model="loomPrivateKey"></md-textarea>
+                    <field-errors field="loomPrivateKey" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />
             </md-dialog-content>

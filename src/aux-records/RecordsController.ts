@@ -6,6 +6,7 @@ import {
     Studio,
     StudioAssignmentRole,
     StudioComIdRequest,
+    LoomConfig,
 } from './RecordsStore';
 import {
     toBase64String,
@@ -33,7 +34,10 @@ import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
     StudioComIdFeaturesConfiguration,
+    StudioLoomFeaturesConfiguration,
+    SubscriptionConfiguration,
     getComIdFeatures,
+    getLoomFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
@@ -1023,7 +1027,7 @@ export class RecordsController {
         request: UpdateStudioRequest
     ): Promise<UpdateStudioResult> {
         try {
-            const { id, ...updates } = request.studio;
+            const { id, loomConfig, ...updates } = request.studio;
             const existingStudio = await this._store.getStudioById(
                 request.studio.id
             );
@@ -1059,6 +1063,10 @@ export class RecordsController {
             };
 
             await this._store.updateStudio(final);
+
+            if (loomConfig) {
+                await this._store.updateStudioLoomConfig(final.id, loomConfig);
+            }
 
             return {
                 success: true,
@@ -1115,6 +1123,10 @@ export class RecordsController {
             let features: StudioComIdFeaturesConfiguration = {
                 allowed: false,
             };
+            let loomFeatures: StudioLoomFeaturesConfiguration = {
+                allowed: false,
+            };
+            let loomConfig: LoomConfig = undefined;
 
             if (
                 studio.subscriptionId &&
@@ -1127,6 +1139,17 @@ export class RecordsController {
                     studio.subscriptionStatus,
                     studio.subscriptionId
                 );
+                loomFeatures = getLoomFeatures(
+                    config,
+                    studio.subscriptionStatus,
+                    studio.subscriptionId
+                );
+
+                if (loomFeatures.allowed) {
+                    loomConfig = await this._store.getStudioLoomConfig(
+                        studio.id
+                    );
+                }
             }
 
             return {
@@ -1139,7 +1162,13 @@ export class RecordsController {
                     ownerStudioComId: studio.ownerStudioComId,
                     comIdConfig: studio.comIdConfig,
                     playerConfig: studio.playerConfig,
+                    loomConfig: loomConfig
+                        ? {
+                              appId: loomConfig.appId,
+                          }
+                        : undefined,
                     comIdFeatures: features,
+                    loomFeatures,
                 },
             };
         } catch (err) {
@@ -2103,6 +2132,12 @@ export interface UpdateStudioRequest {
          * If omitted, then the comId configuration will not be updated.
          */
         comIdConfig?: ComIdConfig;
+
+        /**
+         * The studios loom configuration.
+         * If omitted, then the loom configuration will not be updated.
+         */
+        loomConfig?: LoomConfig;
     };
 }
 
@@ -2166,9 +2201,19 @@ export interface StudioData {
     comIdConfig?: ComIdConfig;
 
     /**
+     * The studio's loom configuration.
+     */
+    loomConfig?: Omit<LoomConfig, 'privateKey'>;
+
+    /**
      * The comId features that this studio has access to.
      */
     comIdFeatures: StudioComIdFeaturesConfiguration;
+
+    /**
+     * The loom features that this studio has access to.
+     */
+    loomFeatures: StudioLoomFeaturesConfiguration;
 }
 
 export interface GetStudioFailure {
