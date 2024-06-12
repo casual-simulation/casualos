@@ -178,6 +178,23 @@ export interface RecordsStore {
      * @param request The request.
      */
     saveComIdRequest(request: StudioComIdRequest): Promise<void>;
+
+    /**
+     * Gets the loom config for the studio with the given ID.
+     * Returns null if the studio does not have a loom config.
+     * @param studioId The ID of the studio.
+     */
+    getStudioLoomConfig(studioId: string): Promise<StudioLoomConfig | null>;
+
+    /**
+     * Updates the loom config for the studio with the given ID.
+     * @param studioId The ID of the studio that should be updated.
+     * @param config The config that should be updated for the studio.
+     */
+    updateStudioLoomConfig(
+        studioId: string,
+        config: StudioLoomConfig
+    ): Promise<void>;
 }
 
 export interface CountRecordsFilter {
@@ -315,6 +332,18 @@ export interface Studio {
      * The config for comId features.
      */
     comIdConfig?: ComIdConfig;
+}
+
+export interface StudioLoomConfig {
+    /**
+     * The ID of the loom app that is configured for this studio.
+     */
+    loomAppId: string;
+
+    /**
+     * The private key for the loom app that is configured for this studio.
+     */
+    loomPrivateKey: string;
 }
 
 /**
