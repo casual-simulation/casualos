@@ -2,7 +2,7 @@
 
 ## V3.3.5
 
-#### Date: TBD
+#### Date: 5/31/2024
 
 ### :rocket: Features
 
@@ -10,6 +10,7 @@
 -   Added the `ai.hume.getAccessToken()` function to allow retrieving an access token for a [Hume.ai](https://www.hume.ai/) session.
     -   Requires that `humeai` be specified in the server configuration with an `apiKey` and `secretKey` and that the user has a subscription with `ai.hume.allowed` set to true in the subscription tier features.
 -   Moved pinned tags in `systemPortal` to appear above the tags list.
+-   Pressing `Enter` while a tag is focused in the system portal now triggers the "New Tag" dialog.
 
 ## V3.3.4
 
