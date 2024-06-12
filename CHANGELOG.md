@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.3.6
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   [Casual Simulation is now PRIVO Certified!](https://cert.privo.com/#/companies/casualsimulation)
+    -   The certification seal has been added in various locations to notify users that Casual Simulation, ab1.bot, and publicos.link are [COPPA Safe Harbor Certified](https://www.ftc.gov/enforcement/coppa-safe-harbor-program).
+
 ## V3.3.5
 
 #### Date: 5/31/2024

@@ -38,6 +38,7 @@ export default class AuthApp extends Vue {
     logoUrl: string = null;
     displayName: string = null;
     comId: string = null;
+    usePrivoLogin: boolean = false;
 
     get title() {
         return comId ?? location.hostname;
@@ -96,6 +97,7 @@ export default class AuthApp extends Vue {
         this.createRecordStudioId = null;
         this.logoUrl = null;
         this.displayName = null;
+        this.usePrivoLogin = authManager.usePrivoLogin;
         this.allowCreateStudio = authManager.studiosSupported;
         authManager.loginState
             .pipe(distinctUntilChanged())

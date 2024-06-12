@@ -139,6 +139,7 @@ export default class PlayerHome extends Vue {
     joinCode: string = null;
     privacyPolicyUrl: string = null;
     termsOfServiceUrl: string = null;
+    codeOfConductUrl: string = null;
     logoUrl: string = null;
     logoTitle: string = null;
 
@@ -147,6 +148,10 @@ export default class PlayerHome extends Vue {
     private _loadedStaticInst: boolean = false;
 
     private _simulations: Map<BrowserSimulation, Subscription>;
+
+    get isPrivoCertified() {
+        return appManager.config?.requirePrivoLogin;
+    }
 
     get joinCodeClass() {
         const hasJoinCodeError = this.errors.some((e) => e.for === 'joinCode');
@@ -360,6 +365,7 @@ export default class PlayerHome extends Vue {
         appManager.auth.primary.getPolicyUrls().then((urls) => {
             this.privacyPolicyUrl = urls.privacyPolicyUrl;
             this.termsOfServiceUrl = urls.termsOfServiceUrl;
+            this.codeOfConductUrl = urls.codeOfConductUrl;
         });
     }
 

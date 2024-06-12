@@ -26,9 +26,32 @@
                     </div>
                 </div>
                 <field-errors :field="null" :errors="errors" />
-                <p>
-                    <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
-                </p>
+                <div class="policies-grid">
+                    <div>
+                        <p v-if="privacyPolicyUrl">
+                            <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                        </p>
+                        <p v-if="codeOfConductUrl">
+                            <a target="_blank" :href="codeOfConductUrl">Code of Conduct</a>
+                        </p>
+                        <p v-if="termsOfServiceUrl">
+                            <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                        </p>
+                    </div>
+                    <div class="spacer"></div>
+                    <div class="policy-cert">
+                        <a
+                            style="display: inline-block; width: 70px; height: 70px"
+                            target="_blank"
+                            href="https://cert.privo.com/#/companies/casualsimulation"
+                        >
+                            <img
+                                src="https://privohub.privo.com/files/images/PRIVO_Cert/KPAS_C2V_104_4_72.png"
+                                alt="COPPA Safe Harbor Certification - Kids Privacy Assured by PRIVO"
+                            />
+                        </a>
+                    </div>
+                </div>
             </form>
             <form v-else @submit.prevent="register()">
                 <div class="md-layout md-gutter">
@@ -112,9 +135,32 @@
                     </div>
                 </div>
                 <field-errors :field="null" :errors="errors" />
-                <p>
-                    <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
-                </p>
+                <div class="policies-grid" style="margin-top: 24px">
+                    <div>
+                        <p v-if="privacyPolicyUrl">
+                            <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                        </p>
+                        <p v-if="codeOfConductUrl">
+                            <a target="_blank" :href="codeOfConductUrl">Code of Conduct</a>
+                        </p>
+                        <p v-if="termsOfServiceUrl">
+                            <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                        </p>
+                    </div>
+                    <div class="spacer"></div>
+                    <div class="policy-cert">
+                        <a
+                            style="display: inline-block; width: 70px; height: 70px"
+                            target="_blank"
+                            href="https://cert.privo.com/#/companies/casualsimulation"
+                        >
+                            <img
+                                src="https://privohub.privo.com/files/images/PRIVO_Cert/KPAS_C2V_104_4_72.png"
+                                alt="COPPA Safe Harbor Certification - Kids Privacy Assured by PRIVO"
+                            />
+                        </a>
+                    </div>
+                </div>
             </form>
         </md-dialog-content>
         <md-dialog-actions>
