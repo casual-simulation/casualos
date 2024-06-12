@@ -1459,17 +1459,24 @@ export default class PlayerApp extends Vue {
                     },
                 });
             } else {
-                const token = await simulation.records.getLoomToken({
-                    recordName: e.options.recordName,
-                });
+                console.warn(
+                    '[PlayerApp] Using Loom "Custom SDK" mode. May not work correctly.'
+                );
+                const token = await simulation.records.getLoomToken(
+                    e.options.recordName
+                );
 
-                result = await createLoomInstance({
-                    mode: 'custom',
-                    jws: token,
-                    config: {
-                        insertButtonText: 'Use Video',
-                    },
-                });
+                if (token) {
+                    result = await createLoomInstance({
+                        mode: 'custom',
+                        jws: token,
+                        config: {
+                            insertButtonText: 'Use Video',
+                        },
+                    });
+                } else {
+                    throw new Error('Unable to start loom session for record.');
+                }
             }
 
             this._setupLoomRecording(result, e, simulation);
