@@ -28,6 +28,14 @@ export default class HasAccountDialog extends Vue {
         return this.status.privacyPolicyUrl;
     }
 
+    get codeOfConductUrl() {
+        return this.status.codeOfConductUrl;
+    }
+
+    get termsOfServiceUrl() {
+        return this.status.termsOfServiceUrl;
+    }
+
     processing: boolean = false;
 
     @Watch('status')

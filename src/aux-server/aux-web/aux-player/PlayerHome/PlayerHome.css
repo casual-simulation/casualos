@@ -77,3 +77,8 @@
 .logo {
     max-height: 750px;
 }
+
+.policies-grid {
+    display: flex;
+    margin-top: 14px;
+}

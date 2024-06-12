@@ -194,6 +194,16 @@
                 <li v-if="comId">
                     <a href="/">Back to {{ hostname }}</a>
                 </li>
+                <li v-if="usePrivoLogin">
+                    <a
+                        style="display: inline-block; width: 140px; height: 70px"
+                        target="_blank"
+                        href="https://cert.privo.com/#/companies/casualsimulation"
+                        ><img
+                            src="https://privohub.privo.com/files/images/PRIVO_Cert/COPPA.png"
+                            alt="COPPA Safe Harbor Certification - Kids Privacy Assured by PRIVO"
+                    /></a>
+                </li>
             </ul>
         </footer>
     </div>
