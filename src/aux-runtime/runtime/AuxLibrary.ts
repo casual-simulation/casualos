@@ -12442,7 +12442,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Returns a promise that resolves with the video data.
      * Resolves with null if the video could not be recorded.
      *
+     * **Note:** Loom requires third-party cookies to be enabled. If third-party cookies are not enabled, then the Loom recording will not work.
+     *
      * @param options The options to use for recording the video.
+     *
+     * @example Record a loom video using the "SDK Standard".
+     * const video = await loom.recordVideo({
+     *     publicAppId: 'your-app-id'
+     * });
+     *
+     * @example Record a loom video using the "SDK Custom".
+     * const video = await loom.recordVideo({
+     *     recordName: 'your-record-name',
+     * });
      *
      * @dochash actions/loom
      * @doctitle Loom Actions
