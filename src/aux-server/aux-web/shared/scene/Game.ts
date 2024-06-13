@@ -123,6 +123,10 @@ export abstract class Game {
     private _ambientLight: AmbientLight;
     private _directionalLight: DirectionalLight;
 
+    private _8thWallLoadPromise: Promise<void>;
+    private _8thWallInitialized: boolean = false;
+    private _8thWallEnabled: boolean = false;
+
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
     showMainCameraHome: boolean;
@@ -1054,10 +1058,17 @@ export abstract class Game {
      * Render the current frame for AR.
      */
     protected renderAR() {
+        if (this._8thWallEnabled) {
+            XR8.runPreRender(Date.now());
+        }
         //
         // [Main scene]
         //
         this.renderMainViewport(false);
+
+        if (this._8thWallEnabled) {
+            XR8.runPostRender();
+        }
     }
 
     /**
@@ -1304,6 +1315,58 @@ export abstract class Game {
         this.stopXR();
     }
 
+    protected async start8thWall(appKey: string) {
+        if (this.xrState === 'starting' || this.xrState === 'running') {
+            console.log('[Game] XR already started!');
+            return;
+        }
+
+        this.xrState = 'starting';
+        this.xrMode = 'immersive-ar';
+
+        await this._init8thWall(appKey);
+
+        // XR requires that we be using a perspective camera.
+        this.setCameraType('perspective');
+
+        document.documentElement.classList.add('ar-app');
+
+        this._8thWallEnabled = true;
+        XR8.run(this.renderer.domElement, true, false);
+
+        this.xrState = 'running';
+        appManager.simulationManager.primary.helper.action(
+            this.xrMode === 'immersive-ar' ? ON_ENTER_AR : ON_ENTER_VR,
+            null
+        );
+    }
+
+    protected stop8thWall() {
+        if (this.xrState === 'ending' || this.xrState === 'stopped') {
+            console.log('[Game] XR already stopped!');
+            return;
+        }
+
+        this.xrState = 'ending';
+        try {
+            XR8.stop();
+        } catch (err) {
+            // Do nothing
+        }
+        this.input.currentInputType = InputType.Undefined;
+        this._8thWallEnabled = false;
+        this.setCameraType('orthographic');
+        document.documentElement.classList.remove('ar-app');
+
+        appManager.simulationManager.primary.helper.action(
+            this.xrMode === 'immersive-ar' ? ON_EXIT_AR : ON_EXIT_VR,
+            null
+        );
+
+        this.xrMode = null;
+        this.xrState = 'stopped';
+    }
+
     protected startPOV(event: EnablePOVAction) {
         if (this._isPOV) {
             console.log('[Game] POV already started!');
@@ -1394,5 +1457,62 @@ export abstract class Game {
 
     protected handleControllerRemoved(controller: ControllerData): void {
         console.log('[Game] Controller removed', controller);
+    }
+
+    private async _init8thWall(appKey: string) {
+        await this._load8thWallScript(appKey);
+        if (!this._8thWallInitialized) {
+            await XR8.initialize();
+            XR8.addCameraPipelineModules([
+                XR8.GlTextureRenderer.pipelineModule(),
+                XR8.XrController.pipelineModule(),
+                {
+                    name: 'casualos',
+                    onStart: () => {},
+                    onUpdate: ({ processGpuResult }) => {
+                        this.mainCameraRig.mainCamera.projectionMatrix.fromArray(
+                            processGpuResult.reality.intrinsics
+                        );
+
+                        const pos = processGpuResult.reality.position;
+                        const rot = processGpuResult.reality.rotation;
+                        this.mainCameraRig.mainCamera.position.set(
+                            pos.x,
+                            pos.y,
+                            pos.z
+                        );
+                        this.mainCameraRig.mainCamera.quaternion.set(
+                            rot.x,
+                            rot.y,
+                            rot.z,
+                            rot.w
+                        );
+                    },
+                },
+            ]);
+
+            this._8thWallInitialized = true;
+        }
+    }
+
+    private async _load8thWallScript(appKey: string) {
+        if (typeof XR8 === 'object') {
+            return;
+        }
+        if (!this._8thWallLoadPromise) {
+            const script = document.createElement('script');
+            script.src = `//apps.8thwall.com/xrweb?appKey=${appKey}`;
+            script.async = true;
+            this._8thWallLoadPromise = new Promise<void>((resolve, reject) => {
+                document.addEventListener('xrloaded', () => {
+                    resolve();
+                });
+                script.onerror = (error) => {
+                    reject(error);
+                };
+            });
+            document.body.appendChild(script);
+        }
+        return this._8thWallLoadPromise;
     }
 }

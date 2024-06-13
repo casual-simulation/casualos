@@ -86,6 +86,8 @@ import {
     CapturePortalScreenshotAction,
     CameraPortal,
     Photo,
+    ON_EXIT_AR,
+    ON_EXIT_VR,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
