@@ -112,7 +112,7 @@ export class LoomController {
             );
             const jws = await new jose.SignJWT({})
                 .setProtectedHeader({ alg: 'RS256' })
-                .setIssuedAt(request.nowMs ?? Date.now())
+                .setIssuedAt((request.nowMs ?? Date.now()) / 1000)
                 .setIssuer(loomConfig.appId)
                 .setExpirationTime('10m')
                 .sign(privateKey);
