@@ -17,6 +17,8 @@ import {
     COM_ID_PLAYER_CONFIG,
     COM_ID_CONFIG_SCHEMA,
     StudioComIdRequest,
+    LoomConfig,
+    LOOM_CONFIG,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
@@ -26,6 +28,37 @@ export class PrismaRecordsStore implements RecordsStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    async getStudioLoomConfig(studioId: string): Promise<LoomConfig> {
+        const studio = await this._client.studio.findUnique({
+            where: {
+                id: studioId,
+            },
+            select: {
+                loomConfig: true,
+            },
+        });
+
+        if (!studio) {
+            return null;
+        }
+
+        return zodParseConfig(studio.loomConfig, LOOM_CONFIG);
+    }
+
+    async updateStudioLoomConfig(
+        studioId: string,
+        config: LoomConfig
+    ): Promise<void> {
+        await this._client.studio.update({
+            where: {
+                id: studioId,
+            },
+            data: {
+                loomConfig: config,
+            },
+        });
     }
 
     async updateRecord(record: Record): Promise<void> {

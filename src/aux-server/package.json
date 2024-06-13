@@ -84,6 +84,8 @@
         "@chenfengyuan/vue-qrcode": "^1.0.0",
         "@ericblade/quagga2": "1.4.2",
         "@juggle/resize-observer": "2.3.0",
+        "@loomhq/loom-embed": "^1.7.0",
+        "@loomhq/record-sdk": "^3.3.3",
         "@octokit/rest": "16.35.2",
         "@prisma/client": "^5.7.0",
         "@simplewebauthn/browser": "9.0.1",

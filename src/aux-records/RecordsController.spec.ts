@@ -2480,6 +2480,44 @@ describe('RecordsController', () => {
             });
         });
 
+        it('should be able to update the loom config', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    loomConfig: {
+                        appId: 'appId',
+                        privateKey: 'privateKey',
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const loomConfig = await store.getStudioLoomConfig('studioId');
+            expect(loomConfig).toEqual({
+                appId: 'appId',
+                privateKey: 'privateKey',
+            });
+        });
+
         it('should do nothing if no updates are provided', async () => {
             await store.updateStudio({
                 id: 'studioId',
@@ -2609,6 +2647,9 @@ describe('RecordsController', () => {
                     comIdFeatures: {
                         allowed: false,
                     },
+                    loomFeatures: {
+                        allowed: false,
+                    },
                 },
             });
         });
@@ -2657,6 +2698,117 @@ describe('RecordsController', () => {
                     comIdFeatures: {
                         allowed: true,
                         maxStudios: 100,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                },
+            });
+        });
+
+        it('should include the configured loom features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                loom: {
+                                    allowed: true,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: true,
+                    },
+                },
+            });
+        });
+
+        it('should include the loom config if loom features are allowed', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                loom: {
+                                    allowed: true,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.updateStudioLoomConfig('studioId', {
+                appId: 'appId',
+                privateKey: 'privateKey',
+            });
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: true,
+                    },
+                    loomConfig: {
+                        appId: 'appId',
                     },
                 },
             });

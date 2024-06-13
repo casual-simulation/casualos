@@ -113,6 +113,19 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             );
     }
 
+    getStudioLoomConfig(
+        studioId: string
+    ): Promise<{ appId?: string; privateKey?: string }> {
+        throw new Error('Method not implemented.');
+    }
+
+    updateStudioLoomConfig(
+        studioId: string,
+        config: { appId?: string; privateKey?: string }
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
     async saveUserAuthenticatorCounter(
         id: string,
         newCounter: number
