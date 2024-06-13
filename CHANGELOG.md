@@ -9,6 +9,7 @@
 -   [Casual Simulation is now PRIVO Certified!](https://cert.privo.com/#/companies/casualsimulation)
     -   The certification seal has been added in various locations to notify users that Casual Simulation, ab1.bot, and publicos.link are [COPPA Safe Harbor Certified](https://www.ftc.gov/enforcement/coppa-safe-harbor-program).
 -   Added the ability to record and display [Loom](https://www.loom.com) videos from within CasualOS.
+    -   **NOTE:** Loom requires access to the [MediaRecorder API](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder) and third party cookies. In testing, if third party cookies are not allowed, the Loom SDK will silently fail to work.
     -   `loom.recordVideo(options)` - A function that can be used to start the recording process. Resolves with a promise that includes information about the recorded video.
         -   `options` is an object with one of the following properties:
             -   `publicAppId` - The public app ID of the loom app that the video should be associated with.
