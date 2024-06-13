@@ -1,5 +1,23 @@
 # CasualOS Changelog
 
+## V3.3.6
+
+#### Date: 6/13/2024
+
+### :rocket: Features
+
+-   [Casual Simulation is now PRIVO Certified!](https://cert.privo.com/#/companies/casualsimulation)
+    -   The certification seal has been added in various locations to notify users that Casual Simulation, ab1.bot, and publicos.link are [COPPA Safe Harbor Certified](https://www.ftc.gov/enforcement/coppa-safe-harbor-program).
+-   Added the ability to record and display [Loom](https://www.loom.com) videos from within CasualOS.
+    -   `loom.recordVideo(options)` - A function that can be used to start the recording process. Resolves with a promise that includes information about the recorded video.
+        -   `options` is an object with one of the following properties:
+            -   `publicAppId` - The public app ID of the loom app that the video should be associated with.
+            -   `recordName` - The name of the record that the video should be associated with. The studio for the record needs to have loom features enabled and also be configured with a loom public app ID and private key.
+    -   `loom.watchVideo(url)` - A function that can be used to load and watch the given loom video.
+    -   `loom.getVideoEmbedMetadata(url)` - A function that can be used to load additional information about a video that can be used to embed the video.
+-   Moved pinned tags in `systemPortal` to appear above the tags list.
+-   Pressing `Enter` while a tag is focused in the system portal now triggers the "New Tag" dialog.
+
 ## V3.3.5
 
 #### Date: 5/31/2024

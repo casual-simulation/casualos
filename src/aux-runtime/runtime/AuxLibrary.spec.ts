@@ -144,6 +144,9 @@ import {
     calculateViewportCoordinatesFromScreenCoordinates,
     capturePortalScreenshot,
     createStaticHtml,
+    recordLoom,
+    watchLoom,
+    getLoomMetadata,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -11509,6 +11512,79 @@ describe('AuxLibrary', () => {
                 );
 
                 expect(result[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('loom.recordVideo()', () => {
+            it('should emit a RecordLoomAction', () => {
+                const action: any = library.api.loom.recordVideo({
+                    publicAppId: 'myId',
+                });
+                const expected = recordLoom(
+                    {
+                        publicAppId: 'myId',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given record name', () => {
+                const action: any = library.api.loom.recordVideo({
+                    recordName: 'myName',
+                });
+                const expected = recordLoom(
+                    {
+                        recordName: 'myName',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('loom.watchVideo()', () => {
+            it('should emit a RecordLoomAction', () => {
+                const action: any = library.api.loom.watchVideo('videoUrl');
+                const expected = watchLoom('videoUrl', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given video', () => {
+                const action: any = library.api.loom.watchVideo({
+                    sharedUrl: 'videoUrl',
+                } as any);
+                const expected = watchLoom('videoUrl', context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('loom.getVideoEmbedMetadata()', () => {
+            it('should emit a RecordLoomAction', () => {
+                const action: any =
+                    library.api.loom.getVideoEmbedMetadata('videoUrl');
+                const expected = getLoomMetadata(
+                    'videoUrl',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given video', () => {
+                const action: any = library.api.loom.getVideoEmbedMetadata({
+                    sharedUrl: 'videoUrl',
+                } as any);
+                const expected = getLoomMetadata(
+                    'videoUrl',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
         });

@@ -136,6 +136,8 @@ import {
 import { fromByteArray } from 'base64-js';
 import { z } from 'zod';
 import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import * as jose from 'jose';
+import { LoomController } from './LoomController';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -290,6 +292,7 @@ describe('RecordsServer', () => {
     let websocketMessenger: MemoryWebsocketMessenger;
     let websocketController: WebsocketController;
     let moderationController: ModerationController;
+    let loomController: LoomController;
 
     let policyController: PolicyController;
 
@@ -641,6 +644,12 @@ describe('RecordsServer', () => {
             policies: store,
         });
         moderationController = new ModerationController(store, store, store);
+        loomController = new LoomController({
+            config: store,
+            store: store,
+            metrics: store,
+            policies: policyController,
+        });
 
         server = new RecordsServer(
             allowedAccountOrigins,
@@ -658,6 +667,7 @@ describe('RecordsServer', () => {
             aiController,
             websocketController,
             moderationController,
+            loomController,
             rateLimitController
         );
         defaultHeaders = {
@@ -12740,6 +12750,144 @@ describe('RecordsServer', () => {
         testRateLimit(() => httpGet(`/api/v2/ai/hume/token`, apiHeaders));
     });
 
+    describe('GET /api/v2/loom/token', () => {
+        // Generated with:
+        // $ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 36500 -nodes
+        const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
+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
+iW7ByiIykfraimQSzn7Il6dpcvug0Io=
+-----END PRIVATE KEY-----`;
+
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                userId
+            );
+
+            await store.updateStudioLoomConfig('studioId', {
+                appId: 'appId',
+                privateKey: PRIVATE_KEY,
+            });
+
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                loom: {
+                                    allowed: true,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/loom/token?recordName=${'studioId'}`,
+                    apiHeaders
+                )
+            );
+
+            const { token } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    token: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const decoded = jose.decodeJwt(token) as any;
+            expect(decoded).toMatchObject({
+                iss: 'appId',
+                iat: expect.any(Number),
+                exp: expect.any(Number),
+            });
+        });
+
+        testOrigin('GET', `/api/v2/loom/token?recordName=${'studioId'}`);
+        testAuthorization(() =>
+            httpGet(`/api/v2/loom/token?recordName=${'studioId'}`, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpGet(`/api/v2/loom/token?recordName=${'studioId'}`, apiHeaders)
+        );
+    });
+
     describe('GET /api/v2/studios', () => {
         beforeEach(async () => {
             await store.createStudioForUser(
@@ -12786,6 +12934,9 @@ describe('RecordsServer', () => {
                             ab1BootstrapURL: 'ab1BootstrapURL',
                         },
                         comIdFeatures: {
+                            allowed: false,
+                        },
+                        loomFeatures: {
                             allowed: false,
                         },
                     },
@@ -16868,6 +17019,7 @@ describe('RecordsServer', () => {
                     aiController,
                     websocketController,
                     moderationController,
+                    loomController,
                     websocketRateLimiter
                 );
 

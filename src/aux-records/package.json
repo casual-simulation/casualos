@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records",
-    "version": "3.3.5-alpha.9323327526",
+    "version": "3.3.5",
     "description": "Helpers and managers used by the CasualOS records system.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -37,7 +37,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.3.5-alpha.9323327526",
+        "@casual-simulation/aux-common": "^3.3.5",
         "@casual-simulation/crypto": "^3.2.7",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "@casual-simulation/rate-limit-redis": "^3.2.7",
@@ -53,6 +53,7 @@
         "mime": "2.4.6",
         "openai": "4.47.1",
         "openid-client": "5.6.1",
+        "jose": "5.4.0",
         "tweetnacl": "1.0.3",
         "uuid": "^8.3.2",
         "yjs": "13.6.8",

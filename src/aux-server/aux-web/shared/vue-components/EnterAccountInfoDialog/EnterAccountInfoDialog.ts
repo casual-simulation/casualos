@@ -52,6 +52,10 @@ export default class EnterAccountInfoDialog extends Vue {
         return this.status.privacyPolicyUrl;
     }
 
+    get codeOfConductUrl(): string {
+        return this.status.codeOfConductUrl;
+    }
+
     get loginSiteName(): string {
         return this.status.siteName;
     }

@@ -2,7 +2,7 @@
 
 You can find a plain-text version of this privacy policy <a href="/privacy-policy.txt">here</a>.
 
-_Last updated on March 20, 2024_
+_Last updated on June 10, 2024_
 
 Please review this Privacy Policy. When using our products or services the terms of our [Code of Conduct](/code-of-conduct), [Acceptable Use Policy](/acceptable-use-policy) and [Terms of Service](/terms) also apply.
 
@@ -18,7 +18,8 @@ Please review this Privacy Policy. When using our products or services the terms
 8. [A Note to EU & UK Citizens](#a-note-to-eu--uk-citizens)
 9. [Links From Our Services](#links-from-our-services)
 10. [Security](#security)
-11. [Contact Us](#contact-us)
+11. [COPPA Safe Harbor Certification](#coppa-certification)
+12. [Contact Us](#contact-us)
 
 <h2 id="introduction">Introduction</h2>
 
@@ -120,7 +121,12 @@ We may provide links to third party websites or services from Our Services. You 
 <h2 id="security">Security</h2>
 
 We use generally accepted security measures and safeguards in an attempt to keep the data we collect secure and we require that the service providers we work with agree to do the same.
-These measures and safeguards include limiting access to the data to those persons who need it to complete their work, using a fire-wall protected environment, and storing personal information in secure operating environments. However, no security measure is full proof.
+These measures and safeguards include limiting access to the data to those persons who need it to complete their work, using a fire-wall protected environment, and storing personal information in secure operating environments. However, no security measure is foolproof.
+
+<h2 id="coppa-certification">Kids Privacy Assured by PRIVO: COPPA Safe Harbor Certification</h2>
+
+<a style="float: inline-start; margin-inline-end: 12px; display: inline-block; width: 140px; height: 70px;" target="_blank" href="https://cert.privo.com/#/companies/casualsimulation"><img src="https://privohub.privo.com/files/images/PRIVO_Cert/COPPA.png" alt="COPPA Safe Harbor Certification - Kids Privacy Assured by PRIVO"></a>
+Casual Simulation Inc is a member of the PRIVO Kids Privacy Assured COPPA safe harbor certification Program (“the Program”). The Program certification applies to the digital properties listed on the certification page that is viewable by clicking on the PRIVO Seal. PRIVO is an independent, third-party organization committed to supporting online services to safeguard children’s personal information collected online. The PRIVO COPPA safe harbor certification Seal posted on this page indicates Casual Simulation Inc has established COPPA compliant privacy practices and has agreed to submit to PRIVO’s oversight and consumer dispute resolution process. If you have questions or concerns about our privacy practices, please contact us at +1 (616) 209-4439 or [hello@casualsimulation.com](mailto:hello@casualsimulation.com). If you have further concerns after you have contacted us, you can contact PRIVO directly at <privacy@privo.com>.
 
 <h2 id="contact-us">Contact Us</h2>
 

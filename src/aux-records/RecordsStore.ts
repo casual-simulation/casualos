@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 
 /**
@@ -178,6 +179,20 @@ export interface RecordsStore {
      * @param request The request.
      */
     saveComIdRequest(request: StudioComIdRequest): Promise<void>;
+
+    /**
+     * Gets the loom config for the studio with the given ID.
+     * Returns null if the studio does not have a loom config.
+     * @param studioId The ID of the studio.
+     */
+    getStudioLoomConfig(studioId: string): Promise<LoomConfig | null>;
+
+    /**
+     * Updates the loom config for the studio with the given ID.
+     * @param studioId The ID of the studio that should be updated.
+     * @param config The config that should be updated for the studio.
+     */
+    updateStudioLoomConfig(studioId: string, config: LoomConfig): Promise<void>;
 }
 
 export interface CountRecordsFilter {
@@ -316,6 +331,15 @@ export interface Studio {
      */
     comIdConfig?: ComIdConfig;
 }
+
+export type LoomConfig = z.infer<typeof LOOM_CONFIG>;
+
+export const LOOM_CONFIG = z
+    .object({
+        appId: z.string().describe('The ID of the loom app.'),
+        privateKey: z.string().describe('The private key for the loom app.'),
+    })
+    .describe('The configuration that can be used by studios to setup loom.');
 
 /**
  * Defines the list of possible studio roles that a user can be assigned.

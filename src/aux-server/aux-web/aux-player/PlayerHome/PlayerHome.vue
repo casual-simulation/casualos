@@ -71,12 +71,32 @@
                     </md-select>
                 </md-field>
 
-                <p v-if="privacyPolicyUrl">
-                    <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
-                </p>
-                <p v-if="termsOfServiceUrl">
-                    <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
-                </p>
+                <div class="policies-grid">
+                    <div>
+                        <p v-if="privacyPolicyUrl">
+                            <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                        </p>
+                        <p v-if="codeOfConductUrl">
+                            <a target="_blank" :href="codeOfConductUrl">Code of Conduct</a>
+                        </p>
+                        <p v-if="termsOfServiceUrl">
+                            <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                        </p>
+                    </div>
+                    <div class="spacer"></div>
+                    <div class="policy-cert" v-if="isPrivoCertified">
+                        <a
+                            style="display: inline-block; width: 70px; height: 70px"
+                            target="_blank"
+                            href="https://cert.privo.com/#/companies/casualsimulation"
+                        >
+                            <img
+                                src="https://privohub.privo.com/files/images/PRIVO_Cert/KPAS_C2V_104_4_72.png"
+                                alt="COPPA Safe Harbor Certification - Kids Privacy Assured by PRIVO"
+                            />
+                        </a>
+                    </div>
+                </div>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button v-if="canSignIn()" @click="signIn()">Sign In</md-button>
