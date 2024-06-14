@@ -31,6 +31,7 @@ import {
     ListedRecord,
     StoreListedStudio,
     StudioComIdRequest,
+    LoomConfig,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
@@ -198,6 +199,8 @@ export class MemoryStore
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+    private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
+
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
 
@@ -729,6 +732,17 @@ export class MemoryStore
                 role: s.role,
             };
         });
+    }
+
+    async getStudioLoomConfig(studioId: string): Promise<LoomConfig> {
+        return this._studioLoomConfigs.get(studioId) ?? null;
+    }
+
+    async updateStudioLoomConfig(
+        studioId: string,
+        config: LoomConfig
+    ): Promise<void> {
+        this._studioLoomConfigs.set(studioId, config);
     }
 
     async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {

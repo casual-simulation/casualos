@@ -24,7 +24,7 @@ import {
     SubscriptionController,
 } from './SubscriptionController';
 import { ZodError, z } from 'zod';
-import { PublicRecordKeyPolicy } from './RecordsStore';
+import { LOOM_CONFIG, PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
@@ -75,6 +75,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
+import { LoomController } from './LoomController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -129,6 +130,12 @@ export const AI_NOT_SUPPORTED_RESULT = {
     success: false as const,
     errorCode: 'not_supported' as const,
     errorMessage: 'AI features are not supported by this server.',
+};
+
+export const LOOM_NOT_SUPPORTED_RESULT = {
+    success: false as const,
+    errorCode: 'not_supported' as const,
+    errorMessage: 'Loom features are not supported by this server.',
 };
 
 export const INSTS_NOT_SUPPORTED_RESULT = {
@@ -447,6 +454,7 @@ export class RecordsServer {
     private _aiController: AIController | null;
     private _websocketController: WebsocketController | null;
     private _moderationController: ModerationController | null;
+    private _loomController: LoomController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -505,6 +513,7 @@ export class RecordsServer {
         aiController: AIController | null,
         websocketController: WebsocketController | null,
         moderationController: ModerationController | null,
+        loomController: LoomController | null,
         websocketRateLimitController: RateLimitController | null = null
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
@@ -524,6 +533,7 @@ export class RecordsServer {
         this._aiController = aiController;
         this._websocketController = websocketController;
         this._moderationController = moderationController;
+        this._loomController = loomController;
         this._procedures = this._createProcedures();
         this._setupRoutes();
     }
@@ -2306,6 +2316,39 @@ export class RecordsServer {
                     return result;
                 }),
 
+            getLoomAccessToken: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/loom/token')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
+                    if (!this._loomController) {
+                        return LOOM_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._loomController.getToken({
+                        userId: sessionKeyValidation.userId,
+                        recordName: recordName,
+                    });
+
+                    return result;
+                }),
+
             getStudio: procedure()
                 .origins('account')
                 .http('GET', '/api/v2/studios')
@@ -2399,11 +2442,19 @@ export class RecordsServer {
                             .optional(),
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
                         playerConfig: COM_ID_PLAYER_CONFIG.optional(),
+                        loomConfig: LOOM_CONFIG.optional(),
                     })
                 )
                 .handler(
                     async (
-                        { id, displayName, logoUrl, comIdConfig, playerConfig },
+                        {
+                            id,
+                            displayName,
+                            logoUrl,
+                            comIdConfig,
+                            playerConfig,
+                            loomConfig,
+                        },
                         context
                     ) => {
                         const sessionKeyValidation =
@@ -2426,6 +2477,7 @@ export class RecordsServer {
                                 logoUrl,
                                 comIdConfig,
                                 playerConfig,
+                                loomConfig,
                             },
                         });
                         return result;

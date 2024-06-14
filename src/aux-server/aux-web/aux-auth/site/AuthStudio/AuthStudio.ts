@@ -11,6 +11,7 @@ import {
     ListedStudioMember,
     StudioAssignmentRole,
     StudioComIdFeaturesConfiguration,
+    StudioLoomFeaturesConfiguration,
     UpdateStudioRequest,
     getFormErrors,
 } from '@casual-simulation/aux-records';
@@ -62,6 +63,9 @@ export default class AuthStudio extends Vue {
     comIdFeatures: StudioComIdFeaturesConfiguration = {
         allowed: false,
     };
+    loomFeatures: StudioLoomFeaturesConfiguration = {
+        allowed: false,
+    };
 
     originalAllowedStudioCreators: AllowedStudioCreators = 'anyone';
     allowedStudioCreators: AllowedStudioCreators = 'anyone';
@@ -87,6 +91,10 @@ export default class AuthStudio extends Vue {
     originalWhat3WordsApiKey: string = null;
     what3WordsApiKey: string = null;
 
+    originalLoomPublicAppId: string = null;
+    loomPublicAppId: string = null;
+    loomPrivateKey: string = null;
+
     isLoadingInfo: boolean = false;
     isSavingStudio: boolean = false;
 
@@ -94,6 +102,7 @@ export default class AuthStudio extends Vue {
     showUpdateComIdConfig: boolean = false;
     showUpdateStudioInfo: boolean = false;
     showRequestComId: boolean = false;
+    showUpdateLoomConfig: boolean = false;
 
     errors: FormError[] = [];
 
@@ -176,8 +185,24 @@ export default class AuthStudio extends Vue {
             : '';
     }
 
+    get loomPublicAppIdFieldClass() {
+        return this.errors.some((e) => e.for === 'loomConfig.appId')
+            ? 'md-invalid'
+            : '';
+    }
+
+    get loomPrivateKeyFieldClass() {
+        return this.errors.some((e) => e.for === 'loomConfig.privateKey')
+            ? 'md-invalid'
+            : '';
+    }
+
     get allowComId() {
         return this.comIdFeatures?.allowed;
+    }
+
+    get allowLoom() {
+        return this.loomFeatures?.allowed;
     }
 
     get hasStudioChange() {
@@ -297,10 +322,22 @@ export default class AuthStudio extends Vue {
                 hasUpdate = true;
             }
 
+            if (
+                this.loomPrivateKey ||
+                this.loomPublicAppId !== this.originalLoomPublicAppId
+            ) {
+                update.loomConfig = {
+                    appId: this.loomPublicAppId || null,
+                    privateKey: this.loomPrivateKey || null,
+                };
+                hasUpdate = true;
+            }
+
             if (!hasUpdate) {
                 this.showUpdateComIdConfig = false;
                 this.showUpdatePlayerConfig = false;
                 this.showUpdateStudioInfo = false;
+                this.showUpdateLoomConfig = false;
                 return;
             }
             const result = await authManager.client.updateStudio(update);
@@ -325,10 +362,13 @@ export default class AuthStudio extends Vue {
                     this.automaticBiosOption || null;
                 this.originalJitsiAppName = this.jitsiAppName;
                 this.originalWhat3WordsApiKey = this.what3WordsApiKey;
+                this.originalLoomPublicAppId = this.loomPublicAppId;
+                this.loomPrivateKey = null;
 
                 this.showUpdateComIdConfig = false;
                 this.showUpdatePlayerConfig = false;
                 this.showUpdateStudioInfo = false;
+                this.showUpdateLoomConfig = false;
             }
         } finally {
             this.isSavingStudio = false;
@@ -343,6 +383,7 @@ export default class AuthStudio extends Vue {
         this.showUpdateComIdConfig = false;
         this.showUpdatePlayerConfig = false;
         this.showUpdateStudioInfo = false;
+        this.showUpdateLoomConfig = false;
     }
 
     private async _loadPageInfo() {
@@ -364,6 +405,7 @@ export default class AuthStudio extends Vue {
                 this.requestedComId = this.comId = result.studio.comId;
                 this.ownerStudioComId = result.studio.ownerStudioComId;
                 this.comIdFeatures = result.studio.comIdFeatures;
+                this.loomFeatures = result.studio.loomFeatures;
                 this.originalAllowedStudioCreators =
                     this.allowedStudioCreators =
                         result.studio.comIdConfig?.allowedStudioCreators ??
@@ -382,6 +424,9 @@ export default class AuthStudio extends Vue {
                     result.studio.playerConfig?.jitsiAppName ?? null;
                 this.originalWhat3WordsApiKey = this.what3WordsApiKey =
                     result.studio.playerConfig?.what3WordsApiKey ?? null;
+                this.originalLoomPublicAppId = this.loomPublicAppId =
+                    result.studio.loomConfig?.appId ?? null;
+                this.loomPrivateKey = null;
             }
         } finally {
             this.isLoadingInfo = false;
@@ -487,6 +532,10 @@ export default class AuthStudio extends Vue {
 
     updateStudioInfo() {
         this.showUpdateStudioInfo = true;
+    }
+
+    updateLoomConfig() {
+        this.showUpdateLoomConfig = true;
     }
 
     // TODO: Support uploading logos

@@ -46,6 +46,7 @@ export default {
                         'actions/data',
                         'actions/debuggers',
                         'actions/experimental',
+                        'actions/loom',
                         'actions/math',
                         'actions/mods',
                         {
@@ -124,6 +125,7 @@ export default {
                                 'types/os/xr',
                             ]
                         },
+                        'types/loom',
                         'types/permissions',
                         {
                             type: 'category',

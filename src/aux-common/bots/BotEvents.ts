@@ -183,7 +183,10 @@ export type AsyncActions =
     | CalculateScreenCoordinatesFromViewportCoordinatesAction
     | CalculateViewportCoordinatesFromScreenCoordinatesAction
     | CapturePortalScreenshotAction
-    | CreateStaticHtmlAction;
+    | CreateStaticHtmlAction
+    | RecordLoomAction
+    | WatchLoomAction
+    | GetLoomMetadataAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3412,6 +3415,173 @@ export interface CreateStaticHtmlAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that requests that a loom video be recorded.
+ *
+ * @dochash types/loom
+ * @docname RecordLoomAction
+ */
+export interface RecordLoomAction extends AsyncAction {
+    type: 'record_loom';
+
+    /**
+     * The options for the loom.
+     */
+    options: RecordLoomOptions;
+}
+
+/**
+ * Defines a set of options that can be used when recording a loom.
+ *
+ * @dochash types/loom
+ * @doctitle Loom Types
+ * @docsidebar Loom
+ * @docdescription Types that are used in Loom actions.
+ * @docname RecordLoomOptions
+ */
+export interface RecordLoomOptions {
+    /**
+     * The public ID of the loom app.
+     */
+    publicAppId?: string | null;
+
+    /**
+     * The name of the record that the loom recording is for.
+     */
+    recordName?: string | null;
+}
+
+/**
+ * Defines an event that requests that a loom video be displayed to the user.
+ *
+ * @dochash types/loom
+ * @docname WatchLoomAction
+ */
+export interface WatchLoomAction extends AsyncAction {
+    type: 'watch_loom';
+
+    /**
+     * The shared URL of the loom video that should be watched.
+     */
+    sharedUrl: string;
+}
+
+/**
+ * Defines an event that retrieves the metadata for a loom video.
+ *
+ * @dochash types/loom
+ * @docname GetLoomMetadataAction
+ */
+export interface GetLoomMetadataAction extends AsyncAction {
+    type: 'get_loom_metadata';
+
+    /**
+     * The shared URL of the loom video that the metadata should be retrieved for.
+     */
+    sharedUrl: string;
+}
+
+/**
+ * Defines an interface that contains information for a loom video.
+ *
+ * @dochash types/loom
+ * @docname LoomVideo
+ */
+export interface LoomVideo {
+    /**
+     * The ID of the loom video.
+     */
+    id: string;
+
+    /**
+     * The URL that should be used for sharing the video.
+     */
+    sharedUrl: string;
+
+    /**
+     * The URL that should be used for embedding the video.
+     */
+    embedUrl: string;
+
+    /**
+     * The title of the loom video.
+     */
+    title: string;
+
+    /**
+     * The height of the video in pixels.
+     */
+    height: number;
+
+    /**
+     * The width of the video in pixels.
+     */
+    width: number;
+
+    /**
+     * The URL of the thumbnail for the video.
+     */
+    thumbnailUrl: string;
+
+    /**
+     * The height of the thumbnail in pixels.
+     */
+    thumbnailHeight: number;
+
+    /**
+     * The width of the thumbnail in pixels.
+     */
+    thumbnailWidth: number;
+
+    /**
+     * The duration of the video in seconds.
+     */
+    duration: string;
+}
+
+/**
+ * Defines an interface that contains embed metadata for a loom video.
+ *
+ * @dochash types/loom
+ * @docname LoomVideoEmbedMetadata
+ */
+export interface LoomVideoEmbedMetadata {
+    /**
+     * The HTML that can be used to embed the video.
+     */
+    html: string;
+
+    /**
+     * The height of the video in pixels.
+     */
+    height: number;
+
+    /**
+     * The width of the video in pixels.
+     */
+    width: number;
+
+    /**
+     * The URL of the thumbnail image for the video.
+     */
+    thumnailUrl: string;
+
+    /**
+     * The height of the thumbnail image in pixels.
+     */
+    thumbnailHeight: number;
+
+    /**
+     * The width of the thumbnail image in pixels.
+     */
+    thumbnailWidth: number;
+
+    /**
+     * The duration of the video in seconds.
+     */
+    duration: number;
+}
+
+/**
  * Defines an event that requests the pre-caching of a GLTF mesh.
  *
  * @dochash types/os/portals
@@ -5743,6 +5913,39 @@ export function createStaticHtml(
         type: 'create_static_html',
         bots,
         templateUrl,
+        taskId,
+    };
+}
+
+export function recordLoom(
+    options: RecordLoomOptions,
+    taskId?: number | string
+): RecordLoomAction {
+    return {
+        type: 'record_loom',
+        options,
+        taskId,
+    };
+}
+
+export function watchLoom(
+    sharedUrl: string,
+    taskId?: number | string
+): WatchLoomAction {
+    return {
+        type: 'watch_loom',
+        sharedUrl,
+        taskId,
+    };
+}
+
+export function getLoomMetadata(
+    sharedUrl: string,
+    taskId?: number | string
+): GetLoomMetadataAction {
+    return {
+        type: 'get_loom_metadata',
+        sharedUrl,
         taskId,
     };
 }

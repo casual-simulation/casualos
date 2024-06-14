@@ -247,6 +247,12 @@ import {
     CameraPortal,
     capturePortalScreenshot as calcCapturePortalScreenshot,
     createStaticHtml as calcCreateStaticHtmlFromBots,
+    RecordLoomOptions,
+    recordLoom,
+    LoomVideo,
+    watchLoom,
+    LoomVideoEmbedMetadata,
+    getLoomMetadata,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -3331,6 +3337,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endRecording,
                 speakText,
                 getVoices,
+            },
+
+            loom: {
+                recordVideo: loomRecordVideo,
+                watchVideo: loomWatchVideo,
+                getVideoEmbedMetadata: loomGetVideoEmbedMetadata,
             },
 
             math: {
@@ -12421,6 +12433,133 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getVoices(): Promise<SyntheticVoice[]> {
         const task = context.createTask();
         const action = calcGetVoices(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Records a loom video using the given options.
+     *
+     * Returns a promise that resolves with the video data.
+     * Resolves with null if the video could not be recorded.
+     *
+     * **Note:** Loom requires third-party cookies to be enabled. If third-party cookies are not enabled, then the Loom recording will not work.
+     *
+     * @param options The options to use for recording the video.
+     *
+     * @example Record a loom video using the "SDK Standard".
+     * const video = await loom.recordVideo({
+     *     publicAppId: 'your-app-id'
+     * });
+     *
+     * @example Record a loom video using the "SDK Custom".
+     * const video = await loom.recordVideo({
+     *     recordName: 'your-record-name',
+     * });
+     *
+     * @dochash actions/loom
+     * @doctitle Loom Actions
+     * @docsidebar Loom
+     * @docdescription Loom actions are useful for recording and sharing videos over loom.
+     * @docname loom.recordVideo
+     */
+    function loomRecordVideo(options: RecordLoomOptions): Promise<LoomVideo> {
+        const task = context.createTask();
+        const action = recordLoom(options, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Displays the given loom video to the user.
+     *
+     * Returns a promise that resolves when the video has been loaded.
+     *
+     * @param video the loom video that should be displayed.
+     *
+     * @example Display a loom video.
+     * const video = await loom.recordVideo({
+     *   publicAppId: 'your-app-id'
+     * });
+     * await loom.watchVideo(video);
+     *
+     * @dochash actions/loom
+     * @docname loom.watchVideo
+     * @docid loom.watchVideo-video
+     */
+    function loomWatchVideo(video: LoomVideo): Promise<void>;
+
+    /**
+     * Displays the given loom video to the user.
+     *
+     * Returns a promise that resolves when the video has been loaded.
+     *
+     * @param sharedUrl the shared URL of the loom video that should be displayed.
+     *
+     * @example Display a loom video by its URL.
+     * await loom.watchVideo(videoUrl);
+     *
+     * @dochash actions/loom
+     * @docname loom.watchVideo
+     * @docid loom.watchVideo-sharedUrl
+     */
+    function loomWatchVideo(sharedUrl: string): Promise<void>;
+
+    function loomWatchVideo(
+        sharedUrlOrVideo: string | LoomVideo
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = watchLoom(
+            typeof sharedUrlOrVideo === 'string'
+                ? sharedUrlOrVideo
+                : sharedUrlOrVideo.sharedUrl,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Gets the embed metadata for the given loom video.
+     *
+     * @param video the loom video that the embed metadata should be retrieved for.
+     *
+     * @example Get the embed metadata for a loom video.
+     * const video = await loom.recordVideo({
+     *   publicAppId: 'your-app-id'
+     * });
+     * const metadata = await loom.getVideoEmbedMetadata(video);
+     *
+     * @dochash actions/loom
+     * @docname loom.getVideoEmbedMetadata
+     * @docid loom.getVideoEmbedMetadata-video
+     */
+    function loomGetVideoEmbedMetadata(
+        video: LoomVideo
+    ): Promise<LoomVideoEmbedMetadata>;
+
+    /**
+     * Gets the embed metadata for the given loom video.
+     *
+     * @param sharedUrl the shared URL of the the video that the embed metadata should be retrieved for.
+     *
+     * @example Get the embed metadata for a loom video.
+     * const metadata = await loom.getVideoEmbedMetadata(videoUrl);
+     *
+     * @dochash actions/loom
+     * @docname loom.getVideoEmbedMetadata
+     * @docid loom.getVideoEmbedMetadata-sharedUrl
+     */
+    function loomGetVideoEmbedMetadata(
+        sharedUrl: string
+    ): Promise<LoomVideoEmbedMetadata>;
+    function loomGetVideoEmbedMetadata(
+        sharedUrlOrVideo: string | LoomVideo
+    ): Promise<LoomVideoEmbedMetadata> {
+        const task = context.createTask();
+        const action = getLoomMetadata(
+            typeof sharedUrlOrVideo === 'string'
+                ? sharedUrlOrVideo
+                : sharedUrlOrVideo.sharedUrl,
+            task.taskId
+        );
         return addAsyncAction(task, action);
     }
 

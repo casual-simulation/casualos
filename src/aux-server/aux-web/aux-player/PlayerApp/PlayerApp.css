@@ -209,3 +209,14 @@
 .md-dialog.not-authorized-dialog ~ .md-overlay.md-fixed.md-dialog-overlay {
     z-index: 18;
 }
+
+.md-dialog.loom-dialog > .md-dialog-container {
+    align-items: center;
+    justify-content: center;
+}
+
+.loom-container {
+    min-width: min(600px, 100vw);
+    max-width: 80vw;
+    max-height: 80vh;
+}

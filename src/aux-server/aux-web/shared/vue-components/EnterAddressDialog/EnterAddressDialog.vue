@@ -37,9 +37,19 @@
                     </div>
                 </div>
                 <field-errors :field="null" :errors="formErrors" />
-                <p>
-                    <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
-                </p>
+                <div class="policies-grid" style="margin-top: 24px">
+                    <div>
+                        <p v-if="privacyPolicyUrl">
+                            <a target="_blank" :href="privacyPolicyUrl">Privacy Policy</a>
+                        </p>
+                        <p v-if="codeOfConductUrl">
+                            <a target="_blank" :href="codeOfConductUrl">Code of Conduct</a>
+                        </p>
+                        <p v-if="termsOfServiceUrl">
+                            <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                        </p>
+                    </div>
+                </div>
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button

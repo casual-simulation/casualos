@@ -155,6 +155,7 @@ export default class AuxVMImpl implements AuxVM {
             console.log('[AuxVMImpl] Relaxing origin to:', baseOrigin);
             origin = baseOrigin;
         }
+        console.log('origin', origin);
         const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
 
         this._connectionStateChanged.next({

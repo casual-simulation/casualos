@@ -74,6 +74,7 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
             'list',
         ],
     ],
+    ['loom', ['create']],
 ];
 
 function constructAllowedResourcesLookup(

@@ -276,8 +276,36 @@
                         @pointermove="onSliderPointerMove"
                         @pointerup="onSliderPointerUp"
                     ></div>
-                    <div class="tags" v-if="selectedPane === 'bots' && hasSelection">
+                    <div
+                        class="tags"
+                        v-if="selectedPane === 'bots' && hasSelection"
+                        @keyup.enter="openNewTag"
+                    >
                         <div class="tags-list">
+                            <div v-if="pinnedTags && pinnedTags.length > 0">
+                                <div @click="togglePinnedTags()" class="tags-toggle">
+                                    <md-icon>{{
+                                        pinnedTagsVisible ? 'expand_more' : 'chevron_right'
+                                    }}</md-icon>
+                                    Pinned Tags
+                                </div>
+                                <system-portal-tag
+                                    v-show="pinnedTagsVisible"
+                                    v-for="tag of pinnedTags"
+                                    :key="`pin-${tag.name}.${tag.space}`"
+                                    ref="pinnedTagEditors"
+                                    :simId="selectedBotSimId"
+                                    :bot="selectedBot"
+                                    :tag="tag"
+                                    :selected="isTagSelected(tag)"
+                                    :showCloseButton="true"
+                                    @click="selectTag(tag)"
+                                    @pin="pinTag(tag)"
+                                    @close="closeTag(tag)"
+                                    @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
+                                >
+                                </system-portal-tag>
+                            </div>
                             <div @click="toggleTags()" class="tags-toggle">
                                 <md-icon>{{
                                     tagsVisible ? 'expand_more' : 'chevron_right'
@@ -318,30 +346,6 @@
                                 @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                             >
                             </system-portal-tag>
-                            <div v-if="pinnedTags && pinnedTags.length > 0">
-                                <div @click="togglePinnedTags()" class="tags-toggle">
-                                    <md-icon>{{
-                                        pinnedTagsVisible ? 'expand_more' : 'chevron_right'
-                                    }}</md-icon>
-                                    Pinned Tags
-                                </div>
-                                <system-portal-tag
-                                    v-show="pinnedTagsVisible"
-                                    v-for="tag of pinnedTags"
-                                    :key="`pin-${tag.name}.${tag.space}`"
-                                    ref="pinnedTagEditors"
-                                    :simId="selectedBotSimId"
-                                    :bot="selectedBot"
-                                    :tag="tag"
-                                    :selected="isTagSelected(tag)"
-                                    :showCloseButton="true"
-                                    @click="selectTag(tag)"
-                                    @pin="pinTag(tag)"
-                                    @close="closeTag(tag)"
-                                    @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
-                                >
-                                </system-portal-tag>
-                            </div>
                         </div>
                         <div class="tags-add-tag">
                             <md-button class="md-raised pin-tag-button" @click="openNewTag">

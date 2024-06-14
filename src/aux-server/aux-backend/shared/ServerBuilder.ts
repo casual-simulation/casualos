@@ -38,6 +38,7 @@ import {
     ModerationStore,
     GoogleAIChatInterface,
     RelyingParty,
+    LoomController,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -240,6 +241,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _moderationStore: ModerationStore = null;
     private _moderationController: ModerationController;
+    private _loomController: LoomController;
 
     private _notificationMessenger: MultiNotificationMessenger;
 
@@ -1221,6 +1223,12 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
             metrics: this._metricsStore,
         });
+        this._loomController = new LoomController({
+            store: this._recordsStore,
+            config: this._configStore,
+            metrics: this._metricsStore,
+            policies: this._policyController,
+        });
 
         if (this._stripe && this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
@@ -1279,6 +1287,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._aiController,
             this._websocketController,
             this._moderationController,
+            this._loomController,
             this._websocketRateLimitController
         );
 

@@ -66,6 +66,11 @@ export interface LoginUIAddressStatus {
     privacyPolicyUrl: string;
 
     /**
+     * The page that should be linked to as the code of conduct.
+     */
+    codeOfConductUrl: string;
+
+    /**
      * The name of the site that is being logged into.
      */
     siteName: string;
@@ -121,6 +126,16 @@ export interface LoginUIHasAccount {
      * The page that should be linked to as the privacy policy.
      */
     privacyPolicyUrl: string;
+
+    /**
+     * The page that should be linked to as the code of conduct.
+     */
+    codeOfConductUrl: string;
+
+    /**
+     * The page that should be linked to as the terms of service.
+     */
+    termsOfServiceUrl: string;
 }
 
 export interface LoginUIPrivoSignUp {
@@ -135,6 +150,11 @@ export interface LoginUIPrivoSignUp {
      * The page that should be linked to as the privacy policy.
      */
     privacyPolicyUrl: string;
+
+    /**
+     * The page that should be linked to as the code of conduct.
+     */
+    codeOfConductUrl: string;
 
     /**
      * The name of the site that is being logged into.
@@ -226,6 +246,7 @@ export type LoginHint = 'sign in' | 'sign up' | null;
 export interface PolicyUrls {
     privacyPolicyUrl: string;
     termsOfServiceUrl: string;
+    codeOfConductUrl: string;
 }
 
 /**

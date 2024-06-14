@@ -303,6 +303,31 @@ export class RecordsManager {
         return result.data;
     }
 
+    /**
+     * Gets a token that can be used to access loom for the given record.
+     * @param recordName The name of the record.
+     */
+    async getLoomToken(recordName: string): Promise<string> {
+        const info = await this._resolveInfoForEvent({ options: {} } as any);
+
+        const result = await this._client.getLoomAccessToken(
+            {
+                recordName,
+            },
+            {
+                sessionKey: info.token,
+                endpoint: await info.auth.getRecordsOrigin(),
+            }
+        );
+
+        if (result.success === false) {
+            console.error('[RecordsManager] Unable to get loom token:', result);
+            return null;
+        }
+
+        return result.token;
+    }
+
     private async _recordData(event: RecordDataAction) {
         if (event.requiresApproval && !event[APPROVED_SYMBOL]) {
             return;

@@ -246,6 +246,19 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: false,
             // allowCustomComId: false,
         }),
+    loom: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe('Whether loom features are granted to the studio.'),
+        })
+        .describe(
+            'The configuration for loom features for studios. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -670,6 +683,11 @@ export interface FeaturesConfiguration {
      * The configuration for comId features.
      */
     comId?: StudioComIdFeaturesConfiguration;
+
+    /**
+     * The configuration for loom features.
+     */
+    loom?: StudioLoomFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -875,6 +893,10 @@ export interface StudioComIdFeaturesConfiguration {
     maxStudios?: number;
 }
 
+export type StudioLoomFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['loom'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -932,6 +954,26 @@ export function getComIdFeatures(
             // allowCustomComId: false,
         }
     );
+}
+
+/**
+ * Gets the loom features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ */
+export function getLoomFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string
+): StudioLoomFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        'studio'
+    );
+    return features.loom ?? { allowed: false };
 }
 
 /**

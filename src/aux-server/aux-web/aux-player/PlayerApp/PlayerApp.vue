@@ -106,6 +106,16 @@
                 </md-dialog-actions>
             </md-dialog>
 
+            <md-dialog
+                :md-active.sync="showLoom"
+                md-theme="default"
+                class="loom-dialog"
+                :md-fullscreen="false"
+                @md-closed="onLoomClosed()"
+            >
+                <div class="loom-container" v-html="loomEmbedHtml"></div>
+            </md-dialog>
+
             <md-dialog-confirm
                 v-if="simulationToRemove"
                 :md-active.sync="showRemoveSimulation"
