@@ -3,23 +3,9 @@ declare namespace XR8 {
 
     /**
      * Open the camera and start running the camera run loop.
-     * @param canvas The HTML Canvas that the camera feed will be drawn to.
-     * @param webgl2 If true, use WebGL2 if available, otherwise fallback to WebGL1. If false, always use WebGL1.
-     * @param ownRunLoop If true, XR should use it's own run loop. If false, you will provide your own run loop and be responsible for calling runPreRender and runPostRender yourself [Advanced Users only].
-     * @param cameraConfig Desired camera to use. Supported values for direction are XR8.XrConfig.camera().BACK or XR8.XrConfig.camera().FRONT.
-     * @param glContextConfig The attributes to configure the WebGL canvas context.
-     * @param allowedDevices Specify the class of devices that the pipeline should run on. If the current device is not in that class, running will fail prior prior to opening the camera. If allowedDevices is XR8.XrConfig.device().ANY, always open the camera. Note that world tracking can only be used with XR8.XrConfig.device().MOBILE_AND_HEADSETS or XR8.XrConfig.device().MOBILE.
-     * @param sessionConfiguration Configure options related to varying types of sessions.
+     * @param options The options for the run loop.
      */
-    function run(
-        canvas: HTMLCanvasElement,
-        webgl2: boolean,
-        ownRunLoop: boolean,
-        cameraConfig?: any,
-        glContextConfig?: any,
-        allowedDevices?: any,
-        sessionConfiguration?: any
-    ): void;
+    function run(options: RunOptions): void;
 
     /**
      * While stopped, the camera feed is closed and device motion is not tracked. Must call XR8.run() to restart after the engine is stopped.
@@ -89,7 +75,9 @@ declare namespace XR8 {
         processCpuResult: ProcessCpuResult;
     }
 
-    interface ProcessGpuResult {
+    interface ProcessGpuResult {}
+
+    interface ProcessCpuResult {
         reality: {
             /**
              * The orientation (quaternion) of the camera in the scene.
@@ -136,8 +124,6 @@ declare namespace XR8 {
         };
     }
 
-    interface ProcessCpuResult {}
-
     interface Point {
         id: any;
         confidence: number;
@@ -150,5 +136,42 @@ declare namespace XR8 {
 
     export namespace XrController {
         function pipelineModule(): CameraPipelineModule;
+    }
+
+    interface RunOptions {
+        /**
+         * The HTML Canvas that the camera feed will be drawn to.
+         */
+        canvas: HTMLCanvasElement;
+        /**
+         * If true, use WebGL2 if available, otherwise fallback to WebGL1. If false, always use WebGL1.
+         */
+        webgl2: boolean;
+        /**
+         * If true, XR should use it's own run loop. If false, you will provide your own run loop and be responsible for calling runPreRender and runPostRender yourself [Advanced Users only].
+         */
+        ownRunLoop: boolean;
+
+        /**
+         * Desired camera to use. Supported values for direction are XR8.XrConfig.camera().BACK or XR8.XrConfig.camera().FRONT.
+         */
+        cameraConfig?: any;
+
+        /**
+         * The attributes to configure the WebGL canvas context.
+         */
+        glContextConfig?: any;
+
+        /**
+         * Specify the class of devices that the pipeline should run on. If the current device is not in that class, running will fail prior prior to opening the camera. If allowedDevices is XR8.XrConfig.device().ANY, always open the camera. Note that world tracking can only be used with XR8.XrConfig.device().MOBILE_AND_HEADSETS or XR8.XrConfig.device().MOBILE.
+         */
+        allowedDevices?: any;
+
+        /**
+         * Configure options related to varying types of sessions.
+         */
+        sessionConfiguration?: any;
+
+        verbose?: boolean;
     }
 }

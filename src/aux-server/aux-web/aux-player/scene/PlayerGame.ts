@@ -24,6 +24,7 @@ import {
     SphereGeometry,
     MeshBasicMaterial,
     Group,
+    Camera,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -2529,6 +2530,31 @@ export class PlayerGame extends Game {
         };
 
         return rig;
+    }
+
+    protected setupGameWith8thWall(
+        renderer: WebGLRenderer,
+        scene: Scene,
+        camera: Camera
+    ): Game {
+        class _8thWallGame extends PlayerGame {
+            constructor(gameView: PlayerGameView) {
+                super(gameView);
+            }
+
+            protected startRenderAnimationLoop(): void {
+                // Do nothing
+            }
+
+            protected stopRenderAnimationLoop(): void {
+                // Do nothing
+            }
+        }
+
+        const game = new _8thWallGame(this.gameView);
+        game.renderer = renderer;
+        game.mainScene = scene;
+        return game;
     }
 }
 function createFocusPointSphere(): Mesh {

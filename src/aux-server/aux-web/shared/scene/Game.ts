@@ -12,6 +12,7 @@ import {
     DirectionalLight,
     PMREMGenerator,
     EquirectangularReflectionMapping,
+    Camera,
 } from '@casual-simulation/three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
@@ -66,6 +67,7 @@ import {
     WORLD_UP,
     ParsedCasualOSUrl,
     TweenCameraPosition,
+    createCube,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import { add, merge, union } from 'lodash';
@@ -86,6 +88,9 @@ import { update as updateMeshUI } from 'three-mesh-ui';
 import { EXRLoader } from '@casual-simulation/three/examples/jsm/loaders/EXRLoader';
 import Bowser from 'bowser';
 import { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
+import * as THREE from 'three';
+
+window.THREE = THREE;
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -887,16 +892,18 @@ export abstract class Game {
     }
 
     protected setupRenderer() {
-        const webGlRenderer = (this.renderer = new WebGLRenderer({
-            antialias: true,
+        if (!this.renderer) {
+            const webGlRenderer = (this.renderer = new WebGLRenderer({
+                antialias: true,
 
-            // Alpha is required for CSS Renderer (HTML support)
-            alpha: true,
-        }));
-        webGlRenderer.autoClear = false;
-        webGlRenderer.shadowMap.enabled = false;
-        this.renderer.outputEncoding = sRGBEncoding;
-        this.gameView.gameView.appendChild(this.renderer.domElement);
+                // Alpha is required for CSS Renderer (HTML support)
+                alpha: true,
+            }));
+            webGlRenderer.autoClear = false;
+            webGlRenderer.shadowMap.enabled = false;
+            this.renderer.outputEncoding = sRGBEncoding;
+            this.gameView.gameView.appendChild(this.renderer.domElement);
+        }
     }
 
     protected setupRendering() {
@@ -907,11 +914,7 @@ export abstract class Game {
     }
 
     protected setupScenes() {
-        //
-        // [Main scene]
-        //
-        this.mainScene = new Scene();
-        this.mainScene.autoUpdate = false;
+        this.setupMainScene();
 
         // Main scene camera.
         this.setCameraType('orthographic');
@@ -934,6 +937,16 @@ export abstract class Game {
             this.mainCameraRig.mainCamera,
             this.gameView.gameView
         );
+    }
+
+    protected setupMainScene() {
+        //
+        // [Main scene]
+        //
+        if (!this.mainScene) {
+            this.mainScene = new Scene();
+            this.mainScene.autoUpdate = false;
+        }
     }
 
     protected frameUpdate(time: number, xrFrame?: XRFrame) {
@@ -993,7 +1006,7 @@ export abstract class Game {
     }
 
     protected renderUpdate(xrFrame?: any) {
-        if (this.xrSession && xrFrame) {
+        if ((this.xrSession && xrFrame) || this._8thWallEnabled) {
             if (this.xrMode === 'immersive-ar') {
                 this.mainScene.background = null;
                 this.renderer.setClearColor('#000', 0);
@@ -1032,7 +1045,7 @@ export abstract class Game {
         this.renderer.setScissorTest(false);
 
         // Render the main scene with the main camera.
-        this.renderer.clear();
+        // this.renderer.clear();
         if (renderBackground) {
             this.mainSceneBackgroundUpdate();
         }
@@ -1058,17 +1071,16 @@ export abstract class Game {
      * Render the current frame for AR.
      */
     protected renderAR() {
-        if (this._8thWallEnabled) {
-            XR8.runPreRender(Date.now());
-        }
+        // if (this._8thWallEnabled) {
+        //     XR8.runPreRender(Date.now());
+        // }
         //
         // [Main scene]
         //
-        this.renderMainViewport(false);
-
-        if (this._8thWallEnabled) {
-            XR8.runPostRender();
-        }
+        // this.renderMainViewport(false);
+        // if (this._8thWallEnabled) {
+        //     XR8.runPostRender();
+        // }
     }
 
     /**
@@ -1321,6 +1333,7 @@ export abstract class Game {
             return;
         }
 
+        console.log('[Game] Start 8thWall XR');
         this.xrState = 'starting';
         this.xrMode = 'immersive-ar';
 
@@ -1331,8 +1344,25 @@ export abstract class Game {
 
         document.documentElement.classList.add('ar-app');
 
+        console.log('[Game] 8thWall Enabled.');
         this._8thWallEnabled = true;
-        XR8.run(this.renderer.domElement, true, false);
+
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '100000';
+
+        this.gameView.$el.prepend(canvas);
+
+        XR8.run({
+            canvas: canvas,
+            // canvas: this.renderer.domElement,
+            webgl2: true,
+            ownRunLoop: true,
+        });
 
         this.xrState = 'running';
         appManager.simulationManager.primary.helper.action(
@@ -1462,32 +1492,62 @@ export abstract class Game {
     private async _init8thWall(appKey: string) {
         await this._load8thWallScript(appKey);
         if (!this._8thWallInitialized) {
+            console.log('[Game] Initializing 8thWall XR...');
             await XR8.initialize();
+            console.log('[Game] 8thWall XR initialized');
             XR8.addCameraPipelineModules([
                 XR8.GlTextureRenderer.pipelineModule(),
                 XR8.XrController.pipelineModule(),
+                // @ts-ignore
+                XR8.Threejs.pipelineModule(),
                 {
                     name: 'casualos',
-                    onStart: () => {},
-                    onUpdate: ({ processGpuResult }) => {
-                        this.mainCameraRig.mainCamera.projectionMatrix.fromArray(
-                            processGpuResult.reality.intrinsics
-                        );
+                    onStart: () => {
+                        console.log('[Game] 8thWall casualos pipeline started');
 
-                        const pos = processGpuResult.reality.position;
-                        const rot = processGpuResult.reality.rotation;
-                        this.mainCameraRig.mainCamera.position.set(
-                            pos.x,
-                            pos.y,
-                            pos.z
-                        );
-                        this.mainCameraRig.mainCamera.quaternion.set(
-                            rot.x,
-                            rot.y,
-                            rot.z,
-                            rot.w
-                        );
+                        // @ts-ignore
+                        const { scene, camera, renderer } =
+                            XR8.Threejs.xrScene();
+
+                        this.setupGameWith8thWall(scene, camera, renderer);
+
+                        console.log('[Game] 8thWall new game setup.');
+                        // const c = createCube(1);
+                        // c.position.set(0, 0, -1);
+                        // scene.add(c);
+
+                        // this.mainScene.children.forEach((child) => {
+                        //     scene.add(child);
+                        // });
                     },
+                    onRender: () => {
+                        console.log('[Game] 8thWall casualos pipeline render');
+                        // this.renderer.clear(false, true, false);
+                        // this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
+                    },
+                    // onUpdate: ({ processCpuResult }) => {
+                    //     console.log('[Game] 8thWall casualos pipeline update', processCpuResult);
+                    //     if (!processCpuResult.reality) {
+                    //         return;
+                    //     }
+                    //     this.mainCameraRig.mainCamera.projectionMatrix.fromArray(
+                    //         processCpuResult.reality.intrinsics
+                    //     );
+
+                    //     const pos = processCpuResult.reality.position;
+                    //     const rot = processCpuResult.reality.rotation;
+                    //     this.mainCameraRig.mainCamera.position.set(
+                    //         pos.x,
+                    //         pos.y,
+                    //         pos.z
+                    //     );
+                    //     this.mainCameraRig.mainCamera.quaternion.set(
+                    //         rot.x,
+                    //         rot.y,
+                    //         rot.z,
+                    //         rot.w
+                    //     );
+                    // },
                 },
             ]);
 
@@ -1504,9 +1564,13 @@ export abstract class Game {
             script.src = `//apps.8thwall.com/xrweb?appKey=${appKey}`;
             script.async = true;
             this._8thWallLoadPromise = new Promise<void>((resolve, reject) => {
-                document.addEventListener('xrloaded', () => {
+                window.addEventListener('xrloaded', () => {
+                    console.log('[Game] 8thWall XR loaded');
                     resolve();
                 });
+                script.onload = () => {
+                    console.log('[Game] 8thWall script loaded');
+                };
                 script.onerror = (error) => {
                     reject(error);
                 };
@@ -1515,4 +1579,25 @@ export abstract class Game {
         }
         return this._8thWallLoadPromise;
     }
+
+    /**
+     * Sets up a new game with 8th wall.
+     * Returns null if not supported.
+     * @param renderer The renderer for the game.
+     * @param scene The scene for the game.
+     * @param camera The camera for the game.
+     */
+    protected setupGameWith8thWall(
+        renderer: WebGLRenderer,
+        scene: Scene,
+        camera: Camera
+    ): Game {
+        return null;
+    }
+
+    protected inject8thWallUtilities(
+        renderer: WebGLRenderer,
+        scene: Scene,
+        camera: Camera
+    ): void {}
 }
