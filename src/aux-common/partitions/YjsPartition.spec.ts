@@ -13,6 +13,7 @@ import {
     getRemotes,
     listInstUpdates,
 } from '../bots';
+import { Map as YMap, Text as YText } from 'yjs';
 import { Action, remote } from '../common';
 import { testPartitionImplementation } from './test/PartitionTests';
 import { createYjsPartition, YjsPartitionImpl } from './YjsPartition';
@@ -20,6 +21,7 @@ import { first } from 'rxjs/operators';
 import { waitAsync } from '../test/TestHelpers';
 import { applyUpdate, encodeStateAsUpdate } from 'yjs';
 import { fromByteArray, toByteArray } from 'base64-js';
+import { case1 } from './test/UpdateCases';
 
 describe('YjsPartition', () => {
     testPartitionImplementation(
@@ -45,6 +47,80 @@ describe('YjsPartition', () => {
 
         expect(version?.currentSite).not.toBe(null);
         expect(version?.currentSite).toBeDefined();
+    });
+
+    describe('bugged cases', () => {
+        let partition: YjsPartitionImpl;
+        let events = [] as Action[];
+        let sub: Subscription;
+        beforeEach(() => {
+            events = [];
+            partition = new YjsPartitionImpl({
+                type: 'yjs',
+                remoteEvents: {
+                    get_remotes: true,
+                    get_remote_count: true,
+                    list_inst_updates: true,
+                    get_inst_state_from_updates: true,
+                    create_initialization_update: true,
+                    apply_updates_to_inst: true,
+                    get_current_inst_update: true,
+                },
+                connectionId: 'connectionId',
+            });
+
+            sub = partition.onEvents.subscribe((e) => events.push(...e));
+        });
+
+        afterEach(() => {
+            sub.unsubscribe();
+        });
+
+        it('case1: should handle an update that includes updates in addition to adding a bot', async () => {
+            partition.connect();
+
+            const botId = '402ccb16-d402-4404-b1ad-7ad73cc29772';
+            const tag = 'ResizeHandle';
+            const bots = partition.doc.getMap('bots');
+            let index = 0;
+
+            for (let update of case1) {
+                await partition.sendRemoteEvents([
+                    remote(
+                        applyUpdatesToInst([
+                            {
+                                id: 0,
+                                timestamp: 0,
+                                update,
+                            },
+                        ]),
+                        undefined,
+                        undefined,
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                const expectedBot = bots.get(botId) as YMap<any>;
+                const computedBot = partition.state[botId];
+
+                if (!computedBot || !expectedBot) {
+                    continue;
+                }
+                const expectedValue = expectedBot
+                    .get('ResizeHandle')
+                    .toString();
+                const calculatedValue = computedBot.tags[tag];
+
+                if (expectedValue !== calculatedValue) {
+                    console.log('Update Index:', index);
+                    expect(calculatedValue).toEqual(expectedValue);
+                }
+
+                index += 1;
+            }
+        });
     });
 
     describe('remote events', () => {
