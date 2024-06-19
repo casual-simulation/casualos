@@ -2542,6 +2542,7 @@ describe('PolicyController', () => {
             ['marker'],
             ['role'],
             ['loom'],
+            ['ai.sloyd'],
         ];
 
         // Admins can perform all actions on all resources
@@ -3388,6 +3389,7 @@ describe('PolicyController', () => {
                 ],
             ],
             ['loom', [['create', 'resourceId']]],
+            ['ai.sloyd', [['create', 'resourceId']]],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -3884,6 +3886,7 @@ describe('PolicyController', () => {
                     ['increment', 'resourceId'],
                 ],
             ],
+            ['ai.sloyd', [['create', 'resourceId']]],
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(

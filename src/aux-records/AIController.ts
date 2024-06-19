@@ -29,12 +29,17 @@ import {
     AIHumeInterface,
     AIHumeInterfaceGetAccessTokenFailure,
 } from './AIHumeInterface';
+import {
+    AISloydInterface,
+    AISloydInterfaceCreateModelFailure,
+} from './AISloydInterface';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
     generateSkybox: AIGenerateSkyboxConfiguration | null;
     images: AIGenerateImageConfiguration | null;
     hume: AIHumeConfiguration | null;
+    sloyd: AISloydConfiguration | null;
     metrics: MetricsStore;
     config: ConfigurationStore;
     policies: PolicyStore | null;
@@ -171,6 +176,13 @@ export interface AIHumeConfiguration {
     interface: AIHumeInterface;
 }
 
+export interface AISloydConfiguration {
+    /**
+     * The interface that should be used for sloyd.ai.
+     */
+    interface: AISloydInterface;
+}
+
 /**
  * Defines a class that is able to handle AI requests.
  */
@@ -192,6 +204,7 @@ export class AIController {
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
     private _humeInterface: AIHumeInterface | null;
+    private _sloydInterface: AISloydInterface | null;
     private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
@@ -242,6 +255,7 @@ export class AIController {
             }
         }
         this._humeInterface = configuration.hume?.interface;
+        this._sloydInterface = configuration.sloyd?.interface;
         this._metrics = configuration.metrics;
         this._config = configuration.config;
         this._policies = configuration.policies;
@@ -1064,6 +1078,23 @@ export class AIController {
         }
     }
 
+    async sloydCreateModel(
+        request: AISloydCreateModelRequest
+    ): Promise<AISloydCreateModelResponse> {
+        try {
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling sloyd create model request:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _matchesSubscriptionTiers(
         tier: string,
         allowedTiers: true | Set<string>
@@ -1402,5 +1433,112 @@ export interface AIHumeGetAccessTokenFailure {
         | SubscriptionLimitReached
         | NotAuthorizedError
         | AIHumeInterfaceGetAccessTokenFailure['errorCode'];
+    errorMessage: string;
+}
+
+export interface AISloydCreateModelRequest {
+    /**
+     * The ID of the user that is logged in.
+     */
+    userId: string;
+
+    /**
+     * The name of the record that the request is for.
+     */
+    recordName: string;
+
+    /**
+     * The prompt that should be used to create the model.
+     */
+    prompt: string;
+
+    /**
+     * The MIME type that should be output.
+     * - `model/gltf+json` indicates that the output should be a glTF file.
+     * - `model/gltf-binary` indicates that the output should be a glb file.
+     */
+    outputMimeType: 'model/gltf+json' | 'model/gltf-binary';
+
+    /**
+     * The level of detail of the model that should be created.
+     * Higher values indicate higher levels of detail.
+     * Should be between 0.01 and 1.
+     * Defaults to 0.5.
+     */
+    levelOfDetail?: number;
+
+    /**
+     * Options for generating a thumbnail for the model.
+     * If not provided, no thumbnail will be generated.
+     */
+    thumbnail?: {
+        /**
+         * The mime type of the thumbnail.
+         */
+        type: 'image/png';
+
+        /**
+         * The desired width of the thumbnail in pixels.
+         */
+        width: number;
+
+        /**
+         * The desired height of the thumbnail in pixels.
+         */
+        height: number;
+    };
+}
+
+export type AISloydCreateModelResponse =
+    | AISloydCreateModelSuccess
+    | AISloydCreateModelFailure;
+
+export interface AISloydCreateModelSuccess {
+    success: true;
+
+    /**
+     * The ID of the model that was created.
+     */
+    modelId: string;
+
+    /**
+     * The name of the model.
+     */
+    name: string;
+
+    /**
+     * The confidence of the AI in the created model.
+     */
+    confidence: number;
+
+    /**
+     * The MIME type of the model.
+     */
+    mimeType: 'model/gltf+json' | 'model/gltf-binary';
+
+    /**
+     * The data for the model.
+     * If the mimeType is "model/gltf+json", then this will be a JSON string.
+     * If the mimeType is "model/gltf-binary", then this will be a base64 encoded string.
+     */
+    modelData: string;
+
+    /**
+     * The base64 encoded thumbnail of the model.
+     */
+    thumbnailBase64?: string;
+}
+
+export interface AISloydCreateModelFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
+        | AISloydInterfaceCreateModelFailure['errorCode'];
     errorMessage: string;
 }

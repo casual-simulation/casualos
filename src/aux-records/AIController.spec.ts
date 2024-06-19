@@ -29,6 +29,10 @@ import {
 import { merge } from 'lodash';
 import { unwind } from '../js-interpreter/InterpreterUtils';
 import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import {
+    AISloydInterfaceCreateModelRequest,
+    AISloydInterfaceCreateModelResponse,
+} from './AISloydInterface';
 
 console.log = jest.fn();
 
@@ -73,6 +77,12 @@ describe('AIController', () => {
             []
         >;
     };
+    let sloydInterface: {
+        createModel: jest.Mock<
+            Promise<AISloydInterfaceCreateModelResponse>,
+            [AISloydInterfaceCreateModelRequest]
+        >;
+    };
     let userId: string;
     let userSubscriptionTier: string;
     let store: MemoryStore;
@@ -97,6 +107,9 @@ describe('AIController', () => {
         };
         humeInterface = {
             getAccessToken: jest.fn(),
+        };
+        sloydInterface = {
+            createModel: jest.fn(),
         };
         store = new MemoryStore({
             subscriptions: null,
@@ -154,6 +167,9 @@ describe('AIController', () => {
             },
             hume: {
                 interface: humeInterface,
+            },
+            sloyd: {
+                interface: sloydInterface,
             },
             metrics: store,
             config: store,

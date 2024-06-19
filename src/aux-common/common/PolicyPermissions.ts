@@ -22,6 +22,7 @@ export const MARKER_RESOURCE_KIND = 'marker';
 export const ROLE_RESOURCE_KIND = 'role';
 export const INST_RESOURCE_KIND = 'inst';
 export const LOOM_RESOURCE_KIND = 'loom';
+export const SLOYD_RESOURCE_KIND = 'ai.sloyd';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -36,7 +37,8 @@ export type ResourceKinds =
     | 'marker'
     | 'role'
     | 'inst'
-    | 'loom';
+    | 'loom'
+    | 'ai.sloyd';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -146,6 +148,14 @@ export type InstActionKinds =
 export type LoomActionKinds = 'create';
 
 /**
+ * The possible types of actions that can be performed on ai.sloyd resources.
+ *
+ * @dochash types/permissions
+ * @docname SloydActionKinds
+ */
+export type SloydActionKinds = 'create';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -161,7 +171,8 @@ export type AvailablePermissions =
     | MarkerPermission
     | RolePermission
     | InstPermission
-    | LoomPermission;
+    | LoomPermission
+    | SloydPermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -216,6 +227,8 @@ export const INST_ACTION_KINDS_VALIDATION = z.enum([
 
 export const LOOM_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
+export const SLOYD_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -224,6 +237,7 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     ROLE_RESOURCE_KIND,
     INST_RESOURCE_KIND,
     LOOM_RESOURCE_KIND,
+    SLOYD_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -570,6 +584,31 @@ export const LOOM_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
 type ZodLoomPermission = z.infer<typeof LOOM_PERMISSION_VALIDATION>;
 type ZodLoomPermissionAssertion = HasType<ZodLoomPermission, LoomPermission>;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect ai.sloyd resources.
+ *
+ * @dochash types/permissions
+ * @docname SloydPermission
+ */
+export interface SloydPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'ai.sloyd';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: SloydActionKinds | null;
+}
+export const SLOYD_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(SLOYD_RESOURCE_KIND),
+    action: SLOYD_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodSloydPermission = z.infer<typeof SLOYD_PERMISSION_VALIDATION>;
+type ZodSloydPermissionAssertion = HasType<ZodSloydPermission, SloydPermission>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -580,6 +619,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         ROLE_PERMISSION_VALIDATION,
         INST_PERMISSION_VALIDATION,
         LOOM_PERMISSION_VALIDATION,
+        SLOYD_PERMISSION_VALIDATION,
     ]
 );
 
