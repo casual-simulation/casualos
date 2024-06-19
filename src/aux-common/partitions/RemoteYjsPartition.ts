@@ -999,6 +999,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                 } else if (change.action === 'delete') {
                                     // bot deleted
                                     memoryEvents.push(botRemoved(key));
+                                } else if (change.action === 'update') {
+                                    // bot updated in a way that we can't track
+                                    // in this scenario, we just remove the bot and re-add it
+                                    memoryEvents.push(botRemoved(key));
+                                    const value = this._bots.get(key);
+                                    const bot = this._mapToBot(key, value);
+                                    memoryEvents.push(botAdded(bot));
                                 }
                             }
                         }
