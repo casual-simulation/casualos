@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.7
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where editing a tag may fail if multiple initialization updates for the same bot with different tag values were applied to the inst.
+
 ## V3.3.6
 
 #### Date: 6/14/2024
