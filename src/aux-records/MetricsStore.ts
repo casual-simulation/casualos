@@ -82,6 +82,14 @@ export interface MetricsStore {
     ): Promise<AISloydSubscriptionMetrics>;
 
     /**
+     * Gets the subscription metrics for sloyd.ai for the given record.
+     * @param recordName The name of the record.
+     */
+    getSubscriptionAiSloydMetricsByRecordName(
+        recordName: string
+    ): Promise<AISloydSubscriptionMetrics>;
+
+    /**
      * Records the given sloyd.ai metrics.
      * @param metrics The metrics to record.
      */
@@ -280,7 +288,7 @@ export interface AISloydSubscriptionMetrics extends SubscriptionMetrics {
     /**
      * The total number of sloyd.ai items that have been created for the current period.
      */
-    totalSloydItemsInCurrentPeriod: number;
+    totalModelsInCurrentPeriod: number;
 }
 
 export interface AISloydMetrics {
@@ -326,4 +334,9 @@ export interface AISloydMetrics {
      * The base64 encoded thumbnail of the model.
      */
     thumbnailBase64?: string;
+
+    /**
+     * The unix time in miliseconds of when the metrics were created.
+     */
+    createdAtMs: number;
 }

@@ -3069,7 +3069,7 @@ export interface AuthorizeSubjectRequest {
     /**
      * The markers that are applied to the resource.
      */
-    markers: string[];
+    markers: string[] | null;
 }
 
 export type AuthorizeSubjectsResult =

@@ -18,10 +18,11 @@ import {
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
 } from './AIGenerateSkyboxInterface';
 import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
-import { MetricsStore } from './MetricsStore';
+import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
     getHumeAiFeatures,
+    getSloydAiFeatures,
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
 import { PolicyStore } from './PolicyStore';
@@ -33,6 +34,13 @@ import {
     AISloydInterface,
     AISloydInterfaceCreateModelFailure,
 } from './AISloydInterface';
+import { fromByteArray } from 'base64-js';
+import {
+    AuthorizeSubjectFailure,
+    ConstructAuthorizationContextFailure,
+    PolicyController,
+} from './PolicyController';
+import { DenialReason } from '@casual-simulation/aux-common';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
@@ -43,6 +51,7 @@ export interface AIConfiguration {
     metrics: MetricsStore;
     config: ConfigurationStore;
     policies: PolicyStore | null;
+    policyController: PolicyController | null;
 }
 
 export interface AIChatConfiguration {
@@ -208,7 +217,8 @@ export class AIController {
     private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
-    private _policies: PolicyStore;
+    private _policyStore: PolicyStore;
+    private _policies: PolicyController;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -254,11 +264,12 @@ export class AIController {
                 }
             }
         }
+        this._policies = configuration.policyController;
         this._humeInterface = configuration.hume?.interface;
         this._sloydInterface = configuration.sloyd?.interface;
         this._metrics = configuration.metrics;
         this._config = configuration.config;
-        this._policies = configuration.policies;
+        this._policyStore = configuration.policies;
     }
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
@@ -393,9 +404,11 @@ export class AIController {
                 }
             }
 
-            if (this._policies) {
+            if (this._policyStore) {
                 const privacyFeatures =
-                    await this._policies.getUserPrivacyFeatures(request.userId);
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
 
                 if (!privacyFeatures.allowAI) {
                     return {
@@ -587,9 +600,11 @@ export class AIController {
                 }
             }
 
-            if (this._policies) {
+            if (this._policyStore) {
                 const privacyFeatures =
-                    await this._policies.getUserPrivacyFeatures(request.userId);
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
 
                 if (!privacyFeatures.allowAI) {
                     return {
@@ -1078,10 +1093,134 @@ export class AIController {
         }
     }
 
-    async sloydCreateModel(
-        request: AISloydCreateModelRequest
-    ): Promise<AISloydCreateModelResponse> {
+    async sloydGenerateModel(
+        request: AISloydGenerateModelRequest
+    ): Promise<AISloydGenerateModelResponse> {
         try {
+            if (!this._sloydInterface) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey.',
+                };
+            }
+
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authResult =
+                await this._policies.authorizeSubjectUsingContext(
+                    context.context,
+                    {
+                        resourceKind: 'ai.sloyd',
+                        action: 'create',
+                        markers: null,
+                        subjectId: request.userId,
+                        subjectType: 'user',
+                    }
+                );
+
+            if (authResult.success === false) {
+                return authResult;
+            }
+
+            let metricsFilter: SubscriptionFilter = {};
+            if (context.context.recordStudioId) {
+                metricsFilter.studioId = context.context.recordStudioId;
+            } else {
+                metricsFilter.ownerId = context.context.recordOwnerId;
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiSloydMetrics(
+                metricsFilter
+            );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSloydAiFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                context.context.recordStudioId ? 'studio' : 'user'
+            );
+
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit Sloyd AI features.',
+                };
+            }
+
+            if (
+                typeof features.maxModelsPerPeriod === 'number' &&
+                metrics.totalModelsInCurrentPeriod >=
+                    features.maxModelsPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The request exceeds allowed subscription limits.`,
+                };
+            }
+
+            const result = await this._sloydInterface.createModel({
+                prompt: request.prompt,
+                modelOutputType:
+                    request.outputMimeType === 'model/gltf+json'
+                        ? 'json-gltf'
+                        : 'binary-glb',
+                levelOfDetail: request.levelOfDetail,
+                thumbnailPreviewExportType: request.thumbnail?.type,
+                thumbnailPreviewSizeX: request.thumbnail?.width,
+                thumbnailPreviewSizeY: request.thumbnail?.height,
+            });
+
+            if (result.success === false) {
+                return result;
+            }
+
+            const response: AISloydGenerateModelSuccess = {
+                success: true,
+                modelId: result.interactionId,
+                confidence: result.confidenceScore,
+                mimeType:
+                    result.modelOutputType === 'json-gltf'
+                        ? 'model/gltf+json'
+                        : 'model/gltf-binary',
+                modelData:
+                    result.modelOutputType === 'json-gltf'
+                        ? result.gltfJson
+                        : fromByteArray(new Uint8Array(result.binary)),
+                name: result.name,
+                thumbnailBase64: result.previewImage,
+            };
+
+            await this._metrics.recordSloydMetrics({
+                userId: request.userId,
+                modelId: response.modelId,
+                confidence: response.confidence,
+                mimeType: response.mimeType,
+                modelData: response.modelData,
+                name: response.name,
+                thumbnailBase64: response.thumbnailBase64,
+                createdAtMs: Date.now(),
+            });
+
+            return response;
         } catch (err) {
             console.error(
                 '[AIController] Error handling sloyd create model request:',
@@ -1436,7 +1575,7 @@ export interface AIHumeGetAccessTokenFailure {
     errorMessage: string;
 }
 
-export interface AISloydCreateModelRequest {
+export interface AISloydGenerateModelRequest {
     /**
      * The ID of the user that is logged in.
      */
@@ -1489,11 +1628,11 @@ export interface AISloydCreateModelRequest {
     };
 }
 
-export type AISloydCreateModelResponse =
-    | AISloydCreateModelSuccess
-    | AISloydCreateModelFailure;
+export type AISloydGenerateModelResponse =
+    | AISloydGenerateModelSuccess
+    | AISloydGenerateModelFailure;
 
-export interface AISloydCreateModelSuccess {
+export interface AISloydGenerateModelSuccess {
     success: true;
 
     /**
@@ -1529,7 +1668,7 @@ export interface AISloydCreateModelSuccess {
     thumbnailBase64?: string;
 }
 
-export interface AISloydCreateModelFailure {
+export interface AISloydGenerateModelFailure {
     success: false;
     errorCode:
         | ServerError
@@ -1539,6 +1678,9 @@ export interface AISloydCreateModelFailure {
         | NotSupportedError
         | SubscriptionLimitReached
         | NotAuthorizedError
+        | AuthorizeSubjectFailure['errorCode']
         | AISloydInterfaceCreateModelFailure['errorCode'];
     errorMessage: string;
+
+    reason?: DenialReason;
 }
