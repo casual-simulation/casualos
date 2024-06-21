@@ -33,6 +33,8 @@ import {
 import {
     AISloydInterface,
     AISloydInterfaceCreateModelFailure,
+    AISloydInterfaceCreateModelSuccess,
+    AISloydInterfaceEditModelSuccess,
 } from './AISloydInterface';
 import { fromByteArray } from 'base64-js';
 import {
@@ -1177,17 +1179,30 @@ export class AIController {
                 };
             }
 
-            const result = await this._sloydInterface.createModel({
-                prompt: request.prompt,
-                modelOutputType:
-                    request.outputMimeType === 'model/gltf+json'
-                        ? 'json-gltf'
-                        : 'binary-glb',
-                levelOfDetail: request.levelOfDetail,
-                thumbnailPreviewExportType: request.thumbnail?.type,
-                thumbnailPreviewSizeX: request.thumbnail?.width,
-                thumbnailPreviewSizeY: request.thumbnail?.height,
-            });
+            const result = request.baseModelId
+                ? await this._sloydInterface.editModel({
+                      prompt: request.prompt,
+                      modelOutputType:
+                          request.outputMimeType === 'model/gltf+json'
+                              ? 'json-gltf'
+                              : 'binary-glb',
+                      levelOfDetail: request.levelOfDetail,
+                      thumbnailPreviewExportType: request.thumbnail?.type,
+                      thumbnailPreviewSizeX: request.thumbnail?.width,
+                      thumbnailPreviewSizeY: request.thumbnail?.height,
+                      interactionId: request.baseModelId,
+                  })
+                : await this._sloydInterface.createModel({
+                      prompt: request.prompt,
+                      modelOutputType:
+                          request.outputMimeType === 'model/gltf+json'
+                              ? 'json-gltf'
+                              : 'binary-glb',
+                      levelOfDetail: request.levelOfDetail,
+                      thumbnailPreviewExportType: request.thumbnail?.type,
+                      thumbnailPreviewSizeX: request.thumbnail?.width,
+                      thumbnailPreviewSizeY: request.thumbnail?.height,
+                  });
 
             if (result.success === false) {
                 return result;
@@ -1210,7 +1225,8 @@ export class AIController {
             };
 
             await this._metrics.recordSloydMetrics({
-                userId: request.userId,
+                userId: context.context.recordOwnerId ?? undefined,
+                studioId: context.context.recordStudioId ?? undefined,
                 modelId: response.modelId,
                 confidence: response.confidence,
                 mimeType: response.mimeType,
@@ -1218,6 +1234,8 @@ export class AIController {
                 name: response.name,
                 thumbnailBase64: response.thumbnailBase64,
                 createdAtMs: Date.now(),
+                baseModelId: request.baseModelId,
+                modelsCreated: 1,
             });
 
             return response;
@@ -1605,6 +1623,11 @@ export interface AISloydGenerateModelRequest {
      * Defaults to 0.5.
      */
     levelOfDetail?: number;
+
+    /**
+     * The ID of the model that the new model should be based on.
+     */
+    baseModelId?: string;
 
     /**
      * Options for generating a thumbnail for the model.

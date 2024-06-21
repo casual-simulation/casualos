@@ -33,8 +33,12 @@ import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
 import {
     AISloydInterfaceCreateModelRequest,
     AISloydInterfaceCreateModelResponse,
+    AISloydInterfaceEditModelRequest,
+    AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
 import { PolicyController } from './PolicyController';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { fromByteArray } from 'base64-js';
 
 console.log = jest.fn();
 
@@ -84,6 +88,10 @@ describe('AIController', () => {
             Promise<AISloydInterfaceCreateModelResponse>,
             [AISloydInterfaceCreateModelRequest]
         >;
+        editModel: jest.Mock<
+            Promise<AISloydInterfaceEditModelResponse>,
+            [AISloydInterfaceEditModelRequest]
+        >;
     };
     let userId: string;
     let userSubscriptionTier: string;
@@ -113,6 +121,7 @@ describe('AIController', () => {
         };
         sloydInterface = {
             createModel: jest.fn(),
+            editModel: jest.fn(),
         };
 
         const services = createTestControllers(null);
@@ -3044,6 +3053,103 @@ describe('AIController', () => {
             ]);
         });
 
+        it('should support binary results', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelOutputType: 'binary-glb',
+                name: 'model name',
+                binary: [123, 255, 0, 37],
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf-binary',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf-binary',
+                confidence: 0.5,
+                name: 'model name',
+                modelData: fromByteArray(new Uint8Array([123, 255, 0, 37])),
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf-binary',
+                    confidence: 0.5,
+                    userId: userId,
+                    createdAtMs: expect.any(Number),
+                    name: 'model name',
+                    modelData: fromByteArray(new Uint8Array([123, 255, 0, 37])),
+                },
+            ]);
+        });
+
+        it('should call the sloyd edit interface if given a previous model ID', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelOutputType: 'json-gltf',
+                name: 'model name',
+                gltfJson: 'json',
+            });
+            sloydInterface.editModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelOutputType: 'json-gltf',
+                name: 'model name',
+                gltfJson: 'json',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+                baseModelId: 'baseModelId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf+json',
+                confidence: 0.5,
+                name: 'model name',
+                modelData: 'json',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    userId: userId,
+                    createdAtMs: expect.any(Number),
+                    name: 'model name',
+                    modelData: 'json',
+                    baseModelId: 'baseModelId',
+                },
+            ]);
+
+            expect(sloydInterface.editModel).toHaveBeenCalledWith({
+                interactionId: 'baseModelId',
+                levelOfDetail: 1,
+                prompt: 'test',
+                modelOutputType: 'json-gltf',
+            });
+        });
+
         it('should return not_authorized if the user doesnt have access to sloyd features', async () => {
             store.subscriptionConfiguration = createTestSubConfiguration();
             store.subscriptionConfiguration.defaultFeatures.user.ai.sloyd = {
@@ -3182,7 +3288,66 @@ describe('AIController', () => {
                     modelId: 'modelId',
                     mimeType: 'model/gltf+json',
                     confidence: 0.5,
-                    userId: userId,
+                    studioId,
+                    createdAtMs: expect.any(Number),
+                    name: 'model name',
+                    modelData: 'json',
+                },
+            ]);
+        });
+
+        it('should allow users given access to ai.sloyd resources to create models', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelOutputType: 'json-gltf',
+                name: 'model name',
+                gltfJson: 'json',
+            });
+
+            const permissionResult = await policies.grantMarkerPermission({
+                recordKeyOrRecordName: studioId,
+                userId: userId,
+                marker: PUBLIC_READ_MARKER,
+                permission: {
+                    resourceKind: 'ai.sloyd',
+                    action: 'create',
+                    expireTimeMs: null,
+                    options: {},
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                    marker: PUBLIC_READ_MARKER,
+                },
+            });
+
+            expect(permissionResult).toMatchObject({
+                success: true,
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId: otherUserId,
+                recordName: studioId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf+json',
+                confidence: 0.5,
+                name: 'model name',
+                modelData: 'json',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    studioId: studioId,
                     createdAtMs: expect.any(Number),
                     name: 'model name',
                     modelData: 'json',

@@ -2738,7 +2738,10 @@ export class MemoryStore
                               m.createdAtMs < info.currentPeriodEndMs))
               );
 
-        const totalModels = metrics.length;
+        let totalModels = 0;
+        for (let m of metrics) {
+            totalModels += m.modelsCreated;
+        }
         return {
             ...info,
             totalModelsInCurrentPeriod: totalModels,
@@ -2756,7 +2759,7 @@ export class MemoryStore
                 metric.userId === info.ownerId ||
                 metric.studioId === info.studioId
             ) {
-                totalModels += 1;
+                totalModels += metric.modelsCreated;
             }
         }
 

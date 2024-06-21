@@ -336,7 +336,17 @@ export interface AISloydMetrics {
     thumbnailBase64?: string;
 
     /**
+     * The ID of the model that the created model is based on.
+     */
+    baseModelId?: string;
+
+    /**
      * The unix time in miliseconds of when the metrics were created.
      */
     createdAtMs: number;
+
+    /**
+     * The number of models that were created in this metric.
+     */
+    modelsCreated: number;
 }
