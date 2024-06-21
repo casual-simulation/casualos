@@ -949,6 +949,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             hume: {
                 allowed: true,
             },
+            sloyd: {
+                allowed: true,
+            },
         },
         data: {
             allowed: true,

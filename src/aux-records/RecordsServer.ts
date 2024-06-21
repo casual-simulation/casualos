@@ -2316,6 +2316,71 @@ export class RecordsServer {
                     return result;
                 }),
 
+            createSloydModel: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/ai/sloyd/model')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        outputMimeType: z.enum([
+                            'model/gltf+json',
+                            'model/gltf-binary',
+                        ]),
+                        prompt: z.string().min(1),
+                        levelOfDetail: z.number().min(0.01).max(1).optional(),
+                        baseModelId: z.string().optional(),
+                        thumbnail: z
+                            .object({
+                                type: z.literal('image/png'),
+                                width: z.number().int().min(1),
+                                height: z.number().int().min(1),
+                            })
+                            .optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            outputMimeType,
+                            prompt,
+                            levelOfDetail,
+                            baseModelId,
+                            thumbnail,
+                        },
+                        context
+                    ) => {
+                        if (!this._aiController) {
+                            return AI_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._aiController.sloydGenerateModel({
+                                userId: sessionKeyValidation.userId,
+                                recordName,
+                                outputMimeType,
+                                prompt,
+                                levelOfDetail,
+                                baseModelId,
+                                thumbnail: thumbnail as any,
+                            });
+
+                        return result;
+                    }
+                ),
+
             getLoomAccessToken: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/loom/token')
