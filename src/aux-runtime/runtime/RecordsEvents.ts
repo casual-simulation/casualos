@@ -27,6 +27,7 @@ export type RecordsAsyncActions =
     | AIGenerateImageAction
     | AIGenerateSkyboxAction
     | AIHumeGetAccessTokenAction
+    | AISloydGenerateModelAction
     | ListUserStudiosAction
     | GetPublicRecordKeyAction
     | GrantRecordPermissionAction
@@ -278,6 +279,72 @@ export interface AIGenerateImageOptions {
  */
 export interface AIHumeGetAccessTokenAction extends RecordsAction {
     type: 'ai_hume_get_access_token';
+}
+
+/**
+ * An event that is used to generate a model using Sloyd AI.
+ */
+export interface AISloydGenerateModelAction
+    extends RecordsAction,
+        AISloydGenerateModelOptions {
+    type: 'ai_sloyd_generate_model';
+}
+
+/**
+ * The options for generating a model using Sloyd AI.
+ *
+ * @dochash types/ai
+ * @docname AISloydGenerateModelOptions
+ */
+export interface AISloydGenerateModelOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
+    /**
+     * The prompt to use for the model.
+     */
+    prompt: string;
+
+    /**
+     * The MIME type that should be used for the model.
+     * If omitted, then "model/gltf+json" will be used.
+     */
+    outputMimeType?: 'model/gltf+json' | 'model/gltf-binary';
+
+    /**
+     * The level of detail that should be used.
+     */
+    levelOfDetail?: number;
+
+    /**
+     * The ID of the model that the new model should be based on.
+     */
+    baseModelId?: string;
+
+    /**
+     * The options for the thumbnail for the model.
+     * If omitted, then no thumbnail will be generated.
+     */
+    thumbnail?: {
+        /**
+         * The type of the thumbnail.
+         * Currently only "image/png" is supported.
+         */
+        type: 'image/png';
+
+        /**
+         * The desired width of the thumbnail in pixels.
+         */
+        width: number;
+
+        /**
+         * The desired height of the thumbnail in pixels.
+         */
+        height: number;
+    };
 }
 
 /**
@@ -1126,6 +1193,25 @@ export function aiHumeGetAccessToken(
     return {
         type: 'ai_hume_get_access_token',
         options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AISloydGenerateModelAction.
+ * @param parameters The parameters for the action.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function aiSloydGenerateModel(
+    parameters: AISloydGenerateModelOptions,
+    options?: RecordActionOptions,
+    taskId?: number | string
+): AISloydGenerateModelAction {
+    return {
+        type: 'ai_sloyd_generate_model',
+        ...parameters,
+        options,
         taskId,
     };
 }

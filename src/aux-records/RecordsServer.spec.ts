@@ -12833,6 +12833,68 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should use the user record if no record name is specified', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/sloyd/model`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                        outputMimeType: 'model/gltf+json',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    modelId: 'model-1',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    name: 'model-1',
+                    modelData: 'json',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(sloydInterface.createModel).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                modelOutputType: 'json-gltf',
+            });
+        });
+
+        it('should default outputMimeType to gltf+json', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/sloyd/model`,
+                    JSON.stringify({
+                        recordName: userId,
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    modelId: 'model-1',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    name: 'model-1',
+                    modelData: 'json',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(sloydInterface.createModel).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                modelOutputType: 'json-gltf',
+            });
+        });
+
         it('should be able to include additional options', async () => {
             const result = await server.handleHttpRequest(
                 httpPost(

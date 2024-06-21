@@ -1651,10 +1651,22 @@ export interface AISloydGenerateModelRequest {
     };
 }
 
+/**
+ * The response to a request to generate a model using the Sloyd AI interface.
+ *
+ * @dochash types/ai
+ * @docname AISloydGenerateModelResponse
+ */
 export type AISloydGenerateModelResponse =
     | AISloydGenerateModelSuccess
     | AISloydGenerateModelFailure;
 
+/**
+ * A successful response to a request to generate a model using the Sloyd AI interface.
+ *
+ * @dochash types/ai
+ * @docname AISloydGenerateModelSuccess
+ */
 export interface AISloydGenerateModelSuccess {
     success: true;
 
@@ -1691,8 +1703,18 @@ export interface AISloydGenerateModelSuccess {
     thumbnailBase64?: string;
 }
 
+/**
+ * A failed response to a request to generate a model using the Sloyd AI interface.
+ *
+ * @dochash types/ai
+ * @docname AISloydGenerateModelFailure
+ */
 export interface AISloydGenerateModelFailure {
     success: false;
+
+    /**
+     * The error code.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
@@ -1703,7 +1725,14 @@ export interface AISloydGenerateModelFailure {
         | NotAuthorizedError
         | AuthorizeSubjectFailure['errorCode']
         | AISloydInterfaceCreateModelFailure['errorCode'];
+
+    /**
+     * The error message.
+     */
     errorMessage: string;
 
+    /**
+     * The reason why the request was denied.
+     */
     reason?: DenialReason;
 }

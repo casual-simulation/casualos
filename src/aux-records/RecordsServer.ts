@@ -2321,11 +2321,10 @@ export class RecordsServer {
                 .http('POST', '/api/v2/ai/sloyd/model')
                 .inputs(
                     z.object({
-                        recordName: RECORD_NAME_VALIDATION,
-                        outputMimeType: z.enum([
-                            'model/gltf+json',
-                            'model/gltf-binary',
-                        ]),
+                        recordName: RECORD_NAME_VALIDATION.optional(),
+                        outputMimeType: z
+                            .enum(['model/gltf+json', 'model/gltf-binary'])
+                            .default('model/gltf+json'),
                         prompt: z.string().min(1),
                         levelOfDetail: z.number().min(0.01).max(1).optional(),
                         baseModelId: z.string().optional(),
@@ -2369,7 +2368,8 @@ export class RecordsServer {
                         const result =
                             await this._aiController.sloydGenerateModel({
                                 userId: sessionKeyValidation.userId,
-                                recordName,
+                                recordName:
+                                    recordName ?? sessionKeyValidation.userId,
                                 outputMimeType,
                                 prompt,
                                 levelOfDetail,

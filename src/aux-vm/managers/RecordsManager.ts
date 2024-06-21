@@ -42,6 +42,7 @@ import {
     RevokeRecordPermissionAction,
     AIChatStreamAction,
     AIHumeGetAccessTokenAction,
+    AISloydGenerateModelAction,
 } from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -255,6 +256,8 @@ export class RecordsManager {
                 this._aiGenerateImage(event);
             } else if (event.type === 'ai_hume_get_access_token') {
                 this._aiHumeGetAccessToken(event);
+            } else if (event.type === 'ai_sloyd_generate_model') {
+                this._aiSloydGenerateModel(event);
             } else if (event.type === 'list_user_studios') {
                 this._listUserStudios(event);
             } else if (event.type === 'get_records_endpoint') {
@@ -1925,6 +1928,55 @@ export class RecordsManager {
         }
     }
 
+    private async _aiSloydGenerateModel(event: AISloydGenerateModelAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const result = await this._client.createSloydModel(
+                {
+                    recordName: event.recordName,
+                    prompt: event.prompt,
+                    baseModelId: event.baseModelId,
+                    levelOfDetail: event.levelOfDetail,
+                    outputMimeType: event.outputMimeType,
+                    thumbnail: event.thumbnail,
+                },
+                {
+                    endpoint: await info.auth.getRecordsOrigin(),
+                    sessionKey: info.token,
+                }
+            );
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(asyncResult(event.taskId, result));
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error generating Sloyd model:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _sendWebsocketSupportedRequest<TResponse>(
         auth: AuthHelperInterface,
         method: GenericHttpRequest['method'],
@@ -2137,6 +2189,7 @@ export class RecordsManager {
             | AIGenerateSkyboxAction
             | AIGenerateImageAction
             | AIHumeGetAccessTokenAction
+            | AISloydGenerateModelAction
             | ListUserStudiosAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<{

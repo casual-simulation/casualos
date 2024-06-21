@@ -300,6 +300,8 @@ import {
     ListDataOptions,
     listDataRecordByMarker,
     aiHumeGetAccessToken,
+    AISloydGenerateModelOptions,
+    aiSloydGenerateModel,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -431,6 +433,7 @@ import {
     AIGenerateImageResponse,
     AIGenerateImageSuccess,
     AIHumeGetAccessTokenResult,
+    AISloydGenerateModelResponse,
 } from '@casual-simulation/aux-records/AIController';
 import {
     RuntimeActions,
@@ -2994,6 +2997,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     getAccessToken: getHumeAccessToken,
                 },
 
+                sloyd: {
+                    generateModel: generateSloydModel,
+                },
+
                 stream: {
                     chat: chatStream,
                 },
@@ -5375,6 +5382,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getHumeAccessToken(): Promise<AIHumeGetAccessTokenResult> {
         const task = context.createTask();
         const action = aiHumeGetAccessToken({}, task.taskId);
+        const final = addAsyncResultAction(task, action);
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Generates a new 3D model using [sloyd.ai](https://www.sloyd.ai/).
+     * @param request The options for the 3D model.
+     * @param options The options for the request.
+     *
+     * @example Generate a chair model using Sloyd
+     * const model = await ai.sloyd.generateModel({
+     *     prompt: 'a chair'
+     * });
+     *
+     * @example Generate a chair using a studio subscription
+     * const model = await ai.sloyd.generateModel({
+     *     recordName: 'studioID',
+     *     prompt: 'a chair'
+     * });
+     *
+     * @dochash actions/ai
+     * @docname ai.sloyd.generateModel
+     */
+    function generateSloydModel(
+        request: AISloydGenerateModelOptions,
+        options?: RecordActionOptions
+    ): Promise<AISloydGenerateModelResponse> {
+        const task = context.createTask();
+        const action = aiSloydGenerateModel(request, options, task.taskId);
         const final = addAsyncResultAction(task, action);
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
