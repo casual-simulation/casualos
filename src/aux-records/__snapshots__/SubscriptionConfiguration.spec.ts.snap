@@ -15,6 +15,9 @@ Object {
     "skyboxes": Object {
       "allowed": true,
     },
+    "sloyd": Object {
+      "allowed": true,
+    },
   },
   "data": Object {
     "allowed": true,

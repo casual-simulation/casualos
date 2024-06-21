@@ -3049,6 +3049,7 @@ describe('AIController', () => {
                     createdAtMs: expect.any(Number),
                     name: 'model name',
                     modelData: 'json',
+                    modelsCreated: 1,
                 },
             ]);
         });
@@ -3089,6 +3090,7 @@ describe('AIController', () => {
                     createdAtMs: expect.any(Number),
                     name: 'model name',
                     modelData: fromByteArray(new Uint8Array([123, 255, 0, 37])),
+                    modelsCreated: 1,
                 },
             ]);
         });
@@ -3139,6 +3141,7 @@ describe('AIController', () => {
                     name: 'model name',
                     modelData: 'json',
                     baseModelId: 'baseModelId',
+                    modelsCreated: 1,
                 },
             ]);
 
@@ -3198,6 +3201,7 @@ describe('AIController', () => {
                 createdAtMs: Date.now(),
                 name: 'model name',
                 modelData: 'json',
+                modelsCreated: 1,
             });
 
             sloydInterface.createModel.mockResolvedValueOnce({
@@ -3292,6 +3296,7 @@ describe('AIController', () => {
                     createdAtMs: expect.any(Number),
                     name: 'model name',
                     modelData: 'json',
+                    modelsCreated: 1,
                 },
             ]);
         });
@@ -3351,6 +3356,7 @@ describe('AIController', () => {
                     createdAtMs: expect.any(Number),
                     name: 'model name',
                     modelData: 'json',
+                    modelsCreated: 1,
                 },
             ]);
         });
