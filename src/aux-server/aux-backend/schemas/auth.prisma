@@ -72,6 +72,7 @@ model User {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+    aiSloydMetrics AiSloydMetrics[]
 
     instReports UserInstReport[]
     comIdRequests StudioComIdRequest[]
@@ -270,6 +271,7 @@ model Studio {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+    aiSloydMetrics AiSloydMetrics[]
 
     childStudios Studio[] @relation("OwnerStudio")
     comIdRequests StudioComIdRequest[]
@@ -794,6 +796,26 @@ model AiSkyboxMetrics {
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_studioId_fkey1")
+}
+
+model AiSloydMetrics {
+    id String @id @db.Uuid
+
+    modelsCreated Int
+    name String?
+    confidence Float?
+    mimeType String
+    modelData String
+    thumbnailBase64 String?
+    baseModelId String?
+
+    createdAt DateTime @default(now())
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiSloydMetrics_userId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSloydMetrics_studioId_fkey1")
 }
 
 model PrivoClientCredentials {

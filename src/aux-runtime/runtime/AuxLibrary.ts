@@ -5408,7 +5408,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function generateSloydModel(
         request: AISloydGenerateModelOptions,
-        options?: RecordActionOptions
+        options: RecordActionOptions = {}
     ): Promise<AISloydGenerateModelResponse> {
         const task = context.createTask();
         const action = aiSloydGenerateModel(request, options, task.taskId);

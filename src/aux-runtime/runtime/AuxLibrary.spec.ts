@@ -3520,7 +3520,7 @@ describe('AuxLibrary', () => {
                     {
                         prompt: 'this is a test',
                     },
-                    undefined,
+                    {},
                     context.tasks.size
                 );
 

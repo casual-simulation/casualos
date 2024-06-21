@@ -2210,6 +2210,8 @@ Object {
             "type": "number",
           },
           "outputMimeType": Object {
+            "defaultValue": "model/gltf+json",
+            "hasDefault": true,
             "type": "enum",
             "values": Array [
               "model/gltf+json",
@@ -2220,6 +2222,7 @@ Object {
             "type": "string",
           },
           "recordName": Object {
+            "optional": true,
             "type": "string",
           },
           "thumbnail": Object {
@@ -5066,6 +5069,8 @@ Object {
             "type": "number",
           },
           "outputMimeType": Object {
+            "defaultValue": "model/gltf+json",
+            "hasDefault": true,
             "type": "enum",
             "values": Array [
               "model/gltf+json",
@@ -5076,6 +5081,7 @@ Object {
             "type": "string",
           },
           "recordName": Object {
+            "optional": true,
             "type": "string",
           },
           "thumbnail": Object {

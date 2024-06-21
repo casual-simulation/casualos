@@ -3106,10 +3106,8 @@ describe('AIController', () => {
             });
             sloydInterface.editModel.mockResolvedValueOnce({
                 success: true,
-                confidenceScore: 0.5,
                 interactionId: 'modelId',
                 modelOutputType: 'json-gltf',
-                name: 'model name',
                 gltfJson: 'json',
             });
 
@@ -3126,8 +3124,6 @@ describe('AIController', () => {
                 success: true,
                 modelId: 'modelId',
                 mimeType: 'model/gltf+json',
-                confidence: 0.5,
-                name: 'model name',
                 modelData: 'json',
             });
 
@@ -3135,10 +3131,8 @@ describe('AIController', () => {
                 {
                     modelId: 'modelId',
                     mimeType: 'model/gltf+json',
-                    confidence: 0.5,
                     userId: userId,
                     createdAtMs: expect.any(Number),
-                    name: 'model name',
                     modelData: 'json',
                     baseModelId: 'baseModelId',
                     modelsCreated: 1,

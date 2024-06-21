@@ -172,11 +172,6 @@ export interface AISloydInterfaceEditModelSuccess {
     interactionId: string;
 
     /**
-     * A basic name for the object.
-     */
-    name: string;
-
-    /**
      * The binary data of the model.
      * Only provided if the modelOutputType is 'binary-glb'.
      */
@@ -187,12 +182,6 @@ export interface AISloydInterfaceEditModelSuccess {
      * Only provided if the modelOutputType is 'json-gltf'.
      */
     gltfJson?: string;
-
-    /**
-     * A score indicating how confident the AI is that the returned object matches the text prompt.
-     * See [Using Confidence Score](https://doc.clickup.com/20484704/p/h/kh4k0-8035/ed114594b2af381).
-     */
-    confidenceScore: number;
 
     /**
      * The type of model to create.

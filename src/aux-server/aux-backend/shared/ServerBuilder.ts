@@ -142,6 +142,7 @@ import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
 // @ts-ignore
 import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
+import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -984,6 +985,7 @@ export class ServerBuilder implements SubscriptionLike {
             | 'stabilityai'
             | 'googleai'
             | 'humeai'
+            | 'sloydai'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using AI.');
@@ -1049,9 +1051,11 @@ export class ServerBuilder implements SubscriptionLike {
             generateSkybox: null,
             images: null,
             hume: null,
+            sloyd: null,
             config: this._configStore,
             metrics: this._metricsStore,
             policies: this._policyStore,
+            policyController: null,
         };
 
         if (this._openAIChatInterface && options.ai.chat) {
@@ -1112,6 +1116,15 @@ export class ServerBuilder implements SubscriptionLike {
                     options.humeai.apiKey,
                     options.humeai.secretKey
                 ),
+            };
+        }
+        if (options.sloydai) {
+            console.log('[ServerBuilder] Using Sloyd AI.');
+            this._aiConfiguration.sloyd = {
+                interface: new SloydInterface({
+                    clientId: options.sloydai.clientId,
+                    clientSecret: options.sloydai.clientSecret,
+                }),
             };
         }
         return this;
@@ -1241,6 +1254,8 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         if (this._aiConfiguration) {
+            // Set the policy controller for the AI controller since it is not set earlier
+            this._aiConfiguration.policyController = this._policyController;
             this._aiController = new AIController(this._aiConfiguration);
         }
 
@@ -2003,6 +2018,15 @@ const humeAiSchema = z.object({
         .min(1),
 });
 
+const sloydAiSchema = z.object({
+    clientId: z.string().describe('The client ID for the Sloyd AI API.').min(1),
+
+    clientSecret: z
+        .string()
+        .describe('The client secret for the Sloyd AI API.')
+        .min(1),
+});
+
 const aiSchema = z.object({
     chat: z
         .object({
@@ -2244,6 +2268,13 @@ export const optionsSchema = z.object({
             'Hume AI options. If omitted, then it will not be possible to use Hume AI.'
         )
         .optional(),
+
+    sloydai: sloydAiSchema
+        .describe(
+            'Sloyd AI options. If omitted, then it will not be possible to use Sloyd AI.'
+        )
+        .optional(),
+
     ai: aiSchema
         .describe(
             'AI configuration options. If omitted, then all AI features will be disabled.'

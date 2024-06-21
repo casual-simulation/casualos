@@ -188,21 +188,29 @@ export const subscriptionFeaturesSchema = z.object({
             .default({
                 allowed: false,
             }),
-        sloyd: z.object({
-            allowed: z
-                .boolean()
-                .describe(
-                    'Whether Sloyd AI features are allowed for the subscription. If false, then every request to generate Sloyd AI will be rejected.'
-                ),
-            maxModelsPerPeriod: z
-                .number()
-                .describe(
-                    'The maximum number of models that can be generated per subscription period. If omitted, then there is no limit.'
-                )
-                .positive()
-                .int()
-                .optional(),
-        }),
+        sloyd: z
+            .object({
+                allowed: z
+                    .boolean()
+                    .describe(
+                        'Whether Sloyd AI features are allowed for the subscription. If false, then every request to generate Sloyd AI will be rejected.'
+                    ),
+                maxModelsPerPeriod: z
+                    .number()
+                    .describe(
+                        'The maximum number of models that can be generated per subscription period. If omitted, then there is no limit.'
+                    )
+                    .positive()
+                    .int()
+                    .optional(),
+            })
+            .describe(
+                'The configuration for Sloyd AI features for the subscription. Defaults to not allowed if omitted.'
+            )
+            .optional()
+            .default({
+                allowed: false,
+            }),
     }),
     insts: z.object({
         allowed: z

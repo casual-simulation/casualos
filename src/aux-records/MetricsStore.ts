@@ -82,14 +82,6 @@ export interface MetricsStore {
     ): Promise<AISloydSubscriptionMetrics>;
 
     /**
-     * Gets the subscription metrics for sloyd.ai for the given record.
-     * @param recordName The name of the record.
-     */
-    getSubscriptionAiSloydMetricsByRecordName(
-        recordName: string
-    ): Promise<AISloydSubscriptionMetrics>;
-
-    /**
      * Records the given sloyd.ai metrics.
      * @param metrics The metrics to record.
      */
@@ -311,12 +303,12 @@ export interface AISloydMetrics {
     /**
      * The name of the model that was created.
      */
-    name: string;
+    name?: string;
 
     /**
      * The confidence of the AI in the created model.
      */
-    confidence: number;
+    confidence?: number;
 
     /**
      * The MIME type of the model.

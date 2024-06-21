@@ -1141,6 +1141,7 @@ export class AIController {
             }
 
             let metricsFilter: SubscriptionFilter = {};
+            console.log('context', context.context);
             if (context.context.recordStudioId) {
                 metricsFilter.studioId = context.context.recordStudioId;
             } else {
@@ -1179,8 +1180,8 @@ export class AIController {
                 };
             }
 
-            const result = request.baseModelId
-                ? await this._sloydInterface.editModel({
+            const result = await (request.baseModelId
+                ? this._sloydInterface.editModel({
                       prompt: request.prompt,
                       modelOutputType:
                           request.outputMimeType === 'model/gltf+json'
@@ -1192,7 +1193,7 @@ export class AIController {
                       thumbnailPreviewSizeY: request.thumbnail?.height,
                       interactionId: request.baseModelId,
                   })
-                : await this._sloydInterface.createModel({
+                : this._sloydInterface.createModel({
                       prompt: request.prompt,
                       modelOutputType:
                           request.outputMimeType === 'model/gltf+json'
@@ -1202,7 +1203,7 @@ export class AIController {
                       thumbnailPreviewExportType: request.thumbnail?.type,
                       thumbnailPreviewSizeX: request.thumbnail?.width,
                       thumbnailPreviewSizeY: request.thumbnail?.height,
-                  });
+                  }));
 
             if (result.success === false) {
                 return result;
@@ -1211,7 +1212,6 @@ export class AIController {
             const response: AISloydGenerateModelSuccess = {
                 success: true,
                 modelId: result.interactionId,
-                confidence: result.confidenceScore,
                 mimeType:
                     result.modelOutputType === 'json-gltf'
                         ? 'model/gltf+json'
@@ -1220,9 +1220,17 @@ export class AIController {
                     result.modelOutputType === 'json-gltf'
                         ? result.gltfJson
                         : fromByteArray(new Uint8Array(result.binary)),
-                name: result.name,
                 thumbnailBase64: result.previewImage,
             };
+
+            if ('name' in result && typeof result.name === 'string') {
+                response.name = (
+                    result as AISloydInterfaceCreateModelSuccess
+                ).name;
+                response.confidence = (
+                    result as AISloydInterfaceCreateModelSuccess
+                ).confidenceScore;
+            }
 
             await this._metrics.recordSloydMetrics({
                 userId: context.context.recordOwnerId ?? undefined,
@@ -1627,7 +1635,7 @@ export interface AISloydGenerateModelRequest {
     /**
      * The ID of the model that the new model should be based on.
      */
-    baseModelId?: string;
+    baseModelId?: string | null;
 
     /**
      * Options for generating a thumbnail for the model.
@@ -1678,12 +1686,12 @@ export interface AISloydGenerateModelSuccess {
     /**
      * The name of the model.
      */
-    name: string;
+    name?: string;
 
     /**
      * The confidence of the AI in the created model.
      */
-    confidence: number;
+    confidence?: number;
 
     /**
      * The MIME type of the model.
