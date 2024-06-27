@@ -1,5 +1,24 @@
 # CasualOS Changelog
 
+## V3.3.7
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added the ability to generate [Sloyd.ai](https://www.sloyd.ai/) models with `ai.sloyd.generateModel(request)`.
+    -   Requires a valid subscription that has been granted access to the `ai.sloyd` feature.
+    -   `request` is should be an object with the following properties:
+        -   `prompt` - The prompt to use for generating the model.
+        -   `recordName` - The name of the record that the model should be generated in. If omitted, then the user's record will be used by default.
+        -   `outputMimeType` - The MIME Type of the model that should be output. Currently, only `model/gltf+json` and `model/gltf-binary` are supported. If omitted, then `model/gltf+json` will be used.
+        -   `levelOfDetail` - A number between `0.01` and `1` that indicates the level of detail that should be generated for the model. Higher values will generate more detailed models. If omitted, then `0.5` will be used.
+        -   `baseModelId` - The ID of the model that should be edited.
+        -   `thumbnail` - An object that specifies how the thumbnail for the model should be generated. If omitted, then no thumbnail will be created. The object should have the following properties:
+            -   `type` - Should always be `"image/png"`
+            -   `width` - The desired width of the thumbnail in pixels.
+            -   `height` - The desired height of the thumbnail in pixels.
+
 ## V3.3.6
 
 #### Date: 6/14/2024
