@@ -686,6 +686,75 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useMongoAndRedisInstRecords(
+        options: Pick<BuilderOptions, 'mongodb' | 'redis'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using MongoDB and Redis Inst Records.');
+
+        if (!options.mongodb) {
+            throw new Error('MongoDB options must be provided.');
+        }
+
+        if (!options.redis) {
+            throw new Error('Redis options must be provided.');
+        }
+
+        if (!this._websocketConnectionStore) {
+            throw new Error(
+                'A websocket connection store must be configured before using Inst Records.'
+            );
+        }
+
+        if (!this._websocketMessenger) {
+            throw new Error(
+                'A websocket messenger must be configured before using Inst Records.'
+            );
+        }
+
+        if (!options.redis.tempInstRecordsStoreNamespace) {
+            throw new Error(
+                'Redis temp inst records store namespace must be provided.'
+            );
+        }
+
+        if (!options.redis.instRecordsStoreNamespace) {
+            throw new Error(
+                'Redis inst records store namespace must be provided.'
+            );
+        }
+
+        const mongodb = options.mongodb;
+        this._actions.push({
+            priority: 1,
+            action: async () => {
+                const redis = this._ensureRedisInstData(options);
+                const mongo = await this._ensureMongoDB(options);
+                const db = mongo.db(mongodb.database);
+
+                this._mongoDb = db;
+
+                this._tempInstRecordsStore = new RedisTempInstRecordsStore(
+                    options.redis.tempInstRecordsStoreNamespace,
+                    redis,
+                    options.redis.tempInstRecordsLifetimeSeconds,
+                    options.redis.tempInstRecordsLifetimeExpireMode,
+                    false
+                );
+                this._instRecordsStore = new SplitInstRecordsStore(
+                    new RedisTempInstRecordsStore(
+                        options.redis.instRecordsStoreNamespace,
+                        redis,
+                        options.redis.publicInstRecordsLifetimeSeconds,
+                        options.redis.publicInstRecordsLifetimeExpireMode,
+                        true
+                    ),
+                    new PrismaInstRecordsStore(prisma)
+                );
+            },
+        });
+        return this;
+    }
+
     get allowedApiOrigins() {
         return this._allowedApiOrigins;
     }
