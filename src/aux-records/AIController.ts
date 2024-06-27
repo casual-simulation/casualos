@@ -1168,6 +1168,10 @@ export class AIController {
                 };
             }
 
+            console.log(
+                `[AIController] [sloydGenerateModel] [maxModelsPerPeriod: ${features.maxModelsPerPeriod} totalModelsInCurrentPeriod: ${metrics.totalModelsInCurrentPeriod}]`
+            );
+
             if (
                 typeof features.maxModelsPerPeriod === 'number' &&
                 metrics.totalModelsInCurrentPeriod >=
@@ -1183,10 +1187,7 @@ export class AIController {
             const result = await (request.baseModelId
                 ? this._sloydInterface.editModel({
                       prompt: request.prompt,
-                      modelOutputType:
-                          request.outputMimeType === 'model/gltf+json'
-                              ? 'json-gltf'
-                              : 'binary-glb',
+                      modelMimeType: request.outputMimeType,
                       levelOfDetail: request.levelOfDetail,
                       thumbnailPreviewExportType: request.thumbnail?.type,
                       thumbnailPreviewSizeX: request.thumbnail?.width,
@@ -1195,10 +1196,7 @@ export class AIController {
                   })
                 : this._sloydInterface.createModel({
                       prompt: request.prompt,
-                      modelOutputType:
-                          request.outputMimeType === 'model/gltf+json'
-                              ? 'json-gltf'
-                              : 'binary-glb',
+                      modelMimeType: request.outputMimeType,
                       levelOfDetail: request.levelOfDetail,
                       thumbnailPreviewExportType: request.thumbnail?.type,
                       thumbnailPreviewSizeX: request.thumbnail?.width,
@@ -1212,14 +1210,11 @@ export class AIController {
             const response: AISloydGenerateModelSuccess = {
                 success: true,
                 modelId: result.interactionId,
-                mimeType:
-                    result.modelOutputType === 'json-gltf'
-                        ? 'model/gltf+json'
-                        : 'model/gltf-binary',
+                mimeType: request.outputMimeType,
                 modelData:
-                    result.modelOutputType === 'json-gltf'
-                        ? result.gltfJson
-                        : fromByteArray(new Uint8Array(result.binary)),
+                    typeof result.modelData === 'string'
+                        ? result.modelData
+                        : fromByteArray(result.modelData),
                 thumbnailBase64: result.previewImage,
             };
 

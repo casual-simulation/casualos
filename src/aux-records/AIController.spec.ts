@@ -3018,9 +3018,9 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
                 name: 'model name',
-                gltfJson: 'json',
             });
 
             const result = await controller.sloydGenerateModel({
@@ -3059,9 +3059,9 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'binary-glb',
+                modelMimeType: 'model/gltf-binary',
+                modelData: new Uint8Array([123, 255, 0, 37]),
                 name: 'model name',
-                binary: [123, 255, 0, 37],
             });
 
             const result = await controller.sloydGenerateModel({
@@ -3100,15 +3100,15 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
                 name: 'model name',
-                gltfJson: 'json',
             });
             sloydInterface.editModel.mockResolvedValueOnce({
                 success: true,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
 
             const result = await controller.sloydGenerateModel({
@@ -3143,7 +3143,7 @@ describe('AIController', () => {
                 interactionId: 'baseModelId',
                 levelOfDetail: 1,
                 prompt: 'test',
-                modelOutputType: 'json-gltf',
+                modelMimeType: 'model/gltf+json',
             });
         });
 
@@ -3157,9 +3157,9 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
                 name: 'model name',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
 
             const result = await controller.sloydGenerateModel({
@@ -3202,9 +3202,9 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
                 name: 'model name',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
 
             const result = await controller.sloydGenerateModel({
@@ -3231,16 +3231,16 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
                 name: 'model name',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
 
             const result = await controller.sloydGenerateModel({
                 userId: null,
                 recordName: userId,
-                outputMimeType: 'model/gltf+json',
                 prompt: 'test',
+                outputMimeType: 'model/gltf+json',
                 levelOfDetail: 1,
             });
 
@@ -3259,9 +3259,9 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
                 name: 'model name',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
 
             const result = await controller.sloydGenerateModel({
@@ -3300,9 +3300,9 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
                 name: 'model name',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
 
             const permissionResult = await policies.grantMarkerPermission({
@@ -3360,9 +3360,9 @@ describe('AIController', () => {
                 success: true,
                 confidenceScore: 0.5,
                 interactionId: 'modelId',
-                modelOutputType: 'json-gltf',
                 name: 'model name',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
 
             const result = await controller.sloydGenerateModel({

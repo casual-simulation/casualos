@@ -12788,16 +12788,15 @@ describe('RecordsServer', () => {
                 name: 'model-1',
                 confidenceScore: 0.5,
                 interactionId: 'model-1',
-                modelOutputType: 'json-gltf',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
             sloydInterface.editModel.mockResolvedValueOnce({
                 success: true,
-                name: 'model-2',
-                confidenceScore: 0.5,
+                // confidenceScore: 0.5,
                 interactionId: 'model-2',
-                modelOutputType: 'json-gltf',
-                gltfJson: 'json',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
             });
         });
 
@@ -12829,7 +12828,7 @@ describe('RecordsServer', () => {
 
             expect(sloydInterface.createModel).toHaveBeenCalledWith({
                 prompt: 'a blue sky',
-                modelOutputType: 'json-gltf',
+                modelMimeType: 'model/gltf+json',
             });
         });
 
@@ -12860,7 +12859,7 @@ describe('RecordsServer', () => {
 
             expect(sloydInterface.createModel).toHaveBeenCalledWith({
                 prompt: 'a blue sky',
-                modelOutputType: 'json-gltf',
+                modelMimeType: 'model/gltf+json',
             });
         });
 
@@ -12891,7 +12890,7 @@ describe('RecordsServer', () => {
 
             expect(sloydInterface.createModel).toHaveBeenCalledWith({
                 prompt: 'a blue sky',
-                modelOutputType: 'json-gltf',
+                modelMimeType: 'model/gltf+json',
             });
         });
 
@@ -12921,8 +12920,6 @@ describe('RecordsServer', () => {
                     success: true,
                     modelId: 'model-2',
                     mimeType: 'model/gltf+json',
-                    confidence: 0.5,
-                    name: 'model-2',
                     modelData: 'json',
                 },
                 headers: apiCorsHeaders,
@@ -12931,7 +12928,7 @@ describe('RecordsServer', () => {
             expect(sloydInterface.editModel).toHaveBeenCalledWith({
                 interactionId: 'model-5',
                 prompt: 'a blue sky',
-                modelOutputType: 'json-gltf',
+                modelMimeType: 'model/gltf+json',
                 levelOfDetail: 1,
                 thumbnailPreviewExportType: 'image/png',
                 thumbnailPreviewSizeX: 64,

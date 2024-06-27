@@ -5,6 +5,7 @@ import {
     AISloydInterfaceCreateModelResponse,
     AISloydInterfaceEditModelRequest,
     AISloydInterfaceEditModelResponse,
+    SloydModelMimeTypes,
 } from './AISloydInterface';
 import axios from 'axios';
 import { handleAxiosErrors } from 'Utils';
@@ -27,29 +28,30 @@ export class SloydInterface implements AISloydInterface {
         request: AISloydInterfaceCreateModelRequest
     ): Promise<AISloydInterfaceCreateModelResponse> {
         try {
-            const result = await axios.post('https://api.sloyd.ai/create', {
-                ClientId: this._clientId,
-                ClientSecret: this._clientSecret,
-                Prompt: request.prompt,
-                ModelOutputType:
-                    request.modelOutputType === 'binary-glb'
-                        ? 1
-                        : request.modelOutputType === 'json-gltf'
-                        ? 4
-                        : 4,
-                LOD: request.levelOfDetail,
-                ThumbnailPreviewExportType: request.thumbnailPreviewExportType,
-                ThumbnailPreviewSizeX: request.thumbnailPreviewSizeX,
-                ThumbnailPreviewSizeY: request.thumbnailPreviewSizeY,
-            });
+            const result = await axios.post(
+                'https://api.sloyd.ai/latest/create',
+                {
+                    ClientId: this._clientId,
+                    ClientSecret: this._clientSecret,
+                    Prompt: request.prompt,
+                    ModelOutputType: this._getModelOutputType(
+                        request.modelMimeType
+                    ),
+                    ApiResponseEncoding: 'json',
+                    LOD: request.levelOfDetail,
+                    ThumbnailPreviewExportType:
+                        request.thumbnailPreviewExportType,
+                    ThumbnailPreviewSizeX: request.thumbnailPreviewSizeX,
+                    ThumbnailPreviewSizeY: request.thumbnailPreviewSizeY,
+                }
+            );
 
             const schema = z.object({
                 InteractionId: z.string(),
                 Name: z.string(),
                 ConfidenceScore: z.number(),
-                ModelOutputType: z.number(),
-                Binary: z.array(z.number()).optional().nullable(),
-                GLTFJson: z.object({}).passthrough().optional().nullable(),
+                ModelOutputType: z.enum(['Glb', 'Gltf']),
+                ModelData: z.union([z.string(), z.array(z.number())]),
             });
 
             const data = schema.parse(result.data);
@@ -59,16 +61,8 @@ export class SloydInterface implements AISloydInterface {
                 interactionId: data.InteractionId,
                 name: data.Name,
                 confidenceScore: data.ConfidenceScore,
-                modelOutputType:
-                    data.ModelOutputType === 1
-                        ? 'binary-glb'
-                        : data.ModelOutputType === 4
-                        ? 'json-gltf'
-                        : 'json-gltf',
-                binary: data.Binary,
-                gltfJson: data.GLTFJson
-                    ? JSON.stringify(data.GLTFJson)
-                    : undefined,
+                modelMimeType: this._getModelMimeType(data.ModelOutputType),
+                modelData: this._getModelData(data.ModelData),
             };
         } catch (err) {
             handleAxiosErrors(err);
@@ -79,28 +73,28 @@ export class SloydInterface implements AISloydInterface {
         request: AISloydInterfaceEditModelRequest
     ): Promise<AISloydInterfaceEditModelResponse> {
         try {
-            const result = await axios.post('https://api.sloyd.ai/edit', {
-                ClientId: this._clientId,
-                ClientSecret: this._clientSecret,
-                InteractionId: request.interactionId,
-                Prompt: request.prompt,
-                ModelOutputType:
-                    request.modelOutputType === 'binary-glb'
-                        ? 1
-                        : request.modelOutputType === 'json-gltf'
-                        ? 4
-                        : 4,
-                LOD: request.levelOfDetail,
-                ThumbnailPreviewExportType: request.thumbnailPreviewExportType,
-                ThumbnailPreviewSizeX: request.thumbnailPreviewSizeX,
-                ThumbnailPreviewSizeY: request.thumbnailPreviewSizeY,
-            });
+            const result = await axios.post(
+                'https://api.sloyd.ai/latest/edit',
+                {
+                    ClientId: this._clientId,
+                    ClientSecret: this._clientSecret,
+                    InteractionId: request.interactionId,
+                    Prompt: request.prompt,
+                    ModelOutputType: this._getModelOutputType(
+                        request.modelMimeType
+                    ),
+                    LOD: request.levelOfDetail,
+                    ThumbnailPreviewExportType:
+                        request.thumbnailPreviewExportType,
+                    ThumbnailPreviewSizeX: request.thumbnailPreviewSizeX,
+                    ThumbnailPreviewSizeY: request.thumbnailPreviewSizeY,
+                }
+            );
 
             const schema = z.object({
                 InteractionId: z.string(),
-                ModelOutputType: z.number(),
-                Binary: z.array(z.number()).optional().nullable(),
-                GLTFJson: z.object({}).passthrough().optional().nullable(),
+                ModelOutputType: z.enum(['Glb', 'Gltf']),
+                ModelData: z.union([z.string(), z.array(z.number())]),
             });
 
             const data = schema.parse(result.data);
@@ -108,19 +102,39 @@ export class SloydInterface implements AISloydInterface {
             return {
                 success: true,
                 interactionId: data.InteractionId,
-                modelOutputType:
-                    data.ModelOutputType === 1
-                        ? 'binary-glb'
-                        : data.ModelOutputType === 4
-                        ? 'json-gltf'
-                        : 'json-gltf',
-                binary: data.Binary,
-                gltfJson: data.GLTFJson
-                    ? JSON.stringify(data.GLTFJson)
-                    : undefined,
+                modelMimeType: this._getModelMimeType(data.ModelOutputType),
+                modelData: this._getModelData(data.ModelData),
             };
         } catch (err) {
             handleAxiosErrors(err);
         }
+    }
+
+    private _getModelData(data: string | number[]): string | Uint8Array {
+        if (Array.isArray(data)) {
+            return new Uint8Array(data);
+        } else {
+            return data;
+        }
+    }
+
+    private _getModelOutputType(
+        modelMimeType: SloydModelMimeTypes
+    ): 'glb' | 'gltf' {
+        return modelMimeType === 'model/gltf-binary'
+            ? 'glb'
+            : modelMimeType === 'model/gltf+json'
+            ? 'gltf'
+            : 'gltf';
+    }
+
+    private _getModelMimeType(
+        modelOutputType: 'Glb' | 'Gltf'
+    ): SloydModelMimeTypes {
+        return modelOutputType === 'Glb'
+            ? 'model/gltf-binary'
+            : modelOutputType === 'Gltf'
+            ? 'model/gltf+json'
+            : 'model/gltf+json';
     }
 }

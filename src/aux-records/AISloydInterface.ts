@@ -30,7 +30,7 @@ export interface AISloydInterfaceCreateModelRequest {
     /**
      * The type of model to create.
      */
-    modelOutputType: 'binary-glb' | 'json-gltf';
+    modelMimeType: SloydModelMimeTypes;
 
     /**
      * The level of detail to use for the model.
@@ -74,16 +74,9 @@ export interface AISloydInterfaceCreateModelSuccess {
     name: string;
 
     /**
-     * The binary data of the model.
-     * Only provided if the modelOutputType is 'binary-glb'.
+     * The generated data of the model.
      */
-    binary?: number[];
-
-    /**
-     * The GLTF JSON data.
-     * Only provided if the modelOutputType is 'json-gltf'.
-     */
-    gltfJson?: string;
+    modelData: string | Uint8Array;
 
     /**
      * A score indicating how confident the AI is that the returned object matches the text prompt.
@@ -94,7 +87,7 @@ export interface AISloydInterfaceCreateModelSuccess {
     /**
      * The type of model to create.
      */
-    modelOutputType: 'binary-glb' | 'json-gltf';
+    modelMimeType: SloydModelMimeTypes;
 
     /**
      * The base64 encoded thumbnail preview image.
@@ -116,6 +109,8 @@ export interface AISloydInterfaceCreateModelFailure {
     errorMessage: string;
 }
 
+export type SloydModelMimeTypes = 'model/gltf+json' | 'model/gltf-binary';
+
 /**
  * The request to edit a model in Sloyd.
  */
@@ -133,7 +128,7 @@ export interface AISloydInterfaceEditModelRequest {
     /**
      * The type of model to create.
      */
-    modelOutputType: 'binary-glb' | 'json-gltf';
+    modelMimeType: SloydModelMimeTypes;
 
     /**
      * The level of detail to use for the model.
@@ -172,21 +167,14 @@ export interface AISloydInterfaceEditModelSuccess {
     interactionId: string;
 
     /**
-     * The binary data of the model.
-     * Only provided if the modelOutputType is 'binary-glb'.
+     * The model data.
      */
-    binary?: number[];
-
-    /**
-     * The GLTF JSON data.
-     * Only provided if the modelOutputType is 'json-gltf'.
-     */
-    gltfJson?: string;
+    modelData: string | Uint8Array;
 
     /**
      * The type of model to create.
      */
-    modelOutputType: 'binary-glb' | 'json-gltf';
+    modelMimeType: SloydModelMimeTypes;
 
     /**
      * The base64 encoded thumbnail preview image.
