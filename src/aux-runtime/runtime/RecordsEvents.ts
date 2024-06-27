@@ -316,6 +316,9 @@ export interface AISloydGenerateModelOptions {
 
     /**
      * The level of detail that should be used.
+     * Higher values will result in more detailed models.
+     * Should be between `0.01` and `1`.
+     * Defaults to `0.5`.
      */
     levelOfDetail?: number;
 
