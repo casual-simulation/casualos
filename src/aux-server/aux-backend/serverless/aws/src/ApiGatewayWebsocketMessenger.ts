@@ -28,8 +28,11 @@ import axios, { Method } from 'axios';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
 import { v4 as uuid } from 'uuid';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
 
 export const MAX_MESSAGE_SIZE = 32_000;
+const TRACE_NAME = 'ApiGatewayMessenger';
 
 /**
  * Defines a class that implements the ApiaryMessenger interface for AWS API Gateway.
@@ -55,12 +58,14 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         this._bucket = bucket;
     }
 
+    @traced(TRACE_NAME)
     async disconnect(connectionId: string): Promise<void> {
         await this._api.deleteConnection({
             ConnectionId: connectionId,
         });
     }
 
+    @traced(TRACE_NAME)
     async presignMessageUpload(): Promise<PresignFileUploadResult> {
         try {
             const uploadUrl = await getMessageUploadUrl(
@@ -75,6 +80,9 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
                 uploadMethod: 'PUT',
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[ApiGatewayMessenger] Failed to presign message upload.',
                 err
@@ -87,6 +95,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         }
     }
 
+    @traced(TRACE_NAME)
     async downloadMessage(
         url: string,
         method: string,
@@ -95,6 +104,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         return await downloadObject(this._s3, this._bucket, url);
     }
 
+    @traced(TRACE_NAME)
     async sendMessage(
         connectionIds: string[],
         data: WebsocketMessage,
@@ -105,10 +115,14 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         try {
             await this._sendMessage(connectionIds, data, excludeConnection);
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error('[ApiGatewayMessenger] Failed to send message.', err);
         }
     }
 
+    @traced(TRACE_NAME)
     async sendEvent(
         connectionId: string,
         event: WebsocketEvent
@@ -121,6 +135,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         });
     }
 
+    @traced(TRACE_NAME)
     async sendRaw(connectionId: string, data: string) {
         await this._api.postToConnection({
             ConnectionId: connectionId,
@@ -128,6 +143,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         });
     }
 
+    @traced(TRACE_NAME)
     private async _sendMessage(
         connectionIds: string[],
         message: WebsocketMessage,
