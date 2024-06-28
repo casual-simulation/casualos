@@ -26,6 +26,9 @@ import {
     SubjectType,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaPolicyStore';
 
 /**
  * Implements PolicyStore for Prisma.
@@ -37,6 +40,7 @@ export class PrismaPolicyStore implements PolicyStore {
         this._client = client;
     }
 
+    @traced(TRACE_NAME)
     async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
         const user = await this._client.user.findUnique({
             where: {
@@ -62,6 +66,7 @@ export class PrismaPolicyStore implements PolicyStore {
         return null;
     }
 
+    @traced(TRACE_NAME)
     async getRecordOwnerPrivacyFeatures(
         recordName: string
     ): Promise<PrivacyFeatures> {
@@ -93,6 +98,7 @@ export class PrismaPolicyStore implements PolicyStore {
         return null;
     }
 
+    @traced(TRACE_NAME)
     async getPermissionForSubjectAndResource(
         subjectType: SubjectType,
         subjectId: string,
@@ -141,6 +147,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getPermissionForSubjectAndMarkers(
         subjectType: SubjectType,
         subjectId: string,
@@ -189,6 +196,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async assignPermissionToSubjectAndResource(
         recordName: string,
         subjectType: SubjectType,
@@ -252,6 +260,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async assignPermissionToSubjectAndMarker(
         recordName: string,
         subjectType: SubjectType,
@@ -315,6 +324,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async deleteResourcePermissionAssignmentById(
         id: string
     ): Promise<DeletePermissionAssignmentResult> {
@@ -329,6 +339,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async deleteMarkerPermissionAssignmentById(
         id: string
     ): Promise<DeletePermissionAssignmentResult> {
@@ -343,6 +354,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async listPermissionsInRecord(
         recordName: string
     ): Promise<ListPermissionsInRecordResult> {
@@ -389,6 +401,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async listPermissionsForResource(
         recordName: string,
         resourceKind: ResourceKinds,
@@ -417,6 +430,7 @@ export class PrismaPolicyStore implements PolicyStore {
         }));
     }
 
+    @traced(TRACE_NAME)
     async listPermissionsForMarker(
         recordName: string,
         marker: string
@@ -443,6 +457,7 @@ export class PrismaPolicyStore implements PolicyStore {
         }));
     }
 
+    @traced(TRACE_NAME)
     async listPermissionsForSubject(
         recordName: string,
         subjectType: SubjectType,
@@ -495,6 +510,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getMarkerPermissionAssignmentById(
         id: string
     ): Promise<MarkerPermissionAssignment> {
@@ -524,6 +540,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getResourcePermissionAssignmentById(
         id: string
     ): Promise<ResourcePermissionAssignment> {
@@ -552,6 +569,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async listRolesForUser(
         recordName: string,
         userId: string
@@ -586,6 +604,7 @@ export class PrismaPolicyStore implements PolicyStore {
         );
     }
 
+    @traced(TRACE_NAME)
     async listRolesForInst(
         recordName: string,
         inst: string
@@ -620,6 +639,7 @@ export class PrismaPolicyStore implements PolicyStore {
         );
     }
 
+    @traced(TRACE_NAME)
     async listAssignmentsForRole(
         recordName: string,
         role: string
@@ -676,6 +696,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async listAssignments(
         recordName: string,
         startingRole: string
@@ -761,6 +782,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async assignSubjectRole(
         recordName: string,
         subjectId: string,
@@ -796,6 +818,7 @@ export class PrismaPolicyStore implements PolicyStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async revokeSubjectRole(
         recordName: string,
         subjectId: string,

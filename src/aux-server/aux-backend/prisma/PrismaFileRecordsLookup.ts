@@ -21,6 +21,10 @@ import {
 } from '@casual-simulation/aux-records/FileRecordsStore';
 import { Prisma, PrismaClient } from './generated';
 import { convertMarkers } from './Utils';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'PrismaFileRecordsLookup';
 
 /**
  * Defines a class that can manage file records in Prisma.
@@ -32,6 +36,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         this._client = client;
     }
 
+    @traced(TRACE_NAME)
     async getFileRecord(
         recordName: string,
         fileName: string
@@ -64,6 +69,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         }
     }
 
+    @traced(TRACE_NAME)
     async listUploadedFiles(
         recordName: string,
         fileName: string
@@ -113,6 +119,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         };
     }
 
+    @traced(TRACE_NAME)
     async addFileRecord(
         recordName: string,
         fileName: string,
@@ -141,6 +148,9 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             if (err instanceof Prisma.PrismaClientKnownRequestError) {
                 if (err.code === 'P2002') {
                     return {
@@ -162,6 +172,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         }
     }
 
+    @traced(TRACE_NAME)
     async updateFileRecord(
         recordName: string,
         fileName: string,
@@ -184,6 +195,9 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             if (
                 err instanceof Prisma.PrismaClientKnownRequestError &&
                 err.code === 'P2025'
@@ -207,6 +221,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         }
     }
 
+    @traced(TRACE_NAME)
     async setFileRecordAsUploaded(
         recordName: string,
         fileName: string
@@ -228,6 +243,9 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             if (
                 err instanceof Prisma.PrismaClientKnownRequestError &&
                 err.code === 'P2025'
@@ -251,6 +269,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         }
     }
 
+    @traced(TRACE_NAME)
     async eraseFileRecord(
         recordName: string,
         fileName: string
@@ -269,6 +288,9 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             if (
                 err instanceof Prisma.PrismaClientKnownRequestError &&
                 err.code === 'P2025'

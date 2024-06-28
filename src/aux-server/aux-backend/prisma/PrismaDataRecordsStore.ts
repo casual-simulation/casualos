@@ -17,6 +17,9 @@ import {
 } from './generated';
 import z from 'zod';
 import { convertMarkers } from './Utils';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaDataRecordsStore';
 
 export class PrismaDataRecordsStore implements DataRecordsStore {
     private _client: PrismaClient;
@@ -31,6 +34,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
             : client.dataRecord;
     }
 
+    @traced(TRACE_NAME)
     async setData(
         recordName: string,
         address: string,
@@ -69,6 +73,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getData(
         recordName: string,
         address: string
@@ -112,6 +117,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async listData(
         recordName: string,
         address: string
@@ -158,6 +164,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async listDataByMarker(
         request: ListDataStoreByMarkerRequest
     ): Promise<ListDataStoreResult> {
@@ -205,6 +212,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async eraseData(
         recordName: string,
         address: string

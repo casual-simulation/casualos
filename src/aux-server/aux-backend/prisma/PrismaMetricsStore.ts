@@ -23,6 +23,9 @@ import { PrismaClient, Prisma } from './generated';
 import { convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 import { DateTime } from 'luxon';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaMetricsStore';
 
 export class PrismaMetricsStore implements MetricsStore {
     private _client: PrismaClient;
@@ -33,6 +36,7 @@ export class PrismaMetricsStore implements MetricsStore {
         this._config = configStore;
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionInstMetrics(
         filter: SubscriptionFilter
     ): Promise<InstSubscriptionMetrics> {
@@ -65,6 +69,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionInstMetricsByRecordName(
         recordName: string
     ): Promise<InstSubscriptionMetrics> {
@@ -114,6 +119,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionAiImageMetrics(
         filter: SubscriptionFilter
     ): Promise<AIImageSubscriptionMetrics> {
@@ -148,6 +154,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async recordImageMetrics(metrics: AIImageMetrics): Promise<void> {
         await this._client.aiImageMetrics.create({
             data: {
@@ -160,6 +167,7 @@ export class PrismaMetricsStore implements MetricsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionAiSkyboxMetrics(
         filter: SubscriptionFilter
     ): Promise<AISkyboxSubscriptionMetrics> {
@@ -193,6 +201,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void> {
         await this._client.aiSkyboxMetrics.create({
             data: {
@@ -205,6 +214,7 @@ export class PrismaMetricsStore implements MetricsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {
         await this._client.aiChatMetrics.create({
             data: {
@@ -217,6 +227,7 @@ export class PrismaMetricsStore implements MetricsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionAiChatMetrics(
         filter: SubscriptionFilter
     ): Promise<AIChatSubscriptionMetrics> {
@@ -250,6 +261,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionDataMetricsByRecordName(
         recordName: string
     ): Promise<DataSubscriptionMetrics> {
@@ -296,6 +308,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionFileMetricsByRecordName(
         recordName: string
     ): Promise<FileSubscriptionMetrics> {
@@ -349,6 +362,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionEventMetricsByRecordName(
         recordName: string
     ): Promise<EventSubscriptionMetrics> {
@@ -398,6 +412,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionRecordMetrics(
         filter: SubscriptionFilter
     ): Promise<RecordSubscriptionMetrics> {
@@ -468,6 +483,7 @@ export class PrismaMetricsStore implements MetricsStore {
         }
     }
 
+    @traced(TRACE_NAME)
     private async _getSubscriptionPeriod(
         status: string,
         startMs: number,
@@ -483,6 +499,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     private async _getDefaultSubscriptionPeriod() {
         const config = await this._config.getSubscriptionConfiguration();
         let currentPeriodStartMs: number = null;
@@ -504,6 +521,7 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     private async _findSubscriptionInfoByRecordName(recordName: string) {
         return await this._client.record.findUnique({
             where: {
