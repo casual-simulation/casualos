@@ -31,6 +31,9 @@ import {
 // import { PrismaClientKnownRequestError } from './generated/runtime';
 import { convertToDate, convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaAuthStore';
 
 export class PrismaAuthStore implements AuthStore {
     private _client: PrismaClient;
@@ -39,6 +42,7 @@ export class PrismaAuthStore implements AuthStore {
         this._client = client;
     }
 
+    @traced(TRACE_NAME)
     async listEmailRules(): Promise<RegexRule[]> {
         const rules = await this._client.emailRule.findMany();
         return rules.map((r) => ({
@@ -47,6 +51,7 @@ export class PrismaAuthStore implements AuthStore {
         }));
     }
 
+    @traced(TRACE_NAME)
     async listSmsRules(): Promise<RegexRule[]> {
         const rules = await this._client.smsRule.findMany();
         return rules.map((r) => ({
@@ -55,6 +60,7 @@ export class PrismaAuthStore implements AuthStore {
         }));
     }
 
+    @traced(TRACE_NAME)
     async findUser(userId: string): Promise<AuthUser | null> {
         if (!userId) {
             return null;
@@ -68,6 +74,7 @@ export class PrismaAuthStore implements AuthStore {
         return this._convertToAuthUser(user);
     }
 
+    @traced(TRACE_NAME)
     async findUserByStripeCustomerId(
         customerId: string
     ): Promise<AuthUser | null> {
@@ -83,6 +90,7 @@ export class PrismaAuthStore implements AuthStore {
         return this._convertToAuthUser(user);
     }
 
+    @traced(TRACE_NAME)
     async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
         if (!serviceId) {
             return null;
@@ -96,6 +104,7 @@ export class PrismaAuthStore implements AuthStore {
         return this._convertToAuthUser(user);
     }
 
+    @traced(TRACE_NAME)
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -110,6 +119,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async setCurrentLoginRequest(
         userId: string,
         requestId: string
@@ -124,6 +134,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async findUserByAddress(
         address: string,
         addressType: AddressType
@@ -157,6 +168,7 @@ export class PrismaAuthStore implements AuthStore {
         return this._convertToAuthUser(user);
     }
 
+    @traced(TRACE_NAME)
     async saveUser(user: AuthUser): Promise<void> {
         const userData: Prisma.UserUncheckedCreateInput = {
             id: user.id,
@@ -194,6 +206,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
         try {
             let createData: Prisma.UserCreateInput = {
@@ -256,6 +269,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async findLoginRequest(
         userId: string,
         requestId: string
@@ -287,6 +301,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async findOpenIDLoginRequest(
         requestId: string
     ): Promise<AuthOpenIDLoginRequest> {
@@ -321,6 +336,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async findOpenIDLoginRequestByState(
         state: string
     ): Promise<AuthOpenIDLoginRequest> {
@@ -355,6 +371,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async saveOpenIDLoginRequest(
         request: AuthOpenIDLoginRequest
     ): Promise<AuthOpenIDLoginRequest> {
@@ -398,6 +415,7 @@ export class PrismaAuthStore implements AuthStore {
         return request;
     }
 
+    @traced(TRACE_NAME)
     async markOpenIDLoginRequestComplete(
         requestId: string,
         completedTimeMs: number
@@ -412,6 +430,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async saveOpenIDLoginRequestAuthorizationCode(
         requestId: string,
         authorizationCode: string,
@@ -428,6 +447,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async findWebAuthnLoginRequest(
         requestId: string
     ): Promise<AuthWebAuthnLoginRequest> {
@@ -452,6 +472,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async saveWebAuthnLoginRequest(
         request: AuthWebAuthnLoginRequest
     ): Promise<AuthWebAuthnLoginRequest> {
@@ -480,6 +501,7 @@ export class PrismaAuthStore implements AuthStore {
         return request;
     }
 
+    @traced(TRACE_NAME)
     async markWebAuthnLoginRequestComplete(
         requestId: string,
         userId: string,
@@ -496,6 +518,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async setCurrentWebAuthnChallenge(
         userId: string,
         challenge: string
@@ -510,6 +533,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async listUserAuthenticators(
         userId: string
     ): Promise<AuthUserAuthenticator[]> {
@@ -522,6 +546,7 @@ export class PrismaAuthStore implements AuthStore {
         return auths.map((a) => this._convertToUserAuthenticator(a));
     }
 
+    @traced(TRACE_NAME)
     async saveUserAuthenticatorCounter(
         id: string,
         newCounter: number
@@ -536,6 +561,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async deleteUserAuthenticator(
         userId: string,
         authenticatorId: string
@@ -575,6 +601,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async findUserAuthenticatorByCredentialId(
         credentialId: string
     ): Promise<AuthUserAuthenticatorWithUser> {
@@ -597,6 +624,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async saveUserAuthenticator(
         authenticator: AuthUserAuthenticator
     ): Promise<void> {
@@ -636,6 +664,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async findSession(
         userId: string,
         sessionId: string
@@ -656,6 +685,7 @@ export class PrismaAuthStore implements AuthStore {
         return this._convertToSession(session);
     }
 
+    @traced(TRACE_NAME)
     async saveLoginRequest(
         request: AuthLoginRequest
     ): Promise<AuthLoginRequest> {
@@ -681,6 +711,7 @@ export class PrismaAuthStore implements AuthStore {
         return request;
     }
 
+    @traced(TRACE_NAME)
     async markLoginRequestComplete(
         userId: string,
         requestId: string,
@@ -696,6 +727,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async incrementLoginRequestAttemptCount(
         userId: string,
         requestId: string
@@ -712,6 +744,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async saveSession(session: AuthSession): Promise<void> {
         const sessionData = {
             sessionId: session.sessionId,
@@ -736,6 +769,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async replaceSession(
         session: AuthSession,
         newSession: AuthSession,
@@ -770,6 +804,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async listSessions(
         userId: string,
         expireTimeMs: number
@@ -798,6 +833,7 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async saveSubscription(subscription: AuthSubscription): Promise<void> {
         const value = {
             ...subscription,
@@ -814,6 +850,8 @@ export class PrismaAuthStore implements AuthStore {
             update: value,
         });
     }
+
+    @traced(TRACE_NAME)
     async getSubscriptionById(id: string): Promise<AuthSubscription> {
         if (!id) {
             return null;
@@ -825,6 +863,8 @@ export class PrismaAuthStore implements AuthStore {
         });
         return this._convertToSubscription(sub);
     }
+
+    @traced(TRACE_NAME)
     async getSubscriptionByStripeSubscriptionId(
         id: string
     ): Promise<AuthSubscription> {
@@ -839,6 +879,8 @@ export class PrismaAuthStore implements AuthStore {
 
         return this._convertToSubscription(sub);
     }
+
+    @traced(TRACE_NAME)
     async saveSubscriptionPeriod(
         period: AuthSubscriptionPeriod
     ): Promise<void> {
@@ -856,6 +898,8 @@ export class PrismaAuthStore implements AuthStore {
             update: value,
         });
     }
+
+    @traced(TRACE_NAME)
     async getSubscriptionPeriodById(
         id: string
     ): Promise<AuthSubscriptionPeriod> {
@@ -870,6 +914,8 @@ export class PrismaAuthStore implements AuthStore {
 
         return this._convertToSubscriptionPeriod(period);
     }
+
+    @traced(TRACE_NAME)
     async listSubscriptionPeriodsBySubscriptionId(
         subscriptionId: string
     ): Promise<AuthSubscriptionPeriod[]> {
@@ -884,6 +930,8 @@ export class PrismaAuthStore implements AuthStore {
 
         return periods.map((p) => this._convertToSubscriptionPeriod(p));
     }
+
+    @traced(TRACE_NAME)
     async saveInvoice(invoice: AuthInvoice): Promise<void> {
         const value = {
             ...invoice,
@@ -898,6 +946,7 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async getInvoiceById(id: string): Promise<AuthInvoice> {
         if (!id) {
             return null;
@@ -908,6 +957,8 @@ export class PrismaAuthStore implements AuthStore {
             },
         });
     }
+
+    @traced(TRACE_NAME)
     async updateSubscriptionInfo(
         request: UpdateSubscriptionInfoRequest
     ): Promise<void> {
@@ -1006,6 +1057,7 @@ export class PrismaAuthStore implements AuthStore {
         }
     }
 
+    @traced(TRACE_NAME)
     async updateSubscriptionPeriod(
         request: UpdateSubscriptionPeriodRequest
     ): Promise<void> {

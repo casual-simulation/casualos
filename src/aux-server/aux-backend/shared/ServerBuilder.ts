@@ -2354,6 +2354,15 @@ const telemetrySchema = z.object({
                 .passthrough()
                 .optional()
                 .nullable(),
+
+            redis: z
+                .object({})
+                .describe(
+                    'Options for Redis instrumentation. If omitted, then Redis instrumentation will be enabled with default settings. If set to null, then redis instrumentation will be disabled.'
+                )
+                .passthrough()
+                .optional()
+                .nullable(),
         })
         .describe('Options for instrumentation')
         .optional()

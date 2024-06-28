@@ -8,6 +8,44 @@ import { SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 
 declare const GIT_TAG: string;
 
+// /**
+//  * Modifies the given class so that each function is traced.
+//  * @param tracerName The name of the tracer that the method spans should be created for.
+//  */
+// export function addTracingToClass(tracerName: string) {
+
+//     return function <T extends { new (...args: any[]): {} }>(constructor: T) {
+//         console.log('Adding tracing to class', tracerName);
+//         for(let prop in constructor.prototype) {
+//             if (typeof constructor.prototype[prop] === 'function') {
+//                 const descriptor = traced(tracerName)(constructor.prototype, prop, {
+//                     value: constructor.prototype[prop]
+//                 });
+//                 if (descriptor.value) {
+//                     constructor.prototype[prop] = descriptor.value;
+//                     // Object.defineProperty(constructor.prototype, prop, descriptor);
+//                 }
+//             }
+//         }
+//     }
+
+//     // return function <T extends { new (...args: any[]): {} }>(constructor: T) {
+//     //     return class extends constructor {
+//     //         constructor(...args: any[]) {
+//     //             super(...args);
+//     //             for (let prop in this) {
+//     //                 if (typeof this[prop] === 'function') {
+//     //                     const descriptor = traced(tracerName)(this, prop, Object.getOwnPropertyDescriptor(this, prop));
+//     //                     if (descriptor) {
+//     //                         Object.defineProperty(this, prop, descriptor);
+//     //                     }
+//     //                 }
+//     //             }
+//     //         }
+//     //     };
+//     // };
+// }
+
 /**
  * Modifies the given method so that it is traced.
  * @param tracerName The name of the tracer that the method spans should be created for.

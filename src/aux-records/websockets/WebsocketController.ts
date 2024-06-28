@@ -81,6 +81,9 @@ import {
 } from '../SubscriptionConfiguration';
 import { MetricsStore } from '../MetricsStore';
 import { AuthStore } from '../AuthStore';
+import { traced } from '../tracing/TracingDecorators';
+
+const TRACE_NAME = 'WebsocketController';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -2047,6 +2050,7 @@ export class WebsocketController {
     /**
      * Saves all of the permanent branches that are currently in memory.
      */
+    @traced(TRACE_NAME)
     async savePermanentBranches(): Promise<void> {
         const store = this._instStore;
         if (store instanceof SplitInstRecordsStore) {

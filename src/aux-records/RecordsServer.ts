@@ -3563,6 +3563,7 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
+    @traced('RecordsServer')
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
         if (!this._websocketController) {
             return;
@@ -3677,14 +3678,17 @@ export class RecordsServer {
         });
     }
 
+    @traced('RecordsServer')
     private async _processWebsocketMessage(
         request: GenericWebsocketRequest,
         requestId: number,
         message: WebsocketRequestMessage
     ) {
+        const span = trace.getActiveSpan();
         const messageResult = websocketRequestMessageSchema.safeParse(message);
 
         if (messageResult.success === false) {
+            span.setAttribute('request.messageType', 'invalid');
             await this._sendWebsocketZodError(
                 request.connectionId,
                 requestId,
@@ -3693,6 +3697,7 @@ export class RecordsServer {
             return;
         }
         const data = messageResult.data;
+        span.setAttribute('request.messageType', data.type);
 
         if (data.type === 'login') {
             await this._websocketController.login(
@@ -3827,6 +3832,7 @@ export class RecordsServer {
         }
     }
 
+    @traced('RecordsServer')
     private async _processWebsocketDownload(
         request: GenericWebsocketRequest,
         requestId: number,
@@ -3871,6 +3877,7 @@ export class RecordsServer {
         );
     }
 
+    @traced('RecordsServer')
     private async _processWebsocketUploadRequest(
         request: GenericWebsocketRequest,
         requestId: number
