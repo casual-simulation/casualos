@@ -30,7 +30,7 @@ import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'EventRecordsController';
 
@@ -177,6 +177,7 @@ export class EventRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[EventRecordsController] A server error occurred while adding count:`,
                 err
@@ -257,6 +258,7 @@ export class EventRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[EventRecordsController] A server error occurred while getting count:`,
                 err
@@ -372,6 +374,7 @@ export class EventRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[EventRecordsController] A server error occurred while updating event:`,
                 err
@@ -448,6 +451,7 @@ export class EventRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[EventRecordsController] Failed to list events:',
                 err

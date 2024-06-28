@@ -46,7 +46,7 @@ import { isActiveSubscription } from './Utils';
 import { NotificationMessenger } from './NotificationMessenger';
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'RecordsController';
 
@@ -273,6 +273,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [createRecord] An error occurred while creating a record:',
@@ -447,6 +448,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [createPublicRecordKey] An error occurred while creating a public record key:',
@@ -587,6 +589,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [validatePublicRecordKey] An error occurred while creating a public record key:',
@@ -763,6 +766,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [validateRecordName] An error occurred while creating a validating a record name:',
@@ -844,6 +848,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [listRecords] Error listing records: ',
@@ -898,6 +903,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [listStudioRecords] Error listing records: ',
@@ -939,6 +945,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [createStudio] An error occurred while creating a studio:',
@@ -1043,6 +1050,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [createStudio] An error occurred while creating a studio in a comId:',
@@ -1111,6 +1119,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [updateStudio] An error occurred while updating a studio:',
@@ -1215,6 +1224,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [getStudio] An error occurred while getting a studio:',
@@ -1255,6 +1265,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [getPlayerConfig] An error occurred while getting the player config:',
@@ -1298,6 +1309,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [listStudios] An error occurred while listing studios:',
@@ -1348,6 +1360,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [listStudios] An error occurred while listing studios:',
@@ -1427,6 +1440,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [listStudioMembers] An error occurred while listing studio members:',
@@ -1511,6 +1525,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [addStudioMember] An error occurred while adding a studio member:',
@@ -1575,6 +1590,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [removeStudioMember] An error occurred while removing a studio member:',
@@ -1662,6 +1678,7 @@ export class RecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[RecordsController] [requestComId] An error occurred while requesting a comId:',

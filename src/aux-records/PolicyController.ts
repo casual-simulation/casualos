@@ -38,7 +38,7 @@ import { sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import { normalizeInstId, parseInstId } from './websockets';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -357,6 +357,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while authorizing user and instances.',
@@ -532,6 +533,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while authorizing user and instances for resources.',
@@ -597,6 +599,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while authorizing subjects.',
@@ -633,6 +636,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while authorizing a subject.',
@@ -1304,6 +1308,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while listing permissions.',
@@ -1385,6 +1390,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while listing permissions for marker.',
@@ -1468,6 +1474,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while listing permissions for resource.',
@@ -1565,6 +1572,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while granting a marker permission.',
@@ -1650,6 +1658,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while revoking a marker permission.',
@@ -1765,6 +1774,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while granting a resource permission.',
@@ -1850,6 +1860,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while revoking a resource permission.',
@@ -1885,6 +1896,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[PolicyController] A server error occurred while revoking a permission.',
@@ -1957,6 +1969,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[PolicyController] A server error occurred.', err);
             return {
@@ -2024,6 +2037,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[PolicyController] A server error occurred.', err);
             return {
@@ -2091,6 +2105,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[PolicyController] A server error occurred.', err);
             return {
@@ -2166,6 +2181,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[PolicyController] A server error occurred.', err);
             return {
@@ -2274,6 +2290,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[PolicyController] A server error occurred.', err);
             return {
@@ -2374,6 +2391,7 @@ export class PolicyController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[PolicyController] A server error occurred.', err);
             return {

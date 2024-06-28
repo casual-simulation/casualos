@@ -13,7 +13,7 @@ import {
     AIChatMessage,
 } from './AIChatInterface';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'GoogleAIChatInterface';
 
@@ -111,6 +111,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (err instanceof Error) {
                 console.error(
@@ -211,6 +212,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (err instanceof Error) {
                 console.error(

@@ -29,7 +29,7 @@ import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'SubscriptionController';
 
@@ -250,6 +250,7 @@ export class SubscriptionController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[SubscriptionController] An error occurred while getting subscription status:',
@@ -405,6 +406,7 @@ export class SubscriptionController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[SubscriptionController] An error occurred while updating a subscription:',
@@ -790,6 +792,7 @@ export class SubscriptionController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[SubscriptionController] An error occurred while creating a manage subscription link:',

@@ -22,7 +22,7 @@ import {
 import { Prisma, PrismaClient } from './generated';
 import { convertMarkers } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'PrismaFileRecordsLookup';
 
@@ -150,6 +150,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (err instanceof Prisma.PrismaClientKnownRequestError) {
                 if (err.code === 'P2002') {
@@ -197,6 +198,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (
                 err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -245,6 +247,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (
                 err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -290,6 +293,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             if (
                 err instanceof Prisma.PrismaClientKnownRequestError &&

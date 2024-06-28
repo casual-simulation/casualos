@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 import OpenAI from 'openai';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'OpenAIChatInterface';
 
@@ -113,6 +113,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                 if (err.response.status === 400) {
                     const span = trace.getActiveSpan();
                     span?.recordException(err);
+                    span?.setStatus({ code: SpanStatusCode.ERROR });
 
                     console.error(
                         `[OpenAIChatInterface] [${request.userId}] [chat]: Bad request: ${err.response.data.error.message}`

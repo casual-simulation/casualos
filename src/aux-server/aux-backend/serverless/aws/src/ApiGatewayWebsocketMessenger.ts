@@ -29,7 +29,7 @@ import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 export const MAX_MESSAGE_SIZE = 32_000;
 const TRACE_NAME = 'ApiGatewayMessenger';
@@ -82,6 +82,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
                 '[ApiGatewayMessenger] Failed to presign message upload.',
@@ -117,6 +118,7 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[ApiGatewayMessenger] Failed to send message.', err);
         }

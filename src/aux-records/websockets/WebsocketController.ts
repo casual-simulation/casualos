@@ -82,6 +82,8 @@ import {
 import { MetricsStore } from '../MetricsStore';
 import { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
 
 const TRACE_NAME = 'WebsocketController';
 
@@ -199,6 +201,19 @@ export class WebsocketController {
                 userId = validationResult.userId;
                 sessionId = validationResult.sessionId;
                 clientConnectionId = validationResult.connectionId;
+
+                const span = trace.getActiveSpan();
+                if (span) {
+                    span.setAttributes({
+                        [SEMATTRS_ENDUSER_ID]: userId,
+                        ['request.userId']: userId,
+                        ['request.sessionId']: sessionId,
+                        ['request.subscriptionId']:
+                            validationResult.subscriptionId,
+                        ['request.subscriptionTier']:
+                            validationResult.subscriptionTier,
+                    });
+                }
             }
 
             await this._messenger.sendMessage([connectionId], {

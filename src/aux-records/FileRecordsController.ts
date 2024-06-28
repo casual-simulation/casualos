@@ -35,7 +35,7 @@ import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'FileRecordsController';
 
@@ -312,6 +312,7 @@ export class FileRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[FileRecordsController] An error occurred while recording a file:',
                 err
@@ -426,6 +427,7 @@ export class FileRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[FileRecordsController] An error occurred while erasing a file:',
                 err
@@ -541,6 +543,7 @@ export class FileRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[FileRecordsController] An error occurred while reading a file:',
                 err
@@ -627,6 +630,7 @@ export class FileRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[FileRecordsController] An error occurred while listing files:',
                 err
@@ -716,6 +720,7 @@ export class FileRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[FileRecordsController] An error occurred while reading a file:',
                 err
@@ -749,6 +754,7 @@ export class FileRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[FileRecordsController] An error occurred while marking a file as uploaded:',
                 err
@@ -770,6 +776,7 @@ export class FileRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[FileRecordsController] An error occurred while getting a file name:',
                 err

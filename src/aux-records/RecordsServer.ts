@@ -3569,6 +3569,16 @@ export class RecordsServer {
             return;
         }
 
+        const span = trace.getActiveSpan();
+        if (span) {
+            span.setAttributes({
+                [SEMATTRS_HTTP_CLIENT_IP]: request.ipAddress,
+                ['http.origin']: request.origin,
+                ['websocket.type']: request.type,
+                ['request.connectionId']: request.connectionId,
+            });
+        }
+
         let skipRateLimitCheck = false;
         if (!this._websocketRateLimit) {
             skipRateLimitCheck = true;
@@ -3596,6 +3606,10 @@ export class RecordsServer {
                     );
                 }
             }
+        }
+
+        if (skipRateLimitCheck && span) {
+            span.setAttribute('request.rateLimitCheck', 'skipped');
         }
 
         if (request.type === 'connect') {

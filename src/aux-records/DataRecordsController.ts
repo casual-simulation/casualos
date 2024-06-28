@@ -41,7 +41,7 @@ import { byteLengthOfString } from './Utils';
 import { ZodIssue, z } from 'zod';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'DataRecordsController';
 
@@ -331,6 +331,7 @@ export class DataRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[DataRecordsController] A server error occurred while recording data:`,
                 err
@@ -414,6 +415,7 @@ export class DataRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[DataRecordsController] An error occurred while getting data:',
                 err
@@ -492,6 +494,7 @@ export class DataRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[DataRecordsController] An error occurred while listing data:',
                 err
@@ -566,6 +569,7 @@ export class DataRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[DataRecordsController] An error occurred while listing data by marker:',
                 err
@@ -691,6 +695,7 @@ export class DataRecordsController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[DataRecordsController] A server error occurred while erasing data:`,
                 err

@@ -9,7 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { NotificationMessenger } from './NotificationMessenger';
 import { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'ModerationController';
 
@@ -97,6 +97,7 @@ export class ModerationController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[ModerationController] Failed to report inst:', err);
             return {

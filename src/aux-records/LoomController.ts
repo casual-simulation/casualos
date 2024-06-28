@@ -9,7 +9,7 @@ import {
 import { MetricsStore } from './MetricsStore';
 import * as jose from 'jose';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'LoomController';
 
@@ -129,6 +129,7 @@ export class LoomController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error('[LoomController] Failed to get token', err);
             return {
                 success: false,

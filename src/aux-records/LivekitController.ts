@@ -1,7 +1,7 @@
 import { AccessToken } from 'livekit-server-sdk';
 import { IssueMeetTokenResult } from './LivekitEvents';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'LivekitController';
 
@@ -81,6 +81,7 @@ export class LivekitController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[LivekitController] A server error occurred while issuing a token:`,
                 err

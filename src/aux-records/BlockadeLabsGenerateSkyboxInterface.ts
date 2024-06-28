@@ -7,7 +7,7 @@ import {
 } from './AIGenerateSkyboxInterface';
 import axios from 'axios';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'BlockadeLabsGenerateSkyboxInterface';
 
@@ -75,6 +75,7 @@ export class BlockadeLabsGenerateSkyboxInterface
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             handleAxiosErrors(err);
         }
     }
@@ -101,6 +102,7 @@ export class BlockadeLabsGenerateSkyboxInterface
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             handleAxiosErrors(err);
         }
     }

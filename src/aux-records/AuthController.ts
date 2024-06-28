@@ -74,7 +74,7 @@ import {
     bufferToBase64URLString,
 } from './Base64UrlUtils';
 import { traced } from './tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'AuthController';
 
@@ -292,6 +292,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while creating account',
                 err
@@ -490,6 +492,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error Occurred while Creating Login Request',
                 err
@@ -703,6 +707,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while completing login request',
                 err
@@ -779,6 +785,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while requesting Privo login',
                 err
@@ -868,6 +876,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while processing Privo authorization code',
                 err
@@ -1106,6 +1116,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while completing Privo login',
                 err
@@ -1326,6 +1338,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting Privo sign up`,
                 err
@@ -1408,6 +1422,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting WebAuthn registration options`,
                 err
@@ -1518,6 +1534,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while completing WebAuthn registration`,
                 err
@@ -1582,6 +1600,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting WebAuthn login`,
                 err
@@ -1778,6 +1798,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting WebAuthn login`,
                 err
@@ -1825,6 +1847,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while listing user authenticators`,
                 err
@@ -1869,6 +1893,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while deleting a user authenticator`,
                 err
@@ -2014,6 +2040,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while validating a session key',
                 err
@@ -2159,6 +2187,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while validating a connection token',
                 err
@@ -2256,6 +2286,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while revoking session',
                 err
@@ -2318,6 +2350,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while revoking all sessions',
                 err
@@ -2446,6 +2480,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while replacing session',
                 err
@@ -2541,6 +2577,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while listing sessions',
                 err
@@ -2671,6 +2709,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while getting user info',
                 err
@@ -2729,6 +2769,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while getting user info',
                 err
@@ -2872,6 +2914,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while getting user info',
                 err
@@ -2899,6 +2943,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while listing email rules',
                 err
@@ -2926,6 +2972,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while listing email rules',
                 err
@@ -2974,6 +3022,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while checking if email address is valid',
                 err
@@ -3030,6 +3080,8 @@ export class AuthController {
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while checking if display name is valid',
                 err
