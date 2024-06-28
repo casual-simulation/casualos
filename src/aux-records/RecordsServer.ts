@@ -433,6 +433,12 @@ export interface Route<T> {
     method: GenericHttpRequest['method'];
 
     /**
+     * The name for the route.
+     * If omitted, then the route will not be named.
+     */
+    name?: string;
+
+    /**
      * The handler that should be called when the route is matched.
      * @param request The request.
      * @param data The data that was parsed from the request.
@@ -3166,7 +3172,7 @@ export class RecordsServer {
             if (procs.hasOwnProperty(procedureName)) {
                 const procedure = (procs as any)[procedureName];
                 if (procedure.http) {
-                    this._addProcedureRoute(procedure);
+                    this._addProcedureRoute(procedure, procedureName);
                 }
             }
         }
@@ -3193,7 +3199,7 @@ export class RecordsServer {
 
                 const span = trace.getActiveSpan();
                 if (span) {
-                    span.updateName(`callProcedure:${procedure}`);
+                    span.updateName(`http:${procedure}`);
                     span.setAttribute('request.procedure', procedure);
                 }
 
@@ -3241,6 +3247,7 @@ export class RecordsServer {
         this.addRoute({
             method: 'POST',
             path: '/api/stripeWebhook',
+            name: 'stripeWebhook',
             allowedOrigins: true,
             handler: (request) => this._stripeWebhook(request),
         });
@@ -3262,7 +3269,7 @@ export class RecordsServer {
         }
         (this._procedures as any)[name] = procedure;
         if (procedure.http) {
-            this._addProcedureRoute(procedure);
+            this._addProcedureRoute(procedure, name);
         }
     }
 
@@ -3281,7 +3288,8 @@ export class RecordsServer {
      * @param route The route that should be added.
      */
     private _addProcedureRoute<T>(
-        procedure: Procedure<T, ProcedureOutput>
+        procedure: Procedure<T, ProcedureOutput>,
+        name: string
     ): void {
         if (!procedure.http) {
             throw new Error('Procedure must have an http route defined.');
@@ -3292,6 +3300,7 @@ export class RecordsServer {
             method: route.method,
             path: route.path,
             schema: procedure.schema,
+            name: name,
             handler: async (request, data) => {
                 const context: RPCContext = {
                     ipAddress: request.ipAddress,
@@ -3453,6 +3462,10 @@ export class RecordsServer {
 
         const route = this._routes.get(`${request.method}:${request.path}`);
         if (route) {
+            if (span && route.name) {
+                span.updateName(`http:${route.name}`);
+            }
+
             const origins =
                 route.allowedOrigins === 'account'
                     ? this._allowedAccountOrigins
@@ -3568,7 +3581,6 @@ export class RecordsServer {
      */
     @traced('RecordsServer', {
         kind: SpanKind.SERVER,
-        root: true,
     })
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
         if (!this._websocketController) {
