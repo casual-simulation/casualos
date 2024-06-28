@@ -8,6 +8,10 @@ import { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
 import { NotificationMessenger } from './NotificationMessenger';
 import { ConfigurationStore } from './ConfigurationStore';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'ModerationController';
 
 /**
  * Defines a class that implements various moderation tasks.
@@ -31,6 +35,7 @@ export class ModerationController {
      * Reports the given inst for a terms of service violation.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async reportInst(request: ReportInstRequest): Promise<ReportInstResult> {
         try {
             const config = await this._config.getModerationConfig();
@@ -90,6 +95,9 @@ export class ModerationController {
                 id: id,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error('[ModerationController] Failed to report inst:', err);
             return {
                 success: false,

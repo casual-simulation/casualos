@@ -40,6 +40,10 @@ import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { byteLengthOfString } from './Utils';
 import { ZodIssue, z } from 'zod';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'DataRecordsController';
 
 export interface DataRecordsConfiguration {
     store: DataRecordsStore;
@@ -80,6 +84,7 @@ export class DataRecordsController {
      * @param markers The list of markers that should be applied to the new record. If null, then the publicRead marker will be applied.
      * @param instances The list of instances that are currently loaded.
      */
+    @traced(TRACE_NAME)
     async recordData(
         recordKeyOrRecordName: string,
         address: string,
@@ -324,6 +329,8 @@ export class DataRecordsController {
                 address: address,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 `[DataRecordsController] A server error occurred while recording data:`,
                 err
@@ -343,6 +350,7 @@ export class DataRecordsController {
      * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
      * @param instances The list of instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async getData(
         recordName: string,
         address: string,
@@ -404,6 +412,8 @@ export class DataRecordsController {
                 markers: markers,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[DataRecordsController] An error occurred while getting data:',
                 err
@@ -423,6 +433,7 @@ export class DataRecordsController {
      * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async listData(
         recordName: string,
         address: string | null,
@@ -479,6 +490,8 @@ export class DataRecordsController {
                 totalCount: result2.totalCount,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[DataRecordsController] An error occurred while listing data:',
                 err
@@ -495,6 +508,7 @@ export class DataRecordsController {
      * Lists some data from the given record, filtered by the given marker and starting at the given address.
      * @param request The request that should be used to list the data.
      */
+    @traced(TRACE_NAME)
     async listDataByMarker(
         request: ListDataByMarkerRequest
     ): Promise<ListDataResult> {
@@ -550,6 +564,8 @@ export class DataRecordsController {
                 marker: result2.marker,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[DataRecordsController] An error occurred while listing data by marker:',
                 err
@@ -570,6 +586,7 @@ export class DataRecordsController {
      * @param subjectId The ID of the user that this request came from.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async eraseData(
         recordKeyOrName: string,
         address: string,
@@ -672,6 +689,8 @@ export class DataRecordsController {
                 address,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 `[DataRecordsController] A server error occurred while erasing data:`,
                 err

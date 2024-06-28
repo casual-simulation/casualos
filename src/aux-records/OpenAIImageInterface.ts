@@ -12,6 +12,9 @@ import {
     AIImageInterface,
 } from './AIImageInterface';
 import { handleAxiosErrors } from './Utils';
+import { traced } from './tracing/TracingDecorators';
+
+const TRACE_NAME = 'OpenAIImageInterface';
 
 export interface OpenAIImageOptions {
     /**
@@ -40,6 +43,7 @@ export class OpenAIImageInterface implements AIImageInterface {
         this._options = options;
     }
 
+    @traced(TRACE_NAME)
     async generateImage(
         request: AIGenerateImageInterfaceRequest
     ): Promise<AIGenerateImageInterfaceResponse> {

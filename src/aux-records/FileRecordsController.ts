@@ -34,6 +34,10 @@ import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'FileRecordsController';
 
 export interface FileRecordsConfiguration {
     policies: PolicyController;
@@ -65,6 +69,7 @@ export class FileRecordsController {
      * @param request The request.
      * @returns
      */
+    @traced(TRACE_NAME)
     async recordFile(
         recordKeyOrRecordName: string,
         userId: string,
@@ -305,6 +310,8 @@ export class FileRecordsController {
                 markers,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[FileRecordsController] An error occurred while recording a file:',
                 err
@@ -324,6 +331,7 @@ export class FileRecordsController {
      * @param subjectId The ID of the user that is making this request. Null if the user is not logged in.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async eraseFile(
         recordKeyOrRecordName: string,
         fileName: string,
@@ -416,6 +424,8 @@ export class FileRecordsController {
                 fileName,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[FileRecordsController] An error occurred while erasing a file:',
                 err
@@ -435,6 +445,7 @@ export class FileRecordsController {
      * @param subjectId The ID of the user that is making this request. Null if the user is not logged in.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async readFile(
         recordKeyOrRecordName: string,
         fileName: string,
@@ -528,6 +539,8 @@ export class FileRecordsController {
                 requestHeaders: readResult.requestHeaders,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[FileRecordsController] An error occurred while reading a file:',
                 err
@@ -547,6 +560,7 @@ export class FileRecordsController {
      * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async listFiles(
         recordKeyOrRecordName: string,
         fileName: string | null,
@@ -611,6 +625,8 @@ export class FileRecordsController {
                 totalCount: result2.totalCount,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[FileRecordsController] An error occurred while listing files:',
                 err
@@ -623,6 +639,7 @@ export class FileRecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     async updateFile(
         recordKeyOrRecordName: string,
         fileName: string,
@@ -697,6 +714,8 @@ export class FileRecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[FileRecordsController] An error occurred while reading a file:',
                 err
@@ -709,6 +728,7 @@ export class FileRecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     async markFileAsUploaded(
         recordName: string,
         fileName: string
@@ -727,6 +747,8 @@ export class FileRecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[FileRecordsController] An error occurred while marking a file as uploaded:',
                 err
@@ -739,12 +761,15 @@ export class FileRecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     async getFileNameFromUrl(
         fileUrl: string
     ): Promise<GetFileNameFromUrlResult> {
         try {
             return await this._store.getFileNameFromUrl(fileUrl);
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[FileRecordsController] An error occurred while getting a file name:',
                 err
@@ -757,6 +782,7 @@ export class FileRecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     getAllowedUploadHeaders() {
         return this._store.getAllowedUploadHeaders();
     }

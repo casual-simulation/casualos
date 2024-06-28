@@ -8,6 +8,10 @@ import {
 } from './SubscriptionConfiguration';
 import { MetricsStore } from './MetricsStore';
 import * as jose from 'jose';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'LoomController';
 
 export interface LoomControllerOptions {
     policies: PolicyController;
@@ -40,6 +44,7 @@ export class LoomController {
      *
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async getToken(request: LoomGetTokenRequest): Promise<LoomGetTokenResult> {
         try {
             const context = await this._policies.constructAuthorizationContext({
@@ -122,6 +127,8 @@ export class LoomController {
                 token: jws,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error('[LoomController] Failed to get token', err);
             return {
                 success: false,

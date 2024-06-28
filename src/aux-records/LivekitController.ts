@@ -1,5 +1,9 @@
 import { AccessToken } from 'livekit-server-sdk';
 import { IssueMeetTokenResult } from './LivekitEvents';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'LivekitController';
 
 /**
  * Defines a class that is able to issue tokens for livekit based meetings.
@@ -26,6 +30,7 @@ export class LivekitController {
      * @param roomName The name of the room.
      * @param userName The username of the user. Simply needs to be a unique identifier and is not attached to an account.
      */
+    @traced(TRACE_NAME)
     async issueToken(
         roomName: string,
         userName: string
@@ -74,6 +79,8 @@ export class LivekitController {
                 url: this._endpoint,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 `[LivekitController] A server error occurred while issuing a token:`,
                 err

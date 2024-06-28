@@ -28,6 +28,10 @@ import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'SubscriptionController';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -61,6 +65,7 @@ export class SubscriptionController {
      * Gets the status of the given user's scription.
      * @param request
      */
+    @traced(TRACE_NAME)
     async getSubscriptionStatus(
         request: GetSubscriptionStatusRequest
     ): Promise<GetSubscriptionStatusResult> {
@@ -243,6 +248,9 @@ export class SubscriptionController {
                 purchasableSubscriptions,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[SubscriptionController] An error occurred while getting subscription status:',
                 err
@@ -259,6 +267,7 @@ export class SubscriptionController {
      * Attempts to update the subscription for the given user.
      * @param request The request to update the subscription.
      */
+    @traced(TRACE_NAME)
     async updateSubscription(
         request: UpdateSubscriptionRequest
     ): Promise<UpdateSubscriptionResult> {
@@ -394,6 +403,9 @@ export class SubscriptionController {
                 };
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[SubscriptionController] An error occurred while updating a subscription:',
                 err
@@ -483,6 +495,7 @@ export class SubscriptionController {
      * Creates a link that the user can be redirected to in order to manage their subscription.
      * Returns a link that the user can be redirected to to initiate a purchase of the subscription.
      */
+    @traced(TRACE_NAME)
     async createManageSubscriptionLink(
         request: CreateManageSubscriptionRequest
     ): Promise<CreateManageSubscriptionResult> {
@@ -775,6 +788,9 @@ export class SubscriptionController {
                 studio
             );
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[SubscriptionController] An error occurred while creating a manage subscription link:',
                 err
@@ -787,6 +803,7 @@ export class SubscriptionController {
         }
     }
 
+    @traced(TRACE_NAME)
     private async _createCheckoutSession(
         request: CreateManageSubscriptionRequest,
         customerId: string,
@@ -878,6 +895,7 @@ export class SubscriptionController {
     /**
      * Handles the webhook from Stripe for updating the internal database.
      */
+    @traced(TRACE_NAME)
     async handleStripeWebhook(
         request: HandleStripeWebhookRequest
     ): Promise<HandleStripeWebhookResponse> {
@@ -1152,6 +1170,9 @@ export class SubscriptionController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span.recordException(err);
+
             console.error(
                 '[SubscriptionController] An error occurred while handling a stripe webhook:',
                 err

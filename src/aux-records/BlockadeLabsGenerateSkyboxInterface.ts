@@ -6,6 +6,10 @@ import {
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
 import axios from 'axios';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'BlockadeLabsGenerateSkyboxInterface';
 
 /**
  * Implements the AI generate skybox interface for Blockade Labs (https://www.blockadelabs.com/).
@@ -19,6 +23,7 @@ export class BlockadeLabsGenerateSkyboxInterface
         this._options = options;
     }
 
+    @traced(TRACE_NAME)
     async generateSkybox(
         request: AIGenerateSkyboxInterfaceRequest
     ): Promise<AIGenerateSkyboxInterfaceResponse> {
@@ -68,10 +73,13 @@ export class BlockadeLabsGenerateSkyboxInterface
                 skyboxId: String(id),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             handleAxiosErrors(err);
         }
     }
 
+    @traced(TRACE_NAME)
     async getSkybox(skyboxId: string): Promise<AIGetSkyboxInterfaceResponse> {
         try {
             console.log(
@@ -91,6 +99,8 @@ export class BlockadeLabsGenerateSkyboxInterface
                 thumbnailUrl: status.thumb_url,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             handleAxiosErrors(err);
         }
     }

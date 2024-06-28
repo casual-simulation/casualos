@@ -12,6 +12,10 @@ import {
     AIChatInterfaceStreamResponse,
     AIChatMessage,
 } from './AIChatInterface';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'GoogleAIChatInterface';
 
 export interface GoogleAIChatOptions {
     /**
@@ -32,6 +36,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         this._genAI = new GoogleGenerativeAI(options.apiKey);
     }
 
+    @traced(TRACE_NAME)
     async chat(
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
@@ -104,6 +109,9 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 totalTokens: tokens.totalTokens,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             if (err instanceof Error) {
                 console.error(
                     '[GoogleAIChatInterface] Error occurred while generating content.',
@@ -123,6 +131,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         }
     }
 
+    @traced(TRACE_NAME)
     async *chatStream(
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
@@ -200,6 +209,9 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 totalTokens: tokens.totalTokens,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             if (err instanceof Error) {
                 console.error(
                     '[GoogleAIChatInterface] Error occurred while generating content.',

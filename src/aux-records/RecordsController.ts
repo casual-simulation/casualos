@@ -45,6 +45,10 @@ import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
 import { NotificationMessenger } from './NotificationMessenger';
 import { isSuperUserRole } from './AuthUtils';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'RecordsController';
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
@@ -76,6 +80,7 @@ export class RecordsController {
      * Creates a new record.
      * @param request The request that should be used to create the record.
      */
+    @traced(TRACE_NAME)
     async createRecord(
         request: CreateRecordRequest
     ): Promise<CreateRecordResult> {
@@ -266,6 +271,9 @@ export class RecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [createRecord] An error occurred while creating a record:',
                 err
@@ -285,6 +293,7 @@ export class RecordsController {
      * @param userId The ID of the user that is creating the public record.
      * @returns
      */
+    @traced(TRACE_NAME)
     async createPublicRecordKey(
         name: string,
         policy: PublicRecordKeyPolicy,
@@ -436,6 +445,9 @@ export class RecordsController {
                 recordName: name,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [createPublicRecordKey] An error occurred while creating a public record key:',
                 err
@@ -454,6 +466,7 @@ export class RecordsController {
      * @param key The key that should be validated.
      * @returns
      */
+    @traced(TRACE_NAME)
     async validatePublicRecordKey(
         key: string
     ): Promise<ValidatePublicRecordKeyResult> {
@@ -572,6 +585,9 @@ export class RecordsController {
                 };
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [validatePublicRecordKey] An error occurred while creating a public record key:',
                 err
@@ -589,6 +605,7 @@ export class RecordsController {
      * @param name The name of the record.
      * @param userId The ID of the user that is validating the record.
      */
+    @traced(TRACE_NAME)
     async validateRecordName(
         name: string,
         userId: string | null
@@ -744,6 +761,9 @@ export class RecordsController {
                 studioMembers,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [validateRecordName] An error occurred while creating a validating a record name:',
                 err
@@ -806,6 +826,7 @@ export class RecordsController {
      * Gets the list of records that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
+    @traced(TRACE_NAME)
     async listRecords(userId: string): Promise<ListRecordsResult> {
         try {
             if (!this._store.listRecordsByOwnerId) {
@@ -821,6 +842,9 @@ export class RecordsController {
                 records: records,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [listRecords] Error listing records: ',
                 err
@@ -838,6 +862,7 @@ export class RecordsController {
      * @param studioId The ID of the studio.
      * @param userId The ID of the user that is currently logged in.
      */
+    @traced(TRACE_NAME)
     async listStudioRecords(
         studioId: string,
         userId: string
@@ -871,6 +896,9 @@ export class RecordsController {
                 records: records,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [listStudioRecords] Error listing records: ',
                 err
@@ -888,6 +916,7 @@ export class RecordsController {
      * @param studioName The name of the studio.
      * @param userId The ID of the user that is creating the studio.
      */
+    @traced(TRACE_NAME)
     async createStudio(
         studioName: string,
         userId: string
@@ -908,6 +937,9 @@ export class RecordsController {
                 studioId: studioId,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [createStudio] An error occurred while creating a studio:',
                 err
@@ -926,6 +958,7 @@ export class RecordsController {
      * @param userId The ID of the user that is creating the studio.
      * @param comId The comId of the studio that this studio should belong to.
      */
+    @traced(TRACE_NAME)
     async createStudioInComId(
         studioName: string,
         userId: string,
@@ -1008,6 +1041,9 @@ export class RecordsController {
                 studioId: studioId,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [createStudio] An error occurred while creating a studio in a comId:',
                 err
@@ -1023,6 +1059,7 @@ export class RecordsController {
     /**
      * Attempts to update the given studio.
      */
+    @traced(TRACE_NAME)
     async updateStudio(
         request: UpdateStudioRequest
     ): Promise<UpdateStudioResult> {
@@ -1072,6 +1109,9 @@ export class RecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [updateStudio] An error occurred while updating a studio:',
                 err
@@ -1089,6 +1129,7 @@ export class RecordsController {
      * @param studioId The ID of the studio.
      * @param userId The ID of the user that is making this request.
      */
+    @traced(TRACE_NAME)
     async getStudio(
         studioId: string,
         userId: string
@@ -1172,6 +1213,9 @@ export class RecordsController {
                 },
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [getStudio] An error occurred while getting a studio:',
                 err
@@ -1188,6 +1232,7 @@ export class RecordsController {
      * Attempts to get the player config for the given comId.
      * @param comId The comId.
      */
+    @traced(TRACE_NAME)
     async getPlayerConfig(comId: string): Promise<GetPlayerConfigResult> {
         try {
             const studio = await this._store.getStudioByComId(comId);
@@ -1208,6 +1253,9 @@ export class RecordsController {
                 playerConfig: studio.playerConfig ?? null,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [getPlayerConfig] An error occurred while getting the player config:',
                 err
@@ -1224,6 +1272,7 @@ export class RecordsController {
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
+    @traced(TRACE_NAME)
     async listStudios(userId: string): Promise<ListStudiosResult> {
         try {
             const studios = await this._store.listStudiosForUser(userId);
@@ -1247,6 +1296,9 @@ export class RecordsController {
                 }),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [listStudios] An error occurred while listing studios:',
                 err
@@ -1264,6 +1316,7 @@ export class RecordsController {
      * @param userId The ID of the user.
      * @param comId The comId.
      */
+    @traced(TRACE_NAME)
     async listStudiosByComId(
         userId: string,
         comId: string
@@ -1293,6 +1346,9 @@ export class RecordsController {
                 }),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [listStudios] An error occurred while listing studios:',
                 err
@@ -1310,6 +1366,7 @@ export class RecordsController {
      * @param studioId The ID of the studio.
      * @param userId The ID of the user that is currently logged in.
      */
+    @traced(TRACE_NAME)
     async listStudioMembers(
         studioId: string,
         userId: string
@@ -1368,6 +1425,9 @@ export class RecordsController {
                 })),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [listStudioMembers] An error occurred while listing studio members:',
                 err
@@ -1380,6 +1440,7 @@ export class RecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     async addStudioMember(
         request: AddStudioMemberRequest
     ): Promise<AddStudioMemberResult> {
@@ -1448,6 +1509,9 @@ export class RecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [addStudioMember] An error occurred while adding a studio member:',
                 err
@@ -1460,6 +1524,7 @@ export class RecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     async removeStudioMember(
         request: RemoveStudioMemberRequest
     ): Promise<RemoveStudioMemberResult> {
@@ -1508,6 +1573,9 @@ export class RecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [removeStudioMember] An error occurred while removing a studio member:',
                 err
@@ -1520,6 +1588,7 @@ export class RecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     async requestComId(request: ComIdRequest): Promise<ComIdRequestResult> {
         try {
             const existingStudio = await this._store.getStudioById(
@@ -1591,6 +1660,9 @@ export class RecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+
             console.error(
                 '[RecordsController] [requestComId] An error occurred while requesting a comId:',
                 err
@@ -1603,6 +1675,7 @@ export class RecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     private _createSalt(): string {
         return fromByteArray(randomBytes(16));
     }

@@ -29,6 +29,10 @@ import {
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+import { traced } from './tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'EventRecordsController';
 
 export interface EventRecordsConfiguration {
     policies: PolicyController;
@@ -66,6 +70,7 @@ export class EventRecordsController {
      * @param subjectId The ID of the user that is adding the count.
      * @param instances The list of instances that are currently loaded by the client.
      */
+    @traced(TRACE_NAME)
     async addCount(
         recordKeyOrRecordName: string,
         eventName: string,
@@ -170,6 +175,8 @@ export class EventRecordsController {
                 };
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 `[EventRecordsController] A server error occurred while adding count:`,
                 err
@@ -189,6 +196,7 @@ export class EventRecordsController {
      * @param userId The ID of the user that is getting the count.
      * @param instances The list of instances that are currently loaded by the client.
      */
+    @traced(TRACE_NAME)
     async getCount(
         recordKeyOrRecordName: string,
         eventName: string,
@@ -247,6 +255,8 @@ export class EventRecordsController {
                 markers: markers,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 `[EventRecordsController] A server error occurred while getting count:`,
                 err
@@ -263,6 +273,7 @@ export class EventRecordsController {
      * Attempts to update the event using the given request.
      * @param request The request
      */
+    @traced(TRACE_NAME)
     async updateEvent(
         request: UpdateEventRecordRequest
     ): Promise<UpdateEventRecordResult> {
@@ -359,6 +370,8 @@ export class EventRecordsController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 `[EventRecordsController] A server error occurred while updating event:`,
                 err
@@ -371,6 +384,7 @@ export class EventRecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
     async listEvents(
         recordKeyOrRecordName: string,
         eventName: string | null,
@@ -432,6 +446,8 @@ export class EventRecordsController {
                 })),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
             console.error(
                 '[EventRecordsController] Failed to list events:',
                 err
