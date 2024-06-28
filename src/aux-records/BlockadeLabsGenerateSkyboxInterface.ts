@@ -7,9 +7,21 @@ import {
 } from './AIGenerateSkyboxInterface';
 import axios from 'axios';
 import { traced } from './tracing/TracingDecorators';
-import { SpanStatusCode, trace } from '@opentelemetry/api';
+import {
+    SpanKind,
+    SpanOptions,
+    SpanStatusCode,
+    trace,
+} from '@opentelemetry/api';
 
 const TRACE_NAME = 'BlockadeLabsGenerateSkyboxInterface';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        'peer.service': 'blockadelabs',
+        'service.name': 'blockadelabs',
+    },
+};
 
 /**
  * Implements the AI generate skybox interface for Blockade Labs (https://www.blockadelabs.com/).
@@ -23,7 +35,7 @@ export class BlockadeLabsGenerateSkyboxInterface
         this._options = options;
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async generateSkybox(
         request: AIGenerateSkyboxInterfaceRequest
     ): Promise<AIGenerateSkyboxInterfaceResponse> {
@@ -80,7 +92,7 @@ export class BlockadeLabsGenerateSkyboxInterface
         }
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getSkybox(skyboxId: string): Promise<AIGetSkyboxInterfaceResponse> {
         try {
             console.log(

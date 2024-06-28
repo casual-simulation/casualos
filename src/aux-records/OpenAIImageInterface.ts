@@ -13,8 +13,16 @@ import {
 } from './AIImageInterface';
 import { handleAxiosErrors } from './Utils';
 import { traced } from './tracing/TracingDecorators';
+import { SpanKind, SpanOptions } from '@opentelemetry/api';
 
 const TRACE_NAME = 'OpenAIImageInterface';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        'peer.service': 'openai',
+        'service.name': 'openai',
+    },
+};
 
 export interface OpenAIImageOptions {
     /**
@@ -43,7 +51,7 @@ export class OpenAIImageInterface implements AIImageInterface {
         this._options = options;
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async generateImage(
         request: AIGenerateImageInterfaceRequest
     ): Promise<AIGenerateImageInterfaceResponse> {

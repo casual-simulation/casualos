@@ -8,6 +8,7 @@ import { DateTime } from 'luxon';
 import { z } from 'zod';
 import { ServerError } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
+import { SpanKind, SpanOptions } from '@opentelemetry/api';
 
 /**
  * Defines an interface for objects that can interface with the Privo API.
@@ -181,6 +182,13 @@ export interface ProcessAuthorizationCallbackResponse {
 }
 
 const TRACE_NAME = 'PrivoClient';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        'peer.service': 'privo',
+        'service.name': 'privo',
+    },
+};
 
 /**
  * Defines a class that implements PrivoClientInterface.
@@ -197,7 +205,7 @@ export class PrivoClient implements PrivoClientInterface {
         this._config = configStore;
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async init(): Promise<void> {
         const config = await this._config.getPrivoConfiguration();
         this._issuer = await Issuer.discover(config.publicEndpoint);
@@ -210,7 +218,7 @@ export class PrivoClient implements PrivoClientInterface {
         });
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async createChildAccount(
         request: CreateChildAccountRequest
     ): Promise<CreateChildAccountResponse> {
@@ -308,7 +316,7 @@ export class PrivoClient implements PrivoClientInterface {
         };
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async createAdultAccount(
         request: CreateAdultAccountRequest
     ): Promise<CreateAdultAccountResponse> {
@@ -389,7 +397,7 @@ export class PrivoClient implements PrivoClientInterface {
         };
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse> {
         const config = await this._config.getPrivoConfiguration();
 
@@ -447,7 +455,7 @@ export class PrivoClient implements PrivoClientInterface {
         };
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async generateAuthorizationUrl(
         state?: string
     ): Promise<GeneratedAuthorizationUrl> {
@@ -473,7 +481,7 @@ export class PrivoClient implements PrivoClientInterface {
         };
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async processAuthorizationCallback(
         request: ProcessAuthorizationCallbackRequest
     ): Promise<ProcessAuthorizationCallbackResponse> {
@@ -538,7 +546,7 @@ export class PrivoClient implements PrivoClientInterface {
         };
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async checkEmail(email: string): Promise<CheckEmailResult> {
         const config = await this._config.getPrivoConfiguration();
 
@@ -566,7 +574,7 @@ export class PrivoClient implements PrivoClientInterface {
         };
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async checkDisplayName(
         displayName: string
     ): Promise<CheckDisplayNameResult> {

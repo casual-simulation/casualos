@@ -3,7 +3,12 @@ import {
     GenericHttpResponse,
     KnownErrorCodes,
 } from '@casual-simulation/aux-common';
-import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import {
+    SpanKind,
+    SpanOptions,
+    SpanStatusCode,
+    trace,
+} from '@opentelemetry/api';
 import { SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 
 declare const GIT_TAG: string;
@@ -49,8 +54,9 @@ declare const GIT_TAG: string;
 /**
  * Modifies the given method so that it is traced.
  * @param tracerName The name of the tracer that the method spans should be created for.
+ * @param options The options for the spans that are created.
  */
-export function traced(tracerName: string, spanName?: string) {
+export function traced(tracerName: string, options: SpanOptions = {}) {
     const tracer = trace.getTracer(tracerName, GIT_TAG);
     return function (
         target: any,
@@ -58,10 +64,9 @@ export function traced(tracerName: string, spanName?: string) {
         descriptor: PropertyDescriptor
     ) {
         const originalMethod = descriptor.value;
-        spanName = spanName || propertyKey;
         descriptor.value = function (...args: any[]) {
             const _this = this;
-            return tracer.startActiveSpan(spanName, (span) => {
+            return tracer.startActiveSpan(propertyKey, options, (span) => {
                 try {
                     const ret = originalMethod.apply(_this, args);
                     if (ret instanceof Promise) {

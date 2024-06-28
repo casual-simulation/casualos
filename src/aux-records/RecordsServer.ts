@@ -77,7 +77,7 @@ import {
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import { LoomController } from './LoomController';
-import { Tracer, trace } from '@opentelemetry/api';
+import { SpanKind, Tracer, trace } from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
     SEMATTRS_ENDUSER_ID,
@@ -3193,6 +3193,7 @@ export class RecordsServer {
 
                 const span = trace.getActiveSpan();
                 if (span) {
+                    span.updateName(`callProcedure:${procedure}`);
                     span.setAttribute('request.procedure', procedure);
                 }
 
@@ -3333,14 +3334,16 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer')
+    @traced('RecordsServer', {
+        kind: SpanKind.SERVER,
+        root: true,
+    })
     @traceHttpResponse()
     async handleHttpRequest(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         const span = trace.getActiveSpan();
         if (span) {
-            span.updateName(`${request.method} ${request.path}`);
             const url = new URL(request.path, `http://${request.headers.host}`);
             span.setAttributes({
                 [SEMATTRS_HTTP_METHOD]: request.method,
@@ -3563,7 +3566,10 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer')
+    @traced('RecordsServer', {
+        kind: SpanKind.SERVER,
+        root: true,
+    })
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
         if (!this._websocketController) {
             return;

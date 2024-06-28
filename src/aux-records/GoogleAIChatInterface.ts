@@ -13,9 +13,21 @@ import {
     AIChatMessage,
 } from './AIChatInterface';
 import { traced } from './tracing/TracingDecorators';
-import { SpanStatusCode, trace } from '@opentelemetry/api';
+import {
+    SpanKind,
+    SpanOptions,
+    SpanStatusCode,
+    trace,
+} from '@opentelemetry/api';
 
 const TRACE_NAME = 'GoogleAIChatInterface';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        'peer.service': 'google',
+        'service.name': 'google',
+    },
+};
 
 export interface GoogleAIChatOptions {
     /**
@@ -36,7 +48,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         this._genAI = new GoogleGenerativeAI(options.apiKey);
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async chat(
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
@@ -132,7 +144,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         }
     }
 
-    @traced(TRACE_NAME)
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async *chatStream(
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
