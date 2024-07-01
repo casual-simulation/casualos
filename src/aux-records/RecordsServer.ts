@@ -558,7 +558,10 @@ export class RecordsServer {
         this._websocketController = websocketController;
         this._moderationController = moderationController;
         this._loomController = loomController;
-        this._tracer = trace.getTracer('RecordsServer', GIT_TAG);
+        this._tracer = trace.getTracer(
+            'RecordsServer',
+            typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
+        );
         this._procedures = this._createProcedures();
         this._setupRoutes();
     }
@@ -3375,7 +3378,7 @@ export class RecordsServer {
             skipRateLimitCheck = true;
         }
 
-        if (skipRateLimitCheck) {
+        if (skipRateLimitCheck && span) {
             span.setAttribute('request.rateLimitCheck', 'skipped');
         }
 
@@ -3720,7 +3723,7 @@ export class RecordsServer {
         const messageResult = websocketRequestMessageSchema.safeParse(message);
 
         if (messageResult.success === false) {
-            span.setAttribute('request.messageType', 'invalid');
+            span?.setAttribute('request.messageType', 'invalid');
             await this._sendWebsocketZodError(
                 request.connectionId,
                 requestId,
@@ -3729,7 +3732,7 @@ export class RecordsServer {
             return;
         }
         const data = messageResult.data;
-        span.setAttribute('request.messageType', data.type);
+        span?.setAttribute('request.messageType', data.type);
 
         if (data.type === 'login') {
             await this._websocketController.login(

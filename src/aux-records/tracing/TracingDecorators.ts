@@ -57,7 +57,10 @@ declare const GIT_TAG: string;
  * @param options The options for the spans that are created.
  */
 export function traced(tracerName: string, options: SpanOptions = {}) {
-    const tracer = trace.getTracer(tracerName, GIT_TAG);
+    const tracer = trace.getTracer(
+        tracerName,
+        typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
+    );
     return function (
         target: any,
         propertyKey: string,
