@@ -74,6 +74,20 @@ export interface MetricsStore {
     recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void>;
 
     /**
+     * Gets the subscription metrics for sloyd.ai for the given user/studio.
+     * @param filter The filter.
+     */
+    getSubscriptionAiSloydMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISloydSubscriptionMetrics>;
+
+    /**
+     * Records the given sloyd.ai metrics.
+     * @param metrics The metrics to record.
+     */
+    recordSloydMetrics(metrics: AISloydMetrics): Promise<void>;
+
+    /**
      * Gets the inst metrics for the given user/studio.
      * @param filter The filter.
      */
@@ -260,4 +274,71 @@ export interface AISkyboxMetrics {
      * The unix time in miliseconds of when the metrics were created.
      */
     createdAtMs: number;
+}
+
+export interface AISloydSubscriptionMetrics extends SubscriptionMetrics {
+    /**
+     * The total number of sloyd.ai items that have been created for the current period.
+     */
+    totalModelsInCurrentPeriod: number;
+}
+
+export interface AISloydMetrics {
+    /**
+     * The ID of the user that the metrics are for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the metrics are for.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the model that was created.
+     * ("interactionId" in the sloyd interface)
+     */
+    modelId: string;
+
+    /**
+     * The name of the model that was created.
+     */
+    name?: string;
+
+    /**
+     * The confidence of the AI in the created model.
+     */
+    confidence?: number;
+
+    /**
+     * The MIME type of the model.
+     */
+    mimeType: string;
+
+    /**
+     * The data for the model.
+     * If the mimeType is "model/gltf+json", then this will be a JSON string.
+     * If the mimeType is "model/gltf-binary", then this will be a base64 encoded string.
+     */
+    modelData: string;
+
+    /**
+     * The base64 encoded thumbnail of the model.
+     */
+    thumbnailBase64?: string;
+
+    /**
+     * The ID of the model that the created model is based on.
+     */
+    baseModelId?: string;
+
+    /**
+     * The unix time in miliseconds of when the metrics were created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The number of models that were created in this metric.
+     */
+    modelsCreated: number;
 }

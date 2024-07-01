@@ -10,6 +10,22 @@ import {
 } from './AIChatInterface';
 import axios from 'axios';
 import OpenAI from 'openai';
+import { traced } from './tracing/TracingDecorators';
+import {
+    SpanKind,
+    SpanOptions,
+    SpanStatusCode,
+    trace,
+} from '@opentelemetry/api';
+
+const TRACE_NAME = 'OpenAIChatInterface';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        'peer.service': 'openai',
+        'service.name': 'openai',
+    },
+};
 
 export interface OpenAIChatOptions {
     /**
@@ -32,6 +48,7 @@ export class OpenAIChatInterface implements AIChatInterface {
         });
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async chat(
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
@@ -106,6 +123,10 @@ export class OpenAIChatInterface implements AIChatInterface {
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 if (err.response.status === 400) {
+                    const span = trace.getActiveSpan();
+                    span?.recordException(err);
+                    span?.setStatus({ code: SpanStatusCode.ERROR });
+
                     console.error(
                         `[OpenAIChatInterface] [${request.userId}] [chat]: Bad request: ${err.response.data.error.message}`
                     );
@@ -124,6 +145,7 @@ export class OpenAIChatInterface implements AIChatInterface {
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async *chatStream(
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {

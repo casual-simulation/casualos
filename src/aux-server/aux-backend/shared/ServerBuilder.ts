@@ -142,6 +142,22 @@ import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
 // @ts-ignore
 import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
+import {
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+} from '@opentelemetry/sdk-metrics';
+import { PrismaInstrumentation } from '@prisma/instrumentation';
+import { Resource } from '@opentelemetry/resources';
+import {
+    SEMRESATTRS_SERVICE_NAME,
+    SEMRESATTRS_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions';
+import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -323,6 +339,114 @@ export class ServerBuilder implements SubscriptionLike {
         for (let plugin of automaticPlugins) {
             this.usePlugin(plugin);
         }
+        return this;
+    }
+
+    /**
+     * Enables telemetry for the server.
+     * Should be called first if telemetry is desired.
+     * @param options The options for the server.
+     */
+    useTelemetry(
+        options: Pick<BuilderOptions, 'telemetry'> = this._options
+    ): this {
+        console.log(`[ServerBuilder] Using telemetry.`);
+        if (!options.telemetry) {
+            throw new Error('Telemetry options must be provided.');
+        }
+
+        console.log(
+            `[ServerBuilder] Tracing Configuration:`,
+            options.telemetry.tracing
+        );
+
+        const traceExporter =
+            options.telemetry.tracing.exporter === 'console'
+                ? new ConsoleSpanExporter()
+                : options.telemetry.tracing.exporter === 'otlp'
+                ? new OTLPTraceExporter({
+                      url: options.telemetry.tracing.url,
+                      headers: options.telemetry.tracing.headers,
+                  })
+                : null;
+
+        console.log(
+            `[ServerBuilder] Metrics Configuration:`,
+            options.telemetry.metrics
+        );
+
+        const metrics =
+            options.telemetry.metrics.exporter === 'none'
+                ? null
+                : new PeriodicExportingMetricReader({
+                      exporter:
+                          options.telemetry.metrics.exporter === 'console'
+                              ? new ConsoleMetricExporter()
+                              : options.telemetry.metrics.exporter === 'otlp'
+                              ? new OTLPMetricExporter({
+                                    url: options.telemetry.metrics.url,
+                                    headers: options.telemetry.metrics.headers,
+                                })
+                              : null,
+                  });
+
+        console.log(
+            `[ServerBuilder] Instrumentation Configuration:`,
+            options.telemetry.instrumentation
+        );
+
+        const instrumentation: any[] = [];
+
+        if (options.telemetry.instrumentation.auto) {
+            console.log(
+                `[ServerBuilder] Using auto instrumentation with config:`,
+                options.telemetry.instrumentation.auto
+            );
+            instrumentation.push(
+                getNodeAutoInstrumentations(
+                    options.telemetry.instrumentation.auto
+                )
+            );
+        } else if (
+            typeof options.telemetry.instrumentation.auto === 'undefined'
+        ) {
+            console.log(`[ServerBuilder] Using auto instrumentation.`);
+            instrumentation.push(getNodeAutoInstrumentations());
+        } else {
+            console.log(`[ServerBuilder] Skipping auto instrumentation.`);
+        }
+
+        if (options.telemetry.instrumentation.prisma) {
+            console.log(
+                `[ServerBuilder] Using Prisma instrumentation with config:`,
+                options.telemetry.instrumentation.prisma
+            );
+            instrumentation.push(
+                new PrismaInstrumentation(
+                    options.telemetry.instrumentation.prisma
+                )
+            );
+        } else if (
+            typeof options.telemetry.instrumentation.prisma === 'undefined'
+        ) {
+            console.log(`[ServerBuilder] Using Prisma instrumentation.`);
+            instrumentation.push(new PrismaInstrumentation());
+        } else {
+            console.log(`[ServerBuilder] Skipping Prisma instrumentation.`);
+        }
+
+        const sdk = new NodeSDK({
+            resource: new Resource({
+                [SEMRESATTRS_SERVICE_NAME]: 'casualos',
+                [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
+            }),
+            traceExporter: traceExporter,
+            metricReader: metrics,
+            instrumentations: instrumentation,
+        });
+
+        sdk.start();
+
         return this;
     }
 
@@ -984,6 +1108,7 @@ export class ServerBuilder implements SubscriptionLike {
             | 'stabilityai'
             | 'googleai'
             | 'humeai'
+            | 'sloydai'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using AI.');
@@ -1049,9 +1174,11 @@ export class ServerBuilder implements SubscriptionLike {
             generateSkybox: null,
             images: null,
             hume: null,
+            sloyd: null,
             config: this._configStore,
             metrics: this._metricsStore,
             policies: this._policyStore,
+            policyController: null,
         };
 
         if (this._openAIChatInterface && options.ai.chat) {
@@ -1112,6 +1239,15 @@ export class ServerBuilder implements SubscriptionLike {
                     options.humeai.apiKey,
                     options.humeai.secretKey
                 ),
+            };
+        }
+        if (options.sloydai) {
+            console.log('[ServerBuilder] Using Sloyd AI.');
+            this._aiConfiguration.sloyd = {
+                interface: new SloydInterface({
+                    clientId: options.sloydai.clientId,
+                    clientSecret: options.sloydai.clientSecret,
+                }),
             };
         }
         return this;
@@ -1241,6 +1377,8 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         if (this._aiConfiguration) {
+            // Set the policy controller for the AI controller since it is not set earlier
+            this._aiConfiguration.policyController = this._policyController;
             this._aiController = new AIController(this._aiConfiguration);
         }
 
@@ -2003,6 +2141,15 @@ const humeAiSchema = z.object({
         .min(1),
 });
 
+const sloydAiSchema = z.object({
+    clientId: z.string().describe('The client ID for the Sloyd AI API.').min(1),
+
+    clientSecret: z
+        .string()
+        .describe('The client secret for the Sloyd AI API.')
+        .min(1),
+});
+
 const aiSchema = z.object({
     chat: z
         .object({
@@ -2168,6 +2315,84 @@ const webauthnSchema = z.object({
         .describe('The relying parties that should be supported.'),
 });
 
+const telemetrySchema = z.object({
+    tracing: z
+        .object({
+            exporter: z
+                .enum(['none', 'console', 'otlp'])
+                .describe(
+                    'The type of exporter that should be used for traces.'
+                ),
+            url: z
+                .string()
+                .describe(
+                    'The URL that traces should be sent to. Only required for otlp exporters.'
+                )
+                .optional(),
+            headers: z
+                .record(z.string())
+                .describe(
+                    'The headers that should be sent with the traces. Only required for otlp exporters.'
+                )
+                .optional(),
+        })
+        .describe('Options for configuring tracing.'),
+
+    metrics: z
+        .object({
+            exporter: z
+                .enum(['none', 'console', 'otlp'])
+                .describe(
+                    'The type of exporter that should be used for metrics.'
+                ),
+            url: z
+                .string()
+                .describe(
+                    'The URL that metrics should be sent to. Only required for otlp exporters.'
+                )
+                .optional(),
+            headers: z
+                .record(z.string())
+                .describe(
+                    'The headers that should be sent with the metrics. Only required for otlp exporters.'
+                )
+                .optional(),
+        })
+        .describe('Options for configuring metrics.'),
+
+    instrumentation: z
+        .object({
+            auto: z
+                .record(z.object({}).passthrough())
+                .describe(
+                    'Options for auto-instrumentation. If omitted, then auto-instrumentation will be enabled with default settings. If set to null, then auto-instrumentation will be disabled.'
+                )
+                .optional()
+                .nullable(),
+
+            prisma: z
+                .object({})
+                .describe(
+                    'Options for Prisma instrumentation. If omitted, then Prisma instrumentation will be enabled with default settings. If set to null, then prisma instrumentation will be disabled.'
+                )
+                .passthrough()
+                .optional()
+                .nullable(),
+
+            redis: z
+                .object({})
+                .describe(
+                    'Options for Redis instrumentation. If omitted, then Redis instrumentation will be enabled with default settings. If set to null, then redis instrumentation will be disabled.'
+                )
+                .passthrough()
+                .optional()
+                .nullable(),
+        })
+        .describe('Options for instrumentation')
+        .optional()
+        .default({}),
+});
+
 export const optionsSchema = z.object({
     s3: s3Schema
         .describe(
@@ -2244,6 +2469,13 @@ export const optionsSchema = z.object({
             'Hume AI options. If omitted, then it will not be possible to use Hume AI.'
         )
         .optional(),
+
+    sloydai: sloydAiSchema
+        .describe(
+            'Sloyd AI options. If omitted, then it will not be possible to use Sloyd AI.'
+        )
+        .optional(),
+
     ai: aiSchema
         .describe(
             'AI configuration options. If omitted, then all AI features will be disabled.'
@@ -2264,6 +2496,12 @@ export const optionsSchema = z.object({
     webauthn: webauthnSchema
         .describe(
             'WebAuthn configuration options. If omitted, then WebAuthn features will be disabled.'
+        )
+        .optional(),
+
+    telemetry: telemetrySchema
+        .describe(
+            'Options for configuring telemetry. If omitted, then telemetry will not be enabled.'
         )
         .optional(),
 

@@ -22,6 +22,9 @@ import {
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaRecordsStore';
 
 export class PrismaRecordsStore implements RecordsStore {
     private _client: PrismaClient;
@@ -30,6 +33,7 @@ export class PrismaRecordsStore implements RecordsStore {
         this._client = client;
     }
 
+    @traced(TRACE_NAME)
     async getStudioLoomConfig(studioId: string): Promise<LoomConfig> {
         const studio = await this._client.studio.findUnique({
             where: {
@@ -47,6 +51,7 @@ export class PrismaRecordsStore implements RecordsStore {
         return zodParseConfig(studio.loomConfig, LOOM_CONFIG);
     }
 
+    @traced(TRACE_NAME)
     async updateStudioLoomConfig(
         studioId: string,
         config: LoomConfig
@@ -61,16 +66,19 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async updateRecord(record: Record): Promise<void> {
         await this._client
             .$executeRaw`UPSERT INTO public."Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "updatedAt")
             VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${record.secretHashes}, ${record.secretSalt}, NOW())`;
     }
 
+    @traced(TRACE_NAME)
     async addRecord(record: Record): Promise<void> {
         await this.updateRecord(record);
     }
 
+    @traced(TRACE_NAME)
     async getRecordByName(name: string): Promise<Record> {
         const record = await this._client.record.findUnique({
             where: {
@@ -84,6 +92,7 @@ export class PrismaRecordsStore implements RecordsStore {
      * Adds the given record key to the store.
      * @param key The key to add.
      */
+    @traced(TRACE_NAME)
     async addRecordKey(key: RecordKey): Promise<void> {
         await this._client.recordKey.create({
             data: {
@@ -100,6 +109,7 @@ export class PrismaRecordsStore implements RecordsStore {
      * @param recordName The name of the record.
      * @param hash The scrypt hash of the key that should be retrieved.
      */
+    @traced(TRACE_NAME)
     async getRecordKeyByRecordAndHash(
         recordName: string,
         hash: string
@@ -116,6 +126,7 @@ export class PrismaRecordsStore implements RecordsStore {
         return recordKey as any;
     }
 
+    @traced(TRACE_NAME)
     listRecordsByOwnerId(ownerId: string): Promise<ListedRecord[]> {
         return this._client.record.findMany({
             where: {
@@ -129,6 +140,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     listRecordsByStudioId(studioId: string): Promise<ListedRecord[]> {
         return this._client.record.findMany({
             where: {
@@ -142,6 +154,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     listRecordsByStudioIdAndUserId(
         studioId: string,
         userId: string
@@ -165,6 +178,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async addStudio(studio: Studio): Promise<void> {
         await this._client.studio.create({
             data: {
@@ -189,6 +203,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async createStudioForUser(
         studio: Studio,
         adminId: string
@@ -257,6 +272,7 @@ export class PrismaRecordsStore implements RecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getStudioById(id: string): Promise<Studio> {
         const studio = await this._client.studio.findUnique({
             where: {
@@ -295,6 +311,7 @@ export class PrismaRecordsStore implements RecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getStudioByComId(comId: string): Promise<Studio> {
         const studio = await this._client.studio.findUnique({
             where: {
@@ -333,6 +350,7 @@ export class PrismaRecordsStore implements RecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
         const studio = await this._client.studio.findUnique({
             where: {
@@ -371,6 +389,7 @@ export class PrismaRecordsStore implements RecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async updateStudio(studio: Studio): Promise<void> {
         await this._client.studio.update({
             where: {
@@ -397,6 +416,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
         await this._client
             .$executeRaw`UPSERT INTO public."StudioComIdRequest" ("id", "studioId", "userId", "requestedComId", "requestingIpAddress", "createdAt", "updatedAt")
@@ -407,6 +427,7 @@ export class PrismaRecordsStore implements RecordsStore {
         )}, NOW())`;
     }
 
+    @traced(TRACE_NAME)
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
         const assignments = await this._client.studioAssignment.findMany({
             where: {
@@ -447,6 +468,7 @@ export class PrismaRecordsStore implements RecordsStore {
         }));
     }
 
+    @traced(TRACE_NAME)
     async listStudiosForUserAndComId(
         userId: string,
         comId: string
@@ -490,6 +512,7 @@ export class PrismaRecordsStore implements RecordsStore {
         }));
     }
 
+    @traced(TRACE_NAME)
     async countStudiosInComId(comId: string): Promise<number> {
         return this._client.studio.count({
             where: {
@@ -498,6 +521,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async addStudioAssignment(assignment: StudioAssignment): Promise<void> {
         await this._client.studioAssignment.create({
             data: {
@@ -509,6 +533,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async updateStudioAssignment(assignment: StudioAssignment): Promise<void> {
         await this._client.studioAssignment.update({
             where: {
@@ -524,6 +549,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async removeStudioAssignment(
         studioId: string,
         userId: string
@@ -538,6 +564,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async listStudioAssignments(
         studioId: string,
         filters?: ListStudioAssignmentFilters
@@ -606,6 +633,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async listUserAssignments(userId: string): Promise<ListedUserAssignment[]> {
         const assignments = await this._client.studioAssignment.findMany({
             where: {
@@ -637,6 +665,7 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async countRecords(filter: CountRecordsFilter): Promise<number> {
         let where: Prisma.RecordWhereInput = {};
         if ('ownerId' in filter) {

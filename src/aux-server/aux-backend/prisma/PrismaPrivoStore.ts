@@ -3,6 +3,9 @@ import {
     PrivoStore,
 } from '@casual-simulation/aux-records/PrivoStore';
 import { PrismaClient } from './generated';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaPrivoStore';
 
 export class PrismaPrivoStore implements PrivoStore {
     private _client: PrismaClient;
@@ -11,6 +14,7 @@ export class PrismaPrivoStore implements PrivoStore {
         this._client = client;
     }
 
+    @traced(TRACE_NAME)
     async getStoredCredentials(): Promise<PrivoClientCredentials> {
         const credentials = await this._client.privoClientCredentials.findFirst(
             {
@@ -28,6 +32,7 @@ export class PrismaPrivoStore implements PrivoStore {
         return credentials;
     }
 
+    @traced(TRACE_NAME)
     async saveCredentials(credentials: PrivoClientCredentials): Promise<void> {
         await this._client.privoClientCredentials.create({
             data: {

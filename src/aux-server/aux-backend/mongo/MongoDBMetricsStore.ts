@@ -5,6 +5,8 @@ import {
     AIImageSubscriptionMetrics,
     AISkyboxMetrics,
     AISkyboxSubscriptionMetrics,
+    AISloydMetrics,
+    AISloydSubscriptionMetrics,
     ConfigurationStore,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
@@ -61,6 +63,22 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._imageMetrics = this._db.collection(IMAGE_METRICS_COLLECTION);
         this._skyboxMetrics = this._db.collection(SKYBOX_METRICS_COLLECTION);
         this._config = configStore;
+    }
+
+    getSubscriptionAiSloydMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISloydSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
+
+    getSubscriptionAiSloydMetricsByRecordName(
+        recordName: string
+    ): Promise<AISloydSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
+
+    recordSloydMetrics(metrics: AISloydMetrics): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     getSubscriptionInstMetrics(

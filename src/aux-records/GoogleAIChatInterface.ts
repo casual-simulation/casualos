@@ -12,6 +12,22 @@ import {
     AIChatInterfaceStreamResponse,
     AIChatMessage,
 } from './AIChatInterface';
+import { traced } from './tracing/TracingDecorators';
+import {
+    SpanKind,
+    SpanOptions,
+    SpanStatusCode,
+    trace,
+} from '@opentelemetry/api';
+
+const TRACE_NAME = 'GoogleAIChatInterface';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        'peer.service': 'google',
+        'service.name': 'google',
+    },
+};
 
 export interface GoogleAIChatOptions {
     /**
@@ -32,6 +48,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         this._genAI = new GoogleGenerativeAI(options.apiKey);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async chat(
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
@@ -104,6 +121,10 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 totalTokens: tokens.totalTokens,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             if (err instanceof Error) {
                 console.error(
                     '[GoogleAIChatInterface] Error occurred while generating content.',
@@ -123,6 +144,7 @@ export class GoogleAIChatInterface implements AIChatInterface {
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async *chatStream(
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
@@ -200,6 +222,10 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 totalTokens: tokens.totalTokens,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             if (err instanceof Error) {
                 console.error(
                     '[GoogleAIChatInterface] Error occurred while generating content.',

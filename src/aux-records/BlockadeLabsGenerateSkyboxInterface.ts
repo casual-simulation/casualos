@@ -6,6 +6,22 @@ import {
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
 import axios from 'axios';
+import { traced } from './tracing/TracingDecorators';
+import {
+    SpanKind,
+    SpanOptions,
+    SpanStatusCode,
+    trace,
+} from '@opentelemetry/api';
+
+const TRACE_NAME = 'BlockadeLabsGenerateSkyboxInterface';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        'peer.service': 'blockadelabs',
+        'service.name': 'blockadelabs',
+    },
+};
 
 /**
  * Implements the AI generate skybox interface for Blockade Labs (https://www.blockadelabs.com/).
@@ -19,6 +35,7 @@ export class BlockadeLabsGenerateSkyboxInterface
         this._options = options;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async generateSkybox(
         request: AIGenerateSkyboxInterfaceRequest
     ): Promise<AIGenerateSkyboxInterfaceResponse> {
@@ -68,10 +85,14 @@ export class BlockadeLabsGenerateSkyboxInterface
                 skyboxId: String(id),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             handleAxiosErrors(err);
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getSkybox(skyboxId: string): Promise<AIGetSkyboxInterfaceResponse> {
         try {
             console.log(
@@ -91,6 +112,9 @@ export class BlockadeLabsGenerateSkyboxInterface
                 thumbnailUrl: status.thumb_url,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
             handleAxiosErrors(err);
         }
     }

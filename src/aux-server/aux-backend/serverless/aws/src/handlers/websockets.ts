@@ -1,4 +1,5 @@
 import 'source-map-support/register';
+import '../Instrumentation';
 import {
     APIGatewayProxyEvent,
     APIGatewayProxyStructuredResultV2,

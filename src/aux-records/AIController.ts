@@ -18,10 +18,11 @@ import {
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
 } from './AIGenerateSkyboxInterface';
 import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
-import { MetricsStore } from './MetricsStore';
+import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
     getHumeAiFeatures,
+    getSloydAiFeatures,
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
 import { PolicyStore } from './PolicyStore';
@@ -29,15 +30,34 @@ import {
     AIHumeInterface,
     AIHumeInterfaceGetAccessTokenFailure,
 } from './AIHumeInterface';
+import { traced } from './tracing/TracingDecorators';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
+import {
+    AISloydInterface,
+    AISloydInterfaceCreateModelFailure,
+    AISloydInterfaceCreateModelSuccess,
+    AISloydInterfaceEditModelSuccess,
+} from './AISloydInterface';
+import { fromByteArray } from 'base64-js';
+import {
+    AuthorizeSubjectFailure,
+    ConstructAuthorizationContextFailure,
+    PolicyController,
+} from './PolicyController';
+import { DenialReason } from '@casual-simulation/aux-common';
+
+const TRACE_NAME = 'AIController';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
     generateSkybox: AIGenerateSkyboxConfiguration | null;
     images: AIGenerateImageConfiguration | null;
     hume: AIHumeConfiguration | null;
+    sloyd: AISloydConfiguration | null;
     metrics: MetricsStore;
     config: ConfigurationStore;
     policies: PolicyStore | null;
+    policyController: PolicyController | null;
 }
 
 export interface AIChatConfiguration {
@@ -171,6 +191,13 @@ export interface AIHumeConfiguration {
     interface: AIHumeInterface;
 }
 
+export interface AISloydConfiguration {
+    /**
+     * The interface that should be used for sloyd.ai.
+     */
+    interface: AISloydInterface;
+}
+
 /**
  * Defines a class that is able to handle AI requests.
  */
@@ -192,10 +219,12 @@ export class AIController {
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
     private _humeInterface: AIHumeInterface | null;
+    private _sloydInterface: AISloydInterface | null;
     private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
-    private _policies: PolicyStore;
+    private _policyStore: PolicyStore;
+    private _policies: PolicyController;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -241,12 +270,15 @@ export class AIController {
                 }
             }
         }
+        this._policies = configuration.policyController;
         this._humeInterface = configuration.hume?.interface;
+        this._sloydInterface = configuration.sloyd?.interface;
         this._metrics = configuration.metrics;
         this._config = configuration.config;
-        this._policies = configuration.policies;
+        this._policyStore = configuration.policies;
     }
 
+    @traced(TRACE_NAME)
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
         try {
             if (!this._chatProviders) {
@@ -379,9 +411,11 @@ export class AIController {
                 }
             }
 
-            if (this._policies) {
+            if (this._policyStore) {
                 const privacyFeatures =
-                    await this._policies.getUserPrivacyFeatures(request.userId);
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
 
                 if (!privacyFeatures.allowAI) {
                     return {
@@ -417,6 +451,10 @@ export class AIController {
                 choices: result.choices,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[AIController] Error handling chat request:', err);
             return {
                 success: false,
@@ -426,6 +464,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async *chatStream(
         request: AIChatRequest
     ): AsyncGenerator<
@@ -573,9 +612,11 @@ export class AIController {
                 }
             }
 
-            if (this._policies) {
+            if (this._policyStore) {
                 const privacyFeatures =
-                    await this._policies.getUserPrivacyFeatures(request.userId);
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
 
                 if (!privacyFeatures.allowAI) {
                     return {
@@ -616,6 +657,10 @@ export class AIController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling chat stream request:',
                 err
@@ -628,6 +673,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async generateSkybox(
         request: AIGenerateSkyboxRequest
     ): Promise<AIGenerateSkyboxResponse> {
@@ -734,6 +780,10 @@ export class AIController {
                 return result;
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling generate skybox request:',
                 err
@@ -746,6 +796,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async getSkybox(request: AIGetSkyboxRequest): Promise<AIGetSkyboxResponse> {
         try {
             if (!this._generateSkybox) {
@@ -812,6 +863,10 @@ export class AIController {
                 return result;
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling get skybox request:',
                 err
@@ -824,6 +879,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async generateImage(
         request: AIGenerateImageRequest
     ): Promise<AIGenerateImageResponse> {
@@ -986,6 +1042,10 @@ export class AIController {
                 images: result.images,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling generate image request:',
                 err
@@ -998,6 +1058,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async getHumeAccessToken(
         request: AIHumeGetAccessTokenRequest
     ): Promise<AIHumeGetAccessTokenResult> {
@@ -1052,8 +1113,172 @@ export class AIController {
                 return result;
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling get hume access token request:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async sloydGenerateModel(
+        request: AISloydGenerateModelRequest
+    ): Promise<AISloydGenerateModelResponse> {
+        try {
+            if (!this._sloydInterface) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey.',
+                };
+            }
+
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authResult =
+                await this._policies.authorizeSubjectUsingContext(
+                    context.context,
+                    {
+                        resourceKind: 'ai.sloyd',
+                        action: 'create',
+                        markers: null,
+                        subjectId: request.userId,
+                        subjectType: 'user',
+                    }
+                );
+
+            if (authResult.success === false) {
+                return authResult;
+            }
+
+            let metricsFilter: SubscriptionFilter = {};
+            console.log('context', context.context);
+            if (context.context.recordStudioId) {
+                metricsFilter.studioId = context.context.recordStudioId;
+            } else {
+                metricsFilter.ownerId = context.context.recordOwnerId;
+            }
+
+            const metrics = await this._metrics.getSubscriptionAiSloydMetrics(
+                metricsFilter
+            );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSloydAiFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                context.context.recordStudioId ? 'studio' : 'user'
+            );
+
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit Sloyd AI features.',
+                };
+            }
+
+            console.log(
+                `[AIController] [sloydGenerateModel] [maxModelsPerPeriod: ${features.maxModelsPerPeriod} totalModelsInCurrentPeriod: ${metrics.totalModelsInCurrentPeriod}]`
+            );
+
+            if (
+                typeof features.maxModelsPerPeriod === 'number' &&
+                metrics.totalModelsInCurrentPeriod >=
+                    features.maxModelsPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The request exceeds allowed subscription limits.`,
+                };
+            }
+
+            const result = await (request.baseModelId
+                ? this._sloydInterface.editModel({
+                      prompt: request.prompt,
+                      modelMimeType: request.outputMimeType,
+                      levelOfDetail: request.levelOfDetail,
+                      thumbnailPreviewExportType: request.thumbnail?.type,
+                      thumbnailPreviewSizeX: request.thumbnail?.width,
+                      thumbnailPreviewSizeY: request.thumbnail?.height,
+                      interactionId: request.baseModelId,
+                  })
+                : this._sloydInterface.createModel({
+                      prompt: request.prompt,
+                      modelMimeType: request.outputMimeType,
+                      levelOfDetail: request.levelOfDetail,
+                      thumbnailPreviewExportType: request.thumbnail?.type,
+                      thumbnailPreviewSizeX: request.thumbnail?.width,
+                      thumbnailPreviewSizeY: request.thumbnail?.height,
+                  }));
+
+            if (result.success === false) {
+                return result;
+            }
+
+            const response: AISloydGenerateModelSuccess = {
+                success: true,
+                modelId: result.interactionId,
+                mimeType: request.outputMimeType,
+                modelData:
+                    typeof result.modelData === 'string'
+                        ? result.modelData
+                        : fromByteArray(result.modelData),
+                thumbnailBase64: result.previewImage,
+            };
+
+            if ('name' in result && typeof result.name === 'string') {
+                response.name = (
+                    result as AISloydInterfaceCreateModelSuccess
+                ).name;
+                response.confidence = (
+                    result as AISloydInterfaceCreateModelSuccess
+                ).confidenceScore;
+            }
+
+            await this._metrics.recordSloydMetrics({
+                userId: context.context.recordOwnerId ?? undefined,
+                studioId: context.context.recordStudioId ?? undefined,
+                modelId: response.modelId,
+                confidence: response.confidence,
+                mimeType: response.mimeType,
+                modelData: response.modelData,
+                name: response.name,
+                thumbnailBase64: response.thumbnailBase64,
+                createdAtMs: Date.now(),
+                baseModelId: request.baseModelId,
+                modelsCreated: 1,
+            });
+
+            return response;
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling sloyd create model request:',
                 err
             );
             return {
@@ -1403,4 +1628,148 @@ export interface AIHumeGetAccessTokenFailure {
         | NotAuthorizedError
         | AIHumeInterfaceGetAccessTokenFailure['errorCode'];
     errorMessage: string;
+}
+
+export interface AISloydGenerateModelRequest {
+    /**
+     * The ID of the user that is logged in.
+     */
+    userId: string;
+
+    /**
+     * The name of the record that the request is for.
+     */
+    recordName: string;
+
+    /**
+     * The prompt that should be used to create the model.
+     */
+    prompt: string;
+
+    /**
+     * The MIME type that should be output.
+     * - `model/gltf+json` indicates that the output should be a glTF file.
+     * - `model/gltf-binary` indicates that the output should be a glb file.
+     */
+    outputMimeType: 'model/gltf+json' | 'model/gltf-binary';
+
+    /**
+     * The level of detail of the model that should be created.
+     * Higher values indicate higher levels of detail.
+     * Should be between 0.01 and 1.
+     * Defaults to 0.5.
+     */
+    levelOfDetail?: number;
+
+    /**
+     * The ID of the model that the new model should be based on.
+     */
+    baseModelId?: string | null;
+
+    /**
+     * Options for generating a thumbnail for the model.
+     * If not provided, no thumbnail will be generated.
+     */
+    thumbnail?: {
+        /**
+         * The mime type of the thumbnail.
+         */
+        type: 'image/png';
+
+        /**
+         * The desired width of the thumbnail in pixels.
+         */
+        width: number;
+
+        /**
+         * The desired height of the thumbnail in pixels.
+         */
+        height: number;
+    };
+}
+
+/**
+ * The response to a request to generate a model using the Sloyd AI interface.
+ *
+ * @dochash types/ai
+ * @docname AISloydGenerateModelResponse
+ */
+export type AISloydGenerateModelResponse =
+    | AISloydGenerateModelSuccess
+    | AISloydGenerateModelFailure;
+
+/**
+ * A successful response to a request to generate a model using the Sloyd AI interface.
+ *
+ * @dochash types/ai
+ * @docname AISloydGenerateModelSuccess
+ */
+export interface AISloydGenerateModelSuccess {
+    success: true;
+
+    /**
+     * The ID of the model that was created.
+     */
+    modelId: string;
+
+    /**
+     * The name of the model.
+     */
+    name?: string;
+
+    /**
+     * The confidence of the AI in the created model.
+     */
+    confidence?: number;
+
+    /**
+     * The MIME type of the model.
+     */
+    mimeType: 'model/gltf+json' | 'model/gltf-binary';
+
+    /**
+     * The data for the model.
+     * If the mimeType is "model/gltf+json", then this will be a JSON string.
+     * If the mimeType is "model/gltf-binary", then this will be a base64 encoded string.
+     */
+    modelData: string;
+
+    /**
+     * The base64 encoded thumbnail of the model.
+     */
+    thumbnailBase64?: string;
+}
+
+/**
+ * A failed response to a request to generate a model using the Sloyd AI interface.
+ *
+ * @dochash types/ai
+ * @docname AISloydGenerateModelFailure
+ */
+export interface AISloydGenerateModelFailure {
+    success: false;
+
+    /**
+     * The error code.
+     */
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
+        | AuthorizeSubjectFailure['errorCode']
+        | AISloydInterfaceCreateModelFailure['errorCode'];
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+
+    /**
+     * The reason why the request was denied.
+     */
+    reason?: DenialReason;
 }

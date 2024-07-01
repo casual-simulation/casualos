@@ -24,6 +24,7 @@
  */
 
 import './env';
+import './instrumentation';
 import process from 'process';
 import { Server } from './server';
 import prodConfig from './config.prod';

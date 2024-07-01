@@ -74,6 +74,8 @@ Resources:
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+            Layers:
+                - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
             Events:
                 HandleApiV2:
                     Type: Api
@@ -159,6 +161,8 @@ Resources:
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+            Layers:
+                - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
             Events:
                 SaveBranches:
                     Type: ScheduleV2
@@ -352,6 +356,8 @@ Resources:
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+            Layers:
+                - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
     HandleConnectPermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -385,6 +391,8 @@ Resources:
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+            Layers:
+                - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
     HandleDisconnectPermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -418,6 +426,8 @@ Resources:
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+            Layers:
+                - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
     HandleMessagePermission:
         Type: AWS::Lambda::Permission
         DependsOn:
