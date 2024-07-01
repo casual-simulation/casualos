@@ -54,6 +54,12 @@ export interface PrivoClientInterface {
     ): Promise<ProcessAuthorizationCallbackResponse>;
 
     /**
+     * Generates a URL that can be used to log out the user with the given token.
+     * @param token The token that should be revoked.
+     */
+    generateLogoutUrl(token: string): Promise<string>;
+
+    /**
      * Checks whether the given email address is available and allowed.
      * @param email The email.
      */
@@ -544,6 +550,19 @@ export class PrivoClient implements PrivoClientInterface {
                 })),
             },
         };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async generateLogoutUrl(token: string): Promise<string> {
+        const config = await this._config.getPrivoConfiguration();
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+
+        const url = new URL('/logout', config.publicEndpoint);
+        url.searchParams.set('id_token_hint', token);
+        url.searchParams.set('post_logout_redirect_uri', config.redirectUri);
+        return url.href;
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
