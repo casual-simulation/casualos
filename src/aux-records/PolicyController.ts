@@ -2386,12 +2386,43 @@ export interface ConstructAuthorizationContextFailure {
 }
 
 export interface AuthorizationContext {
+    /**
+     * The result of validating the record key if one was provided.
+     * Null if a record key was not provided.
+     */
     recordKeyResult: ValidatePublicRecordKeyResult | null;
+
+    /**
+     * Whether a record key was provided.
+     */
     recordKeyProvided: boolean;
+
+    /**
+     * The name of the record.
+     */
     recordName: string;
+
+    /**
+     * The ID of the user that owns the record.
+     * Null if the record is owned by a studio.
+     */
     recordOwnerId: string;
+
+    /**
+     * The ID of the studio that owns the record.
+     * Null if the record is owned by a user.
+     */
     recordStudioId: string;
+
+    /**
+     * The list of members that are assigned to the studio.
+     * Null if the record is owned by a user.
+     */
     recordStudioMembers?: ListedStudioAssignment[];
+
+    /**
+     * The subject policy that is used for the record key.
+     */
     subjectPolicy: PublicRecordKeyPolicy;
 
     /**
@@ -3069,7 +3100,7 @@ export interface AuthorizeSubjectRequest {
     /**
      * The markers that are applied to the resource.
      */
-    markers: string[];
+    markers: string[] | null;
 }
 
 export type AuthorizeSubjectsResult =

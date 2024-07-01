@@ -9969,6 +9969,7 @@ export interface StopFormAnimationOptions {
     duration: number;
 }
 
+
 /**
  * Defines an interface that represents a single chat message in a conversation with an AI.
  *
@@ -10336,9 +10337,145 @@ export interface AIHumeGetAccessTokenFailure {
         | NotLoggedInError
         | NotSupportedError
         | NotAuthorizedError
-        | 'hume_api_error'
+        | 'hume_api_error';
     errorMessage: string;
 }
+
+
+/**
+ * The response to a request to generate a model using the Sloyd AI interface.
+ * 
+ * @dochash types/ai
+ * @docname AISloydGenerateModelResponse
+ */
+export type AISloydGenerateModelResponse =
+    | AISloydGenerateModelSuccess
+    | AISloydGenerateModelFailure;
+
+/**
+ * A successful response to a request to generate a model using the Sloyd AI interface.
+ * 
+ * @dochash types/ai
+ * @docname AISloydGenerateModelSuccess
+ */
+export interface AISloydGenerateModelSuccess {
+    success: true;
+
+    /**
+     * The ID of the model that was created.
+     */
+    modelId: string;
+
+    /**
+     * The name of the model.
+     */
+    name: string;
+
+    /**
+     * The confidence of the AI in the created model.
+     */
+    confidence: number;
+
+    /**
+     * The MIME type of the model.
+     */
+    mimeType: 'model/gltf+json' | 'model/gltf-binary';
+
+    /**
+     * The data for the model.
+     * If the mimeType is "model/gltf+json", then this will be a JSON string.
+     * If the mimeType is "model/gltf-binary", then this will be a base64 encoded string.
+     */
+    modelData: string;
+
+    /**
+     * The base64 encoded thumbnail of the model.
+     */
+    thumbnailBase64?: string;
+}
+
+/**
+ * A failed response to a request to generate a model using the Sloyd AI interface.
+ * 
+ * @dochash types/ai
+ * @docname AISloydGenerateModelFailure
+ */
+export interface AISloydGenerateModelFailure {
+    success: false;
+
+    /**
+     * The error code.
+     */
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSupportedError
+        | NotAuthorizedError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+
+/**
+ * The options for generating a model using Sloyd AI.
+ * 
+ * @dochash types/ai
+ * @docname AISloydGenerateModelOptions
+ */
+export interface AISloydGenerateModelOptions {
+    /**
+     * The name of the record that should be used.
+     * If omitted, then the ID of the user will be used.
+     */
+    recordName?: string | null;
+
+    /**
+     * The prompt to use for the model.
+     */
+    prompt: string;
+
+    /**
+     * The MIME type that should be used for the model.
+     * If omitted, then "model/gltf+json" will be used.
+     */
+    outputMimeType?: 'model/gltf+json' | 'model/gltf-binary';
+
+    /**
+     * The level of detail that should be used.
+     */
+    levelOfDetail?: number;
+
+    /**
+     * The ID of the model that the new model should be based on.
+     */
+    baseModelId?: string;
+
+    /**
+     * The options for the thumbnail for the model.
+     * If omitted, then no thumbnail will be generated.
+     */
+    thumbnail?: {
+        /**
+         * The type of the thumbnail.
+         * Currently only "image/png" is supported.
+         */
+        type: 'image/png';
+
+        /**
+         * The desired width of the thumbnail in pixels.
+         */
+        width: number;
+
+        /**
+         * The desired height of the thumbnail in pixels.
+         */
+        height: number;
+    }
+}
+
 
 interface Ai {
     /**
@@ -10646,6 +10783,15 @@ interface Ai {
          * @docname ai.hume.getAccessToken
          */
         getAccessToken(): Promise<AIHumeGetAccessTokenResult>;
+    }
+
+    sloyd: {
+        /**
+         * Generates a new 3D model using [sloyd.ai](https://www.sloyd.ai/).
+         * @param request The options for the 3D model.
+         * @param options The options for the request.
+         */
+        generateModel(request: AISloydGenerateModelOptions, options?: RecordActionOptions): Promise<AISloydGenerateModelResponse>;
     }
 
     stream: {

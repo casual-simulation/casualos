@@ -1507,6 +1507,46 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.sloyd",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -1573,6 +1613,7 @@ Object {
               "role",
               "inst",
               "loom",
+              "ai.sloyd",
             ],
           },
         },
@@ -2151,6 +2192,59 @@ Object {
         "type": "object",
       },
       "name": "getHumeAccessToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/sloyd/model",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "baseModelId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "levelOfDetail": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "outputMimeType": Object {
+            "defaultValue": "model/gltf+json",
+            "hasDefault": true,
+            "type": "enum",
+            "values": Array [
+              "model/gltf+json",
+              "model/gltf-binary",
+            ],
+          },
+          "prompt": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "thumbnail": Object {
+            "optional": true,
+            "schema": Object {
+              "height": Object {
+                "type": "number",
+              },
+              "type": Object {
+                "type": "literal",
+                "value": "image/png",
+              },
+              "width": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createSloydModel",
       "origins": "api",
     },
     Object {
@@ -4272,6 +4366,46 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.sloyd",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -4338,6 +4472,7 @@ Object {
               "role",
               "inst",
               "loom",
+              "ai.sloyd",
             ],
           },
         },
@@ -4916,6 +5051,59 @@ Object {
         "type": "object",
       },
       "name": "getHumeAccessToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/sloyd/model",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "baseModelId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "levelOfDetail": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "outputMimeType": Object {
+            "defaultValue": "model/gltf+json",
+            "hasDefault": true,
+            "type": "enum",
+            "values": Array [
+              "model/gltf+json",
+              "model/gltf-binary",
+            ],
+          },
+          "prompt": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "thumbnail": Object {
+            "optional": true,
+            "schema": Object {
+              "height": Object {
+                "type": "number",
+              },
+              "type": Object {
+                "type": "literal",
+                "value": "image/png",
+              },
+              "width": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createSloydModel",
       "origins": "api",
     },
     Object {
