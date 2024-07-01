@@ -37,6 +37,10 @@ import {
 import { sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import { normalizeInstId, parseInstId } from './websockets';
+import { traced } from './tracing/TracingDecorators';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'PolicyController';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -204,6 +208,7 @@ export class PolicyController {
      * @param request The request that will be authorized.
      * @returns The authorization context that will be used to evaluate whether the request is authorized.
      */
+    @traced(TRACE_NAME)
     async constructAuthorizationContext(
         request: ConstructAuthorizationContextRequest
     ): Promise<ConstructAuthorizationContextResult> {
@@ -310,6 +315,7 @@ export class PolicyController {
      * @param context The authorization context for the request.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async authorizeUserAndInstances(
         context: AuthorizationContext,
         request: AuthorizeUserAndInstancesRequest
@@ -349,6 +355,10 @@ export class PolicyController {
                 user: userResult,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while authorizing user and instances.',
                 err
@@ -366,6 +376,7 @@ export class PolicyController {
      * @param context The authorization context for the request.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async authorizeUserAndInstancesForResources(
         context: AuthorizationContext,
         request: AuthorizeUserAndInstancesForResources
@@ -520,6 +531,10 @@ export class PolicyController {
                 results,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while authorizing user and instances for resources.',
                 err
@@ -537,6 +552,7 @@ export class PolicyController {
      * @param context The authorization context for the request.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async authorizeSubjects(
         context: AuthorizationContext,
         request: AuthorizeSubjectsRequest
@@ -581,6 +597,10 @@ export class PolicyController {
                 results: results,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while authorizing subjects.',
                 err
@@ -599,6 +619,7 @@ export class PolicyController {
      * @param context The context for the request.
      * @param request The request to authorize.
      */
+    @traced(TRACE_NAME)
     async authorizeSubject(
         context: ConstructAuthorizationContextResult,
         request: AuthorizeSubjectRequest
@@ -613,6 +634,10 @@ export class PolicyController {
                 request
             );
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while authorizing a subject.',
                 err
@@ -631,6 +656,7 @@ export class PolicyController {
      * @param context The context for the request.
      * @param request The request to authorize.
      */
+    @traced(TRACE_NAME)
     async authorizeSubjectUsingContext(
         context: AuthorizationContext,
         request: AuthorizeSubjectRequest
@@ -660,6 +686,7 @@ export class PolicyController {
      * @param context The context for the request.
      * @param request The request to authorize.
      */
+    @traced(TRACE_NAME)
     private async _authorizeSubjectUsingContext(
         context: AuthorizationContext,
         request: AuthorizeSubjectRequest
@@ -1205,6 +1232,7 @@ export class PolicyController {
      * @param userId The ID of the currently logged in user.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async listPermissions(
         recordKeyOrRecordName: string,
         userId: string,
@@ -1278,6 +1306,10 @@ export class PolicyController {
                 ),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while listing permissions.',
                 err
@@ -1297,6 +1329,7 @@ export class PolicyController {
      * @param userId The ID of the currently logged in user.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async listPermissionsForMarker(
         recordKeyOrRecordName: string,
         marker: string,
@@ -1355,6 +1388,10 @@ export class PolicyController {
                 ),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while listing permissions for marker.',
                 err
@@ -1375,6 +1412,7 @@ export class PolicyController {
      * @param userId The ID of the currently logged in user.
      * @param instances The instances that are loaded.
      */
+    @traced(TRACE_NAME)
     async listPermissionsForResource(
         recordKeyOrRecordName: string,
         resourceKind: ResourceKinds,
@@ -1434,6 +1472,10 @@ export class PolicyController {
                 ),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while listing permissions for resource.',
                 err
@@ -1450,6 +1492,7 @@ export class PolicyController {
      * Attempts to grant a permission to a marker.
      * @param request The request for the operation.
      */
+    @traced(TRACE_NAME)
     async grantMarkerPermission(
         request: GrantMarkerPermissionRequest
     ): Promise<GrantMarkerPermissionResult> {
@@ -1527,6 +1570,10 @@ export class PolicyController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while granting a marker permission.',
                 err
@@ -1543,6 +1590,7 @@ export class PolicyController {
      * Attempts to revoke a permission from a marker.
      * @param request The request for the operation.
      */
+    @traced(TRACE_NAME)
     async revokeMarkerPermission(
         request: RevokeMarkerPermissionRequest
     ): Promise<RevokeMarkerPermissionResult> {
@@ -1608,6 +1656,10 @@ export class PolicyController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while revoking a marker permission.',
                 err
@@ -1624,6 +1676,7 @@ export class PolicyController {
      * Attempts to grant a permission to a resource.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async grantResourcePermission(
         request: GrantResourcePermissionRequest
     ): Promise<GrantResourcePermissionResult> {
@@ -1719,6 +1772,10 @@ export class PolicyController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while granting a resource permission.',
                 err
@@ -1735,6 +1792,7 @@ export class PolicyController {
      * Attempts to revoke a permission from a resource.
      * @param request The request for the operation.
      */
+    @traced(TRACE_NAME)
     async revokeResourcePermission(
         request: RevokeResourcePermissionRequest
     ): Promise<RevokeResourcePermissionResult> {
@@ -1800,6 +1858,10 @@ export class PolicyController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while revoking a resource permission.',
                 err
@@ -1816,6 +1878,7 @@ export class PolicyController {
      * Attempts to revoke the permission with the given ID.
      * @param request The request for the operation.
      */
+    @traced(TRACE_NAME)
     async revokePermission(
         request: RevokePermissionRequest
     ): Promise<RevokePermissionResult> {
@@ -1831,6 +1894,10 @@ export class PolicyController {
 
             return markerResult;
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[PolicyController] A server error occurred while revoking a permission.',
                 err
@@ -1850,6 +1917,7 @@ export class PolicyController {
      * @param subjectId The ID of the user whose roles should be listed.
      * @param instances The instances that the request is being made from.
      */
+    @traced(TRACE_NAME)
     async listUserRoles(
         recordKeyOrRecordName: string,
         userId: string,
@@ -1899,6 +1967,10 @@ export class PolicyController {
                 roles: sortBy(result, (r) => r.role),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 success: false,
@@ -1915,6 +1987,7 @@ export class PolicyController {
      * @param subjectId The ID of the inst whose roles should be listed.
      * @param instances The instances that the request is being made from.
      */
+    @traced(TRACE_NAME)
     async listInstRoles(
         recordKeyOrRecordName: string,
         userId: string,
@@ -1962,6 +2035,10 @@ export class PolicyController {
                 roles: sortBy(result, (r) => r.role),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 success: false,
@@ -1978,6 +2055,7 @@ export class PolicyController {
      * @param role The name of the role whose assigments should be listed.
      * @param instances The instances that the request is being made from.
      */
+    @traced(TRACE_NAME)
     async listAssignedRoles(
         recordKeyOrRecordName: string,
         userId: string,
@@ -2025,6 +2103,10 @@ export class PolicyController {
                 assignments: result.assignments,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 success: false,
@@ -2041,6 +2123,7 @@ export class PolicyController {
      * @param startingRole The role that assignments should be returned after.
      * @param instances The instances that the request is being made from.
      */
+    @traced(TRACE_NAME)
     async listRoleAssignments(
         recordKeyOrRecordName: string,
         userId: string,
@@ -2096,6 +2179,10 @@ export class PolicyController {
                 totalCount: result.totalCount,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 success: false,
@@ -2112,6 +2199,7 @@ export class PolicyController {
      * @param request The request to grant the role.
      * @param instances The instances that the request is being made from.
      */
+    @traced(TRACE_NAME)
     async grantRole(
         recordKeyOrRecordName: string,
         userId: string,
@@ -2200,6 +2288,10 @@ export class PolicyController {
                     'Either a user ID or an instance must be specified.',
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 success: false,
@@ -2216,6 +2308,7 @@ export class PolicyController {
      * @param request The request to revoke the role.
      * @param instances The instances that the request is being made from.
      */
+    @traced(TRACE_NAME)
     async revokeRole(
         recordKeyOrRecordName: string,
         userId: string,
@@ -2296,6 +2389,10 @@ export class PolicyController {
                     'Either a user ID or an instance must be specified.',
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 success: false,

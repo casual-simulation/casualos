@@ -1,4 +1,5 @@
 // Create clients and set shared const values outside of the handler.
+import '../Instrumentation';
 import {
     GenericHttpRequest,
     GenericHttpHeaders,

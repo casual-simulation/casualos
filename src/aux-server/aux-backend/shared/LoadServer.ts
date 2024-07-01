@@ -74,6 +74,10 @@ export function constructServerBuilder(dynamicConfig: BuilderOptions = {}) {
         .useAllowedApiOrigins(allowedApiOrigins)
         .useAllowedAccountOrigins(allowedOrigins);
 
+    if (config.telemetry) {
+        builder.useTelemetry();
+    }
+
     if (config.redis && config.redis.cacheNamespace) {
         builder.useRedisCache();
     }

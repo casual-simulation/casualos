@@ -13,6 +13,9 @@ import {
 } from '@casual-simulation/aux-records/PrivoConfiguration';
 import { PrismaClient } from './generated';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaConfigurationStore';
 
 export class PrismaConfigurationStore implements ConfigurationStore {
     private _client: PrismaClient;
@@ -23,6 +26,7 @@ export class PrismaConfigurationStore implements ConfigurationStore {
         this._defaultConfiguration = defaultConfig;
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
         const result = await this._client.configuration.findUnique({
             where: {
@@ -36,6 +40,7 @@ export class PrismaConfigurationStore implements ConfigurationStore {
         );
     }
 
+    @traced(TRACE_NAME)
     async getPrivoConfiguration(): Promise<PrivoConfiguration> {
         const result = await this._client.configuration.findUnique({
             where: {
@@ -49,6 +54,7 @@ export class PrismaConfigurationStore implements ConfigurationStore {
         );
     }
 
+    @traced(TRACE_NAME)
     async getModerationConfig(): Promise<{
         allowUnauthenticatedReports?: boolean;
     }> {

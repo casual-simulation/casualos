@@ -30,6 +30,8 @@ import {
     AIHumeInterface,
     AIHumeInterfaceGetAccessTokenFailure,
 } from './AIHumeInterface';
+import { traced } from './tracing/TracingDecorators';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 import {
     AISloydInterface,
     AISloydInterfaceCreateModelFailure,
@@ -43,6 +45,8 @@ import {
     PolicyController,
 } from './PolicyController';
 import { DenialReason } from '@casual-simulation/aux-common';
+
+const TRACE_NAME = 'AIController';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
@@ -274,6 +278,7 @@ export class AIController {
         this._policyStore = configuration.policies;
     }
 
+    @traced(TRACE_NAME)
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
         try {
             if (!this._chatProviders) {
@@ -446,6 +451,10 @@ export class AIController {
                 choices: result.choices,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[AIController] Error handling chat request:', err);
             return {
                 success: false,
@@ -455,6 +464,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async *chatStream(
         request: AIChatRequest
     ): AsyncGenerator<
@@ -647,6 +657,10 @@ export class AIController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling chat stream request:',
                 err
@@ -659,6 +673,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async generateSkybox(
         request: AIGenerateSkyboxRequest
     ): Promise<AIGenerateSkyboxResponse> {
@@ -765,6 +780,10 @@ export class AIController {
                 return result;
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling generate skybox request:',
                 err
@@ -777,6 +796,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async getSkybox(request: AIGetSkyboxRequest): Promise<AIGetSkyboxResponse> {
         try {
             if (!this._generateSkybox) {
@@ -843,6 +863,10 @@ export class AIController {
                 return result;
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling get skybox request:',
                 err
@@ -855,6 +879,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async generateImage(
         request: AIGenerateImageRequest
     ): Promise<AIGenerateImageResponse> {
@@ -1017,6 +1042,10 @@ export class AIController {
                 images: result.images,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling generate image request:',
                 err
@@ -1029,6 +1058,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async getHumeAccessToken(
         request: AIHumeGetAccessTokenRequest
     ): Promise<AIHumeGetAccessTokenResult> {
@@ -1083,6 +1113,10 @@ export class AIController {
                 return result;
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AIController] Error handling get hume access token request:',
                 err

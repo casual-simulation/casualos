@@ -81,6 +81,11 @@ import {
 } from '../SubscriptionConfiguration';
 import { MetricsStore } from '../MetricsStore';
 import { AuthStore } from '../AuthStore';
+import { traced } from '../tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+
+const TRACE_NAME = 'WebsocketController';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -135,6 +140,7 @@ export class WebsocketController {
      * @param requestId The ID of the request.
      * @param message The login message.
      */
+    @traced(TRACE_NAME)
     async login(
         connectionId: string,
         requestId: number,
@@ -195,6 +201,19 @@ export class WebsocketController {
                 userId = validationResult.userId;
                 sessionId = validationResult.sessionId;
                 clientConnectionId = validationResult.connectionId;
+
+                const span = trace.getActiveSpan();
+                if (span) {
+                    span.setAttributes({
+                        [SEMATTRS_ENDUSER_ID]: userId,
+                        ['request.userId']: userId,
+                        ['request.sessionId']: sessionId,
+                        ['request.subscriptionId']:
+                            validationResult.subscriptionId,
+                        ['request.subscriptionTier']:
+                            validationResult.subscriptionTier,
+                    });
+                }
             }
 
             await this._messenger.sendMessage([connectionId], {
@@ -219,6 +238,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async disconnect(connectionId: string) {
         const loadedConnections = await this._connectionStore.getConnections(
             connectionId
@@ -293,6 +313,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async watchBranch(connectionId: string, event: WatchBranchMessage) {
         if (!event) {
             console.warn(
@@ -507,6 +528,7 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
+    @traced(TRACE_NAME)
     async unwatchBranch(
         connectionId: string,
         recordName: string | null,
@@ -600,6 +622,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async addUpdates(connectionId: string, event: AddUpdatesMessage) {
         if (!event) {
             console.warn(
@@ -1013,6 +1036,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async sendAction(connectionId: string, event: SendActionMessage) {
         if (!event) {
             console.warn(
@@ -1159,6 +1183,7 @@ export class WebsocketController {
         );
     }
 
+    @traced(TRACE_NAME)
     async watchBranchDevices(
         connectionId: string,
         recordName: string | null,
@@ -1255,6 +1280,7 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
+    @traced(TRACE_NAME)
     async unwatchBranchDevices(
         connectionId: string,
         recordName: string | null,
@@ -1270,6 +1296,7 @@ export class WebsocketController {
         );
     }
 
+    @traced(TRACE_NAME)
     async deviceCount(
         connectionId: string,
         recordName: string | null,
@@ -1339,6 +1366,7 @@ export class WebsocketController {
         });
     }
 
+    @traced(TRACE_NAME)
     async getBranchData(
         userId: string | null,
         recordName: string | null,
@@ -1393,6 +1421,7 @@ export class WebsocketController {
         };
     }
 
+    @traced(TRACE_NAME)
     async listInsts(
         recordName: string | null,
         userId: string,
@@ -1477,6 +1506,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async getUpdates(
         connectionId: string,
         recordName: string | null,
@@ -1580,6 +1610,7 @@ export class WebsocketController {
         });
     }
 
+    @traced(TRACE_NAME)
     async eraseInst(
         recordKeyOrName: string | null,
         inst: string,
@@ -1649,6 +1680,7 @@ export class WebsocketController {
      * @param headers The headers that were included in the request.
      * @param data The data included in the request.
      */
+    @traced(TRACE_NAME)
     async webhook(
         recordName: string | null,
         inst: string,
@@ -1725,6 +1757,7 @@ export class WebsocketController {
      * @param connectionId The ID of the connection that is making the request.
      * @param event The request missing permission event.
      */
+    @traced(TRACE_NAME)
     async requestMissingPermission(
         connectionId: string,
         event: RequestMissingPermissionMessage
@@ -1856,6 +1889,7 @@ export class WebsocketController {
      * @param connectionId The ID of the connection that is responding to the request.
      * @param event The response to the missing permission request.
      */
+    @traced(TRACE_NAME)
     async respondToPermissionRequest(
         connectionId: string,
         event: RequestMissingPermissionResponseMessage
@@ -1907,6 +1941,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async syncTime(
         connectionId: string,
         event: TimeSyncRequestMessage,
@@ -1928,6 +1963,7 @@ export class WebsocketController {
      * @param totalHits The total number of hits by the connection.
      * @param timeMs The current time in unix time in miliseconds.
      */
+    @traced(TRACE_NAME)
     async rateLimitExceeded(
         connectionId: string,
         retryAfter: number,
@@ -1958,6 +1994,7 @@ export class WebsocketController {
      * @param connectionId The ID of the connection that is requesting the upload.
      * @param requestId The ID of the request.
      */
+    @traced(TRACE_NAME)
     async uploadRequest(
         connectionId: string,
         requestId: number
@@ -1996,6 +2033,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async downloadRequest(
         connectionId: string,
         requestId: number,
@@ -2047,6 +2085,7 @@ export class WebsocketController {
     /**
      * Saves all of the permanent branches that are currently in memory.
      */
+    @traced(TRACE_NAME)
     async savePermanentBranches(): Promise<void> {
         const store = this._instStore;
         if (store instanceof SplitInstRecordsStore) {

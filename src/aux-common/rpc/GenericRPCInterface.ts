@@ -1,6 +1,8 @@
 import { GenericHttpRequest } from '../http/GenericHttpInterface';
 import z, { input } from 'zod';
 import { KnownErrorCodes } from './ErrorCodes';
+import type { Span } from '@opentelemetry/api';
+import type { DenialReason } from '../common/DenialReason';
 
 /**
  * Defines an interface for the context that an RPC call is made with.
@@ -25,6 +27,11 @@ export interface RPCContext {
      * The HTTP origin that the request was made from.
      */
     origin: string | null;
+
+    /**
+     * The span that the RPC call is being made in.
+     */
+    span?: Span;
 }
 
 export type ProcedureOutput =
@@ -39,6 +46,8 @@ export interface ProcedureOutputSuccess {
 export interface ProcedureOutputError {
     success: false;
     errorCode: KnownErrorCodes;
+    errorMessage: string;
+    reason?: DenialReason;
 }
 
 export interface ProcedureOutputStream

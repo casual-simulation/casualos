@@ -6,6 +6,10 @@
 
 ### :rocket: Features
 
+-   Added [OpenTelemetry](https://opentelemetry.io/) tracing to the CasualOS server.
+    -   This will greatly improve our ability to track down issues and understand what is going on with the system.
+    -   Can be configured via the `SERVER_CONFIG` environment variable in the `telemetry` key.
+    -   See the `SERVER_CONFIG` schema in [ServerBuilder.ts](https://github.com/casual-simulation/casualos/blob/develop/src/aux-server/aux-backend/shared/ServerBuilder.ts#L2171) for more information.
 -   Added the ability to generate [Sloyd.ai](https://www.sloyd.ai/) models with `ai.sloyd.generateModel(request)`.
     -   Requires a valid subscription that has been granted access to the `ai.sloyd` feature.
     -   `request` is should be an object with the following properties:
