@@ -5,6 +5,8 @@ import {
     AIImageSubscriptionMetrics,
     AISkyboxMetrics,
     AISkyboxSubscriptionMetrics,
+    AISloydMetrics,
+    AISloydSubscriptionMetrics,
     ConfigurationStore,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
@@ -34,6 +36,59 @@ export class PrismaMetricsStore implements MetricsStore {
     constructor(client: PrismaClient, configStore: ConfigurationStore) {
         this._client = client;
         this._config = configStore;
+    }
+
+    @traced(TRACE_NAME)
+    async getSubscriptionAiSloydMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISloydSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+
+        const where: Prisma.AiSloydMetricsWhereInput = {
+            createdAt: {
+                lt: new Date(metrics.currentPeriodEndMs),
+                gte: new Date(metrics.currentPeriodStartMs),
+            },
+        };
+
+        if (filter.ownerId) {
+            where.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            where.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const sloydMetrics = await this._client.aiSloydMetrics.aggregate({
+            where,
+            _sum: {
+                modelsCreated: true,
+            },
+        });
+
+        return {
+            ...metrics,
+            totalModelsInCurrentPeriod: sloydMetrics._sum.modelsCreated,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async recordSloydMetrics(metrics: AISloydMetrics): Promise<void> {
+        await this._client.aiSloydMetrics.create({
+            data: {
+                id: uuid(),
+                userId: metrics.userId,
+                studioId: metrics.studioId,
+                modelsCreated: metrics.modelsCreated,
+                confidence: metrics.confidence,
+                mimeType: metrics.mimeType,
+                modelData: metrics.modelData,
+                name: metrics.name,
+                baseModelId: metrics.baseModelId,
+                thumbnailBase64: metrics.thumbnailBase64,
+                createdAt: new Date(metrics.createdAtMs),
+            },
+        });
     }
 
     @traced(TRACE_NAME)
