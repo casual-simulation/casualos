@@ -20,7 +20,7 @@ import {
     RemoteActionResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, mergeUpdates } from 'yjs';
+import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 import {
     DeviceConnection,
     WebsocketConnectionStore,
@@ -2513,8 +2513,16 @@ export class WebsocketController {
         );
 
         if (updates) {
-            const updatesBytes = updates.updates.map((u) => toByteArray(u));
-            const mergedBytes = mergeUpdates(updatesBytes);
+            const doc = new Doc({
+                gc: true,
+            });
+
+            for (let update of updates.updates) {
+                const bytes = toByteArray(update);
+                applyUpdate(doc, bytes);
+            }
+
+            const mergedBytes = encodeStateAsUpdate(doc);
             const mergedBase64 = fromByteArray(mergedBytes);
             const permanentReplaceResult =
                 await store.perm.replaceCurrentUpdates(
