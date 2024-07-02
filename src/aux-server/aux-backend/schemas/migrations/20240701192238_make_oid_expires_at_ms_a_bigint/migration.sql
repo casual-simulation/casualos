@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE "AuthSession" ALTER COLUMN "oidExpiresAtMs" SET TYPE INT8;
+ALTER TABLE "AuthSession" ALTER COLUMN "oidExpiresAtMs" TYPE INT8;
