@@ -687,7 +687,9 @@ export class WebsocketController {
                     event.inst,
                     event.branch
                 ));
-            const updateSize = sumBy(event.updates, (u) => u.length);
+            const updateSize = sumBy(event.updates, (u) =>
+                Buffer.byteLength(u, 'utf8')
+            );
             const config = await this._config.getSubscriptionConfiguration();
             let features: FeaturesConfiguration = null;
 
