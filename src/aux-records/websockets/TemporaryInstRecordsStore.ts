@@ -211,6 +211,18 @@ export interface TemporaryInstRecordsStore {
     getDirtyBranchGeneration(): Promise<string>;
 
     /**
+     * Aquires a lock with the given ID.
+     * If successful, returns a function that will release the lock when called.
+     * If unsuccessful, returns null.
+     * @param id The id of the lock.
+     * @param timeout The timeout for the lock in miliseconds. If the lock isn't released in this time, it will be automatically released.
+     */
+    aquireLock(
+        id: string,
+        timeout: number
+    ): Promise<(() => Promise<boolean>) | null>;
+
+    /**
      * Marks the given branch as dirty in the current generation.
      * @param branch The branch that should be marked.
      */

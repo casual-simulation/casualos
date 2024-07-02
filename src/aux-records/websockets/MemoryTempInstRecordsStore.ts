@@ -16,6 +16,28 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _counts: Map<string, number> = new Map();
     private _generations: Map<string, BranchName[]> = new Map();
     private _currentGeneration: string = '0';
+    private _locks: Map<string, number> = new Map();
+
+    async aquireLock(
+        id: string,
+        timeout: number
+    ): Promise<() => Promise<boolean>> {
+        const lock = this._locks.get(id);
+        if (typeof lock === 'undefined' || lock < Date.now()) {
+            const release = Date.now() + timeout;
+            this._locks.set(id, release);
+            return async () => {
+                const current = this._locks.get(id);
+                if (current !== release) {
+                    return false;
+                }
+                this._locks.delete(id);
+                return true;
+            };
+        }
+
+        return null;
+    }
 
     async markBranchAsDirty(branch: BranchName): Promise<void> {
         const generation = await this.getDirtyBranchGeneration();

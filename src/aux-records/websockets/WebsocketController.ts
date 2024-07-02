@@ -87,6 +87,8 @@ import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
 
 const TRACE_NAME = 'WebsocketController';
 
+export const SAVE_PERMANENT_BRANCHES_LOCK = 'savePermanentBranches';
+
 /**
  * Defines a class that is able to serve causal repos in realtime.
  */
@@ -2086,24 +2088,49 @@ export class WebsocketController {
 
     /**
      * Saves all of the permanent branches that are currently in memory.
+     * @param timeout The timeout for the operation. Defaults to 30 seconds.
      */
     @traced(TRACE_NAME)
-    async savePermanentBranches(): Promise<void> {
+    async savePermanentBranches(timeout: number = 30_000): Promise<void> {
         const store = this._instStore;
         if (store instanceof SplitInstRecordsStore) {
-            const generation = await store.temp.getDirtyBranchGeneration();
-            store.temp.setDirtyBranchGeneration(uuid());
-            const branches = await store.temp.listDirtyBranches(generation);
+            const unlock = await store.temp.aquireLock(
+                SAVE_PERMANENT_BRANCHES_LOCK,
+                timeout
+            );
 
-            for (let branch of branches) {
-                if (!branch.recordName) {
-                    continue;
-                }
-                await this._saveBranchUpdates(store, branch);
+            if (!unlock) {
+                console.log(
+                    `[WebsocketController] [savePermanentBranches] Unable to acquire lock.`
+                );
+                return;
             }
+            console.log(
+                '[WebsocketController] [savePermanentBranches] Lock aquired.'
+            );
 
-            await store.temp.clearDirtyBranches(generation);
-            console.log(`[WebsocketController] Saved permanent branches.`);
+            try {
+                const generation = await store.temp.getDirtyBranchGeneration();
+                store.temp.setDirtyBranchGeneration(uuid());
+                const branches = await store.temp.listDirtyBranches(generation);
+
+                for (let branch of branches) {
+                    if (!branch.recordName) {
+                        continue;
+                    }
+                    await this._saveBranchUpdates(store, branch);
+                }
+
+                await store.temp.clearDirtyBranches(generation);
+                console.log(
+                    `[WebsocketController] [savePermanentBranches] Saved.`
+                );
+            } finally {
+                unlock();
+                console.log(
+                    '[WebsocketController] [savePermanentBranches] Released lock.'
+                );
+            }
         }
     }
 

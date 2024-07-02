@@ -11,6 +11,7 @@ import {
     SEMRESATTRS_SERVICE_NAME,
 } from '@opentelemetry/semantic-conventions';
 import { RedisClientType } from 'redis';
+import { tryAquireLock } from './RedisLock';
 
 const TRACE_NAME = 'RedisTempInstRecordsStore';
 const SPAN_OPTIONS: SpanOptions = {
@@ -53,6 +54,10 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         this._instDataExpirationSeconds = dataExpirationSeconds;
         this._instDataExpirationMode = dataExpirationMode;
         this._onlyExpireRecordlessUpdates = onlyExpireRecordlessUpdates;
+    }
+
+    aquireLock(id: string, timeout: number): Promise<() => Promise<boolean>> {
+        return tryAquireLock(this._redis, id, timeout);
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)

@@ -2,6 +2,7 @@ import {
     WebsocketController,
     isEventForDevice,
     connectionInfo,
+    SAVE_PERMANENT_BRANCHES_LOCK,
 } from './WebsocketController';
 import { MemoryWebsocketConnectionStore } from './MemoryWebsocketConnectionStore';
 import { DeviceConnection } from './WebsocketConnectionStore';
@@ -9006,6 +9007,45 @@ describe('WebsocketController', () => {
                 expect(
                     await instStore.temp.listDirtyBranches(generation)
                 ).toEqual([]);
+            });
+
+            it('should aquire a lock before trying to save branch data', async () => {
+                const generation =
+                    await instStore.temp.getDirtyBranchGeneration();
+                const beforeSaveUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    'branch'
+                );
+
+                expect(beforeSaveUpdates).toEqual({
+                    updates: [update1Base64, update2Base64],
+                    timestamps: [expect.any(Number), expect.any(Number)],
+                    instSizeInBytes:
+                        update1Base64.length + update2Base64.length,
+                });
+
+                const lock = await instStore.temp.aquireLock(
+                    SAVE_PERMANENT_BRANCHES_LOCK,
+                    100_000
+                );
+                expect(lock).not.toBeFalsy();
+
+                const p1 = server.savePermanentBranches();
+                const p2 = server.savePermanentBranches();
+
+                const [r1, r2] = await Promise.all([p1, p2]);
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    'branch'
+                );
+
+                expect(updates).toEqual(beforeSaveUpdates);
+                expect(await instStore.temp.getDirtyBranchGeneration()).toBe(
+                    generation
+                );
             });
 
             it('should start a new dirty branch generation', async () => {
