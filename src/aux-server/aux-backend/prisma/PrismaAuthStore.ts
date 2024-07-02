@@ -1278,7 +1278,10 @@ export class PrismaAuthStore implements AuthStore {
             oidProvider: session.oidProvider,
             oidAccessToken: session.oidAccessToken,
             oidIdToken: session.oidIdToken,
-            oidExpiresAtMs: session.oidExpiresAtMs,
+            oidExpiresAtMs:
+                typeof session.oidExpiresAtMs === 'bigint'
+                    ? Number(session.oidExpiresAtMs)
+                    : session.oidExpiresAtMs,
             oidRefreshToken: session.oidRefreshToken,
             oidRequestId: session.oidRequestId,
             oidScope: session.oidScope,
