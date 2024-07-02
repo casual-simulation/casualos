@@ -561,7 +561,6 @@ export class PrivoClient implements PrivoClientInterface {
 
         const url = new URL('/logout', config.publicEndpoint);
         url.searchParams.set('id_token_hint', token);
-        url.searchParams.set('post_logout_redirect_uri', config.redirectUri);
         return url.href;
     }
 
