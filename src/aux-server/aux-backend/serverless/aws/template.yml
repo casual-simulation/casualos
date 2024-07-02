@@ -140,7 +140,7 @@ Resources:
             Handler: Records.savePermanentBranches
             CodeUri: dist/handlers
             Runtime: nodejs18.x
-            MemorySize: 512
+            MemorySize: 1024
             Timeout: 900
             Description: A function that periodically saves all the permanent inst branches.
             Policies:
