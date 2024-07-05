@@ -80,6 +80,8 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
 
         if (scope === 'updateData') {
             await this._redis.expire(key, this._expireAuthorizationSeconds);
+        } else if (scope === 'token') {
+            this._expire(key);
         }
     }
 
