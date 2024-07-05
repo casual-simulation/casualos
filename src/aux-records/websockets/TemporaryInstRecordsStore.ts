@@ -163,6 +163,7 @@ export interface TemporaryInstRecordsStore {
 
     /**
      * Deletes the given number of updates from the beginning of the updates list.
+     * May also set the branch to expire.
      * @param recordName The name of the record.
      * @param inst The name of the inst.
      * @param branch The name of the branch.
@@ -209,6 +210,18 @@ export interface TemporaryInstRecordsStore {
      * Gets the current generation that dirty branches should be recorded in.
      */
     getDirtyBranchGeneration(): Promise<string>;
+
+    /**
+     * Aquires a lock with the given ID.
+     * If successful, returns a function that will release the lock when called.
+     * If unsuccessful, returns null.
+     * @param id The id of the lock.
+     * @param timeout The timeout for the lock in miliseconds. If the lock isn't released in this time, it will be automatically released.
+     */
+    aquireLock(
+        id: string,
+        timeout: number
+    ): Promise<(() => Promise<boolean>) | null>;
 
     /**
      * Marks the given branch as dirty in the current generation.

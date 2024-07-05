@@ -20,7 +20,7 @@ import {
     RemoteActionResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, mergeUpdates } from 'yjs';
+import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 import {
     DeviceConnection,
     WebsocketConnectionStore,
@@ -86,6 +86,8 @@ import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
 
 const TRACE_NAME = 'WebsocketController';
+
+export const SAVE_PERMANENT_BRANCHES_LOCK = 'savePermanentBranches';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -687,7 +689,9 @@ export class WebsocketController {
                     event.inst,
                     event.branch
                 ));
-            const updateSize = sumBy(event.updates, (u) => u.length);
+            const updateSize = sumBy(event.updates, (u) =>
+                Buffer.byteLength(u, 'utf8')
+            );
             const config = await this._config.getSubscriptionConfiguration();
             let features: FeaturesConfiguration = null;
 
@@ -2084,24 +2088,49 @@ export class WebsocketController {
 
     /**
      * Saves all of the permanent branches that are currently in memory.
+     * @param timeout The timeout for the operation. Defaults to 30 seconds.
      */
     @traced(TRACE_NAME)
-    async savePermanentBranches(): Promise<void> {
+    async savePermanentBranches(timeout: number = 30_000): Promise<void> {
         const store = this._instStore;
         if (store instanceof SplitInstRecordsStore) {
-            const generation = await store.temp.getDirtyBranchGeneration();
-            store.temp.setDirtyBranchGeneration(uuid());
-            const branches = await store.temp.listDirtyBranches(generation);
+            const unlock = await store.temp.aquireLock(
+                SAVE_PERMANENT_BRANCHES_LOCK,
+                timeout
+            );
 
-            for (let branch of branches) {
-                if (!branch.recordName) {
-                    continue;
-                }
-                await this._saveBranchUpdates(store, branch);
+            if (!unlock) {
+                console.log(
+                    `[WebsocketController] [savePermanentBranches] Unable to acquire lock.`
+                );
+                return;
             }
+            console.log(
+                '[WebsocketController] [savePermanentBranches] Lock aquired.'
+            );
 
-            await store.temp.clearDirtyBranches(generation);
-            console.log(`[WebsocketController] Saved permanent branches.`);
+            try {
+                const generation = await store.temp.getDirtyBranchGeneration();
+                store.temp.setDirtyBranchGeneration(uuid());
+                const branches = await store.temp.listDirtyBranches(generation);
+
+                for (let branch of branches) {
+                    if (!branch.recordName) {
+                        continue;
+                    }
+                    await this._saveBranchUpdates(store, branch);
+                }
+
+                await store.temp.clearDirtyBranches(generation);
+                console.log(
+                    `[WebsocketController] [savePermanentBranches] Saved.`
+                );
+            } finally {
+                unlock();
+                console.log(
+                    '[WebsocketController] [savePermanentBranches] Released lock.'
+                );
+            }
         }
     }
 
@@ -2511,8 +2540,16 @@ export class WebsocketController {
         );
 
         if (updates) {
-            const updatesBytes = updates.updates.map((u) => toByteArray(u));
-            const mergedBytes = mergeUpdates(updatesBytes);
+            const doc = new Doc({
+                gc: true,
+            });
+
+            for (let update of updates.updates) {
+                const bytes = toByteArray(update);
+                applyUpdate(doc, bytes);
+            }
+
+            const mergedBytes = encodeStateAsUpdate(doc);
             const mergedBase64 = fromByteArray(mergedBytes);
             const permanentReplaceResult =
                 await store.perm.replaceCurrentUpdates(

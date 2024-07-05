@@ -530,6 +530,41 @@ describe('SplitInstRecordsStore', () => {
             });
         });
 
+        it('should return the most recent update from the permanent store when the temp store returns an empty array of updates', async () => {
+            await perm.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test'],
+                4
+            );
+            await temp.addUpdates(recordName, instName, branchName, [], 0);
+
+            const result = await store.getCurrentUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+
+            expect(result).toEqual({
+                updates: ['test'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 4,
+            });
+
+            const tempResult = await temp.getUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(tempResult).toEqual({
+                updates: ['test'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 4,
+                branchSizeInBytes: 4,
+            });
+        });
+
         it('should return the updates from the temp store', async () => {
             await temp.addUpdates(
                 recordName,

@@ -26,6 +26,9 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where editing a tag may fail if multiple initialization updates for the same bot with different tag values were applied to the inst.
+-   Fixed an issue where different instances of the CasualOS server could try to save an inst at the same time and cause the inst to lose track of its data.
+-   Fixed an issue where CasualOS would always decide to load inst data from Redis instead of the database.
+-   Improved the CasualOS server to discard redundant updates when saving a studio inst. This will greatly help prevent hitting inst size limits in the future.
 
 ## V3.3.6
 
