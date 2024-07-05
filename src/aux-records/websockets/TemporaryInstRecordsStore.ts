@@ -163,6 +163,7 @@ export interface TemporaryInstRecordsStore {
 
     /**
      * Deletes the given number of updates from the beginning of the updates list.
+     * May also set the branch to expire.
      * @param recordName The name of the record.
      * @param inst The name of the inst.
      * @param branch The name of the branch.

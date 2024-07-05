@@ -39,7 +39,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
      * @param redis The client that should be used.
      * @param dataExpirationSeconds The number of seconds that inst data should be stored for. If null, then the data will not expire.
      * @param dataExpirationMode The expiration mode that should be used for inst data.
-     * @param onlyExpireRecordlessUpdates Whether to only expire updates that are not associated with a record.
+     * @param onlyExpireRecordlessUpdates Whether to only expire updates that are not associated with a record. This will set the expiration for the updates when they are added. All kinds of branches will have an expiration set when trimmed.
      */
     constructor(
         globalNamespace: string,
@@ -75,7 +75,19 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
     async markBranchAsDirty(branch: BranchName): Promise<void> {
         const generation = await this.getDirtyBranchGeneration();
         const key = this._generationKey(generation);
-        await this._redis.sAdd(key, JSON.stringify(branch));
+        if (this._instDataExpirationSeconds) {
+            const multi = this._redis.multi();
+            multi.sAdd(key, JSON.stringify(branch));
+
+            // Always reset the expiration for the branch size
+            // if it is for a private record.
+            // Otherwise, we can follow the expiration mode.
+            const expireMode = this._instDataExpirationMode;
+            this._expireMulti(multi, key, expireMode);
+            await multi.exec();
+        } else {
+            await this._redis.sAdd(key, JSON.stringify(branch));
+        }
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
@@ -273,7 +285,10 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             this._expireMulti(multi, key, expireMode);
             promise = multi.exec();
         } else {
-            promise = this._redis.rPush(key, finalUpdates);
+            const multi = this._redis.multi();
+            multi.rPush(key, finalUpdates);
+            multi.persist(key);
+            promise = multi.exec();
         }
 
         await Promise.all([
@@ -432,7 +447,27 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         numToDelete: number
     ): Promise<void> {
         const key = this._getUpdatesKey(recordName, inst, branch);
-        await this._redis.lPopCount(key, numToDelete);
+        if (this._instDataExpirationSeconds) {
+            const multi = this._redis.multi();
+            multi.lPopCount(key, numToDelete);
+
+            // Always reset the expiration for updates if it is for a private record.
+            // Otherwise, we can follow the expiration mode.
+            const expireMode = !recordName
+                ? this._instDataExpirationMode
+                : null;
+            this._expireMulti(multi, key, expireMode);
+            const branchSizeKey = this._getBranchSizeKey(
+                recordName,
+                inst,
+                branch
+            );
+            this._expireMulti(multi, branchSizeKey, expireMode);
+
+            await multi.exec();
+        } else {
+            await this._redis.lPopCount(key, numToDelete);
+        }
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
