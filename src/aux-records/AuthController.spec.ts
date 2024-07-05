@@ -149,6 +149,9 @@ describe('AuthController', () => {
         checkDisplayName: jest.Mock<
             ReturnType<PrivoClientInterface['checkDisplayName']>
         >;
+        generateLogoutUrl: jest.Mock<
+            ReturnType<PrivoClientInterface['generateLogoutUrl']>
+        >;
     };
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
@@ -196,6 +199,7 @@ describe('AuthController', () => {
             processAuthorizationCallback: jest.fn(),
             checkEmail: jest.fn(),
             checkDisplayName: jest.fn(),
+            generateLogoutUrl: jest.fn(),
         };
 
         relyingParty = {
@@ -6426,6 +6430,102 @@ describe('AuthController', () => {
                 success: false,
                 errorCode: 'session_is_not_revokable',
                 errorMessage: 'The session cannot be revoked.',
+            });
+        });
+
+        describe('privo', () => {
+            const requestId = 'requestId';
+            const sessionId = toBase64String('sessionId');
+            const code = 'code';
+            const userId = 'myid';
+
+            beforeEach(async () => {
+                // Jan 1, 2023 in miliseconds
+                nowMock.mockReturnValue(
+                    DateTime.utc(2023, 1, 1, 0, 0, 0).toMillis()
+                );
+
+                store.privoConfiguration = {
+                    gatewayEndpoint: 'endpoint',
+                    featureIds: {
+                        adultPrivoSSO: 'adultAccount',
+                        childPrivoSSO: 'childAccount',
+                        joinAndCollaborate: 'joinAndCollaborate',
+                        publishProjects: 'publish',
+                        projectDevelopment: 'dev',
+                        buildAIEggs: 'buildaieggs',
+                    },
+                    clientId: 'clientId',
+                    clientSecret: 'clientSecret',
+                    publicEndpoint: 'publicEndpoint',
+                    roleIds: {
+                        child: 'childRole',
+                        adult: 'adultRole',
+                        parent: 'parentRole',
+                    },
+                    clientTokenScopes: 'scope1 scope2',
+                    userTokenScopes: 'scope1 scope2',
+                    redirectUri: 'redirectUri',
+                    ageOfConsent: 18,
+                };
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
+                    expireTimeMs: DateTime.utc(2023, 1, 1, 1, 0, 0).toMillis(), // one hour after "now",
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+
+                    oidProvider: PRIVO_OPEN_ID_PROVIDER,
+                    oidAccessToken: 'accessToken',
+                    oidExpiresAtMs: DateTime.utc(
+                        2023,
+                        1,
+                        1,
+                        1,
+                        0,
+                        0
+                    ).toMillis(), // one hour after "now"
+                    oidIdToken: 'accessToken',
+                    oidRefreshToken: 'refreshToken',
+                    oidRequestId: 'oidRequestId',
+                    oidScope: 'scope1 scope2',
+                    oidTokenType: 'Bearer',
+                });
+            });
+
+            it('should include a URL that the user can be redirected to in order to logout', async () => {
+                privoClientMock.generateLogoutUrl.mockResolvedValue(
+                    'http://example.com/logout?id_token_hint=accessToken'
+                );
+
+                const sessionKey = formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    code,
+                    200
+                );
+
+                const result = await controller.revokeSession({
+                    sessionId: sessionId,
+                    sessionKey: sessionKey,
+                    userId: userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    logoutUrl:
+                        'http://example.com/logout?id_token_hint=accessToken',
+                });
+                expect(privoClientMock.generateLogoutUrl).toHaveBeenCalledWith(
+                    'accessToken'
+                );
             });
         });
 

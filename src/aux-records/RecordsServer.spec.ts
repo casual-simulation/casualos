@@ -410,6 +410,9 @@ describe('RecordsServer', () => {
         checkDisplayName: jest.Mock<
             ReturnType<PrivoClientInterface['checkDisplayName']>
         >;
+        generateLogoutUrl: jest.Mock<
+            ReturnType<PrivoClientInterface['generateLogoutUrl']>
+        >;
     };
 
     beforeEach(async () => {
@@ -463,6 +466,7 @@ describe('RecordsServer', () => {
             processAuthorizationCallback: jest.fn(),
             checkEmail: jest.fn(),
             checkDisplayName: jest.fn(),
+            generateLogoutUrl: jest.fn(),
         };
         relyingParty = {
             id: 'relying_party_id',

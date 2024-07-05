@@ -759,6 +759,15 @@ export class PrismaAuthStore implements AuthStore {
             ipAddress: session.ipAddress,
             connectionSecret: session.connectionSecret,
             revocable: session.revocable,
+
+            oidProvider: session.oidProvider,
+            oidAccessToken: session.oidAccessToken,
+            oidIdToken: session.oidIdToken,
+            oidRefreshToken: session.oidRefreshToken,
+            oidExpiresAtMs: session.oidExpiresAtMs,
+            oidRequestId: session.oidRequestId,
+            oidScope: session.oidScope,
+            oidTokenType: session.oidTokenType,
         };
         await this._client.authSession.upsert({
             where: {
@@ -1265,6 +1274,19 @@ export class PrismaAuthStore implements AuthStore {
             connectionSecret: session.connectionSecret,
 
             revocable: session.revocable,
+
+            oidProvider: session.oidProvider,
+            oidAccessToken: session.oidAccessToken,
+            oidIdToken: session.oidIdToken,
+            oidExpiresAtMs:
+                typeof session.oidExpiresAtMs === 'bigint'
+                    ? Number(session.oidExpiresAtMs)
+                    : session.oidExpiresAtMs,
+            oidRefreshToken: session.oidRefreshToken,
+            oidRequestId: session.oidRequestId,
+            oidScope: session.oidScope,
+            oidTokenType: session.oidTokenType,
+            webauthnRequestId: session.webauthnRequestId,
         };
     }
 

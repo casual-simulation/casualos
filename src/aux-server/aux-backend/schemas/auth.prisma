@@ -148,7 +148,7 @@ model AuthSession {
     oidIdToken String?
     oidRefreshToken String?
     oidScope String?
-    oidExpiresAtMs Int?
+    oidExpiresAtMs BigInt?
 
     grantedTime DateTime
     expireTime DateTime?

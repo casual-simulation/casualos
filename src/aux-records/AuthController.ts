@@ -2280,8 +2280,16 @@ export class AuthController {
 
             await this._store.saveSession(newSession);
 
+            let logoutUrl: string;
+            if (session.oidProvider === PRIVO_OPEN_ID_PROVIDER) {
+                logoutUrl = await this._privoClient.generateLogoutUrl(
+                    session.oidIdToken ?? session.oidAccessToken
+                );
+            }
+
             return {
                 success: true,
+                logoutUrl,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -3646,6 +3654,11 @@ export type RevokeSessionResult = RevokeSessionSuccess | RevokeSessionFailure;
 
 export interface RevokeSessionSuccess {
     success: true;
+
+    /**
+     * The URL that the user can be redirected to in order to logout completely.
+     */
+    logoutUrl?: string;
 }
 
 export interface RevokeSessionFailure {
