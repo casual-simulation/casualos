@@ -1,0 +1,49 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "../../temp/aux-server/dom/",
+        "composite": true,
+        "incremental": true,
+        "paths": {
+            "vue-json-tree-view": [
+                "aux-web/shared/public/VueJsonTreeView/index.ts"
+            ],
+            "three-legacy-gltf-loader": [
+                "aux-web/shared/public/three-legacy-gltf-loader/index.d.ts"
+            ],
+            "monaco-editor": [
+                "../../node_modules/@casual-simulation/monaco-editor"
+            ]
+        },
+        "lib": ["es2015", "es5", "dom"],
+        "skipLibCheck": true
+    },
+    "include": [
+        "./aux-web/**/*",
+        "./aux-backend/**/*",
+        "./shared/**/*",
+        "./typings/**/*"
+        // "./node_modules/@casual-simulation/aux-common/**/*"
+    ],
+    "exclude": [
+        "**/node_modules/**",
+        "./aux-web/aux-player/sw.ts",
+        "./aux-web/aux-player/vite.config.mts",
+        "./aux-web/aux-auth/sw.ts",
+        "./aux-web/aux-auth/vite.config.mts"
+    ],
+    "references": [
+        { "path": "../aux-common" },
+        { "path": "../aux-runtime" },
+        { "path": "../aux-records" },
+        { "path": "../aux-vm-browser" },
+        { "path": "../aux-components" },
+        { "path": "../aux-vm-node" },
+        { "path": "../aux-vm-deno" },
+        { "path": "../websocket" },
+        { "path": "../fast-json-stable-stringify" },
+        { "path": "../multi-streams-mixer" },
+        { "path": "../vue-shortkey" }
+    ]
+}
