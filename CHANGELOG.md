@@ -30,6 +30,8 @@
 -   Fixed an issue where CasualOS would always decide to load inst data from Redis instead of the database.
 -   Improved the CasualOS server to discard redundant updates when saving a studio inst. This will greatly help prevent hitting inst size limits in the future.
 -   Fixed an issue where `@onSpaceMaxSizeReached` would not be called when an inst ran out of space.
+-   Fixed an issue where meshes for hands in XR don't follow the camera when `cameraPositionOffset` is changed.
+-   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
 
 ## V3.3.6
 
