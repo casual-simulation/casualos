@@ -30,6 +30,7 @@
 -   Fixed an issue where CasualOS would always decide to load inst data from Redis instead of the database.
 -   Improved the CasualOS server to discard redundant updates when saving a studio inst. This will greatly help prevent hitting inst size limits in the future.
 -   Fixed an issue where `@onSpaceMaxSizeReached` would not be called when an inst ran out of space.
+-   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
 
 ## V3.3.6
 
