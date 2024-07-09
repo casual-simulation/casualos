@@ -164,7 +164,7 @@ Use the following to configure the meetPortal:
 
 Use the following to configure the records system:
 
--   `SERVER_CONFIG`: The configuration that should be used for the authentication backend. Should be formatted as a JSON string. Find the full list of supported properties at the bottom of [this file](https://github.com/casual-simulation/casualos/blob/feature/consolidation/src/aux-server/aux-backend/shared/ServerBuilder.ts). If not specified or left empty, then authentication features will be automatically disabled.
+-   `SERVER_CONFIG`: The configuration that should be used for the authentication backend. Should be formatted as a JSON string. Find the full list of supported properties at the bottom of [this file](https://github.com/casual-simulation/casualos/blob/feature/server-config-cli/src/aux-records/ServerConfig.ts). If not specified or left empty, then authentication features will be automatically disabled.
 -   `AUTH_API_ENDPOINT`: The HTTP endpoint that the auth site should use to access the records API.
 -   `AUTH_WEBSOCKET_ENDPOINT`: The HTTP endpoint that the auth site should use to access the records websocket API.
 -   `AUTH_WEBSOCKET_PROTOCOL`: The connection protocol that should be used for the records websocket API. Possible options are `websocket` and `apiary-aws`. The `websocket` protocol works with Raspberry PIs and self-hosted servers (like in development). The `apiary-aws` protocol works with [CasualOS apiaries hosted on AWS](https://github.com/casual-simulation/casualos). Defaults to `websocket`.
