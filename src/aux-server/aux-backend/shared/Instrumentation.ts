@@ -13,15 +13,15 @@ import {
     SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { PrismaInstrumentation } from '@prisma/instrumentation';
-import type { BuilderOptions } from './ServerBuilder';
 import { RedisInstrumentation } from '@opentelemetry/instrumentation-redis-4';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { ServerConfig } from '@casual-simulation/aux-records';
 
 /**
  * Configures instrumentation for a server.
  * @param config The configuration that should be used.
  */
-export function setupInstrumentation(options: BuilderOptions) {
+export function setupInstrumentation(options: ServerConfig) {
     if (!options.telemetry) {
         return;
     }

@@ -54,8 +54,27 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     hasMainViewport: boolean = false;
     hasMiniViewport: boolean = false;
+    /**
+     * Whether the map portal has been loaded and displayed.
+     */
     hasMap: boolean = false;
+
+    /**
+     * Whether the map is supposed to be loading.
+     * This is set to true during the loading process, but if it is set to false then the loading process can be interrupted.
+     */
+    wantsMap: boolean = false;
+
+    /**
+     * Whether the mini map has been loaded and displayed.
+     */
     hasMiniMap: boolean = false;
+
+    /**
+     * Whether the mini map is supposed to be loading.
+     * This is set to true during the loading process, but if it is set to false then the loading process can be interrupted.
+     */
+    wantsMiniMap: boolean = false;
     menu: DimensionItem[] = [];
     extraMenuStyle: Partial<HTMLElement['style']> = {};
 
@@ -296,9 +315,14 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
      * @param externalRenderer The external renderer that should be used to integrate with the map's rendering system.
      */
     async enableMapView(externalRenderer?: __esri.ExternalRenderer) {
+        console.log('[PlayerGameView] Enable Map');
+        this.wantsMap = true;
         await loadMapModules();
 
-        console.log('[PlayerGameView] Enable Map');
+        if (!this.wantsMap) {
+            return;
+        }
+
         if (hasValue(appManager.config.arcGisApiKey)) {
             Config.apiKey = appManager.config.arcGisApiKey;
         }
@@ -346,13 +370,19 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         } catch (err) {
             console.warn('[PlayerGameView] Failed to load the map view.', err);
             this.hasMap = false;
+            this.wantsMap = false;
         }
     }
 
     async enableMiniMapView(externalRenderer?: __esri.ExternalRenderer) {
+        console.log('[PlayerGameView] Enable Mini Map');
+        this.wantsMiniMap = true;
         await loadMapModules();
 
-        console.log('[PlayerGameView] Enable Mini Map');
+        if (!this.wantsMiniMap) {
+            return;
+        }
+
         if (hasValue(appManager.config.arcGisApiKey)) {
             Config.apiKey = appManager.config.arcGisApiKey;
         }
@@ -402,6 +432,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         } catch (err) {
             console.warn('[PlayerGameView] Failed to load the map view.', err);
             this.hasMiniMap = false;
+            this.wantsMiniMap = false;
         }
     }
 
@@ -415,6 +446,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 this._mapView.destroy();
                 this._mapView = null;
             }
+            this.wantsMap = false;
             this.hasMap = false;
         } catch (err) {
             console.warn(
@@ -434,6 +466,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 this._miniMapView.destroy();
                 this._miniMapView = null;
             }
+            this.wantsMiniMap = false;
             this.hasMiniMap = false;
         } catch (err) {
             console.warn(

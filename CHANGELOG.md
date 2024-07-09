@@ -22,6 +22,7 @@
             -   `type` - Should always be `"image/png"`
             -   `width` - The desired width of the thumbnail in pixels.
             -   `height` - The desired height of the thumbnail in pixels.
+-   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
 
 ### :bug: Bug Fixes
 
@@ -32,6 +33,7 @@
 -   Fixed an issue where `@onSpaceMaxSizeReached` would not be called when an inst ran out of space.
 -   Fixed an issue where meshes for hands in XR don't follow the camera when `cameraPositionOffset` is changed.
 -   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
+-   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
 
 ## V3.3.6
 
