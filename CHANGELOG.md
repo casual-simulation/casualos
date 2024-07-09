@@ -22,6 +22,7 @@
             -   `type` - Should always be `"image/png"`
             -   `width` - The desired width of the thumbnail in pixels.
             -   `height` - The desired height of the thumbnail in pixels.
+-   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
 
 ### :bug: Bug Fixes
 
