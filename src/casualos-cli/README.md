@@ -35,6 +35,8 @@ Commands:
   status                               Get the status of the current session.
   query [options] [procedure] [input]  Query the CasualOS API
   repl [options]                       Start a REPL for the CasualOS API
+  generate-server-config [options]     Generate a server config for CasualOS.
+  validate-server-config [options]     Validate a server config for CasualOS.
   help [command]                       display help for command
 ```
 
@@ -115,6 +117,35 @@ Options:
 
 The CasualOS REPL allows you to interact with the CasualOS API using a Read-Eval-Print Loop (REPL).
 It supports JavaScript and has a special function, query([procedure], [input]), that can be used to query the API.
+```
+
+#### `generate-server-config`
+
+```
+$ casualos help generate-server-config
+
+Usage: casualos generate-server-config [options]
+
+Generate a server config for CasualOS.
+
+Options:
+  -p, --pretty  Pretty print the output.
+  -h, --help    display help for command
+```
+
+#### `validate-server-config`
+
+```
+$ casualos help validate-server-config
+
+Usage: casualos validate-server-config [options]
+
+Validate a server config for CasualOS.
+
+Options:
+  --json <config>    The JSON to validate.
+  -f, --file <file>  The file to validate.
+  -h, --help         display help for command
 ```
 
 ### REPL Usage
