@@ -33,17 +33,17 @@ const wristOffsets = {
     generic_hand_right: {
         positionOffset: new Vector3(0.1, 0.05, -0.05),
         rotationOffset: new Euler(
-            -90 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD,
+            -120 * ThreeMath.DEG2RAD,
+            90 * ThreeMath.DEG2RAD,
             -90 * ThreeMath.DEG2RAD
         ),
     },
     generic_hand_left: {
         positionOffset: new Vector3(-0.1, 0.05, -0.05),
         rotationOffset: new Euler(
-            -90 * ThreeMath.DEG2RAD,
-            0 * ThreeMath.DEG2RAD,
-            90 * ThreeMath.DEG2RAD
+            -120 * ThreeMath.DEG2RAD,
+            90 * ThreeMath.DEG2RAD,
+            -90 * ThreeMath.DEG2RAD
         ),
     },
     generic_controller_right: {
