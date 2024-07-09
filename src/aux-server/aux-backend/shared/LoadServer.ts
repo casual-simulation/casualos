@@ -1,7 +1,8 @@
-import { BuilderOptions, ServerBuilder } from './ServerBuilder';
+import { ServerBuilder } from './ServerBuilder';
 import { getAllowedAPIOrigins, allowedOrigins } from './EnvUtils';
 import { merge } from 'lodash';
 import { loadConfig } from './ConfigUtils';
+import { ServerConfig } from '@casual-simulation/aux-records';
 
 declare var S3_ENDPOINT: string;
 declare var DEVELOPMENT: boolean;
@@ -19,7 +20,7 @@ export const WEBSOCKET_URL = process.env.WEBSOCKET_URL;
  * @returns
  */
 export function constructServerlessAwsServerBuilder() {
-    const dynamicConfig: BuilderOptions = {
+    const dynamicConfig: ServerConfig = {
         s3: {
             region: REGION,
             filesBucket: FILES_BUCKET,
@@ -48,7 +49,7 @@ export function constructServerlessAwsServerBuilder() {
 /**
  * Loads the server and configures it.
  */
-export function constructServerBuilder(dynamicConfig: BuilderOptions = {}) {
+export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
     const staticConfig = loadConfig();
 
     const config = merge({}, staticConfig, dynamicConfig);

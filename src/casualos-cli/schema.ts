@@ -5,6 +5,7 @@ import type {
     DiscriminatedUnionSchemaMetadata,
     EnumSchemaMetadata,
     ObjectSchemaMetadata,
+    RecordSchemaMetadata,
     SchemaMetadata,
     UnionSchemaMetadata,
 } from '../aux-common';
@@ -93,6 +94,8 @@ export async function askForInputs(
             return await askForEnumInputs(inputs, name, repl);
         } else if (inputs.type === 'union') {
             return await askForUnionInputs(inputs, name, repl);
+        } else if (inputs.type === 'record') {
+            return await askForRecordInputs(inputs, name, repl);
         } else if (inputs.type === 'any') {
             return await askForAnyInputs(name, repl);
         }
@@ -139,6 +142,11 @@ async function askForObjectInputs(
     name: string,
     repl: repl.REPLServer
 ): Promise<any> {
+    const allowed = await askForOptionalInputs(inputs, name, repl);
+    if (!allowed) {
+        return inputs.defaultValue;
+    }
+
     const result: any = {};
     for (let key in inputs.schema) {
         const prop = inputs.schema[key];
@@ -153,24 +161,12 @@ async function askForArrayInputs(
     name: string,
     repl: repl.REPLServer
 ): Promise<any[]> {
-    const result: any[] = [];
-
-    if (inputs.optional || inputs.nullable) {
-        const response = await prompts({
-            type: 'confirm',
-            name: 'continue',
-            message: `Do you want to enter an array for ${name}?`,
-            onState,
-        });
-
-        if (!response.continue) {
-            if (inputs.nullable) {
-                return null;
-            } else {
-                return undefined;
-            }
-        }
+    const allowed = await askForOptionalInputs(inputs, name, repl);
+    if (!allowed) {
+        return inputs.defaultValue;
     }
+
+    const result: any[] = [];
 
     let length = 0;
     if (typeof inputs.exactLength === 'number') {
@@ -285,6 +281,37 @@ async function askForUnionInputs(
     }
 }
 
+async function askForRecordInputs(
+    inputs: RecordSchemaMetadata,
+    name: string,
+    repl: repl.REPLServer
+): Promise<any> {
+    const allowed = await askForOptionalInputs(inputs, name, repl);
+    if (!allowed) {
+        return inputs.defaultValue;
+    }
+
+    const result: any = {};
+
+    while (true) {
+        let key = await prompts({
+            type: 'text',
+            name: 'key',
+            message: `Enter a property name for ${name}.`,
+        });
+
+        if (!key.key) {
+            break;
+        }
+
+        const prop = inputs.valueSchema;
+        const value = await askForInputs(prop, `${name}.${key.key}`, repl);
+        result[key.key] = value;
+    }
+
+    return result;
+}
+
 async function askForDiscriminatedUnionInputs(
     inputs: DiscriminatedUnionSchemaMetadata,
     name: string,
@@ -391,4 +418,29 @@ async function askForAnyInputs(
         name,
         repl
     );
+}
+
+async function askForOptionalInputs(
+    inputs: SchemaMetadata,
+    name: string,
+    repl: repl.REPLServer
+): Promise<true | undefined | null> {
+    if (inputs.optional || inputs.nullable) {
+        const response = await prompts({
+            type: 'confirm',
+            name: 'continue',
+            message: `Do you want to enter a value for ${name}?`,
+            onState,
+        });
+
+        if (!response.continue) {
+            if (inputs.nullable) {
+                return null;
+            } else {
+                return undefined;
+            }
+        }
+    }
+
+    return true;
 }
