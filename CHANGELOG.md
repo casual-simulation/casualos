@@ -22,6 +22,7 @@
             -   `type` - Should always be `"image/png"`
             -   `width` - The desired width of the thumbnail in pixels.
             -   `height` - The desired height of the thumbnail in pixels.
+-   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
 
 ### :bug: Bug Fixes
 
