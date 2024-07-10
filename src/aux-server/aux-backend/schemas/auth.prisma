@@ -79,6 +79,9 @@ model User {
     comIdRequests StudioComIdRequest[]
     authenticators UserAuthenticator[]
 
+    xpUser XpUser?
+    isXpAdmin Boolean?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -874,3 +877,156 @@ model StudioComIdRequest {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
+
+model XpUser {
+    id String @id @db.Uuid
+
+    userId String @db.Uuid @unique
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
+
+    accountId String @unique
+    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpUser_accountId_fkey1")
+
+    // The rate at which the user is requested to be paid per gig.
+    // Should have the same currency as the account.
+    requestedRate Int
+
+    issuedContracts XpContract[] @relation("IssuerUser")
+    heldContracts XpContract[] @relation("HoldingUser")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Represents a account of money that can be used to track entries and transactions
+// The current balance of the account is the sum of all entries
+model XpAccount {
+    id String @id @db.Uuid
+
+    entries XpAccountEntry[]
+
+    // The user that the account is for
+    user XpUser?
+
+    // The contract that the account is for
+    contract XpContract?
+
+    // The currency of transactions in the account
+    currency String
+
+    // Time that the account was closed
+    // Fail-safe to help prevent making entries for accounts that are closed
+    // (i.e. accounts for closed contracts)
+    closedTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Get current balance
+// SELECT balance FROM XpAccountEntry
+// WHERE accountId = $accountId
+// ORDER BY time DESC
+// LIMIT 1;
+
+// Represents the addition or withdrawl of money from an account
+model XpAccountEntry {
+    id String @id @db.Uuid
+
+    // The ID of the account
+    accountId String
+    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "XpAccountEntry_accountId_fkey1")
+
+    // The number of cents that were added to the ledger
+    // positive for incoming money (deposits)
+    // negative for outgoing money (withdrawals)
+    amount Int
+
+    // The new balance of the account after the entry was made
+    // If two entries have the same balance, or their amounts sum to conflicing balances,
+    // then the entries are in conflict and should be resolved
+    balance Int
+
+    // The time that the entry was created
+    time DateTime
+
+    // Entries with the same transaction ID are part of the same transaction
+    // makes it easy to track the flow of money between accounts
+    transactionId String @db.Uuid
+
+    // The note for the entry
+    note String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([transactionId])
+}
+
+// A contract is a promise of work at a certain rate
+model XpContract {
+    id String @id @db.Uuid
+
+    issuerUserId String @db.Uuid
+    issuer XpUser @relation(fields: [issuerUserId], references: [userId], onDelete: Cascade, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
+
+    holdingUserId String @db.Uuid
+    holdingUser XpUser @relation(fields: [holdingUserId], references: [userId], onDelete: Cascade, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
+
+    // The rate at which the contract is paid
+    // This determines the number of gigs that can be paid for the contract
+    // The currency should always be the same as the account
+    rate Int
+
+    // The description of the contract
+    description String
+
+    // The status of the contract
+    // "open" - the contract is open and can be invoiced
+    // "closed" - the contract is closed and cannot be invoiced
+    status String
+
+    // The account that holds the money allocated to the contract
+    accountId String @db.Uuid @unique
+    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "XpContract_accountId_fkey1")
+
+    invoices XpInvoice[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// An invoice is a request for payment for part of a contract
+model XpInvoice {
+    id String @id @db.Uuid
+
+    contractId String @db.Uuid
+    contract XpContract @relation(fields: [contractId], references: [id], onDelete: Cascade, map: "XpInvoice_contractId_fkey1")
+
+    // The amount being invoiced
+    // the amount / rate = number of gigs being invoiced
+    // currency is the same as the contract account currency
+    amount Int
+
+    // The status of the invoice
+    // "open" - the invoice has been created but not yet paid
+    // "paid" - the invoice has been paid
+    // "void" - the invoice has been cancelled
+    status String
+
+    // The reason why the invoice was voided
+    // "rejected" - the invoice was rejected by the receiver
+    // "cancelled" - the invoice was cancelled by the issuer
+    voidReason String?
+
+    // The ID of the transaction that paid the invoice
+    transactionId String? @db.Uuid
+
+    // Additional information about the invoice
+    note String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// gigs * rate = amount
