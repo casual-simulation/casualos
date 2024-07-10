@@ -1308,7 +1308,7 @@ export default class SystemPortal extends Vue {
         // }
 
         if (this.isMakingNewTag) {
-            appManager.systemPortal.addPinnedTag(this.newTag);
+            this.selectTag({ name: this.newTag });
             this.newTag = '';
             this.isMakingNewTag = false;
         } else {
