@@ -929,17 +929,17 @@ export class WebsocketController {
                           event.recordName,
                           event.inst
                       );
-                if (currentSize + updateSize > maxInstSize) {
-                    await this.sendError(connectionId, -1, {
-                        success: false,
-                        errorCode: features
-                            ? 'subscription_limit_reached'
-                            : 'not_authorized',
-                        errorMessage:
-                            'The maximum number of bytes per inst has been reached.',
+                const neededSizeInBytes = currentSize + updateSize;
+                if (neededSizeInBytes > maxInstSize) {
+                    await this._messenger.sendMessage([connectionId], {
+                        type: 'repo/updates_received',
                         recordName: event.recordName,
                         inst: event.inst,
                         branch: event.branch,
+                        updateId: event.updateId,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: maxInstSize,
+                        neededBranchSizeInBytes: neededSizeInBytes,
                     });
                     return;
                 }

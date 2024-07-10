@@ -23,6 +23,7 @@
             -   `width` - The desired width of the thumbnail in pixels.
             -   `height` - The desired height of the thumbnail in pixels.
 -   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
+-   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
 
 ### :bug: Bug Fixes
 
@@ -30,6 +31,10 @@
 -   Fixed an issue where different instances of the CasualOS server could try to save an inst at the same time and cause the inst to lose track of its data.
 -   Fixed an issue where CasualOS would always decide to load inst data from Redis instead of the database.
 -   Improved the CasualOS server to discard redundant updates when saving a studio inst. This will greatly help prevent hitting inst size limits in the future.
+-   Fixed an issue where `@onSpaceMaxSizeReached` would not be called when an inst ran out of space.
+-   Fixed an issue where meshes for hands in XR don't follow the camera when `cameraPositionOffset` is changed.
+-   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
+-   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
 
 ## V3.3.6
 
