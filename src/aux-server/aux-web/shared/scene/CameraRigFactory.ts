@@ -20,6 +20,8 @@ export const Perspective_FOV: number = 60;
 export const Perspective_NearClip: number = 0.1;
 export const Perspective_FarClip: number = 20000;
 export const Perspective_DefaultPosition = { x: 5, y: 5, z: 5 };
+export const Perspective_MinZoom: number = 0;
+export const Perspective_MaxZoom: number = Infinity;
 
 export declare type CameraType = 'perspective' | 'orthographic';
 
