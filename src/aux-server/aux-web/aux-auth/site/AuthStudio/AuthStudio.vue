@@ -162,6 +162,16 @@
                     <md-table-cell>loom.privateKey</md-table-cell>
                     <md-table-cell>{{ '(secret)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row v-if="allowHume" @click="updateHumeConfig()">
+                    <md-tooltip>The API key that used to access Hume.</md-tooltip>
+                    <md-table-cell>loom.apiKey</md-table-cell>
+                    <md-table-cell>{{ originalHumeApiKey || '(not set)' }}</md-table-cell>
+                </md-table-row>
+                <md-table-row v-if="allowHume" @click="updateHumeConfig()">
+                    <md-tooltip>The Secret API key that used to access Hume.</md-tooltip>
+                    <md-table-cell>loom.secretKey</md-table-cell>
+                    <md-table-cell>{{ '(secret)' }}</md-table-cell>
+                </md-table-row>
             </md-table>
         </div>
 
@@ -408,6 +418,35 @@
                     <label for="loomPrivateKey">Loom Private Key</label>
                     <md-textarea id="loomPrivateKey" v-model="loomPrivateKey"></md-textarea>
                     <field-errors field="loomPrivateKey" :errors="errors" />
+                </md-field>
+                <field-errors :field="null" :errors="errors" />
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="saveStudio()">
+                    <md-progress-spinner
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        v-if="isSavingStudio"
+                    >
+                    </md-progress-spinner>
+                    <span v-else>Save</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showUpdateHumeConfig" @md-closed="cancelUpdateStudio()">
+            <md-dialog-title> Update Hume Config</md-dialog-title>
+            <md-dialog-content>
+                <md-field :class="humeApiKeyFieldClass">
+                    <label for="humeApiKey">Loom Public App ID</label>
+                    <md-input id="humeApiKey" v-model="humeApiKey" type="text"></md-input>
+                    <field-errors field="humeConfig.apiKey" :errors="errors" />
+                </md-field>
+                <md-field :class="humeSecretKeyFieldClass">
+                    <label for="humeSecretKey">Hume Secret Key</label>
+                    <md-textarea id="humeSecretKey" v-model="humeSecretKey"></md-textarea>
+                    <field-errors field="humeConfig.secretKey" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />
             </md-dialog-content>
