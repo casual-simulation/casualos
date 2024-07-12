@@ -2518,6 +2518,44 @@ describe('RecordsController', () => {
             });
         });
 
+        it('should be able to update the hume config', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    humeConfig: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const humeConfig = await store.getStudioHumeConfig('studioId');
+            expect(humeConfig).toEqual({
+                apiKey: 'apiKey',
+                secretKey: 'secretKey',
+            });
+        });
+
         it('should do nothing if no updates are provided', async () => {
             await store.updateStudio({
                 id: 'studioId',
@@ -2650,6 +2688,9 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: false,
                     },
+                    humeFeatures: {
+                        allowed: false,
+                    },
                 },
             });
         });
@@ -2702,6 +2743,9 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: false,
                     },
+                    humeFeatures: {
+                        allowed: false,
+                    },
                 },
             });
         });
@@ -2751,6 +2795,9 @@ describe('RecordsController', () => {
                     },
                     loomFeatures: {
                         allowed: true,
+                    },
+                    humeFeatures: {
+                        allowed: false,
                     },
                 },
             });
@@ -2807,8 +2854,125 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: true,
                     },
+                    humeFeatures: {
+                        allowed: false,
+                    },
                     loomConfig: {
                         appId: 'appId',
+                    },
+                },
+            });
+        });
+
+        it('should include the configured hume features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                hume: {
+                                    allowed: true,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                },
+            });
+        });
+
+        it('should include the hume config if hume features are allowed', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                hume: {
+                                    allowed: true,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.updateStudioHumeConfig('studioId', {
+                apiKey: 'apiKey',
+                secretKey: 'secretKey',
+            });
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    humeConfig: {
+                        apiKey: 'apiKey',
                     },
                 },
             });

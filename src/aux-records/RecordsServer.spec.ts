@@ -662,6 +662,10 @@ describe('RecordsServer', () => {
             },
             hume: {
                 interface: humeInterface,
+                config: {
+                    apiKey: 'globalApiKey',
+                    secretKey: 'globalSecretKey',
+                },
             },
             sloyd: {
                 interface: sloydInterface,
@@ -670,6 +674,7 @@ describe('RecordsServer', () => {
             metrics: store,
             policies: store,
             policyController: policyController,
+            records: store,
         });
         moderationController = new ModerationController(store, store, store);
         loomController = new LoomController({
@@ -12767,6 +12772,56 @@ describe('RecordsServer', () => {
                 },
                 headers: apiCorsHeaders,
             });
+            expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                apiKey: 'globalApiKey',
+                secretKey: 'globalSecretKey',
+            });
+        });
+
+        describe('studio', () => {
+            const studioId = 'studioId';
+
+            beforeEach(async () => {
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'myStudio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
+
+            it('should be able to use a studios hume token', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/ai/hume/token?recordName=${studioId}`,
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        accessToken: 'token',
+                        expiresIn: 3600,
+                        issuedAt: 1234567890,
+                        tokenType: 'Bearer',
+                    },
+                    headers: apiCorsHeaders,
+                });
+                expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
         });
 
         testOrigin('GET', `/api/v2/ai/hume/token`, () =>
@@ -13160,6 +13215,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         loomFeatures: {
                             allowed: false,
                         },
+                        humeFeatures: {
+                            allowed: true,
+                        },
                     },
                 },
                 headers: accountCorsHeaders,
@@ -13376,6 +13434,118 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
                 stripeCustomerId: 'customerId',
+            });
+        });
+
+        it('should update the loom config', async () => {
+            const result = await server.handleHttpRequest(
+                httpPut(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        id: 'studioId',
+                        displayName: 'new name',
+                        logoUrl: 'http://example.com/new-url',
+                        comIdConfig: {
+                            allowedStudioCreators: 'only-members',
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'new bootstrap',
+                        },
+                        loomConfig: {
+                            appId: 'appId',
+                            privateKey: 'secret',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const studio = await store.getStudioById('studioId');
+
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                logoUrl: 'http://example.com/new-url',
+                comIdConfig: {
+                    allowedStudioCreators: 'only-members',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'new bootstrap',
+                },
+                comId: 'comId',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeCustomerId: 'customerId',
+            });
+
+            const loomConfig = await store.getStudioLoomConfig('studioId');
+            expect(loomConfig).toEqual({
+                appId: 'appId',
+                privateKey: 'secret',
+            });
+        });
+
+        it('should update the hume config', async () => {
+            const result = await server.handleHttpRequest(
+                httpPut(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        id: 'studioId',
+                        displayName: 'new name',
+                        logoUrl: 'http://example.com/new-url',
+                        comIdConfig: {
+                            allowedStudioCreators: 'only-members',
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'new bootstrap',
+                        },
+                        humeConfig: {
+                            apiKey: 'apiKey',
+                            secretKey: 'secretKey',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const studio = await store.getStudioById('studioId');
+
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                logoUrl: 'http://example.com/new-url',
+                comIdConfig: {
+                    allowedStudioCreators: 'only-members',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'new bootstrap',
+                },
+                comId: 'comId',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeCustomerId: 'customerId',
+            });
+
+            const humeConfig = await store.getStudioHumeConfig('studioId');
+            expect(humeConfig).toEqual({
+                apiKey: 'apiKey',
+                secretKey: 'secretKey',
             });
         });
 

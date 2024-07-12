@@ -712,6 +712,11 @@ export interface FeaturesConfiguration {
      * The configuration for loom features.
      */
     loom?: StudioLoomFeaturesConfiguration;
+
+    // /**
+    //  * The configuration for studio hume features.
+    //  */
+    // hume?: StudioHumeFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
