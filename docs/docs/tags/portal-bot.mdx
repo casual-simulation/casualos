@@ -312,8 +312,17 @@ For the mapPortal and miniMapPortal, the value is measured in meters.
 
 #### Possible values are:
 <PossibleValuesTable>
+  <PossibleValueCode value='0.4'>
+    (Default for grid portals with <TagLink tag='portalCameraType'>orthographic camera types</TagLink>)
+  </PossibleValueCode>
+  <PossibleValueCode value='0'>
+    (Default for grid portals with <TagLink tag='portalCameraType'>perspective camera types</TagLink>)
+  </PossibleValueCode>
+  <PossibleValueCode value='-Infinity'>
+    (Default for map portals)
+  </PossibleValueCode>
   <PossibleValue value='Any Number > 0'>
-    Minimum value that the camera zoom to. (Default is 0.4 for the grid portals and -Infinity for the map portals)
+    Minimum value that the camera zoom to.
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -330,8 +339,17 @@ For the mapPortal and miniMapPortal, the value is measured in meters.
 
 #### Possible values are:
 <PossibleValuesTable>
+<PossibleValueCode value='80'>
+    (Default for grid portals with <TagLink tag='portalCameraType'>orthographic camera types</TagLink>)
+  </PossibleValueCode>
+  <PossibleValueCode value='Infinity'>
+    (Default for grid portals with <TagLink tag='portalCameraType'>perspective camera types</TagLink>)
+  </PossibleValueCode>
+  <PossibleValueCode value='EARTH_RADIUS * 4'>
+    (Default for map portals)
+  </PossibleValueCode>
   <PossibleValue value='Any Number > 0'>
-    Maximum value that the camera can zoom to. (Default is 80 for the grid portals and EARTH_RADIUS * 4 for the map portals)
+    Maximum value that the camera can zoom to.
   </PossibleValue>
 </PossibleValuesTable>
 
