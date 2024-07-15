@@ -193,6 +193,20 @@ export interface RecordsStore {
      * @param config The config that should be updated for the studio.
      */
     updateStudioLoomConfig(studioId: string, config: LoomConfig): Promise<void>;
+
+    /**
+     * Gets the hume config for the studio with the given ID.
+     * Returns null if the studio does not have a hume config.
+     * @param studioId The ID of the studio.
+     */
+    getStudioHumeConfig(studioId: string): Promise<HumeConfig | null>;
+
+    /**
+     * Updates the hume config for the studio with the given ID.
+     * @param studioId The ID of the studio that should be updated.
+     * @param config The config that should be updated for the studio.
+     */
+    updateStudioHumeConfig(studioId: string, config: HumeConfig): Promise<void>;
 }
 
 export interface CountRecordsFilter {
@@ -336,10 +350,23 @@ export type LoomConfig = z.infer<typeof LOOM_CONFIG>;
 
 export const LOOM_CONFIG = z
     .object({
-        appId: z.string().describe('The ID of the loom app.'),
-        privateKey: z.string().describe('The private key for the loom app.'),
+        appId: z.string().describe('The ID of the loom app.').max(100),
+        privateKey: z
+            .string()
+            .describe('The private key for the loom app.')
+            .max(100),
     })
     .describe('The configuration that can be used by studios to setup loom.');
+
+export const HUME_CONFIG = z.object({
+    apiKey: z.string().describe('The API key for the Hume service.').max(100),
+    secretKey: z
+        .string()
+        .describe('The secret key for the Hume service.')
+        .max(100),
+});
+
+export type HumeConfig = z.infer<typeof HUME_CONFIG>;
 
 /**
  * Defines the list of possible studio roles that a user can be assigned.

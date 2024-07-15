@@ -22,9 +22,16 @@
             -   `type` - Should always be `"image/png"`
             -   `width` - The desired width of the thumbnail in pixels.
             -   `height` - The desired height of the thumbnail in pixels.
+    -   Requesting users require access to the `ai.sloyd` resource kind and `create` action for the specified record.
 -   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
 -   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
 -   Improved `portalZoomableMax` and `portalZoomableMin` to be supported for `perspective` portal camera types.
+-   Improved Hume AI features to support Studios.
+    -   The `ai.hume` features now determine whether a Studio can configure their own Hume `apiKey` and `secretKey`.
+    -   `ai.hume.getAccessToken(recordName)` now accepts a record name.
+        -   This allows the user to specify which record they want to use for hume.ai access.
+        -   Once a studio is configured, requests to one of the Studio's records will return an access token derived from the Studio's configured `apiKey` and `secretKey`.
+        -   Requesting users require access to the `ai.hume` resource kind and `create` action for the specified record.
 
 ### :bug: Bug Fixes
 

@@ -7,21 +7,20 @@ import { z } from 'zod';
 export interface AIHumeInterface {
     /**
      * Generates an access token that can be used to access the Hume API.
+     * @param request The request that contains the API key and secret key.
      */
-    getAccessToken(): Promise<AIHumeInterfaceGetAccessTokenResult>;
+    getAccessToken(
+        request: AIHumeInterfaceGetAccessTokenRequest
+    ): Promise<AIHumeInterfaceGetAccessTokenResult>;
 }
 
 export class HumeInterface implements AIHumeInterface {
-    private _apiKey: string;
-    private _secretKey: string;
+    constructor() {}
 
-    constructor(apiKey: string, secretKey: string) {
-        this._apiKey = apiKey;
-        this._secretKey = secretKey;
-    }
-
-    async getAccessToken(): Promise<AIHumeInterfaceGetAccessTokenResult> {
-        const authString = `${this._apiKey}:${this._secretKey}`;
+    async getAccessToken(
+        request: AIHumeInterfaceGetAccessTokenRequest
+    ): Promise<AIHumeInterfaceGetAccessTokenResult> {
+        const authString = `${request.apiKey}:${request.secretKey}`;
         const encodedAuthString = Buffer.from(authString).toString('base64');
 
         const response = await fetch('https://api.hume.ai/oauth2-cc/token', {
@@ -79,6 +78,14 @@ export class HumeInterface implements AIHumeInterface {
             tokenType: result.data.token_type,
         };
     }
+}
+
+export interface AIHumeInterfaceGetAccessTokenRequest {
+    /**
+     * The API key that should be used for the request.
+     */
+    apiKey: string;
+    secretKey: string;
 }
 
 export type AIHumeInterfaceGetAccessTokenResult =
