@@ -25,7 +25,7 @@
             </md-dialog-title>
             <md-dialog-content>
                 <md-field class="bios-selection-field">
-                    <label for="biosOption">bios=</label>
+                    <label for="biosOption">inst type</label>
                     <bios-select v-model="biosSelection" name="biosOption" id="biosOption">
                         <bios-option
                             v-for="option in biosSelectionOptions"
@@ -42,7 +42,7 @@
                 </md-field>
 
                 <md-field v-if="isJoinCode(biosSelection)" :class="joinCodeClass">
-                    <label for="joinCode">joinCode=</label>
+                    <label for="joinCode">join code</label>
                     <md-input name="joinCode" id="joinCode" v-model="joinCode" />
                     <field-errors field="joinCode" :errors="errors" />
                 </md-field>
@@ -56,9 +56,9 @@
                     </md-select>
                 </md-field> -->
                 <md-field v-if="instOptions.length > 0">
-                    <label for="instOption">staticInst=</label>
+                    <label for="instOption">inst</label>
                     <md-select v-model="instSelection" name="instOption" id="instOption">
-                        <md-option value="new-inst">(new inst)</md-option>
+                        <md-option value="new-inst">+new</md-option>
                         <md-option v-for="option in instOptions" :key="option" :value="option">{{
                             option
                         }}</md-option>
