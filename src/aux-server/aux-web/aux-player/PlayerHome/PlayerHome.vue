@@ -40,11 +40,6 @@
                         >
                     </bios-select>
                 </md-field>
-                <span
-                    class="selection-bios-description"
-                    v-if="hasOptionDescription(biosSelection)"
-                    >{{ getOptionDescription(biosSelection) }}</span
-                >
 
                 <md-field v-if="isJoinCode(biosSelection)" :class="joinCodeClass">
                     <label for="joinCode">joinCode=</label>
