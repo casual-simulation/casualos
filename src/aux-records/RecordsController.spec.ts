@@ -2689,7 +2689,7 @@ describe('RecordsController', () => {
                         allowed: false,
                     },
                     humeFeatures: {
-                        allowed: false,
+                        allowed: true,
                     },
                 },
             });
@@ -2744,7 +2744,7 @@ describe('RecordsController', () => {
                         allowed: false,
                     },
                     humeFeatures: {
-                        allowed: false,
+                        allowed: true,
                     },
                 },
             });
@@ -2797,7 +2797,7 @@ describe('RecordsController', () => {
                         allowed: true,
                     },
                     humeFeatures: {
-                        allowed: false,
+                        allowed: true,
                     },
                 },
             });
@@ -2855,7 +2855,7 @@ describe('RecordsController', () => {
                         allowed: true,
                     },
                     humeFeatures: {
-                        allowed: false,
+                        allowed: true,
                     },
                     loomConfig: {
                         appId: 'appId',
