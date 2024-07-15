@@ -141,6 +141,8 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         const sim = this._simulationManager.simulations.get(simId);
         if (sim) {
             await sim.auth.primary.openAccountPage();
+        } else {
+            await this.authHelper?.primary.openAccountPage();
         }
     }
 
@@ -148,6 +150,8 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         const sim = this._simulationManager.simulations.get(simId);
         if (sim) {
             await sim.auth.primary.logout();
+        } else {
+            await this.authHelper?.primary.logout();
         }
     }
 
@@ -167,6 +171,15 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
             if (status) {
                 this._onShowAccountInfo.next({
                     simulationId: sim.id,
+                    loginStatus: status,
+                });
+            }
+        } else if (this.authHelper) {
+            const endpoint = this.authHelper.primary;
+            const status = endpoint.currentLoginStatus;
+            if (status) {
+                this._onShowAccountInfo.next({
+                    simulationId: null,
                     loginStatus: status,
                 });
             }

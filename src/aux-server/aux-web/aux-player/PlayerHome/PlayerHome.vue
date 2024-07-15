@@ -13,7 +13,7 @@
             :md-close-on-esc="false"
             :md-click-outside-to-close="false"
         >
-            <md-dialog-title :class="{ 'logo-title': !!logoUrl }">
+            <md-dialog-title class="bios-title" :class="{ 'logo-title': !!logoUrl }">
                 <img
                     v-if="logoUrl"
                     :src="logoUrl"
@@ -22,6 +22,11 @@
                     :title="logoTitle"
                 />
                 <span v-else>BIOS</span>
+                <span class="spacer"></span>
+                <md-button v-if="canSignOut()" class="md-icon-button" @click="showAccountInfo()">
+                    <md-icon>perm_identity</md-icon>
+                    <md-tooltip md-direction="bottom">Account Info</md-tooltip>
+                </md-button>
             </md-dialog-title>
             <md-dialog-content>
                 <md-field class="bios-selection-field">

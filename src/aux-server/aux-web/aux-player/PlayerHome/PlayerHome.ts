@@ -473,6 +473,10 @@ export default class PlayerHome extends Vue {
         await appManager.auth.primary.cancelLogin();
     }
 
+    async showAccountInfo() {
+        await appManager.authCoordinator.showAccountInfo(null);
+    }
+
     private _loadStaticInst(instSelection: string) {
         const update: Dictionary<string | string[]> = {};
         const inst =

@@ -78,3 +78,8 @@
     display: flex;
     margin-top: 14px;
 }
+
+.bios-title {
+    display: flex;
+    align-items: center;
+}

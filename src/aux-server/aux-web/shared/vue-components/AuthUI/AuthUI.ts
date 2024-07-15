@@ -153,20 +153,16 @@ export default class AuthUI extends Vue {
     }
 
     async openAccountDashboard() {
-        if (this._simId) {
-            const simId = this._simId;
-            this.closeAccountInfo();
-            await appManager.authCoordinator.openAccountDashboard(simId);
-        }
+        const simId = this._simId;
+        this.closeAccountInfo();
+        await appManager.authCoordinator.openAccountDashboard(simId);
     }
 
     async logout() {
-        if (this._simId) {
-            const simId = this._simId;
-            this.closeAccountInfo();
-            await appManager.authCoordinator.logout(simId);
-            location.reload();
-        }
+        const simId = this._simId;
+        this.closeAccountInfo();
+        await appManager.authCoordinator.logout(simId);
+        location.reload();
     }
 
     async changeLogin() {
