@@ -609,6 +609,10 @@ export interface MissingPermissionEvent {
 }
 
 export interface ShowAccountInfoEvent {
+    /**
+     * The ID of the simulation that the account info should be shown for.
+     * If null, then the account info should be shown for the default auth endpoint.
+     */
     simulationId: string;
     loginStatus: LoginStatus;
 }
