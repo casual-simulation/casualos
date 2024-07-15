@@ -575,10 +575,10 @@ export default class PlayerHome extends Vue {
         const authenticated = await appManager.auth.primary.isAuthenticated();
         return (
             appManager.config.allowedBiosOptions ?? [
-                'join inst',
-                'local inst',
-                'studio inst',
-                'free inst',
+                'enter join code',
+                'local',
+                'studio',
+                'free',
                 'sign in',
                 'sign up',
                 'sign out',
