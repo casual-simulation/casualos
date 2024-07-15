@@ -3,6 +3,7 @@ import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     getBotLabelAnchor,
+    isFloatingAnchor,
 } from '@casual-simulation/aux-common';
 import { WordBubble3D } from '../WordBubble3D';
 import { WordBubbleElement } from '../WordBubbleElement';
@@ -61,12 +62,17 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
         let anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         const wasVisible = this.wordBubble.visible;
 
-        const hasBubble = (this.wordBubble.visible = anchor === 'floating');
+        const hasBubble = (this.wordBubble.visible = isFloatingAnchor(anchor));
         if (wasVisible && !this.wordBubble.visible) {
-            this.bot3D.container.remove(this.wordBubble);
+            this.wordBubble.parent?.remove(this.wordBubble);
         } else if (!wasVisible && this.wordBubble.visible) {
-            this.bot3D.container.add(this.wordBubble);
-            this.wordBubble.updateMatrixWorld(true);
+            if (anchor === 'floatingBillboard') {
+                this._label.text3D.add(this.wordBubble);
+                this.wordBubble.updateMatrixWorld(true);
+            } else {
+                this.bot3D.container.add(this.wordBubble);
+                this.wordBubble.updateMatrixWorld(true);
+            }
         }
 
         if (!hasBubble || !this._label || !this._label.text3D) {
@@ -80,12 +86,18 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let arrowPoint = new Vector3(0, 0, 0);
+        let arrowPoint: Vector3 | null;
 
-        arrowPoint.z += this.bot3D.boundingBox.max.z;
+        if (anchor !== 'floatingBillboard') {
+            arrowPoint = new Vector3(0, 0, 0);
+            arrowPoint.z += this.bot3D.boundingBox.max.z;
+        }
 
         let elementsBoundingBox: Vector2 = this._label.getSize();
-        let labelPosition: Vector3 = this._label.text3D.position;
+        let labelPosition: Vector3 =
+            anchor === 'floatingBillboard'
+                ? new Vector3()
+                : this._label.text3D.position;
         if (elementsBoundingBox) {
             console.log('size', elementsBoundingBox, arrowPoint, labelPosition);
             this.wordBubble.update(

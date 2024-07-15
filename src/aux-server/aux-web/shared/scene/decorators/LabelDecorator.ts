@@ -18,6 +18,7 @@ import {
     BotLabelFontSize,
     getBotLabelPadding,
     getBotOrientationMode,
+    isFloatingAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import {
@@ -25,6 +26,8 @@ import {
     Vector3,
     Vector2,
     PerspectiveCamera,
+    Group,
+    Object3D,
 } from '@casual-simulation/three';
 import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
@@ -33,6 +36,10 @@ import { calculateScale, buildSRGBColor } from '../SceneUtils';
 import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';
 import { WordBubbleDecorator } from './WordBubbleDecorator';
+import {
+    Rotation,
+    Vector3 as CasualVector3,
+} from '@casual-simulation/aux-common/math';
 
 export class LabelDecorator
     extends AuxBot3DDecoratorBase
@@ -50,6 +57,7 @@ export class LabelDecorator
 
     private _game: Game;
     private _autoSizeMode: boolean;
+    private _billboard: boolean;
     private _initialSetup: boolean;
     private _lastFontSize: BotLabelFontSize;
     private _lastHeight: number;
@@ -86,6 +94,8 @@ export class LabelDecorator
             botLength = botSize.z;
         }
 
+        this._billboard = anchor === 'floatingBillboard';
+
         if (label) {
             if (!this.text3D) {
                 this.text3D = new Text3D();
@@ -97,13 +107,19 @@ export class LabelDecorator
             // without worrying about what the AuxBot3D scale is etc.
             // For billboarded bots and floating labels, we need to parent the label directly to the bot so that it does not rotate with the bot.
             const orientationMode = getBotOrientationMode(calc, this.bot3D.bot);
-            const targetContainer =
+            let targetContainer: Object3D;
+            if (
                 anchor === 'floating' &&
                 (orientationMode === 'billboard' ||
                     orientationMode === 'billboardTop' ||
                     orientationMode === 'billboardFront')
-                    ? this.bot3D
-                    : this.bot3D.container;
+            ) {
+                targetContainer = this.bot3D;
+            } else if (anchor === 'floatingBillboard') {
+                targetContainer = this.bot3D;
+            } else {
+                targetContainer = this.bot3D.container;
+            }
             if (this.text3D.parent !== targetContainer) {
                 this.text3D.parent?.remove(this.text3D);
                 targetContainer.add(this.text3D);
@@ -223,6 +239,47 @@ export class LabelDecorator
                 this.bot3D.forceComputeBoundingObjects();
                 this._updateTextPosition();
             }
+
+            if (this._billboard) {
+                const cameraRig =
+                    this.bot3D.dimensionGroup.simulation3D.getMainCameraRig();
+                const cameraWorld = new Vector3();
+                cameraWorld.setFromMatrixPosition(
+                    cameraRig.mainCamera.matrixWorld
+                );
+
+                const objWorld = new Vector3();
+                objWorld.setFromMatrixPosition(this.text3D.matrixWorld);
+
+                const direction = new CasualVector3(
+                    objWorld.x,
+                    objWorld.y,
+                    objWorld.z
+                ).subtract(
+                    new CasualVector3(
+                        cameraWorld.x,
+                        cameraWorld.y,
+                        cameraWorld.z
+                    )
+                );
+                const lookRotation = new Rotation({
+                    direction: direction,
+                    upwards: new CasualVector3(
+                        cameraRig.mainCamera.up.x,
+                        cameraRig.mainCamera.up.y,
+                        cameraRig.mainCamera.up.z
+                    ),
+                    errorHandling: 'nudge',
+                });
+
+                this.text3D.quaternion.set(
+                    lookRotation.quaternion.x,
+                    lookRotation.quaternion.y,
+                    lookRotation.quaternion.z,
+                    lookRotation.quaternion.w
+                );
+                this.text3D.updateMatrixWorld();
+            }
         }
     }
 
@@ -241,10 +298,8 @@ export class LabelDecorator
     getSize(): Vector2 {
         if (this.text3D) {
             const size3D = this.text3D.localBoundingBox.getSize(new Vector3());
-            return new Vector2(
-                size3D.x * this.text3D.scale.x,
-                size3D.y * this.text3D.scale.y
-            );
+            const scale = this.text3D.getScale();
+            return new Vector2(size3D.x * scale.x, size3D.y * scale.y);
         } else {
             return null;
         }

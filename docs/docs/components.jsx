@@ -405,6 +405,10 @@ export const LabelAnchorValues = ({}) => (<React.Fragment>
   <PossibleValueCode value='floating'>
      Floating above the bot.
   </PossibleValueCode>
+  <PossibleValueCode value='floatingBillboard'>
+     Floating above the bot and billboarded to face the camera.
+     Like floating, but the label background won't have an arrow and the label will always face the camera.
+  </PossibleValueCode>
 </React.Fragment>)
 
 export const Badges = ({children}) => (

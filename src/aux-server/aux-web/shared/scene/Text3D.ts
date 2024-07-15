@@ -474,7 +474,7 @@ export class Text3D extends Object3D {
         }
         this._anchor = anchor;
 
-        if (anchor === 'floating') {
+        if (isFloatingAnchor(anchor)) {
             this._mesh.anchorY = 'bottom';
         } else {
             this._mesh.anchorY = 'middle';
@@ -587,8 +587,8 @@ export class Text3D extends Object3D {
 
         const positionMultiplier = 0.5;
 
-        if (anchor === 'floating') {
-            let [pos, anchor] = Text3D._positionOffset(
+        if (isFloatingAnchor(anchor)) {
+            let [pos, textAnchor] = Text3D._positionOffset(
                 targetCenter,
                 targetSize,
                 'x',
@@ -599,11 +599,13 @@ export class Text3D extends Object3D {
                     targetCenter.y,
                     targetCenter.z +
                         targetSize.z * positionMultiplier +
-                        Text3D.floatingExtraSpace
+                        (anchor === 'floatingBillboard'
+                            ? Text3D.floatingBillboardExtraSpace
+                            : Text3D.floatingExtraSpace)
                 )
             );
 
-            return [pos, new Euler(ThreeMath.degToRad(90), 0, 0), anchor];
+            return [pos, new Euler(ThreeMath.degToRad(90), 0, 0), textAnchor];
         } else if (anchor === 'front') {
             let [pos, anchor] = Text3D._positionOffset(
                 targetCenter,

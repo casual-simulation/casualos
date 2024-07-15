@@ -999,7 +999,8 @@ export type BotLabelAnchor =
     | 'back'
     | 'left'
     | 'right'
-    | 'floating';
+    | 'floating'
+    | 'floatingBillboard';
 
 /**
  * Defines the possible label alignment types.
