@@ -44,6 +44,7 @@
 -   Fixed an issue where meshes for hands in XR don't follow the camera when `cameraPositionOffset` is changed.
 -   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
 -   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
+-   Fixed an issue where selecting an option in the BIOS would fail to actually show the selected option.
 
 ## V3.3.6
 
