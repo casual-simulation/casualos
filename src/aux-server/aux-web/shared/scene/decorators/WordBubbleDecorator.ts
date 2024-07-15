@@ -82,7 +82,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
         let arrowPoint = new Vector3(0, 0, 0);
 
-        arrowPoint.z += this.bot3D.gridScale;
+        arrowPoint.z += this.bot3D.boundingBox.max.z;
 
         let elementsBoundingBox: Vector2 = this._label.getSize();
         let labelPosition: Vector3 = this._label.text3D.position;
