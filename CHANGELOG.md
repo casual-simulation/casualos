@@ -26,6 +26,15 @@
 -   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
 -   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
 -   Improved `portalZoomableMax` and `portalZoomableMin` to be supported for `perspective` portal camera types.
+-   Updated the BIOS dialog with various visual improvements.
+-   The default BIOS options have been updated:
+    -   `enter join code`
+    -   `local`
+    -   `studio`
+    -   `free`
+    -   `sign in`
+    -   `sign up`
+    -   `sign out`
 -   Improved Hume AI features to support Studios.
     -   The `ai.hume` features now determine whether a Studio can configure their own Hume `apiKey` and `secretKey`.
     -   `ai.hume.getAccessToken(recordName)` now accepts a record name.
@@ -43,6 +52,7 @@
 -   Fixed an issue where meshes for hands in XR don't follow the camera when `cameraPositionOffset` is changed.
 -   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
 -   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
+-   Fixed an issue where selecting an option in the BIOS would fail to actually show the selected option.
 
 ## V3.3.6
 

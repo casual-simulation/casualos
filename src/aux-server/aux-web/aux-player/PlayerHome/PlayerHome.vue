@@ -13,7 +13,7 @@
             :md-close-on-esc="false"
             :md-click-outside-to-close="false"
         >
-            <md-dialog-title :class="{ 'logo-title': !!logoUrl }">
+            <md-dialog-title class="bios-title" :class="{ 'logo-title': !!logoUrl }">
                 <img
                     v-if="logoUrl"
                     :src="logoUrl"
@@ -22,33 +22,32 @@
                     :title="logoTitle"
                 />
                 <span v-else>BIOS</span>
+                <span class="spacer"></span>
+                <md-button v-if="canSignOut()" class="md-icon-button" @click="showAccountInfo()">
+                    <md-icon>perm_identity</md-icon>
+                    <md-tooltip md-direction="bottom">Account Info</md-tooltip>
+                </md-button>
             </md-dialog-title>
             <md-dialog-content>
                 <md-field class="bios-selection-field">
-                    <label for="biosOption">bios=</label>
-                    <md-select v-model="biosSelection" name="biosOption" id="biosOption">
+                    <label for="biosOption">inst type</label>
+                    <bios-select v-model="biosSelection" name="biosOption" id="biosOption">
                         <bios-option
-                            v-for="option in biosOptions"
+                            v-for="option in biosSelectionOptions"
                             :key="option"
                             ref="biosOptions"
                             :value="option"
                             :class="{ 'double-line': hasOptionDescription(option) }"
-                        >
-                            <span>{{ option }}</span>
-                            <span v-if="hasOptionDescription(option)">{{
+                            ><span>{{ option }}</span
+                            ><span v-if="hasOptionDescription(option)">{{
                                 getOptionDescription(option)
-                            }}</span>
-                        </bios-option>
-                    </md-select>
+                            }}</span></bios-option
+                        >
+                    </bios-select>
                 </md-field>
-                <span
-                    class="selection-bios-description"
-                    v-if="hasOptionDescription(biosSelection)"
-                    >{{ getOptionDescription(biosSelection) }}</span
-                >
 
                 <md-field v-if="isJoinCode(biosSelection)" :class="joinCodeClass">
-                    <label for="joinCode">joinCode=</label>
+                    <label for="joinCode">join code</label>
                     <md-input name="joinCode" id="joinCode" v-model="joinCode" />
                     <field-errors field="joinCode" :errors="errors" />
                 </md-field>
@@ -62,9 +61,9 @@
                     </md-select>
                 </md-field> -->
                 <md-field v-if="instOptions.length > 0">
-                    <label for="instOption">staticInst=</label>
+                    <label for="instOption">inst</label>
                     <md-select v-model="instSelection" name="instOption" id="instOption">
-                        <md-option value="new-inst">(new inst)</md-option>
+                        <md-option value="new-inst">+new</md-option>
                         <md-option v-for="option in instOptions" :key="option" :value="option">{{
                             option
                         }}</md-option>
@@ -108,6 +107,7 @@
                     @click="
                         executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)
                     "
+                    :disabled="!canLoad"
                     >{{ startButtonLabel }}</md-button
                 >
             </md-dialog-actions>
