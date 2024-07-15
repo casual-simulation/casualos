@@ -24,7 +24,11 @@ import {
     SubscriptionController,
 } from './SubscriptionController';
 import { ZodError, z } from 'zod';
-import { LOOM_CONFIG, PublicRecordKeyPolicy } from './RecordsStore';
+import {
+    HUME_CONFIG,
+    LOOM_CONFIG,
+    PublicRecordKeyPolicy,
+} from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
@@ -2319,8 +2323,12 @@ export class RecordsServer {
             getHumeAccessToken: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/ai/hume/token')
-                .inputs(z.object({}))
-                .handler(async (_, context) => {
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
                     if (!this._aiController) {
                         return AI_NOT_SUPPORTED_RESULT;
                     }
@@ -2339,6 +2347,7 @@ export class RecordsServer {
 
                     const result = await this._aiController.getHumeAccessToken({
                         userId: sessionKeyValidation.userId,
+                        recordName,
                     });
 
                     return result;
@@ -2536,6 +2545,7 @@ export class RecordsServer {
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
                         playerConfig: COM_ID_PLAYER_CONFIG.optional(),
                         loomConfig: LOOM_CONFIG.optional(),
+                        humeConfig: HUME_CONFIG.optional(),
                     })
                 )
                 .handler(
@@ -2547,6 +2557,7 @@ export class RecordsServer {
                             comIdConfig,
                             playerConfig,
                             loomConfig,
+                            humeConfig,
                         },
                         context
                     ) => {
@@ -2571,6 +2582,7 @@ export class RecordsServer {
                                 comIdConfig,
                                 playerConfig,
                                 loomConfig,
+                                humeConfig,
                             },
                         });
                         return result;

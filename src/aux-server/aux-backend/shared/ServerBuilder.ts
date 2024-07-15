@@ -1176,6 +1176,7 @@ export class ServerBuilder implements SubscriptionLike {
             metrics: this._metricsStore,
             policies: this._policyStore,
             policyController: null,
+            records: this._recordsStore,
         };
 
         if (this._openAIChatInterface && options.ai.chat) {
@@ -1230,14 +1231,22 @@ export class ServerBuilder implements SubscriptionLike {
             };
         }
         if (options.humeai) {
+            console.log('[ServerBuilder] Using Hume AI with API Key.');
+            this._aiConfiguration.hume = {
+                interface: new HumeInterface(),
+                config: {
+                    apiKey: options.humeai.apiKey,
+                    secretKey: options.humeai.secretKey,
+                },
+            };
+        } else {
             console.log('[ServerBuilder] Using Hume AI.');
             this._aiConfiguration.hume = {
-                interface: new HumeInterface(
-                    options.humeai.apiKey,
-                    options.humeai.secretKey
-                ),
+                interface: new HumeInterface(),
+                config: null,
             };
         }
+
         if (options.sloydai) {
             console.log('[ServerBuilder] Using Sloyd AI.');
             this._aiConfiguration.sloyd = {

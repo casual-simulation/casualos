@@ -23,6 +23,7 @@ export const ROLE_RESOURCE_KIND = 'role';
 export const INST_RESOURCE_KIND = 'inst';
 export const LOOM_RESOURCE_KIND = 'loom';
 export const SLOYD_RESOURCE_KIND = 'ai.sloyd';
+export const HUME_RESOURCE_KIND = 'ai.hume';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -38,7 +39,8 @@ export type ResourceKinds =
     | 'role'
     | 'inst'
     | 'loom'
-    | 'ai.sloyd';
+    | 'ai.sloyd'
+    | 'ai.hume';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -156,6 +158,14 @@ export type LoomActionKinds = 'create';
 export type SloydActionKinds = 'create';
 
 /**
+ * The possible types of actions that can be performed on ai.hume resources.
+ *
+ * @dochash types/permissions
+ * @docname HumeActionKinds
+ */
+export type HumeActionKinds = 'create';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -172,7 +182,8 @@ export type AvailablePermissions =
     | RolePermission
     | InstPermission
     | LoomPermission
-    | SloydPermission;
+    | SloydPermission
+    | HumePermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -229,6 +240,8 @@ export const LOOM_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
 export const SLOYD_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
+export const HUME_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -238,6 +251,7 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     INST_RESOURCE_KIND,
     LOOM_RESOURCE_KIND,
     SLOYD_RESOURCE_KIND,
+    HUME_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -609,6 +623,31 @@ export const SLOYD_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
 type ZodSloydPermission = z.infer<typeof SLOYD_PERMISSION_VALIDATION>;
 type ZodSloydPermissionAssertion = HasType<ZodSloydPermission, SloydPermission>;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect ai.hume resources.
+ *
+ * @dochash types/permissions
+ * @docname HumePermission
+ */
+export interface HumePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'ai.hume';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: HumeActionKinds | null;
+}
+export const HUME_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(HUME_RESOURCE_KIND),
+    action: HUME_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodHumePermission = z.infer<typeof HUME_PERMISSION_VALIDATION>;
+type ZodHumePermissionAssertion = HasType<ZodHumePermission, HumePermission>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -620,6 +659,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         INST_PERMISSION_VALIDATION,
         LOOM_PERMISSION_VALIDATION,
         SLOYD_PERMISSION_VALIDATION,
+        HUME_PERMISSION_VALIDATION,
     ]
 );
 

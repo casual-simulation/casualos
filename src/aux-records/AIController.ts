@@ -45,6 +45,7 @@ import {
     PolicyController,
 } from './PolicyController';
 import { DenialReason } from '@casual-simulation/aux-common';
+import { HumeConfig, RecordsStore } from './RecordsStore';
 
 const TRACE_NAME = 'AIController';
 
@@ -58,6 +59,7 @@ export interface AIConfiguration {
     config: ConfigurationStore;
     policies: PolicyStore | null;
     policyController: PolicyController | null;
+    records: RecordsStore | null;
 }
 
 export interface AIChatConfiguration {
@@ -189,6 +191,12 @@ export interface AIHumeConfiguration {
      * The interface that should be used for Hume.
      */
     interface: AIHumeInterface;
+
+    /**
+     * The hume configuration that was included in the server config.
+     * If null, then users are not able to use hume and studios need the hume feature.
+     */
+    config: HumeConfig | null;
 }
 
 export interface AISloydConfiguration {
@@ -219,12 +227,14 @@ export class AIController {
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
     private _humeInterface: AIHumeInterface | null;
+    private _humeConfig: HumeConfig | null;
     private _sloydInterface: AISloydInterface | null;
     private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
     private _policyStore: PolicyStore;
     private _policies: PolicyController;
+    private _recordsStore: RecordsStore;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -272,10 +282,12 @@ export class AIController {
         }
         this._policies = configuration.policyController;
         this._humeInterface = configuration.hume?.interface;
+        this._humeConfig = configuration.hume?.config;
         this._sloydInterface = configuration.sloyd?.interface;
         this._metrics = configuration.metrics;
         this._config = configuration.config;
         this._policyStore = configuration.policies;
+        this._recordsStore = configuration.records;
     }
 
     @traced(TRACE_NAME)
@@ -1079,15 +1091,48 @@ export class AIController {
                 };
             }
 
-            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
-                ownerId: request.userId,
+            const recordName = request.recordName ?? request.userId;
+
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: recordName,
+                userId: request.userId,
             });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authResult =
+                await this._policies.authorizeSubjectUsingContext(
+                    context.context,
+                    {
+                        resourceKind: 'ai.hume',
+                        action: 'create',
+                        markers: null,
+                        subjectId: request.userId,
+                        subjectType: 'user',
+                    }
+                );
+
+            if (authResult.success === false) {
+                return authResult;
+            }
+
+            let metricsFilter: SubscriptionFilter = {};
+            if (context.context.recordStudioId) {
+                metricsFilter.studioId = context.context.recordStudioId;
+            } else {
+                metricsFilter.ownerId = context.context.recordOwnerId;
+            }
+            const metrics = await this._metrics.getSubscriptionRecordMetrics(
+                metricsFilter
+            );
             const config = await this._config.getSubscriptionConfiguration();
             const features = getHumeAiFeatures(
                 config,
                 metrics.subscriptionStatus,
                 metrics.subscriptionId,
-                'user'
+                context.context.recordStudioId ? 'studio' : 'user'
             );
 
             if (!features.allowed) {
@@ -1099,7 +1144,36 @@ export class AIController {
                 };
             }
 
-            const result = await this._humeInterface.getAccessToken();
+            let humeConfig: HumeConfig;
+            if (context.context.recordStudioId) {
+                humeConfig = await this._recordsStore.getStudioHumeConfig(
+                    context.context.recordStudioId
+                );
+            }
+            humeConfig ??= this._humeConfig;
+
+            if (!humeConfig) {
+                if (context.context.recordStudioId) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'The studio does not have a Hume configuration.',
+                    };
+                }
+
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit Hume AI features.',
+                };
+            }
+
+            const result = await this._humeInterface.getAccessToken({
+                apiKey: humeConfig.apiKey,
+                secretKey: humeConfig.secretKey,
+            });
 
             if (result.success) {
                 return {
@@ -1175,7 +1249,6 @@ export class AIController {
             }
 
             let metricsFilter: SubscriptionFilter = {};
-            console.log('context', context.context);
             if (context.context.recordStudioId) {
                 metricsFilter.studioId = context.context.recordStudioId;
             } else {
@@ -1587,6 +1660,12 @@ export interface AIHumeGetAccessTokenRequest {
      * The ID of the user that is currently logged in.
      */
     userId: string;
+
+    /**
+     * The name of the record that the request is for.
+     * If omitted, then the userId will be used for the record name.
+     */
+    recordName?: string;
 }
 
 export type AIHumeGetAccessTokenResult =
@@ -1626,7 +1705,10 @@ export interface AIHumeGetAccessTokenFailure {
         | NotSupportedError
         | SubscriptionLimitReached
         | NotAuthorizedError
-        | AIHumeInterfaceGetAccessTokenFailure['errorCode'];
+        | AIHumeInterfaceGetAccessTokenFailure['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode']
+        | 'invalid_request';
     errorMessage: string;
 }
 

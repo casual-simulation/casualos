@@ -1547,6 +1547,46 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.hume",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -1614,6 +1654,7 @@ Object {
               "inst",
               "loom",
               "ai.sloyd",
+              "ai.hume",
             ],
           },
         },
@@ -2188,7 +2229,12 @@ Object {
         "path": "/api/v2/ai/hume/token",
       },
       "inputs": Object {
-        "schema": Object {},
+        "schema": Object {
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
         "type": "object",
       },
       "name": "getHumeAccessToken",
@@ -2330,6 +2376,20 @@ Object {
           "displayName": Object {
             "optional": true,
             "type": "string",
+          },
+          "humeConfig": Object {
+            "optional": true,
+            "schema": Object {
+              "apiKey": Object {
+                "description": "The API key for the Hume service.",
+                "type": "string",
+              },
+              "secretKey": Object {
+                "description": "The secret key for the Hume service.",
+                "type": "string",
+              },
+            },
+            "type": "object",
           },
           "id": Object {
             "type": "string",
@@ -4406,6 +4466,46 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.hume",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -4473,6 +4573,7 @@ Object {
               "inst",
               "loom",
               "ai.sloyd",
+              "ai.hume",
             ],
           },
         },
@@ -5047,7 +5148,12 @@ Object {
         "path": "/api/v2/ai/hume/token",
       },
       "inputs": Object {
-        "schema": Object {},
+        "schema": Object {
+          "recordName": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
         "type": "object",
       },
       "name": "getHumeAccessToken",
@@ -5189,6 +5295,20 @@ Object {
           "displayName": Object {
             "optional": true,
             "type": "string",
+          },
+          "humeConfig": Object {
+            "optional": true,
+            "schema": Object {
+              "apiKey": Object {
+                "description": "The API key for the Hume service.",
+                "type": "string",
+              },
+              "secretKey": Object {
+                "description": "The secret key for the Hume service.",
+                "type": "string",
+              },
+            },
+            "type": "object",
           },
           "id": Object {
             "type": "string",

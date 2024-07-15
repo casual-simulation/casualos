@@ -19,6 +19,8 @@ import {
     StudioComIdRequest,
     LoomConfig,
     LOOM_CONFIG,
+    HumeConfig,
+    HUME_CONFIG,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
@@ -31,6 +33,37 @@ export class PrismaRecordsStore implements RecordsStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    async getStudioHumeConfig(studioId: string): Promise<HumeConfig | null> {
+        const studio = await this._client.studio.findUnique({
+            where: {
+                id: studioId,
+            },
+            select: {
+                humeConfig: true,
+            },
+        });
+
+        if (!studio) {
+            return null;
+        }
+
+        return zodParseConfig(studio.humeConfig, HUME_CONFIG);
+    }
+
+    async updateStudioHumeConfig(
+        studioId: string,
+        config: HumeConfig
+    ): Promise<void> {
+        await this._client.studio.update({
+            where: {
+                id: studioId,
+            },
+            data: {
+                humeConfig: config,
+            },
+        });
     }
 
     @traced(TRACE_NAME)
