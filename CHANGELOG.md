@@ -25,6 +25,14 @@
 -   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
 -   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
 -   Improved `portalZoomableMax` and `portalZoomableMin` to be supported for `perspective` portal camera types.
+-   The default BIOS options have been updated:
+    -   `enter join code`
+    -   `local`
+    -   `studio`
+    -   `free`
+    -   `sign in`
+    -   `sign up`
+    -   `sign out`
 
 ### :bug: Bug Fixes
 
