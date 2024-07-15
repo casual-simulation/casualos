@@ -182,7 +182,8 @@ export type AvailablePermissions =
     | RolePermission
     | InstPermission
     | LoomPermission
-    | SloydPermission;
+    | SloydPermission
+    | HumePermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
