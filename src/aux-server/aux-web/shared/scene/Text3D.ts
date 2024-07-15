@@ -19,6 +19,7 @@ import {
     BotLabelAnchor,
     BotLabelAlignment,
     BotLabelWordWrap,
+    isFloatingAnchor,
 } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Text as TextMesh } from 'troika-three-text';
@@ -44,6 +45,7 @@ export class Text3D extends Object3D {
 
     public static readonly extraSpace: number = 0.001;
     public static readonly floatingExtraSpace: number = 0.4;
+    public static readonly floatingBillboardExtraSpace: number = 0.2;
 
     /**
      * Number chosen by expirementation to place 5-6 characters on a bot.
@@ -288,12 +290,19 @@ export class Text3D extends Object3D {
      * @param scale The scale of the text mesh. (default is 0.004)
      */
     public setScale(scale: number): boolean {
-        if (this.scale.x !== scale) {
-            this.scale.setScalar(scale);
+        if (this._mesh.scale.x !== scale) {
+            this._mesh.scale.setScalar(scale);
             this.updateBoundingBox();
         }
 
         return false;
+    }
+
+    /**
+     * Gets the scale of the text.
+     */
+    public getScale(): Vector3 {
+        return this._mesh.scale;
     }
 
     /**
@@ -514,6 +523,7 @@ export class Text3D extends Object3D {
         this._mesh.overflowWrap = other._mesh.overflowWrap;
         this._mesh.color = other._mesh.color;
         this._mesh.rotation.copy(other._mesh.rotation);
+        this._mesh.scale.copy(other._mesh.scale);
         this._anchor = other._anchor;
         this._unprocessedText = other._unprocessedText;
         this.currentWidth = other.currentWidth;
