@@ -102,6 +102,7 @@
                     @click="
                         executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)
                     "
+                    :disabled="!canLoad"
                     >{{ startButtonLabel }}</md-button
                 >
             </md-dialog-actions>

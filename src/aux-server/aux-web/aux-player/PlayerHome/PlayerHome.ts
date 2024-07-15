@@ -175,6 +175,18 @@ export default class PlayerHome extends Vue {
         return appManager.simulationManager.primary;
     }
 
+    get canLoad() {
+        if (this.biosSelection) {
+            if (isJoinCode(this.biosSelection)) {
+                return !!this.joinCode;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
     get startButtonLabel() {
         if (
             isPublicInst(this.biosSelection) ||
