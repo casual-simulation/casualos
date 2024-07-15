@@ -50,6 +50,8 @@ export default class AuthUI extends Vue {
     expireTimeMs: number = 0;
     grantPermissionLevel: 'full-access' | 'read-only' = 'full-access';
 
+    reportInstVisible: boolean = false;
+
     private _simId: string = null;
     private _origin: string = null;
 
@@ -94,6 +96,18 @@ export default class AuthUI extends Vue {
                 this.showAccountInfo = true;
                 this.loginStatus = e.loginStatus;
                 this._simId = e.simulationId;
+
+                this.reportInstVisible = false;
+                if (this._simId) {
+                    const sim = appManager.simulationManager.simulations.get(
+                        this._simId
+                    );
+                    if (sim) {
+                        if (!sim.origin.isStatic) {
+                            this.reportInstVisible = true;
+                        }
+                    }
+                }
             })
         );
         this._sub.add(
