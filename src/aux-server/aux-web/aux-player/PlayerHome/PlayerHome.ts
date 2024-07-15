@@ -190,7 +190,7 @@ export default class PlayerHome extends Vue {
         ) {
             return 'Continue';
         } else {
-            return 'Start';
+            return 'Load';
         }
     }
 
