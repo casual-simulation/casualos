@@ -164,12 +164,12 @@
                 </md-table-row>
                 <md-table-row v-if="allowHume" @click="updateHumeConfig()">
                     <md-tooltip>The API key that used to access Hume.</md-tooltip>
-                    <md-table-cell>loom.apiKey</md-table-cell>
+                    <md-table-cell>hume.apiKey</md-table-cell>
                     <md-table-cell>{{ originalHumeApiKey || '(not set)' }}</md-table-cell>
                 </md-table-row>
                 <md-table-row v-if="allowHume" @click="updateHumeConfig()">
                     <md-tooltip>The Secret API key that used to access Hume.</md-tooltip>
-                    <md-table-cell>loom.secretKey</md-table-cell>
+                    <md-table-cell>hume.secretKey</md-table-cell>
                     <md-table-cell>{{ '(secret)' }}</md-table-cell>
                 </md-table-row>
             </md-table>
@@ -445,7 +445,7 @@
                 </md-field>
                 <md-field :class="humeSecretKeyFieldClass">
                     <label for="humeSecretKey">Hume Secret Key</label>
-                    <md-textarea id="humeSecretKey" v-model="humeSecretKey"></md-textarea>
+                    <md-input id="humeSecretKey" v-model="humeSecretKey" type="text"></md-input>
                     <field-errors field="humeConfig.secretKey" :errors="errors" />
                 </md-field>
                 <field-errors :field="null" :errors="errors" />

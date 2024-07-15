@@ -226,6 +226,10 @@ export default class AuthStudio extends Vue {
         return this.loomFeatures?.allowed;
     }
 
+    get allowHume() {
+        return this.humeFeatures?.allowed;
+    }
+
     get hasStudioChange() {
         return (
             this.displayName !== this.originalDisplayName ||
@@ -397,6 +401,8 @@ export default class AuthStudio extends Vue {
                 this.originalWhat3WordsApiKey = this.what3WordsApiKey;
                 this.originalLoomPublicAppId = this.loomPublicAppId;
                 this.loomPrivateKey = null;
+                this.originalHumeApiKey = this.humeApiKey;
+                this.humeSecretKey = null;
 
                 this.showUpdateComIdConfig = false;
                 this.showUpdatePlayerConfig = false;
