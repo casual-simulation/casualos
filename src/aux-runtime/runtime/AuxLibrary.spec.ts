@@ -3504,7 +3504,24 @@ describe('AuxLibrary', () => {
         describe('ai.hume.getAccessToken()', () => {
             it('should emit a AIGetHumeAccessTokenAction', () => {
                 const promise: any = library.api.ai.hume.getAccessToken();
-                const expected = aiHumeGetAccessToken({}, context.tasks.size);
+                const expected = aiHumeGetAccessToken(
+                    undefined,
+                    {},
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to include the record name', () => {
+                const promise: any =
+                    library.api.ai.hume.getAccessToken('recordName');
+                const expected = aiHumeGetAccessToken(
+                    'recordName',
+                    {},
+                    context.tasks.size
+                );
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
