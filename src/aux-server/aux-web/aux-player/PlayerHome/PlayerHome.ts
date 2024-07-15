@@ -206,6 +206,18 @@ export default class PlayerHome extends Vue {
         }
     }
 
+    get biosSelectionOptions() {
+        if (!this.biosOptions) {
+            return [];
+        }
+        return this.biosOptions.filter(
+            (option) =>
+                option !== 'sign in' &&
+                option !== 'sign up' &&
+                option !== 'sign out'
+        );
+    }
+
     hasOptionDescription(option: BiosOption): boolean {
         if (
             isPrivateInst(option) ||

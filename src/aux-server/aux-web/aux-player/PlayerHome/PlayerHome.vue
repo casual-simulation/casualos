@@ -28,7 +28,7 @@
                     <label for="biosOption">bios=</label>
                     <bios-select v-model="biosSelection" name="biosOption" id="biosOption">
                         <bios-option
-                            v-for="option in biosOptions"
+                            v-for="option in biosSelectionOptions"
                             :key="option"
                             ref="biosOptions"
                             :value="option"
