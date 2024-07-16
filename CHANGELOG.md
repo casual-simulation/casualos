@@ -45,6 +45,9 @@
     -   Like `floating`, but the label background won't have an arrow and the label will always face the camera.
 -   Added the `labelFloatingBackgroundColor` tag to control the color of the background for floating labels.
     -   Defaults to `white`.
+-   Improved `@onClick`, `@onAnyBotClicked`, `@onGridClick`, `@onPointerEnter`, `@onPointerExit`, `@onPointerDown`, `@onPointerUp`, `@onAnyBotPointerEnter`, `@onAnyBotPointerExit`, `@onAnyBotPointerDown`, and `@onAnyBotPointerUp` to include the ID of the button that was pressed.
+    -   For each of these listeners, `that.buttonId` will be either `"left"`, `"right"`, `"middle"`, or `null`.
+    -   This means that you can now determine which button was pressed (if any) and respond accordingly.
 
 ### :bug: Bug Fixes
 
