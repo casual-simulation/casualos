@@ -52,7 +52,11 @@ import { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/aux-common';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
-import { formatModalityButtonId, Input } from '../../shared/scene/Input';
+import {
+    formatModalityButtonId,
+    getModalityKey,
+    Input,
+} from '../../shared/scene/Input';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import { Subscription } from 'rxjs';
 import { BotManager } from '@casual-simulation/aux-vm-browser';
@@ -223,7 +227,14 @@ export default class MenuBot extends Vue {
         const simulation = _simulation(this.item);
         const dimension = first(this.item.dimensions.values());
         const buttonId = formatModalityButtonId(event?.button);
-        let arg = onPointerUpDownArg(this.item.bot, dimension, buttonId);
+        let arg = onPointerUpDownArg(
+            this.item.bot,
+            dimension,
+            'mouse',
+            null,
+            null,
+            buttonId
+        );
         simulation.helper.transaction(
             ...simulation.helper.actions([
                 {
@@ -318,7 +329,14 @@ export default class MenuBot extends Vue {
             const simulation = _simulation(this.item);
             const dimension = first(this.item.dimensions.values());
             const buttonId = formatModalityButtonId(event?.button);
-            let arg = onPointerUpDownArg(this.item.bot, dimension, buttonId);
+            let arg = onPointerUpDownArg(
+                this.item.bot,
+                dimension,
+                'mouse',
+                null,
+                null,
+                buttonId
+            );
             simulation.helper.transaction(
                 ...simulation.helper.actions([
                     {
