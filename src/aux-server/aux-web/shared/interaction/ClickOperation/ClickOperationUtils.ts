@@ -1,6 +1,8 @@
 import { Vector2, Object3D, Sphere } from '@casual-simulation/three';
+import { MouseButtonId } from '../../scene/Input';
 
 export const DragThreshold: number = 0.03;
+export const MiddleDragThreshold: number = 0.001;
 export const VRDragAngleThreshold: number = 0.06;
 export const VRDragPosThreshold: number = 0.03;
 
@@ -10,10 +12,15 @@ export const MaxFingerClickTimeMs = 3000;
 
 export function DragThresholdPassed(
     startScreenPos: Vector2,
-    curScreenPos: Vector2
+    curScreenPos: Vector2,
+    buttonId: number
 ): boolean {
     const distance = curScreenPos.distanceTo(startScreenPos);
-    return distance >= DragThreshold;
+    if (buttonId === MouseButtonId.Middle) {
+        return distance >= MiddleDragThreshold;
+    } else {
+        return distance >= DragThreshold;
+    }
 }
 
 export function VRDragThresholdPassed(

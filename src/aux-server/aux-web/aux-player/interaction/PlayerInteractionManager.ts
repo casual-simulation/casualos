@@ -60,6 +60,8 @@ import {
     InputModality,
     getModalityHand,
     getModalityFinger,
+    getModalityButtonId,
+    getModalityKey,
 } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -305,7 +307,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             dimension,
             modality.type,
             getModalityHand(modality),
-            getModalityFinger(modality)
+            getModalityFinger(modality),
+            getModalityButtonId(modality)
         );
         const actions = simulation.helper.actions([
             {
@@ -334,7 +337,8 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             dimension,
             modality.type,
             getModalityHand(modality),
-            getModalityFinger(modality)
+            getModalityFinger(modality),
+            getModalityButtonId(modality)
         );
         const actions = simulation.helper.actions([
             {
@@ -389,7 +393,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         if (modality.type !== 'finger') {
             let arg = onPointerUpDownArg(
                 bot,
-                [...bot3D.dimensionGroup.dimensions.values()][0]
+                [...bot3D.dimensionGroup.dimensions.values()][0],
+                getModalityKey(modality),
+                getModalityHand(modality),
+                getModalityFinger(modality),
+                getModalityButtonId(modality)
             );
             simulation.helper.transaction(
                 ...simulation.helper.actions([
@@ -425,7 +433,11 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         if (modality.type !== 'finger') {
             let arg = onPointerUpDownArg(
                 bot,
-                [...bot3D.dimensionGroup.dimensions.values()][0]
+                [...bot3D.dimensionGroup.dimensions.values()][0],
+                getModalityKey(modality),
+                getModalityHand(modality),
+                getModalityFinger(modality),
+                getModalityButtonId(modality)
             );
             simulation.helper.transaction(
                 ...simulation.helper.actions([
@@ -476,8 +488,16 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         simulation.helper.transaction(...actions);
     }
 
-    createEmptyClickOperation(inputMethod: InputMethod): IOperation {
-        return new PlayerEmptyClickOperation(this._game, this, inputMethod);
+    createEmptyClickOperation(
+        inputMethod: InputMethod,
+        inputModality: InputModality
+    ): IOperation {
+        return new PlayerEmptyClickOperation(
+            this._game,
+            this,
+            inputMethod,
+            inputModality
+        );
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
