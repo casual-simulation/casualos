@@ -1940,6 +1940,7 @@ export function getBotTagAnchor(
     if (
         anchor === 'back' ||
         anchor === 'floating' ||
+        anchor === 'floatingBillboard' ||
         anchor === 'front' ||
         anchor === 'left' ||
         anchor === 'right' ||
@@ -1948,6 +1949,14 @@ export function getBotTagAnchor(
         return anchor;
     }
     return DEFAULT_LABEL_ANCHOR;
+}
+
+/**
+ * Determines whether the given anchor is a floating anchor.
+ * @param anchor The anchor to check.
+ */
+export function isFloatingAnchor(anchor: BotLabelAnchor) {
+    return anchor === 'floating' || anchor === 'floatingBillboard';
 }
 
 /**

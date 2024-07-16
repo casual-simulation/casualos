@@ -41,6 +41,10 @@
         -   This allows the user to specify which record they want to use for hume.ai access.
         -   Once a studio is configured, requests to one of the Studio's records will return an access token derived from the Studio's configured `apiKey` and `secretKey`.
         -   Requesting users require access to the `ai.hume` resource kind and `create` action for the specified record.
+-   Added the `floatingBillboard` option for `labelPosition`.
+    -   Like `floating`, but the label background won't have an arrow and the label will always face the camera.
+-   Added the `labelFloatingBackgroundColor` tag to control the color of the background for floating labels.
+    -   Defaults to `white`.
 
 ### :bug: Bug Fixes
 
@@ -53,6 +57,7 @@
 -   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
 -   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
 -   Fixed an issue where selecting an option in the BIOS would fail to actually show the selected option.
+-   Fixed an issue where the arrow on floating labels would clip into the bot if the bot had a scale > 1.
 
 ## V3.3.6
 

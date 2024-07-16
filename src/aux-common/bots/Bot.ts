@@ -999,7 +999,8 @@ export type BotLabelAnchor =
     | 'back'
     | 'left'
     | 'right'
-    | 'floating';
+    | 'floating'
+    | 'floatingBillboard';
 
 /**
  * Defines the possible label alignment types.
@@ -2695,6 +2696,7 @@ export const KNOWN_TAGS: string[] = [
     'labelAlignment',
     'labelWordWrapMode',
     'labelFontAddress',
+    'labelFloatingBackgroundColor',
     'listening',
     'scale',
     'scaleX',

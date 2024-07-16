@@ -12,7 +12,7 @@ import {
     ShapeBufferGeometry,
 } from '@casual-simulation/three';
 import { merge } from '@casual-simulation/aux-common/utils';
-import { setLayerMask, buildSRGBColor } from './SceneUtils';
+import { setLayerMask, buildSRGBColor, setColor } from './SceneUtils';
 import { Text3D } from './Text3D';
 
 export class WordBubble3D extends Object3D {
@@ -21,6 +21,10 @@ export class WordBubble3D extends Object3D {
     private _shapeMesh: Mesh;
 
     private _options: WordBubbleOptions;
+
+    get mesh() {
+        return this._shapeMesh;
+    }
 
     constructor(opt?: WordBubbleOptions) {
         super();
@@ -46,12 +50,12 @@ export class WordBubble3D extends Object3D {
 
     /**
      * Update the world bubble.
-     * @param arrowPosition The position that the arrow point should start at. Should be relative to the bot.
+     * @param arrowPosition The position that the arrow point should start at. Should be relative to the bot. If null, then no arrow will be drawn.
      * @param labelPosition The position that the label is at. Should be relative to the bot.
      * @param labelSize The size of the label.
      */
     public update(
-        arrowPosition: Vector3,
+        arrowPosition: Vector3 | null,
         labelPosition: Vector3,
         labelSize: Vector2
     ): void {
@@ -59,7 +63,7 @@ export class WordBubble3D extends Object3D {
     }
 
     public regenerateMesh(
-        arrowPosition: Vector3,
+        arrowPosition: Vector3 | null,
         labelPosition: Vector3,
         labelSize: Vector2
     ) {
@@ -70,36 +74,60 @@ export class WordBubble3D extends Object3D {
 
         let halfWidth = sizeWithPadding.x / 2;
 
-        // Get local space conversion of min, max, and arrowPoint.
-        const arrowPointLocal = arrowPosition.clone();
-
-        const minPanel = new Vector3(
-            -halfWidth,
-            arrowPointLocal.y,
-            labelPosition.z
-        );
-        const maxPanel = new Vector3(
-            halfWidth,
-            arrowPointLocal.y,
-            labelPosition.z + labelSize.y
-        );
-
-        // Clamp arrow width to the size of the box if the box is smaller than the defualt arrow width.
-        const arrowWidthPct = 0.3;
-        const boxWidth = maxPanel.x - minPanel.x;
-        const arrowWidth = boxWidth * arrowWidthPct;
-
-        // Generate base word bubble mesh.
         let shape = new Shape();
+        if (arrowPosition) {
+            // Get local space conversion of min, max, and arrowPoint.
+            const arrowPointLocal = arrowPosition.clone();
 
-        // Sharp corners.
-        shape.moveTo(arrowPointLocal.x, arrowPointLocal.z);
-        shape.lineTo(-arrowWidth / 2 + arrowPointLocal.x, minPanel.z);
-        shape.lineTo(minPanel.x, minPanel.z);
-        shape.lineTo(minPanel.x, maxPanel.z);
-        shape.lineTo(maxPanel.x, maxPanel.z);
-        shape.lineTo(maxPanel.x, minPanel.z);
-        shape.lineTo(arrowWidth / 2 + arrowPointLocal.x, minPanel.z);
+            const minPanel = new Vector3(
+                -halfWidth,
+                arrowPointLocal.y,
+                labelPosition.z
+            );
+            const maxPanel = new Vector3(
+                halfWidth,
+                arrowPointLocal.y,
+                labelPosition.z + labelSize.y
+            );
+
+            // Clamp arrow width to the size of the box if the box is smaller than the defualt arrow width.
+            const arrowWidthPct = 0.3;
+            const boxWidth = maxPanel.x - minPanel.x;
+            const arrowWidth = boxWidth * arrowWidthPct;
+
+            // Sharp corners.
+            shape.moveTo(arrowPointLocal.x, arrowPointLocal.z);
+            shape.lineTo(-arrowWidth / 2 + arrowPointLocal.x, minPanel.z);
+            shape.lineTo(minPanel.x, minPanel.z);
+            shape.lineTo(minPanel.x, maxPanel.z);
+            shape.lineTo(maxPanel.x, maxPanel.z);
+            shape.lineTo(maxPanel.x, minPanel.z);
+            shape.lineTo(arrowWidth / 2 + arrowPointLocal.x, minPanel.z);
+        } else {
+            const minPanel = new Vector2(-halfWidth, labelPosition.z);
+
+            const maxPanel = new Vector2(
+                halfWidth,
+                labelPosition.z + labelSize.y
+            );
+
+            // Draw rectangle
+
+            // Bottom left corner
+            shape.moveTo(minPanel.x, minPanel.y);
+
+            // Line to top left corner
+            shape.lineTo(minPanel.x, maxPanel.y);
+
+            // Line to top right corner
+            shape.lineTo(maxPanel.x, maxPanel.y);
+
+            // Line to bottom right corner
+            shape.lineTo(maxPanel.x, minPanel.y);
+
+            // Line to bottom left corner
+            shape.lineTo(minPanel.x, minPanel.y);
+        }
 
         // Dispose of old geometry.
         if (this._shapeGeometry) {
@@ -120,7 +148,7 @@ export class WordBubble3D extends Object3D {
         }
 
         // Nudge the shape mesh back so that meshes that we encapsulated can render 'on top'.
-        this._shapeMesh.position.set(0, arrowPointLocal.y + 0.01, 0);
+        this._shapeMesh.position.set(0, arrowPosition?.y ?? 0 + 0.01, 0);
         this._shapeMesh.rotation.set(ThreeMath.degToRad(90), 0, 0);
 
         this.updateMatrixWorld(true);
