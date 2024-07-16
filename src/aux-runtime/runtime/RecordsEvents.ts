@@ -279,6 +279,11 @@ export interface AIGenerateImageOptions {
  */
 export interface AIHumeGetAccessTokenAction extends RecordsAction {
     type: 'ai_hume_get_access_token';
+
+    /**
+     * The name of the record that the access token should be retrieved for.
+     */
+    recordName?: string;
 }
 
 /**
@@ -1190,11 +1195,13 @@ export function aiGenerateImage(
  * @param taskId The ID of the async task.
  */
 export function aiHumeGetAccessToken(
+    recordName?: string,
     options?: RecordActionOptions,
     taskId?: number | string
 ): AIHumeGetAccessTokenAction {
     return {
         type: 'ai_hume_get_access_token',
+        recordName,
         options: options ?? {},
         taskId,
     };

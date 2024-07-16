@@ -1,11 +1,14 @@
-import { tryParseJson } from '@casual-simulation/aux-records';
-import { BuilderOptions, optionsSchema } from '../shared/ServerBuilder';
+import {
+    ServerConfig,
+    serverConfigSchema,
+    tryParseJson,
+} from '@casual-simulation/aux-records';
 import { merge } from '@casual-simulation/aux-common';
 
 declare const DEVELOPMENT: boolean;
 declare const SERVER_CONFIG: string;
 
-export const DEV_CONFIG: BuilderOptions = {};
+export const DEV_CONFIG: ServerConfig = {};
 
 export function loadConfig(required: boolean = true) {
     const injectedConfig = parseObject(SERVER_CONFIG);
@@ -17,7 +20,7 @@ export function loadConfig(required: boolean = true) {
 
     const merged = merge({}, injectedConfig ?? {}, envConfig ?? {});
 
-    const optionsResult = optionsSchema.safeParse(merged);
+    const optionsResult = serverConfigSchema.safeParse(merged);
 
     if (optionsResult.success === false) {
         console.error(

@@ -8058,7 +8058,7 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([aiHumeGetAccessToken({}, 1)]);
+                records.handleEvents([aiHumeGetAccessToken(undefined, {}, 1)]);
 
                 await waitAsync();
 
@@ -8069,6 +8069,53 @@ describe('RecordsManager', () => {
                         body: JSON.stringify({
                             procedure: 'getHumeAccessToken',
                             input: {},
+                        }),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        accessToken: 'token',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the record name', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        accessToken: 'token',
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiHumeGetAccessToken('recordName', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            procedure: 'getHumeAccessToken',
+                            input: {
+                                recordName: 'recordName',
+                            },
                         }),
                         headers: expect.objectContaining({
                             Authorization: 'Bearer authToken',

@@ -2826,6 +2826,7 @@ export function botCalculationContextTests(
             ['left', 'left'],
             ['right', 'right'],
             ['floating', 'floating'],
+            ['floatingBillboard', 'floatingBillboard'],
             ['abc', 'top'],
         ];
 

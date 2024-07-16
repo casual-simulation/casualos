@@ -1,7 +1,5 @@
 import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
-import redis from 'redis';
-import type WebSocket from 'ws';
-import { BuilderOptions } from '../shared/ServerBuilder';
+import { ServerConfig } from '@casual-simulation/aux-records';
 
 export const DRIVES_URL = '/drives';
 
@@ -32,7 +30,7 @@ export interface Config {
     backend: {
         httpPort: number;
         dist: string;
-        config: BuilderOptions;
+        config: ServerConfig;
     };
 }
 

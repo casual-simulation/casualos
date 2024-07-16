@@ -181,6 +181,10 @@ describe('AIController', () => {
             },
             hume: {
                 interface: humeInterface,
+                config: {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                },
             },
             sloyd: {
                 interface: sloydInterface,
@@ -189,6 +193,7 @@ describe('AIController', () => {
             config: store,
             policies: null,
             policyController: policies,
+            records: store,
         });
     });
 
@@ -479,6 +484,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.chat({
@@ -528,6 +534,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.chat({
@@ -958,12 +965,17 @@ describe('AIController', () => {
                 },
                 hume: {
                     interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
                 },
                 sloyd: null,
                 metrics: store,
                 config: store,
                 policies: store,
                 policyController: policies,
+                records: store,
             });
 
             chatInterface.chat.mockReturnValueOnce(
@@ -1355,6 +1367,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await unwindAndCaptureAsync(
@@ -1412,6 +1425,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await unwindAndCaptureAsync(
@@ -1891,12 +1905,17 @@ describe('AIController', () => {
                 },
                 hume: {
                     interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
                 },
                 sloyd: null,
                 metrics: store,
                 config: store,
                 policies: store,
                 policyController: policies,
+                records: store,
             });
 
             chatInterface.chatStream.mockReturnValueOnce(
@@ -2005,6 +2024,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateSkybox({
@@ -2094,6 +2114,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateSkybox({
@@ -2269,6 +2290,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.getSkybox({
@@ -2360,6 +2382,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.getSkybox({
@@ -2474,6 +2497,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             otherInterface.generateImage.mockReturnValueOnce(
@@ -2527,6 +2551,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateImage({
@@ -2633,6 +2658,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateImage({
@@ -2895,6 +2921,7 @@ describe('AIController', () => {
                 sloyd: null,
                 policies: null,
                 policyController: policies,
+                records: store,
             });
 
             const result = await controller.getHumeAccessToken({
@@ -2936,6 +2963,197 @@ describe('AIController', () => {
                 errorCode: 'not_authorized',
                 errorMessage:
                     'The subscription does not permit Hume AI features.',
+            });
+        });
+
+        describe('studio features', () => {
+            const studioId = 'studioId';
+
+            beforeEach(async () => {
+                controller = new AIController({
+                    chat: null,
+                    generateSkybox: null,
+                    images: null,
+                    metrics: store,
+                    config: store,
+                    hume: {
+                        interface: humeInterface,
+                        config: null,
+                    },
+                    sloyd: null,
+                    policies: null,
+                    policyController: policies,
+                    records: store,
+                });
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'myStudio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
+
+            it('should return not_authorized if the studio doesnt have hume features', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: true,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: false,
+                    };
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit Hume AI features.',
+                });
+            });
+
+            it('should return invalid_request when the studio doesnt have a hume configuration', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: false,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: true,
+                    };
+
+                await store.updateStudioHumeConfig(studioId, null);
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The studio does not have a Hume configuration.',
+                });
+            });
+
+            it('should use the studios hume configuration', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: false,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: true,
+                    };
+
+                humeInterface.getAccessToken.mockResolvedValueOnce({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'studioApiKey',
+                    secretKey: 'studioSecretKey',
+                });
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+                expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                    apiKey: 'studioApiKey',
+                    secretKey: 'studioSecretKey',
+                });
+            });
+
+            it('should use global configuration if the studio doesnt have a configuration', async () => {
+                controller = new AIController({
+                    chat: null,
+                    generateSkybox: null,
+                    images: null,
+                    metrics: store,
+                    config: store,
+                    hume: {
+                        interface: humeInterface,
+                        config: {
+                            apiKey: 'globalApiKey',
+                            secretKey: 'globalSecretKey',
+                        },
+                    },
+                    sloyd: null,
+                    policies: null,
+                    policyController: policies,
+                    records: store,
+                });
+
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: false,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: true,
+                    };
+
+                humeInterface.getAccessToken.mockResolvedValueOnce({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+
+                await store.updateStudioHumeConfig(studioId, null);
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+                expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                    apiKey: 'globalApiKey',
+                    secretKey: 'globalSecretKey',
+                });
             });
         });
     });

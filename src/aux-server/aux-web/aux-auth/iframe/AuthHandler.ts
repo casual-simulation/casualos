@@ -73,6 +73,8 @@ declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
+const CURRENT_PROTOCOL_VERSION = 11;
+
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
  */
@@ -325,7 +327,7 @@ export class AuthHandler implements AuxAuth {
     }
 
     async getProtocolVersion() {
-        return 10;
+        return CURRENT_PROTOCOL_VERSION;
     }
 
     async getRecordsOrigin(): Promise<string> {
@@ -341,6 +343,11 @@ export class AuthHandler implements AuxAuth {
     }
 
     async openAccountPage(): Promise<void> {
+        const url = await this.getAccountPage();
+        window.open(url, '_blank');
+    }
+
+    async getAccountPage(): Promise<string> {
         const url = new URL('/', location.origin);
         if (
             authManager.currentSessionKey !== authManager.savedSessionKey &&
@@ -352,7 +359,7 @@ export class AuthHandler implements AuxAuth {
                 authManager.currentConnectionKey
             );
         }
-        window.open(url.href, '_blank');
+        return url.href;
     }
 
     async addLoginStatusCallback(

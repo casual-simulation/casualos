@@ -257,6 +257,9 @@ model Studio {
     // The loom app id and private key for this studio.
     loomConfig Json?
 
+    // The hume apiKey and secretKey for this studio.
+    humeConfig Json?
+
     records Record[]
     assignments StudioAssignment[]
 

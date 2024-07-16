@@ -2,6 +2,8 @@ import {
     Input,
     InputMethod,
     ControllerData,
+    InputModality,
+    MouseOrTouchInputMethod,
 } from '../../../shared/scene/Input';
 import { Vector2, Object3D } from '@casual-simulation/three';
 import { IOperation } from '../../../shared/interaction/IOperation';
@@ -29,6 +31,8 @@ export abstract class BaseEmptyClickOperation implements IOperation {
 
     protected _startScreenPos: Vector2;
     protected _startVRControllerPose: Object3D;
+    protected _inputModality: InputModality;
+    protected _inputMethod: InputMethod;
 
     get simulation() {
         return appManager.simulationManager.primary;
@@ -37,12 +41,15 @@ export abstract class BaseEmptyClickOperation implements IOperation {
     constructor(
         game: Game,
         interaction: BaseInteractionManager,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        inputModality: InputModality
     ) {
         this._game = game;
         this._interaction = interaction;
         this._controller =
             inputMethod.type === 'controller' ? inputMethod.controller : null;
+        this._inputMethod = inputMethod;
+        this._inputModality = inputModality;
 
         if (this._controller) {
             // Store the pose of the vr controller when the click occured.
@@ -66,7 +73,9 @@ export abstract class BaseEmptyClickOperation implements IOperation {
         const input = this._game.getInput();
         const buttonHeld: boolean = this._controller
             ? input.getControllerPrimaryButtonHeld(this._controller)
-            : input.getMouseButtonHeld(0);
+            : input.getMouseButtonHeld(
+                  (this._inputMethod as MouseOrTouchInputMethod).buttonId ?? 0
+              );
 
         if (!buttonHeld) {
             let dragThresholdPassed: boolean = this._controller
@@ -76,7 +85,9 @@ export abstract class BaseEmptyClickOperation implements IOperation {
                   )
                 : DragThresholdPassed(
                       this._startScreenPos,
-                      this._game.getInput().getMouseScreenPos()
+                      this._game.getInput().getMouseScreenPos(),
+                      (this._inputMethod as MouseOrTouchInputMethod).buttonId ??
+                          0
                   );
 
             if (!dragThresholdPassed) {

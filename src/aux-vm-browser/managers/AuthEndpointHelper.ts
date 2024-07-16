@@ -441,7 +441,18 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         if (this._protocolVersion < 2) {
             return;
         }
-        return await this._proxy.openAccountPage();
+
+        if (this._protocolVersion >= 11) {
+            const newTab = window.open('/loading-oauth.html', '_blank');
+
+            const url = await this._proxy.getAccountPage();
+
+            if (newTab && !newTab.closed) {
+                newTab.location = url;
+            }
+        } else {
+            return await this._proxy.openAccountPage();
+        }
     }
 
     async setUseCustomUI(useCustomUI: boolean) {

@@ -300,6 +300,12 @@ export interface AuxAuth {
     openAccountPage(): Promise<void>;
 
     /**
+     * Gets the link to the account page.
+     * Only supported on protocol version 11 or more.
+     */
+    getAccountPage(): Promise<string>;
+
+    /**
      * Adds the given function as a callback for login status information.
      * Only supported on protocol version 2 or more.
      * @param callback The function that should be called when the login status changes.

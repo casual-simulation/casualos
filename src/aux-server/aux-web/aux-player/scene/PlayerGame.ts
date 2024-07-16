@@ -4,6 +4,8 @@ import {
     CameraRig,
     CameraType,
     createCameraRig,
+    Perspective_MaxZoom,
+    Perspective_MinZoom,
     resizeCameraRig,
 } from '../../shared/scene/CameraRigFactory';
 import {
@@ -24,6 +26,7 @@ import {
     SphereGeometry,
     MeshBasicMaterial,
     Group,
+    PerspectiveCamera,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -326,6 +329,22 @@ export class PlayerGame extends Game {
             this.playerSimulations,
             'zoomMax',
             Orthographic_MaxZoom
+        );
+    }
+
+    getPerspectiveZoomMin(): number {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'zoomMin',
+            Perspective_MinZoom
+        );
+    }
+
+    getPerspectiveZoomMax(): number {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'zoomMax',
+            Perspective_MaxZoom
         );
     }
 
@@ -2108,8 +2127,19 @@ export class PlayerGame extends Game {
             mainControls.controls.enableRotate = this.getRotatable();
             mainControls.controls.enableZoom = this.getZoomable();
 
-            mainControls.controls.minZoom = this.getZoomMin();
-            mainControls.controls.maxZoom = this.getZoomMax();
+            if (mainControls.rig.mainCamera instanceof PerspectiveCamera) {
+                mainControls.controls.minDistance =
+                    this.getPerspectiveZoomMin();
+                mainControls.controls.maxDistance =
+                    this.getPerspectiveZoomMax();
+                mainControls.controls.minZoom = Orthographic_MinZoom;
+                mainControls.controls.maxZoom = Orthographic_MaxZoom;
+            } else {
+                mainControls.controls.minDistance = Perspective_MinZoom;
+                mainControls.controls.maxDistance = Perspective_MaxZoom;
+                mainControls.controls.minZoom = this.getZoomMin();
+                mainControls.controls.maxZoom = this.getZoomMax();
+            }
 
             mainControls.controls.minPanX = this.getPanMinX();
             mainControls.controls.maxPanX = this.getPanMaxX();

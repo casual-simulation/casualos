@@ -60,10 +60,10 @@
                 </div>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button @click="showReportInst()">Report Inst</md-button>
-                <md-button class="md-primary" @click="openAccountDashboard()"
-                    >Manage Account</md-button
+                <md-button v-if="reportInstVisible" @click="showReportInst()"
+                    >Report Inst</md-button
                 >
+                <md-button @click="openAccountDashboard()">Manage Account</md-button>
                 <md-button @click="logout()">Sign Out</md-button>
             </md-dialog-actions>
         </md-dialog>
