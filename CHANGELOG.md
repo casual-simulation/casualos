@@ -43,6 +43,8 @@
         -   Requesting users require access to the `ai.hume` resource kind and `create` action for the specified record.
 -   Added the `floatingBillboard` option for `labelPosition`.
     -   Like `floating`, but the label background won't have an arrow and the label will always face the camera.
+-   Added the `labelFloatingBackgroundColor` tag to control the color of the background for floating labels.
+    -   Defaults to `white`.
 
 ### :bug: Bug Fixes
 
