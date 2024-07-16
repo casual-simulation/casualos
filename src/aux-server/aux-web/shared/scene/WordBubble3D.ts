@@ -12,7 +12,7 @@ import {
     ShapeBufferGeometry,
 } from '@casual-simulation/three';
 import { merge } from '@casual-simulation/aux-common/utils';
-import { setLayerMask, buildSRGBColor } from './SceneUtils';
+import { setLayerMask, buildSRGBColor, setColor } from './SceneUtils';
 import { Text3D } from './Text3D';
 
 export class WordBubble3D extends Object3D {
@@ -21,6 +21,10 @@ export class WordBubble3D extends Object3D {
     private _shapeMesh: Mesh;
 
     private _options: WordBubbleOptions;
+
+    get mesh() {
+        return this._shapeMesh;
+    }
 
     constructor(opt?: WordBubbleOptions) {
         super();

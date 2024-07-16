@@ -2,6 +2,8 @@ import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
+    calculateBotValue,
+    calculateStringTagValue,
     getBotLabelAnchor,
     isFloatingAnchor,
 } from '@casual-simulation/aux-common';
@@ -12,6 +14,7 @@ import {
     convertToBox2,
     objectUpwardRay,
     objectWorldDirectionRay,
+    setColor,
 } from '../SceneUtils';
 import {
     Scene,
@@ -85,6 +88,13 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
             this.wordBubble.visible = false;
             return;
         }
+
+        const color = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxLabelFloatingBackgroundColor'
+        );
+        setColor(this.wordBubble.mesh, color);
 
         let arrowPoint: Vector3 | null;
 

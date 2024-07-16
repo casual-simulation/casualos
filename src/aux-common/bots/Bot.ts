@@ -2696,6 +2696,7 @@ export const KNOWN_TAGS: string[] = [
     'labelAlignment',
     'labelWordWrapMode',
     'labelFontAddress',
+    'labelFloatingBackgroundColor',
     'listening',
     'scale',
     'scaleX',

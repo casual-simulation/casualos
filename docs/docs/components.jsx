@@ -146,6 +146,7 @@ export const tagMap = {
     labelAlignment: 'tags/visualization',
     labelFontAddress: 'tags/visualization',
     labelWordWrapMode: 'tags/visualization',
+    labelFloatingBackgroundColor: 'tags/visualization',
     scale: 'tags/visualization',
     scaleX: 'tags/visualization',
     scaleY: 'tags/visualization',
