@@ -1,6 +1,7 @@
 import { type } from 'os';
 import { TagEditOp } from './AuxStateHelpers';
 import { BotModule, BotModuleResult } from './BotModule';
+import { Point2D } from './BotEvents';
 
 export type PartialBot = Partial<Bot>;
 
@@ -2908,7 +2909,8 @@ export function onClickArg(
     uv: string,
     modality: string,
     hand: string,
-    finger: string
+    finger: string,
+    buttonId: string
 ) {
     return {
         face,
@@ -2917,6 +2919,7 @@ export function onClickArg(
         modality,
         hand,
         finger,
+        buttonId,
     };
 }
 
@@ -2927,11 +2930,30 @@ export function onAnyClickArg(
     uv: string,
     modality: string,
     hand: string,
-    finger: string
+    finger: string,
+    buttonId: string
 ) {
     return {
-        ...onClickArg(face, dimension, uv, modality, hand, finger),
+        ...onClickArg(face, dimension, uv, modality, hand, finger, buttonId),
         bot,
+    };
+}
+
+export function onGridClickArg(
+    position: Point2D,
+    dimension: string,
+    modality: string,
+    hand: string,
+    finger: string,
+    buttonId: string
+) {
+    return {
+        position,
+        dimension,
+        modality,
+        hand,
+        finger,
+        buttonId,
     };
 }
 
@@ -3039,7 +3061,8 @@ export function onPointerEnterExitArg(
     dimension: string,
     modality: string,
     hand: string,
-    finger: string
+    finger: string,
+    buttonId: string
 ) {
     return {
         bot,
@@ -3047,13 +3070,25 @@ export function onPointerEnterExitArg(
         modality,
         hand,
         finger,
+        buttonId,
     };
 }
 
-export function onPointerUpDownArg(bot: Bot, dimension: string) {
+export function onPointerUpDownArg(
+    bot: Bot,
+    dimension: string,
+    modality: string,
+    hand: string,
+    finger: string,
+    buttonId: string
+) {
     return {
         bot,
         dimension,
+        modality,
+        hand,
+        finger,
+        buttonId,
     };
 }
 

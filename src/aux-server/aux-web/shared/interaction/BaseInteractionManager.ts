@@ -30,6 +30,8 @@ import {
     getFingerModality,
     getModalityKey,
     getModalityHand,
+    formatModalityButtonId,
+    modalityForInputMethod,
 } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
@@ -354,52 +356,67 @@ export abstract class BaseInteractionManager {
     }
 
     private _handleMouseInput(input: Input) {
-        const inputMethod: InputMethod = {
-            type: 'mouse_or_touch',
-            identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
-        };
-        const modality: InputModality = {
-            type:
-                input.currentInputType === InputType.Touch ? 'touch' : 'mouse',
-        };
-        if (input.getMouseButtonDown(MouseButtonId.Left)) {
-            if (!this._overHtmlMixerIFrame) {
-                this._disableIFramePointerEvents();
-            }
-            if (
-                input.isMouseButtonDownOnElement(this._game.gameView.gameView)
-            ) {
-                const { gameObject, hit, block } = this.findHoveredGameObject(
-                    inputMethod,
-                    (obj) => obj.pointable
-                );
-                if (gameObject) {
-                    // Start game object click operation.
-                    this._startClickingGameObject(
-                        gameObject,
-                        hit,
-                        inputMethod,
-                        modality,
-                        block
-                    );
-                } else {
-                    this._startClickingEmptySpace(inputMethod);
+        for (let buttonId of [
+            MouseButtonId.Left,
+            MouseButtonId.Middle,
+            MouseButtonId.Right,
+        ]) {
+            const inputMethod: InputMethod = {
+                type: 'mouse_or_touch',
+                identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+                buttonId,
+            };
+            const modality: InputModality = modalityForInputMethod(
+                inputMethod,
+                input.currentInputType
+            );
+            if (input.getMouseButtonDown(buttonId)) {
+                if (!this._overHtmlMixerIFrame) {
+                    this._disableIFramePointerEvents();
                 }
-            } else if (
-                input.isMouseButtonDownOnAnyElements(
-                    this._game.getUIHtmlElements()
-                )
-            ) {
-                const element = input.getTargetData().inputDown;
-                const elementClickOperation =
-                    this.createHtmlElementClickOperation(element, inputMethod);
-                if (elementClickOperation !== null) {
-                    this._operations.push(elementClickOperation);
+                if (
+                    input.isMouseButtonDownOnElement(
+                        this._game.gameView.gameView
+                    )
+                ) {
+                    const { gameObject, hit, block } =
+                        this.findHoveredGameObject(
+                            inputMethod,
+                            (obj) => obj.pointable
+                        );
+                    if (gameObject) {
+                        // Start game object click operation.
+                        this._startClickingGameObject(
+                            gameObject,
+                            hit,
+                            inputMethod,
+                            modality,
+                            block
+                        );
+                    } else {
+                        this._startClickingEmptySpace(inputMethod, modality);
+                    }
+                } else if (
+                    buttonId === MouseButtonId.Left &&
+                    input.isMouseButtonDownOnAnyElements(
+                        this._game.getUIHtmlElements()
+                    )
+                ) {
+                    const element = input.getTargetData().inputDown;
+                    const elementClickOperation =
+                        this.createHtmlElementClickOperation(
+                            element,
+                            inputMethod
+                        );
+                    if (elementClickOperation !== null) {
+                        this._operations.push(elementClickOperation);
+                    }
                 }
+            } else if (input.getMouseButtonUp(buttonId)) {
+                this._stopClickingGameObject(inputMethod);
             }
-        } else if (input.getMouseButtonUp(MouseButtonId.Left)) {
-            this._stopClickingGameObject(inputMethod);
         }
+
         // Middle click or Right click.
         if (
             input.getMouseButtonDown(MouseButtonId.Middle) ||
@@ -418,6 +435,11 @@ export abstract class BaseInteractionManager {
 
         if (input.supportsHoverEvents) {
             if (input.isMouseFocusingOnElement(this._game.gameView.gameView)) {
+                const inputMethod: InputMethod = {
+                    type: 'mouse_or_touch',
+                    identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+                    buttonId: null,
+                };
                 const { gameObject, block } = this.findHoveredGameObject(
                     inputMethod,
                     (obj) => obj.pointable
@@ -426,9 +448,10 @@ export abstract class BaseInteractionManager {
                     // Set bot as being hovered on.
                     this._setHoveredBot(
                         gameObject,
-                        {
-                            type: 'mouse',
-                        },
+                        modalityForInputMethod(
+                            inputMethod,
+                            input.currentInputType
+                        ),
                         block
                     );
                 }
@@ -461,7 +484,10 @@ export abstract class BaseInteractionManager {
                         block
                     );
                 } else {
-                    this._startClickingEmptySpace(inputMethod);
+                    this._startClickingEmptySpace(
+                        inputMethod,
+                        controllerModality
+                    );
                 }
             } else if (input.getControllerPrimaryButtonUp(controller)) {
                 this._stopClickingGameObject(inputMethod);
@@ -636,12 +662,14 @@ export abstract class BaseInteractionManager {
             inputMethod = {
                 type: 'mouse_or_touch',
                 identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+                buttonId: MouseButtonId.Left, // Assume left click for dragging a bot
             };
             modality = {
                 type:
                     input.currentInputType === InputType.Touch
                         ? 'touch'
                         : 'mouse',
+                buttonId: 'left',
             };
         }
 
@@ -660,8 +688,14 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    private _startClickingEmptySpace(inputMethod: InputMethod) {
-        const emptyClickOperation = this.createEmptyClickOperation(inputMethod);
+    private _startClickingEmptySpace(
+        inputMethod: InputMethod,
+        modality: InputModality
+    ) {
+        const emptyClickOperation = this.createEmptyClickOperation(
+            inputMethod,
+            modality
+        );
         if (emptyClickOperation !== null) {
             this._operations.push(emptyClickOperation);
         }
@@ -1266,6 +1300,7 @@ export abstract class BaseInteractionManager {
             {
                 type: 'mouse_or_touch',
                 identifier: MOUSE_INPUT_METHOD_IDENTIFIER,
+                buttonId: MouseButtonId.Right, // Assume right click for context menu.
             },
             (obj) => obj.pointable
         );
@@ -1365,7 +1400,10 @@ export abstract class BaseInteractionManager {
         modality: InputModality,
         block: Block | null
     ): IOperation;
-    abstract createEmptyClickOperation(inputMethod: InputMethod): IOperation;
+    abstract createEmptyClickOperation(
+        inputMethod: InputMethod,
+        modality: InputModality
+    ): IOperation;
     abstract createHtmlElementClickOperation(
         element: HTMLElement,
         inputMethod: InputMethod
