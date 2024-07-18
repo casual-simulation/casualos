@@ -61,6 +61,7 @@
 -   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
 -   Fixed an issue where selecting an option in the BIOS would fail to actually show the selected option.
 -   Fixed an issue where the arrow on floating labels would clip into the bot if the bot had a scale > 1.
+-   Fixed an issue where portal bots would not appear in the code editor autocomplete.
 
 ## V3.3.6
 
