@@ -417,7 +417,7 @@ export function watchSimulation(
                     addDefinitionsForPortalBot(
                         data.portalId,
                         data.botId,
-                        monaco.languages.typescript.javascriptDefaults
+                        monaco.languages.typescript.typescriptDefaults
                     );
                 })
             )
@@ -429,7 +429,7 @@ export function watchSimulation(
     addDefinitionsForPortalBot(
         'auth',
         'botId',
-        monaco.languages.typescript.javascriptDefaults
+        monaco.languages.typescript.typescriptDefaults
     );
 
     sub.add(
@@ -689,7 +689,7 @@ function registerEditorActionsForSimulation(simulation: Simulation) {
 export function addDefinitionsForPortalBot(
     portalId: string,
     botId: string,
-    defaults: typeof monaco.languages.typescript.javascriptDefaults
+    defaults: typeof monaco.languages.typescript.typescriptDefaults
 ) {
     const extraLibs = defaults.getExtraLibs();
     const libs: { filePath: string; content: string }[] = [];
