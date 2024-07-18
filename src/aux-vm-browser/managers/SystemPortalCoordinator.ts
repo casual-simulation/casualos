@@ -817,7 +817,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                 ret.prefix = tagPrefix;
             }
 
-            if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
+            if (recentTagsCounts.get(`${tag}.${space}`)) {
                 const area = getSystemArea(system);
                 const prefix =
                     hasValue(system) && hasValue(area)
@@ -828,11 +828,6 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                     ...ret,
                 };
             }
-
-            return {
-                hint: '',
-                ...ret,
-            };
         }
     }
 
