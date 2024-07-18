@@ -722,6 +722,14 @@ const telemetrySchema = z.object({
         .describe('Options for instrumentation')
         .optional()
         .default({}),
+
+    resource: z
+        .record(z.string())
+        .describe(
+            'The resource that should be used. See https://opentelemetry.io/docs/specs/semconv/resource/ for more information.'
+        )
+        .optional()
+        .default({}),
 });
 
 export const serverConfigSchema = z.object({

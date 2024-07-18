@@ -105,6 +105,7 @@ export function setupInstrumentation(options: ServerConfig) {
         resource: new Resource({
             [SEMRESATTRS_SERVICE_NAME]: 'casualos',
             [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
+            ...options.telemetry.resource,
         }),
         traceExporter: traceExporter,
         metricReader: metrics,
