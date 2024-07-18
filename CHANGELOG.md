@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.8
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Improved `SERVER_CONFIG` to allow customizing the OpenTelemetry resource.
+
 ## V3.3.7
 
 #### Date: 7/18/2024
