@@ -1,5 +1,9 @@
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import { ServerError } from '@casual-simulation/aux-common/Errors';
+import { traced } from './tracing/TracingDecorators';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'RateLimitController';
 
 /**
  * Defines a controller that is able to handle rate limiting.
@@ -20,6 +24,7 @@ export class RateLimitController {
      * Checks that the given request is allowed to proceed due to not exceeding the rate limit.
      * @param request The request to check.
      */
+    @traced(TRACE_NAME)
     async checkRateLimit(
         request: CheckRateLimitRequest
     ): Promise<CheckRateLimitResponse> {
@@ -46,6 +51,10 @@ export class RateLimitController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[RateLimitController] An error occurred while checking the rate limit.`,
                 err

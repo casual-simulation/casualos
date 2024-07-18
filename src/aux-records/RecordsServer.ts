@@ -24,10 +24,15 @@ import {
     SubscriptionController,
 } from './SubscriptionController';
 import { ZodError, z } from 'zod';
-import { LOOM_CONFIG, PublicRecordKeyPolicy } from './RecordsStore';
+import {
+    HUME_CONFIG,
+    LOOM_CONFIG,
+    PublicRecordKeyPolicy,
+} from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
+    DenialReason,
     Procedure,
     ProcedureOutput,
     ProcedureOutputError,
@@ -76,6 +81,18 @@ import {
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import { LoomController } from './LoomController';
+import { SpanKind, Tracer, trace } from '@opentelemetry/api';
+import { traceHttpResponse, traced } from './tracing/TracingDecorators';
+import {
+    SEMATTRS_ENDUSER_ID,
+    SEMATTRS_HTTP_CLIENT_IP,
+    SEMATTRS_HTTP_HOST,
+    SEMATTRS_HTTP_METHOD,
+    SEMATTRS_HTTP_ROUTE,
+    SEMATTRS_HTTP_TARGET,
+    SEMATTRS_HTTP_URL,
+    SEMATTRS_HTTP_USER_AGENT,
+} from '@opentelemetry/semantic-conventions';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -420,6 +437,12 @@ export interface Route<T> {
     method: GenericHttpRequest['method'];
 
     /**
+     * The name for the route.
+     * If omitted, then the route will not be named.
+     */
+    name?: string;
+
+    /**
      * The handler that should be called when the route is matched.
      * @param request The request.
      * @param data The data that was parsed from the request.
@@ -475,6 +498,11 @@ export class RecordsServer {
     private _routes: Map<string, Route<any>> = new Map();
 
     private _procedures: ReturnType<RecordsServer['_createProcedures']>;
+
+    /**
+     * The tracer that is used for tracing requests.
+     */
+    private _tracer: Tracer;
 
     /**
      * The set of origins that are allowed for account management requests.
@@ -534,6 +562,10 @@ export class RecordsServer {
         this._websocketController = websocketController;
         this._moderationController = moderationController;
         this._loomController = loomController;
+        this._tracer = trace.getTracer(
+            'RecordsServer',
+            typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
+        );
         this._procedures = this._createProcedures();
         this._setupRoutes();
     }
@@ -2291,8 +2323,12 @@ export class RecordsServer {
             getHumeAccessToken: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/ai/hume/token')
-                .inputs(z.object({}))
-                .handler(async (_, context) => {
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
                     if (!this._aiController) {
                         return AI_NOT_SUPPORTED_RESULT;
                     }
@@ -2311,10 +2347,76 @@ export class RecordsServer {
 
                     const result = await this._aiController.getHumeAccessToken({
                         userId: sessionKeyValidation.userId,
+                        recordName,
                     });
 
                     return result;
                 }),
+
+            createSloydModel: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/ai/sloyd/model')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION.optional(),
+                        outputMimeType: z
+                            .enum(['model/gltf+json', 'model/gltf-binary'])
+                            .default('model/gltf+json'),
+                        prompt: z.string().min(1),
+                        levelOfDetail: z.number().min(0.01).max(1).optional(),
+                        baseModelId: z.string().optional(),
+                        thumbnail: z
+                            .object({
+                                type: z.literal('image/png'),
+                                width: z.number().int().min(1),
+                                height: z.number().int().min(1),
+                            })
+                            .optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            outputMimeType,
+                            prompt,
+                            levelOfDetail,
+                            baseModelId,
+                            thumbnail,
+                        },
+                        context
+                    ) => {
+                        if (!this._aiController) {
+                            return AI_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._aiController.sloydGenerateModel({
+                                userId: sessionKeyValidation.userId,
+                                recordName:
+                                    recordName ?? sessionKeyValidation.userId,
+                                outputMimeType,
+                                prompt,
+                                levelOfDetail,
+                                baseModelId,
+                                thumbnail: thumbnail as any,
+                            });
+
+                        return result;
+                    }
+                ),
 
             getLoomAccessToken: procedure()
                 .origins('api')
@@ -2443,6 +2545,7 @@ export class RecordsServer {
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
                         playerConfig: COM_ID_PLAYER_CONFIG.optional(),
                         loomConfig: LOOM_CONFIG.optional(),
+                        humeConfig: HUME_CONFIG.optional(),
                     })
                 )
                 .handler(
@@ -2454,6 +2557,7 @@ export class RecordsServer {
                             comIdConfig,
                             playerConfig,
                             loomConfig,
+                            humeConfig,
                         },
                         context
                     ) => {
@@ -2478,6 +2582,7 @@ export class RecordsServer {
                                 comIdConfig,
                                 playerConfig,
                                 loomConfig,
+                                humeConfig,
                             },
                         });
                         return result;
@@ -3147,7 +3252,7 @@ export class RecordsServer {
             if (procs.hasOwnProperty(procedureName)) {
                 const procedure = (procs as any)[procedureName];
                 if (procedure.http) {
-                    this._addProcedureRoute(procedure);
+                    this._addProcedureRoute(procedure, procedureName);
                 }
             }
         }
@@ -3170,6 +3275,12 @@ export class RecordsServer {
                         errorCode: 'not_found',
                         errorMessage: `Unable to find procedure: ${procedure}`,
                     } as const);
+                }
+
+                const span = trace.getActiveSpan();
+                if (span) {
+                    span.updateName(`http:${procedure}`);
+                    span.setAttribute('request.procedure', procedure);
                 }
 
                 const origins =
@@ -3216,6 +3327,7 @@ export class RecordsServer {
         this.addRoute({
             method: 'POST',
             path: '/api/stripeWebhook',
+            name: 'stripeWebhook',
             allowedOrigins: true,
             handler: (request) => this._stripeWebhook(request),
         });
@@ -3237,7 +3349,7 @@ export class RecordsServer {
         }
         (this._procedures as any)[name] = procedure;
         if (procedure.http) {
-            this._addProcedureRoute(procedure);
+            this._addProcedureRoute(procedure, name);
         }
     }
 
@@ -3256,7 +3368,8 @@ export class RecordsServer {
      * @param route The route that should be added.
      */
     private _addProcedureRoute<T>(
-        procedure: Procedure<T, ProcedureOutput>
+        procedure: Procedure<T, ProcedureOutput>,
+        name: string
     ): void {
         if (!procedure.http) {
             throw new Error('Procedure must have an http route defined.');
@@ -3267,6 +3380,7 @@ export class RecordsServer {
             method: route.method,
             path: route.path,
             schema: procedure.schema,
+            name: name,
             handler: async (request, data) => {
                 const context: RPCContext = {
                     ipAddress: request.ipAddress,
@@ -3309,9 +3423,28 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
+    @traced('RecordsServer', {
+        kind: SpanKind.SERVER,
+        root: true,
+    })
+    @traceHttpResponse()
     async handleHttpRequest(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        const span = trace.getActiveSpan();
+        if (span) {
+            const url = new URL(request.path, `http://${request.headers.host}`);
+            span.setAttributes({
+                [SEMATTRS_HTTP_METHOD]: request.method,
+                [SEMATTRS_HTTP_URL]: url.href,
+                [SEMATTRS_HTTP_TARGET]: request.path,
+                [SEMATTRS_HTTP_CLIENT_IP]: request.ipAddress,
+                [SEMATTRS_HTTP_HOST]: request.headers.host,
+                [SEMATTRS_HTTP_USER_AGENT]: request.headers['user-agent'],
+                ['http.origin']: request.headers.origin,
+            });
+        }
+
         let skipRateLimitCheck = false;
         if (!this._rateLimit) {
             skipRateLimitCheck = true;
@@ -3320,6 +3453,10 @@ export class RecordsServer {
             request.path === '/api/stripeWebhook'
         ) {
             skipRateLimitCheck = true;
+        }
+
+        if (skipRateLimitCheck && span) {
+            span.setAttribute('request.rateLimitCheck', 'skipped');
         }
 
         if (!skipRateLimitCheck) {
@@ -3405,6 +3542,10 @@ export class RecordsServer {
 
         const route = this._routes.get(`${request.method}:${request.path}`);
         if (route) {
+            if (span && route.name) {
+                span.updateName(`http:${route.name}`);
+            }
+
             const origins =
                 route.allowedOrigins === 'account'
                     ? this._allowedAccountOrigins
@@ -3518,9 +3659,22 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
+    @traced('RecordsServer', {
+        kind: SpanKind.SERVER,
+    })
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
         if (!this._websocketController) {
             return;
+        }
+
+        const span = trace.getActiveSpan();
+        if (span) {
+            span.setAttributes({
+                [SEMATTRS_HTTP_CLIENT_IP]: request.ipAddress,
+                ['http.origin']: request.origin,
+                ['websocket.type']: request.type,
+                ['request.connectionId']: request.connectionId,
+            });
         }
 
         let skipRateLimitCheck = false;
@@ -3550,6 +3704,10 @@ export class RecordsServer {
                     );
                 }
             }
+        }
+
+        if (skipRateLimitCheck && span) {
+            span.setAttribute('request.rateLimitCheck', 'skipped');
         }
 
         if (request.type === 'connect') {
@@ -3632,14 +3790,17 @@ export class RecordsServer {
         });
     }
 
+    @traced('RecordsServer')
     private async _processWebsocketMessage(
         request: GenericWebsocketRequest,
         requestId: number,
         message: WebsocketRequestMessage
     ) {
+        const span = trace.getActiveSpan();
         const messageResult = websocketRequestMessageSchema.safeParse(message);
 
         if (messageResult.success === false) {
+            span?.setAttribute('request.messageType', 'invalid');
             await this._sendWebsocketZodError(
                 request.connectionId,
                 requestId,
@@ -3648,6 +3809,7 @@ export class RecordsServer {
             return;
         }
         const data = messageResult.data;
+        span?.setAttribute('request.messageType', data.type);
 
         if (data.type === 'login') {
             await this._websocketController.login(
@@ -3782,6 +3944,7 @@ export class RecordsServer {
         }
     }
 
+    @traced('RecordsServer')
     private async _processWebsocketDownload(
         request: GenericWebsocketRequest,
         requestId: number,
@@ -3826,6 +3989,7 @@ export class RecordsServer {
         );
     }
 
+    @traced('RecordsServer')
     private async _processWebsocketUploadRequest(
         request: GenericWebsocketRequest,
         requestId: number
@@ -6728,13 +6892,53 @@ export class RecordsServer {
                     'A session key was not provided, but it is required for this operation.',
             };
         }
-        return await this._auth.validateSessionKey(sessionKey);
+        const result = await this._auth.validateSessionKey(sessionKey);
+        if (result.success === true) {
+            const span = trace.getActiveSpan();
+            if (span) {
+                span.setAttributes({
+                    [SEMATTRS_ENDUSER_ID]: result.userId,
+                    ['request.userId']: result.userId,
+                    ['request.userRole']: result.role,
+                    ['request.sessionId']: result.sessionId,
+                    ['request.subscriptionId']: result.subscriptionId,
+                    ['request.subscriptionTier']: result.subscriptionTier,
+                });
+            }
+        }
+        return result;
     }
 }
 
 export function returnResult<
-    T extends { success: false; errorCode: KnownErrorCodes } | { success: true }
+    T extends
+        | {
+              success: false;
+              errorCode: KnownErrorCodes;
+              errorMessage: string;
+              reason?: DenialReason;
+          }
+        | { success: true }
 >(result: T): GenericHttpResponse {
+    const span = trace.getActiveSpan();
+    if (span) {
+        if (result.success === false) {
+            span.setAttributes({
+                ['result.errorCode']: result.errorCode,
+                ['result.errorMessage']: result.errorMessage,
+            });
+
+            if (result.reason) {
+                for (let prop in result.reason) {
+                    span.setAttribute(
+                        `result.reason.${prop}`,
+                        (result.reason as any)[prop] as string
+                    );
+                }
+            }
+        }
+    }
+
     return {
         statusCode: getStatusCode(result),
         body: JSON.stringify(result),
@@ -6744,6 +6948,13 @@ export function returnResult<
 export function returnProcedureOutputStream(
     result: ProcedureOutputStream
 ): GenericHttpResponse {
+    const span = trace.getActiveSpan();
+    if (span) {
+        span.setAttributes({
+            ['result.stream']: true,
+        });
+    }
+
     async function* generateBody(): AsyncGenerator<string, string> {
         while (true) {
             const { done, value } = await result.next();

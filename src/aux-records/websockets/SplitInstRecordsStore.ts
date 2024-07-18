@@ -148,7 +148,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
             branch
         );
 
-        if (tempUpdates) {
+        if (tempUpdates && tempUpdates.updates.length > 0) {
             const { branchSizeInBytes, ...result } = tempUpdates;
             return result;
         } else if (!recordName) {

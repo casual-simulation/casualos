@@ -10,8 +10,11 @@ import {
     GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { trace } from '@opentelemetry/api';
 
 export const MESSAGES_BUCKET_NAME = process.env.MESSAGES_BUCKET;
+
+const tracer = trace.getTracer('WebsocketUtils');
 
 export function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -36,27 +39,36 @@ export async function uploadMessage(
     bucket: string,
     data: string
 ): Promise<string> {
-    const key = uuid();
-    const response = await client.putObject({
-        Bucket: bucket,
-        Key: key,
-        ContentType: 'application/json',
-        Body: data,
-        ACL: 'bucket-owner-full-control',
+    return tracer.startActiveSpan('uploadMessage', async (span) => {
+        try {
+            const key = uuid();
+            const response = await client.putObject({
+                Bucket: bucket,
+                Key: key,
+                ContentType: 'application/json',
+                Body: data,
+                ACL: 'bucket-owner-full-control',
+            });
+
+            if (isOffline()) {
+                return `http://localhost:4569/${bucket}/${key}`;
+            } else {
+                const params = new GetObjectCommand({
+                    Bucket: bucket,
+                    Key: key,
+                });
+
+                return await getSignedUrl(client, params, {
+                    expiresIn: 3600,
+                });
+            }
+        } catch (err) {
+            span.recordException(err);
+            throw err;
+        } finally {
+            span.end();
+        }
     });
-
-    if (isOffline()) {
-        return `http://localhost:4569/${bucket}/${key}`;
-    } else {
-        const params = new GetObjectCommand({
-            Bucket: bucket,
-            Key: key,
-        });
-
-        return await getSignedUrl(client, params, {
-            expiresIn: 3600,
-        });
-    }
 }
 
 export async function getMessageUploadUrl(
@@ -83,13 +95,22 @@ export async function downloadObject(
     bucket: string,
     url: string
 ): Promise<string> {
-    const parsed = new URL(url);
-    const params: GetObjectCommandInput = {
-        Bucket: bucket,
-        Key: parsed.pathname.slice(1),
-    };
-    const response = await client.getObject(params);
-    return response.Body.transformToString('utf8');
+    return tracer.startActiveSpan('downloadObject', async (span) => {
+        try {
+            const parsed = new URL(url);
+            const params: GetObjectCommandInput = {
+                Bucket: bucket,
+                Key: parsed.pathname.slice(1),
+            };
+            const response = await client.getObject(params);
+            return response.Body.transformToString('utf8');
+        } catch (err) {
+            span.recordException(err);
+            throw err;
+        } finally {
+            span.end();
+        }
+    });
 }
 
 /**

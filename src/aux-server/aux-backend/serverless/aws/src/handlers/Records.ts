@@ -1,4 +1,5 @@
 // Create clients and set shared const values outside of the handler.
+import '../Instrumentation';
 import {
     GenericHttpRequest,
     GenericHttpHeaders,
@@ -122,5 +123,7 @@ export async function handleRecords(
 
 export async function savePermanentBranches() {
     await builder.ensureInitialized();
-    await websocketController.savePermanentBranches();
+
+    // 15 minute timeout to match the lambda timeout.
+    await websocketController.savePermanentBranches(900 * 1000);
 }

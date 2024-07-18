@@ -4,6 +4,9 @@ import {
 } from '@casual-simulation/aux-records';
 import { PrismaClient } from './generated';
 import { convertToDate } from './Utils';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaModerationStore';
 
 /**
  * Defines a class that implements a ModerationStore using Prisma.
@@ -15,6 +18,7 @@ export class PrismaModerationStore implements ModerationStore {
         this._client = client;
     }
 
+    @traced(TRACE_NAME)
     async saveUserInstReport(report: UserInstReport): Promise<void> {
         await this._client.userInstReport.upsert({
             where: {

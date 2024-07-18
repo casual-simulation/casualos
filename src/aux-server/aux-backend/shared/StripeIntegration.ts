@@ -13,7 +13,23 @@ import {
     StripeSubscription,
     StripeSubscriptionItem,
 } from '@casual-simulation/aux-records';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import {
+    SEMATTRS_PEER_SERVICE,
+    SEMRESATTRS_SERVICE_NAME,
+    SEMRESATTRS_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions';
 import Stripe from 'stripe';
+
+const TRACE_NAME = 'StripeIntegration';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.CLIENT,
+    attributes: {
+        [SEMATTRS_PEER_SERVICE]: 'stripe',
+        [SEMRESATTRS_SERVICE_NAME]: 'stripe',
+    },
+};
 
 /**
  * Defines a concrete implementation of the Stripe Interface that is used by SubscriptionController.
@@ -33,6 +49,7 @@ export class StripeIntegration implements StripeInterface {
         this._testClock = testClock;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async listPricesForProduct(product: string): Promise<StripePrice[]> {
         const prices = await this._stripe.prices.list({
             product: product,
@@ -41,6 +58,7 @@ export class StripeIntegration implements StripeInterface {
         return prices.data;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getProductAndPriceInfo(product: string): Promise<StripeProduct> {
         const p = await this._stripe.products.retrieve(product, {
             expand: ['default_price'],
@@ -49,6 +67,7 @@ export class StripeIntegration implements StripeInterface {
         return p as StripeProduct;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async createCheckoutSession(
         request: StripeCheckoutRequest
     ): Promise<StripeCheckoutResponse> {
@@ -61,6 +80,7 @@ export class StripeIntegration implements StripeInterface {
         };
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async createPortalSession(
         request: StripePortalRequest
     ): Promise<StripePortalResponse> {
@@ -73,6 +93,7 @@ export class StripeIntegration implements StripeInterface {
         };
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async createCustomer(
         request: StripeCreateCustomerRequest
     ): Promise<StripeCreateCustomerResponse> {
@@ -84,6 +105,7 @@ export class StripeIntegration implements StripeInterface {
         return response;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async listActiveSubscriptionsForCustomer(
         id: string
     ): Promise<StripeListActiveSubscriptionsResponse> {
@@ -148,6 +170,7 @@ export class StripeIntegration implements StripeInterface {
         return this._stripe.webhooks.constructEvent(payload, signature, secret);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getSubscriptionById(
         id: string
     ): Promise<Omit<StripeSubscription, 'items'>> {

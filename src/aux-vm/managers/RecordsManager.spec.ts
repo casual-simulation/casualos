@@ -42,6 +42,7 @@ import {
     revokeRecordPermission,
     aiChatStream,
     aiHumeGetAccessToken,
+    aiSloydGenerateModel,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -8057,7 +8058,7 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(true);
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
-                records.handleEvents([aiHumeGetAccessToken({}, 1)]);
+                records.handleEvents([aiHumeGetAccessToken(undefined, {}, 1)]);
 
                 await waitAsync();
 
@@ -8081,6 +8082,138 @@ describe('RecordsManager', () => {
                     asyncResult(1, {
                         success: true,
                         accessToken: 'token',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the record name', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        accessToken: 'token',
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiHumeGetAccessToken('recordName', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            procedure: 'getHumeAccessToken',
+                            input: {
+                                recordName: 'recordName',
+                            },
+                        }),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        accessToken: 'token',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('ai_sloyd_generate_model', () => {
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    headers?: Headers;
+                    json?: () => Promise<any>;
+                    text?: () => Promise<string>;
+                    body?: ReadableStream;
+                }>
+            >;
+
+            const originalFetch = globalThis.fetch;
+
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+                fetch = globalThis.fetch = jest.fn();
+            });
+
+            afterAll(() => {
+                globalThis.fetch = originalFetch;
+            });
+
+            it('should make a GET request to /api/v3/callProcedure', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        confidenceScore: 0.5,
+                        interactionId: 'modelId',
+                        modelOutputType: 'json-gltf',
+                        name: 'model name',
+                        gltfJson: 'json',
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiSloydGenerateModel(
+                        {
+                            prompt: 'the prompt',
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            procedure: 'createSloydModel',
+                            input: {
+                                prompt: 'the prompt',
+                            },
+                        }),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        confidenceScore: 0.5,
+                        interactionId: 'modelId',
+                        modelOutputType: 'json-gltf',
+                        name: 'model name',
+                        gltfJson: 'json',
                     }),
                 ]);
                 expect(authMock.isAuthenticated).toBeCalled();

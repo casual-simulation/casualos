@@ -138,6 +138,12 @@ import { z } from 'zod';
 import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
 import * as jose from 'jose';
 import { LoomController } from './LoomController';
+import {
+    AISloydInterfaceCreateModelRequest,
+    AISloydInterfaceCreateModelResponse,
+    AISloydInterfaceEditModelRequest,
+    AISloydInterfaceEditModelResponse,
+} from './AISloydInterface';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -340,6 +346,16 @@ describe('RecordsServer', () => {
     let humeInterface: {
         getAccessToken: jest.Mock<Promise<AIHumeInterfaceGetAccessTokenResult>>;
     };
+    let sloydInterface: {
+        createModel: jest.Mock<
+            Promise<AISloydInterfaceCreateModelResponse>,
+            [AISloydInterfaceCreateModelRequest]
+        >;
+        editModel: jest.Mock<
+            Promise<AISloydInterfaceEditModelResponse>,
+            [AISloydInterfaceEditModelRequest]
+        >;
+    };
 
     let stripe: StripeInterface;
     let subscriptionController: SubscriptionController;
@@ -394,6 +410,9 @@ describe('RecordsServer', () => {
         checkDisplayName: jest.Mock<
             ReturnType<PrivoClientInterface['checkDisplayName']>
         >;
+        generateLogoutUrl: jest.Mock<
+            ReturnType<PrivoClientInterface['generateLogoutUrl']>
+        >;
     };
 
     beforeEach(async () => {
@@ -447,6 +466,7 @@ describe('RecordsServer', () => {
             processAuthorizationCallback: jest.fn(),
             checkEmail: jest.fn(),
             checkDisplayName: jest.fn(),
+            generateLogoutUrl: jest.fn(),
         };
         relyingParty = {
             id: 'relying_party_id',
@@ -591,6 +611,10 @@ describe('RecordsServer', () => {
         humeInterface = {
             getAccessToken: jest.fn(),
         };
+        sloydInterface = {
+            createModel: jest.fn(),
+            editModel: jest.fn(),
+        };
         aiController = new AIController({
             chat: {
                 interfaces: {
@@ -638,10 +662,19 @@ describe('RecordsServer', () => {
             },
             hume: {
                 interface: humeInterface,
+                config: {
+                    apiKey: 'globalApiKey',
+                    secretKey: 'globalSecretKey',
+                },
+            },
+            sloyd: {
+                interface: sloydInterface,
             },
             config: store,
             metrics: store,
             policies: store,
+            policyController: policyController,
+            records: store,
         });
         moderationController = new ModerationController(store, store, store);
         loomController = new LoomController({
@@ -12723,7 +12756,7 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should return a not_supported result if the server has a null AI controller', async () => {
+        it('should be able to retrive a token that can be used to access Hume', async () => {
             const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/ai/hume/token`, apiHeaders)
             );
@@ -12739,6 +12772,56 @@ describe('RecordsServer', () => {
                 },
                 headers: apiCorsHeaders,
             });
+            expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                apiKey: 'globalApiKey',
+                secretKey: 'globalSecretKey',
+            });
+        });
+
+        describe('studio', () => {
+            const studioId = 'studioId';
+
+            beforeEach(async () => {
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'myStudio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
+
+            it('should be able to use a studios hume token', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/ai/hume/token?recordName=${studioId}`,
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        accessToken: 'token',
+                        expiresIn: 3600,
+                        issuedAt: 1234567890,
+                        tokenType: 'Bearer',
+                    },
+                    headers: apiCorsHeaders,
+                });
+                expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
         });
 
         testOrigin('GET', `/api/v2/ai/hume/token`, () =>
@@ -12748,6 +12831,199 @@ describe('RecordsServer', () => {
         );
         testAuthorization(() => httpGet(`/api/v2/ai/hume/token`, apiHeaders));
         testRateLimit(() => httpGet(`/api/v2/ai/hume/token`, apiHeaders));
+    });
+
+    describe('POST /api/v2/ai/sloyd/model', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                name: 'model-1',
+                confidenceScore: 0.5,
+                interactionId: 'model-1',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+            sloydInterface.editModel.mockResolvedValueOnce({
+                success: true,
+                // confidenceScore: 0.5,
+                interactionId: 'model-2',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+        });
+
+        it('should be able to call the sloyd interface to create a model', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/sloyd/model`,
+                    JSON.stringify({
+                        recordName: userId,
+                        prompt: 'a blue sky',
+                        outputMimeType: 'model/gltf+json',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    modelId: 'model-1',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    name: 'model-1',
+                    modelData: 'json',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(sloydInterface.createModel).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                modelMimeType: 'model/gltf+json',
+            });
+        });
+
+        it('should use the user record if no record name is specified', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/sloyd/model`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                        outputMimeType: 'model/gltf+json',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    modelId: 'model-1',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    name: 'model-1',
+                    modelData: 'json',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(sloydInterface.createModel).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                modelMimeType: 'model/gltf+json',
+            });
+        });
+
+        it('should default outputMimeType to gltf+json', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/sloyd/model`,
+                    JSON.stringify({
+                        recordName: userId,
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    modelId: 'model-1',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    name: 'model-1',
+                    modelData: 'json',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(sloydInterface.createModel).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                modelMimeType: 'model/gltf+json',
+            });
+        });
+
+        it('should be able to include additional options', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/sloyd/model`,
+                    JSON.stringify({
+                        recordName: userId,
+                        prompt: 'a blue sky',
+                        outputMimeType: 'model/gltf+json',
+                        levelOfDetail: 1,
+                        thumbnail: {
+                            type: 'image/png',
+                            width: 64,
+                            height: 64,
+                        },
+                        baseModelId: 'model-5',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    modelId: 'model-2',
+                    mimeType: 'model/gltf+json',
+                    modelData: 'json',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(sloydInterface.editModel).toHaveBeenCalledWith({
+                interactionId: 'model-5',
+                prompt: 'a blue sky',
+                modelMimeType: 'model/gltf+json',
+                levelOfDetail: 1,
+                thumbnailPreviewExportType: 'image/png',
+                thumbnailPreviewSizeX: 64,
+                thumbnailPreviewSizeY: 64,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/sloyd/model`, () =>
+            JSON.stringify({
+                recordName: userId,
+                prompt: 'a blue sky',
+                outputMimeType: 'model/gltf+json',
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/sloyd/model`,
+                JSON.stringify({
+                    recordName: userId,
+                    prompt: 'a blue sky',
+                    outputMimeType: 'model/gltf+json',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/sloyd/model`,
+                JSON.stringify({
+                    recordName: userId,
+                    prompt: 'a blue sky',
+                    outputMimeType: 'model/gltf+json',
+                }),
+                apiHeaders
+            )
+        );
     });
 
     describe('GET /api/v2/loom/token', () => {
@@ -12938,6 +13214,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         },
                         loomFeatures: {
                             allowed: false,
+                        },
+                        humeFeatures: {
+                            allowed: true,
                         },
                     },
                 },
@@ -13155,6 +13434,118 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
                 stripeCustomerId: 'customerId',
+            });
+        });
+
+        it('should update the loom config', async () => {
+            const result = await server.handleHttpRequest(
+                httpPut(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        id: 'studioId',
+                        displayName: 'new name',
+                        logoUrl: 'http://example.com/new-url',
+                        comIdConfig: {
+                            allowedStudioCreators: 'only-members',
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'new bootstrap',
+                        },
+                        loomConfig: {
+                            appId: 'appId',
+                            privateKey: 'secret',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const studio = await store.getStudioById('studioId');
+
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                logoUrl: 'http://example.com/new-url',
+                comIdConfig: {
+                    allowedStudioCreators: 'only-members',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'new bootstrap',
+                },
+                comId: 'comId',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeCustomerId: 'customerId',
+            });
+
+            const loomConfig = await store.getStudioLoomConfig('studioId');
+            expect(loomConfig).toEqual({
+                appId: 'appId',
+                privateKey: 'secret',
+            });
+        });
+
+        it('should update the hume config', async () => {
+            const result = await server.handleHttpRequest(
+                httpPut(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        id: 'studioId',
+                        displayName: 'new name',
+                        logoUrl: 'http://example.com/new-url',
+                        comIdConfig: {
+                            allowedStudioCreators: 'only-members',
+                        },
+                        playerConfig: {
+                            ab1BootstrapURL: 'new bootstrap',
+                        },
+                        humeConfig: {
+                            apiKey: 'apiKey',
+                            secretKey: 'secretKey',
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const studio = await store.getStudioById('studioId');
+
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'new name',
+                logoUrl: 'http://example.com/new-url',
+                comIdConfig: {
+                    allowedStudioCreators: 'only-members',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'new bootstrap',
+                },
+                comId: 'comId',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeCustomerId: 'customerId',
+            });
+
+            const humeConfig = await store.getStudioHumeConfig('studioId');
+            expect(humeConfig).toEqual({
+                apiKey: 'apiKey',
+                secretKey: 'secretKey',
             });
         });
 

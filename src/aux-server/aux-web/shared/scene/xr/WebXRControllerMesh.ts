@@ -135,7 +135,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
         copyPose(gripPose, this.mesh);
 
         this._updateMotionControllerModel();
-        this._updateHands(frame, referenceSpace);
+        this._updateHands(frame, space);
         this._updatePointer(rayPose);
 
         this.mesh.updateMatrixWorld();
@@ -243,8 +243,20 @@ export class WebXRControllerMesh implements SubscriptionLike {
 
             if (bone && jointPose) {
                 if (bone.visible) {
+                    // joint pose is relative to the reference space, which should be the grip space
+                    // this means that the joint pose should be relative to the mesh.
+
+                    // Because the hand mesh has multiple bones that are attached in a hierarchy,
+                    // we need to calculate the final position relative to the bone's parent.
+
+                    // hold the joint matrix
                     tempJointMatrix.fromArray(jointPose.transform.matrix);
+
+                    // invert the parent matrix so that we can apply the joint matrix in the correct space
                     tempParentMatrix.copy(bone.parent.matrixWorld).invert();
+
+                    // apply the scene root's matrix to the joint matrix
+                    tempParentMatrix.premultiply(this._sceneRoot.matrixWorld);
 
                     bone.matrix.copy(
                         tempParentMatrix.multiply(tempJointMatrix)

@@ -61,10 +61,6 @@
     max-width: 240px;
 }
 
-.bios-selection-field {
-    margin-bottom: 4px;
-}
-
 .spacer {
     flex: 1 1 auto;
 }
@@ -81,4 +77,9 @@
 .policies-grid {
     display: flex;
     margin-top: 14px;
+}
+
+.bios-title {
+    display: flex;
+    align-items: center;
 }

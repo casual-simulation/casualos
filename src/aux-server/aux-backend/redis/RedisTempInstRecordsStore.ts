@@ -4,7 +4,23 @@ import {
     TempBranchInfo,
     TemporaryInstRecordsStore,
 } from '@casual-simulation/aux-records';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import {
+    SEMATTRS_DB_NAME,
+    SEMRESATTRS_SERVICE_NAME,
+} from '@opentelemetry/semantic-conventions';
 import { RedisClientType } from 'redis';
+import { tryAquireLock } from './RedisLock';
+
+const TRACE_NAME = 'RedisTempInstRecordsStore';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.PRODUCER,
+    attributes: {
+        [SEMATTRS_DB_NAME]: 'redis',
+        [SEMRESATTRS_SERVICE_NAME]: 'redis',
+    },
+};
 
 /**
  * Defines an implementation of a TempInstRecordsStore for redis.
@@ -23,7 +39,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
      * @param redis The client that should be used.
      * @param dataExpirationSeconds The number of seconds that inst data should be stored for. If null, then the data will not expire.
      * @param dataExpirationMode The expiration mode that should be used for inst data.
-     * @param onlyExpireRecordlessUpdates Whether to only expire updates that are not associated with a record.
+     * @param onlyExpireRecordlessUpdates Whether to only expire updates that are not associated with a record. This will set the expiration for the updates when they are added. All kinds of branches will have an expiration set when trimmed.
      */
     constructor(
         globalNamespace: string,
@@ -40,21 +56,41 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         this._onlyExpireRecordlessUpdates = onlyExpireRecordlessUpdates;
     }
 
+    aquireLock(id: string, timeout: number): Promise<() => Promise<boolean>> {
+        return tryAquireLock(this._redis, id, timeout);
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async setDirtyBranchGeneration(generation: string): Promise<void> {
         await this._redis.set(this._currentGenerationKey, generation);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getDirtyBranchGeneration(): Promise<string> {
         const generation = await this._redis.get(this._currentGenerationKey);
         return generation ?? '0';
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async markBranchAsDirty(branch: BranchName): Promise<void> {
         const generation = await this.getDirtyBranchGeneration();
         const key = this._generationKey(generation);
-        await this._redis.sAdd(key, JSON.stringify(branch));
+        if (this._instDataExpirationSeconds) {
+            const multi = this._redis.multi();
+            multi.sAdd(key, JSON.stringify(branch));
+
+            // Always reset the expiration for the branch size
+            // if it is for a private record.
+            // Otherwise, we can follow the expiration mode.
+            const expireMode = this._instDataExpirationMode;
+            this._expireMulti(multi, key, expireMode);
+            await multi.exec();
+        } else {
+            await this._redis.sAdd(key, JSON.stringify(branch));
+        }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async listDirtyBranches(generation?: string): Promise<BranchName[]> {
         if (!generation) {
             generation = await this.getDirtyBranchGeneration();
@@ -64,6 +100,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         return branches.map((b) => JSON.parse(b));
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async clearDirtyBranches(generation: string): Promise<void> {
         const key = this._generationKey(generation);
         console.log('[RedisTempInstRecordsStore] Deleting key:', key);
@@ -112,6 +149,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         return `${this._globalNamespace}/branches/${recordName ?? ''}/${inst}`;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getBranchByName(
         recordName: string,
         inst: string,
@@ -126,6 +164,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         return JSON.parse(branchInfo);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async saveBranchInfo(branch: TempBranchInfo): Promise<void> {
         const key = this._getBranchInfoKey(
             branch.recordName,
@@ -138,6 +177,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         await this._expire(key, mode);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async deleteAllInstBranchInfo(
         recordName: string,
         inst: string
@@ -181,6 +221,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         await multi.exec();
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getUpdates(
         recordName: string,
         inst: string,
@@ -217,6 +258,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async addUpdates(
         recordName: string,
         inst: string,
@@ -243,7 +285,10 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             this._expireMulti(multi, key, expireMode);
             promise = multi.exec();
         } else {
-            promise = this._redis.rPush(key, finalUpdates);
+            const multi = this._redis.multi();
+            multi.rPush(key, finalUpdates);
+            multi.persist(key);
+            promise = multi.exec();
         }
 
         await Promise.all([
@@ -259,12 +304,14 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         ]);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getInstSize(recordName: string, inst: string): Promise<number> {
         const key = this._getInstSizeKey(recordName, inst);
         const size = await this._redis.get(key);
         return size ? parseInt(size) : 0;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async setInstSize(
         recordName: string,
         inst: string,
@@ -289,6 +336,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async addInstSize(
         recordName: string,
         inst: string,
@@ -312,12 +360,14 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async deleteInstSize(recordName: string, inst: string): Promise<void> {
         const key = this._getInstSizeKey(recordName, inst);
         console.log('[RedisTempInstRecordsStore] Deleting key:', key);
         await this._redis.del(key);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getBranchSize(
         recordName: string,
         inst: string,
@@ -328,6 +378,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         return size ? parseInt(size) : 0;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async setBranchSize(
         recordName: string,
         inst: string,
@@ -352,6 +403,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async addBranchSize(
         recordName: string,
         inst: string,
@@ -376,6 +428,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async deleteBranchSize(
         recordName: string,
         inst: string,
@@ -386,6 +439,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         await this._redis.del(key);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async trimUpdates(
         recordName: string,
         inst: string,
@@ -393,9 +447,30 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         numToDelete: number
     ): Promise<void> {
         const key = this._getUpdatesKey(recordName, inst, branch);
-        await this._redis.lPopCount(key, numToDelete);
+        if (this._instDataExpirationSeconds) {
+            const multi = this._redis.multi();
+            multi.lPopCount(key, numToDelete);
+
+            // Always reset the expiration for updates if it is for a private record.
+            // Otherwise, we can follow the expiration mode.
+            const expireMode = !recordName
+                ? this._instDataExpirationMode
+                : null;
+            this._expireMulti(multi, key, expireMode);
+            const branchSizeKey = this._getBranchSizeKey(
+                recordName,
+                inst,
+                branch
+            );
+            this._expireMulti(multi, branchSizeKey, expireMode);
+
+            await multi.exec();
+        } else {
+            await this._redis.lPopCount(key, numToDelete);
+        }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async countBranchUpdates(
         recordName: string,
         inst: string,
@@ -405,6 +480,7 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         return await this._redis.lLen(key);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async deleteBranch(
         recordName: string,
         inst: string,

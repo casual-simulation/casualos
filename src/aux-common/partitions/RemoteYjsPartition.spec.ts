@@ -70,6 +70,7 @@ import {
     PartitionAuthRequest,
     PartitionAuthSource,
 } from './PartitionAuthSource';
+import { case1 } from './test/UpdateCases';
 
 console.log = jest.fn();
 
@@ -1537,6 +1538,48 @@ describe('RemoteYjsPartition', () => {
                     expect(states[1].state.bot1.tags.tag1.version).toEqual({
                         // @ts-ignore
                         [version.currentSite]: 0,
+                    });
+                });
+
+                describe('bugged cases', () => {
+                    it('case1: should handle an update that includes updates in addition to adding a bot', async () => {
+                        partition.connect();
+
+                        const botId = '402ccb16-d402-4404-b1ad-7ad73cc29772';
+                        const tag = 'ResizeHandle';
+                        const bots = partition.doc.getMap('bots');
+                        let index = 0;
+
+                        for (let update of case1) {
+                            addAtoms.next({
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: [update],
+                                initial: true,
+                            });
+
+                            await waitAsync();
+
+                            const expectedBot = bots.get(botId) as YMap<any>;
+                            const computedBot = partition.state[botId];
+
+                            if (!computedBot || !expectedBot) {
+                                continue;
+                            }
+                            const expectedValue = expectedBot
+                                .get('ResizeHandle')
+                                .toString();
+                            const calculatedValue = computedBot.tags[tag];
+
+                            if (expectedValue !== calculatedValue) {
+                                console.log('Update Index:', index);
+                                expect(calculatedValue).toEqual(expectedValue);
+                            }
+
+                            index += 1;
+                        }
                     });
                 });
             });

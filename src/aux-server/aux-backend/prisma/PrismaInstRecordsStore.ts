@@ -15,6 +15,9 @@ import {
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
 import { v4 as uuid } from 'uuid';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaInstRecordsStore';
 
 /**
  * Defines an inst records store that uses Prisma to store records.
@@ -26,6 +29,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         this._prisma = prisma;
     }
 
+    @traced(TRACE_NAME)
     async listInstsByRecord(
         recordName: string,
         startingInst?: string
@@ -69,6 +73,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getInstByName(
         recordName: string,
         inst: string
@@ -127,6 +132,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async deleteInst(recordName: string, inst: string): Promise<void> {
         await this._prisma.instRecord.delete({
             where: {
@@ -138,6 +144,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async getBranchByName(
         recordName: string,
         inst: string,
@@ -214,6 +221,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
         try {
             await this._prisma.instRecord.upsert({
@@ -252,6 +260,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME)
     async saveBranch(branch: BranchRecord): Promise<SaveBranchResult> {
         try {
             await this._prisma.instBranch.upsert({
@@ -292,6 +301,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME)
     async getCurrentUpdates(
         recordName: string,
         inst: string,
@@ -316,6 +326,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getInstSize(recordName: string, inst: string): Promise<number> {
         const branches = await this._prisma.instBranch.findMany({
             where: {
@@ -345,6 +356,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         return size;
     }
 
+    @traced(TRACE_NAME)
     async getAllUpdates(
         recordName: string,
         inst: string,
@@ -367,6 +379,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async addUpdates(
         recordName: string,
         inst: string,
@@ -379,6 +392,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         );
     }
 
+    @traced(TRACE_NAME)
     async deleteBranch(
         recordName: string,
         inst: string,
@@ -406,6 +420,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME)
     async replaceCurrentUpdates(
         recordName: string,
         inst: string,

@@ -7,6 +7,9 @@ import {
 } from './AIImageInterface';
 import axios from 'axios';
 import { handleAxiosErrors } from './Utils';
+import { traced } from './tracing/TracingDecorators';
+
+const TRACE_NAME = 'StabilityAIImageInterface';
 
 export interface StabilityAIImageOptions {
     /**
@@ -35,6 +38,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
         this._options = options;
     }
 
+    @traced(TRACE_NAME)
     async generateImage(
         request: AIGenerateImageInterfaceRequest
     ): Promise<AIGenerateImageInterfaceResponse> {

@@ -73,7 +73,10 @@ import {
     base64URLStringToBuffer,
     bufferToBase64URLString,
 } from './Base64UrlUtils';
-import { getInfoForAAGUID } from './AAGUID';
+import { traced } from './tracing/TracingDecorators';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
+
+const TRACE_NAME = 'AuthController';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -208,6 +211,7 @@ export class AuthController {
         this._webAuthNRelyingParties = relyingParties;
     }
 
+    @traced(TRACE_NAME)
     async createAccount(
         request: CreateAccountRequest
     ): Promise<CreateAccountResult> {
@@ -286,6 +290,10 @@ export class AuthController {
                 expireTimeMs: session.expireTimeMs,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while creating account',
                 err
@@ -298,6 +306,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
         if (typeof request.address !== 'string' || request.address === '') {
             return {
@@ -481,6 +490,10 @@ export class AuthController {
                 };
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error Occurred while Creating Login Request',
                 err
@@ -517,6 +530,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async completeLogin(
         request: CompleteLoginRequest
     ): Promise<CompleteLoginResult> {
@@ -691,6 +705,10 @@ export class AuthController {
                 expireTimeMs: session.expireTimeMs,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while completing login request',
                 err
@@ -703,6 +721,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async requestOpenIDLogin(
         request: OpenIDLoginRequest
     ): Promise<OpenIDLoginRequestResult> {
@@ -764,6 +783,10 @@ export class AuthController {
                 requestId: requestId,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while requesting Privo login',
                 err
@@ -776,6 +799,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async processOpenIDAuthorizationCode(
         request: ProcessOpenIDAuthorizationCodeRequest
     ): Promise<ProcessOpenIDAuthorizationCodeResult> {
@@ -850,6 +874,10 @@ export class AuthController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while processing Privo authorization code',
                 err
@@ -862,6 +890,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async completeOpenIDLogin(
         request: CompleteOpenIDLoginRequest
     ): Promise<CompleteOpenIDLoginResult> {
@@ -1085,6 +1114,10 @@ export class AuthController {
                 expireTimeMs: session.expireTimeMs,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error occurred while completing Privo login',
                 err
@@ -1097,6 +1130,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async requestPrivoSignUp(
         request: PrivoSignUpRequest
     ): Promise<PrivoSignUpRequestResult> {
@@ -1302,6 +1336,10 @@ export class AuthController {
                 expireTimeMs: session.expireTimeMs,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting Privo sign up`,
                 err
@@ -1314,6 +1352,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async requestWebAuthnRegistration(
         request: RequestWebAuthnRegistration
     ): Promise<RequestWebAuthnRegistrationResult> {
@@ -1381,6 +1420,10 @@ export class AuthController {
                 options,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting WebAuthn registration options`,
                 err
@@ -1393,6 +1436,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async completeWebAuthnRegistration(
         request: CompleteWebAuthnRegistrationRequest
     ): Promise<CompleteWebAuthnRegistrationResult> {
@@ -1488,6 +1532,10 @@ export class AuthController {
                 };
             }
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while completing WebAuthn registration`,
                 err
@@ -1500,6 +1548,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async requestWebAuthnLogin(
         request: RequestWebAuthnLogin
     ): Promise<RequestWebAuthnLoginResult> {
@@ -1549,6 +1598,10 @@ export class AuthController {
                 options,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting WebAuthn login`,
                 err
@@ -1561,6 +1614,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async completeWebAuthnLogin(
         request: CompleteWebAuthnLoginRequest
     ): Promise<CompleteWebAuthnLoginResult> {
@@ -1742,6 +1796,10 @@ export class AuthController {
                 expireTimeMs: session.expireTimeMs,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while requesting WebAuthn login`,
                 err
@@ -1754,6 +1812,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async listUserAuthenticators(
         userId: string
     ): Promise<ListUserAuthenticatorsResult> {
@@ -1786,6 +1845,10 @@ export class AuthController {
                 })),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while listing user authenticators`,
                 err
@@ -1798,6 +1861,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async deleteUserAuthenticator(
         userId: string,
         authenticatorId: string
@@ -1827,6 +1891,10 @@ export class AuthController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 `[AuthController] Error occurred while deleting a user authenticator`,
                 err
@@ -1839,6 +1907,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async validateSessionKey(key: string): Promise<ValidateSessionKeyResult> {
         if (typeof key !== 'string' || key === '') {
             return {
@@ -1969,6 +2038,10 @@ export class AuthController {
                 role: userInfo.role,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while validating a session key',
                 err
@@ -1981,6 +2054,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async validateConnectionToken(
         token: string
     ): Promise<ValidateConnectionTokenResult> {
@@ -2111,6 +2185,10 @@ export class AuthController {
                 privacyFeatures: userInfo.privacyFeatures,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while validating a connection token',
                 err
@@ -2123,6 +2201,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async revokeSession(
         request: RevokeSessionRequest
     ): Promise<RevokeSessionResult> {
@@ -2201,10 +2280,22 @@ export class AuthController {
 
             await this._store.saveSession(newSession);
 
+            let logoutUrl: string;
+            if (session.oidProvider === PRIVO_OPEN_ID_PROVIDER) {
+                logoutUrl = await this._privoClient.generateLogoutUrl(
+                    session.oidIdToken ?? session.oidAccessToken
+                );
+            }
+
             return {
                 success: true,
+                logoutUrl,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while revoking session',
                 err
@@ -2221,6 +2312,7 @@ export class AuthController {
      * Attempts to revoke all the sessions for the specified user.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async revokeAllSessions(
         request: RevokeAllSessionsRequest
     ): Promise<RevokeAllSessionsResult> {
@@ -2264,6 +2356,10 @@ export class AuthController {
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while revoking all sessions',
                 err
@@ -2280,6 +2376,7 @@ export class AuthController {
      * Attempts to replace the given session key with a new key.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async replaceSession(
         request: ReplaceSessionRequest
     ): Promise<ReplaceSessionResult> {
@@ -2389,6 +2486,10 @@ export class AuthController {
                 expireTimeMs: newSession.expireTimeMs,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while replacing session',
                 err
@@ -2405,6 +2506,7 @@ export class AuthController {
      * Lists all the sessions for a given user.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async listSessions(
         request: ListSessionsRequest
     ): Promise<ListSessionsResult> {
@@ -2481,6 +2583,10 @@ export class AuthController {
                 })),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while listing sessions',
                 err
@@ -2497,6 +2603,7 @@ export class AuthController {
      * Gets the information for a specific user.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async getUserInfo(request: GetUserInfoRequest): Promise<GetUserInfoResult> {
         if (typeof request.userId !== 'string' || request.userId === '') {
             return {
@@ -2608,6 +2715,10 @@ export class AuthController {
                 role: result.role ?? 'none',
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while getting user info',
                 err
@@ -2624,6 +2735,7 @@ export class AuthController {
      * Gets the public information for a specific user.
      * @param userId The ID of the user whose information is being requested.
      */
+    @traced(TRACE_NAME)
     async getPublicUserInfo(userId: string): Promise<GetPublicUserInfoResult> {
         if (typeof userId !== 'string' || userId === '') {
             return {
@@ -2663,6 +2775,10 @@ export class AuthController {
                 },
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while getting user info',
                 err
@@ -2729,6 +2845,7 @@ export class AuthController {
      * Attempts to update a user's metadata.
      * @param request The request for the operation.
      */
+    @traced(TRACE_NAME)
     async updateUserInfo(
         request: UpdateUserInfoRequest
     ): Promise<UpdateUserInfoResult> {
@@ -2803,6 +2920,10 @@ export class AuthController {
                 userId: user.id,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while getting user info',
                 err
@@ -2818,6 +2939,7 @@ export class AuthController {
     /**
      * Lists the email rules that should be used.
      */
+    @traced(TRACE_NAME)
     async listEmailRules(): Promise<ListEmailRulesResult> {
         try {
             const rules = await this._store.listEmailRules();
@@ -2827,6 +2949,10 @@ export class AuthController {
                 rules,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while listing email rules',
                 err
@@ -2842,6 +2968,7 @@ export class AuthController {
     /**
      * Lists the SMS rules that should be used.
      */
+    @traced(TRACE_NAME)
     async listSmsRules(): Promise<ListSmsRulesResult> {
         try {
             const rules = await this._store.listSmsRules();
@@ -2851,6 +2978,10 @@ export class AuthController {
                 rules,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while listing email rules',
                 err
@@ -2863,6 +2994,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async isValidEmailAddress(
         email: string
     ): Promise<IsValidEmailAddressResult> {
@@ -2896,6 +3028,10 @@ export class AuthController {
                 allowed: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while checking if email address is valid',
                 err
@@ -2908,6 +3044,7 @@ export class AuthController {
         }
     }
 
+    @traced(TRACE_NAME)
     async isValidDisplayName(
         displayName: string,
         name?: string
@@ -2949,6 +3086,10 @@ export class AuthController {
                 allowed: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(
                 '[AuthController] Error ocurred while checking if display name is valid',
                 err
@@ -3513,6 +3654,11 @@ export type RevokeSessionResult = RevokeSessionSuccess | RevokeSessionFailure;
 
 export interface RevokeSessionSuccess {
     success: true;
+
+    /**
+     * The URL that the user can be redirected to in order to logout completely.
+     */
+    logoutUrl?: string;
 }
 
 export interface RevokeSessionFailure {

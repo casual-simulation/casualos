@@ -77,7 +77,15 @@ export default class CodeToolsPortal extends Vue {
                         CLICK_ACTION_NAME,
                         [bot.id],
                         sim.helper.userId,
-                        onClickArg(null, tool.dimension, null, null, null, null)
+                        onClickArg(
+                            null,
+                            tool.dimension,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        )
                     ),
                     action(
                         ANY_CLICK_ACTION_NAME,
@@ -87,6 +95,7 @@ export default class CodeToolsPortal extends Vue {
                             null,
                             tool.dimension,
                             bot,
+                            null,
                             null,
                             null,
                             null,

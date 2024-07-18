@@ -87,9 +87,45 @@ A whisper that is sent to the bot that was clicked.
 #### Arguments:
 ```typescript
 let that: {
-  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
-  dimension: string,
-  uv: Vector2
+  /**
+   * The face of the bot that was clicked.
+   */
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom';
+  
+  /**
+   * The dimension that the bot was clicked in.
+  */
+  dimension: string;
+
+  /**
+   * The UV Coordinates that were clicked on the bot.
+   */
+  uv: Vector2;
+
+  /**
+   * The modality that was used to click the bot.
+   * 
+   * - `mouse` - The mouse was used to click the bot.
+   * - `touch` - A touch screen was used to click the bot.
+   * - `controller` - A XR controller was used to click the bot.
+   * - `finger` - A finger was used to click the bot in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to click the bot.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to click the bot.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to click the bot.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -113,8 +149,40 @@ A whisper that is sent to a bot when the mouse cursor starts to hover over it.
 #### Arguments:
 ```typescript
 let that: {
-  bot: Bot,
-  dimension: string
+  /**
+   * The bot that the pointer hovered.
+   */
+  bot: Bot;
+  
+  /**
+   * The dimension that the bot was hovered in.
+   */
+  dimension: string;
+
+  /**
+   * The modality that was used to hover over the bot.
+   * 
+   * - `mouse` - The mouse was used to hover over the bot.
+   * - `touch` - A touch screen was used to hover over the bot.
+   * - `controller` - A XR controller was used to hover over the bot.
+   * - `finger` - A finger was used to hover over the bot in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to hover over the bot.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to hover over the bot.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to hover over the bot.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -125,8 +193,40 @@ A whisper that is sent to a bot when the mouse cursor stops hovering over it.
 #### Arguments:
 ```typescript
 let that: {
-  bot: Bot,
-  dimension: string
+  /**
+   * The bot that the pointer hovered.
+   */
+  bot: Bot;
+  
+  /**
+   * The dimension that the bot was hovered in.
+   */
+  dimension: string;
+
+  /**
+   * The modality that was used to hover over the bot.
+   * 
+   * - `mouse` - The mouse was used to hover over the bot.
+   * - `touch` - A touch screen was used to hover over the bot.
+   * - `controller` - A XR controller was used to hover over the bot.
+   * - `finger` - A finger was used to hover over the bot in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to hover over the bot.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to hover over the bot.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to hover over the bot.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -137,8 +237,40 @@ A whipser that is sent to a bot when the user starts clicking it.
 #### Arguments:
 ```typescript
 let that: {
-  bot: Bot,
-  dimension: string
+  /**
+   * The bot that the pointer started clicking.
+   */
+  bot: Bot;
+  
+  /**
+   * The dimension that the bot was clicked in.
+   */
+  dimension: string;
+
+  /**
+   * The modality that was used to click the bot.
+   * 
+   * - `mouse` - The mouse was used to click the bot.
+   * - `touch` - A touch screen was used to click the bot.
+   * - `controller` - A XR controller was used to click the bot.
+   * - `finger` - A finger was used to click the bot in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to click the bot.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to click the bot.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to click the bot.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -149,8 +281,40 @@ A whisper that is sent to a bot when the user stops clicking it.
 #### Arguments:
 ```typescript
 let that: {
-  bot: Bot,
-  dimension: string
+  /**
+   * The bot that the pointer stopped clicking.
+   */
+  bot: Bot;
+  
+  /**
+   * The dimension that the bot was clicked in.
+   */
+  dimension: string;
+
+  /**
+   * The modality that was used to click the bot.
+   * 
+   * - `mouse` - The mouse was used to click the bot.
+   * - `touch` - A touch screen was used to click the bot.
+   * - `controller` - A XR controller was used to click the bot.
+   * - `finger` - A finger was used to click the bot in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to click the bot.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to click the bot.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to click the bot.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -573,10 +737,50 @@ A shout that is sent to all bots when a bot is clicked.
 #### Arguments:
 ```typescript
 let that: {
-  bot: Bot,
-  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
-  dimension: string,
-  uv: Vector2
+  /**
+   * The bot that was clicked.
+   */
+  bot: Bot;
+
+  /**
+   * The face of the bot that was clicked.
+   */
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom';
+  
+  /**
+   * The dimension that the bot was clicked in.
+   */
+  dimension: string;
+
+  /**
+   * The UV Coordinates that were clicked on the bot.
+   */
+  uv: Vector2;
+
+  /**
+   * The modality that was used to click the bot.
+   * 
+   * - `mouse` - The mouse was used to click the bot.
+   * - `touch` - A touch screen was used to click the bot.
+   * - `controller` - A XR controller was used to click the bot.
+   * - `finger` - A finger was used to click the bot in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to click the bot.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to click the bot.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to click the bot.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -695,11 +899,43 @@ A shout that is sent to all bots when the user clicks on empty space.
 #### Arguments:
 ```typescript
 let that: {
+  /**
+   * The position within the dimension that was clicked.
+   */
   position: {
     x: number,
     y: number
-  },
-  dimension: string
+  };
+
+  /**
+   * The dimension that the grid was clicked on.
+   */
+  dimension: string;
+
+  /**
+   * The modality that was used to click the grid.
+   * 
+   * - `mouse` - The mouse was used to click the grid.
+   * - `touch` - A touch screen was used to click the grid.
+   * - `controller` - A XR controller was used to click the grid.
+   * - `finger` - A finger was used to click the grid in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to click the grid.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to click the grid.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to click the grid.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -710,11 +946,43 @@ A shout that is sent to all bots when the user starts clicking on empty space.
 #### Arguments:
 ```typescript
 let that: {
+  /**
+   * The position within the dimension that was clicked.
+   */
   position: {
     x: number,
     y: number
-  },
-  dimension: string
+  };
+
+  /**
+   * The dimension that the grid was clicked on.
+   */
+  dimension: string;
+
+  /**
+   * The modality that was used to click the grid.
+   * 
+   * - `mouse` - The mouse was used to click the grid.
+   * - `touch` - A touch screen was used to click the grid.
+   * - `controller` - A XR controller was used to click the grid.
+   * - `finger` - A finger was used to click the grid in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to click the grid.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to click the grid.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to click the grid.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 
@@ -725,11 +993,43 @@ A shout that is sent to all bots when the user stops clicking on empty space.
 #### Arguments:
 ```typescript
 let that: {
+  /**
+   * The position within the dimension that was clicked.
+   */
   position: {
     x: number,
     y: number
-  },
-  dimension: string
+  };
+
+  /**
+   * The dimension that the grid was clicked on.
+   */
+  dimension: string;
+
+  /**
+   * The modality that was used to click the grid.
+   * 
+   * - `mouse` - The mouse was used to click the grid.
+   * - `touch` - A touch screen was used to click the grid.
+   * - `controller` - A XR controller was used to click the grid.
+   * - `finger` - A finger was used to click the grid in XR.
+   */
+  modality: 'mouse' | 'touch' | 'controller' | 'finger';
+
+  /**
+   * For "finger" modalities, which hand was used to click the grid.
+   */
+  hand: 'left' | 'right';
+
+  /**
+   * For "finger" modalities, which finger was used to click the grid.
+   */
+  finger: 'index' | 'middle' | 'ring' | 'pinky' | 'thumb' | 'unknown';
+
+  /**
+   * For "mouse" modalities, which button was used to click the grid.
+   */
+  buttonId: 'left' | 'middle' | 'right';
 };
 ```
 

@@ -9,6 +9,9 @@ import {
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from './generated';
 import { convertMarkers } from './Utils';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaEventRecordsStore';
 
 export class PrismaEventRecordsStore implements EventRecordsStore {
     private _client: PrismaClient;
@@ -17,6 +20,7 @@ export class PrismaEventRecordsStore implements EventRecordsStore {
         this._client = client;
     }
 
+    @traced(TRACE_NAME)
     async addEventCount(
         recordName: string,
         eventName: string,
@@ -46,6 +50,7 @@ export class PrismaEventRecordsStore implements EventRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getEventCount(
         recordName: string,
         eventName: string
@@ -72,6 +77,7 @@ export class PrismaEventRecordsStore implements EventRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME)
     async updateEvent(
         recordName: string,
         eventName: string,
@@ -103,6 +109,7 @@ export class PrismaEventRecordsStore implements EventRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async listEvents(
         recordName: string,
         eventName: string

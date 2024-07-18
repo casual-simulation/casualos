@@ -182,6 +182,7 @@ import {
     listDataRecordByMarker,
     aiChatStream,
     aiHumeGetAccessToken,
+    aiSloydGenerateModel,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -3503,7 +3504,42 @@ describe('AuxLibrary', () => {
         describe('ai.hume.getAccessToken()', () => {
             it('should emit a AIGetHumeAccessTokenAction', () => {
                 const promise: any = library.api.ai.hume.getAccessToken();
-                const expected = aiHumeGetAccessToken({}, context.tasks.size);
+                const expected = aiHumeGetAccessToken(
+                    undefined,
+                    {},
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to include the record name', () => {
+                const promise: any =
+                    library.api.ai.hume.getAccessToken('recordName');
+                const expected = aiHumeGetAccessToken(
+                    'recordName',
+                    {},
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('ai.sloyd.generateModel()', () => {
+            it('should emit a AISloydGenerateModelAction', () => {
+                const promise: any = library.api.ai.sloyd.generateModel({
+                    prompt: 'this is a test',
+                });
+                const expected = aiSloydGenerateModel(
+                    {
+                        prompt: 'this is a test',
+                    },
+                    {},
+                    context.tasks.size
+                );
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

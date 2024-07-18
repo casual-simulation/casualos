@@ -6,6 +6,21 @@ import {
     DeviceConnection,
     WebsocketConnectionStore,
 } from '@casual-simulation/aux-records';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import {
+    SEMATTRS_DB_NAME,
+    SEMRESATTRS_SERVICE_NAME,
+} from '@opentelemetry/semantic-conventions';
+
+const TRACE_NAME = 'RedisWebsocketConnectionStore';
+const SPAN_OPTIONS: SpanOptions = {
+    kind: SpanKind.PRODUCER,
+    attributes: {
+        [SEMATTRS_DB_NAME]: 'redis',
+        [SEMRESATTRS_SERVICE_NAME]: 'redis',
+    },
+};
 
 /**
  * Defines a class that specifies a Redis implementation of an WebsocketConnectionStore.
@@ -49,6 +64,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
     // /{global}/authorized/{connection}
     //    - {recordName}/{inst}
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async saveAuthorizedInst(
         connectionId: string,
         recordName: string,
@@ -64,9 +80,12 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
 
         if (scope === 'updateData') {
             await this._redis.expire(key, this._expireAuthorizationSeconds);
+        } else if (scope === 'token') {
+            this._expire(key);
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async isAuthorizedInst(
         connectionId: string,
         recordName: string,
@@ -79,6 +98,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         );
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async saveConnection(connection: DeviceConnection): Promise<void> {
         const connections = connectionsKey(this._globalNamespace);
         await this._redis.hSet(
@@ -91,6 +111,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         await this._expire(connections);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async saveBranchConnection(
         connection: DeviceBranchConnection
     ): Promise<void> {
@@ -142,6 +163,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         }
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async deleteBranchConnection(
         connectionId: string,
         mode: BranchConnectionMode,
@@ -173,6 +195,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         ]);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async clearConnection(connectionId: string): Promise<void> {
         const connectionKey = connectionIdKey(
             this._globalNamespace,
@@ -223,6 +246,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         await this._expire(connections);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async expireConnection(connectionId: string): Promise<void> {
         // Delete the connection from the namespaces and from the global list of connections,
         // but set a 10 second expiration on all the namespaces that the connection is connected to.
@@ -266,6 +290,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         ]);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getConnectionsByBranch(
         mode: BranchConnectionMode,
         recordName: string,
@@ -285,6 +310,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         return values.map((v) => JSON.parse(v));
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async countConnectionsByBranch(
         mode: BranchConnectionMode,
         recordName: string,
@@ -303,6 +329,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         return count;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getConnection(connectionId: string): Promise<DeviceConnection> {
         const connectionJson = await this._redis.hGet(
             connectionsKey(this._globalNamespace),
@@ -314,6 +341,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         return null;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getBranchConnection(
         connectionId: string,
         mode: BranchConnectionMode,
@@ -338,6 +366,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         return null;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getConnections(
         connectionId: string
     ): Promise<DeviceBranchConnection[]> {
@@ -348,6 +377,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         return values.map((v) => JSON.parse(v));
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async countConnections(): Promise<number> {
         const count = await this._redis.hLen(
             connectionsKey(this._globalNamespace)
@@ -355,6 +385,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         return count;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getConnectionRateLimitExceededTime(
         connectionId: string
     ): Promise<number> {
@@ -370,6 +401,7 @@ export class RedisWebsocketConnectionStore implements WebsocketConnectionStore {
         return parsed;
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async setConnectionRateLimitExceededTime(
         connectionId: string,
         timeMs: number

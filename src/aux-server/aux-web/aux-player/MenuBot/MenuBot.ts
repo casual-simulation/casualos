@@ -52,7 +52,11 @@ import { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/aux-common';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
-import { Input } from '../../shared/scene/Input';
+import {
+    formatModalityButtonId,
+    getModalityKey,
+    Input,
+} from '../../shared/scene/Input';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import { Subscription } from 'rxjs';
 import { BotManager } from '@casual-simulation/aux-vm-browser';
@@ -193,13 +197,14 @@ export default class MenuBot extends Vue {
         }
     }
 
-    async click() {
+    async click(event?: MouseEvent) {
         const simulation = _simulation(this.item);
         const dimension = first(this.item.dimensions.values());
+        const buttonId = formatModalityButtonId(event?.button);
         simulation.helper.action(
             CLICK_ACTION_NAME,
             [this.item.bot],
-            onClickArg(null, dimension, null, 'mouse', null, null)
+            onClickArg(null, dimension, null, 'mouse', null, null, buttonId)
         );
         simulation.helper.action(
             ANY_CLICK_ACTION_NAME,
@@ -211,17 +216,25 @@ export default class MenuBot extends Vue {
                 null,
                 'mouse',
                 null,
-                null
+                null,
+                buttonId
             )
         );
     }
 
-    async mouseDown() {
+    async mouseDown(event?: MouseEvent) {
         this._down = true;
-
         const simulation = _simulation(this.item);
         const dimension = first(this.item.dimensions.values());
-        let arg = onPointerUpDownArg(this.item.bot, dimension);
+        const buttonId = formatModalityButtonId(event?.button);
+        let arg = onPointerUpDownArg(
+            this.item.bot,
+            dimension,
+            'mouse',
+            null,
+            null,
+            buttonId
+        );
         simulation.helper.transaction(
             ...simulation.helper.actions([
                 {
@@ -238,10 +251,11 @@ export default class MenuBot extends Vue {
         );
     }
 
-    async mouseEnter() {
+    async mouseEnter(event?: MouseEvent) {
         this._hover = true;
         const simulation = _simulation(this.item);
         const dimension = first(this.item.dimensions.values());
+        const buttonId = formatModalityButtonId(event?.button);
         simulation.helper.transaction(
             ...simulation.helper.actions([
                 {
@@ -252,7 +266,8 @@ export default class MenuBot extends Vue {
                         dimension,
                         'mouse',
                         null,
-                        null
+                        null,
+                        buttonId
                     ),
                 },
                 {
@@ -263,18 +278,20 @@ export default class MenuBot extends Vue {
                         dimension,
                         'mouse',
                         null,
-                        null
+                        null,
+                        buttonId
                     ),
                 },
             ])
         );
     }
 
-    async mouseLeave() {
+    async mouseLeave(event?: MouseEvent) {
         if (this._hover === true) {
             this._hover = false;
             const simulation = _simulation(this.item);
             const dimension = first(this.item.dimensions.values());
+            const buttonId = formatModalityButtonId(event?.button);
             simulation.helper.transaction(
                 ...simulation.helper.actions([
                     {
@@ -285,7 +302,8 @@ export default class MenuBot extends Vue {
                             dimension,
                             'mouse',
                             null,
-                            null
+                            null,
+                            buttonId
                         ),
                     },
                     {
@@ -296,7 +314,8 @@ export default class MenuBot extends Vue {
                             dimension,
                             'mouse',
                             null,
-                            null
+                            null,
+                            buttonId
                         ),
                     },
                 ])
@@ -304,12 +323,20 @@ export default class MenuBot extends Vue {
         }
     }
 
-    async mouseUp() {
+    async mouseUp(event?: MouseEvent) {
         if (this._down === true) {
             this._down = false;
             const simulation = _simulation(this.item);
             const dimension = first(this.item.dimensions.values());
-            let arg = onPointerUpDownArg(this.item.bot, dimension);
+            const buttonId = formatModalityButtonId(event?.button);
+            let arg = onPointerUpDownArg(
+                this.item.bot,
+                dimension,
+                'mouse',
+                null,
+                null,
+                buttonId
+            );
             simulation.helper.transaction(
                 ...simulation.helper.actions([
                     {

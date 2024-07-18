@@ -2,6 +2,7 @@ import {
     WebsocketController,
     isEventForDevice,
     connectionInfo,
+    SAVE_PERMANENT_BRANCHES_LOCK,
 } from './WebsocketController';
 import { MemoryWebsocketConnectionStore } from './MemoryWebsocketConnectionStore';
 import { DeviceConnection } from './WebsocketConnectionStore';
@@ -2835,7 +2836,7 @@ describe('WebsocketController', () => {
                     );
                 });
 
-                it('should return a not_authorized error if it would exceed the maximum inst size for recordless insts', async () => {
+                it('should return a max_size_reached error if it would exceed the maximum inst size for recordless insts', async () => {
                     store.subscriptionConfiguration = merge(
                         createTestSubConfiguration(),
                         {
@@ -2860,21 +2861,18 @@ describe('WebsocketController', () => {
                     });
 
                     expect(
-                        messenger.getEvents(device1Info.serverConnectionId)
+                        messenger.getMessages(device1Info.serverConnectionId)
                     ).toEqual([
-                        [
-                            WebsocketEventTypes.Error,
-                            -1,
-                            {
-                                success: false,
-                                errorCode: 'not_authorized',
-                                errorMessage:
-                                    'The maximum number of bytes per inst has been reached.',
-                                recordName,
-                                inst,
-                                branch: 'doesNotExist',
-                            },
-                        ],
+                        {
+                            type: 'repo/updates_received',
+                            recordName,
+                            inst,
+                            branch: 'doesNotExist',
+                            updateId: 0,
+                            errorCode: 'max_size_reached',
+                            maxBranchSizeInBytes: 1,
+                            neededBranchSizeInBytes: 6,
+                        },
                     ]);
                 });
 
@@ -3603,7 +3601,7 @@ describe('WebsocketController', () => {
                         ).toEqual([]);
                     });
 
-                    it('should return a subscription_limit_reached error if adding the updates to a new inst would exceed the allowed inst size', async () => {
+                    it('should return a max_size_reached error if adding the updates to a new inst would exceed the allowed inst size', async () => {
                         store.subscriptionConfiguration = merge(
                             createTestSubConfiguration(),
                             {
@@ -3653,26 +3651,20 @@ describe('WebsocketController', () => {
                             updateId: 0,
                         });
 
-                        expect(messenger.getEvents(serverConnectionId)).toEqual(
-                            [
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'subscription_limit_reached',
-                                        errorMessage:
-                                            'The maximum number of bytes per inst has been reached.',
-                                        recordName,
-                                        inst,
-                                        branch: 'testBranch',
-                                    },
-                                ],
-                            ]
-                        );
                         expect(
                             messenger.getMessages(serverConnectionId).slice(1)
-                        ).toEqual([]);
+                        ).toEqual([
+                            {
+                                type: 'repo/updates_received',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updateId: 0,
+                                errorCode: 'max_size_reached',
+                                maxBranchSizeInBytes: 1,
+                                neededBranchSizeInBytes: 6,
+                            },
+                        ]);
                     });
 
                     it('should return a subscription_limit_reached error if adding the updates to an existing inst would exceed the allowed inst size', async () => {
@@ -3746,26 +3738,20 @@ describe('WebsocketController', () => {
                             updateId: 0,
                         });
 
-                        expect(messenger.getEvents(serverConnectionId)).toEqual(
-                            [
-                                [
-                                    WebsocketEventTypes.Error,
-                                    -1,
-                                    {
-                                        success: false,
-                                        errorCode: 'subscription_limit_reached',
-                                        errorMessage:
-                                            'The maximum number of bytes per inst has been reached.',
-                                        recordName,
-                                        inst,
-                                        branch: 'testBranch',
-                                    },
-                                ],
-                            ]
-                        );
                         expect(
                             messenger.getMessages(serverConnectionId).slice(1)
-                        ).toEqual([]);
+                        ).toEqual([
+                            {
+                                type: 'repo/updates_received',
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updateId: 0,
+                                errorCode: 'max_size_reached',
+                                maxBranchSizeInBytes: 100,
+                                neededBranchSizeInBytes: 105,
+                            },
+                        ]);
                     });
                 });
 
@@ -9006,6 +8992,45 @@ describe('WebsocketController', () => {
                 expect(
                     await instStore.temp.listDirtyBranches(generation)
                 ).toEqual([]);
+            });
+
+            it('should aquire a lock before trying to save branch data', async () => {
+                const generation =
+                    await instStore.temp.getDirtyBranchGeneration();
+                const beforeSaveUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    'branch'
+                );
+
+                expect(beforeSaveUpdates).toEqual({
+                    updates: [update1Base64, update2Base64],
+                    timestamps: [expect.any(Number), expect.any(Number)],
+                    instSizeInBytes:
+                        update1Base64.length + update2Base64.length,
+                });
+
+                const lock = await instStore.temp.aquireLock(
+                    SAVE_PERMANENT_BRANCHES_LOCK,
+                    100_000
+                );
+                expect(lock).not.toBeFalsy();
+
+                const p1 = server.savePermanentBranches();
+                const p2 = server.savePermanentBranches();
+
+                const [r1, r2] = await Promise.all([p1, p2]);
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    'branch'
+                );
+
+                expect(updates).toEqual(beforeSaveUpdates);
+                expect(await instStore.temp.getDirtyBranchGeneration()).toBe(
+                    generation
+                );
             });
 
             it('should start a new dirty branch generation', async () => {

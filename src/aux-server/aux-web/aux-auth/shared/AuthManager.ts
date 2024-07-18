@@ -61,6 +61,7 @@ import type {
     CompleteLoginSuccess,
     ListUserAuthenticatorsResult,
     ValidateSessionKeyFailure,
+    RevokeSessionSuccess,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
@@ -425,12 +426,14 @@ export class AuthManager {
     }
 
     async logout(revokeSessionKey: boolean = true) {
+        let logoutUrl: string;
         if (this.currentSessionKey === this.savedSessionKey) {
             const sessionKey = this.savedSessionKey;
             if (sessionKey) {
                 this.savedSessionKey = null;
                 if (revokeSessionKey) {
-                    await this._revokeSessionKey(sessionKey);
+                    const result = await this._revokeSessionKey(sessionKey);
+                    logoutUrl = result?.logoutUrl;
                 }
             }
             this.savedConnectionKey = null;
@@ -442,6 +445,15 @@ export class AuthManager {
         this._appMetadata = null;
         this._saveEmail(null);
         this._loginState.next(false);
+
+        if (logoutUrl) {
+            if (inIframe()) {
+                console.log('[AuthManager] Logging out in iframe', logoutUrl);
+                window.open(logoutUrl);
+            } else {
+                location.href = logoutUrl;
+            }
+        }
     }
 
     async listSubscriptions(): Promise<GetSubscriptionStatusSuccess> {
@@ -569,7 +581,9 @@ export class AuthManager {
         }
     }
 
-    private async _revokeSessionKey(sessionKey: string): Promise<void> {
+    private async _revokeSessionKey(
+        sessionKey: string
+    ): Promise<RevokeSessionSuccess | null> {
         try {
             const result = await this.client.revokeSession(
                 {
@@ -580,6 +594,7 @@ export class AuthManager {
 
             if (result.success) {
                 console.log('[AuthManager] Session key revoked!');
+                return result;
             } else {
                 console.log(
                     '[AuthManager] Could not revoke session key:',
@@ -589,6 +604,7 @@ export class AuthManager {
         } catch (err) {
             console.log('[AuthManager] Could not revoke session key:', err);
         }
+        return null;
     }
 
     async loginWithEmail(email: string) {
@@ -885,4 +901,12 @@ export interface LoginRequestNotSent {
 export interface LoginComplete {
     type: 'login_complete';
     sessionKey: string;
+}
+
+function inIframe() {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return true;
+    }
 }

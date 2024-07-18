@@ -31,6 +31,7 @@ import {
     InputModality,
     getModalityHand,
     getModalityFinger,
+    getModalityButtonId,
 } from '../../../shared/scene/Input';
 import { MapSimulation3D } from '../../scene/MapSimulation3D';
 import { Block } from 'three-mesh-ui';
@@ -72,6 +73,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         const uv = !!this._hit?.uv
             ? `${VECTOR_TAG_PREFIX}${this._hit.uv.x},${this._hit.uv.y}`
             : null;
+
         this.simulation.helper.action(
             CLICK_ACTION_NAME,
             [this._bot],
@@ -81,7 +83,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 uv,
                 this._inputModality.type,
                 getModalityHand(this._inputModality),
-                getModalityFinger(this._inputModality)
+                getModalityFinger(this._inputModality),
+                getModalityButtonId(this._inputModality)
             )
         );
 
@@ -95,7 +98,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 uv,
                 this._inputModality.type,
                 getModalityHand(this._inputModality),
-                getModalityFinger(this._inputModality)
+                getModalityFinger(this._inputModality),
+                getModalityButtonId(this._inputModality)
             )
         );
 

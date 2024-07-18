@@ -2752,6 +2752,11 @@ export interface ControllerInputMethod {
 export interface MouseOrTouchInputMethod {
     type: 'mouse_or_touch';
     identifier: string;
+    /**
+     * The ID of the mouse button that is being used.
+     * If null, then the button ID is not known.
+     */
+    buttonId: number;
 }
 
 export type InputModality =
@@ -2762,6 +2767,12 @@ export type InputModality =
 
 export interface MouseInputModality {
     type: 'mouse';
+
+    /**
+     * The ID of the button.
+     * Null if the button ID is not known or a button is not pressed.
+     */
+    buttonId: 'left' | 'right' | 'middle';
 }
 
 export interface TouchInputModality {
@@ -2780,13 +2791,38 @@ export interface FingerInputModality {
     pose: Sphere;
 }
 
+export function modalityForInputMethod(
+    method: InputMethod,
+    currentInputType: InputType
+): InputModality {
+    if (method.type === 'mouse_or_touch') {
+        if (currentInputType === InputType.Mouse) {
+            return {
+                type: 'mouse',
+                buttonId: formatModalityButtonId(method.buttonId),
+            };
+        } else {
+            return {
+                type: 'touch',
+            };
+        }
+    } else if (method.type === 'controller') {
+        return {
+            type: 'controller',
+            hand: method.controller.inputSource.handedness,
+        };
+    }
+
+    return null;
+}
+
 /**
  * Gets the identifier for the given input modality.
  * @param modality
  */
 export function getModalityKey(modality: InputModality): string {
     if (modality.type === 'mouse') {
-        return 'mouse';
+        return `mouse`;
     } else if (modality.type === 'controller') {
         return 'controller';
     } else if (modality.type === 'finger') {
@@ -2841,6 +2877,29 @@ export function getModalityFinger(modality: InputModality): string {
         return modality.finger;
     } else {
         return null;
+    }
+}
+
+export function getModalityButtonId(modality: InputModality) {
+    if (modality.type === 'mouse') {
+        return modality.buttonId;
+    } else {
+        return null;
+    }
+}
+
+export function formatModalityButtonId(
+    buttonId: number
+): MouseInputModality['buttonId'] {
+    switch (buttonId) {
+        case MouseButtonId.Left:
+            return 'left';
+        case MouseButtonId.Middle:
+            return 'middle';
+        case MouseButtonId.Right:
+            return 'right';
+        default:
+            return null;
     }
 }
 

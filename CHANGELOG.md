@@ -1,5 +1,68 @@
 # CasualOS Changelog
 
+## V3.3.7
+
+#### Date: 7/18/2024
+
+### :rocket: Features
+
+-   Added [OpenTelemetry](https://opentelemetry.io/) tracing to the CasualOS server.
+    -   This will greatly improve our ability to track down issues and understand what is going on with the system.
+    -   Can be configured via the `SERVER_CONFIG` environment variable in the `telemetry` key.
+    -   See the `SERVER_CONFIG` schema in [ServerBuilder.ts](https://github.com/casual-simulation/casualos/blob/develop/src/aux-server/aux-backend/shared/ServerBuilder.ts#L2171) for more information.
+-   Added the ability to generate [Sloyd.ai](https://www.sloyd.ai/) models with `ai.sloyd.generateModel(request)`.
+    -   Requires a valid subscription that has been granted access to the `ai.sloyd` feature.
+    -   `request` is should be an object with the following properties:
+        -   `prompt` - The prompt to use for generating the model.
+        -   `recordName` - The name of the record that the model should be generated in. If omitted, then the user's record will be used by default.
+        -   `outputMimeType` - The MIME Type of the model that should be output. Currently, only `model/gltf+json` and `model/gltf-binary` are supported. If omitted, then `model/gltf+json` will be used.
+        -   `levelOfDetail` - A number between `0.01` and `1` that indicates the level of detail that should be generated for the model. Higher values will generate more detailed models. If omitted, then `0.5` will be used.
+        -   `baseModelId` - The ID of the model that should be edited.
+        -   `thumbnail` - An object that specifies how the thumbnail for the model should be generated. If omitted, then no thumbnail will be created. The object should have the following properties:
+            -   `type` - Should always be `"image/png"`
+            -   `width` - The desired width of the thumbnail in pixels.
+            -   `height` - The desired height of the thumbnail in pixels.
+    -   Requesting users require access to the `ai.sloyd` resource kind and `create` action for the specified record.
+-   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
+-   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
+-   Improved `portalZoomableMax` and `portalZoomableMin` to be supported for `perspective` portal camera types.
+-   Updated the BIOS dialog with various visual improvements.
+-   The default BIOS options have been updated:
+    -   `enter join code`
+    -   `local`
+    -   `studio`
+    -   `free`
+    -   `sign in`
+    -   `sign up`
+    -   `sign out`
+-   Improved Hume AI features to support Studios.
+    -   The `ai.hume` features now determine whether a Studio can configure their own Hume `apiKey` and `secretKey`.
+    -   `ai.hume.getAccessToken(recordName)` now accepts a record name.
+        -   This allows the user to specify which record they want to use for hume.ai access.
+        -   Once a studio is configured, requests to one of the Studio's records will return an access token derived from the Studio's configured `apiKey` and `secretKey`.
+        -   Requesting users require access to the `ai.hume` resource kind and `create` action for the specified record.
+-   Added the `floatingBillboard` option for `labelPosition`.
+    -   Like `floating`, but the label background won't have an arrow and the label will always face the camera.
+-   Added the `labelFloatingBackgroundColor` tag to control the color of the background for floating labels.
+    -   Defaults to `white`.
+-   Improved `@onClick`, `@onAnyBotClicked`, `@onGridClick`, `@onPointerEnter`, `@onPointerExit`, `@onPointerDown`, `@onPointerUp`, `@onAnyBotPointerEnter`, `@onAnyBotPointerExit`, `@onAnyBotPointerDown`, and `@onAnyBotPointerUp` to include the ID of the button that was pressed.
+    -   For each of these listeners, `that.buttonId` will be either `"left"`, `"right"`, `"middle"`, or `null`.
+    -   This means that you can now determine which button was pressed (if any) and respond accordingly.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where editing a tag may fail if multiple initialization updates for the same bot with different tag values were applied to the inst.
+-   Fixed an issue where different instances of the CasualOS server could try to save an inst at the same time and cause the inst to lose track of its data.
+-   Fixed an issue where CasualOS would always decide to load inst data from Redis instead of the database.
+-   Improved the CasualOS server to discard redundant updates when saving a studio inst. This will greatly help prevent hitting inst size limits in the future.
+-   Fixed an issue where `@onSpaceMaxSizeReached` would not be called when an inst ran out of space.
+-   Fixed an issue where meshes for hands in XR don't follow the camera when `cameraPositionOffset` is changed.
+-   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
+-   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
+-   Fixed an issue where selecting an option in the BIOS would fail to actually show the selected option.
+-   Fixed an issue where the arrow on floating labels would clip into the bot if the bot had a scale > 1.
+-   Fixed an issue where portal bots would not appear in the code editor autocomplete.
+
 ## V3.3.6
 
 #### Date: 6/14/2024

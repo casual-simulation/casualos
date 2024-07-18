@@ -18,6 +18,7 @@ import { MemoryStore } from './MemoryStore';
 import {
     asyncIterable,
     asyncIterator,
+    createTestControllers,
     createTestSubConfiguration,
     unwindAndCaptureAsync,
 } from './TestUtils';
@@ -29,6 +30,15 @@ import {
 import { merge } from 'lodash';
 import { unwind } from '../js-interpreter/InterpreterUtils';
 import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import {
+    AISloydInterfaceCreateModelRequest,
+    AISloydInterfaceCreateModelResponse,
+    AISloydInterfaceEditModelRequest,
+    AISloydInterfaceEditModelResponse,
+} from './AISloydInterface';
+import { PolicyController } from './PolicyController';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { fromByteArray } from 'base64-js';
 
 console.log = jest.fn();
 
@@ -73,9 +83,20 @@ describe('AIController', () => {
             []
         >;
     };
+    let sloydInterface: {
+        createModel: jest.Mock<
+            Promise<AISloydInterfaceCreateModelResponse>,
+            [AISloydInterfaceCreateModelRequest]
+        >;
+        editModel: jest.Mock<
+            Promise<AISloydInterfaceEditModelResponse>,
+            [AISloydInterfaceEditModelRequest]
+        >;
+    };
     let userId: string;
     let userSubscriptionTier: string;
     let store: MemoryStore;
+    let policies: PolicyController;
 
     beforeEach(() => {
         userId = 'test-user';
@@ -98,9 +119,15 @@ describe('AIController', () => {
         humeInterface = {
             getAccessToken: jest.fn(),
         };
-        store = new MemoryStore({
-            subscriptions: null,
-        });
+        sloydInterface = {
+            createModel: jest.fn(),
+            editModel: jest.fn(),
+        };
+
+        const services = createTestControllers(null);
+        store = services.store;
+        policies = services.policies;
+
         controller = new AIController({
             chat: {
                 interfaces: {
@@ -154,10 +181,19 @@ describe('AIController', () => {
             },
             hume: {
                 interface: humeInterface,
+                config: {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                },
+            },
+            sloyd: {
+                interface: sloydInterface,
             },
             metrics: store,
             config: store,
             policies: null,
+            policyController: policies,
+            records: store,
         });
     });
 
@@ -445,7 +481,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.chat({
@@ -492,7 +531,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.chat({
@@ -923,10 +965,17 @@ describe('AIController', () => {
                 },
                 hume: {
                     interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
                 },
+                sloyd: null,
                 metrics: store,
                 config: store,
                 policies: store,
+                policyController: policies,
+                records: store,
             });
 
             chatInterface.chat.mockReturnValueOnce(
@@ -1315,7 +1364,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await unwindAndCaptureAsync(
@@ -1370,7 +1422,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await unwindAndCaptureAsync(
@@ -1850,10 +1905,17 @@ describe('AIController', () => {
                 },
                 hume: {
                     interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
                 },
+                sloyd: null,
                 metrics: store,
                 config: store,
                 policies: store,
+                policyController: policies,
+                records: store,
             });
 
             chatInterface.chatStream.mockReturnValueOnce(
@@ -1959,7 +2021,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateSkybox({
@@ -2046,7 +2111,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateSkybox({
@@ -2219,7 +2287,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.getSkybox({
@@ -2308,7 +2379,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.getSkybox({
@@ -2420,7 +2494,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             otherInterface.generateImage.mockReturnValueOnce(
@@ -2471,7 +2548,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateImage({
@@ -2575,7 +2655,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.generateImage({
@@ -2835,7 +2918,10 @@ describe('AIController', () => {
                 metrics: store,
                 config: store,
                 hume: null,
+                sloyd: null,
                 policies: null,
+                policyController: policies,
+                records: store,
             });
 
             const result = await controller.getHumeAccessToken({
@@ -2878,6 +2964,672 @@ describe('AIController', () => {
                 errorMessage:
                     'The subscription does not permit Hume AI features.',
             });
+        });
+
+        describe('studio features', () => {
+            const studioId = 'studioId';
+
+            beforeEach(async () => {
+                controller = new AIController({
+                    chat: null,
+                    generateSkybox: null,
+                    images: null,
+                    metrics: store,
+                    config: store,
+                    hume: {
+                        interface: humeInterface,
+                        config: null,
+                    },
+                    sloyd: null,
+                    policies: null,
+                    policyController: policies,
+                    records: store,
+                });
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'myStudio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
+
+            it('should return not_authorized if the studio doesnt have hume features', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: true,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: false,
+                    };
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit Hume AI features.',
+                });
+            });
+
+            it('should return invalid_request when the studio doesnt have a hume configuration', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: false,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: true,
+                    };
+
+                await store.updateStudioHumeConfig(studioId, null);
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The studio does not have a Hume configuration.',
+                });
+            });
+
+            it('should use the studios hume configuration', async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: false,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: true,
+                    };
+
+                humeInterface.getAccessToken.mockResolvedValueOnce({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'studioApiKey',
+                    secretKey: 'studioSecretKey',
+                });
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+                expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                    apiKey: 'studioApiKey',
+                    secretKey: 'studioSecretKey',
+                });
+            });
+
+            it('should use global configuration if the studio doesnt have a configuration', async () => {
+                controller = new AIController({
+                    chat: null,
+                    generateSkybox: null,
+                    images: null,
+                    metrics: store,
+                    config: store,
+                    hume: {
+                        interface: humeInterface,
+                        config: {
+                            apiKey: 'globalApiKey',
+                            secretKey: 'globalSecretKey',
+                        },
+                    },
+                    sloyd: null,
+                    policies: null,
+                    policyController: policies,
+                    records: store,
+                });
+
+                store.subscriptionConfiguration = createTestSubConfiguration();
+                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
+                    allowed: false,
+                };
+                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
+                    {
+                        allowed: true,
+                    };
+
+                humeInterface.getAccessToken.mockResolvedValueOnce({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+
+                await store.updateStudioHumeConfig(studioId, null);
+
+                const result = await controller.getHumeAccessToken({
+                    userId,
+                    recordName: studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    accessToken: 'token',
+                    expiresIn: 3600,
+                    issuedAt: 1234567890,
+                    tokenType: 'Bearer',
+                });
+                expect(humeInterface.getAccessToken).toHaveBeenCalledWith({
+                    apiKey: 'globalApiKey',
+                    secretKey: 'globalSecretKey',
+                });
+            });
+        });
+    });
+
+    describe('sloydGenerateModel()', () => {
+        const studioId = 'studioId';
+        const otherUserId = 'otherUserId';
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    defaultFeatures: {
+                        user: {
+                            ai: {
+                                sloyd: {
+                                    allowed: true,
+                                },
+                            },
+                        },
+                    },
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                ai: {
+                                    sloyd: {
+                                        allowed: true,
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                }
+            );
+
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: 'studio',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                },
+                userId
+            );
+
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: otherUserId,
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should call the sloyd interface', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+                name: 'model name',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf+json',
+                confidence: 0.5,
+                name: 'model name',
+                modelData: 'json',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    userId: userId,
+                    createdAtMs: expect.any(Number),
+                    name: 'model name',
+                    modelData: 'json',
+                    modelsCreated: 1,
+                },
+            ]);
+        });
+
+        it('should support binary results', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelMimeType: 'model/gltf-binary',
+                modelData: new Uint8Array([123, 255, 0, 37]),
+                name: 'model name',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf-binary',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf-binary',
+                confidence: 0.5,
+                name: 'model name',
+                modelData: fromByteArray(new Uint8Array([123, 255, 0, 37])),
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf-binary',
+                    confidence: 0.5,
+                    userId: userId,
+                    createdAtMs: expect.any(Number),
+                    name: 'model name',
+                    modelData: fromByteArray(new Uint8Array([123, 255, 0, 37])),
+                    modelsCreated: 1,
+                },
+            ]);
+        });
+
+        it('should call the sloyd edit interface if given a previous model ID', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+                name: 'model name',
+            });
+            sloydInterface.editModel.mockResolvedValueOnce({
+                success: true,
+                interactionId: 'modelId',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+                baseModelId: 'baseModelId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf+json',
+                    userId: userId,
+                    createdAtMs: expect.any(Number),
+                    modelData: 'json',
+                    baseModelId: 'baseModelId',
+                    modelsCreated: 1,
+                },
+            ]);
+
+            expect(sloydInterface.editModel).toHaveBeenCalledWith({
+                interactionId: 'baseModelId',
+                levelOfDetail: 1,
+                prompt: 'test',
+                modelMimeType: 'model/gltf+json',
+            });
+        });
+
+        it('should return not_authorized if the user doesnt have access to sloyd features', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+            store.subscriptionConfiguration.defaultFeatures.user.ai.sloyd = {
+                allowed: false,
+            };
+
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                name: 'model name',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'The subscription does not permit Sloyd AI features.',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([]);
+        });
+
+        it('should return subscription_limit_reached if the user has too many model requests', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+            store.subscriptionConfiguration.defaultFeatures.user.ai.sloyd = {
+                allowed: true,
+                maxModelsPerPeriod: 1,
+            };
+
+            store.aiSloydMetrics.push({
+                modelId: 'modelId2',
+                mimeType: 'model/gltf+json',
+                confidence: 0.5,
+                userId: userId,
+                createdAtMs: Date.now(),
+                name: 'model name',
+                modelData: 'json',
+                modelsCreated: 1,
+            });
+
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                name: 'model name',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The request exceeds allowed subscription limits.',
+            });
+
+            expect(sloydInterface.createModel).not.toHaveBeenCalled();
+            // expect(store.aiSloydMetrics).toEqual([]);
+        });
+
+        it('should return not_logged_in if the user is not logged in', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                name: 'model name',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId: null,
+                recordName: userId,
+                prompt: 'test',
+                outputMimeType: 'model/gltf+json',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in. Please provide a sessionKey.',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([]);
+        });
+
+        it('should be able to use the studio for the given record', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                name: 'model name',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: studioId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf+json',
+                confidence: 0.5,
+                name: 'model name',
+                modelData: 'json',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    studioId,
+                    createdAtMs: expect.any(Number),
+                    name: 'model name',
+                    modelData: 'json',
+                    modelsCreated: 1,
+                },
+            ]);
+        });
+
+        it('should allow users given access to ai.sloyd resources to create models', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                name: 'model name',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            const permissionResult = await policies.grantMarkerPermission({
+                recordKeyOrRecordName: studioId,
+                userId: userId,
+                marker: PUBLIC_READ_MARKER,
+                permission: {
+                    resourceKind: 'ai.sloyd',
+                    action: 'create',
+                    expireTimeMs: null,
+                    options: {},
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                    marker: PUBLIC_READ_MARKER,
+                },
+            });
+
+            expect(permissionResult).toMatchObject({
+                success: true,
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId: otherUserId,
+                recordName: studioId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                modelId: 'modelId',
+                mimeType: 'model/gltf+json',
+                confidence: 0.5,
+                name: 'model name',
+                modelData: 'json',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([
+                {
+                    modelId: 'modelId',
+                    mimeType: 'model/gltf+json',
+                    confidence: 0.5,
+                    studioId: studioId,
+                    createdAtMs: expect.any(Number),
+                    name: 'model name',
+                    modelData: 'json',
+                    modelsCreated: 1,
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user is not authorized to access the ai.sloyd resource', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                name: 'model name',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId: otherUserId,
+                recordName: studioId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    resourceKind: 'ai.sloyd',
+                    action: 'create',
+                    recordName: studioId,
+                    subjectId: otherUserId,
+                    subjectType: 'user',
+                },
+            });
+
+            expect(store.aiSloydMetrics).toEqual([]);
+        });
+
+        it('should return errors that the sloyd interface returns', async () => {
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'Server Error',
+            });
+
+            const result = await controller.sloydGenerateModel({
+                userId,
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                levelOfDetail: 1,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'Server Error',
+            });
+
+            expect(store.aiSloydMetrics).toEqual([]);
         });
     });
 });

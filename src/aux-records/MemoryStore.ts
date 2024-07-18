@@ -32,6 +32,7 @@ import {
     StoreListedStudio,
     StudioComIdRequest,
     LoomConfig,
+    HumeConfig,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
 import {
@@ -112,6 +113,8 @@ import {
     AIImageSubscriptionMetrics,
     AISkyboxSubscriptionMetrics,
     InstSubscriptionMetrics,
+    AISloydMetrics,
+    AISloydSubscriptionMetrics,
 } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
@@ -178,6 +181,7 @@ export class MemoryStore
     private _aiChatMetrics: AIChatMetrics[] = [];
     private _aiImageMetrics: AIImageMetrics[] = [];
     private _aiSkyboxMetrics: AISkyboxMetrics[] = [];
+    private _aiSloydMetrics: AISloydMetrics[] = [];
 
     private _dataBuckets: Map<string, Map<string, RecordData>> = new Map();
     private _eventBuckets: Map<string, Map<string, EventData>> = new Map();
@@ -200,6 +204,7 @@ export class MemoryStore
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
+    private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
@@ -230,6 +235,10 @@ export class MemoryStore
             }[];
         };
     };
+
+    get aiSloydMetrics(): AISloydMetrics[] {
+        return this._aiSloydMetrics;
+    }
 
     get users(): AuthUser[] {
         return this._users;
@@ -743,6 +752,17 @@ export class MemoryStore
         config: LoomConfig
     ): Promise<void> {
         this._studioLoomConfigs.set(studioId, config);
+    }
+
+    async getStudioHumeConfig(studioId: string): Promise<HumeConfig | null> {
+        return this._studioHumeConfigs.get(studioId) ?? null;
+    }
+
+    async updateStudioHumeConfig(
+        studioId: string,
+        config: HumeConfig
+    ): Promise<void> {
+        this._studioHumeConfigs.set(studioId, config);
     }
 
     async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
@@ -2709,6 +2729,61 @@ export class MemoryStore
             ...info,
             totalInsts,
         };
+    }
+
+    async getSubscriptionAiSloydMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISloydSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+        const metrics = filter.ownerId
+            ? this._aiSloydMetrics.filter(
+                  (m) =>
+                      m.userId === filter.ownerId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              )
+            : this._aiSloydMetrics.filter(
+                  (m) =>
+                      m.studioId === filter.studioId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              );
+
+        let totalModels = 0;
+        for (let m of metrics) {
+            totalModels += m.modelsCreated;
+        }
+        return {
+            ...info,
+            totalModelsInCurrentPeriod: totalModels,
+        };
+    }
+
+    async getSubscriptionAiSloydMetricsByRecordName(
+        recordName: string
+    ): Promise<AISloydSubscriptionMetrics> {
+        const info = await this._getSubscriptionInfo(recordName);
+
+        let totalModels = 0;
+        for (let metric of this._aiSloydMetrics) {
+            if (
+                metric.userId === info.ownerId ||
+                metric.studioId === info.studioId
+            ) {
+                totalModels += metric.modelsCreated;
+            }
+        }
+
+        return {
+            ...info,
+            totalModelsInCurrentPeriod: totalModels,
+        };
+    }
+
+    async recordSloydMetrics(metrics: AISloydMetrics): Promise<void> {
+        this._aiSloydMetrics.push(metrics);
     }
 
     async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {

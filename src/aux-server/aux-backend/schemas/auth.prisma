@@ -5,6 +5,7 @@ generator client {
   provider = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-1.0.x", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
   output   = "../prisma/generated"
+  previewFeatures = ["tracing"]
 }
 
 datasource db {
@@ -72,6 +73,7 @@ model User {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+    aiSloydMetrics AiSloydMetrics[]
 
     instReports UserInstReport[]
     comIdRequests StudioComIdRequest[]
@@ -146,7 +148,7 @@ model AuthSession {
     oidIdToken String?
     oidRefreshToken String?
     oidScope String?
-    oidExpiresAtMs Int?
+    oidExpiresAtMs BigInt?
 
     grantedTime DateTime
     expireTime DateTime?
@@ -255,6 +257,9 @@ model Studio {
     // The loom app id and private key for this studio.
     loomConfig Json?
 
+    // The hume apiKey and secretKey for this studio.
+    humeConfig Json?
+
     records Record[]
     assignments StudioAssignment[]
 
@@ -270,6 +275,7 @@ model Studio {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+    aiSloydMetrics AiSloydMetrics[]
 
     childStudios Studio[] @relation("OwnerStudio")
     comIdRequests StudioComIdRequest[]
@@ -794,6 +800,26 @@ model AiSkyboxMetrics {
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSkyboxMetrics_studioId_fkey1")
+}
+
+model AiSloydMetrics {
+    id String @id @db.Uuid
+
+    modelsCreated Int
+    name String?
+    confidence Float?
+    mimeType String
+    modelData String
+    thumbnailBase64 String?
+    baseModelId String?
+
+    createdAt DateTime @default(now())
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiSloydMetrics_userId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSloydMetrics_studioId_fkey1")
 }
 
 model PrivoClientCredentials {

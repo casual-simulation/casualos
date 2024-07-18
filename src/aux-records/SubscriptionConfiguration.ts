@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
+import { max } from 'lodash';
 
 export const subscriptionFeaturesSchema = z.object({
     records: z
@@ -182,6 +183,29 @@ export const subscriptionFeaturesSchema = z.object({
             })
             .describe(
                 'The configuration for Hume AI features for the subscription. Defaults to not allowed if omitted.'
+            )
+            .optional()
+            .default({
+                allowed: false,
+            }),
+        sloyd: z
+            .object({
+                allowed: z
+                    .boolean()
+                    .describe(
+                        'Whether Sloyd AI features are allowed for the subscription. If false, then every request to generate Sloyd AI will be rejected.'
+                    ),
+                maxModelsPerPeriod: z
+                    .number()
+                    .describe(
+                        'The maximum number of models that can be generated per subscription period. If omitted, then there is no limit.'
+                    )
+                    .positive()
+                    .int()
+                    .optional(),
+            })
+            .describe(
+                'The configuration for Sloyd AI features for the subscription. Defaults to not allowed if omitted.'
             )
             .optional()
             .default({
@@ -688,6 +712,11 @@ export interface FeaturesConfiguration {
      * The configuration for loom features.
      */
     loom?: StudioLoomFeaturesConfiguration;
+
+    // /**
+    //  * The configuration for studio hume features.
+    //  */
+    // hume?: StudioHumeFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -787,6 +816,11 @@ export interface AIFeaturesConfiguration {
      * The configuration for Hume AI features.
      */
     hume?: AIHumeFeaturesConfiguration;
+
+    /**
+     * The configuration for Sloyd AI features.
+     */
+    sloyd?: AISloydFeaturesConfiguration;
 }
 
 export interface AIChatFeaturesConfiguration {
@@ -851,6 +885,19 @@ export interface AIHumeFeaturesConfiguration {
     allowed: boolean;
 }
 
+export interface AISloydFeaturesConfiguration {
+    /**
+     * The Sloyd AI features are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of models that can be generated per subscription period.
+     * If not specified, then there is no limit.
+     */
+    maxModelsPerPeriod?: number;
+}
+
 export interface InstsFeaturesConfiguration {
     /**
      * Whether inst features are allowed.
@@ -913,6 +960,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
                 allowed: true,
             },
             hume: {
+                allowed: true,
+            },
+            sloyd: {
                 allowed: true,
             },
         },
@@ -997,6 +1047,29 @@ export function getHumeAiFeatures(
         type
     );
     return features.ai.hume ?? { allowed: false };
+}
+
+/**
+ * Gets the Sloyd AI features that are allowed for the given subscription.
+ * If sloyd ai features are not configured, then they are not allowed.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getSloydAiFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio'
+): AISloydFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type
+    );
+    return features.ai.sloyd ?? { allowed: false };
 }
 
 /**

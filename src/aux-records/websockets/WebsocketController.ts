@@ -20,7 +20,7 @@ import {
     RemoteActionResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, mergeUpdates } from 'yjs';
+import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 import {
     DeviceConnection,
     WebsocketConnectionStore,
@@ -81,6 +81,13 @@ import {
 } from '../SubscriptionConfiguration';
 import { MetricsStore } from '../MetricsStore';
 import { AuthStore } from '../AuthStore';
+import { traced } from '../tracing/TracingDecorators';
+import { trace } from '@opentelemetry/api';
+import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+
+const TRACE_NAME = 'WebsocketController';
+
+export const SAVE_PERMANENT_BRANCHES_LOCK = 'savePermanentBranches';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -135,6 +142,7 @@ export class WebsocketController {
      * @param requestId The ID of the request.
      * @param message The login message.
      */
+    @traced(TRACE_NAME)
     async login(
         connectionId: string,
         requestId: number,
@@ -195,6 +203,19 @@ export class WebsocketController {
                 userId = validationResult.userId;
                 sessionId = validationResult.sessionId;
                 clientConnectionId = validationResult.connectionId;
+
+                const span = trace.getActiveSpan();
+                if (span) {
+                    span.setAttributes({
+                        [SEMATTRS_ENDUSER_ID]: userId,
+                        ['request.userId']: userId,
+                        ['request.sessionId']: sessionId,
+                        ['request.subscriptionId']:
+                            validationResult.subscriptionId,
+                        ['request.subscriptionTier']:
+                            validationResult.subscriptionTier,
+                    });
+                }
             }
 
             await this._messenger.sendMessage([connectionId], {
@@ -219,6 +240,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async disconnect(connectionId: string) {
         const loadedConnections = await this._connectionStore.getConnections(
             connectionId
@@ -293,6 +315,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async watchBranch(connectionId: string, event: WatchBranchMessage) {
         if (!event) {
             console.warn(
@@ -507,6 +530,7 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
+    @traced(TRACE_NAME)
     async unwatchBranch(
         connectionId: string,
         recordName: string | null,
@@ -600,6 +624,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async addUpdates(connectionId: string, event: AddUpdatesMessage) {
         if (!event) {
             console.warn(
@@ -664,7 +689,9 @@ export class WebsocketController {
                     event.inst,
                     event.branch
                 ));
-            const updateSize = sumBy(event.updates, (u) => u.length);
+            const updateSize = sumBy(event.updates, (u) =>
+                Buffer.byteLength(u, 'utf8')
+            );
             const config = await this._config.getSubscriptionConfiguration();
             let features: FeaturesConfiguration = null;
 
@@ -902,17 +929,17 @@ export class WebsocketController {
                           event.recordName,
                           event.inst
                       );
-                if (currentSize + updateSize > maxInstSize) {
-                    await this.sendError(connectionId, -1, {
-                        success: false,
-                        errorCode: features
-                            ? 'subscription_limit_reached'
-                            : 'not_authorized',
-                        errorMessage:
-                            'The maximum number of bytes per inst has been reached.',
+                const neededSizeInBytes = currentSize + updateSize;
+                if (neededSizeInBytes > maxInstSize) {
+                    await this._messenger.sendMessage([connectionId], {
+                        type: 'repo/updates_received',
                         recordName: event.recordName,
                         inst: event.inst,
                         branch: event.branch,
+                        updateId: event.updateId,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: maxInstSize,
+                        neededBranchSizeInBytes: neededSizeInBytes,
                     });
                     return;
                 }
@@ -1013,6 +1040,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async sendAction(connectionId: string, event: SendActionMessage) {
         if (!event) {
             console.warn(
@@ -1159,6 +1187,7 @@ export class WebsocketController {
         );
     }
 
+    @traced(TRACE_NAME)
     async watchBranchDevices(
         connectionId: string,
         recordName: string | null,
@@ -1255,6 +1284,7 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
+    @traced(TRACE_NAME)
     async unwatchBranchDevices(
         connectionId: string,
         recordName: string | null,
@@ -1270,6 +1300,7 @@ export class WebsocketController {
         );
     }
 
+    @traced(TRACE_NAME)
     async deviceCount(
         connectionId: string,
         recordName: string | null,
@@ -1339,6 +1370,7 @@ export class WebsocketController {
         });
     }
 
+    @traced(TRACE_NAME)
     async getBranchData(
         userId: string | null,
         recordName: string | null,
@@ -1393,6 +1425,7 @@ export class WebsocketController {
         };
     }
 
+    @traced(TRACE_NAME)
     async listInsts(
         recordName: string | null,
         userId: string,
@@ -1477,6 +1510,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async getUpdates(
         connectionId: string,
         recordName: string | null,
@@ -1580,6 +1614,7 @@ export class WebsocketController {
         });
     }
 
+    @traced(TRACE_NAME)
     async eraseInst(
         recordKeyOrName: string | null,
         inst: string,
@@ -1649,6 +1684,7 @@ export class WebsocketController {
      * @param headers The headers that were included in the request.
      * @param data The data included in the request.
      */
+    @traced(TRACE_NAME)
     async webhook(
         recordName: string | null,
         inst: string,
@@ -1725,6 +1761,7 @@ export class WebsocketController {
      * @param connectionId The ID of the connection that is making the request.
      * @param event The request missing permission event.
      */
+    @traced(TRACE_NAME)
     async requestMissingPermission(
         connectionId: string,
         event: RequestMissingPermissionMessage
@@ -1856,6 +1893,7 @@ export class WebsocketController {
      * @param connectionId The ID of the connection that is responding to the request.
      * @param event The response to the missing permission request.
      */
+    @traced(TRACE_NAME)
     async respondToPermissionRequest(
         connectionId: string,
         event: RequestMissingPermissionResponseMessage
@@ -1907,6 +1945,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async syncTime(
         connectionId: string,
         event: TimeSyncRequestMessage,
@@ -1928,6 +1967,7 @@ export class WebsocketController {
      * @param totalHits The total number of hits by the connection.
      * @param timeMs The current time in unix time in miliseconds.
      */
+    @traced(TRACE_NAME)
     async rateLimitExceeded(
         connectionId: string,
         retryAfter: number,
@@ -1958,6 +1998,7 @@ export class WebsocketController {
      * @param connectionId The ID of the connection that is requesting the upload.
      * @param requestId The ID of the request.
      */
+    @traced(TRACE_NAME)
     async uploadRequest(
         connectionId: string,
         requestId: number
@@ -1996,6 +2037,7 @@ export class WebsocketController {
         }
     }
 
+    @traced(TRACE_NAME)
     async downloadRequest(
         connectionId: string,
         requestId: number,
@@ -2046,23 +2088,49 @@ export class WebsocketController {
 
     /**
      * Saves all of the permanent branches that are currently in memory.
+     * @param timeout The timeout for the operation. Defaults to 30 seconds.
      */
-    async savePermanentBranches(): Promise<void> {
+    @traced(TRACE_NAME)
+    async savePermanentBranches(timeout: number = 30_000): Promise<void> {
         const store = this._instStore;
         if (store instanceof SplitInstRecordsStore) {
-            const generation = await store.temp.getDirtyBranchGeneration();
-            store.temp.setDirtyBranchGeneration(uuid());
-            const branches = await store.temp.listDirtyBranches(generation);
+            const unlock = await store.temp.aquireLock(
+                SAVE_PERMANENT_BRANCHES_LOCK,
+                timeout
+            );
 
-            for (let branch of branches) {
-                if (!branch.recordName) {
-                    continue;
-                }
-                await this._saveBranchUpdates(store, branch);
+            if (!unlock) {
+                console.log(
+                    `[WebsocketController] [savePermanentBranches] Unable to acquire lock.`
+                );
+                return;
             }
+            console.log(
+                '[WebsocketController] [savePermanentBranches] Lock aquired.'
+            );
 
-            await store.temp.clearDirtyBranches(generation);
-            console.log(`[WebsocketController] Saved permanent branches.`);
+            try {
+                const generation = await store.temp.getDirtyBranchGeneration();
+                store.temp.setDirtyBranchGeneration(uuid());
+                const branches = await store.temp.listDirtyBranches(generation);
+
+                for (let branch of branches) {
+                    if (!branch.recordName) {
+                        continue;
+                    }
+                    await this._saveBranchUpdates(store, branch);
+                }
+
+                await store.temp.clearDirtyBranches(generation);
+                console.log(
+                    `[WebsocketController] [savePermanentBranches] Saved.`
+                );
+            } finally {
+                unlock();
+                console.log(
+                    '[WebsocketController] [savePermanentBranches] Released lock.'
+                );
+            }
         }
     }
 
@@ -2472,8 +2540,16 @@ export class WebsocketController {
         );
 
         if (updates) {
-            const updatesBytes = updates.updates.map((u) => toByteArray(u));
-            const mergedBytes = mergeUpdates(updatesBytes);
+            const doc = new Doc({
+                gc: true,
+            });
+
+            for (let update of updates.updates) {
+                const bytes = toByteArray(update);
+                applyUpdate(doc, bytes);
+            }
+
+            const mergedBytes = encodeStateAsUpdate(doc);
             const mergedBase64 = fromByteArray(mergedBytes);
             const permanentReplaceResult =
                 await store.perm.replaceCurrentUpdates(

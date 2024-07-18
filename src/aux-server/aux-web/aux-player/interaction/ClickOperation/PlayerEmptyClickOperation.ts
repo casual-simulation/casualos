@@ -1,4 +1,12 @@
-import { Input, InputMethod } from '../../../shared/scene/Input';
+import {
+    getModalityButtonId,
+    getModalityFinger,
+    getModalityHand,
+    getModalityKey,
+    Input,
+    InputMethod,
+    InputModality,
+} from '../../../shared/scene/Input';
 import { Ray } from '@casual-simulation/three';
 import { appManager } from '../../../shared/AppManager';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
@@ -13,6 +21,7 @@ import {
     ON_GRID_CLICK_ACTION_NAME,
     ON_GRID_DOWN_ACTION_NAME,
     ON_GRID_UP_ACTION_NAME,
+    onGridClickArg,
 } from '@casual-simulation/aux-common';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -32,9 +41,10 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
     constructor(
         game: PlayerGame,
         interaction: PlayerInteractionManager,
-        inputMethod: InputMethod
+        inputMethod: InputMethod,
+        inputModality: InputModality
     ) {
-        super(game, interaction, inputMethod);
+        super(game, interaction, inputMethod, inputModality);
         this._game = game;
         this._interaction = interaction;
     }
@@ -97,10 +107,17 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                 };
             }
 
-            sendAction(sim.simulation, {
-                dimension: inputDimension,
-                position: position,
-            });
+            sendAction(
+                sim.simulation,
+                onGridClickArg(
+                    position,
+                    inputDimension,
+                    getModalityKey(this._inputModality),
+                    getModalityHand(this._inputModality),
+                    getModalityFinger(this._inputModality),
+                    getModalityButtonId(this._inputModality)
+                )
+            );
         };
 
         // If we're in VR, then send the empty click to the PlayerPageSimulation

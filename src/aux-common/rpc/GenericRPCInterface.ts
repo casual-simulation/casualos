@@ -1,6 +1,8 @@
 import { GenericHttpRequest } from '../http/GenericHttpInterface';
 import z, { input } from 'zod';
 import { KnownErrorCodes } from './ErrorCodes';
+import type { Span } from '@opentelemetry/api';
+import type { DenialReason } from '../common/DenialReason';
 
 /**
  * Defines an interface for the context that an RPC call is made with.
@@ -25,6 +27,11 @@ export interface RPCContext {
      * The HTTP origin that the request was made from.
      */
     origin: string | null;
+
+    /**
+     * The span that the RPC call is being made in.
+     */
+    span?: Span;
 }
 
 export type ProcedureOutput =
@@ -39,6 +46,8 @@ export interface ProcedureOutputSuccess {
 export interface ProcedureOutputError {
     success: false;
     errorCode: KnownErrorCodes;
+    errorMessage: string;
+    reason?: DenialReason;
 }
 
 export interface ProcedureOutputStream
@@ -368,6 +377,15 @@ export interface DiscriminatedUnionSchemaMetadata extends UnionSchemaMetadata {
     discriminator: string;
 }
 
+export interface RecordSchemaMetadata extends BaseSchemaMetadata {
+    type: 'record';
+
+    /**
+     * The schema of the values in the record.
+     */
+    valueSchema: SchemaMetadata;
+}
+
 export type SchemaMetadata =
     | StringSchemaMetadata
     | BooleanSchemaMetadata
@@ -380,7 +398,8 @@ export type SchemaMetadata =
     | AnySchemaMetadata
     | NullSchemaMetadata
     | UnionSchemaMetadata
-    | DiscriminatedUnionSchemaMetadata;
+    | DiscriminatedUnionSchemaMetadata
+    | RecordSchemaMetadata;
 
 /**
  * Gets a serializable version of the schema metdata.
@@ -459,6 +478,11 @@ export function getSchemaMetadata(schema: z.ZodType): SchemaMetadata {
             options: schema._def.options.map((o: any) => getSchemaMetadata(o)),
             discriminator: schema._def.discriminator,
             description: schema._def.description,
+        };
+    } else if (schema instanceof z.ZodRecord) {
+        return {
+            type: 'record',
+            valueSchema: getSchemaMetadata(schema._def.valueType),
         };
     } else {
         console.error('Unsupported schema type', schema);

@@ -39,6 +39,8 @@ import {
     GoogleAIChatInterface,
     RelyingParty,
     LoomController,
+    ServerConfig,
+    RedisServerOptions,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -142,6 +144,22 @@ import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
 // @ts-ignore
 import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
+import {
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+} from '@opentelemetry/sdk-metrics';
+import { PrismaInstrumentation } from '@prisma/instrumentation';
+import { Resource } from '@opentelemetry/resources';
+import {
+    SEMRESATTRS_SERVICE_NAME,
+    SEMRESATTRS_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions';
+import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -263,7 +281,7 @@ export class ServerBuilder implements SubscriptionLike {
         'http://localhost:3002',
     ]);
 
-    private _options: BuilderOptions;
+    private _options: ServerConfig;
 
     /**
      * The actions that should be performed when the server is built.
@@ -292,7 +310,7 @@ export class ServerBuilder implements SubscriptionLike {
         return !this._stripe;
     }
 
-    constructor(options?: BuilderOptions) {
+    constructor(options?: ServerConfig) {
         this._options = options ?? {};
         this._subscription = new Subscription();
     }
@@ -326,9 +344,115 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useRedisCache(
-        options: Pick<BuilderOptions, 'redis'> = this._options
+    /**
+     * Enables telemetry for the server.
+     * Should be called first if telemetry is desired.
+     * @param options The options for the server.
+     */
+    useTelemetry(
+        options: Pick<ServerConfig, 'telemetry'> = this._options
     ): this {
+        console.log(`[ServerBuilder] Using telemetry.`);
+        if (!options.telemetry) {
+            throw new Error('Telemetry options must be provided.');
+        }
+
+        console.log(
+            `[ServerBuilder] Tracing Configuration:`,
+            options.telemetry.tracing
+        );
+
+        const traceExporter =
+            options.telemetry.tracing.exporter === 'console'
+                ? new ConsoleSpanExporter()
+                : options.telemetry.tracing.exporter === 'otlp'
+                ? new OTLPTraceExporter({
+                      url: options.telemetry.tracing.url,
+                      headers: options.telemetry.tracing.headers,
+                  })
+                : null;
+
+        console.log(
+            `[ServerBuilder] Metrics Configuration:`,
+            options.telemetry.metrics
+        );
+
+        const metrics =
+            options.telemetry.metrics.exporter === 'none'
+                ? null
+                : new PeriodicExportingMetricReader({
+                      exporter:
+                          options.telemetry.metrics.exporter === 'console'
+                              ? new ConsoleMetricExporter()
+                              : options.telemetry.metrics.exporter === 'otlp'
+                              ? new OTLPMetricExporter({
+                                    url: options.telemetry.metrics.url,
+                                    headers: options.telemetry.metrics.headers,
+                                })
+                              : null,
+                  });
+
+        console.log(
+            `[ServerBuilder] Instrumentation Configuration:`,
+            options.telemetry.instrumentation
+        );
+
+        const instrumentation: any[] = [];
+
+        if (options.telemetry.instrumentation.auto) {
+            console.log(
+                `[ServerBuilder] Using auto instrumentation with config:`,
+                options.telemetry.instrumentation.auto
+            );
+            instrumentation.push(
+                getNodeAutoInstrumentations(
+                    options.telemetry.instrumentation.auto
+                )
+            );
+        } else if (
+            typeof options.telemetry.instrumentation.auto === 'undefined'
+        ) {
+            console.log(`[ServerBuilder] Using auto instrumentation.`);
+            instrumentation.push(getNodeAutoInstrumentations());
+        } else {
+            console.log(`[ServerBuilder] Skipping auto instrumentation.`);
+        }
+
+        if (options.telemetry.instrumentation.prisma) {
+            console.log(
+                `[ServerBuilder] Using Prisma instrumentation with config:`,
+                options.telemetry.instrumentation.prisma
+            );
+            instrumentation.push(
+                new PrismaInstrumentation(
+                    options.telemetry.instrumentation.prisma
+                )
+            );
+        } else if (
+            typeof options.telemetry.instrumentation.prisma === 'undefined'
+        ) {
+            console.log(`[ServerBuilder] Using Prisma instrumentation.`);
+            instrumentation.push(new PrismaInstrumentation());
+        } else {
+            console.log(`[ServerBuilder] Skipping Prisma instrumentation.`);
+        }
+
+        const sdk = new NodeSDK({
+            resource: new Resource({
+                [SEMRESATTRS_SERVICE_NAME]: 'casualos',
+                [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
+            }),
+            traceExporter: traceExporter,
+            metricReader: metrics,
+            instrumentations: instrumentation,
+        });
+
+        sdk.start();
+
+        return this;
+    }
+
+    useRedisCache(options: Pick<ServerConfig, 'redis'> = this._options): this {
         console.log('[ServerBuilder] Using Redis Cache.');
         if (!options.redis) {
             throw new Error('Redis options must be provided.');
@@ -348,7 +472,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     useMongoDB(
         options: Pick<
-            BuilderOptions,
+            ServerConfig,
             'mongodb' | 'subscriptions' | 'moderation'
         > = this._options
     ): this {
@@ -443,7 +567,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     usePrismaWithS3(
         options: Pick<
-            BuilderOptions,
+            ServerConfig,
             'prisma' | 's3' | 'subscriptions' | 'moderation'
         > = this._options
     ): this {
@@ -498,7 +622,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     usePrismaWithMongoDBFileStore(
         options: Pick<
-            BuilderOptions,
+            ServerConfig,
             'prisma' | 'mongodb' | 'subscriptions'
         > = this._options
     ): this {
@@ -552,7 +676,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useRedisWebsocketConnectionStore(
-        options: Pick<BuilderOptions, 'redis'> = this._options
+        options: Pick<ServerConfig, 'redis'> = this._options
     ): this {
         console.log('[ServerBuilder] Using Redis Websocket Connection Store.');
         if (!options.redis) {
@@ -578,7 +702,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useApiGatewayWebsocketMessenger(
-        options: Pick<BuilderOptions, 'apiGateway' | 's3'> = this._options
+        options: Pick<ServerConfig, 'apiGateway' | 's3'> = this._options
     ): this {
         console.log('[ServerBuilder] Using API Gateway Websocket Messenger.');
 
@@ -612,7 +736,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useWSWebsocketMessenger(
-        options: Pick<BuilderOptions, 'ws'> = this._options
+        options: Pick<ServerConfig, 'ws'> = this._options
     ): this {
         console.log('[ServerBuilder] Using WS Websocket Messenger.');
 
@@ -626,7 +750,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     usePrismaAndRedisInstRecords(
-        options: Pick<BuilderOptions, 'prisma' | 'redis'> = this._options
+        options: Pick<ServerConfig, 'prisma' | 'redis'> = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma and Redis Inst Records.');
 
@@ -706,9 +830,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useWebAuthn(
-        options: Pick<BuilderOptions, 'webauthn'> = this._options
-    ): this {
+    useWebAuthn(options: Pick<ServerConfig, 'webauthn'> = this._options): this {
         console.log('[ServerBuilder] Using WebAuthn.');
         if (!options.webauthn) {
             throw new Error('WebAuthn options must be provided.');
@@ -721,7 +843,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useLivekit(options: Pick<BuilderOptions, 'livekit'> = this._options): this {
+    useLivekit(options: Pick<ServerConfig, 'livekit'> = this._options): this {
         console.log('[ServerBuilder] Using Livekit.');
         if (
             !options.livekit ||
@@ -740,7 +862,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useTextItAuthMessenger(
-        options: Pick<BuilderOptions, 'textIt'> = this._options
+        options: Pick<ServerConfig, 'textIt'> = this._options
     ): this {
         console.log('[ServerBuilder] Using TextIt Auth Messenger.');
         if (!options.textIt) {
@@ -754,7 +876,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useSesAuthMessenger(
-        options: Pick<BuilderOptions, 'ses'> = this._options
+        options: Pick<ServerConfig, 'ses'> = this._options
     ): this {
         console.log('[ServerBuilder] Using SES Auth Messenger.');
         if (!options.ses) {
@@ -780,7 +902,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useRedisRateLimit(
-        options: Pick<BuilderOptions, 'redis' | 'rateLimit'> = this._options
+        options: Pick<ServerConfig, 'redis' | 'rateLimit'> = this._options
     ): this {
         console.log('[ServerBuilder] Using Redis Rate Limiter.');
         if (!options.redis) {
@@ -813,7 +935,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     useRedisWebsocketRateLimit(
         options: Pick<
-            BuilderOptions,
+            ServerConfig,
             'redis' | 'rateLimit' | 'websocketRateLimit'
         > = this._options
     ): this {
@@ -850,7 +972,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useMongoDBRateLimit(
-        options: Pick<BuilderOptions, 'rateLimit'> = this._options
+        options: Pick<ServerConfig, 'rateLimit'> = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB Rate Limiter.');
         if (
@@ -890,8 +1012,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useStripeSubscriptions(
-        options: Pick<BuilderOptions, 'subscriptions' | 'stripe'> = this
-            ._options
+        options: Pick<ServerConfig, 'subscriptions' | 'stripe'> = this._options
     ): this {
         console.log('[ServerBuilder] Using Stripe subscriptions.');
         if (!options.stripe) {
@@ -918,7 +1039,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     useNotifications(
-        options: Pick<BuilderOptions, 'notifications'> = this._options
+        options: Pick<ServerConfig, 'notifications'> = this._options
     ): this {
         console.log('[ServerBuilder] Using notifications.');
         if (!options.notifications) {
@@ -947,7 +1068,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    usePrivo(options: Pick<BuilderOptions, 'privo'> = this._options): this {
+    usePrivo(options: Pick<ServerConfig, 'privo'> = this._options): this {
         console.log('[ServerBuilder] Using Privo.');
         if (!options.privo) {
             throw new Error('Privo options must be provided');
@@ -977,13 +1098,14 @@ export class ServerBuilder implements SubscriptionLike {
 
     useAI(
         options: Pick<
-            BuilderOptions,
+            ServerConfig,
             | 'openai'
             | 'ai'
             | 'blockadeLabs'
             | 'stabilityai'
             | 'googleai'
             | 'humeai'
+            | 'sloydai'
         > = this._options
     ): this {
         console.log('[ServerBuilder] Using AI.');
@@ -1049,9 +1171,12 @@ export class ServerBuilder implements SubscriptionLike {
             generateSkybox: null,
             images: null,
             hume: null,
+            sloyd: null,
             config: this._configStore,
             metrics: this._metricsStore,
             policies: this._policyStore,
+            policyController: null,
+            records: this._recordsStore,
         };
 
         if (this._openAIChatInterface && options.ai.chat) {
@@ -1106,12 +1231,29 @@ export class ServerBuilder implements SubscriptionLike {
             };
         }
         if (options.humeai) {
+            console.log('[ServerBuilder] Using Hume AI with API Key.');
+            this._aiConfiguration.hume = {
+                interface: new HumeInterface(),
+                config: {
+                    apiKey: options.humeai.apiKey,
+                    secretKey: options.humeai.secretKey,
+                },
+            };
+        } else {
             console.log('[ServerBuilder] Using Hume AI.');
             this._aiConfiguration.hume = {
-                interface: new HumeInterface(
-                    options.humeai.apiKey,
-                    options.humeai.secretKey
-                ),
+                interface: new HumeInterface(),
+                config: null,
+            };
+        }
+
+        if (options.sloydai) {
+            console.log('[ServerBuilder] Using Sloyd AI.');
+            this._aiConfiguration.sloyd = {
+                interface: new SloydInterface({
+                    clientId: options.sloydai.clientId,
+                    clientSecret: options.sloydai.clientSecret,
+                }),
             };
         }
         return this;
@@ -1241,6 +1383,8 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         if (this._aiConfiguration) {
+            // Set the policy controller for the AI controller since it is not set earlier
+            this._aiConfiguration.policyController = this._policyController;
             this._aiController = new AIController(this._aiConfiguration);
         }
 
@@ -1345,7 +1489,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private _ensureRedis(
-        options: Pick<BuilderOptions, 'redis'>
+        options: Pick<ServerConfig, 'redis'>
     ): RedisClientType {
         return (this._redis = this._createRedisClient(
             this._redis,
@@ -1354,7 +1498,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private _ensureRedisWebsocketConnections(
-        options: Pick<BuilderOptions, 'redis'>
+        options: Pick<ServerConfig, 'redis'>
     ): RedisClientType {
         if (options.redis.servers.websocketConnections) {
             return (this._redisWebsocketConnections = this._createRedisClient(
@@ -1367,7 +1511,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private _ensureRedisInstData(
-        options: Pick<BuilderOptions, 'redis'>
+        options: Pick<ServerConfig, 'redis'>
     ): RedisClientType {
         if (options.redis.servers.instData) {
             return (this._redisInstData = this._createRedisClient(
@@ -1380,7 +1524,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private _ensureRedisCaches(
-        options: Pick<BuilderOptions, 'redis'>
+        options: Pick<ServerConfig, 'redis'>
     ): RedisClientType {
         if (options.redis.servers.caches) {
             return (this._redisCaches = this._createRedisClient(
@@ -1393,7 +1537,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private _ensureRedisRateLimit(
-        options: Pick<BuilderOptions, 'redis'>
+        options: Pick<ServerConfig, 'redis'>
     ): RedisClientType {
         if (options.redis.servers.rateLimit) {
             return (this._redisRateLimit = this._createRedisClient(
@@ -1451,9 +1595,7 @@ export class ServerBuilder implements SubscriptionLike {
         return redis;
     }
 
-    private _ensurePrisma(
-        options: Pick<BuilderOptions, 'prisma'>
-    ): PrismaClient {
+    private _ensurePrisma(options: Pick<ServerConfig, 'prisma'>): PrismaClient {
         if (!this._prismaClient) {
             this._prismaClient = new PrismaClient(
                 options.prisma.options as any
@@ -1466,7 +1608,7 @@ export class ServerBuilder implements SubscriptionLike {
         return this._prismaClient;
     }
 
-    private _ensureS3(options: Pick<BuilderOptions, 's3'>): S3 {
+    private _ensureS3(options: Pick<ServerConfig, 's3'>): S3 {
         if (!this._s3) {
             this._s3 = new S3();
             this._subscription.add(() => {
@@ -1477,7 +1619,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     private async _ensureMongoDB(
-        options: Pick<BuilderOptions, 'mongodb'>
+        options: Pick<ServerConfig, 'mongodb'>
     ): Promise<MongoClient> {
         if (!this._mongoClient) {
             const connect = pify(MongoClient.connect);
@@ -1495,7 +1637,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _ensurePrismaPolicyStore(
         prismaClient: PrismaClient,
-        options: Pick<BuilderOptions, 'prisma'>
+        options: Pick<ServerConfig, 'prisma'>
     ): PolicyStore {
         const policyStore = new PrismaPolicyStore(prismaClient);
         if (this._multiCache && options.prisma.policiesCacheSeconds) {
@@ -1513,7 +1655,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _ensurePrismaConfigurationStore(
         prismaClient: PrismaClient,
         options: Pick<
-            BuilderOptions,
+            ServerConfig,
             'prisma' | 'subscriptions' | 'moderation' | 'privo'
         >
     ): ConfigurationStore {
@@ -1534,765 +1676,3 @@ export class ServerBuilder implements SubscriptionLike {
         }
     }
 }
-
-/**
- * The schema for the S3 configuration.
- */
-const s3Schema = z.object({
-    region: z
-        .string()
-        .describe(
-            'The region of the file records and websocket message buckets.'
-        )
-        .nonempty(),
-    filesBucket: z
-        .string()
-        .describe(
-            'The name of the bucket that file records should be placed in.'
-        )
-        .nonempty(),
-    defaultFilesBucket: z
-        .string()
-        .describe(
-            'The name of the bucket that file records were originally placed in. This is used for backwards compatibility for file records that were uploaded before changing the filesBucket was supported. If not specified, then filesBucket is used.'
-        )
-        .nonempty()
-        .optional(),
-    filesStorageClass: z
-        .string()
-        .describe(
-            'The S3 File Storage Class that should be used for file records.'
-        )
-        .nonempty(),
-
-    publicFilesUrl: z
-        .string()
-        .describe(
-            'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default S3 URL will be used. ' +
-                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
-                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
-        )
-        .nonempty()
-        .optional(),
-
-    messagesBucket: z
-        .string()
-        .describe(
-            'The name of the bucket that large websocket messages should be placed in.'
-        )
-        .nonempty()
-        .optional(),
-
-    options: z
-        .object({
-            endpoint: z
-                .string()
-                .describe('The endpoint of the S3 API.')
-                .nonempty()
-                .optional(),
-            s3ForcePathStyle: z
-                .boolean()
-                .describe(
-                    'Wether to force the S3 client to use the path style API. Defaults to false.'
-                )
-                .optional(),
-        })
-        .describe('Options for the S3 client.'),
-
-    host: z
-        .string()
-        .describe(
-            'The S3 host that should be used for file record storage. If omitted, then the default S3 host will be used.'
-        )
-        .nonempty()
-        .optional(),
-});
-
-const livekitSchema = z.object({
-    apiKey: z
-        .string()
-        .describe('The API Key for Livekit.')
-        .nonempty()
-        .nullable(),
-    secretKey: z
-        .string()
-        .describe('The secret key for Livekit.')
-        .nonempty()
-        .nullable(),
-    endpoint: z
-        .string()
-        .describe('The URL that the Livekit server is publicly available at.')
-        .nonempty()
-        .nullable(),
-});
-
-const textItSchema = z.object({
-    apiKey: z
-        .string()
-        .describe('The API Key for TextIt.')
-        .nonempty()
-        .nullable(),
-    flowId: z
-        .string()
-        .describe(
-            'The ID of the flow that should be triggered for sending login codes.'
-        )
-        .nonempty()
-        .nullable(),
-});
-
-const sesContentSchema = z.discriminatedUnion('type', [
-    z.object({
-        type: z.literal('template'),
-        templateArn: z
-            .string()
-            .describe('The ARN of the SES email template that should be used.')
-            .nonempty(),
-    }),
-    z.object({
-        type: z.literal('plain'),
-        subject: z.string().describe('The subject of the email.').nonempty(),
-        body: z
-            .string()
-            .describe(
-                'The body of the email. Use double curly-braces {{variable}} to insert variables.'
-            )
-            .nonempty(),
-    }),
-]);
-
-const sesSchema = z.object({
-    fromAddress: z
-        .string()
-        .describe('The email address that SES messages should be sent from.')
-        .nonempty(),
-    content: sesContentSchema.describe(
-        'The content that should be sent in login codes in emails.'
-    ),
-});
-
-const expireModeSchema = z.union([
-    z.literal('NX').describe('The Redis NX expire mode.'),
-    z.literal('XX').describe('The Redis XX expire mode.'),
-    z.literal('GT').describe('The Redis GT expire mode.'),
-    z.literal('LT').describe('The Redis LT expire mode.'),
-    z.null().describe('The expiration will be updated every time.'),
-]);
-
-const redisServerSchema = z.object({
-    url: z
-        .string()
-        .describe(
-            'The Redis connection URL that should be used. If omitted, then host, port, and password must be provided.'
-        )
-        .nonempty()
-        .optional(),
-    host: z
-        .string()
-        .describe(
-            'The host that the redis client should connect to. Ignored if url is provided.'
-        )
-        .nonempty()
-        .optional(),
-    port: z
-        .number()
-        .describe(
-            'The port that the redis client should connect to. Ignored if url is provided.'
-        )
-        .optional(),
-    password: z
-        .string()
-        .describe(
-            'The password that the redis client should use. Ignored if url is provided.'
-        )
-        .nonempty()
-        .optional(),
-    tls: z
-        .boolean()
-        .describe(
-            'Whether to use TLS for connecting to the Redis server. Ignored if url is provided.'
-        )
-        .optional(),
-});
-
-export type RedisServerOptions = z.infer<typeof redisServerSchema>;
-
-const redisSchema = z.object({
-    url: z
-        .string()
-        .describe(
-            'The Redis connection URL that should be used. If omitted, then host, port, and password must be provided.'
-        )
-        .nonempty()
-        .optional(),
-    host: z
-        .string()
-        .describe(
-            'The host that the redis client should connect to. Ignored if url is provided.'
-        )
-        .nonempty()
-        .optional(),
-    port: z
-        .number()
-        .describe(
-            'The port that the redis client should connect to. Ignored if url is provided.'
-        )
-        .optional(),
-    password: z
-        .string()
-        .describe(
-            'The password that the redis client should use. Ignored if url is provided.'
-        )
-        .nonempty()
-        .optional(),
-    tls: z
-        .boolean()
-        .describe(
-            'Whether to use TLS for connecting to the Redis server. Ignored if url is provided.'
-        )
-        .optional(),
-
-    servers: z
-        .object({
-            instData: redisServerSchema
-                .describe(
-                    'The Redis server that should be used for storage of temporary inst data. If omitted, then the default server will be used.'
-                )
-                .optional(),
-            websocketConnections: redisServerSchema
-                .describe(
-                    'The Redis server that should be used for storage of websocket connections. If omitted, then the default server will be used.'
-                )
-                .optional(),
-            caches: redisServerSchema
-                .describe(
-                    'The Redis server that should be used for the caches. If omitted, then the default server will be used.'
-                )
-                .optional(),
-            rateLimit: redisServerSchema
-                .describe(
-                    'The Redis server that should be used for rate limits. If omitted, then the default server will be used.'
-                )
-                .optional(),
-        })
-        .describe(
-            'The Redis servers that should be used for specific categories of data. If omitted, then the default server will be used.'
-        )
-        .default({}),
-
-    rateLimitPrefix: z
-        .string()
-        .describe(
-            'The namespace that rate limit counters are stored under. If omitted, then redis rate limiting is not possible.'
-        )
-        .nonempty()
-        .optional(),
-
-    websocketRateLimitPrefix: z
-        .string()
-        .describe(
-            'The namespace that websocket rate limit counters are stored under. If omitted, then the rateLimitPrefix is used.'
-        )
-        .nonempty()
-        .optional(),
-
-    websocketConnectionNamespace: z
-        .string()
-        .describe(
-            'The namespace that websocket connections are stored under. If omitted, then redis inst records are not possible.'
-        )
-        .optional(),
-    instRecordsStoreNamespace: z
-        .string()
-        .describe(
-            'The namespace that inst records are stored under. If omitted, then redis inst records are not possible.'
-        )
-        .optional(),
-    publicInstRecordsLifetimeSeconds: z
-        .number()
-        .describe(
-            'The lifetime of public inst records in seconds. If null, then public inst records never expire. Defaults to 1 day in seconds (86,400)'
-        )
-        .positive()
-        .nullable()
-        .optional()
-        .default(60 * 60 * 24),
-    publicInstRecordsLifetimeExpireMode: expireModeSchema
-        .describe(
-            'The Redis expire mode that should be used for public inst records. Defaults to NX. If null, then the expiration will update every time the inst data is updated. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
-        )
-        .optional()
-        .default('NX'),
-
-    tempInstRecordsStoreNamespace: z
-        .string()
-        .describe(
-            'The namespace that temporary inst records are stored under (e.g. tempShared space). If omitted, then redis inst records are not possible.'
-        )
-        .optional(),
-    tempInstRecordsLifetimeSeconds: z
-        .number()
-        .describe(
-            'The lifetime of temporary inst records data in seconds (e.g. tempShared space). Intended to clean up temporary branches that have not been changed for some amount of time. If null, then temporary inst branches never expire. Defaults to 24 hours.'
-        )
-        .positive()
-        .nullable()
-        .optional()
-        .default(60 * 60 * 24),
-    tempInstRecordsLifetimeExpireMode: expireModeSchema
-        .describe(
-            'The Redis expire mode that should be used for temporary inst branches (e.g. tempShared space). Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
-        )
-        .optional()
-        .default(null),
-
-    // The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
-    // Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often.
-    // 5 minutes by default
-    connectionAuthorizationCacheSeconds: z
-        .number()
-        .describe(
-            `The number of seconds that authorizations for repo/add_updates permissions (inst.read and inst.updateData) are cached for.
-Because repo/add_updates is a very common permission, we periodically cache permissions to avoid hitting the database too often. Defaults to 5 minutes.`
-        )
-        .positive()
-        .default(300),
-
-    cacheNamespace: z
-        .string()
-        .describe(
-            'The namespace for cached items. (policies & configuration) Defaults to "/cache". Set to null to disable caching of policies and configuration.'
-        )
-        .nonempty()
-        .nullable()
-        .optional()
-        .default('/cache'),
-
-    connectionExpireSeconds: z
-        .number()
-        .describe(
-            'The maximum lifetime of websocket connections in seconds. Intended to clean up any keys under websocketConnectionNamespace that have not been changed after an amount of time. It is recomended to set this longer than the maximum websocket connection length. Defaults to 3 hours. Set to null to disable.'
-        )
-        .positive()
-        .optional()
-        .nullable()
-        .default(60 * 60 * 3),
-    connectionExpireMode: expireModeSchema
-        .describe(
-            'The Redis expire mode that should be used for connections. Defaults to null. If null, then the expiration will not have a mode. Only supported on Redis 7+. If set to something not null on Redis 6, then errors will occur.'
-        )
-        .optional()
-        .default(null),
-});
-
-const rateLimitSchema = z.object({
-    maxHits: z
-        .number()
-        .describe(
-            'The maximum number of hits allowed from a single IP Address within the window.'
-        )
-        .positive(),
-    windowMs: z
-        .number()
-        .describe('The size of the window in miliseconds.')
-        .positive(),
-});
-
-const stripeSchema = z.object({
-    secretKey: z
-        .string()
-        .describe('The Stripe secret key that should be used.')
-        .nonempty(),
-    publishableKey: z
-        .string()
-        .describe('The Stripe publishable key that should be used.')
-        .nonempty(),
-    testClock: z
-        .string()
-        .describe('The stripe test clock that should be used.')
-        .nonempty()
-        .optional(),
-});
-
-const mongodbSchema = z.object({
-    url: z
-        .string()
-        .describe('The MongoDB URL that should be used to connect to MongoDB.')
-        .nonempty(),
-    useNewUrlParser: z
-        .boolean()
-        .describe('Whether to use the new URL parser. Defaults to false.')
-        .optional()
-        .default(false),
-    database: z
-        .string()
-        .describe('The database that should be used.')
-        .nonempty(),
-    fileUploadUrl: z
-        .string()
-        .describe('The URL that files records need to be uploaded to.')
-        .nonempty()
-        .optional(),
-});
-
-const prismaSchema = z.object({
-    options: z
-        .object({})
-        .describe(
-            'Generic options that should be passed to the Prisma client constructor.'
-        )
-        .passthrough()
-        .optional(),
-
-    policiesCacheSeconds: z
-        .number()
-        .describe(
-            'The number of seconds that policies are cached for. Defaults to 60 seconds. Set to null to disable caching of policies.'
-        )
-        .positive()
-        .nullable()
-        .optional()
-        .default(60),
-    configurationCacheSeconds: z
-        .number()
-        .describe(
-            'The number of seconds that configuration items are cached for. Defaults to 60 seconds. Set to null to disable caching of configuration items.'
-        )
-        .positive()
-        .nullable()
-        .optional()
-        .default(60),
-});
-
-const openAiSchema = z.object({
-    apiKey: z
-        .string()
-        .describe('The OpenAI API Key that should be used.')
-        .nonempty(),
-});
-
-const googleAiSchema = z.object({
-    apiKey: z
-        .string()
-        .describe('The Google AI API Key that should be used.')
-        .nonempty(),
-});
-
-const blockadeLabsSchema = z.object({
-    apiKey: z
-        .string()
-        .describe('The Blockade Labs API Key that should be used.')
-        .nonempty(),
-});
-
-const stabilityAiSchema = z.object({
-    apiKey: z
-        .string()
-        .describe('The StabilityAI API Key that should be used.')
-        .nonempty(),
-});
-
-const humeAiSchema = z.object({
-    apiKey: z
-        .string()
-        .describe('The Hume AI API Key that should be used.')
-        .min(1),
-    secretKey: z
-        .string()
-        .describe('The Hume AI Secret Key that should be used.')
-        .min(1),
-});
-
-const aiSchema = z.object({
-    chat: z
-        .object({
-            provider: z
-                .enum(['openai', 'google'])
-                .describe(
-                    'The provider that should be used by default for Chat AI request models that dont have an associated provider.'
-                ),
-            defaultModel: z
-                .string()
-                .describe(
-                    'The model that should be used for Chat AI requests when one is not specified.'
-                )
-                .nonempty(),
-            allowedModels: z
-                .array(
-                    z.union([
-                        z.string().nonempty(),
-                        z.object({
-                            provider: z.enum(['openai', 'google']).optional(),
-                            model: z.string().nonempty(),
-                        }),
-                    ])
-                )
-                .describe(
-                    'The list of models that are allowed to be used for Chat AI requets.'
-                ),
-            allowedSubscriptionTiers: z
-                .union([z.literal(true), z.array(z.string().nonempty())])
-                .describe(
-                    'The subscription tiers that are allowed to use Chat AI. If true, then all tiers are allowed.'
-                ),
-        })
-        .describe('Options for Chat AI. If omitted, then chat AI is disabled.')
-        .optional(),
-    generateSkybox: z
-        .object({
-            provider: z
-                .literal('blockadeLabs')
-                .describe(
-                    'The provider that should be used for Skybox Generation AI requests.'
-                ),
-            allowedSubscriptionTiers: z
-                .union([z.literal(true), z.array(z.string().nonempty())])
-                .describe(
-                    'The subscription tiers that are allowed to use Skybox AI. If true, then all tiers are allowed.'
-                ),
-        })
-        .describe(
-            'Options for Skybox Generation AI. If omitted, then Skybox AI is disabled.'
-        )
-        .optional(),
-    images: z
-        .object({
-            defaultModel: z
-                .string()
-                .describe(
-                    'The model that should be used for Image AI requests when one is not specified.'
-                )
-                .nonempty(),
-            defaultWidth: z
-                .number()
-                .describe('The default width of generated images.')
-                .int()
-                .positive(),
-            defaultHeight: z
-                .number()
-                .describe('The default height of generated images.')
-                .int()
-                .positive(),
-            maxWidth: z
-                .number()
-                .describe(
-                    'The maximum width of generated images. If omitted, then the max width is controlled by the model.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            maxHeight: z
-                .number()
-                .describe(
-                    'The maximum height of generated images. If omitted, then the max height is controlled by the model.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            maxSteps: z
-                .number()
-                .describe(
-                    'The maximum number of steps that can be used to generate an image. If omitted, then the max steps is controlled by the model.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            maxImages: z
-                .number()
-                .describe(
-                    'The maximum number of images that can be generated in a single request. If omitted, then the max images is controlled by the model.'
-                )
-                .int()
-                .positive()
-                .optional(),
-            allowedModels: z
-                .object({
-                    openai: z
-                        .array(z.string().nonempty())
-                        .describe(
-                            'The list of OpenAI DALL-E models that are allowed to be used. If omitted, then no OpenAI models are allowed.'
-                        )
-                        .optional(),
-                    stabilityai: z
-                        .array(z.string().nonempty())
-                        .describe(
-                            'The list of StabilityAI models that are allowed to be used. If omitted, then no StabilityAI models are allowed.'
-                        )
-                        .optional(),
-                })
-                .describe(
-                    'The models that are allowed to be used from each provider.'
-                ),
-            allowedSubscriptionTiers: z
-                .union([z.literal(true), z.array(z.string().nonempty())])
-                .describe(
-                    'The subscription tiers that are allowed to use Image AI. If true, then all tiers are allowed.'
-                ),
-        })
-        .describe(
-            'Options for Image AI. If omitted, then Image AI is disabled.'
-        )
-        .optional(),
-});
-
-const apiGatewaySchema = z.object({
-    endpoint: z
-        .string()
-        .describe(
-            'The API Gateway endpoint that should be used for sending messages to connected clients.'
-        ),
-});
-
-const wsSchema = z.object({});
-
-const webauthnSchema = z.object({
-    relyingParties: z
-        .array(
-            z.object({
-                name: z
-                    .string()
-                    .describe('The human-readable name of the relying party.')
-                    .nonempty(),
-                id: z
-                    .string()
-                    .describe(
-                        'The ID of the relying party. Should be the domain of the relying party. Note that this does not mean that it has to be unique. Instead, it just needs to match the domain that the passkeys can be used on.'
-                    )
-                    .nonempty(),
-                origin: z
-                    .string()
-                    .describe('The HTTP origin of the relying party.')
-                    .nonempty(),
-            })
-        )
-        .describe('The relying parties that should be supported.'),
-});
-
-export const optionsSchema = z.object({
-    s3: s3Schema
-        .describe(
-            'S3 Configuration Options. If omitted, then S3 cannot be used for file storage.'
-        )
-        .optional(),
-    apiGateway: apiGatewaySchema
-        .describe(
-            'AWS API Gateway configuration options. If omitted, then inst records cannot be used on AWS Lambda.'
-        )
-        .optional(),
-    mongodb: mongodbSchema
-        .describe(
-            'MongoDB configuration options. If omitted, then MongoDB cannot be used.'
-        )
-        .optional(),
-    prisma: prismaSchema
-        .describe(
-            'Prisma configuration options. If omitted, then Prisma (CockroachDB) cannot be used.'
-        )
-        .optional(),
-    livekit: livekitSchema
-        .describe(
-            'Livekit configuration options. If omitted, then Livekit features will be disabled.'
-        )
-        .optional(),
-    textIt: textItSchema
-        .describe(
-            'TextIt configuration options. If omitted, then SMS login will be disabled.'
-        )
-        .optional(),
-    ses: sesSchema
-        .describe(
-            'AWS SES configuration options. If omitted, then sending login codes via SES is not possible.'
-        )
-        .optional(),
-    redis: redisSchema
-        .describe(
-            'Redis configuration options. If omitted, then using Redis is not possible.'
-        )
-        .optional(),
-    rateLimit: rateLimitSchema
-        .describe(
-            'Rate limit options. If omitted, then rate limiting will be disabled.'
-        )
-        .optional(),
-    websocketRateLimit: rateLimitSchema
-        .describe(
-            'Rate limit options for websockets. If omitted, then the rateLimit options will be used for websockets.'
-        )
-        .optional(),
-    openai: openAiSchema
-        .describe(
-            'OpenAI options. If omitted, then it will not be possible to use GPT or DALL-E.'
-        )
-        .optional(),
-    blockadeLabs: blockadeLabsSchema
-        .describe(
-            'Blockade Labs options. If omitted, then it will not be possible to generate skyboxes.'
-        )
-        .optional(),
-    stabilityai: stabilityAiSchema
-        .describe(
-            'Stability AI options. If omitted, then it will not be possible to use Stable Diffusion.'
-        )
-        .optional(),
-    googleai: googleAiSchema
-        .describe(
-            'Google AI options. If omitted, then it will not be possible to use Google AI (i.e. Gemini)'
-        )
-        .optional(),
-    humeai: humeAiSchema
-        .describe(
-            'Hume AI options. If omitted, then it will not be possible to use Hume AI.'
-        )
-        .optional(),
-    ai: aiSchema
-        .describe(
-            'AI configuration options. If omitted, then all AI features will be disabled.'
-        )
-        .optional(),
-    ws: wsSchema
-        .describe(
-            'WebSocket Server configuration options. If omitted, then inst records cannot be used in standalone deployments.'
-        )
-        .optional(),
-
-    privo: privoSchema
-        .describe(
-            'Privo configuration options. If omitted, then Privo features will be disabled.'
-        )
-        .optional(),
-
-    webauthn: webauthnSchema
-        .describe(
-            'WebAuthn configuration options. If omitted, then WebAuthn features will be disabled.'
-        )
-        .optional(),
-
-    // auth: authSchema
-    //     .describe('Authentication configuration options.')
-    //     .optional()
-    //     .default({}),
-
-    subscriptions: subscriptionConfigSchema
-        .describe(
-            'The default subscription configuration. If omitted, then subscription features will be disabled.'
-        )
-        .optional(),
-    stripe: stripeSchema
-        .describe(
-            'Stripe options. If omitted, then Stripe features will be disabled.'
-        )
-        .optional(),
-    notifications: notificationsSchema
-        .describe(
-            'Notification configuration options. If omitted, then server notifications will be disabled.'
-        )
-        .optional(),
-    moderation: moderationSchema
-        .describe(
-            'Moderation configuration options. If omitted, then moderation features will be disabled unless overridden in the database.'
-        )
-        .optional(),
-});
-
-export type S3Config = z.infer<typeof s3Schema>;
-export type BuilderOptions = z.infer<typeof optionsSchema>;
