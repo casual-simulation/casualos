@@ -817,20 +817,13 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                 ret.prefix = tagPrefix;
             }
 
-            if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
-                const area = getSystemArea(system);
-                const prefix =
-                    hasValue(system) && hasValue(area)
-                        ? system.substring(area.length + 1)
-                        : null;
-                return {
-                    hint: prefix ?? getShortId(bot),
-                    ...ret,
-                };
-            }
-
+            const area = getSystemArea(system);
+            const prefix =
+                hasValue(system) && hasValue(area)
+                    ? system.substring(area.length + 1)
+                    : null;
             return {
-                hint: '',
+                hint: prefix ?? getShortId(bot),
                 ...ret,
             };
         }
