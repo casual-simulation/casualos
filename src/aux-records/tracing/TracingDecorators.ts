@@ -126,7 +126,7 @@ export function traced(
             const histogram = getHistogram(metricOptions.histogram);
             const counter = getCounter(metricOptions.counter);
             const errorCounter = getCounter(metricOptions.errorCounter);
-            const startTime = Date.now();
+            const startTime = histogram ? Date.now() : null;
             const _this = this;
             return tracer.startActiveSpan(propertyKey, options, (span) => {
                 try {
@@ -135,14 +135,16 @@ export function traced(
                         return ret.then(
                             (result) => {
                                 span.end();
-                                const endTime = Date.now();
-                                histogram?.record(
-                                    endTime - startTime,
-                                    metricOptions.histogram?.attributes?.(
-                                        args,
-                                        result
-                                    )
-                                );
+                                if (histogram) {
+                                    const endTime = Date.now();
+                                    histogram.record(
+                                        endTime - startTime,
+                                        metricOptions.histogram?.attributes?.(
+                                            args,
+                                            result
+                                        )
+                                    );
+                                }
 
                                 counter?.add(
                                     1,
