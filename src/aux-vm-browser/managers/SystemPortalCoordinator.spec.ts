@@ -1952,7 +1952,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -1969,7 +1969,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: false,
@@ -1980,7 +1980,7 @@ describe('SystemPortalCoordinator', () => {
                             space: null,
                         },
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2121,7 +2121,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2138,7 +2138,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: false,
@@ -2149,7 +2149,7 @@ describe('SystemPortalCoordinator', () => {
                             space: null,
                         },
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2194,7 +2194,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: true,
@@ -2239,7 +2239,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: false,
@@ -2294,7 +2294,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2311,7 +2311,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: false,
@@ -2322,7 +2322,7 @@ describe('SystemPortalCoordinator', () => {
                             space: 'tempLocal',
                         },
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2377,7 +2377,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2466,7 +2466,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2483,7 +2483,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: false,
@@ -2494,7 +2494,7 @@ describe('SystemPortalCoordinator', () => {
                             space: null,
                         },
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2511,7 +2511,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2523,7 +2523,7 @@ describe('SystemPortalCoordinator', () => {
                             space: null,
                         },
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: false,
@@ -2614,7 +2614,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
@@ -2631,7 +2631,7 @@ describe('SystemPortalCoordinator', () => {
                     hasRecents: true,
                     recentTags: [
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: false,
                             isFormula: false,
@@ -2642,7 +2642,7 @@ describe('SystemPortalCoordinator', () => {
                             space: null,
                         },
                         {
-                            hint: '',
+                            hint: 'test2',
                             system: 'core.game.test2',
                             isScript: true,
                             isFormula: false,
