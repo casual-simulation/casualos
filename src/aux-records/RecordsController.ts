@@ -14,10 +14,8 @@ import {
     fromBase64String,
 } from '@casual-simulation/aux-common';
 import {
-    createRandomPassword,
     hashHighEntropyPasswordWithSalt,
     hashPasswordWithSalt,
-    verifyPasswordAgainstHashes,
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
@@ -431,7 +429,7 @@ export class RecordsController {
             const passwordBytes = randomBytes(16);
             const password = fromByteArray(passwordBytes); // convert to human-readable string
             const salt = record.secretSalt;
-            const passwordHash = hashHighEntropyPasswordWithSalt(
+            const passwordHash = this.hashHighEntropyPasswordWithSalt(
                 password,
                 salt
             );
@@ -464,6 +462,14 @@ export class RecordsController {
                 errorReason: 'server_error',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    hashHighEntropyPasswordWithSalt(
+        sessionSecret: string,
+        sessionId: string
+    ): string {
+        return hashHighEntropyPasswordWithSalt(sessionSecret, sessionId);
     }
 
     /**
@@ -532,7 +538,7 @@ export class RecordsController {
                     }
                 } else {
                     // Check v1 hashes
-                    const hash = hashPasswordWithSalt(
+                    const hash = this.hashPasswordWithSalt(
                         password,
                         record.secretSalt
                     );
@@ -604,6 +610,11 @@ export class RecordsController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    hashPasswordWithSalt(password: string, secretSalt: string) {
+        return hashPasswordWithSalt(password, secretSalt);
     }
 
     /**

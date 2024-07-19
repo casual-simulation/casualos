@@ -16,7 +16,6 @@ import {
 } from './RecordsController';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPassword,
     hashPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
