@@ -7,6 +7,7 @@
 ### :rocket: Features
 
 -   Improved `SERVER_CONFIG` to allow customizing the OpenTelemetry resource.
+-   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
 
 ## V3.3.7
 
@@ -32,7 +33,6 @@
             -   `height` - The desired height of the thumbnail in pixels.
     -   Requesting users require access to the `ai.sloyd` resource kind and `create` action for the specified record.
 -   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
--   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
 -   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
 -   Improved `portalZoomableMax` and `portalZoomableMin` to be supported for `perspective` portal camera types.
 -   Updated the BIOS dialog with various visual improvements.
