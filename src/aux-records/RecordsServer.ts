@@ -81,7 +81,13 @@ import {
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import { LoomController } from './LoomController';
-import { SpanKind, Tracer, trace } from '@opentelemetry/api';
+import {
+    SpanKind,
+    Tracer,
+    ValueType,
+    metrics,
+    trace,
+} from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
     SEMATTRS_ENDUSER_ID,
@@ -3423,11 +3429,69 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer', {
-        kind: SpanKind.SERVER,
-        root: true,
+    @traced(
+        'RecordsServer',
+        {
+            kind: SpanKind.SERVER,
+            root: true,
+        },
+        {
+            histogram: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.http.duration',
+                options: {
+                    description:
+                        'A distribution of the HTTP server request durations.',
+                    unit: 'miliseconds',
+                    valueType: ValueType.INT,
+                },
+            },
+            counter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.http.requests',
+                options: {
+                    description: 'A count of the HTTP server requests.',
+                },
+            },
+            errorCounter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.http.errors',
+                options: {
+                    description: 'A count of the HTTP server errors.',
+                },
+            },
+        }
+    )
+    @traceHttpResponse({
+        _2xxCounter: {
+            meter: RECORDS_SERVER_METER,
+            name: 'records.http.2xx',
+            options: {
+                description: 'A count of 2xx HTTP server responses.',
+            },
+        },
+        _3xxCounter: {
+            meter: RECORDS_SERVER_METER,
+            name: 'records.http.3xx',
+            options: {
+                description: 'A count of 3xx HTTP server responses.',
+            },
+        },
+        _4xxCounter: {
+            meter: RECORDS_SERVER_METER,
+            name: 'records.http.4xx',
+            options: {
+                description: 'A count of 4xx HTTP server responses.',
+            },
+        },
+        _5xxCounter: {
+            meter: RECORDS_SERVER_METER,
+            name: 'records.http.5xx',
+            options: {
+                description: 'A count of 5xx HTTP server responses.',
+            },
+        },
     })
-    @traceHttpResponse()
     async handleHttpRequest(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -3659,9 +3723,38 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer', {
-        kind: SpanKind.SERVER,
-    })
+    @traced(
+        'RecordsServer',
+        {
+            kind: SpanKind.SERVER,
+        },
+        {
+            histogram: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.ws.duration',
+                options: {
+                    description:
+                        'A distribution of the HTTP server request durations.',
+                    unit: 'miliseconds',
+                    valueType: ValueType.INT,
+                },
+            },
+            counter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.ws.requests',
+                options: {
+                    description: 'A count of the Websocket server requests.',
+                },
+            },
+            errorCounter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.ws.errors',
+                options: {
+                    description: 'A count of the Websocket server errors.',
+                },
+            },
+        }
+    )
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
         if (!this._websocketController) {
             return;

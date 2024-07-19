@@ -4,10 +4,15 @@ import {
     KnownErrorCodes,
 } from '@casual-simulation/aux-common';
 import {
+    Counter,
+    Histogram,
     SpanKind,
     SpanOptions,
     SpanStatusCode,
     trace,
+    MetricOptions as OTMetricOptions,
+    metrics,
+    Meter,
 } from '@opentelemetry/api';
 import { SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 
@@ -51,12 +56,54 @@ declare const GIT_TAG: string;
 //     // };
 // }
 
+export interface MeterConfig {
+    /**
+     * The name of the meter.
+     */
+    meter: string;
+
+    /**
+     * The name of the histogram.
+     */
+    name: string;
+
+    /**
+     * The options.
+     */
+    options: OTMetricOptions;
+}
+
+/**
+ * The options for the metric that is created.
+ */
+export interface MetricOptions {
+    /**
+     * The histogram that method durations should be recorded to.
+     */
+    histogram?: MeterConfig;
+
+    /**
+     * The counter that should be incremented when the method is called.
+     */
+    counter?: MeterConfig;
+
+    /**
+     * The counter that should be incremented when the method throws an error.
+     */
+    errorCounter?: MeterConfig;
+}
+
 /**
  * Modifies the given method so that it is traced.
  * @param tracerName The name of the tracer that the method spans should be created for.
  * @param options The options for the spans that are created.
+ * @param metricOptions The options for recording metrics.
  */
-export function traced(tracerName: string, options: SpanOptions = {}) {
+export function traced(
+    tracerName: string,
+    options: SpanOptions = {},
+    metricOptions: MetricOptions = {}
+) {
     const tracer = trace.getTracer(
         tracerName,
         typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -68,17 +115,25 @@ export function traced(tracerName: string, options: SpanOptions = {}) {
     ) {
         const originalMethod = descriptor.value;
         descriptor.value = function (...args: any[]) {
+            const histogram = getHistogram(metricOptions.histogram);
+            const counter = getCounter(metricOptions.counter);
+            const errorCounter = getCounter(metricOptions.errorCounter);
+            const startTime = Date.now();
             const _this = this;
             return tracer.startActiveSpan(propertyKey, options, (span) => {
                 try {
+                    counter?.add(1);
                     const ret = originalMethod.apply(_this, args);
                     if (ret instanceof Promise) {
                         return ret.then(
                             (result) => {
                                 span.end();
+                                const endTime = Date.now();
+                                histogram?.record(endTime - startTime);
                                 return result;
                             },
                             (err) => {
+                                errorCounter?.add(1);
                                 span.recordException(err);
                                 span.setStatus({ code: SpanStatusCode.ERROR });
                                 throw err;
@@ -86,9 +141,12 @@ export function traced(tracerName: string, options: SpanOptions = {}) {
                         );
                     } else {
                         span.end();
+                        const endTime = Date.now();
+                        histogram?.record(endTime - startTime);
                         return ret;
                     }
                 } catch (err) {
+                    errorCounter?.add(1);
                     span.recordException(err);
                     span.setStatus({ code: SpanStatusCode.ERROR });
                     throw err;
@@ -100,10 +158,64 @@ export function traced(tracerName: string, options: SpanOptions = {}) {
 }
 
 /**
+ * Gets the histogram for the given meter config.
+ * @param meter The meter config.
+ */
+function getHistogram(meter: MeterConfig) {
+    if (!meter) {
+        return null;
+    }
+    return metrics
+        .getMeter(
+            meter.meter,
+            typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
+        )
+        .createHistogram(meter.name, meter.options);
+}
+
+function getCounter(meter: MeterConfig) {
+    if (!meter) {
+        return null;
+    }
+    return metrics
+        .getMeter(
+            meter.meter,
+            typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
+        )
+        .createCounter(meter.name, meter.options);
+}
+
+/**
+ * The options for the metrics that should be recorded for the HTTP response.
+ */
+export interface HttpResponseMetricOptions {
+    /**
+     * The counter that should be incremented when the response has a 2xx status code.
+     */
+    _2xxCounter?: MeterConfig;
+
+    /**
+     * The counter that should be incremented when the response has a 3xx status code.
+     */
+    _3xxCounter?: MeterConfig;
+
+    /**
+     * The counter that should be incremented when the response has a 4xx status code.
+     */
+    _4xxCounter?: MeterConfig;
+
+    /**
+     * The counter that should be incremented when the response has a 5xx status code.
+     */
+    _5xxCounter?: MeterConfig;
+}
+
+/**
  * Modifies the given method so that information about the HTTP response is added to the active span.
  * This should be used on methods that return a GenericHttpResponse.
+ * @param options The options for the metrics that should be recorded for the HTTP response.
  */
-export function traceHttpResponse() {
+export function traceHttpResponse(options: HttpResponseMetricOptions = {}) {
     return function (
         target: any,
         propertyKey: string,
@@ -121,6 +233,32 @@ export function traceHttpResponse() {
                 span.setAttributes({
                     [SEMATTRS_HTTP_STATUS_CODE]: response.statusCode,
                 });
+            }
+
+            const _2xxCounter = getCounter(options._2xxCounter);
+            const _3xxCounter = getCounter(options._3xxCounter);
+            const _4xxCounter = getCounter(options._4xxCounter);
+            const _5xxCounter = getCounter(options._5xxCounter);
+            if (
+                _2xxCounter &&
+                response.statusCode >= 200 &&
+                response.statusCode < 300
+            ) {
+                _2xxCounter.add(1);
+            } else if (
+                _3xxCounter &&
+                response.statusCode >= 300 &&
+                response.statusCode < 400
+            ) {
+                _3xxCounter.add(1);
+            } else if (
+                _4xxCounter &&
+                response.statusCode >= 400 &&
+                response.statusCode < 500
+            ) {
+                _4xxCounter.add(1);
+            } else if (_5xxCounter && response.statusCode >= 500) {
+                _5xxCounter.add(1);
             }
 
             return response;
