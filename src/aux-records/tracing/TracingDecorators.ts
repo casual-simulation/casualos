@@ -13,6 +13,7 @@ import {
     MetricOptions as OTMetricOptions,
     metrics,
     Meter,
+    Attributes,
 } from '@opentelemetry/api';
 import { SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 
@@ -71,6 +72,13 @@ export interface MeterConfig {
      * The options.
      */
     options: OTMetricOptions;
+
+    /**
+     * A function that gets the attributes for the metric.
+     * @param args The arguments that were passed to the method.
+     * @param ret The return value of the method.
+     */
+    attributes?: (args: any[], ret: any) => Attributes;
 }
 
 /**
@@ -122,18 +130,38 @@ export function traced(
             const _this = this;
             return tracer.startActiveSpan(propertyKey, options, (span) => {
                 try {
-                    counter?.add(1);
                     const ret = originalMethod.apply(_this, args);
                     if (ret instanceof Promise) {
                         return ret.then(
                             (result) => {
                                 span.end();
                                 const endTime = Date.now();
-                                histogram?.record(endTime - startTime);
+                                histogram?.record(
+                                    endTime - startTime,
+                                    metricOptions.histogram?.attributes?.(
+                                        args,
+                                        result
+                                    )
+                                );
+
+                                counter?.add(
+                                    1,
+                                    metricOptions.counter?.attributes?.(
+                                        args,
+                                        result
+                                    )
+                                );
+
                                 return result;
                             },
                             (err) => {
-                                errorCounter?.add(1);
+                                errorCounter?.add(
+                                    1,
+                                    metricOptions.errorCounter?.attributes?.(
+                                        args,
+                                        err
+                                    )
+                                );
                                 span.recordException(err);
                                 span.setStatus({ code: SpanStatusCode.ERROR });
                                 throw err;
@@ -142,11 +170,17 @@ export function traced(
                     } else {
                         span.end();
                         const endTime = Date.now();
-                        histogram?.record(endTime - startTime);
+                        histogram?.record(
+                            endTime - startTime,
+                            metricOptions.histogram?.attributes?.(args, ret)
+                        );
                         return ret;
                     }
                 } catch (err) {
-                    errorCounter?.add(1);
+                    errorCounter?.add(
+                        1,
+                        metricOptions.errorCounter?.attributes?.(args, err)
+                    );
                     span.recordException(err);
                     span.setStatus({ code: SpanStatusCode.ERROR });
                     throw err;
@@ -190,24 +224,9 @@ function getCounter(meter: MeterConfig) {
  */
 export interface HttpResponseMetricOptions {
     /**
-     * The counter that should be incremented when the response has a 2xx status code.
+     * The counter that should be incremented when a response is returned.
      */
-    _2xxCounter?: MeterConfig;
-
-    /**
-     * The counter that should be incremented when the response has a 3xx status code.
-     */
-    _3xxCounter?: MeterConfig;
-
-    /**
-     * The counter that should be incremented when the response has a 4xx status code.
-     */
-    _4xxCounter?: MeterConfig;
-
-    /**
-     * The counter that should be incremented when the response has a 5xx status code.
-     */
-    _5xxCounter?: MeterConfig;
+    counter?: MeterConfig;
 }
 
 /**
@@ -233,32 +252,6 @@ export function traceHttpResponse(options: HttpResponseMetricOptions = {}) {
                 span.setAttributes({
                     [SEMATTRS_HTTP_STATUS_CODE]: response.statusCode,
                 });
-            }
-
-            const _2xxCounter = getCounter(options._2xxCounter);
-            const _3xxCounter = getCounter(options._3xxCounter);
-            const _4xxCounter = getCounter(options._4xxCounter);
-            const _5xxCounter = getCounter(options._5xxCounter);
-            if (
-                _2xxCounter &&
-                response.statusCode >= 200 &&
-                response.statusCode < 300
-            ) {
-                _2xxCounter.add(1);
-            } else if (
-                _3xxCounter &&
-                response.statusCode >= 300 &&
-                response.statusCode < 400
-            ) {
-                _3xxCounter.add(1);
-            } else if (
-                _4xxCounter &&
-                response.statusCode >= 400 &&
-                response.statusCode < 500
-            ) {
-                _4xxCounter.add(1);
-            } else if (_5xxCounter && response.statusCode >= 500) {
-                _5xxCounter.add(1);
             }
 
             return response;

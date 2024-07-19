@@ -468,6 +468,8 @@ export interface Route<T> {
     allowedOrigins?: Set<string> | true | 'account' | 'api';
 }
 
+const RECORDS_SERVER_METER = 'RecordsServer';
+
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
@@ -3445,13 +3447,15 @@ export class RecordsServer {
                     unit: 'miliseconds',
                     valueType: ValueType.INT,
                 },
-            },
-            counter: {
-                meter: RECORDS_SERVER_METER,
-                name: 'records.http.requests',
-                options: {
-                    description: 'A count of the HTTP server requests.',
-                },
+                attributes: (
+                    [request]: [GenericHttpRequest],
+                    ret: GenericHttpResponse
+                ) => ({
+                    [SEMATTRS_HTTP_METHOD]: request.method,
+                    [SEMATTRS_HTTP_HOST]: request.headers.host,
+                    ['http.origin']: request.headers.origin,
+                    ['http.status_code']: ret.statusCode,
+                }),
             },
             errorCounter: {
                 meter: RECORDS_SERVER_METER,
@@ -3462,36 +3466,7 @@ export class RecordsServer {
             },
         }
     )
-    @traceHttpResponse({
-        _2xxCounter: {
-            meter: RECORDS_SERVER_METER,
-            name: 'records.http.2xx',
-            options: {
-                description: 'A count of 2xx HTTP server responses.',
-            },
-        },
-        _3xxCounter: {
-            meter: RECORDS_SERVER_METER,
-            name: 'records.http.3xx',
-            options: {
-                description: 'A count of 3xx HTTP server responses.',
-            },
-        },
-        _4xxCounter: {
-            meter: RECORDS_SERVER_METER,
-            name: 'records.http.4xx',
-            options: {
-                description: 'A count of 4xx HTTP server responses.',
-            },
-        },
-        _5xxCounter: {
-            meter: RECORDS_SERVER_METER,
-            name: 'records.http.5xx',
-            options: {
-                description: 'A count of 5xx HTTP server responses.',
-            },
-        },
-    })
+    @traceHttpResponse()
     async handleHttpRequest(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -3738,13 +3713,11 @@ export class RecordsServer {
                     unit: 'miliseconds',
                     valueType: ValueType.INT,
                 },
-            },
-            counter: {
-                meter: RECORDS_SERVER_METER,
-                name: 'records.ws.requests',
-                options: {
-                    description: 'A count of the Websocket server requests.',
-                },
+                attributes: ([request]: [GenericWebsocketRequest], ret) => ({
+                    'websocket.type': request.type,
+                    'request.connectionId': request.connectionId,
+                    'http.origin': request.origin,
+                }),
             },
             errorCounter: {
                 meter: RECORDS_SERVER_METER,
@@ -3752,6 +3725,11 @@ export class RecordsServer {
                 options: {
                     description: 'A count of the Websocket server errors.',
                 },
+                attributes: ([request]: [GenericWebsocketRequest], ret) => ({
+                    'websocket.type': request.type,
+                    'request.connectionId': request.connectionId,
+                    'http.origin': request.origin,
+                }),
             },
         }
     )
