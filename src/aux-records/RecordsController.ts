@@ -14,11 +14,9 @@ import {
     fromBase64String,
 } from '@casual-simulation/aux-common';
 import {
-    createRandomPassword,
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
-    verifyPasswordAgainstHashes,
-} from '@casual-simulation/crypto';
+    hashLowEntropyPasswordWithSalt,
+} from './InstrumentedHashHelpers';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import {
@@ -532,7 +530,7 @@ export class RecordsController {
                     }
                 } else {
                     // Check v1 hashes
-                    const hash = hashPasswordWithSalt(
+                    const hash = hashLowEntropyPasswordWithSalt(
                         password,
                         record.secretSalt
                     );

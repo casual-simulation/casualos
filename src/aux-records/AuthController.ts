@@ -20,10 +20,9 @@ import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
-    verifyPassword,
+    hashLowEntropyPasswordWithSalt,
     verifyPasswordAgainstHashes,
-} from '@casual-simulation/crypto';
+} from './InstrumentedHashHelpers';
 import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import {
@@ -426,7 +425,7 @@ export class AuthController {
             );
             const code = randomCode();
 
-            const hash = hashPasswordWithSalt(code, requestId);
+            const hash = hashLowEntropyPasswordWithSalt(code, requestId);
 
             const loginRequest: AuthLoginRequest = {
                 userId: user.id,
@@ -1303,7 +1302,8 @@ export class AuthController {
                 userId: userId,
                 sessionId: newSessionId,
                 requestId: null,
-                secretHash: hashPasswordWithSalt(
+
+                secretHash: hashHighEntropyPasswordWithSalt(
                     newSessionSecret,
                     newSessionId
                 ),
@@ -2453,7 +2453,7 @@ export class AuthController {
                 userId: userId,
                 sessionId: newSessionId,
                 requestId: null,
-                secretHash: hashPasswordWithSalt(
+                secretHash: hashHighEntropyPasswordWithSalt(
                     newSessionSecret,
                     newSessionId
                 ),

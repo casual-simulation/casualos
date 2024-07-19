@@ -28,7 +28,7 @@ import { randomBytes } from 'tweetnacl';
 import { fromByteArray, toByteArray } from 'base64-js';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
+    hashLowEntropyPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import {
     fromBase64String,
@@ -397,7 +397,7 @@ describe('AuthController', () => {
                     {
                         userId: 'uuid1',
                         requestId: fromByteArray(salt),
-                        secretHash: hashPasswordWithSalt(
+                        secretHash: hashLowEntropyPasswordWithSalt(
                             codeNumber(code),
                             fromByteArray(salt)
                         ),
@@ -470,7 +470,7 @@ describe('AuthController', () => {
                     {
                         userId: 'myid',
                         requestId: fromByteArray(salt),
-                        secretHash: hashPasswordWithSalt(
+                        secretHash: hashLowEntropyPasswordWithSalt(
                             codeNumber(code),
                             fromByteArray(salt)
                         ),
@@ -556,7 +556,7 @@ describe('AuthController', () => {
                     {
                         userId: 'myid',
                         requestId: fromByteArray(salt),
-                        secretHash: hashPasswordWithSalt(
+                        secretHash: hashLowEntropyPasswordWithSalt(
                             codeNumber(code),
                             fromByteArray(salt)
                         ),
@@ -971,7 +971,7 @@ describe('AuthController', () => {
                 await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
-                    secretHash: hashPasswordWithSalt(code, requestId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                     expireTimeMs: 200,
                     requestTimeMs: 100,
                     completedTimeMs: null,
@@ -1041,7 +1041,10 @@ describe('AuthController', () => {
                     {
                         userId: 'myid',
                         requestId: requestId,
-                        secretHash: hashPasswordWithSalt(code, requestId),
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            requestId
+                        ),
                         expireTimeMs: 200,
                         requestTimeMs: 100,
                         completedTimeMs: 150,
@@ -1094,7 +1097,7 @@ describe('AuthController', () => {
                 await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
-                    secretHash: hashPasswordWithSalt(code, requestId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                     expireTimeMs: 200,
                     requestTimeMs: 100,
                     completedTimeMs: null,
@@ -1145,7 +1148,7 @@ describe('AuthController', () => {
                 await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
-                    secretHash: hashPasswordWithSalt(code, requestId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                     expireTimeMs: 200,
                     requestTimeMs: 100,
                     completedTimeMs: null,
@@ -1193,7 +1196,7 @@ describe('AuthController', () => {
                 await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
-                    secretHash: hashPasswordWithSalt(code, requestId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                     expireTimeMs: 1000,
                     requestTimeMs: 100,
                     completedTimeMs: 300,
@@ -1241,7 +1244,7 @@ describe('AuthController', () => {
                 await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
-                    secretHash: hashPasswordWithSalt(code, requestId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                     expireTimeMs: 1000,
                     requestTimeMs: 100,
                     completedTimeMs: null,
@@ -1289,7 +1292,7 @@ describe('AuthController', () => {
                 await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
-                    secretHash: hashPasswordWithSalt(code, requestId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                     expireTimeMs: 1000,
                     requestTimeMs: 100,
                     completedTimeMs: null,
@@ -1337,7 +1340,7 @@ describe('AuthController', () => {
                 await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
-                    secretHash: hashPasswordWithSalt(code, requestId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                     expireTimeMs: 1000,
                     requestTimeMs: 100,
                     completedTimeMs: null,
@@ -2238,7 +2241,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 1,
@@ -2409,7 +2412,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 1,
@@ -2612,7 +2615,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 1,
@@ -4349,7 +4352,10 @@ describe('AuthController', () => {
                     await store.saveSession({
                         requestId,
                         sessionId,
-                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
                         connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
@@ -4387,7 +4393,10 @@ describe('AuthController', () => {
                     await store.saveSession({
                         requestId,
                         sessionId,
-                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
                         connectionSecret: code,
                         expireTimeMs: null,
                         grantedTimeMs: 100,
@@ -4434,7 +4443,10 @@ describe('AuthController', () => {
                     await store.saveSession({
                         requestId,
                         sessionId,
-                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
                         connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
@@ -4473,7 +4485,10 @@ describe('AuthController', () => {
                     await store.saveSession({
                         requestId,
                         sessionId,
-                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
                         connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
@@ -4521,7 +4536,10 @@ describe('AuthController', () => {
                     await store.saveSession({
                         requestId,
                         sessionId,
-                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
                         connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
@@ -4571,7 +4589,10 @@ describe('AuthController', () => {
                     await store.saveSession({
                         requestId,
                         sessionId,
-                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
                         connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
@@ -4889,7 +4910,7 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                     connectionSecret: code,
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
@@ -4926,7 +4947,7 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                     connectionSecret: code,
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
@@ -4964,7 +4985,7 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                     connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
@@ -5010,7 +5031,7 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                     connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
@@ -5056,7 +5077,7 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                     connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
@@ -5101,7 +5122,7 @@ describe('AuthController', () => {
             await store.saveLoginRequest({
                 userId: 'myid',
                 requestId: requestId,
-                secretHash: hashPasswordWithSalt(code, requestId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                 expireTimeMs: 200,
                 requestTimeMs: 100,
                 completedTimeMs: null,
@@ -5169,7 +5190,7 @@ describe('AuthController', () => {
             await store.saveLoginRequest({
                 userId: 'myid',
                 requestId: requestId,
-                secretHash: hashPasswordWithSalt(code, requestId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                 expireTimeMs: 200,
                 requestTimeMs: 100,
                 completedTimeMs: null,
@@ -5237,7 +5258,7 @@ describe('AuthController', () => {
             await store.saveLoginRequest({
                 userId: 'myid',
                 requestId: requestId,
-                secretHash: hashPasswordWithSalt(code, requestId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                 expireTimeMs: 200,
                 requestTimeMs: 100,
                 completedTimeMs: null,
@@ -5893,7 +5914,7 @@ describe('AuthController', () => {
             await store.saveLoginRequest({
                 userId: 'myid',
                 requestId: requestId,
-                secretHash: hashPasswordWithSalt(code, requestId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                 expireTimeMs: 200,
                 requestTimeMs: 100,
                 completedTimeMs: null,
@@ -5971,7 +5992,7 @@ describe('AuthController', () => {
             await store.saveLoginRequest({
                 userId: 'myid',
                 requestId: requestId,
-                secretHash: hashPasswordWithSalt(code, requestId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
                 expireTimeMs: 200,
                 requestTimeMs: 100,
                 completedTimeMs: null,
@@ -6079,7 +6100,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6141,7 +6162,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6178,7 +6199,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6234,7 +6255,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6283,7 +6304,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6340,7 +6361,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6391,7 +6412,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6472,7 +6493,7 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId,
                     sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                     connectionSecret: code,
                     expireTimeMs: DateTime.utc(2023, 1, 1, 1, 0, 0).toMillis(), // one hour after "now",
                     grantedTimeMs: 100,
@@ -6619,7 +6640,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6721,7 +6742,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashHighEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6770,7 +6791,7 @@ describe('AuthController', () => {
             expect(await store.findSession(userId, sessionId)).toEqual({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashHighEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6788,7 +6809,7 @@ describe('AuthController', () => {
                 nextSessionId: null,
                 sessionId: fromByteArray(newSessionId),
                 userId,
-                secretHash: hashPasswordWithSalt(
+                secretHash: hashHighEntropyPasswordWithSalt(
                     fromByteArray(newSessionSecret),
                     fromByteArray(newSessionId)
                 ),
@@ -6819,7 +6840,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashHighEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6848,7 +6869,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashHighEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
@@ -6942,7 +6963,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
@@ -7160,7 +7181,10 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId: null,
                     sessionId: superUserSessionId,
-                    secretHash: hashPasswordWithSalt(code, superUserSessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(
+                        code,
+                        superUserSessionId
+                    ),
                     connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 999,
@@ -7238,7 +7262,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
@@ -7969,7 +7993,10 @@ describe('AuthController', () => {
                 await store.saveSession({
                     requestId: null,
                     sessionId: superUserSessionId,
-                    secretHash: hashPasswordWithSalt(code, superUserSessionId),
+                    secretHash: hashLowEntropyPasswordWithSalt(
+                        code,
+                        superUserSessionId
+                    ),
                     connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 999,
@@ -8060,7 +8087,7 @@ describe('AuthController', () => {
             await store.saveSession({
                 requestId,
                 sessionId,
-                secretHash: hashPasswordWithSalt(code, sessionId),
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
                 connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
