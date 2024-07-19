@@ -104,19 +104,6 @@ export function setupInstrumentation(options: ServerConfig) {
         console.log(`[Instrumentation] Skipping Prisma instrumentation.`);
     }
 
-    const histogramView = new View({
-        aggregation: new ExplicitBucketHistogramAggregation([
-            0, 1, 5, 10, 15, 20, 25, 30,
-        ]),
-        instrumentName: 'duration',
-        instrumentType: InstrumentType.HISTOGRAM,
-    });
-
-    const counterView = new View({
-        instrumentName: 'http*',
-        instrumentType: InstrumentType.COUNTER,
-    });
-
     const resource = new Resource({
         [SEMRESATTRS_SERVICE_NAME]: 'casualos',
         [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
@@ -128,7 +115,6 @@ export function setupInstrumentation(options: ServerConfig) {
         traceExporter: traceExporter,
         metricReader: metrics,
         instrumentations: instrumentation,
-        views: [histogramView, counterView],
     });
 
     sdk.start();
