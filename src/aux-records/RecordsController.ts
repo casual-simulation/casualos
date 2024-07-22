@@ -429,7 +429,7 @@ export class RecordsController {
             const passwordBytes = randomBytes(16);
             const password = fromByteArray(passwordBytes); // convert to human-readable string
             const salt = record.secretSalt;
-            const passwordHash = hashHighEntropyPasswordWithSalt(
+            const passwordHash = this.hashHighEntropyPasswordWithSalt(
                 password,
                 salt
             );
@@ -462,6 +462,14 @@ export class RecordsController {
                 errorReason: 'server_error',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    hashHighEntropyPasswordWithSalt(
+        sessionSecret: string,
+        sessionId: string
+    ): string {
+        return hashHighEntropyPasswordWithSalt(sessionSecret, sessionId);
     }
 
     /**

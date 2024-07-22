@@ -7,6 +7,7 @@
 ### :rocket: Features
 
 -   Improved `SERVER_CONFIG` to allow customizing the OpenTelemetry resource.
+-   Improved the server to record metrics for how long HTTP and Websocket requests take to complete and also the status they have when finishing.
 -   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
 
 ### :bug: Bug Fixes

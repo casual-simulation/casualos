@@ -3,8 +3,13 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { Resource } from '@opentelemetry/resources';
 import {
+    Aggregation,
     ConsoleMetricExporter,
+    ExplicitBucketHistogramAggregation,
+    InstrumentType,
+    MeterProvider,
     PeriodicExportingMetricReader,
+    View,
 } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
@@ -13,9 +18,7 @@ import {
     SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { PrismaInstrumentation } from '@prisma/instrumentation';
-import { RedisInstrumentation } from '@opentelemetry/instrumentation-redis-4';
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
-import { ServerConfig } from '@casual-simulation/aux-records';
+import type { ServerConfig } from '@casual-simulation/aux-records';
 
 /**
  * Configures instrumentation for a server.
@@ -101,12 +104,14 @@ export function setupInstrumentation(options: ServerConfig) {
         console.log(`[Instrumentation] Skipping Prisma instrumentation.`);
     }
 
+    const resource = new Resource({
+        [SEMRESATTRS_SERVICE_NAME]: 'casualos',
+        [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
+        ...options.telemetry.resource,
+    });
+
     const sdk = new NodeSDK({
-        resource: new Resource({
-            [SEMRESATTRS_SERVICE_NAME]: 'casualos',
-            [SEMRESATTRS_SERVICE_VERSION]: GIT_TAG || 'dev',
-            ...options.telemetry.resource,
-        }),
+        resource,
         traceExporter: traceExporter,
         metricReader: metrics,
         instrumentations: instrumentation,
