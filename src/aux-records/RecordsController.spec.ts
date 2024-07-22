@@ -16,7 +16,8 @@ import {
 } from './RecordsController';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
+    hashPassword,
+    hashLowEntropyPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
@@ -478,9 +479,18 @@ describe('RecordsController', () => {
             describe('v1 hashes', () => {
                 it('should return true if the given key is valid and is contained in the secret hashes of the record', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -503,9 +513,18 @@ describe('RecordsController', () => {
 
                 it('should return true if the given key is valid and is contained in the key store', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -547,9 +566,18 @@ describe('RecordsController', () => {
 
                 it('should return the ID of the user who created the key', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -591,9 +619,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key has a different creator than the record owner and the record has the same name as the owner ID', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',
@@ -855,9 +892,18 @@ describe('RecordsController', () => {
             describe('v1 hashes', () => {
                 it('should return true if the given key is valid and is contained in the secret hashes of the record', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -880,9 +926,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key is valid but has a non-default policy when it is contained in the secret hashes of the record', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -903,9 +958,18 @@ describe('RecordsController', () => {
 
                 it('should return true if the given key is valid and is contained in the key store', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -947,9 +1011,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key is valid but does not have the correct policy', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -989,9 +1062,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key has a different creator than the record owner and the record has the same name as the owner ID', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',

@@ -10,6 +10,10 @@
 -   Improved the server to record metrics for how long HTTP and Websocket requests take to complete and also the status they have when finishing.
 -   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where an older version of session key hashes would be used when refreshing a session, leading to slowdowns when validating session keys.
+
 ## V3.3.7
 
 #### Date: 7/18/2024

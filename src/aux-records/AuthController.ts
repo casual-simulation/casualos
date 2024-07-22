@@ -20,9 +20,9 @@ import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
+    hashLowEntropyPasswordWithSalt,
     verifyPasswordAgainstHashes,
-} from '@casual-simulation/crypto';
+} from './InstrumentedHashHelpers';
 import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import {
@@ -433,8 +433,7 @@ export class AuthController {
             );
             const code = randomCode();
 
-            const hash = this.hashPasswordWithSalt(code, requestId);
-
+            const hash = hashLowEntropyPasswordWithSalt(code, requestId);
             const loginRequest: AuthLoginRequest = {
                 userId: user.id,
                 requestId: requestId,
@@ -1310,7 +1309,7 @@ export class AuthController {
                 userId: userId,
                 sessionId: newSessionId,
                 requestId: null,
-                secretHash: this.hashPasswordWithSalt(
+                secretHash: hashHighEntropyPasswordWithSalt(
                     newSessionSecret,
                     newSessionId
                 ),
@@ -1357,14 +1356,6 @@ export class AuthController {
                 errorMessage: 'A server error occurred.',
             };
         }
-    }
-
-    @traced(TRACE_NAME)
-    hashPasswordWithSalt(
-        newSessionSecret: string,
-        newSessionId: string
-    ): string {
-        return hashPasswordWithSalt(newSessionSecret, newSessionId);
     }
 
     @traced(TRACE_NAME)
@@ -2479,7 +2470,7 @@ export class AuthController {
                 userId: userId,
                 sessionId: newSessionId,
                 requestId: null,
-                secretHash: this.hashPasswordWithSalt(
+                secretHash: hashHighEntropyPasswordWithSalt(
                     newSessionSecret,
                     newSessionId
                 ),

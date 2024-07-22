@@ -15,8 +15,8 @@ import {
 } from '@casual-simulation/aux-common';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
-} from '@casual-simulation/crypto';
+    hashLowEntropyPasswordWithSalt,
+} from './InstrumentedHashHelpers';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import {
@@ -538,7 +538,7 @@ export class RecordsController {
                     }
                 } else {
                     // Check v1 hashes
-                    const hash = this.hashPasswordWithSalt(
+                    const hash = hashLowEntropyPasswordWithSalt(
                         password,
                         record.secretSalt
                     );
@@ -610,11 +610,6 @@ export class RecordsController {
                 errorMessage: 'A server error occurred.',
             };
         }
-    }
-
-    @traced(TRACE_NAME)
-    hashPasswordWithSalt(password: string, secretSalt: string) {
-        return hashPasswordWithSalt(password, secretSalt);
     }
 
     /**
