@@ -231,13 +231,18 @@ export class GoogleAIChatInterface implements AIChatInterface {
                     '[GoogleAIChatInterface] Error occurred while generating content.',
                     err
                 );
-                return {
+                yield {
                     choices: [
                         {
                             role: 'system',
                             content: `Error: ${err.message}`,
                         },
                     ],
+                    totalTokens: 0,
+                };
+
+                return {
+                    choices: [],
                     totalTokens: 0,
                 };
             }

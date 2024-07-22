@@ -13,6 +13,8 @@
     -   There are two possible values:
         -   `center` - The mesh will be positioned so it is centered around the bot's center. (Default)
         -   `absolute` - The mesh won't be repositioned. It will retain the position configured in the GLTF.
+-   Added support for [Anthropic AI Chat models](https://docs.anthropic.com/en/docs/about-claude/models) to `ai.chat()` and `ai.stream.chat()`.
+    -   `SERVER_CONFIG` needs to be configured with an Anthropic API Key and allowed `anthropic` models.
 
 ### :bug: Bug Fixes
 

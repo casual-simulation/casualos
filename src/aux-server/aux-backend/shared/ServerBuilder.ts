@@ -41,6 +41,7 @@ import {
     LoomController,
     ServerConfig,
     RedisServerOptions,
+    AnthropicAIChatInterface,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -254,6 +255,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _openAIChatInterface: AIChatInterface = null;
     private _googleAIChatInterface: AIChatInterface = null;
+    private _anthropicAIChatInterface: AnthropicAIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
@@ -1104,6 +1106,7 @@ export class ServerBuilder implements SubscriptionLike {
             | 'blockadeLabs'
             | 'stabilityai'
             | 'googleai'
+            | 'anthropicai'
             | 'humeai'
             | 'sloydai'
         > = this._options
@@ -1124,6 +1127,13 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Using Google AI Chat.');
             this._googleAIChatInterface = new GoogleAIChatInterface({
                 apiKey: options.googleai.apiKey,
+            });
+        }
+
+        if (options.anthropicai) {
+            console.log('[ServerBuilder] Using Anthropic AI Chat.');
+            this._anthropicAIChatInterface = new AnthropicAIChatInterface({
+                apiKey: options.anthropicai.apiKey,
             });
         }
 
@@ -1184,6 +1194,7 @@ export class ServerBuilder implements SubscriptionLike {
                 interfaces: {
                     openai: this._openAIChatInterface,
                     google: this._googleAIChatInterface,
+                    anthropic: this._anthropicAIChatInterface,
                 },
                 options: {
                     defaultModel: options.ai.chat.defaultModel,

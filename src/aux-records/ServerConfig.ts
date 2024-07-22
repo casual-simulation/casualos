@@ -447,6 +447,13 @@ const googleAiSchema = z.object({
         .nonempty(),
 });
 
+const anthropicAiSchema = z.object({
+    apiKey: z
+        .string()
+        .describe('The Anthropic AI API Key that should be used.')
+        .min(1),
+});
+
 const blockadeLabsSchema = z.object({
     apiKey: z
         .string()
@@ -485,7 +492,7 @@ const aiSchema = z.object({
     chat: z
         .object({
             provider: z
-                .enum(['openai', 'google'])
+                .enum(['openai', 'google', 'anthropic'])
                 .describe(
                     'The provider that should be used by default for Chat AI request models that dont have an associated provider.'
                 ),
@@ -500,7 +507,9 @@ const aiSchema = z.object({
                     z.union([
                         z.string().nonempty(),
                         z.object({
-                            provider: z.enum(['openai', 'google']).optional(),
+                            provider: z
+                                .enum(['openai', 'google', 'anthropic'])
+                                .optional(),
                             model: z.string().nonempty(),
                         }),
                     ])
@@ -801,6 +810,11 @@ export const serverConfigSchema = z.object({
     googleai: googleAiSchema
         .describe(
             'Google AI options. If omitted, then it will not be possible to use Google AI (i.e. Gemini)'
+        )
+        .optional(),
+    anthropicai: anthropicAiSchema
+        .describe(
+            'Anthropic AI options. If omitted, then it will not be possible to use Anthropic AI (i.e. Claude).'
         )
         .optional(),
     humeai: humeAiSchema
