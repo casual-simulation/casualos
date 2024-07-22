@@ -8,6 +8,10 @@
 
 -   Improved `SERVER_CONFIG` to allow customizing the OpenTelemetry resource.
 -   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
+-   Added the `meshPositioningMode` tag to prevent CasualOS from repositioning meshes around the center of the bot.
+    -   There are two possible values:
+        -   `center` - The mesh will be positioned so it is centered around the bot's center. (Default)
+        -   `absolute` - The mesh won't be repositioned. It will retain the position configured in the GLTF.
 
 ## V3.3.7
 
