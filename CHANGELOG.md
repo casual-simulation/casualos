@@ -19,6 +19,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where an older version of session key hashes would be used when refreshing a session, leading to slowdowns when validating session keys.
+-   Fixed an issue where lines wouldn't draw to the center of the target bot when the bot was smaller than the arrow head length.
 
 ## V3.3.7
 
