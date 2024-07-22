@@ -1,6 +1,6 @@
 import {
     BotCalculationContext,
-    BotPositioningMode,
+    BotMeshPositioningMode,
     BotScaleMode,
     BotShape,
     BotSubShape,
@@ -126,7 +126,7 @@ export class BotShapeDecorator
     private _ldrawPartsAddress: string = null;
     private _animation: any = null;
     private _scaleMode: BotScaleMode = null;
-    private _positioningMode: BotPositioningMode;
+    private _positioningMode: BotMeshPositioningMode;
     private _canHaveStroke = false;
     // private _animationMode: 'tag' | 'action' = 'tag';
     private _animationMixer: AnimationMixer;
@@ -916,7 +916,7 @@ export class BotShapeDecorator
         shape: BotShape,
         subShape: BotSubShape,
         scaleMode: BotScaleMode,
-        positioningMode: BotPositioningMode,
+        positioningMode: BotMeshPositioningMode,
         address: string,
         addressAspectRatio: number,
         animationAddress: string,
