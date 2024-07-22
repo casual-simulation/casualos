@@ -9,6 +9,10 @@
 -   Improved `SERVER_CONFIG` to allow customizing the OpenTelemetry resource.
 -   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where an older version of session key hashes would be used when refreshing a session, leading to slowdowns when validating session keys.
+
 ## V3.3.7
 
 #### Date: 7/18/2024
