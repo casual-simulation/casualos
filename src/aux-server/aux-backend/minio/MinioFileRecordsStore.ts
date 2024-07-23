@@ -101,7 +101,7 @@ export class MinioFileRecordsStore
         );
 
         const listener = async (record: Minio.NotificationRecord) =>
-            await this._onFileUploaded(record);
+            await this._onFileUploaded(record as MinioNotification);
 
         notification.on('notification', listener);
         this._sub.add(() => {
@@ -111,10 +111,10 @@ export class MinioFileRecordsStore
         await this._trySetupBucket(this._bucket);
     }
 
-    private async _onFileUploaded(record: Minio.NotificationRecord) {
+    private async _onFileUploaded(record: MinioNotification) {
         console.log('[MinioFileRecordsStore] Got file uploaded event:', record);
-        const event = record as any;
-        const key = event.key;
+        const event = record;
+        const key = event.s3.object.key;
 
         const firstSlash = key.indexOf('/');
 
@@ -147,6 +147,68 @@ export class MinioFileRecordsStore
                 `[MinioFileRecordsStore] Bucket does not exist. Trying to create: ${bucketName}`
             );
             await this._client.makeBucket(bucketName);
+        }
+
+        let policy = await this._tryGetBucketPolicy(bucketName);
+        console.log(
+            `[MinioFileRecordsStore] Bucket policy for ${bucketName}:`,
+            policy
+        );
+
+        const PublicReadGetObjectStatement = {
+            Sid: 'PublicReadGetObject',
+            Effect: 'Allow',
+            Principal: '*',
+            Action: ['s3:GetObject'],
+            Resource: `arn:aws:s3:::${bucketName}/*`,
+            Condition: {
+                StringEquals: {
+                    's3:ExistingObjectTag/marker': 'publicRead',
+                },
+            },
+        };
+
+        let updatedPolicy = false;
+        if (!policy) {
+            policy = {
+                Version: '2012-10-17',
+                Statement: [PublicReadGetObjectStatement],
+            };
+            updatedPolicy = true;
+        } else {
+            if (
+                !policy.Statement.some(
+                    (s) => s.Sid === PublicReadGetObjectStatement.Sid
+                )
+            ) {
+                policy.Statement.push(PublicReadGetObjectStatement);
+                updatedPolicy = true;
+            }
+        }
+
+        if (updatedPolicy) {
+            console.log(
+                `[MinioFileRecordsStore] Updating bucket policy for ${bucketName}:`,
+                policy
+            );
+            await this._client.setBucketPolicy(
+                bucketName,
+                JSON.stringify(policy)
+            );
+        }
+    }
+
+    private async _tryGetBucketPolicy(bucketName: string): Promise<any> {
+        try {
+            const p = await this._client.getBucketPolicy(bucketName);
+            return JSON.parse(p);
+        } catch (err) {
+            if (err instanceof Minio.S3Error) {
+                if (err.code === 'NoSuchBucketPolicy') {
+                    return null;
+                }
+            }
+            throw err;
         }
     }
 
@@ -201,11 +263,27 @@ export class MinioFileRecordsStore
                             'The URL does not match an expected format.',
                     };
                 }
-                const recordName = decodeURIComponent(
+                const bucketName = decodeURIComponent(
                     recordNameAndFileName.slice(0, firstSlash)
                 );
+                const afterBucketName = recordNameAndFileName.slice(
+                    firstSlash + 1
+                );
+
+                const secondSlash = afterBucketName.indexOf('/');
+                if (secondSlash < 0) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_url',
+                        errorMessage:
+                            'The URL does not match an expected format.',
+                    };
+                }
+                const recordName = decodeURIComponent(
+                    afterBucketName.slice(0, secondSlash)
+                );
                 const fileName = decodeURIComponent(
-                    recordNameAndFileName.slice(firstSlash + 1)
+                    afterBucketName.slice(secondSlash + 1)
                 );
 
                 if (recordName && fileName) {
@@ -263,7 +341,7 @@ export class MinioFileRecordsStore
             'content-type': request.fileMimeType,
             'content-length': request.fileByteLength.toString(),
             'cache-control': 'max-age=31536000',
-            'x-amz-acl': s3AclForMarkers(request.markers),
+            'x-amz-tagging': s3TagForMarkers(request.markers),
             host: fileUrl.host,
         };
 
@@ -507,15 +585,12 @@ export class MinioFileRecordsStore
 }
 
 /**
- * Gets the Access Control List (ACL) that should be used for files uploaded with the given markers.
+ * Gets the tags that should be used for files uploaded with the given markers.
  * @param markers The markers that are applied to the file.
  */
-export function s3AclForMarkers(markers: readonly string[]): string {
-    if (isPublicFile(markers)) {
-        return 'public-read';
-    }
-
-    return 'private';
+export function s3TagForMarkers(markers: readonly string[]): string {
+    const marker = isPublicFile(markers) ? 'publicRead' : 'private';
+    return `marker=${marker}`;
 }
 
 /**
@@ -525,3 +600,82 @@ export function s3AclForMarkers(markers: readonly string[]): string {
 export function isPublicFile(markers: readonly string[]): boolean {
     return markers.some((m) => m === PUBLIC_READ_MARKER);
 }
+
+export interface MinioNotification {
+    eventVersion: string;
+    eventSource: string;
+    awsRegion: string;
+    eventTime: string;
+    eventName: string;
+    userIdentity: {
+        principalId: string;
+    };
+    requestParameters: {
+        principalId: string;
+        region: string;
+        sourceIPAddress: string;
+    };
+    responseElements: Record<string, string>;
+    s3: {
+        s3SchemaVersion: string;
+        configurationId: string;
+        bucket: {
+            name: string;
+            ownerIdentity: any;
+            arn: string;
+        };
+        object: {
+            key: string;
+            size: number;
+            eTag: string;
+            contentType: string;
+            userMetadata: Record<string, string>;
+            sequencer: string;
+        };
+    };
+    source: {
+        host: string;
+        port: string;
+        userAgent: string;
+    };
+}
+
+// eventVersion: '2.0',
+// [Server] [Backend] [Run]   eventSource: 'minio:s3',
+// [Server] [Backend] [Run]   awsRegion: '',
+// [Server] [Backend] [Run]   eventTime: '2024-07-23T21:44:42.847Z',
+// [Server] [Backend] [Run]   eventName: 's3:ObjectCreated:Put',
+// [Server] [Backend] [Run]   userIdentity: { principalId: 'minioadmin' },
+// [Server] [Backend] [Run]   requestParameters: {
+// [Server] [Backend] [Run]     principalId: 'minioadmin',
+// [Server] [Backend] [Run]     region: '',
+// [Server] [Backend] [Run]     sourceIPAddress: '172.26.176.1'
+// [Server] [Backend] [Run]   },
+// [Server] [Backend] [Run]   responseElements: {
+// [Server] [Backend] [Run]     'x-amz-id-2': 'dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8',
+// [Server] [Backend] [Run]     'x-amz-request-id': '17E4F5AD6FB91D9A',
+// [Server] [Backend] [Run]     'x-minio-deployment-id': '1fbfa9d5-2278-4d2f-8153-be2d44856442',
+// [Server] [Backend] [Run]     'x-minio-origin-endpoint': 'http://10.4.1.60:9000'
+// [Server] [Backend] [Run]   },
+// [Server] [Backend] [Run]   s3: {
+// [Server] [Backend] [Run]     s3SchemaVersion: '1.0',
+// [Server] [Backend] [Run]     configurationId: 'Config',
+// [Server] [Backend] [Run]     bucket: {
+// [Server] [Backend] [Run]       name: 'files',
+// [Server] [Backend] [Run]       ownerIdentity: [Object],
+// [Server] [Backend] [Run]       arn: 'arn:aws:s3:::files'
+// [Server] [Backend] [Run]     },
+// [Server] [Backend] [Run]     object: {
+// [Server] [Backend] [Run]       key: '0296afb8-6082-4130-9941-9e503060a8f9/590044b30f770994d14a73a591995273a2ecb3f7e3fdc8a9e598a9dea422c934.txt',
+// [Server] [Backend] [Run]       size: 16,
+// [Server] [Backend] [Run]       eTag: '03fe5be4bc50f5e9a6cfd8d7f4a2d658',
+// [Server] [Backend] [Run]       contentType: 'text/plain',
+// [Server] [Backend] [Run]       userMetadata: [Object],
+// [Server] [Backend] [Run]       sequencer: '17E4F5AD6FDC24FA'
+// [Server] [Backend] [Run]     }
+// [Server] [Backend] [Run]   },
+// [Server] [Backend] [Run]   source: {
+// [Server] [Backend] [Run]     host: '172.26.176.1',
+// [Server] [Backend] [Run]     port: '',
+// [Server] [Backend] [Run]     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+// [Server] [Backend] [Run]   }
