@@ -20,6 +20,7 @@
 
 -   Fixed an issue where an older version of session key hashes would be used when refreshing a session, leading to slowdowns when validating session keys.
 -   Fixed an issue where lines wouldn't draw to the center of the target bot when the bot was smaller than the arrow head length.
+-   Fixed an issue where the SystemPortal didn't support creating listeners from the "Add Tag" dialog.
 
 ## V3.3.7
 
