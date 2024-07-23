@@ -118,6 +118,11 @@ export interface FileRecordsVault {
  */
 export interface FileRecordsStore extends FileRecordsVault {
     /**
+     * Initializes the store.
+     */
+    init?(): Promise<void>;
+
+    /**
      * Gets the file record for the file with the given name.
      * @param recordName The name of the record that the file is stored in.
      * @param fileName The name of the file.

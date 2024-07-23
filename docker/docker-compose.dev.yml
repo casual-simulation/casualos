@@ -4,6 +4,18 @@ volumes:
     mongodata:
 
 services:
+    minio:
+        image: minio/minio:latest
+        restart: always
+        command: minio server --console-address ":9001"
+        ports:
+            - '9000:9000'
+            - '9001:9001'
+        environment:
+            MINIO_CONFIG_ENV_FILE: /etc/config.env
+        volumes:
+            - './conf/minio.env:/etc/config.env'
+            - './services/data/minio:/mnt/data'
     mongo:
         image: 'mongo:latest'
         restart: always
