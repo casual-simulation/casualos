@@ -1354,6 +1354,402 @@ describe('SystemPortalCoordinator', () => {
         });
     });
 
+    describe('addTag()', () => {
+        it('should add the new tag to the tags list', async () => {
+            await sim.helper.transaction(
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated(connectionId, {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            manager.addTag('test');
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true, prefix: '@' },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true, prefix: '@' },
+                        { name: 'color' },
+                        { name: 'system' },
+                        { name: 'test', focusValue: true },
+                    ],
+                },
+            ]);
+        });
+
+        it('should be able to add tags that already exist on bot', async () => {
+            await sim.helper.transaction(
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated(connectionId, {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            manager.addTag('onClick');
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true, prefix: '@' },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should focus the new tag and unfocus the other pinned tags', async () => {
+            await sim.helper.transaction(
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated(connectionId, {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            manager.addTag('onClick');
+
+            await waitAsync();
+
+            manager.addTag('other');
+
+            await waitAsync();
+
+            expect(selectionUpdates).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true, prefix: '@' },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
+                        { name: 'color' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        color: 'red',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true, prefix: '@' },
+                        { name: 'color' },
+                        { name: 'other', focusValue: true },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should create an empty script if the tag is prefixed with @', async () => {
+            await sim.helper.transaction(
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botUpdated(connectionId, {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            await manager.addTag('@onClick');
+
+            await waitAsync();
+
+            expect(sim.helper.botsState['test2']).toEqual(
+                createPrecalculatedBot('test2', {
+                    system: 'core.game.test2',
+                    onClick: '@',
+                })
+            );
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@',
+                    }),
+                    tags: [
+                        { name: 'onClick', isScript: true, prefix: '@' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@',
+                    }),
+                    tags: [
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should create an empty mod if the tag is prefixed with the DNA emoji', async () => {
+            await sim.helper.transaction(
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                    })
+                ),
+                botUpdated(connectionId, {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            await manager.addTag('🧬mod');
+
+            await waitAsync();
+
+            expect(sim.helper.botsState['test2']).toEqual(
+                createPrecalculatedBot(
+                    'test2',
+                    {
+                        system: 'core.game.test2',
+                        mod: expect.any(String),
+                    },
+                    {
+                        system: 'core.game.test2',
+                        mod: '🧬',
+                    }
+                )
+            );
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot(
+                        'test2',
+                        {
+                            system: 'core.game.test2',
+                            mod: expect.any(String),
+                        },
+                        {
+                            system: 'core.game.test2',
+                            mod: '🧬',
+                        }
+                    ),
+                    tags: [
+                        { name: 'mod', isFormula: true, prefix: '🧬' },
+                        { name: 'system' },
+                    ],
+                },
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot(
+                        'test2',
+                        {
+                            system: 'core.game.test2',
+                            mod: expect.any(String),
+                        },
+                        {
+                            system: 'core.game.test2',
+                            mod: '🧬',
+                        }
+                    ),
+                    tags: [
+                        {
+                            name: 'mod',
+                            isFormula: true,
+                            prefix: '🧬',
+                            focusValue: true,
+                        },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+
+        it('should focus the new tag if it is already on the bot', async () => {
+            await sim.helper.transaction(
+                botAdded(
+                    createBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@os.toast("Cool!");',
+                    })
+                ),
+                botUpdated(connectionId, {
+                    tags: {
+                        [SYSTEM_PORTAL]: 'core.game',
+                        [SYSTEM_PORTAL_BOT]: 'test2',
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            manager.addTag('onClick');
+            manager.addTag('onClick');
+
+            await waitAsync();
+
+            expect(selectionUpdates.slice(1)).toEqual([
+                {
+                    hasSelection: true,
+                    sortMode: 'scripts-first',
+                    simulationId: sim.id,
+                    bot: createPrecalculatedBot('test2', {
+                        system: 'core.game.test2',
+                        onClick: '@os.toast("Cool!");',
+                    }),
+                    tags: [
+                        {
+                            name: 'onClick',
+                            isScript: true,
+                            prefix: '@',
+                            focusValue: true,
+                        },
+                        { name: 'system' },
+                    ],
+                },
+            ]);
+        });
+    });
+
     describe('addPinnedTag()', () => {
         it('should add the new tag to a pinned tags list', async () => {
             await sim.helper.transaction(
