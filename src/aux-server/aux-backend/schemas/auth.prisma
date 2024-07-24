@@ -881,10 +881,10 @@ model StudioComIdRequest {
 model XpUser {
     id String @id @db.Uuid
 
-    userId String @db.Uuid @unique
+    userId String @unique
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
 
-    accountId String @unique
+    accountId String @db.Uuid @unique
     account XpAccount @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpUser_accountId_fkey1")
 
     // The rate at which the user is requested to be paid per gig.
@@ -901,7 +901,7 @@ model XpUser {
 // Represents a account of money that can be used to track entries and transactions
 // The current balance of the account is the sum of all entries
 model XpAccount {
-    id String @id @db.Uuid
+    id String @id @default(uuid()) @db.Uuid
 
     entries XpAccountEntry[]
 
@@ -934,7 +934,7 @@ model XpAccountEntry {
     id String @id @db.Uuid
 
     // The ID of the account
-    accountId String
+    accountId String @db.Uuid
     account XpAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "XpAccountEntry_accountId_fkey1")
 
     // The number of cents that were added to the ledger
@@ -967,10 +967,10 @@ model XpAccountEntry {
 model XpContract {
     id String @id @db.Uuid
 
-    issuerUserId String @db.Uuid
+    issuerUserId String
     issuer XpUser @relation(fields: [issuerUserId], references: [userId], onDelete: Cascade, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
 
-    holdingUserId String @db.Uuid
+    holdingUserId String
     holdingUser XpUser @relation(fields: [holdingUserId], references: [userId], onDelete: Cascade, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
 
     // The rate at which the contract is paid
