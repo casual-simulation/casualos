@@ -144,7 +144,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
             {
                 headers: {
                     Accept: 'application/json',
-                    Authorization: `Bearer ${this._options.apiKey}`,
+                    Authorization: this._options.apiKey,
                 },
             }
         );
@@ -190,7 +190,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
             {
                 headers: {
                     Accept: 'application/json',
-                    Authorization: `Bearer ${this._options.apiKey}`,
+                    Authorization: this._options.apiKey,
                 },
             }
         );
@@ -239,7 +239,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
             {
                 headers: {
                     Accept: 'application/json',
-                    Authorization: `Bearer ${this._options.apiKey}`,
+                    Authorization: this._options.apiKey,
                 },
             }
         );
