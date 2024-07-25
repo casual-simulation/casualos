@@ -16,9 +16,12 @@ import {
     CompleteLoginSuccess,
     CompleteOpenIDLoginSuccess,
     getExpireTime,
+    serverConfigSchema,
 } from '@casual-simulation/aux-records';
-import { stderr, stdout } from 'process';
 import { Duplex, PassThrough, Readable } from 'node:stream';
+import { getSchemaMetadata } from '@casual-simulation/aux-common';
+import path from 'path';
+import { readFile } from 'fs/promises';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -195,6 +198,53 @@ program
                 }),
             },
         });
+    });
+
+program
+    .command('generate-server-config')
+    .option('-p, --pretty', 'Pretty print the output.')
+    .description('Generate a server config for CasualOS.')
+    .action(async () => {
+        const metadata = getSchemaMetadata(serverConfigSchema);
+        const result = await askForInputs(metadata, 'serverConfig');
+
+        const isValid = serverConfigSchema.safeParse(result);
+        if (isValid.success === false) {
+            console.error('Generated config is invalid:');
+            console.error(isValid.error.toString());
+        }
+
+        if (result) {
+            const output = JSON.stringify(result, null, 2);
+            console.log(output);
+        } else {
+            console.log(JSON.stringify(result));
+        }
+    });
+
+program
+    .command('validate-server-config')
+    .option('--json <config>', 'The JSON to validate.')
+    .option('-f, --file <file>', 'The file to validate.')
+    .description('Validate a server config for CasualOS.')
+    .action(async (options) => {
+        let configJson: string;
+        if (options.json) {
+            configJson = options.json;
+        } else {
+            const fullPath = path.resolve(options.file);
+            configJson = await readFile(fullPath, 'utf-8');
+        }
+
+        const parsed = JSON.parse(configJson);
+        const result = serverConfigSchema.safeParse(parsed);
+        if (result.success == true) {
+            console.log('Config is valid!');
+        } else {
+            console.error('Config is invalid:');
+            console.error(result.error.toString());
+            process.exit(1);
+        }
     });
 
 async function query(

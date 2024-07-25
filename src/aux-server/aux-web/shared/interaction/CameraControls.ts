@@ -1335,17 +1335,17 @@ export class CameraControls {
 
             this.spherical.radius *= this.scale;
 
-            if (!this.usingImmersiveControls) {
-                if (this._camera instanceof PerspectiveCamera) {
-                    this.sphereRadiusSetter = this.spherical.radius;
-                }
-            }
-
             // restrict radius to be between desired limits
             this.spherical.radius = Math.max(
                 this.minDistance,
                 Math.min(this.maxDistance, this.spherical.radius)
             );
+
+            if (!this.usingImmersiveControls) {
+                if (this._camera instanceof PerspectiveCamera) {
+                    this.sphereRadiusSetter = this.spherical.radius;
+                }
+            }
 
             // move target to panned location
             this.target.add(this.panOffset);

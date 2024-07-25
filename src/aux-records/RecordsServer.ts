@@ -24,7 +24,11 @@ import {
     SubscriptionController,
 } from './SubscriptionController';
 import { ZodError, z } from 'zod';
-import { LOOM_CONFIG, PublicRecordKeyPolicy } from './RecordsStore';
+import {
+    HUME_CONFIG,
+    LOOM_CONFIG,
+    PublicRecordKeyPolicy,
+} from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
@@ -77,7 +81,13 @@ import {
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import { LoomController } from './LoomController';
-import { SpanKind, Tracer, trace } from '@opentelemetry/api';
+import {
+    SpanKind,
+    Tracer,
+    ValueType,
+    metrics,
+    trace,
+} from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
     SEMATTRS_ENDUSER_ID,
@@ -457,6 +467,8 @@ export interface Route<T> {
      */
     allowedOrigins?: Set<string> | true | 'account' | 'api';
 }
+
+const RECORDS_SERVER_METER = 'RecordsServer';
 
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
@@ -2319,8 +2331,12 @@ export class RecordsServer {
             getHumeAccessToken: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/ai/hume/token')
-                .inputs(z.object({}))
-                .handler(async (_, context) => {
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName }, context) => {
                     if (!this._aiController) {
                         return AI_NOT_SUPPORTED_RESULT;
                     }
@@ -2339,6 +2355,7 @@ export class RecordsServer {
 
                     const result = await this._aiController.getHumeAccessToken({
                         userId: sessionKeyValidation.userId,
+                        recordName,
                     });
 
                     return result;
@@ -2536,6 +2553,7 @@ export class RecordsServer {
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
                         playerConfig: COM_ID_PLAYER_CONFIG.optional(),
                         loomConfig: LOOM_CONFIG.optional(),
+                        humeConfig: HUME_CONFIG.optional(),
                     })
                 )
                 .handler(
@@ -2547,6 +2565,7 @@ export class RecordsServer {
                             comIdConfig,
                             playerConfig,
                             loomConfig,
+                            humeConfig,
                         },
                         context
                     ) => {
@@ -2571,6 +2590,7 @@ export class RecordsServer {
                                 comIdConfig,
                                 playerConfig,
                                 loomConfig,
+                                humeConfig,
                             },
                         });
                         return result;
@@ -3411,10 +3431,41 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer', {
-        kind: SpanKind.SERVER,
-        root: true,
-    })
+    @traced(
+        'RecordsServer',
+        {
+            kind: SpanKind.SERVER,
+            root: true,
+        },
+        {
+            histogram: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.http.duration',
+                options: {
+                    description:
+                        'A distribution of the HTTP server request durations.',
+                    unit: 'miliseconds',
+                    valueType: ValueType.INT,
+                },
+                attributes: (
+                    [request]: [GenericHttpRequest],
+                    ret: GenericHttpResponse
+                ) => ({
+                    [SEMATTRS_HTTP_METHOD]: request.method,
+                    [SEMATTRS_HTTP_HOST]: request.headers.host,
+                    ['http.origin']: request.headers.origin,
+                    ['http.status_code']: ret.statusCode,
+                }),
+            },
+            errorCounter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.http.errors',
+                options: {
+                    description: 'A count of the HTTP server errors.',
+                },
+            },
+        }
+    )
     @traceHttpResponse()
     async handleHttpRequest(
         request: GenericHttpRequest
@@ -3647,9 +3698,41 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer', {
-        kind: SpanKind.SERVER,
-    })
+    @traced(
+        'RecordsServer',
+        {
+            kind: SpanKind.SERVER,
+        },
+        {
+            histogram: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.ws.duration',
+                options: {
+                    description:
+                        'A distribution of the HTTP server request durations.',
+                    unit: 'miliseconds',
+                    valueType: ValueType.INT,
+                },
+                attributes: ([request]: [GenericWebsocketRequest], ret) => ({
+                    'websocket.type': request.type,
+                    'request.connectionId': request.connectionId,
+                    'http.origin': request.origin,
+                }),
+            },
+            errorCounter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.ws.errors',
+                options: {
+                    description: 'A count of the Websocket server errors.',
+                },
+                attributes: ([request]: [GenericWebsocketRequest], ret) => ({
+                    'websocket.type': request.type,
+                    'request.connectionId': request.connectionId,
+                    'http.origin': request.origin,
+                }),
+            },
+        }
+    )
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
         if (!this._websocketController) {
             return;

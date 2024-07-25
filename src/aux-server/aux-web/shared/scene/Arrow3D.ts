@@ -9,6 +9,7 @@ import { AuxBot3D } from './AuxBot3D';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
 import { disposeMaterial, buildSRGBColor } from './SceneUtils';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 export class Arrow3D extends Object3D {
     public static DefaultColor: Color = buildSRGBColor(1, 1, 1);
@@ -97,6 +98,11 @@ export class Arrow3D extends Object3D {
             headWidth = undefined;
         }
 
+        if (!this._hasArrowTip) {
+            headLength = 0;
+            headWidth = 0;
+        }
+
         this._arrowHelper.setLength(length, headLength, headWidth);
     }
 
@@ -151,7 +157,7 @@ export class Arrow3D extends Object3D {
 
             if (!this._hasArrowTip) {
                 this._arrowHelper.cone.visible = false;
-                dir.setLength(dir.length() + 0.2);
+                dir.setLength(dir.length());
             } else {
                 this._arrowHelper.cone.visible = true;
                 // Decrease length of direction vector so that it only goes

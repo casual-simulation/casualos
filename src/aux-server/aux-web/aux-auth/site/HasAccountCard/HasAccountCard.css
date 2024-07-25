@@ -1,0 +1,8 @@
+.policies-grid {
+    display: flex;
+    margin-top: 14px;
+}
+
+.spacer {
+    flex: 1 1 20px;
+}

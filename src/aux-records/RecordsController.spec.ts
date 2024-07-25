@@ -17,7 +17,7 @@ import {
 import {
     hashHighEntropyPasswordWithSalt,
     hashPassword,
-    hashPasswordWithSalt,
+    hashLowEntropyPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
@@ -479,9 +479,18 @@ describe('RecordsController', () => {
             describe('v1 hashes', () => {
                 it('should return true if the given key is valid and is contained in the secret hashes of the record', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -504,9 +513,18 @@ describe('RecordsController', () => {
 
                 it('should return true if the given key is valid and is contained in the key store', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -548,9 +566,18 @@ describe('RecordsController', () => {
 
                 it('should return the ID of the user who created the key', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -592,9 +619,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key has a different creator than the record owner and the record has the same name as the owner ID', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',
@@ -856,9 +892,18 @@ describe('RecordsController', () => {
             describe('v1 hashes', () => {
                 it('should return true if the given key is valid and is contained in the secret hashes of the record', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -881,9 +926,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key is valid but has a non-default policy when it is contained in the secret hashes of the record', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -904,9 +958,18 @@ describe('RecordsController', () => {
 
                 it('should return true if the given key is valid and is contained in the key store', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -948,9 +1011,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key is valid but does not have the correct policy', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
@@ -990,9 +1062,18 @@ describe('RecordsController', () => {
 
                 it('should return false if the given key has a different creator than the record owner and the record has the same name as the owner ID', async () => {
                     const salt = fromByteArray(randomBytes(16));
-                    const hash1 = hashPasswordWithSalt('password1', salt);
-                    const hash2 = hashPasswordWithSalt('password2', salt);
-                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    const hash1 = hashLowEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashLowEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashLowEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',
@@ -2518,6 +2599,44 @@ describe('RecordsController', () => {
             });
         });
 
+        it('should be able to update the hume config', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.updateStudio({
+                userId: 'userId',
+                studio: {
+                    id: 'studioId',
+                    humeConfig: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const studio = await store.getStudioById('studioId');
+            expect(studio).toEqual({
+                id: 'studioId',
+                displayName: 'studio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const humeConfig = await store.getStudioHumeConfig('studioId');
+            expect(humeConfig).toEqual({
+                apiKey: 'apiKey',
+                secretKey: 'secretKey',
+            });
+        });
+
         it('should do nothing if no updates are provided', async () => {
             await store.updateStudio({
                 id: 'studioId',
@@ -2650,6 +2769,9 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: false,
                     },
+                    humeFeatures: {
+                        allowed: true,
+                    },
                 },
             });
         });
@@ -2702,6 +2824,9 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: false,
                     },
+                    humeFeatures: {
+                        allowed: true,
+                    },
                 },
             });
         });
@@ -2750,6 +2875,9 @@ describe('RecordsController', () => {
                         allowed: false,
                     },
                     loomFeatures: {
+                        allowed: true,
+                    },
+                    humeFeatures: {
                         allowed: true,
                     },
                 },
@@ -2807,8 +2935,125 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: true,
                     },
+                    humeFeatures: {
+                        allowed: true,
+                    },
                     loomConfig: {
                         appId: 'appId',
+                    },
+                },
+            });
+        });
+
+        it('should include the configured hume features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                hume: {
+                                    allowed: true,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                },
+            });
+        });
+
+        it('should include the hume config if hume features are allowed', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                hume: {
+                                    allowed: true,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.updateStudioHumeConfig('studioId', {
+                apiKey: 'apiKey',
+                secretKey: 'secretKey',
+            });
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    humeConfig: {
+                        apiKey: 'apiKey',
                     },
                 },
             });

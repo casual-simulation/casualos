@@ -102,13 +102,25 @@ const BiosOptionComponent = MdOption.extend({
                     '.md-list-item-text > span'
                 );
                 if (queryResult) {
-                    return queryResult.textContent;
+                    return queryResult.textContent.trim();
                 }
-                return el.textContent;
+                return el.textContent.trim();
             }
             const slot = this.$slots.default;
             const slotText = slot ? slot[0]?.text?.trim() : '';
             return slotText ?? '';
+        },
+    },
+});
+
+const MdSelect = Vue.component('MdSelect');
+const BiosSelectComponent = MdSelect.extend({
+    methods: {
+        setFieldContent() {
+            // Overrides the default MdSelect#setFieldContent method
+            // to ensure that it actually works for the BIOS selection dialog.
+            // For some reason, the default version doesn't work because of the multiple-line item description issue.
+            this.MdSelect.label = this.localValue;
         },
     },
 });
@@ -118,6 +130,7 @@ const BiosOptionComponent = MdOption.extend({
         'game-view': PlayerGameView,
         'field-errors': FieldErrors,
         'bios-option': BiosOptionComponent,
+        'bios-select': BiosSelectComponent,
     },
 })
 export default class PlayerHome extends Vue {
@@ -162,6 +175,18 @@ export default class PlayerHome extends Vue {
         return appManager.simulationManager.primary;
     }
 
+    get canLoad() {
+        if (this.biosSelection) {
+            if (isJoinCode(this.biosSelection)) {
+                return !!this.joinCode;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
     get startButtonLabel() {
         if (
             isPublicInst(this.biosSelection) ||
@@ -177,8 +202,20 @@ export default class PlayerHome extends Vue {
         ) {
             return 'Continue';
         } else {
-            return 'Start';
+            return 'Load';
         }
+    }
+
+    get biosSelectionOptions() {
+        if (!this.biosOptions) {
+            return [];
+        }
+        return this.biosOptions.filter(
+            (option) =>
+                option !== 'sign in' &&
+                option !== 'sign up' &&
+                option !== 'sign out'
+        );
     }
 
     hasOptionDescription(option: BiosOption): boolean {
@@ -436,6 +473,10 @@ export default class PlayerHome extends Vue {
         await appManager.auth.primary.cancelLogin();
     }
 
+    async showAccountInfo() {
+        await appManager.authCoordinator.showAccountInfo(null);
+    }
+
     private _loadStaticInst(instSelection: string) {
         const update: Dictionary<string | string[]> = {};
         const inst =
@@ -538,10 +579,10 @@ export default class PlayerHome extends Vue {
         const authenticated = await appManager.auth.primary.isAuthenticated();
         return (
             appManager.config.allowedBiosOptions ?? [
-                'join inst',
-                'local inst',
-                'studio inst',
-                'free inst',
+                'enter join code',
+                'local',
+                'studio',
+                'free',
                 'sign in',
                 'sign up',
                 'sign out',

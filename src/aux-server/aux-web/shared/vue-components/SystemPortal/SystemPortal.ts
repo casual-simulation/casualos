@@ -1308,7 +1308,7 @@ export default class SystemPortal extends Vue {
         // }
 
         if (this.isMakingNewTag) {
-            appManager.systemPortal.addPinnedTag(this.newTag);
+            appManager.systemPortal.addTag(this.newTag);
             this.newTag = '';
             this.isMakingNewTag = false;
         } else {
@@ -1381,7 +1381,7 @@ export default class SystemPortal extends Vue {
                 const result = await sim.helper.shout(
                     CLICK_ACTION_NAME,
                     [this._currentConfig.configBot],
-                    onClickArg(null, null, null, 'mouse', null, null)
+                    onClickArg(null, null, null, 'mouse', null, null, null)
                 );
                 if (result.results.length <= 0) {
                     this._exitPortal(sim);

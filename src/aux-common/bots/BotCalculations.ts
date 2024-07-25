@@ -20,7 +20,6 @@ import {
     BotsState,
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
-    BotPositioningMode,
     BotSpace,
     BOT_SPACE_TAG,
     PortalType,
@@ -70,6 +69,8 @@ import {
     SYSTEM_PORTAL_DIFF,
     SHEET_PORTAL,
     MenuBotSubtype,
+    BotMeshPositioningMode,
+    DEFAULT_MESH_POSITIONING_MODE,
 } from './Bot';
 import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
@@ -1940,6 +1941,7 @@ export function getBotTagAnchor(
     if (
         anchor === 'back' ||
         anchor === 'floating' ||
+        anchor === 'floatingBillboard' ||
         anchor === 'front' ||
         anchor === 'left' ||
         anchor === 'right' ||
@@ -1948,6 +1950,14 @@ export function getBotTagAnchor(
         return anchor;
     }
     return DEFAULT_LABEL_ANCHOR;
+}
+
+/**
+ * Determines whether the given anchor is a floating anchor.
+ * @param anchor The anchor to check.
+ */
+export function isFloatingAnchor(anchor: BotLabelAnchor) {
+    return anchor === 'floating' || anchor === 'floatingBillboard';
 }
 
 /**
@@ -2001,7 +2011,7 @@ function isIrrational(val: number): boolean {
 }
 
 /**
- * Gets the text alignment for the bot's label.
+ * Gets the scale mode for the bot.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -2014,6 +2024,26 @@ export function getBotScaleMode(
         return anchor;
     }
     return DEFAULT_SCALE_MODE;
+}
+
+/**
+ * Gets the mesh positioning mode for the bot.
+ * @param calc The calculation context.
+ * @param bot The bot.
+ */
+export function getBotMeshPositioningMode(
+    calc: BotCalculationContext,
+    bot: Bot
+): BotMeshPositioningMode {
+    const anchor: BotMeshPositioningMode = calculateBotValue(
+        calc,
+        bot,
+        'auxMeshPositioningMode'
+    );
+    if (anchor === 'center' || anchor === 'absolute') {
+        return anchor;
+    }
+    return DEFAULT_MESH_POSITIONING_MODE;
 }
 
 /**

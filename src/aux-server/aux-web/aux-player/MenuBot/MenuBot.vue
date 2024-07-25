@@ -41,10 +41,10 @@
         :class="{ active: selected, 'no-hover': hoverStyle === 'none' }"
         :style="style"
         :md-ripple="hoverStyle !== 'none'"
-        @click="click()"
-        @mousedown="mouseDown()"
-        @mouseenter="mouseEnter()"
-        @mouseleave="mouseLeave()"
+        @click="click"
+        @mousedown="mouseDown"
+        @mouseenter="mouseEnter"
+        @mouseleave="mouseLeave"
     >
         <div
             class="menu-bot-content"

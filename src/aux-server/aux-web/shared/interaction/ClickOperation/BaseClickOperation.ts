@@ -3,6 +3,7 @@ import {
     ControllerData,
     InputMethod,
     InputModality,
+    MouseOrTouchInputMethod,
 } from '../../../shared/scene/Input';
 import {
     Vector2,
@@ -142,7 +143,9 @@ export abstract class BaseClickOperation implements IOperation {
                       )
                     : DragThresholdPassed(
                           this._startScreenPos,
-                          this.game.getInput().getMouseScreenPos()
+                          this.game.getInput().getMouseScreenPos(),
+                          (this._inputMethod as MouseOrTouchInputMethod)
+                              .buttonId ?? 0
                       );
 
                 if (dragThresholdPassed) {

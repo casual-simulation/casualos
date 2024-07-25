@@ -1,8 +1,30 @@
 # CasualOS Changelog
 
-## V3.3.7
+## V3.3.8
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Improved `SERVER_CONFIG` to allow customizing the OpenTelemetry resource.
+-   Improved the server to record metrics for how long HTTP and Websocket requests take to complete and also the status they have when finishing.
+-   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
+-   Added the `meshPositioningMode` tag to prevent CasualOS from repositioning meshes around the center of the bot.
+    -   There are two possible values:
+        -   `center` - The mesh will be positioned so it is centered around the bot's center. (Default)
+        -   `absolute` - The mesh won't be repositioned. It will retain the position configured in the GLTF.
+-   Added support for [Anthropic AI Chat models](https://docs.anthropic.com/en/docs/about-claude/models) to `ai.chat()` and `ai.stream.chat()`.
+    -   `SERVER_CONFIG` needs to be configured with an Anthropic API Key and allowed `anthropic` models.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where an older version of session key hashes would be used when refreshing a session, leading to slowdowns when validating session keys.
+-   Fixed an issue where lines wouldn't draw to the center of the target bot when the bot was smaller than the arrow head length.
+-   Fixed an issue where the SystemPortal didn't support creating listeners from the "Add Tag" dialog.
+
+## V3.3.7
+
+#### Date: 7/18/2024
 
 ### :rocket: Features
 
@@ -22,6 +44,32 @@
             -   `type` - Should always be `"image/png"`
             -   `width` - The desired width of the thumbnail in pixels.
             -   `height` - The desired height of the thumbnail in pixels.
+    -   Requesting users require access to the `ai.sloyd` resource kind and `create` action for the specified record.
+-   Tags added to bots through the `systemPortal` will now be added to the "tags" section instead of the "pinned tags" section.
+-   Improved the [CasualOS CLI](https://www.npmjs.com/package/casualos) to be able to generate and validate server configs.
+-   Improved `portalZoomableMax` and `portalZoomableMin` to be supported for `perspective` portal camera types.
+-   Updated the BIOS dialog with various visual improvements.
+-   The default BIOS options have been updated:
+    -   `enter join code`
+    -   `local`
+    -   `studio`
+    -   `free`
+    -   `sign in`
+    -   `sign up`
+    -   `sign out`
+-   Improved Hume AI features to support Studios.
+    -   The `ai.hume` features now determine whether a Studio can configure their own Hume `apiKey` and `secretKey`.
+    -   `ai.hume.getAccessToken(recordName)` now accepts a record name.
+        -   This allows the user to specify which record they want to use for hume.ai access.
+        -   Once a studio is configured, requests to one of the Studio's records will return an access token derived from the Studio's configured `apiKey` and `secretKey`.
+        -   Requesting users require access to the `ai.hume` resource kind and `create` action for the specified record.
+-   Added the `floatingBillboard` option for `labelPosition`.
+    -   Like `floating`, but the label background won't have an arrow and the label will always face the camera.
+-   Added the `labelFloatingBackgroundColor` tag to control the color of the background for floating labels.
+    -   Defaults to `white`.
+-   Improved `@onClick`, `@onAnyBotClicked`, `@onGridClick`, `@onPointerEnter`, `@onPointerExit`, `@onPointerDown`, `@onPointerUp`, `@onAnyBotPointerEnter`, `@onAnyBotPointerExit`, `@onAnyBotPointerDown`, and `@onAnyBotPointerUp` to include the ID of the button that was pressed.
+    -   For each of these listeners, `that.buttonId` will be either `"left"`, `"right"`, `"middle"`, or `null`.
+    -   This means that you can now determine which button was pressed (if any) and respond accordingly.
 
 ### :bug: Bug Fixes
 
@@ -30,6 +78,12 @@
 -   Fixed an issue where CasualOS would always decide to load inst data from Redis instead of the database.
 -   Improved the CasualOS server to discard redundant updates when saving a studio inst. This will greatly help prevent hitting inst size limits in the future.
 -   Fixed an issue where `@onSpaceMaxSizeReached` would not be called when an inst ran out of space.
+-   Fixed an issue where meshes for hands in XR don't follow the camera when `cameraPositionOffset` is changed.
+-   Fixed an issue where the wrist portals for hands in Meta Quest devices were positioned incorrectly.
+-   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
+-   Fixed an issue where selecting an option in the BIOS would fail to actually show the selected option.
+-   Fixed an issue where the arrow on floating labels would clip into the bot if the bot had a scale > 1.
+-   Fixed an issue where portal bots would not appear in the code editor autocomplete.
 
 ## V3.3.6
 

@@ -1,6 +1,7 @@
 import { type } from 'os';
 import { TagEditOp } from './AuxStateHelpers';
 import { BotModule, BotModuleResult } from './BotModule';
+import { Point2D } from './BotEvents';
 
 export type PartialBot = Partial<Bot>;
 
@@ -975,12 +976,12 @@ export type BotSubShape =
 export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 
 /**
- * Defines the possible positioning modes that a bot can have.
+ * Defines the possible positioning modes that a bot's mesh can have.
  *
- * "stack" means the bot is able to stack with other bots.
- * "absolute" means the bot will ignore other bots.
+ * "center" means the mesh will be repositioned to be placed in the center of the bot. (default)
+ * "absolute" means the mesh will be placed in its original position.
  */
-export type BotPositioningMode = 'stack' | 'absolute';
+export type BotMeshPositioningMode = 'center' | 'absolute';
 
 /**
  * Defines the possible scaling modes that a bot's mesh can have.
@@ -999,7 +1000,8 @@ export type BotLabelAnchor =
     | 'back'
     | 'left'
     | 'right'
-    | 'floating';
+    | 'floating'
+    | 'floatingBillboard';
 
 /**
  * Defines the possible label alignment types.
@@ -1188,6 +1190,11 @@ export const DEFAULT_LABEL_ALIGNMENT: BotLabelAlignment = 'center';
  * The default bot scale mode.
  */
 export const DEFAULT_SCALE_MODE: BotScaleMode = 'fit';
+
+/**
+ * The default bot mesh positioning mode.
+ */
+export const DEFAULT_MESH_POSITIONING_MODE: BotMeshPositioningMode = 'center';
 
 /**
  * The default bot orientation mode.
@@ -2695,6 +2702,7 @@ export const KNOWN_TAGS: string[] = [
     'labelAlignment',
     'labelWordWrapMode',
     'labelFontAddress',
+    'labelFloatingBackgroundColor',
     'listening',
     'scale',
     'scaleX',
@@ -2720,6 +2728,7 @@ export const KNOWN_TAGS: string[] = [
     'formLightGroundColor',
     'formBuildStep',
     'formLDrawPartsAddress',
+    'meshPositioningMode',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
@@ -2906,7 +2915,8 @@ export function onClickArg(
     uv: string,
     modality: string,
     hand: string,
-    finger: string
+    finger: string,
+    buttonId: string
 ) {
     return {
         face,
@@ -2915,6 +2925,7 @@ export function onClickArg(
         modality,
         hand,
         finger,
+        buttonId,
     };
 }
 
@@ -2925,11 +2936,30 @@ export function onAnyClickArg(
     uv: string,
     modality: string,
     hand: string,
-    finger: string
+    finger: string,
+    buttonId: string
 ) {
     return {
-        ...onClickArg(face, dimension, uv, modality, hand, finger),
+        ...onClickArg(face, dimension, uv, modality, hand, finger, buttonId),
         bot,
+    };
+}
+
+export function onGridClickArg(
+    position: Point2D,
+    dimension: string,
+    modality: string,
+    hand: string,
+    finger: string,
+    buttonId: string
+) {
+    return {
+        position,
+        dimension,
+        modality,
+        hand,
+        finger,
+        buttonId,
     };
 }
 
@@ -3037,7 +3067,8 @@ export function onPointerEnterExitArg(
     dimension: string,
     modality: string,
     hand: string,
-    finger: string
+    finger: string,
+    buttonId: string
 ) {
     return {
         bot,
@@ -3045,13 +3076,25 @@ export function onPointerEnterExitArg(
         modality,
         hand,
         finger,
+        buttonId,
     };
 }
 
-export function onPointerUpDownArg(bot: Bot, dimension: string) {
+export function onPointerUpDownArg(
+    bot: Bot,
+    dimension: string,
+    modality: string,
+    hand: string,
+    finger: string,
+    buttonId: string
+) {
     return {
         bot,
         dimension,
+        modality,
+        hand,
+        finger,
+        buttonId,
     };
 }
 

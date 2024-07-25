@@ -1905,7 +1905,9 @@ export class RecordsManager {
             }
 
             const result = await this._client.getHumeAccessToken(
-                {},
+                {
+                    recordName: event.recordName,
+                },
                 {
                     endpoint: await info.auth.getRecordsOrigin(),
                     sessionKey: info.token,

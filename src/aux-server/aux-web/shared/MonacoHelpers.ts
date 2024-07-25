@@ -366,7 +366,15 @@ export function watchSimulation(
             };
             simulation.helper.transaction(
                 action(CLICK_ACTION_NAME, [botId], simulation.helper.userId, {
-                    ...onClickArg(null, dimension, null, null, null, null),
+                    ...onClickArg(
+                        null,
+                        dimension,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ),
                     ...extraArgs,
                 }),
                 action(ANY_CLICK_ACTION_NAME, null, simulation.helper.userId, {
@@ -374,6 +382,7 @@ export function watchSimulation(
                         null,
                         dimension,
                         bot,
+                        null,
                         null,
                         null,
                         null,
@@ -408,7 +417,7 @@ export function watchSimulation(
                     addDefinitionsForPortalBot(
                         data.portalId,
                         data.botId,
-                        monaco.languages.typescript.javascriptDefaults
+                        monaco.languages.typescript.typescriptDefaults
                     );
                 })
             )
@@ -420,7 +429,7 @@ export function watchSimulation(
     addDefinitionsForPortalBot(
         'auth',
         'botId',
-        monaco.languages.typescript.javascriptDefaults
+        monaco.languages.typescript.typescriptDefaults
     );
 
     sub.add(
@@ -639,6 +648,7 @@ function registerEditorActionsForSimulation(simulation: Simulation) {
                                         null,
                                         null,
                                         null,
+                                        null,
                                         null
                                     )
                                 ),
@@ -650,6 +660,7 @@ function registerEditorActionsForSimulation(simulation: Simulation) {
                                         null,
                                         EDITOR_CODE_BUTTON_DIMENSION,
                                         bot,
+                                        null,
                                         null,
                                         null,
                                         null,
@@ -678,7 +689,7 @@ function registerEditorActionsForSimulation(simulation: Simulation) {
 export function addDefinitionsForPortalBot(
     portalId: string,
     botId: string,
-    defaults: typeof monaco.languages.typescript.javascriptDefaults
+    defaults: typeof monaco.languages.typescript.typescriptDefaults
 ) {
     const extraLibs = defaults.getExtraLibs();
     const libs: { filePath: string; content: string }[] = [];
@@ -980,6 +991,7 @@ export function watchEditor(
                                         null,
                                         null,
                                         null,
+                                        null,
                                         null
                                     ),
                                     ...extraArgs,
@@ -994,6 +1006,7 @@ export function watchEditor(
                                         null,
                                         dimension,
                                         bot,
+                                        null,
                                         null,
                                         null,
                                         null,

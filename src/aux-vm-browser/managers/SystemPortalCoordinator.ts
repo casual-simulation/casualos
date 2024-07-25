@@ -239,6 +239,37 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         this._sub.add(paneUpdated.subscribe(this._systemPortalPaneUpdated));
     }
 
+    async addTag(tag: string) {
+        const parsed = parseNewTag(tag);
+
+        const primarySim = this._simulationManager.primary;
+        const helper = primarySim.helper;
+
+        const selectedBotId = calculateBotIdTagValue(
+            helper.userBot,
+            SYSTEM_PORTAL_BOT,
+            null
+        );
+        const selectedBot = selectedBotId
+            ? helper.botsState[selectedBotId]
+            : null;
+        if ((parsed.isScript || parsed.isFormula) && selectedBot) {
+            if (!hasValue(selectedBot.tags[parsed.name])) {
+                await helper.updateBot(selectedBot, {
+                    tags: {
+                        [parsed.name]: parsed.isScript
+                            ? '@'
+                            : parsed.isFormula
+                            ? DNA_TAG_PREFIX
+                            : '',
+                    },
+                });
+            }
+        }
+
+        this._updateSelection(undefined, [parsed.name]);
+    }
+
     /**
      * Adds the given tag as a pinned tag.
      * Pinned tags are a separate list of tags that are persisted across multiple selections.
@@ -288,8 +319,12 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         this._updateSelection();
     }
 
-    private _updateSelection(extraTags?: string[]) {
-        const update = this._findSelection(this._itemsUpdated.value, extraTags);
+    private _updateSelection(extraTags?: string[], addedTags?: string[]) {
+        const update = this._findSelection(
+            this._itemsUpdated.value,
+            extraTags,
+            addedTags
+        );
 
         if (!isEqual(update, this._selectionUpdated.value)) {
             this._selectionUpdated.next(update);
@@ -464,7 +499,8 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
 
     private _findSelection(
         update: SystemPortalUpdate,
-        tagsToPin?: string[]
+        tagsToPin?: string[],
+        tagsToAdd?: string[]
     ): SystemPortalSelectionUpdate {
         if (
             !update.hasPortal ||
@@ -530,9 +566,19 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
             }
         }
 
+        let addedTags = [] as SystemPortalSelectionTag[];
+        if (hasValue(tagsToAdd)) {
+            addedTags.push(
+                ...tagsToAdd.map((t, i) => ({
+                    ...createSelectionTag(bot, t),
+                    focusValue: i === 0,
+                }))
+            );
+        }
+
         const sortMode = this.tagSortMode;
         const inputTags = unionBy(
-            [...normalTags, ...maskTags],
+            [...addedTags, ...normalTags, ...maskTags],
             (t) => `${t.name}.${t.space}`
         );
         const tags = sortTags(inputTags);
@@ -546,6 +592,7 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         };
 
         let pinnedTags = [] as SystemPortalSelectionTag[];
+
         if (hasValue(tagsToPin)) {
             pinnedTags.push(
                 ...tagsToPin.map((t, i) => ({
@@ -817,20 +864,13 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
                 ret.prefix = tagPrefix;
             }
 
-            if ((recentTagsCounts.get(`${tag}.${space}`) ?? 0) > 1) {
-                const area = getSystemArea(system);
-                const prefix =
-                    hasValue(system) && hasValue(area)
-                        ? system.substring(area.length + 1)
-                        : null;
-                return {
-                    hint: prefix ?? getShortId(bot),
-                    ...ret,
-                };
-            }
-
+            const area = getSystemArea(system);
+            const prefix =
+                hasValue(system) && hasValue(area)
+                    ? system.substring(area.length + 1)
+                    : null;
             return {
-                hint: '',
+                hint: prefix ?? getShortId(bot),
                 ...ret,
             };
         }

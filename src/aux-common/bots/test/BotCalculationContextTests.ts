@@ -78,6 +78,7 @@ import {
     getOpenSystemPortalPane,
     getBotTheme,
     getMenuBotSubtype,
+    getBotMeshPositioningMode,
 } from '../BotCalculations';
 import {
     Bot,
@@ -2826,6 +2827,7 @@ export function botCalculationContextTests(
             ['left', 'left'],
             ['right', 'right'],
             ['floating', 'floating'],
+            ['floatingBillboard', 'floatingBillboard'],
             ['abc', 'top'],
         ];
 
@@ -3031,6 +3033,39 @@ export function botCalculationContextTests(
 
                     const calc = createPrecalculatedContext([bot]);
                     const a = getBotScaleMode(calc, bot);
+
+                    expect(a).toBe(expected);
+                }
+            );
+        });
+    });
+
+    describe('getBotMeshPositioningMode()', () => {
+        it('should default to center', () => {
+            const bot = createBot('bot');
+
+            const calc = createPrecalculatedContext([bot]);
+            const anchor = getBotMeshPositioningMode(calc, bot);
+
+            expect(anchor).toBe('center');
+        });
+
+        const cases = [
+            ['center', 'center'],
+            ['absolute', 'absolute'],
+            ['abc', 'center'],
+        ];
+        const tagCases = ['auxMeshPositioningMode', 'meshPositioningMode'];
+        describe.each(tagCases)('%s', (tag: string) => {
+            it.each(cases)(
+                'given %s it should return %s',
+                (anchor, expected) => {
+                    const bot = createBot('bot', {
+                        [tag]: anchor,
+                    });
+
+                    const calc = createPrecalculatedContext([bot]);
+                    const a = getBotMeshPositioningMode(calc, bot);
 
                     expect(a).toBe(expected);
                 }

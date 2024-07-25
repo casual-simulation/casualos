@@ -7,17 +7,16 @@ import {
     StudioAssignmentRole,
     StudioComIdRequest,
     LoomConfig,
+    HumeConfig,
 } from './RecordsStore';
 import {
     toBase64String,
     fromBase64String,
 } from '@casual-simulation/aux-common';
 import {
-    createRandomPassword,
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
-    verifyPasswordAgainstHashes,
-} from '@casual-simulation/crypto';
+    hashLowEntropyPasswordWithSalt,
+} from './InstrumentedHashHelpers';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import {
@@ -33,10 +32,12 @@ import { v4 as uuid } from 'uuid';
 import { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
+    AIHumeFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
     SubscriptionConfiguration,
     getComIdFeatures,
+    getHumeAiFeatures,
     getLoomFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
@@ -428,7 +429,7 @@ export class RecordsController {
             const passwordBytes = randomBytes(16);
             const password = fromByteArray(passwordBytes); // convert to human-readable string
             const salt = record.secretSalt;
-            const passwordHash = hashHighEntropyPasswordWithSalt(
+            const passwordHash = this.hashHighEntropyPasswordWithSalt(
                 password,
                 salt
             );
@@ -461,6 +462,14 @@ export class RecordsController {
                 errorReason: 'server_error',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    hashHighEntropyPasswordWithSalt(
+        sessionSecret: string,
+        sessionId: string
+    ): string {
+        return hashHighEntropyPasswordWithSalt(sessionSecret, sessionId);
     }
 
     /**
@@ -529,7 +538,7 @@ export class RecordsController {
                     }
                 } else {
                     // Check v1 hashes
-                    const hash = hashPasswordWithSalt(
+                    const hash = hashLowEntropyPasswordWithSalt(
                         password,
                         record.secretSalt
                     );
@@ -1072,7 +1081,7 @@ export class RecordsController {
         request: UpdateStudioRequest
     ): Promise<UpdateStudioResult> {
         try {
-            const { id, loomConfig, ...updates } = request.studio;
+            const { id, loomConfig, humeConfig, ...updates } = request.studio;
             const existingStudio = await this._store.getStudioById(
                 request.studio.id
             );
@@ -1111,6 +1120,10 @@ export class RecordsController {
 
             if (loomConfig) {
                 await this._store.updateStudioLoomConfig(final.id, loomConfig);
+            }
+
+            if (humeConfig) {
+                await this._store.updateStudioHumeConfig(final.id, humeConfig);
             }
 
             return {
@@ -1176,7 +1189,11 @@ export class RecordsController {
             let loomFeatures: StudioLoomFeaturesConfiguration = {
                 allowed: false,
             };
+            let humeFeatures: AIHumeFeaturesConfiguration = {
+                allowed: false,
+            };
             let loomConfig: LoomConfig = undefined;
+            let humeConfig: HumeConfig = undefined;
 
             if (
                 studio.subscriptionId &&
@@ -1200,6 +1217,19 @@ export class RecordsController {
                         studio.id
                     );
                 }
+
+                humeFeatures = getHumeAiFeatures(
+                    config,
+                    studio.subscriptionStatus,
+                    studio.subscriptionId,
+                    'studio'
+                );
+
+                if (humeFeatures.allowed) {
+                    humeConfig = await this._store.getStudioHumeConfig(
+                        studio.id
+                    );
+                }
             }
 
             return {
@@ -1217,8 +1247,14 @@ export class RecordsController {
                               appId: loomConfig.appId,
                           }
                         : undefined,
+                    humeConfig: humeConfig
+                        ? {
+                              apiKey: humeConfig.apiKey,
+                          }
+                        : undefined,
                     comIdFeatures: features,
                     loomFeatures,
+                    humeFeatures,
                 },
             };
         } catch (err) {
@@ -2228,6 +2264,12 @@ export interface UpdateStudioRequest {
          * If omitted, then the loom configuration will not be updated.
          */
         loomConfig?: LoomConfig;
+
+        /**
+         * The studio's hume configuration.
+         * If omitted, then the Hume configuration will not be updated.
+         */
+        humeConfig?: HumeConfig;
     };
 }
 
@@ -2296,6 +2338,11 @@ export interface StudioData {
     loomConfig?: Omit<LoomConfig, 'privateKey'>;
 
     /**
+     * The studio's hume configuration.
+     */
+    humeConfig?: Omit<HumeConfig, 'secretKey'>;
+
+    /**
      * The comId features that this studio has access to.
      */
     comIdFeatures: StudioComIdFeaturesConfiguration;
@@ -2304,6 +2351,11 @@ export interface StudioData {
      * The loom features that this studio has access to.
      */
     loomFeatures: StudioLoomFeaturesConfiguration;
+
+    /**
+     * The hume features that this studio has access to.
+     */
+    humeFeatures: AIHumeFeaturesConfiguration;
 }
 
 export interface GetStudioFailure {

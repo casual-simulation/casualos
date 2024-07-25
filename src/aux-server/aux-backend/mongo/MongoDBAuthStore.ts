@@ -13,6 +13,7 @@ import {
     ListedRecord,
     StoreListedStudio,
     StudioComIdRequest,
+    HumeConfig,
 } from '@casual-simulation/aux-records';
 import {
     AddressType,
@@ -111,6 +112,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             db.collection<MongoDBWebAuthnLoginRequest>(
                 WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
             );
+    }
+
+    getStudioHumeConfig(studioId: string): Promise<HumeConfig | null> {
+        throw new Error('Method not implemented.');
+    }
+
+    updateStudioHumeConfig(
+        studioId: string,
+        config: HumeConfig
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     getStudioLoomConfig(
