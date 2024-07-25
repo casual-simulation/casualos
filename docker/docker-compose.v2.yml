@@ -1,0 +1,48 @@
+version: '3.7'
+services:
+    server:
+        image: 'ghcr.io/casual-simulation/casualos:latest'
+        restart: always
+        ports:
+            - '80:3000'
+            - '3002:3002'
+            - '4567:4567'
+        depends_on:
+            - mongo
+            - redis
+            - cockroach
+        env_file:
+            - ./docker-compose.v2.env
+    minio:
+        image: minio/minio:latest
+        restart: always
+        command: minio server --console-address ":9001"
+        ports:
+            - '9000:9000'
+            - '9001:9001'
+        environment:
+            MINIO_ROOT_USER: 'minioadmin'
+            MINIO_ROOT_PASSWORD: 'minioadmin'
+            # MINIO_VOLUMES sets the storage volume or path to use for the MinIO server.
+            MINIO_VOLUMES: '/mnt/data'
+        volumes:
+            - minio-data:/mnt/data
+    redis:
+        image: 'redis:7.2'
+        restart: always
+        ports:
+            - '6379:6379'
+        volumes:
+            - redis-data:/data
+    cockroach:
+        image: 'cockroachdb/cockroach:v23.1.13'
+        restart: always
+        command: start-single-node --insecure
+        ports:
+            - '8080:8080'
+        volumes:
+            - cockroach-single:/cockroach/cockroach-data
+volumes:
+    cockroach-single:
+    redis-data:
+    minio-data:

@@ -16,28 +16,11 @@ services:
         volumes:
             - './conf/minio.env:/etc/config.env'
             - './services/data/minio:/mnt/data'
-    mongo:
-        image: 'mongo:latest'
-        restart: always
-        ports:
-            - '27017:27017'
-        volumes:
-            - 'mongodata:/data/db'
     redis:
         image: 'redis:latest'
         restart: always
         ports:
             - '6379:6379'
-    s3:
-        image: localstack/localstack:latest
-        environment:
-            - SERVICES=s3
-            - DEFAULT_REGION=us-east-1
-            - DATA_DIR=/tmp/s3-data
-        ports:
-            - '4566:4566'
-        volumes:
-            - './services/data/s3:/tmp/s3-data'
     livekit:
         image: livekit/livekit-server:v1.6.1
         command: --config /etc/livekit.yaml
