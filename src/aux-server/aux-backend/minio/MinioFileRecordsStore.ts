@@ -18,6 +18,7 @@ import {
 } from '@casual-simulation/aux-records';
 import * as Minio from 'minio';
 import { Subscription, SubscriptionLike } from 'rxjs';
+import { z } from 'zod';
 
 export const EMPTY_STRING_SHA256_HASH_HEX =
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
@@ -150,10 +151,6 @@ export class MinioFileRecordsStore
         }
 
         let policy = await this._tryGetBucketPolicy(bucketName);
-        console.log(
-            `[MinioFileRecordsStore] Bucket policy for ${bucketName}:`,
-            policy
-        );
 
         const PublicReadGetObjectStatement = {
             Sid: 'PublicReadGetObject',
@@ -198,10 +195,12 @@ export class MinioFileRecordsStore
         }
     }
 
-    private async _tryGetBucketPolicy(bucketName: string): Promise<any> {
+    private async _tryGetBucketPolicy(
+        bucketName: string
+    ): Promise<MinioPolicy> {
         try {
             const p = await this._client.getBucketPolicy(bucketName);
-            return JSON.parse(p);
+            return minioPolicySchema.parse(JSON.parse(p));
         } catch (err) {
             if (err instanceof Minio.S3Error) {
                 if (err.code === 'NoSuchBucketPolicy') {
@@ -639,6 +638,25 @@ export interface MinioNotification {
         userAgent: string;
     };
 }
+
+const minioPolicySchema = z.object({
+    Version: z.string(),
+    Statement: z.array(
+        z.object({
+            Sid: z.string().optional(),
+            Effect: z.string(),
+            Action: z.array(z.string()),
+            Resource: z.string(),
+            Condition: z.any().optional(),
+        })
+    ),
+});
+
+/**
+ * A policy that can be used with Minio.
+ * See https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html
+ */
+export type MinioPolicy = z.infer<typeof minioPolicySchema>;
 
 // eventVersion: '2.0',
 // [Server] [Backend] [Run]   eventSource: 'minio:s3',
