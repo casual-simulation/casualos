@@ -44,7 +44,8 @@ Make sure you have all the prerequisite tools installed:
             127.0.0.1 casualos.localhost
             ```
 6. Start related services:
-    1. `nerdctl compose -f docker/docker-compose.dev.yml up -d`
+    - If using `nerdctl`: `npm run nerdctl:dev`
+    - If using `docker`: `npm run docker:dev`
 7. Bootstrap the project.
     - `npm run bootstrap`
 8. Install commit hooks.
@@ -58,6 +59,9 @@ Most of them are NPM scripts, so they're easy to run.
 -   Install existing dependencies
     -   `npm run boostrap`
     -   This runs `pnpm install --frozen-lockfile` which means that the `pnpm-lock.yaml` file will not be updated. If there are packages that need to be added to the lockfile, you need to run `pnpm install` manually.
+-   Start dev docker services
+    -   If using `nerdctl`: `npm run nerdctl:dev`
+    -   If using `docker`: `npm run docker:dev`
 -   Build & Run in Watch Mode
     -   `npm run watch`
     -   This will trigger Vite to start in watch mode and run nodemon.
