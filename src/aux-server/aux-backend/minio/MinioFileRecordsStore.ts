@@ -646,7 +646,7 @@ const minioPolicySchema = z.object({
             Sid: z.string().optional(),
             Effect: z.string(),
             Action: z.array(z.string()),
-            Resource: z.string(),
+            Resource: z.union([z.string(), z.array(z.string())]),
             Condition: z.any().optional(),
         })
     ),
