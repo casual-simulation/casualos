@@ -2348,6 +2348,12 @@ export const EDITING_TAG: string = 'editingTag';
 export const EDITING_TAG_SPACE: string = 'editingTagSpace';
 
 /**
+ * The name of the tag that is used to enable or disable semantic highlighting in the code editor.
+ */
+
+export const SHOW_SCRIPT_ISSUES: string = 'showScriptIssues';
+
+/**
  * The name of the IMU portal.
  */
 export const IMU_PORTAL: string = 'imuPortal';
@@ -2746,6 +2752,8 @@ export const KNOWN_TAGS: string[] = [
     'menuItemHoverMode',
     'menuItemText',
     'menuItemShowSubmitWhenEmpty',
+
+    'showScriptIssues',
 
     'taskOutput',
     'taskError',
