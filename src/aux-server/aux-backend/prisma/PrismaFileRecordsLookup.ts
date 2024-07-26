@@ -235,6 +235,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                         recordName,
                         fileName,
                     },
+                    uploadedAt: { equals: null },
                 },
                 data: {
                     uploadedAt: new Date(),
