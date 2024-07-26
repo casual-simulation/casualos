@@ -7,6 +7,21 @@ export interface ModerationStore {
      * @param report The report to save.
      */
     saveUserInstReport(report: UserInstReport): Promise<void>;
+
+    /**
+     * Saves the given moderation job.
+     * @param job The job that should be saved.
+     */
+    saveModerationJob(job: ModerationJob): Promise<void>;
+
+    /**
+     * Attempts to find the most recent job of the given type.
+     * If no job is found, returns null.
+     * @param type The type of the job.
+     */
+    findMostRecentJobOfType(
+        type: ModerationJob['type']
+    ): Promise<ModerationJob | null>;
 }
 
 export interface UserInstReport {
@@ -82,3 +97,30 @@ export type ReportReason =
     | 'obscene'
     | 'illegal'
     | 'other';
+
+export interface ModerationJob {
+    /**
+     * The ID of the moderation job.
+     */
+    id: string;
+
+    /**
+     * The type of the moderation job.
+     */
+    type: 'files';
+
+    /**
+     * The ID of the s3 batch job that is being used to scan the files.
+     */
+    s3Id?: string;
+
+    /**
+     * The unix time in milliseconds that the job was created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The unix time in milliseconds that the job was last updated.
+     */
+    updatedAtMs: number;
+}

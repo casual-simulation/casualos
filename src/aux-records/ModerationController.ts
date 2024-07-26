@@ -1,5 +1,6 @@
 import { NotLoggedInError, ServerError } from '@casual-simulation/aux-common';
 import {
+    ModerationJob,
     ModerationStore,
     ReportReason,
     UserInstReport,
@@ -10,6 +11,10 @@ import { NotificationMessenger } from './NotificationMessenger';
 import { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import {
+    ModerationJobFilesFilter,
+    ModerationJobProvider,
+} from './ModerationJobProvider';
 
 const TRACE_NAME = 'ModerationController';
 
@@ -20,15 +25,18 @@ export class ModerationController {
     private _store: ModerationStore;
     private _config: ConfigurationStore;
     private _messenger: NotificationMessenger | null;
+    private _jobProvider: ModerationJobProvider;
 
     constructor(
         store: ModerationStore,
         config: ConfigurationStore,
-        messenger: NotificationMessenger | null
+        messenger: NotificationMessenger | null,
+        jobProvider: ModerationJobProvider | null
     ) {
         this._store = store;
         this._config = config;
         this._messenger = messenger;
+        this._jobProvider = jobProvider;
     }
 
     /**
@@ -100,6 +108,80 @@ export class ModerationController {
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[ModerationController] Failed to report inst:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    @traced(TRACE_NAME)
+    async scheduleModerationScans(): Promise<ScheduleModerationScansResult> {
+        try {
+            if (!this._jobProvider) {
+                console.warn(
+                    '[ModerationController] No job provider available to schedule moderation scans.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const config = await this._config.getModerationConfig();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const jobs: ModerationJob[] = [];
+
+            if (config.jobs?.files?.enabled) {
+                console.log(
+                    '[ModerationController] Starting file moderation job...'
+                );
+
+                let filter: ModerationJobFilesFilter = {};
+
+                if (config.jobs.files.fileExtensions) {
+                    filter.keyNameConstraint = {
+                        matchAnySuffix: config.jobs.files.fileExtensions,
+                    };
+                }
+
+                const lastFileJob = await this._store.findMostRecentJobOfType(
+                    'files'
+                );
+                if (lastFileJob) {
+                    filter.createdAfterMs = lastFileJob.createdAtMs;
+                }
+
+                const job = await this._jobProvider.startFilesJob(filter);
+
+                await this._store.saveModerationJob(job);
+
+                jobs.push(job);
+            }
+
+            return {
+                success: true,
+                jobs,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[ModerationController] Failed to start moderation jobs:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -191,4 +273,31 @@ export interface ReportInstFailure {
      * The issues with parsing the request.
      */
     issues?: ZodIssue[];
+}
+
+export type ScheduleModerationScansResult =
+    | ScheduleModerationScansSuccess
+    | ScheduleModerationScansFailure;
+
+export interface ScheduleModerationScansSuccess {
+    success: true;
+
+    /**
+     * The jobs that were started.
+     */
+    jobs: ModerationJob[];
+}
+
+export interface ScheduleModerationScansFailure {
+    success: false;
+
+    /**
+     * The error code for the failure.
+     */
+    errorCode: ServerError | 'not_supported';
+
+    /**
+     * The error message for the failure.
+     */
+    errorMessage: string;
 }

@@ -135,7 +135,11 @@ import {
     StoredUpdates,
 } from './websockets';
 import { PrivoConfiguration } from './PrivoConfiguration';
-import { ModerationStore, UserInstReport } from './ModerationStore';
+import {
+    ModerationJob,
+    ModerationStore,
+    UserInstReport,
+} from './ModerationStore';
 import {
     NotificationMessenger,
     RecordsNotification,
@@ -236,6 +240,8 @@ export class MemoryStore
         };
     };
 
+    private _moderationJobs: ModerationJob[] = [];
+
     get aiSloydMetrics(): AISloydMetrics[] {
         return this._aiSloydMetrics;
     }
@@ -316,6 +322,10 @@ export class MemoryStore
         return this._userInstReports;
     }
 
+    get moderationJobs() {
+        return this._moderationJobs;
+    }
+
     get recordsNotifications() {
         return this._recordNotifications;
     }
@@ -332,6 +342,8 @@ export class MemoryStore
         this.roles = {};
         this.roleAssignments = {};
     }
+
+    init?(): Promise<void>;
 
     /**
      * Constructs a deep clone of this memory store.
@@ -459,6 +471,29 @@ export class MemoryStore
             this._userInstReports[existingReportIndex] = report;
         } else {
             this._userInstReports.push(report);
+        }
+    }
+
+    async saveModerationJob(job: ModerationJob): Promise<void> {
+        const existingJobIndex = this._moderationJobs.findIndex(
+            (j) => j.id === job.id
+        );
+        if (existingJobIndex >= 0) {
+            this._moderationJobs[existingJobIndex] = job;
+        } else {
+            this._moderationJobs.push(job);
+        }
+    }
+
+    async findMostRecentJobOfType(
+        type: ModerationJob['type']
+    ): Promise<ModerationJob | null> {
+        const jobs = this._moderationJobs.filter((j) => j.type === type);
+        const mostRecent = orderBy(jobs, (j) => j.createdAtMs, 'desc');
+        if (mostRecent.length > 0) {
+            return mostRecent[0];
+        } else {
+            return null;
         }
     }
 
