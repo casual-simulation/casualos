@@ -282,7 +282,6 @@ export function watchSimulation(
 
     function updateShowScriptIssues(bot: Bot) {
         const showScriptIssues = getShowScriptIssues(null, bot);
-        console.log('showScriptIssues', showScriptIssues);
         if (showScriptIssues) {
             monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
                 {
@@ -481,7 +480,7 @@ export function watchSimulation(
 
     sub.add(
         simulation.watcher.stateUpdated.subscribe(async (update) => {
-            worker.postMessage({
+            worker?.postMessage({
                 __type: 'state',
                 simId: simulation.id,
                 update,
