@@ -108,13 +108,11 @@ import {
 let worker: Worker;
 
 export function setup() {
-    worker = new TypescriptWorker();
-
     // Tell monaco how to create the web workers
     (<any>self).MonacoEnvironment = {
         getWorker: function (moduleId: string, label: string) {
             if (label === 'typescript' || label === 'javascript') {
-                return worker;
+                return (worker = new TypescriptWorker());
             } else if (label === 'html') {
                 return new HtmlWorker();
             } else if (label === 'css') {
@@ -434,7 +432,7 @@ export function watchSimulation(
 
     sub.add(
         simulation.watcher.stateUpdated.subscribe(async (update) => {
-            worker.postMessage({
+            worker?.postMessage({
                 __type: 'state',
                 simId: simulation.id,
                 update,
