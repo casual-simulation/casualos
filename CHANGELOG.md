@@ -18,6 +18,7 @@
 -   Added support for [`stable-image-ultra`](https://platform.stability.ai/docs/api-reference#tag/Generate/paths/~1v2beta~1stable-image~1generate~1ultra/post), [`stable-image-core`](https://platform.stability.ai/docs/api-reference#tag/Generate/paths/~1v2beta~1stable-image~1generate~1core/post), [`sd3-medium`, `sd3-large`, `sd3-large-turbo`](https://platform.stability.ai/docs/api-reference#tag/Generate/paths/~1v2beta~1stable-image~1generate~1sd3/post) AI image generation models.
 -   Add support for [Minio](https://min.io/) for file records.
     -   Can be configured by using the `minio` property in `SERVER_CONFIG`.
+-   Added the ability to enable semantic error highlighting.
 
 ### :bug: Bug Fixes
 
