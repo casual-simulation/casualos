@@ -267,7 +267,52 @@ export function watchSimulation(
             }
         }
     }
-    function getShowScriptIssues(
+    function getScriptIssues(bot: Bot, tag: string): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            try {
+                // Retrieve the script content from the bot using the provided tag
+                const scriptContent = bot.tags[tag];
+
+                // Initialize an array to hold the identified issues
+                const issues: string[] = [];
+
+                // Perform analysis on the script content to identify issues
+                if (!scriptContent) {
+                    issues.push('Script content is empty.');
+                } else {
+                    // Example checks (these can be expanded based on actual requirements)
+                    if (scriptContent.includes('eval(')) {
+                        issues.push('Usage of eval() is not allowed.');
+                    }
+                    if (scriptContent.length > 1000) {
+                        issues.push('Script content is too long.');
+                    }
+                }
+
+                // Resolve the promise with the identified issues
+                resolve(issues);
+            } catch (error) {
+                // Reject the promise if an error occurs
+                reject(error);
+            }
+        });
+    }
+
+    function updateScriptIssues(bot: Bot, tag: string) {
+        getScriptIssues(bot, tag)
+            .then((issues) => {
+                if (issues.length > 0) {
+                    console.log('Major issues found:', issues);
+                } else {
+                    console.log('No major issues found.');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error.message);
+            });
+    }
+
+    function getSemanticHighlighting(
         context: BotCalculationContext,
         bot: Bot
     ): boolean {
@@ -280,8 +325,8 @@ export function watchSimulation(
         return value;
     }
 
-    function updateShowScriptIssues(bot: Bot) {
-        const showScriptIssues = getShowScriptIssues(null, bot);
+    function updateSemanticHighlighting(bot: Bot) {
+        const showScriptIssues = getSemanticHighlighting(null, bot);
         if (showScriptIssues) {
             monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
                 {
@@ -317,7 +362,10 @@ export function watchSimulation(
                 updateTheme(change.bot);
             }
             if (change.tags.has(SHOW_SCRIPT_ISSUES)) {
-                updateShowScriptIssues(change.bot);
+                updateSemanticHighlighting(change.bot);
+            }
+            if (change.tags.has('script')) {
+                updateScriptIssues(change.bot, 'script');
             }
         })
     );
