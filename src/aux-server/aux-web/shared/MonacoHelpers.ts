@@ -76,6 +76,7 @@ import {
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
 import {
+    BotCalculationContext,
     del,
     edit,
     edits,
@@ -83,6 +84,7 @@ import {
     isModule,
     mergeVersions,
     preserve,
+    SHOW_SCRIPT_ISSUES,
     TagEditOp,
 } from '@casual-simulation/aux-common/bots';
 import { Color } from '@casual-simulation/three';
@@ -265,11 +267,57 @@ export function watchSimulation(
             }
         }
     }
+    function getShowScriptIssues(
+        context: BotCalculationContext,
+        bot: Bot
+    ): boolean {
+        const value = calculateBooleanTagValue(
+            context,
+            bot,
+            SHOW_SCRIPT_ISSUES,
+            false
+        );
+        return value;
+    }
+
+    function updateShowScriptIssues(bot: Bot) {
+        const showScriptIssues = getShowScriptIssues(null, bot);
+        if (showScriptIssues) {
+            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
+                {
+                    noSemanticValidation: false,
+                    noSyntaxValidation: false,
+                }
+            );
+            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+                {
+                    noSemanticValidation: false,
+                    noSyntaxValidation: false,
+                }
+            );
+        } else {
+            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
+                {
+                    noSemanticValidation: true,
+                    noSyntaxValidation: false,
+                }
+            );
+            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+                {
+                    noSemanticValidation: true,
+                    noSyntaxValidation: false,
+                }
+            );
+        }
+    }
 
     sub.add(
         userBotTagsChanged(simulation).subscribe((change) => {
             if (change.tags.has('theme')) {
                 updateTheme(change.bot);
+            }
+            if (change.tags.has(SHOW_SCRIPT_ISSUES)) {
+                updateShowScriptIssues(change.bot);
             }
         })
     );
