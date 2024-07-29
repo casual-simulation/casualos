@@ -33,6 +33,7 @@ export * from './AIImageInterface';
 export * from './OpenAIImageInterface';
 export * from './StabilityAIImageInterface';
 export * from './GoogleAIChatInterface';
+export * from './AnthropicAIChatInterface';
 
 export * from './ConfigurationStore';
 export * from './SubscriptionConfiguration';

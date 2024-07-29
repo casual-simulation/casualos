@@ -1,8 +1,34 @@
 # CasualOS Changelog
 
+## V3.3.8
+
+#### Date: 7/29/2024
+
+### :rocket: Features
+
+-   Improved `SERVER_CONFIG` to allow customizing the OpenTelemetry resource.
+-   Improved the server to record metrics for how long HTTP and Websocket requests take to complete and also the status they have when finishing.
+-   Tags in the "recent tags" list in the `systemPortal` will now always show bot system.
+-   Added the `meshPositioningMode` tag to prevent CasualOS from repositioning meshes around the center of the bot.
+    -   There are two possible values:
+        -   `center` - The mesh will be positioned so it is centered around the bot's center. (Default)
+        -   `absolute` - The mesh won't be repositioned. It will retain the position configured in the GLTF.
+-   Added support for [Anthropic AI Chat models](https://docs.anthropic.com/en/docs/about-claude/models) to `ai.chat()` and `ai.stream.chat()`.
+    -   `SERVER_CONFIG` needs to be configured with an Anthropic API Key and allowed `anthropic` models.
+-   Added support for [`stable-image-ultra`](https://platform.stability.ai/docs/api-reference#tag/Generate/paths/~1v2beta~1stable-image~1generate~1ultra/post), [`stable-image-core`](https://platform.stability.ai/docs/api-reference#tag/Generate/paths/~1v2beta~1stable-image~1generate~1core/post), [`sd3-medium`, `sd3-large`, `sd3-large-turbo`](https://platform.stability.ai/docs/api-reference#tag/Generate/paths/~1v2beta~1stable-image~1generate~1sd3/post) AI image generation models.
+-   Add support for [Minio](https://min.io/) for file records.
+    -   Can be configured by using the `minio` property in `SERVER_CONFIG`.
+-   Added the ability to enable semantic error highlighting.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where an older version of session key hashes would be used when refreshing a session, leading to slowdowns when validating session keys.
+-   Fixed an issue where lines wouldn't draw to the center of the target bot when the bot was smaller than the arrow head length.
+-   Fixed an issue where the SystemPortal didn't support creating listeners from the "Add Tag" dialog.
+
 ## V3.3.7
 
-#### Date: 7/16/2024
+#### Date: 7/18/2024
 
 ### :rocket: Features
 
@@ -61,6 +87,7 @@
 -   Fixed an issue where it was impossible to close the map portal from inside `@onInstJoined`.
 -   Fixed an issue where selecting an option in the BIOS would fail to actually show the selected option.
 -   Fixed an issue where the arrow on floating labels would clip into the bot if the bot had a scale > 1.
+-   Fixed an issue where portal bots would not appear in the code editor autocomplete.
 
 ## V3.3.6
 

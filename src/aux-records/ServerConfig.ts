@@ -77,6 +77,86 @@ const s3Schema = z.object({
         .optional(),
 });
 
+const minioSchema = z.object({
+    endpoint: z
+        .string()
+        .describe('The hostname or IP Address of the Minio server.')
+        .min(1),
+
+    port: z
+        .number()
+        .describe(
+            'The port that the Minio server is running on. Defaults to 80 for non-SSL, and 443 for SSL.'
+        )
+        .int()
+        .positive()
+        .optional(),
+
+    useSSL: z
+        .boolean()
+        .describe(
+            'Whether to use SSL when connecting to the Minio server. Defaults to true.'
+        )
+        .optional()
+        .default(true),
+
+    accessKey: z
+        .string()
+        .describe(
+            'The access key that should be used to connect to the Minio server.'
+        )
+        .min(1),
+
+    secretKey: z
+        .string()
+        .describe(
+            'The secret key that should be used to connect to the Minio server.'
+        )
+        .min(1),
+
+    region: z
+        .string()
+        .describe(
+            'The region of the file records and websocket message buckets.'
+        )
+        .min(1)
+        .optional()
+        .default('us-east-1'),
+
+    filesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that file records should be placed in.'
+        )
+        .min(1),
+
+    defaultFilesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that file records were originally placed in. This is used for backwards compatibility for file records that were uploaded before changing the filesBucket was supported. If not specified, then filesBucket is used.'
+        )
+        .min(1)
+        .optional(),
+
+    publicFilesUrl: z
+        .string()
+        .describe(
+            'The URL that public files should be accessed at. If specified, then public file records will point to this URL instead of the default S3 URL. If not specified, then the default URL will be used. ' +
+                'Useful for adding CDN support for public files. Private file records are unaffected by this setting. ' +
+                'File Record URLs will be formatted as: "{publicFilesUrl}/{recordName}/{filename}".'
+        )
+        .nonempty()
+        .optional(),
+
+    messagesBucket: z
+        .string()
+        .describe(
+            'The name of the bucket that large websocket messages should be placed in.'
+        )
+        .min(1)
+        .optional(),
+});
+
 const livekitSchema = z.object({
     apiKey: z
         .string()
@@ -447,6 +527,13 @@ const googleAiSchema = z.object({
         .nonempty(),
 });
 
+const anthropicAiSchema = z.object({
+    apiKey: z
+        .string()
+        .describe('The Anthropic AI API Key that should be used.')
+        .min(1),
+});
+
 const blockadeLabsSchema = z.object({
     apiKey: z
         .string()
@@ -485,7 +572,7 @@ const aiSchema = z.object({
     chat: z
         .object({
             provider: z
-                .enum(['openai', 'google'])
+                .enum(['openai', 'google', 'anthropic'])
                 .describe(
                     'The provider that should be used by default for Chat AI request models that dont have an associated provider.'
                 ),
@@ -500,7 +587,9 @@ const aiSchema = z.object({
                     z.union([
                         z.string().nonempty(),
                         z.object({
-                            provider: z.enum(['openai', 'google']).optional(),
+                            provider: z
+                                .enum(['openai', 'google', 'anthropic'])
+                                .optional(),
                             model: z.string().nonempty(),
                         }),
                     ])
@@ -722,6 +811,14 @@ const telemetrySchema = z.object({
         .describe('Options for instrumentation')
         .optional()
         .default({}),
+
+    resource: z
+        .record(z.string())
+        .describe(
+            'The resource that should be used. See https://opentelemetry.io/docs/specs/semconv/resource/ for more information.'
+        )
+        .optional()
+        .default({}),
 });
 
 export const serverConfigSchema = z.object({
@@ -730,6 +827,13 @@ export const serverConfigSchema = z.object({
             'S3 Configuration Options. If omitted, then S3 cannot be used for file storage.'
         )
         .optional(),
+
+    minio: minioSchema
+        .describe(
+            'Minio Configuration Options. If omitted, then Minio cannot be used for file storage.'
+        )
+        .optional(),
+
     apiGateway: apiGatewaySchema
         .describe(
             'AWS API Gateway configuration options. If omitted, then inst records cannot be used on AWS Lambda.'
@@ -793,6 +897,11 @@ export const serverConfigSchema = z.object({
     googleai: googleAiSchema
         .describe(
             'Google AI options. If omitted, then it will not be possible to use Google AI (i.e. Gemini)'
+        )
+        .optional(),
+    anthropicai: anthropicAiSchema
+        .describe(
+            'Anthropic AI options. If omitted, then it will not be possible to use Anthropic AI (i.e. Claude).'
         )
         .optional(),
     humeai: humeAiSchema

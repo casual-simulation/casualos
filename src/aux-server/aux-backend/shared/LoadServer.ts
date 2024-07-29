@@ -83,7 +83,9 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.useRedisCache();
     }
 
-    if (config.prisma && config.s3) {
+    if (config.prisma && config.minio) {
+        builder.usePrismaWithMinio();
+    } else if (config.prisma && config.s3) {
         builder.usePrismaWithS3();
     } else if (config.prisma && config.mongodb) {
         builder.usePrismaWithMongoDBFileStore();

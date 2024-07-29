@@ -81,7 +81,13 @@ import {
 import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import { LoomController } from './LoomController';
-import { SpanKind, Tracer, trace } from '@opentelemetry/api';
+import {
+    SpanKind,
+    Tracer,
+    ValueType,
+    metrics,
+    trace,
+} from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
     SEMATTRS_ENDUSER_ID,
@@ -461,6 +467,8 @@ export interface Route<T> {
      */
     allowedOrigins?: Set<string> | true | 'account' | 'api';
 }
+
+const RECORDS_SERVER_METER = 'RecordsServer';
 
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
@@ -3423,10 +3431,41 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer', {
-        kind: SpanKind.SERVER,
-        root: true,
-    })
+    @traced(
+        'RecordsServer',
+        {
+            kind: SpanKind.SERVER,
+            root: true,
+        },
+        {
+            histogram: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.http.duration',
+                options: {
+                    description:
+                        'A distribution of the HTTP server request durations.',
+                    unit: 'miliseconds',
+                    valueType: ValueType.INT,
+                },
+                attributes: (
+                    [request]: [GenericHttpRequest],
+                    ret: GenericHttpResponse
+                ) => ({
+                    [SEMATTRS_HTTP_METHOD]: request.method,
+                    [SEMATTRS_HTTP_HOST]: request.headers.host,
+                    ['http.origin']: request.headers.origin,
+                    ['http.status_code']: ret.statusCode,
+                }),
+            },
+            errorCounter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.http.errors',
+                options: {
+                    description: 'A count of the HTTP server errors.',
+                },
+            },
+        }
+    )
     @traceHttpResponse()
     async handleHttpRequest(
         request: GenericHttpRequest
@@ -3659,9 +3698,41 @@ export class RecordsServer {
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    @traced('RecordsServer', {
-        kind: SpanKind.SERVER,
-    })
+    @traced(
+        'RecordsServer',
+        {
+            kind: SpanKind.SERVER,
+        },
+        {
+            histogram: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.ws.duration',
+                options: {
+                    description:
+                        'A distribution of the HTTP server request durations.',
+                    unit: 'miliseconds',
+                    valueType: ValueType.INT,
+                },
+                attributes: ([request]: [GenericWebsocketRequest], ret) => ({
+                    'websocket.type': request.type,
+                    'request.connectionId': request.connectionId,
+                    'http.origin': request.origin,
+                }),
+            },
+            errorCounter: {
+                meter: RECORDS_SERVER_METER,
+                name: 'records.ws.errors',
+                options: {
+                    description: 'A count of the Websocket server errors.',
+                },
+                attributes: ([request]: [GenericWebsocketRequest], ret) => ({
+                    'websocket.type': request.type,
+                    'request.connectionId': request.connectionId,
+                    'http.origin': request.origin,
+                }),
+            },
+        }
+    )
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
         if (!this._websocketController) {
             return;

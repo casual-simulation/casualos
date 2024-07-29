@@ -41,6 +41,7 @@ import {
     LoomController,
     ServerConfig,
     RedisServerOptions,
+    AnthropicAIChatInterface,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -160,6 +161,7 @@ import {
     SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
+import { MinioFileRecordsStore } from 'aux-backend/minio/MinioFileRecordsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -254,6 +256,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _openAIChatInterface: AIChatInterface = null;
     private _googleAIChatInterface: AIChatInterface = null;
+    private _anthropicAIChatInterface: AnthropicAIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
@@ -560,6 +563,7 @@ export class ServerBuilder implements SubscriptionLike {
                     fileLookup,
                     mongodb.fileUploadUrl as string
                 );
+                this._ensureFileStoreInit();
             },
         });
         return this;
@@ -614,6 +618,65 @@ export class ServerBuilder implements SubscriptionLike {
             undefined,
             s3.publicFilesUrl
         );
+        this._ensureFileStoreInit();
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
+
+        return this;
+    }
+
+    usePrismaWithMinio(
+        options: Pick<
+            ServerConfig,
+            'prisma' | 'minio' | 'subscriptions' | 'moderation'
+        > = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Prisma with Minio.');
+        if (!options.prisma) {
+            throw new Error('Prisma options must be provided.');
+        }
+
+        if (!options.minio) {
+            throw new Error('Minio options must be provided.');
+        }
+
+        const prisma = options.prisma;
+        const minio = options.minio;
+
+        const prismaClient = this._ensurePrisma(options);
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
+        this._metricsStore = new PrismaMetricsStore(
+            prismaClient,
+            this._configStore
+        );
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        this._filesStore = new MinioFileRecordsStore(
+            {
+                endPoint: minio.endpoint,
+                port: minio.port,
+                accessKey: minio.accessKey,
+                secretKey: minio.secretKey,
+                useSSL: minio.useSSL,
+                region: minio.region,
+            },
+            minio.filesBucket,
+            minio.defaultFilesBucket ?? minio.filesBucket,
+            filesLookup,
+            minio.publicFilesUrl
+        );
+        this._ensureFileStoreInit();
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
 
@@ -669,6 +732,7 @@ export class ServerBuilder implements SubscriptionLike {
                     filesLookup,
                     mongodb.fileUploadUrl as string
                 );
+                this._ensureFileStoreInit();
             },
         });
 
@@ -1104,6 +1168,7 @@ export class ServerBuilder implements SubscriptionLike {
             | 'blockadeLabs'
             | 'stabilityai'
             | 'googleai'
+            | 'anthropicai'
             | 'humeai'
             | 'sloydai'
         > = this._options
@@ -1124,6 +1189,13 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Using Google AI Chat.');
             this._googleAIChatInterface = new GoogleAIChatInterface({
                 apiKey: options.googleai.apiKey,
+            });
+        }
+
+        if (options.anthropicai) {
+            console.log('[ServerBuilder] Using Anthropic AI Chat.');
+            this._anthropicAIChatInterface = new AnthropicAIChatInterface({
+                apiKey: options.anthropicai.apiKey,
             });
         }
 
@@ -1184,6 +1256,7 @@ export class ServerBuilder implements SubscriptionLike {
                 interfaces: {
                     openai: this._openAIChatInterface,
                     google: this._googleAIChatInterface,
+                    anthropic: this._anthropicAIChatInterface,
                 },
                 options: {
                     defaultModel: options.ai.chat.defaultModel,
@@ -1673,6 +1746,17 @@ export class ServerBuilder implements SubscriptionLike {
             );
         } else {
             return configStore;
+        }
+    }
+
+    private _ensureFileStoreInit() {
+        if (this._filesStore?.init) {
+            this._initActions.push({
+                priority: 20,
+                action: async () => {
+                    await this._filesStore?.init();
+                },
+            });
         }
     }
 }

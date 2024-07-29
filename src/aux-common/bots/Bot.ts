@@ -976,12 +976,12 @@ export type BotSubShape =
 export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 
 /**
- * Defines the possible positioning modes that a bot can have.
+ * Defines the possible positioning modes that a bot's mesh can have.
  *
- * "stack" means the bot is able to stack with other bots.
- * "absolute" means the bot will ignore other bots.
+ * "center" means the mesh will be repositioned to be placed in the center of the bot. (default)
+ * "absolute" means the mesh will be placed in its original position.
  */
-export type BotPositioningMode = 'stack' | 'absolute';
+export type BotMeshPositioningMode = 'center' | 'absolute';
 
 /**
  * Defines the possible scaling modes that a bot's mesh can have.
@@ -1190,6 +1190,11 @@ export const DEFAULT_LABEL_ALIGNMENT: BotLabelAlignment = 'center';
  * The default bot scale mode.
  */
 export const DEFAULT_SCALE_MODE: BotScaleMode = 'fit';
+
+/**
+ * The default bot mesh positioning mode.
+ */
+export const DEFAULT_MESH_POSITIONING_MODE: BotMeshPositioningMode = 'center';
 
 /**
  * The default bot orientation mode.
@@ -2343,6 +2348,12 @@ export const EDITING_TAG: string = 'editingTag';
 export const EDITING_TAG_SPACE: string = 'editingTagSpace';
 
 /**
+ * The name of the tag that is used to enable or disable semantic highlighting in the code editor.
+ */
+
+export const SHOW_SCRIPT_ISSUES: string = 'showSemanticHighlighting';
+
+/**
  * The name of the IMU portal.
  */
 export const IMU_PORTAL: string = 'imuPortal';
@@ -2723,6 +2734,7 @@ export const KNOWN_TAGS: string[] = [
     'formLightGroundColor',
     'formBuildStep',
     'formLDrawPartsAddress',
+    'meshPositioningMode',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
@@ -2740,6 +2752,8 @@ export const KNOWN_TAGS: string[] = [
     'menuItemHoverMode',
     'menuItemText',
     'menuItemShowSubmitWhenEmpty',
+
+    'showSemanticHighlighting',
 
     'taskOutput',
     'taskError',
