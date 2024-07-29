@@ -584,7 +584,7 @@ export class WebsocketController {
                             connection.branch
                         ));
 
-                    if (branch.temporary) {
+                    if (branch?.temporary) {
                         await this._temporaryStore.deleteBranch(
                             connection.recordName,
                             connection.inst,
