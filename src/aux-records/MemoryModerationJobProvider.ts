@@ -1,6 +1,8 @@
 import {
+    ModerationFileScan,
     ModerationJobFilesFilter,
     ModerationJobProvider,
+    ScanFileOptions,
 } from './ModerationJobProvider';
 import { ModerationJob } from './ModerationStore';
 import { v4 as uuid } from 'uuid';
@@ -27,6 +29,14 @@ export class MemoryModerationJobProvider implements ModerationJobProvider {
         };
         this._jobs.push(job);
         return job;
+    }
+
+    async scanFile(options: ScanFileOptions): Promise<ModerationFileScan> {
+        return {
+            recordName: options.recordName,
+            fileName: options.fileName,
+            labels: [],
+        };
     }
 }
 

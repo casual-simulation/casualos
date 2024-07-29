@@ -2,6 +2,8 @@ import { StudioComIdRequest } from './RecordsStore';
 import { UserInstReport } from './ModerationStore';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
+import { ModerationFileScanLabel } from 'ModerationJobProvider';
+import { ResourceKinds } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for a class that is able to send records notifications.
@@ -58,6 +60,7 @@ export class MultiNotificationMessenger implements NotificationMessenger {
 
 export type RecordsNotification =
     | UserInstReportNotification
+    | ModerationResourceScanNotification
     | StudioComIdRequestNotification;
 
 /**
@@ -100,6 +103,47 @@ export interface UserInstReportNotification extends ResourceNotification {
     report: UserInstReport;
 }
 
+/**
+ * Defines a notification that is for a user inst report.
+ */
+export interface ModerationResourceScanNotification
+    extends ResourceNotification {
+    /**
+     * The kind of the resource that was scanned.
+     */
+    resource: ResourceKinds;
+
+    /**
+     * The name of the record that the resource was scanned in.
+     */
+    recordName: string | null;
+
+    /**
+     * The ID of the resource that was scanned.
+     */
+    resourceId: string;
+
+    /**
+     * The labels that were detected in the file.
+     */
+    labels: ModerationFileScanLabel[];
+
+    /**
+     * The time of the scan in unix time in milliseconds.
+     */
+    timeMs: number;
+
+    /**
+     * The message that should be sent with the notification.
+     */
+    message: string;
+
+    /**
+     * The label that caused the resource to be banned.
+     */
+    bannedLabel?: ModerationFileScanLabel;
+}
+
 export interface StudioComIdRequestNotification extends ResourceNotification {
     resource: 'studio_com_id_request';
 
@@ -109,7 +153,11 @@ export interface StudioComIdRequestNotification extends ResourceNotification {
     request: StudioComIdRequest;
 }
 
-export type NotificationResourceActions = 'created' | 'updated' | 'deleted';
+export type NotificationResourceActions =
+    | 'created'
+    | 'updated'
+    | 'deleted'
+    | 'scanned';
 
 export const slackSchema = z.object({
     webhookUrl: z

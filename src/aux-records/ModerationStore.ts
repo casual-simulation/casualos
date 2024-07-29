@@ -22,6 +22,12 @@ export interface ModerationStore {
     findMostRecentJobOfType(
         type: ModerationJob['type']
     ): Promise<ModerationJob | null>;
+
+    /**
+     * Saves the result of a file moderation scan.
+     * @param result The result to save.
+     */
+    saveFileModerationResult(result: ModerationFileScanResult): Promise<void>;
 }
 
 export interface UserInstReport {
@@ -123,4 +129,63 @@ export interface ModerationJob {
      * The unix time in milliseconds that the job was last updated.
      */
     updatedAtMs: number;
+}
+
+export interface ModerationFileScanResult {
+    /**
+     * The ID of the scan.
+     */
+    id: string;
+
+    /**
+     * The ID of the job that the scan is associated with.
+     */
+    jobId: string | null;
+
+    /**
+     * The name of the record that the file was stored inside.
+     */
+    recordName: string;
+
+    /**
+     * The name of the file.
+     */
+    fileName: string;
+
+    /**
+     * Whether the file has detected labels that are banned.
+     */
+    appearsToMatchBannedContent: boolean;
+
+    /**
+     * The labels that were detected in the file.
+     */
+    labels: ModerationFileScanResultLabel[];
+
+    /**
+     * The unix time in milliseconds that the scan was created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The unix time in milliseconds that the scan was last updated.
+     */
+    updatedAtMs: number;
+}
+
+export interface ModerationFileScanResultLabel {
+    /**
+     * The name of the label.
+     */
+    name: string;
+
+    /**
+     * The category of the label.
+     */
+    category?: string;
+
+    /**
+     * The confidence of the label.
+     */
+    confidence: number;
 }

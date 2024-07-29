@@ -136,6 +136,7 @@ import {
 } from './websockets';
 import { PrivoConfiguration } from './PrivoConfiguration';
 import {
+    ModerationFileScanResult,
     ModerationJob,
     ModerationStore,
     UserInstReport,
@@ -241,6 +242,7 @@ export class MemoryStore
     };
 
     private _moderationJobs: ModerationJob[] = [];
+    private _moderationFileResults: ModerationFileScanResult[] = [];
 
     get aiSloydMetrics(): AISloydMetrics[] {
         return this._aiSloydMetrics;
@@ -324,6 +326,10 @@ export class MemoryStore
 
     get moderationJobs() {
         return this._moderationJobs;
+    }
+
+    get moderationFileResults() {
+        return this._moderationFileResults;
     }
 
     get recordsNotifications() {
@@ -494,6 +500,19 @@ export class MemoryStore
             return mostRecent[0];
         } else {
             return null;
+        }
+    }
+
+    async saveFileModerationResult(
+        result: ModerationFileScanResult
+    ): Promise<void> {
+        const existingFileIndex = this._moderationFileResults.findIndex(
+            (r) => r.id === result.id
+        );
+        if (existingFileIndex >= 0) {
+            this._moderationFileResults[existingFileIndex] = result;
+        } else {
+            this._moderationFileResults.push(result);
         }
     }
 
