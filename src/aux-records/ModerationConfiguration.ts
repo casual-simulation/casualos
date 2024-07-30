@@ -62,7 +62,60 @@ export const moderationSchema = z.object({
                         )
                         .describe(
                             'The labels that should be banned. If a file contains any of these labels, it will be marked as banned. Additionally, a notification will be sent '
-                        ),
+                        )
+                        .optional()
+                        .default([
+                            {
+                                label: 'Explicit',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Non-Explicit Nudity of Intimate parts and Kissing',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Swimwear or Underwear',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Violence',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Visually Disturbing',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Drugs & Tobacco',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Alcohol',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Rude Gestures',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Gambling',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                            {
+                                label: 'Hate Symbols',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                        ]),
                 })
                 .describe('Options for moderating files.'),
         })
