@@ -257,8 +257,9 @@ export class ModerationController {
                 if (label.label) {
                     bannedLabel = scan.labels.find(
                         (l) =>
-                            l.name === label.label &&
-                            l.confidence >= label.threshold
+                            l.name.localeCompare(label.label, undefined, {
+                                sensitivity: 'base',
+                            }) === 0 && l.confidence >= label.threshold
                     );
                 }
 

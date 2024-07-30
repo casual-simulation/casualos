@@ -781,5 +781,125 @@ describe('ModerationController', () => {
                 },
             ]);
         });
+
+        it('should ignore case with labels', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+                jobs: {
+                    files: {
+                        enabled: true,
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
+                        bannedLabels: [
+                            {
+                                label: 'Label1',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const scanFile = (jobProvider.scanFile = jest.fn<
+                Promise<ModerationFileScan>,
+                any[]
+            >());
+            scanFile.mockResolvedValue({
+                recordName,
+                fileName: 'file1.png',
+                labels: [
+                    {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    {
+                        name: 'label2',
+                        confidence: 0.6,
+                    },
+                ],
+            });
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                result: {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: true,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                },
+            });
+
+            expect(store.moderationFileResults).toEqual([
+                {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: true,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                },
+            ]);
+
+            expect(store.recordsNotifications).toEqual([
+                {
+                    resource: 'file',
+                    action: 'scanned',
+                    recordName: recordName,
+                    resourceId: 'file1.png',
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    timeMs: 123,
+                    bannedLabel: {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    message: `Banned label (label1) detected in file (${recordName}/file1.png).`,
+                },
+            ]);
+        });
     });
 });
