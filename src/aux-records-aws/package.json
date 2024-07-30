@@ -46,6 +46,7 @@
         "@aws-sdk/client-rekognition": "^3.620.1",
         "@casual-simulation/aux-common": "^3.3.7",
         "@casual-simulation/aux-records": "^3.3.7",
+        "uuid": "^8.3.2",
         "axios": "1.6.2"
     }
 }

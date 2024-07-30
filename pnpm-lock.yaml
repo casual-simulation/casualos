@@ -759,6 +759,9 @@ importers:
       axios:
         specifier: 1.6.2
         version: 1.6.2
+      uuid:
+        specifier: ^8.3.2
+        version: 8.3.2
 
   src/aux-redirector:
     dependencies:
