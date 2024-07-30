@@ -907,7 +907,7 @@ export class ServerBuilder implements SubscriptionLike {
             !(this._filesStore instanceof S3FileRecordsStore)
         ) {
             throw new Error(
-                'S3 file store must be configured before using Rekognition moderation.'
+                'S3 must be the configured file store in order to use Rekognition moderation.'
             );
         }
 
