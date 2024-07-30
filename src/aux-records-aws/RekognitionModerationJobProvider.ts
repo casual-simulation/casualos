@@ -68,6 +68,11 @@ export interface RekognitionModerationFileJobOptions {
     roleArn: string;
 
     /**
+     * The ARN of the custom moderation model that should be used.
+     */
+    projectVersionArn?: string;
+
+    /**
      * The tags that should be applied to the job.
      */
     tags?: {
@@ -174,6 +179,10 @@ export class RekognitionModerationJobProvider implements ModerationJobProvider {
                 },
             },
         };
+
+        if (typeof this._filesOptions.projectVersionArn === 'string') {
+            args.ProjectVersion = this._filesOptions.projectVersionArn;
+        }
 
         if (typeof options.minConfidence === 'number') {
             args.MinConfidence = options.minConfidence;

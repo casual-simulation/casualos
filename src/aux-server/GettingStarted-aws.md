@@ -135,6 +135,7 @@ Use the following to configure the records system:
 -   `MODERATION_JOB_LAMBDA_FUNCTION_ARN`: The ARN of the lambda function that should be triggered to scan files as part of a job.
 -   `MODERATION_JOB_ROLE_ARN`: The ARN of the role that should be used for the job.
 -   `MODERATION_JOB_PRIORITY`: The integer priority that moderation jobs should have. Higher values means higher priority.
+-   `MODERATION_PROJECT_VERSION`: The ARN of the AWS Rekognition project that should be used for moderation.
 
 #### Policies Customization
 

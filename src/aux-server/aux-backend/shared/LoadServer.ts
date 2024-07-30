@@ -20,6 +20,8 @@ export const MODERATION_JOB_LAMBDA_FUNCTION_ARN =
     process.env.MODERATION_JOB_LAMBDA_FUNCTION_ARN;
 export const MODERATION_JOB_ROLE_ARN = process.env.MODERATION_JOB_ROLE_ARN;
 export const MODERATION_JOB_PRIORITY = process.env.MODERATION_JOB_PRIORITY;
+export const MODERATION_PROJECT_VERSION =
+    process.env.MODERATION_PROJECT_VERSION;
 
 /**
  * Creates a new server builder that uses environment variables that are specific to the serverless environment.
@@ -62,6 +64,7 @@ export function constructServerlessAwsServerBuilder() {
                     priority: MODERATION_JOB_PRIORITY
                         ? parseInt(MODERATION_JOB_PRIORITY)
                         : undefined,
+                    projectVersionArn: MODERATION_PROJECT_VERSION,
                 },
             },
         };

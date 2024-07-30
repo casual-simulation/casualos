@@ -858,6 +858,14 @@ const rekognitionSchema = z.object({
                 )
                 .min(1),
 
+            projectVersionArn: z
+                .string()
+                .describe(
+                    'The ARN of the custom moderation model that should be used. If omitted, then the default model is used.'
+                )
+                .min(1)
+                .optional(),
+
             tags: z
                 .array(
                     z.object({
