@@ -14,6 +14,13 @@ export const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 export const REGION = process.env.AWS_REGION;
 export const WEBSOCKET_URL = process.env.WEBSOCKET_URL;
 
+export const MODERATION_JOB_REPORT_BUCKET =
+    process.env.MODERATION_JOB_REPORT_BUCKET;
+export const MODERATION_JOB_LAMBDA_FUNCTION_ARN =
+    process.env.MODERATION_JOB_LAMBDA_FUNCTION_ARN;
+export const MODERATION_JOB_ROLE_ARN = process.env.MODERATION_JOB_ROLE_ARN;
+export const MODERATION_JOB_PRIORITY = process.env.MODERATION_JOB_PRIORITY;
+
 /**
  * Creates a new server builder that uses environment variables that are specific to the serverless environment.
  * See GettingStarted-aws.md for more information.
@@ -43,6 +50,23 @@ export function constructServerlessAwsServerBuilder() {
             endpoint: DEVELOPMENT ? 'http://localhost:4001' : WEBSOCKET_URL,
         },
     };
+
+    if (MODERATION_JOB_REPORT_BUCKET) {
+        dynamicConfig.rekognition = {
+            moderation: {
+                files: {
+                    sourceBucket: FILES_BUCKET,
+                    reportBucket: MODERATION_JOB_REPORT_BUCKET,
+                    lambdaFunctionArn: MODERATION_JOB_LAMBDA_FUNCTION_ARN,
+                    roleArn: MODERATION_JOB_ROLE_ARN,
+                    priority: MODERATION_JOB_PRIORITY
+                        ? parseInt(MODERATION_JOB_PRIORITY)
+                        : undefined,
+                },
+            },
+        };
+    }
+
     return constructServerBuilder(dynamicConfig);
 }
 
@@ -161,6 +185,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
 
     if (config.webauthn) {
         builder.useWebAuthn();
+    }
+
+    if (config.rekognition?.moderation && config.s3) {
+        builder.useRekognitionModeration();
     }
 
     builder.useAutomaticPlugins();
