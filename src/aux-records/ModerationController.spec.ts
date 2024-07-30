@@ -270,6 +270,18 @@ describe('ModerationController', () => {
             );
         });
 
+        it('should return not_supported if the job provider is null', async () => {
+            controller = new ModerationController(store, store, store, null);
+
+            const result = await controller.scheduleModerationScans();
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
         it('should schedule a moderation scan for unscaned files', async () => {
             uuidMock.mockReturnValue('uuid');
             nowMock.mockReturnValue(123);
@@ -457,6 +469,21 @@ describe('ModerationController', () => {
                 'description',
                 [PUBLIC_READ_MARKER]
             );
+        });
+
+        it('should return not_supported if the job provider is null', async () => {
+            controller = new ModerationController(store, store, store, null);
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
         });
 
         it('should scan the given file and return the result', async () => {

@@ -15,6 +15,7 @@ export const moderationSchema = z.object({
                     enabled: z
                         .boolean()
                         .describe('Whether to enable file moderation.'),
+
                     fileExtensions: z
                         .array(z.string())
                         .describe(
