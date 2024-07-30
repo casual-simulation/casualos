@@ -37,11 +37,13 @@
         "access": "public"
     },
     "dependencies": {
-        "@aws-sdk/client-dynamodb": "^3.359.0",
-        "@aws-sdk/client-s3": "^3.359.0",
-        "@aws-sdk/client-sesv2": "^3.359.0",
-        "@aws-sdk/credential-providers": "^3.359.0",
-        "@aws-sdk/types": "^3.359.0",
+        "@aws-sdk/client-dynamodb": "^3.620.1",
+        "@aws-sdk/client-s3": "^3.620.1",
+        "@aws-sdk/client-s3-control": "^3.620.1",
+        "@aws-sdk/client-sesv2": "^3.620.1",
+        "@aws-sdk/credential-providers": "^3.620.1",
+        "@aws-sdk/types": "^3.609.0",
+        "@aws-sdk/client-rekognition": "^3.620.1",
         "@casual-simulation/aux-common": "^3.3.7",
         "@casual-simulation/aux-records": "^3.3.7",
         "axios": "1.6.2"
