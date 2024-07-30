@@ -103,7 +103,7 @@ import {
     STUDIOS_COLLECTION_NAME,
 } from '../mongo';
 import { sortBy } from 'lodash';
-import { ModerationJob, PrismaClient } from '../prisma/generated';
+import { PrismaClient } from '../prisma/generated';
 import {
     PrismaAuthStore,
     PrismaConfigurationStore,
