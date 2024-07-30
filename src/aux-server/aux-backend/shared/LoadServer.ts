@@ -50,9 +50,7 @@ export function constructServerlessAwsServerBuilder() {
  * Loads the server and configures it.
  */
 export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
-    const staticConfig = loadConfig();
-
-    const config = merge({}, staticConfig, dynamicConfig);
+    const config = loadConfig(true, dynamicConfig);
 
     const allowedApiOrigins = new Set([
         'http://localhost:3000',

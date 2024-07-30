@@ -14,6 +14,12 @@ export function merge<T1, T2, T3>(
     second: T2,
     third: T3
 ): T1 & T2 & T3;
+export function merge<T1, T2, T3, T4>(
+    first: T1,
+    second: T2,
+    third: T3,
+    fourth: T4
+): T1 & T2 & T3 & T4;
 export function merge(...objs: any[]): any {
     let result: any = {};
     const objKeys = objs.map((o) => keys(o));
