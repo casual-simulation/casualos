@@ -131,6 +131,7 @@ export class RekognitionModerationJobProvider implements ModerationJobProvider {
             Operation: {
                 LambdaInvoke: {
                     FunctionArn: this._filesOptions.lambdaFunctionArn,
+                    InvocationSchemaVersion: '2.0',
                     UserArguments: {
                         jobId: jobId,
                     },
