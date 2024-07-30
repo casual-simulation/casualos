@@ -355,7 +355,7 @@ describe('ModerationController', () => {
             uuidMock.mockReturnValue('uuid');
             nowMock.mockReturnValue(123);
 
-            await store.saveModerationJob({
+            await store.addModerationJob({
                 id: 'old',
                 createdAtMs: 5,
                 type: 'files',

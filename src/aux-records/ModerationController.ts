@@ -172,7 +172,7 @@ export class ModerationController {
 
                 const job = await this._jobProvider.startFilesJob(filter);
 
-                await this._store.saveModerationJob(job);
+                await this._store.addModerationJob(job);
 
                 jobs.push(job);
             }
@@ -307,7 +307,7 @@ export class ModerationController {
                 updatedAtMs: Date.now(),
                 appearsToMatchBannedContent: !!bannedLabel,
             };
-            this._store.saveFileModerationResult(result);
+            this._store.addFileModerationResult(result);
 
             return {
                 success: true,

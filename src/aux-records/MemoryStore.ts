@@ -480,15 +480,8 @@ export class MemoryStore
         }
     }
 
-    async saveModerationJob(job: ModerationJob): Promise<void> {
-        const existingJobIndex = this._moderationJobs.findIndex(
-            (j) => j.id === job.id
-        );
-        if (existingJobIndex >= 0) {
-            this._moderationJobs[existingJobIndex] = job;
-        } else {
-            this._moderationJobs.push(job);
-        }
+    async addModerationJob(job: ModerationJob): Promise<void> {
+        this._moderationJobs.push(job);
     }
 
     async findMostRecentJobOfType(
@@ -503,17 +496,10 @@ export class MemoryStore
         }
     }
 
-    async saveFileModerationResult(
+    async addFileModerationResult(
         result: ModerationFileScanResult
     ): Promise<void> {
-        const existingFileIndex = this._moderationFileResults.findIndex(
-            (r) => r.id === result.id
-        );
-        if (existingFileIndex >= 0) {
-            this._moderationFileResults[existingFileIndex] = result;
-        } else {
-            this._moderationFileResults.push(result);
-        }
+        this._moderationFileResults.push(result);
     }
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {

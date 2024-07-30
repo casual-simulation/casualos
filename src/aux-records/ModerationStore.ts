@@ -9,10 +9,10 @@ export interface ModerationStore {
     saveUserInstReport(report: UserInstReport): Promise<void>;
 
     /**
-     * Saves the given moderation job.
+     * Inserts the given moderation job.
      * @param job The job that should be saved.
      */
-    saveModerationJob(job: ModerationJob): Promise<void>;
+    addModerationJob(job: ModerationJob): Promise<void>;
 
     /**
      * Attempts to find the most recent job of the given type.
@@ -24,10 +24,10 @@ export interface ModerationStore {
     ): Promise<ModerationJob | null>;
 
     /**
-     * Saves the result of a file moderation scan.
+     * Inserts the result of a file moderation scan.
      * @param result The result to save.
      */
-    saveFileModerationResult(result: ModerationFileScanResult): Promise<void>;
+    addFileModerationResult(result: ModerationFileScanResult): Promise<void>;
 }
 
 export interface UserInstReport {
