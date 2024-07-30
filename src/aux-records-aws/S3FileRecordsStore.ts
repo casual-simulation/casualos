@@ -457,6 +457,32 @@ export class S3FileRecordsStore implements FileRecordsStore {
         return await this._credentialProvider();
     }
 
+    /**
+     * Gets the S3 object info for the given record and file name.
+     * @param recordName The name of the record.
+     * @param fileName The name of the file.
+     */
+    async getS3ObjectInfo(
+        recordName: string,
+        fileName: string
+    ): Promise<{
+        bucket: string;
+        name: string;
+    }> {
+        let file = await this._lookup.getFileRecord(recordName, fileName);
+
+        if (!file) {
+            return {
+                bucket: this._bucket,
+                name: this._fileKey(recordName, fileName),
+            };
+        }
+
+        return {
+            bucket: file.bucket ?? this._bucket,
+            name: this._fileKey(recordName, fileName),
+        };
+    }
     private _fileUrl(
         recordName: string,
         fileName: string,
