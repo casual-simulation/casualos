@@ -497,6 +497,15 @@ export class S3FileRecordsStore implements FileRecordsStore {
         };
     }
 
+    async getFileInfo(
+        bucket: string,
+        name: string
+    ): Promise<GetFileNameFromUrlResult> {
+        return this.getFileNameFromUrl(
+            `https://${bucket}.s3.amazonaws.com/${name}`
+        );
+    }
+
     @traced(TRACE_NAME)
     private _fileUrl(
         recordName: string,
