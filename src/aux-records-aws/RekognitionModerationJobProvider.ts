@@ -5,7 +5,7 @@ import {
     ModerationJobProvider,
     ScanFileOptions,
 } from '@casual-simulation/aux-records';
-import { S3FileRecordsStore } from 'S3FileRecordsStore';
+import { S3FileRecordsStore } from './S3FileRecordsStore';
 import {
     DetectModerationLabelsCommandInput,
     Rekognition,
