@@ -2,7 +2,7 @@ import { StudioComIdRequest } from './RecordsStore';
 import { UserInstReport } from './ModerationStore';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
-import { ModerationFileScanLabel } from 'ModerationJobProvider';
+import { ModerationFileScanLabel } from './ModerationJobProvider';
 import { ResourceKinds } from '@casual-simulation/aux-common';
 
 /**
@@ -122,6 +122,11 @@ export interface ModerationResourceScanNotification
      * The ID of the resource that was scanned.
      */
     resourceId: string;
+
+    /**
+     * The ID of the moderation result that was created for the resource.
+     */
+    resultId: string;
 
     /**
      * The labels that were detected in the file.

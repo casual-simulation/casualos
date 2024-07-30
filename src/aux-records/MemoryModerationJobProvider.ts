@@ -36,6 +36,7 @@ export class MemoryModerationJobProvider implements ModerationJobProvider {
             recordName: options.recordName,
             fileName: options.fileName,
             labels: [],
+            modelVersion: 'memory',
         };
     }
 }

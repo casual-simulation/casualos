@@ -163,6 +163,11 @@ export interface ModerationFileScanResult {
     labels: ModerationFileScanResultLabel[];
 
     /**
+     * The version of the model that was used to scan the file.
+     */
+    modelVersion: string;
+
+    /**
      * The unix time in milliseconds that the scan was created.
      */
     createdAtMs: number;

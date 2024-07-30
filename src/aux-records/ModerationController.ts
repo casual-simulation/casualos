@@ -9,7 +9,10 @@ import {
 } from './ModerationStore';
 import { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
-import { NotificationMessenger } from './NotificationMessenger';
+import {
+    NotificationMessenger,
+    RecordsNotification,
+} from './NotificationMessenger';
 import { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
@@ -252,6 +255,7 @@ export class ModerationController {
                 minConfidence: config.jobs.files.minConfidence,
             });
 
+            const resultId = uuid();
             let bannedLabel: ModerationFileScanResultLabel = null;
             for (let label of config.jobs.files.bannedLabels) {
                 if (label.label) {
@@ -274,6 +278,7 @@ export class ModerationController {
                             action: 'scanned',
                             recordName: request.recordName,
                             resourceId: request.fileName,
+                            resultId,
                             labels: scan.labels,
                             timeMs: createdAtMs,
                             bannedLabel,
@@ -292,11 +297,12 @@ export class ModerationController {
             }
 
             const result: ModerationFileScanResult = {
-                id: uuid(),
+                id: resultId,
                 recordName: request.recordName,
                 fileName: request.fileName,
                 jobId: request.jobId,
                 labels: scan.labels,
+                modelVersion: scan.modelVersion,
                 createdAtMs,
                 updatedAtMs: Date.now(),
                 appearsToMatchBannedContent: !!bannedLabel,

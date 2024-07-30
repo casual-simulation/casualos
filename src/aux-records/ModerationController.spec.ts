@@ -505,6 +505,7 @@ describe('ModerationController', () => {
                     labels: [],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             });
 
@@ -517,6 +518,7 @@ describe('ModerationController', () => {
                     labels: [],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             ]);
         });
@@ -542,6 +544,7 @@ describe('ModerationController', () => {
                         confidence: 0.6,
                     },
                 ],
+                modelVersion: 'memory',
             });
 
             const result = await controller.scanFile({
@@ -568,6 +571,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             });
 
@@ -589,6 +593,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             ]);
         });
@@ -614,6 +619,7 @@ describe('ModerationController', () => {
                         confidence: 0.6,
                     },
                 ],
+                modelVersion: 'memory',
             });
 
             store.moderationConfiguration = {
@@ -658,6 +664,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             });
 
@@ -679,6 +686,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             ]);
 
@@ -733,6 +741,7 @@ describe('ModerationController', () => {
                         confidence: 0.6,
                     },
                 ],
+                modelVersion: 'memory',
             });
 
             const result = await controller.scanFile({
@@ -759,6 +768,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             });
 
@@ -780,6 +790,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             ]);
 
@@ -789,6 +800,7 @@ describe('ModerationController', () => {
                     action: 'scanned',
                     recordName: recordName,
                     resourceId: 'file1.png',
+                    resultId: 'uuid',
                     labels: [
                         {
                             name: 'label1',
@@ -853,6 +865,7 @@ describe('ModerationController', () => {
                         confidence: 0.6,
                     },
                 ],
+                modelVersion: 'memory',
             });
 
             const result = await controller.scanFile({
@@ -879,6 +892,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             });
 
@@ -900,6 +914,7 @@ describe('ModerationController', () => {
                     ],
                     createdAtMs: 123,
                     updatedAtMs: 123,
+                    modelVersion: 'memory',
                 },
             ]);
 
@@ -909,6 +924,7 @@ describe('ModerationController', () => {
                     action: 'scanned',
                     recordName: recordName,
                     resourceId: 'file1.png',
+                    resultId: 'uuid',
                     labels: [
                         {
                             name: 'label1',

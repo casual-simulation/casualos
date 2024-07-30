@@ -96,6 +96,11 @@ export interface ModerationFileScan {
      * There should be one label per detected label and one per detected category.
      */
     labels: ModerationFileScanLabel[];
+
+    /**
+     * The version of the model that was used to scan the file.
+     */
+    modelVersion: string;
 }
 
 /**
