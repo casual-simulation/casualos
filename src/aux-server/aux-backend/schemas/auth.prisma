@@ -884,8 +884,8 @@ model FileModerationResult {
     id String @id @db.Uuid
 
     // The job that this moderation result is associated with
-    jobId String @db.Uuid
-    job ModerationJob @relation(fields: [jobId], references: [id], onDelete: Cascade, map: "FileModerationResult_jobId_fkey1")
+    jobId String? @db.Uuid
+    job ModerationJob? @relation(fields: [jobId], references: [id], onDelete: Cascade, map: "FileModerationResult_jobId_fkey1")
 
     // The name of the record that was moderated
     recordName String @db.String(128)
