@@ -10,7 +10,7 @@ module.exports = {
         '/playwright/',
         '/__arbitraries__/',
         '/__tests__/setPrettyPrint',
-        '<rootDir>/docker',
+        '/docker/services/',
     ],
     coveragePathIgnorePatterns: [
         '/node_modules/',
@@ -20,9 +20,10 @@ module.exports = {
         '/playwright/',
         '/__arbitraries__/',
         '/__tests__/setPrettyPrint',
-        '<rootDir>/docker',
+        '/docker/services/',
     ],
-    watchPathIgnorePatterns: ['/node_modules/', '<rootDir>/docker'],
+    watchPathIgnorePatterns: ['/node_modules/', '/docker\\/services/'],
+    modulePathIgnorePatterns: ['/node_modules/', '/docker/services/'],
     setupFiles: ['fake-indexeddb/auto'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
     moduleNameMapper: {

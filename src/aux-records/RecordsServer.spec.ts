@@ -144,6 +144,7 @@ import {
     AISloydInterfaceEditModelRequest,
     AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
+import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -280,6 +281,7 @@ describe('RecordsServer', () => {
     });
 
     let store: MemoryStore;
+    let jobProvider: MemoryModerationJobProvider;
     let authMessenger: MemoryAuthMessenger;
     let authController: AuthController;
     let server: RecordsServer;
@@ -676,7 +678,13 @@ describe('RecordsServer', () => {
             policyController: policyController,
             records: store,
         });
-        moderationController = new ModerationController(store, store, store);
+        jobProvider = new MemoryModerationJobProvider();
+        moderationController = new ModerationController(
+            store,
+            store,
+            store,
+            jobProvider
+        );
         loomController = new LoomController({
             config: store,
             store: store,
@@ -7631,6 +7639,109 @@ describe('RecordsServer', () => {
                 },
             });
         });
+    });
+
+    describe('POST /api/v2/records/file/scan', () => {
+        beforeEach(async () => {
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+                jobs: {
+                    files: {
+                        enabled: true,
+                        bannedLabels: [
+                            {
+                                label: 'banned',
+                                threshold: 0.7,
+                                actions: ['notify'],
+                            },
+                        ],
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
+                    },
+                },
+            };
+        });
+
+        describe('superUser', () => {
+            beforeEach(async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    role: 'superUser',
+                });
+            });
+
+            it('should scan the file with the given name', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/records/file/scan',
+                        JSON.stringify({
+                            recordName,
+                            fileName: 'hash.png',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        result: {
+                            id: expect.any(String),
+                            recordName,
+                            fileName: 'hash.png',
+                            labels: [],
+                            appearsToMatchBannedContent: false,
+                            createdAtMs: expect.any(Number),
+                            updatedAtMs: expect.any(Number),
+                            modelVersion: 'memory',
+                        },
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+        });
+
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/file/scan',
+                    JSON.stringify({
+                        recordName,
+                        fileName: 'hash.png',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/file/scan',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    fileName: 'hash.png',
+                }),
+            () => authenticatedHeaders
+        );
     });
 
     describe('DELETE /api/v2/records/data', () => {

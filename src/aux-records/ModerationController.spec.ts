@@ -1,15 +1,22 @@
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { MemoryStore } from './MemoryStore';
 import { ModerationController } from './ModerationController';
 import { v4 as uuid } from 'uuid';
+import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
+import { ModerationFileScan } from './ModerationJobProvider';
 
 const originalDateNow = Date.now;
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
 
+console.log = jest.fn();
+console.warn = jest.fn();
+
 describe('ModerationController', () => {
     let controller: ModerationController;
     let store: MemoryStore;
+    let jobProvider: MemoryModerationJobProvider;
     let nowMock: jest.Mock<number>;
 
     beforeEach(() => {
@@ -18,13 +25,28 @@ describe('ModerationController', () => {
             subscriptions: null,
             moderation: {
                 allowUnauthenticatedReports: true,
+                jobs: {
+                    files: {
+                        enabled: true,
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
+                        bannedLabels: [],
+                    },
+                },
             },
         });
-        controller = new ModerationController(store, store, store);
+        jobProvider = new MemoryModerationJobProvider();
+        controller = new ModerationController(store, store, store, jobProvider);
     });
 
     afterEach(() => {
         Date.now = originalDateNow;
+        uuidMock.mockReset();
     });
 
     describe('reportInst()', () => {
@@ -161,6 +183,766 @@ describe('ModerationController', () => {
                 errorCode: 'not_logged_in',
                 errorMessage: 'The user must be logged in to report an inst.',
             });
+        });
+    });
+
+    describe('scheduleModerationScans()', () => {
+        const recordName = 'test_record';
+        const recordName2 = 'test_record';
+        const userId = 'userId';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+            await store.addRecord({
+                name: recordName2,
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'file1.txt',
+                null,
+                userId,
+                128,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName,
+                'file2.txt',
+                null,
+                userId,
+                128,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName,
+                'file3.txt',
+                null,
+                userId,
+                128,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName2,
+                'file1.txt',
+                null,
+                userId,
+                128,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName2,
+                'file2.txt',
+                null,
+                userId,
+                128,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName2,
+                'file3.txt',
+                null,
+                userId,
+                128,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+        });
+
+        it('should return not_supported if the job provider is null', async () => {
+            controller = new ModerationController(store, store, store, null);
+
+            const result = await controller.scheduleModerationScans();
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should schedule a moderation scan for unscaned files', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+            const result = await controller.scheduleModerationScans();
+
+            expect(result).toEqual({
+                success: true,
+                jobs: [
+                    {
+                        id: 'uuid',
+                        type: 'files',
+                        createdAtMs: 123,
+                        updatedAtMs: 123,
+                        filter: {
+                            keyNameConstraint: {
+                                matchAnySuffix: [
+                                    '.png',
+                                    '.webp',
+                                    '.jpg',
+                                    '.jpeg',
+                                    '.gif',
+                                ],
+                            },
+                        },
+                    },
+                ],
+            });
+
+            expect(jobProvider.jobs).toEqual([
+                {
+                    id: 'uuid',
+                    type: 'files',
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    filter: {
+                        keyNameConstraint: {
+                            matchAnySuffix: [
+                                '.png',
+                                '.webp',
+                                '.jpg',
+                                '.jpeg',
+                                '.gif',
+                            ],
+                        },
+                    },
+                },
+            ]);
+
+            expect(store.moderationJobs).toEqual([
+                {
+                    id: 'uuid',
+                    type: 'files',
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    filter: {
+                        keyNameConstraint: {
+                            matchAnySuffix: [
+                                '.png',
+                                '.webp',
+                                '.jpg',
+                                '.jpeg',
+                                '.gif',
+                            ],
+                        },
+                    },
+                },
+            ]);
+        });
+
+        it('should schedule a moderation scan for only files created after the last scan', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+
+            await store.addModerationJob({
+                id: 'old',
+                createdAtMs: 5,
+                type: 'files',
+                updatedAtMs: 5,
+            });
+
+            const result = await controller.scheduleModerationScans();
+
+            expect(result).toEqual({
+                success: true,
+                jobs: [
+                    {
+                        id: 'uuid',
+                        type: 'files',
+                        createdAtMs: 123,
+                        updatedAtMs: 123,
+                        filter: {
+                            createdAfterMs: 5,
+                            keyNameConstraint: {
+                                matchAnySuffix: [
+                                    '.png',
+                                    '.webp',
+                                    '.jpg',
+                                    '.jpeg',
+                                    '.gif',
+                                ],
+                            },
+                        },
+                    },
+                ],
+            });
+
+            expect(jobProvider.jobs).toEqual([
+                {
+                    id: 'uuid',
+                    type: 'files',
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    filter: {
+                        createdAfterMs: 5,
+                        keyNameConstraint: {
+                            matchAnySuffix: [
+                                '.png',
+                                '.webp',
+                                '.jpg',
+                                '.jpeg',
+                                '.gif',
+                            ],
+                        },
+                    },
+                },
+            ]);
+
+            expect(store.moderationJobs.slice(1)).toEqual([
+                {
+                    id: 'uuid',
+                    type: 'files',
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    filter: {
+                        createdAfterMs: 5,
+                        keyNameConstraint: {
+                            matchAnySuffix: [
+                                '.png',
+                                '.webp',
+                                '.jpg',
+                                '.jpeg',
+                                '.gif',
+                            ],
+                        },
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('scanFile()', () => {
+        const recordName = 'test_record';
+        const recordName2 = 'test_record';
+        const userId = 'userId';
+
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+            await store.addRecord({
+                name: recordName2,
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'file1.png',
+                null,
+                userId,
+                128,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+        });
+
+        it('should return not_supported if the job provider is null', async () => {
+            controller = new ModerationController(store, store, store, null);
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should scan the given file and return the result', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                result: {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: false,
+                    labels: [],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            });
+
+            expect(store.moderationFileResults).toEqual([
+                {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: false,
+                    labels: [],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            ]);
+        });
+
+        it('should save the detected labels', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+
+            const scanFile = (jobProvider.scanFile = jest.fn<
+                Promise<ModerationFileScan>,
+                any[]
+            >());
+            scanFile.mockResolvedValue({
+                recordName,
+                fileName: 'file1.png',
+                labels: [
+                    {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    {
+                        name: 'label2',
+                        confidence: 0.6,
+                    },
+                ],
+                modelVersion: 'memory',
+            });
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                result: {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: false,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            });
+
+            expect(store.moderationFileResults).toEqual([
+                {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: false,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            ]);
+        });
+
+        it('should include the configured min confidence', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+
+            const scanFile = (jobProvider.scanFile = jest.fn<
+                Promise<ModerationFileScan>,
+                any[]
+            >());
+            scanFile.mockResolvedValue({
+                recordName,
+                fileName: 'file1.png',
+                labels: [
+                    {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    {
+                        name: 'label2',
+                        confidence: 0.6,
+                    },
+                ],
+                modelVersion: 'memory',
+            });
+
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+                jobs: {
+                    files: {
+                        enabled: true,
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
+                        bannedLabels: [],
+                        minConfidence: 0.6,
+                    },
+                },
+            };
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                result: {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: false,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            });
+
+            expect(store.moderationFileResults).toEqual([
+                {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: false,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            ]);
+
+            expect(scanFile).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'file1.png',
+                minConfidence: 0.6,
+            });
+        });
+
+        it('should send notifications for banned labels', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+                jobs: {
+                    files: {
+                        enabled: true,
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
+                        bannedLabels: [
+                            {
+                                label: 'label1',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const scanFile = (jobProvider.scanFile = jest.fn<
+                Promise<ModerationFileScan>,
+                any[]
+            >());
+            scanFile.mockResolvedValue({
+                recordName,
+                fileName: 'file1.png',
+                labels: [
+                    {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    {
+                        name: 'label2',
+                        confidence: 0.6,
+                    },
+                ],
+                modelVersion: 'memory',
+            });
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                result: {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: true,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            });
+
+            expect(store.moderationFileResults).toEqual([
+                {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: true,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            ]);
+
+            expect(store.recordsNotifications).toEqual([
+                {
+                    resource: 'file',
+                    action: 'scanned',
+                    recordName: recordName,
+                    resourceId: 'file1.png',
+                    resultId: 'uuid',
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    timeMs: 123,
+                    bannedLabel: {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    message: `Banned label (label1) detected in file (${recordName}/file1.png).`,
+                },
+            ]);
+        });
+
+        it('should ignore case with labels', async () => {
+            uuidMock.mockReturnValue('uuid');
+            nowMock.mockReturnValue(123);
+
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+                jobs: {
+                    files: {
+                        enabled: true,
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
+                        bannedLabels: [
+                            {
+                                label: 'Label1',
+                                threshold: 0.5,
+                                actions: ['notify'],
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const scanFile = (jobProvider.scanFile = jest.fn<
+                Promise<ModerationFileScan>,
+                any[]
+            >());
+            scanFile.mockResolvedValue({
+                recordName,
+                fileName: 'file1.png',
+                labels: [
+                    {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    {
+                        name: 'label2',
+                        confidence: 0.6,
+                    },
+                ],
+                modelVersion: 'memory',
+            });
+
+            const result = await controller.scanFile({
+                recordName: recordName,
+                fileName: 'file1.png',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                result: {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: true,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            });
+
+            expect(store.moderationFileResults).toEqual([
+                {
+                    id: 'uuid',
+                    recordName: recordName,
+                    fileName: 'file1.png',
+                    appearsToMatchBannedContent: true,
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    modelVersion: 'memory',
+                },
+            ]);
+
+            expect(store.recordsNotifications).toEqual([
+                {
+                    resource: 'file',
+                    action: 'scanned',
+                    recordName: recordName,
+                    resourceId: 'file1.png',
+                    resultId: 'uuid',
+                    labels: [
+                        {
+                            name: 'label1',
+                            confidence: 0.5,
+                        },
+                        {
+                            name: 'label2',
+                            confidence: 0.6,
+                        },
+                    ],
+                    timeMs: 123,
+                    bannedLabel: {
+                        name: 'label1',
+                        confidence: 0.5,
+                    },
+                    message: `Banned label (label1) detected in file (${recordName}/file1.png).`,
+                },
+            ]);
         });
     });
 });

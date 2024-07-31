@@ -19,6 +19,17 @@
 -   Add support for [Minio](https://min.io/) for file records.
     -   Can be configured by using the `minio` property in `SERVER_CONFIG`.
 -   Added the ability to enable semantic error highlighting.
+-   Added the ability to scan files for moderation labels.
+    -   This functionality can be configured by the `SERVER_CONFIG.moderation.jobs.files` and `SERVER_CONFIG.rekognition.moderation` properties.
+    -   Once a (configured) banned label is detected, a notification can be sent based on the `SERVER_CONFIG.notifications` configuration.
+        -   If desired, the filter should be set to match `file` resources and `scanned` actions.
+    -   Currently, only image files are supported. The default list of supported file types is:
+        -   `.png`
+        -   `.webp`
+        -   `.jpg`
+        -   `.jpeg`
+        -   `.gif`
+    -   Additionally, it is possible to manually trigger moderation for a file as a `superUser` by using the `scanFileForModeration` procedure.
 
 ### :bug: Bug Fixes
 

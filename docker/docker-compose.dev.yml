@@ -2,6 +2,7 @@ version: '3.7'
 
 volumes:
     mongodata:
+    minio-data:
 
 services:
     minio:
@@ -15,7 +16,7 @@ services:
             MINIO_CONFIG_ENV_FILE: /etc/config.env
         volumes:
             - './conf/minio.env:/etc/config.env'
-            - './services/data/minio:/mnt/data'
+            - minio-data:/mnt/data
     redis:
         image: 'redis:latest'
         restart: always
