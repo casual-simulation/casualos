@@ -49,4 +49,41 @@ describe('formatNotificationAsString()', () => {
         });
         expect(result).toMatchSnapshot();
     });
+
+    it('should consistently format file scan notifications', () => {
+        const result = formatNotificationAsString({
+            resource: 'file',
+            action: 'scanned',
+            resourceId: 'fileName.txt',
+            recordName: 'test_record',
+            labels: [
+                {
+                    name: 'label1',
+                    confidence: 0.5,
+                },
+                {
+                    name: 'label2',
+                    confidence: 0.6,
+                },
+            ],
+            message: 'A file was scanned',
+            resultId: 'test_result_id',
+            timeMs: 123,
+            bannedLabel: {
+                name: 'label1',
+                confidence: 0.5,
+            },
+        });
+        expect(result).toMatchSnapshot();
+    });
+
+    it('should consistently format unknown notifications', () => {
+        const result = formatNotificationAsString({
+            resource: 'random_request',
+            action: 'created',
+            resourceId: 'test_id',
+            timeMs: 123,
+        } as any);
+        expect(result).toMatchSnapshot();
+    });
 });

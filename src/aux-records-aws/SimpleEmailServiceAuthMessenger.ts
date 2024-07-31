@@ -4,6 +4,9 @@ import {
 } from '@casual-simulation/aux-records/AuthMessenger';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import { SESv2, EmailContent as SESEmailContent } from '@aws-sdk/client-sesv2';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'SimpleEmailServiceAuthMessenger';
 
 export interface SimpleEmailServiceAuthMessengerOptions {
     /**
@@ -39,10 +42,12 @@ export class SimpleEmailServiceAuthMessenger implements AuthMessenger {
         this._options = options;
     }
 
+    @traced(TRACE_NAME)
     supportsAddressType(addressType: AddressType): Promise<boolean> {
         return Promise.resolve(addressType === 'email');
     }
 
+    @traced(TRACE_NAME)
     async sendCode(
         address: string,
         addressType: AddressType,

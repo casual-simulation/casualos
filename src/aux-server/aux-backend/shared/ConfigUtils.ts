@@ -10,7 +10,10 @@ declare const SERVER_CONFIG: string;
 
 export const DEV_CONFIG: ServerConfig = {};
 
-export function loadConfig(required: boolean = true) {
+export function loadConfig(
+    required: boolean = true,
+    dynamicConfig: ServerConfig = {}
+) {
     const injectedConfig = parseObject(SERVER_CONFIG);
     const envConfig = parseObject(process.env.SERVER_CONFIG);
 
@@ -18,7 +21,12 @@ export function loadConfig(required: boolean = true) {
         throw new Error(`SERVER_CONFIG must be specified!`);
     }
 
-    const merged = merge({}, injectedConfig ?? {}, envConfig ?? {});
+    const merged = merge(
+        {},
+        injectedConfig ?? {},
+        envConfig ?? {},
+        dynamicConfig
+    );
 
     const optionsResult = serverConfigSchema.safeParse(merged);
 

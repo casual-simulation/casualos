@@ -942,6 +942,25 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/file/scan",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileName": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "scanFileForModeration",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
         "method": "DELETE",
         "path": "/api/v2/records/data",
       },
@@ -3858,6 +3877,25 @@ Object {
       },
       "name": "updateFile",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/file/scan",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "fileName": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "scanFileForModeration",
+      "origins": "account",
     },
     Object {
       "http": Object {
