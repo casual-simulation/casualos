@@ -18,20 +18,79 @@
 
 ### Terms
 
-_Note:_
-Abbreviations should only be made on noun forms of their respective words.
+> _Note (before you examine terms):_
+
+Abbreviations should only be made on noun or adjective forms of their respective words.
 Verbs (action) should be directly and completely specified at source, without need for terminology reference.
 Shortenings do not need to contain a period (.) but are documented in [Terms](#terms) with; for sake of respect to multiple
 national language norms (American & British English).
 
-| Term   | Reference                         | Context?                                                   |
-| ------ | --------------------------------- | ---------------------------------------------------------- |
-| Impl.  | Abbreviation for "Implementation" |
-| Ref.   | Abbreviation for "Reference"      |
-| &\|    | Symbolic equivalent to "and / or" | "&" = "and", "\|" = "or"                                   |
-| Async. | Abbreviation for "asynchronous"   |
-| XPA    | Acronym for "Xp API"              | The programmatic implementation supporting the XP Exchange |
-| XPE    | Acronym for "Xp Exchange"         | The system which utilizes the Xp API                       |
+> Terminology:
+
+<table>
+  <tr>
+    <th>Term</th>
+    <th>Reference</th>
+    <th>Context?</th>
+  </tr>
+  <tr>
+    <td>Impl.</td>
+    <td>Abbreviation for "Implementation"</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Ref.</td>
+    <td>Abbreviation for "Reference"</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>&amp;|</td>
+    <td>Symbolic equivalent to "and / or"</td>
+    <td>&amp; = "and", | = "or"</td>
+  </tr>
+  <tr>
+    <td>Async.</td>
+    <td>Abbreviation for "asynchronous"</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>XPA</td>
+    <td>Acronym for "Xp API"</td>
+    <td>The programmatic implementation supporting the XP Exchange</td>
+  </tr>
+  <tr>
+    <td>XPE</td>
+    <td>Acronym for "Xp Exchange"</td>
+    <td>The system which utilizes the Xp API</td>
+  </tr>
+  <tr>
+    <td>BOCS</td>
+    <td>Acronym (non-standard) for "Beginning of Conceptual Scope"</td>
+    <td>
+      Useful when creating conceptual sub-scopes in an otherwise procedurally "same-scope" context.<br>
+      (See <a href="#conceptual-scope-impl">Conceptual scope impl</a>.)
+    </td>
+  </tr>
+  <tr>
+  <td>EOCS</td>
+  <td>Acronym (non-standard) for "End of Conceptual Scope"</td>
+  <td>Used to mark the end of a previously specified conceptual scope. (See BOCS.)</td>
+  </tr>
+</table>
+
+> Examples:
+
+##### Conceptual Scope Impl:
+
+```ts
+/**
+ * * BOCS: Init Cache
+ *  We'll import our Cache interface and initialize the cache object.
+ */
+import { Cache } from '../CacheProvider.ts';
+const cache: Cache = {};
+// * EOCS: Init Cache
+```
 
 ---
 
@@ -70,6 +129,8 @@ In summary the prefixes and their niche assertions on comments are as follows:
 | \*     | Highlights         |
 | ?      | Queries            |
 | TODO:  | To-dos             |
+
+> Examples:
 
 ##### Comment example:
 
