@@ -81,7 +81,7 @@ Resources:
                   ]
 
                   # Give the ability to detect moderation labels using Rekognition
-                - RekognitionLabelsPolicy:
+                - RekognitionLabelsPolicy: {}
             Environment:
                 Variables:
                     REGION: !Ref 'AWS::Region'
