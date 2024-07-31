@@ -34,9 +34,15 @@ Parameters:
         Type: Number
         Description: The priority of jobs that are started for moderation.
         Default: 10
+    ModerationJobScheduleParameter:
+        Type: String
+        Description: The schedule that the moderation job should be run at. If empty, then the job will not be run on a schedule.
+        Default: ''
 
 Conditions:
     UseSESCrud: !Not [!Equals [!Ref SESIdentityNameParameter, '']]
+    UseModerationJobSchedule:
+        !Not [!Equals [!Ref ModerationJobScheduleParameter, '']]
 
 Globals:
     Api:
@@ -231,13 +237,15 @@ Resources:
                     MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
-            Events:
-                SaveBranches:
-                    Type: ScheduleV2
-                    Properties:
-                        OmitName: true
-                        Description: Schedule for scanning files.
-                        ScheduleExpression: 'rate(1 day)'
+            Events: !If
+                - UseModerationJobSchedule
+                - SaveBranches:
+                  Type: ScheduleV2
+                  Properties:
+                      OmitName: true
+                      Description: Schedule for scanning files.
+                      ScheduleExpression: !Ref ModerationJobScheduleParameter
+                - !Ref 'AWS::NoValue'
     ScheduleModerationScansLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
