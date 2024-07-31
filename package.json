@@ -56,7 +56,9 @@
         "cloc": "cloc src --exclude-dir=node_modules --exclude-ext=js,json,def",
         "vite": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run vite",
         "cli": "lerna exec --no-prefix --scope casualos -- npm run dev",
-        "build:cli": "lerna exec --no-prefix --scope casualos -- npm run build"
+        "build:cli": "lerna exec --no-prefix --scope casualos -- npm run build",
+        "nerdctl:dev": "nerdctl compose -f ./docker/docker-compose.dev.yml up -d",
+        "docker:dev": "docker compose -f ./docker/docker-compose.dev.yml up -d"
     },
     "devDependencies": {
         "@babel/core": "^7.14.3",
