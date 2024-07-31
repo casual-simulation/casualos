@@ -234,6 +234,13 @@ export function formatNotificationAsString(
             return formatUserInstReportNotificationAsString(notification);
         case 'studio_com_id_request':
             return formatStudioComIdRequestNotificationAsString(notification);
+        case 'file':
+        case 'data':
+        case 'event':
+        case 'inst':
+            return formatResourceNotificationAsString(notification);
+        default:
+            return JSON.stringify(notification, undefined, 2);
     }
 }
 
@@ -275,4 +282,34 @@ Requested comID: ${notification.request.requestedComId}
 Time: ${time}
 Reporting User: ${notification.request.userId ?? '(null)'}
 Requesting IP: ${notification.request.requestingIpAddress ?? '(null)'}`;
+}
+
+export function formatResourceNotificationAsString(
+    notification: ModerationResourceScanNotification
+): string {
+    const time = DateTime.fromMillis(notification.timeMs, {
+        zone: 'utc',
+    }).toISO();
+    return `A ${notification.resource} was ${
+        notification.action
+    } for moderation labels.
+
+Message: ${notification.message}
+RecordName: ${notification.recordName}
+FileName: ${notification.resourceId}
+ResultId: ${notification.resultId}
+BannedLabel: ${
+        notification.bannedLabel
+            ? formatLabel(notification.bannedLabel)
+            : '(null)'
+    }
+Labels: 
+${notification.labels.map(formatLabel).join('\n')}
+Time: ${time}`;
+
+    function formatLabel(label: ModerationFileScanLabel): string {
+        return `- ${label.name}${label.category ? ':' + label.category : ''} (${
+            label.confidence
+        })`;
+    }
 }
