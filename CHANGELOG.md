@@ -19,6 +19,8 @@
 -   Add support for [Minio](https://min.io/) for file records.
     -   Can be configured by using the `minio` property in `SERVER_CONFIG`.
 -   Added the ability to enable semantic error highlighting.
+-   Added the ability to scan files for moderation labels.
+    -   This functionality can be configured by the `SERVER_CONFIG.moderation.jobs.files` and `SERVER_CONFIG.rekognition.moderation` properties.
 
 ### :bug: Bug Fixes
 
