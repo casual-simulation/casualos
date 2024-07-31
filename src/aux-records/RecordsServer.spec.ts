@@ -7676,13 +7676,13 @@ describe('RecordsServer', () => {
                 });
             });
 
-            it('should scan the file with the given URL', async () => {
+            it('should scan the file with the given name', async () => {
                 const result = await server.handleHttpRequest(
                     httpPost(
                         '/api/v2/records/file/scan',
                         JSON.stringify({
-                            fileUrl:
-                                'http://localhost:9191/testRecord/hash.png',
+                            recordName,
+                            fileName: 'hash.png',
                         }),
                         authenticatedHeaders
                     )
@@ -7713,7 +7713,8 @@ describe('RecordsServer', () => {
                 httpPost(
                     '/api/v2/records/file/scan',
                     JSON.stringify({
-                        fileUrl: 'http://localhost:9191/testRecord/hash.png',
+                        recordName,
+                        fileName: 'hash.png',
                     }),
                     authenticatedHeaders
                 )
@@ -7736,7 +7737,8 @@ describe('RecordsServer', () => {
             '/api/v2/records/file/scan',
             () =>
                 JSON.stringify({
-                    fileUrl: 'http://localhost:9191/testRecord/hash.png',
+                    recordName,
+                    fileName: 'hash.png',
                 }),
             () => authenticatedHeaders
         );

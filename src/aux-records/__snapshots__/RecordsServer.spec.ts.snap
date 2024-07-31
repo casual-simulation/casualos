@@ -946,28 +946,15 @@ Object {
         "path": "/api/v2/records/file/scan",
       },
       "inputs": Object {
-        "options": Array [
-          Object {
-            "schema": Object {
-              "fileName": Object {
-                "type": "string",
-              },
-              "recordName": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+        "schema": Object {
+          "fileName": Object {
+            "type": "string",
           },
-          Object {
-            "schema": Object {
-              "fileUrl": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+          "recordName": Object {
+            "type": "string",
           },
-        ],
-        "type": "union",
+        },
+        "type": "object",
       },
       "name": "scanFileForModeration",
       "origins": "account",
@@ -3897,28 +3884,15 @@ Object {
         "path": "/api/v2/records/file/scan",
       },
       "inputs": Object {
-        "options": Array [
-          Object {
-            "schema": Object {
-              "fileName": Object {
-                "type": "string",
-              },
-              "recordName": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+        "schema": Object {
+          "fileName": Object {
+            "type": "string",
           },
-          Object {
-            "schema": Object {
-              "fileUrl": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+          "recordName": Object {
+            "type": "string",
           },
-        ],
-        "type": "union",
+        },
+        "type": "object",
       },
       "name": "scanFileForModeration",
       "origins": "account",

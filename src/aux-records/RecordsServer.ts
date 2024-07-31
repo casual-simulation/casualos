@@ -1430,21 +1430,10 @@ export class RecordsServer {
                 .origins('account')
                 .http('POST', '/api/v2/records/file/scan')
                 .inputs(
-                    z.union([
-                        z.object({
-                            recordName: RECORD_NAME_VALIDATION,
-                            fileName: z.string().min(1),
-                        }),
-                        z.object({
-                            fileUrl: z
-                                .string({
-                                    invalid_type_error:
-                                        'fileUrl must be a string.',
-                                    required_error: 'fileUrl is required.',
-                                })
-                                .nonempty('fileUrl must be non-empty.'),
-                        }),
-                    ])
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        fileName: z.string().min(1),
+                    })
                 )
                 .handler(async (input, context) => {
                     const validation = await this._validateSessionKey(
@@ -1464,28 +1453,8 @@ export class RecordsServer {
                                 'You are not authorized to perform this action.',
                         } as const;
                     }
-                    let recordName: string;
-                    let fileName: string;
-                    if ('fileUrl' in input) {
-                        let name = await this._files.getFileNameFromUrl(
-                            input.fileUrl
-                        );
-                        if (name.success === false) {
-                            return name;
-                        }
-
-                        recordName = name.recordName;
-                        fileName = name.fileName;
-                    } else if ('recordName' in input) {
-                        recordName = input.recordName;
-                        fileName = input.fileName;
-                    } else {
-                        return {
-                            success: false,
-                            errorCode: 'unacceptable_request',
-                            errorMessage: 'recordName or fileUrl is required.',
-                        };
-                    }
+                    const recordName: string = input.recordName;
+                    const fileName: string = input.fileName;
 
                     const result = await this._moderationController.scanFile({
                         recordName,
