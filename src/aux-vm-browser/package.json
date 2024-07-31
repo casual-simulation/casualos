@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-browser",
-    "version": "3.3.8-alpha.10185283421",
+    "version": "3.3.8-alpha.10185494837",
     "description": "A set of utilities required to securely run an AUX in a web browser.",
     "keywords": [
         "aux"
@@ -40,15 +40,15 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/aux-records": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/aux-runtime": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/aux-vm": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/aux-vm-client": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/aux-websocket": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/aux-websocket-aws": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/crypto": "^3.3.8-alpha.10185283421",
-        "@casual-simulation/crypto-browser": "^3.3.8-alpha.10185283421",
+        "@casual-simulation/aux-common": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/aux-records": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/aux-runtime": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/aux-vm": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/aux-vm-client": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/aux-websocket": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/aux-websocket-aws": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/crypto": "^3.3.8-alpha.10185494837",
+        "@casual-simulation/crypto-browser": "^3.3.8-alpha.10185494837",
         "@casual-simulation/websocket": "^3.3.4",
         "axios": "1.6.2",
         "bowser": "^2.4.0",
