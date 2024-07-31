@@ -179,3 +179,9 @@ export async function savePermanentBranches() {
     // 15 minute timeout to match the lambda timeout.
     await websocketController.savePermanentBranches(900 * 1000);
 }
+
+export async function scheduleModerationScans() {
+    await builder.ensureInitialized();
+
+    await moderationController.scheduleModerationScans();
+}

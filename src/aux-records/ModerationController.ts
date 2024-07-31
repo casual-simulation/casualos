@@ -175,6 +175,11 @@ export class ModerationController {
                 await this._store.addModerationJob(job);
 
                 jobs.push(job);
+
+                console.log(
+                    '[ModerationController] File moderation job started:',
+                    job
+                );
             }
 
             return {
