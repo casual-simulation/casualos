@@ -31,9 +31,9 @@ Parameters:
         Description: The project version that should be used for Rekognition moderation.
         Default: ''
     ModerationJobPriorityParameter:
-        Type: Number
+        Type: String
         Description: The priority of jobs that are started for moderation.
-        Default: 10
+        Default: ''
     ModerationJobScheduleParameter:
         Type: String
         Description: The schedule that the moderation job should be run at. If empty, then the job will not be run on a schedule.
