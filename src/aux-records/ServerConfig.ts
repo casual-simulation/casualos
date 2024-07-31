@@ -824,56 +824,69 @@ const telemetrySchema = z.object({
 const rekognitionSchema = z.object({
     moderation: z.object({
         files: z.object({
-            sourceBucket: z
-                .string()
-                .describe(
-                    'The bucket that should be scanned when a job is started.'
-                )
-                .min(1),
+            job: z
+                .object({
+                    sourceBucket: z
+                        .string()
+                        .describe(
+                            'The bucket that should be scanned when a job is started.'
+                        )
+                        .min(1),
 
-            reportBucket: z
-                .string()
-                .describe('The bucket that job reports should be placed in.')
-                .min(1),
+                    reportBucket: z
+                        .string()
+                        .describe(
+                            'The bucket that job reports should be placed in.'
+                        )
+                        .min(1),
 
-            priority: z
-                .number()
-                .describe(
-                    'The priority of jobs that are created. Higher numbers are higher priority. Defaults to 10.'
-                )
-                .int()
-                .default(10),
+                    priority: z
+                        .number()
+                        .describe(
+                            'The priority of jobs that are created. Higher numbers are higher priority. Defaults to 10.'
+                        )
+                        .int()
+                        .optional()
+                        .default(10),
 
-            roleArn: z
-                .string()
-                .describe(
-                    'The ARN of the role that should be used to run the job.'
-                )
-                .min(1),
+                    roleArn: z
+                        .string()
+                        .describe(
+                            'The ARN of the role that should be used to run the job.'
+                        )
+                        .min(1),
 
-            lambdaFunctionArn: z
-                .string()
-                .describe(
-                    'The ARN of the lambda function that should be invoked to process the files.'
-                )
-                .min(1),
+                    lambdaFunctionArn: z
+                        .string()
+                        .describe(
+                            'The ARN of the lambda function that should be invoked to process the files.'
+                        )
+                        .min(1),
 
-            projectVersionArn: z
-                .string()
-                .describe(
-                    'The ARN of the custom moderation model that should be used. If omitted, then the default model is used.'
-                )
-                .min(1)
+                    tags: z
+                        .array(
+                            z.object({
+                                key: z.string().min(1),
+                                value: z.string().min(1),
+                            })
+                        )
+                        .describe('The tags that should be placed on the job.')
+                        .optional(),
+                })
+                .describe('The options specific to starting batch jobs.')
                 .optional(),
 
-            tags: z
-                .array(
-                    z.object({
-                        key: z.string().min(1),
-                        value: z.string().min(1),
-                    })
-                )
-                .describe('The tags that should be placed on the job.')
+            scan: z
+                .object({
+                    projectVersionArn: z
+                        .string()
+                        .describe(
+                            'The ARN of the custom moderation model that should be used. If omitted, then the default model is used.'
+                        )
+                        .min(1)
+                        .optional(),
+                })
+                .describe('The options specific to scanning files.')
                 .optional(),
         }),
     }),

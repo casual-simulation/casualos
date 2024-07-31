@@ -57,17 +57,32 @@ export function constructServerlessAwsServerBuilder() {
         dynamicConfig.rekognition = {
             moderation: {
                 files: {
-                    sourceBucket: FILES_BUCKET,
-                    reportBucket: MODERATION_JOB_REPORT_BUCKET,
-                    lambdaFunctionArn: MODERATION_JOB_LAMBDA_FUNCTION_ARN,
-                    roleArn: MODERATION_JOB_ROLE_ARN,
-                    priority: MODERATION_JOB_PRIORITY
-                        ? parseInt(MODERATION_JOB_PRIORITY)
-                        : undefined,
-                    projectVersionArn: MODERATION_PROJECT_VERSION,
+                    job: {
+                        sourceBucket: FILES_BUCKET || undefined,
+                        reportBucket: MODERATION_JOB_REPORT_BUCKET || undefined,
+                        lambdaFunctionArn:
+                            MODERATION_JOB_LAMBDA_FUNCTION_ARN || undefined,
+                        roleArn: MODERATION_JOB_ROLE_ARN || undefined,
+                        priority: MODERATION_JOB_PRIORITY
+                            ? parseInt(MODERATION_JOB_PRIORITY)
+                            : undefined,
+                    },
                 },
             },
         };
+    }
+
+    if (MODERATION_PROJECT_VERSION) {
+        dynamicConfig.rekognition = merge(dynamicConfig.rekognition || {}, {
+            moderation: {
+                files: {
+                    scan: {
+                        projectVersionArn:
+                            MODERATION_PROJECT_VERSION || undefined,
+                    },
+                },
+            },
+        });
     }
 
     return constructServerBuilder(dynamicConfig);

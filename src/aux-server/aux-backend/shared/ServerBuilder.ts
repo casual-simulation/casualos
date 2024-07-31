@@ -917,12 +917,17 @@ export class ServerBuilder implements SubscriptionLike {
             s3Control: this._ensureS3Control(options),
             filesJob: {
                 lambdaFunctionArn:
-                    options.rekognition.moderation.files.lambdaFunctionArn,
-                sourceBucket: options.rekognition.moderation.files.sourceBucket,
-                reportBucket: options.rekognition.moderation.files.reportBucket,
-                priority: options.rekognition.moderation.files.priority,
-                roleArn: options.rekognition.moderation.files.roleArn,
-                tags: options.rekognition.moderation.files.tags as any,
+                    options.rekognition.moderation.files.job?.lambdaFunctionArn,
+                sourceBucket:
+                    options.rekognition.moderation.files.job?.sourceBucket,
+                reportBucket:
+                    options.rekognition.moderation.files.job?.reportBucket,
+                priority: options.rekognition.moderation.files.job?.priority,
+                roleArn: options.rekognition.moderation.files.job?.roleArn,
+                tags: options.rekognition.moderation.files.job?.tags as any,
+                projectVersionArn:
+                    options.rekognition.moderation.files.scan
+                        ?.projectVersionArn,
             },
         });
 
