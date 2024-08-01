@@ -216,6 +216,7 @@ Resources:
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+                    MODERATION_JOB_ACCOUNT_ID: !Sub '${AWS::AccountId}'
                     MODERATION_JOB_REPORT_BUCKET: !Ref ModerationJobReportBucket
                     MODERATION_JOB_LAMBDA_FUNCTION_ARN: !GetAtt handleRecords.Arn
                     MODERATION_JOB_ROLE_ARN: !GetAtt ModerationScanRole.Arn
