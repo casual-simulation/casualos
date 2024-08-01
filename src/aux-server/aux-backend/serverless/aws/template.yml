@@ -204,23 +204,9 @@ Resources:
             MemorySize: 1024
             Timeout: 900
             Description: A function that periodically schedules moderation scans.
-            Policies:
-                # Policy that grants permissions to start a batch job and pass
-                # the correct role to the batch job
-                - PolicyName: CreateBatchJob
-                  PolicyDocument:
-                      Version: 2012-10-17
-                      Statement:
-                          - Effect: Allow
-                            Action:
-                                - 'iam:PassRole'
-                            Resource:
-                                - !GetAtt ModerationScanRole.Arn
-                          - Effect: Allow
-                            Action:
-                                - 's3:CreateJob'
-                            Resource:
-                                - '*'
+            Role: !GetAtt
+                - ScheduleModerationScanRole
+                - Arn
             Environment:
                 Variables:
                     REGION: !Ref 'AWS::Region'
@@ -237,20 +223,58 @@ Resources:
                     MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
-            Events: !If
-                - UseModerationJobSchedule
-                - SaveBranches:
-                  Type: ScheduleV2
-                  Properties:
-                      OmitName: true
-                      Description: Schedule for scanning files.
-                      ScheduleExpression: !Ref ModerationJobScheduleParameter
-                - !Ref 'AWS::NoValue'
+            Events:
+                ScheduleModerationJob:
+                    Type: ScheduleV2
+                    Properties:
+                        OmitName: true
+                        Description: 'Schedule for scanning files.'
+                        ScheduleExpression:
+                            !If [
+                                UseModerationJobSchedule,
+                                !Ref ModerationJobScheduleParameter,
+                                'rate(1 day)',
+                            ]
+                        State:
+                            !If [
+                                UseModerationJobSchedule,
+                                'ENABLED',
+                                'DISABLED',
+                            ]
     ScheduleModerationScansLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
             LogGroupName: !Sub '/aws/lambda/${ScheduleModerationScansFunction}'
             RetentionInDays: 14
+
+    ScheduleModerationScanRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub '${AWS::StackName}-schedule-moderation-scan-role'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - lambda.amazonaws.com
+                      Action:
+                          - sts:AssumeRole
+            Policies:
+                - PolicyName: CreateBatchJob
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'iam:PassRole'
+                            Resource:
+                                - !GetAtt ModerationScanRole.Arn
+                          - Effect: Allow
+                            Action:
+                                - 's3:CreateJob'
+                            Resource:
+                                - '*'
 
     # The role that is used by the S3 moderation batch job to grab files
     # and execute the lambda function
@@ -292,6 +316,7 @@ Resources:
     FilesBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
         Properties:
             BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             CorsConfiguration:
@@ -318,6 +343,7 @@ Resources:
     ModerationJobReportBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
         Properties:
             BucketName: !Sub '${AWS::StackName}-moderation-job-reports-${AWS::AccountId}'
 
