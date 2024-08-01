@@ -316,6 +316,7 @@ Resources:
     FilesBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
         Properties:
             BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             CorsConfiguration:
@@ -342,6 +343,7 @@ Resources:
     ModerationJobReportBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
         Properties:
             BucketName: !Sub '${AWS::StackName}-moderation-job-reports-${AWS::AccountId}'
 
