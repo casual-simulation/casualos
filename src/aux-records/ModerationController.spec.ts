@@ -286,7 +286,6 @@ describe('ModerationController', () => {
             uuidMock.mockReturnValue('uuid');
             nowMock.mockReturnValue(123);
             const result = await controller.scheduleModerationScans();
-
             expect(result).toEqual({
                 success: true,
                 jobs: [
@@ -296,15 +295,13 @@ describe('ModerationController', () => {
                         createdAtMs: 123,
                         updatedAtMs: 123,
                         filter: {
-                            keyNameConstraint: {
-                                matchAnySuffix: [
-                                    '.png',
-                                    '.webp',
-                                    '.jpg',
-                                    '.jpeg',
-                                    '.gif',
-                                ],
-                            },
+                            fileExtensions: [
+                                '.png',
+                                '.webp',
+                                '.jpg',
+                                '.jpeg',
+                                '.gif',
+                            ],
                         },
                     },
                 ],
@@ -317,15 +314,13 @@ describe('ModerationController', () => {
                     createdAtMs: 123,
                     updatedAtMs: 123,
                     filter: {
-                        keyNameConstraint: {
-                            matchAnySuffix: [
-                                '.png',
-                                '.webp',
-                                '.jpg',
-                                '.jpeg',
-                                '.gif',
-                            ],
-                        },
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
                     },
                 },
             ]);
@@ -337,15 +332,13 @@ describe('ModerationController', () => {
                     createdAtMs: 123,
                     updatedAtMs: 123,
                     filter: {
-                        keyNameConstraint: {
-                            matchAnySuffix: [
-                                '.png',
-                                '.webp',
-                                '.jpg',
-                                '.jpeg',
-                                '.gif',
-                            ],
-                        },
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
                     },
                 },
             ]);
@@ -373,16 +366,14 @@ describe('ModerationController', () => {
                         createdAtMs: 123,
                         updatedAtMs: 123,
                         filter: {
-                            createdAfterMs: 5,
-                            keyNameConstraint: {
-                                matchAnySuffix: [
-                                    '.png',
-                                    '.webp',
-                                    '.jpg',
-                                    '.jpeg',
-                                    '.gif',
-                                ],
-                            },
+                            uploadedAfterMs: 5,
+                            fileExtensions: [
+                                '.png',
+                                '.webp',
+                                '.jpg',
+                                '.jpeg',
+                                '.gif',
+                            ],
                         },
                     },
                 ],
@@ -395,16 +386,14 @@ describe('ModerationController', () => {
                     createdAtMs: 123,
                     updatedAtMs: 123,
                     filter: {
-                        createdAfterMs: 5,
-                        keyNameConstraint: {
-                            matchAnySuffix: [
-                                '.png',
-                                '.webp',
-                                '.jpg',
-                                '.jpeg',
-                                '.gif',
-                            ],
-                        },
+                        uploadedAfterMs: 5,
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
                     },
                 },
             ]);
@@ -416,16 +405,14 @@ describe('ModerationController', () => {
                     createdAtMs: 123,
                     updatedAtMs: 123,
                     filter: {
-                        createdAfterMs: 5,
-                        keyNameConstraint: {
-                            matchAnySuffix: [
-                                '.png',
-                                '.webp',
-                                '.jpg',
-                                '.jpeg',
-                                '.gif',
-                            ],
-                        },
+                        uploadedAfterMs: 5,
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
                     },
                 },
             ]);

@@ -74,6 +74,8 @@ Resources:
                 # Give Create/Read/Update/Delete Permissions to the Bucket
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                - S3CrudPolicy:
+                      BucketName: !Sub '${ModerationJobReportBucket}'
                 - !If [
                       UseSESCrud,
                       !Ref SESIdentityNameParameter,

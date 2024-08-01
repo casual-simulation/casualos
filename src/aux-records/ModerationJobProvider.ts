@@ -28,36 +28,14 @@ export interface ModerationJobProvider {
  */
 export interface ModerationJobFilesFilter {
     /**
-     * If provided, only files that were created after this timestamp will be included.
-     * Time is in unix time in milliseconds.
+     * If provided, only files that were uploaded after this timestamp will be included.
      */
-    createdAfterMs?: number;
+    uploadedAfterMs?: number;
 
     /**
-     * If provided, only files that were created before this timestamp will be included.
-     * Time is in unix time in milliseconds.
+     * If provided, only files that match one of the given extensions will be included.
      */
-    createdBeforeMs?: number;
-
-    /**
-     * Constraints on the name of files that should be included in the job.
-     */
-    keyNameConstraint?: {
-        /**
-         * Includes files that match any of the given substrings.
-         */
-        matchAnySubstring?: string[];
-
-        /**
-         * Includes files that match any of the given prefixes.
-         */
-        matchAnyPrefix?: string[];
-
-        /**
-         * Includes files that match any of the given suffixes.
-         */
-        matchAnySuffix?: string[];
-    };
+    fileExtensions?: string[];
 }
 
 export interface ScanFileOptions {

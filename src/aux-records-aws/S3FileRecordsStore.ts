@@ -1,6 +1,8 @@
 import {
     FileRecordsStore,
     GetFileNameFromUrlResult,
+    ListAllFilesFilter,
+    ListAllFilesResult,
     ListFilesLookupFailure,
     ListFilesStoreResult,
     PresignFileReadRequest,
@@ -96,6 +98,12 @@ export class S3FileRecordsStore implements FileRecordsStore {
                 }
             };
         }
+    }
+
+    listAllUploadedFilesMatching(
+        filter: ListAllFilesFilter
+    ): Promise<ListAllFilesResult> {
+        return this._lookup.listAllUploadedFilesMatching(filter);
     }
 
     listUploadedFiles?(
@@ -437,7 +445,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         try {
             await this._lookup.eraseFileRecord(recordName, fileName);
 
-            const key = this._fileKey(recordName, fileName);
+            const key = this.getFileKey(recordName, fileName);
 
             await this._s3.deleteObject({
                 Bucket: this._bucket,
@@ -487,13 +495,13 @@ export class S3FileRecordsStore implements FileRecordsStore {
         if (!file) {
             return {
                 bucket: this._bucket,
-                name: this._fileKey(recordName, fileName),
+                name: this.getFileKey(recordName, fileName),
             };
         }
 
         return {
             bucket: file.bucket ?? this._bucket,
-            name: this._fileKey(recordName, fileName),
+            name: this.getFileKey(recordName, fileName),
         };
     }
 
@@ -513,7 +521,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         bucket: string,
         isPublic: boolean
     ): URL {
-        let filePath = this._fileKey(recordName, fileName);
+        let filePath = this.getFileKey(recordName, fileName);
 
         if (isPublic && this._publicFilesUrl) {
             return new URL(`${this._publicFilesUrl}/${filePath}`);
@@ -527,7 +535,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
     }
 
     @traced(TRACE_NAME)
-    private _fileKey(recordName: string, fileName: string): string {
+    getFileKey(recordName: string, fileName: string): string {
         return `${recordName}/${fileName}`;
     }
 }

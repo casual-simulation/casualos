@@ -11,11 +11,14 @@ import {
     Rekognition,
 } from '@aws-sdk/client-rekognition';
 import {
+    CreateJobCommand,
+    CreateJobCommandInput,
     JobManifestGeneratorFilter,
-    S3Control,
+    S3ControlClient,
 } from '@aws-sdk/client-s3-control';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { S3 } from '@aws-sdk/client-s3';
 
 const TRACE_NAME = 'RekognitionModerationJobProvider';
 
@@ -33,7 +36,12 @@ export interface RekognitionModerationJobProviderOptions {
     /**
      * The S3 client that should be used to create jobs.
      */
-    s3Control: S3Control;
+    s3Control: S3ControlClient;
+
+    /**
+     * The S3 client that should be used to store manifest files.
+     */
+    s3: S3;
 
     /**
      * Options specific to the files job.
@@ -92,13 +100,15 @@ export interface RekognitionModerationFileJobOptions {
 export class RekognitionModerationJobProvider implements ModerationJobProvider {
     private _filesStore: S3FileRecordsStore;
     private _rekognition: Rekognition;
-    private _s3: S3Control;
+    private _s3Control: S3ControlClient;
+    private _s3: S3;
     private _filesOptions: RekognitionModerationFileJobOptions;
 
     constructor(options: RekognitionModerationJobProviderOptions) {
         this._filesStore = options.filesStore;
         this._rekognition = options.rekognition;
-        this._s3 = options.s3Control;
+        this._s3Control = options.s3Control;
+        this._s3 = options.s3;
         this._filesOptions = options.filesJob;
     }
 
@@ -108,31 +118,44 @@ export class RekognitionModerationJobProvider implements ModerationJobProvider {
     ): Promise<ModerationJob> {
         const jobId = uuid();
 
-        const manifestFilter: JobManifestGeneratorFilter = {};
+        const files = await this._filesStore.listAllUploadedFilesMatching(
+            filter
+        );
 
-        if (typeof filter.createdAfterMs === 'number') {
-            manifestFilter.CreatedAfter = new Date(filter.createdAfterMs);
-        }
-        if (typeof filter.createdBeforeMs === 'number') {
-            manifestFilter.CreatedBefore = new Date(filter.createdBeforeMs);
-        }
-        if (typeof filter.keyNameConstraint === 'object') {
-            manifestFilter.KeyNameConstraint = {};
-            if (filter.keyNameConstraint.matchAnyPrefix) {
-                manifestFilter.KeyNameConstraint.MatchAnyPrefix =
-                    filter.keyNameConstraint.matchAnyPrefix;
-            }
-            if (filter.keyNameConstraint.matchAnySubstring) {
-                manifestFilter.KeyNameConstraint.MatchAnySubstring =
-                    filter.keyNameConstraint.matchAnySubstring;
-            }
-            if (filter.keyNameConstraint.matchAnySuffix) {
-                manifestFilter.KeyNameConstraint.MatchAnySuffix =
-                    filter.keyNameConstraint.matchAnySuffix;
-            }
+        if (files.success === false) {
+            console.error('Error listing files:', files);
+            throw new Error('Error listing files');
         }
 
-        const job = await this._s3.createJob({
+        console.log(
+            `[RekognitionModerationJobProvider] Generating manifest for ${files.files.length} files.`
+        );
+
+        let manifest = '';
+        for (let file of files.files) {
+            const key = this._filesStore.getFileKey(
+                file.recordName,
+                file.fileName
+            );
+            manifest += `${
+                file.bucket ?? this._filesOptions.sourceBucket
+            },${key}\n`;
+        }
+
+        const manifestKey = `${jobId}.manifest.csv`;
+
+        const manifestResult = await this._s3.putObject({
+            Bucket: this._filesOptions.reportBucket,
+            Key: manifestKey,
+            Body: manifest,
+        });
+
+        console.log(
+            `[RekognitionModerationJobProvider] Manifest uploaded to ${this._filesOptions.reportBucket}/${manifestKey}.`
+        );
+
+        const input: CreateJobCommandInput = {
+            ClientRequestToken: jobId,
             AccountId: this._filesOptions.accountId,
             Priority: this._filesOptions.priority,
             Tags: this._filesOptions.tags?.map((t) => ({
@@ -148,20 +171,27 @@ export class RekognitionModerationJobProvider implements ModerationJobProvider {
                     },
                 },
             },
-            ManifestGenerator: {
-                S3JobManifestGenerator: {
-                    EnableManifestOutput: false,
-                    SourceBucket: this._filesOptions.sourceBucket,
-                    Filter: manifestFilter,
+            Manifest: {
+                Location: {
+                    ObjectArn: `arn:aws:s3:::${this._filesOptions.reportBucket}/${manifestKey}`,
+                    ETag: manifestResult.ETag,
+                },
+                Spec: {
+                    Format: 'S3BatchOperations_CSV_20180820',
+                    Fields: ['Bucket', 'Key'],
                 },
             },
             Report: {
                 Enabled: true,
-                Bucket: this._filesOptions.reportBucket,
+                Bucket: `arn:aws:s3:::${this._filesOptions.reportBucket}`,
+                Format: 'Report_CSV_20180820',
+                ReportScope: 'AllTasks',
+                Prefix: 'reports',
             },
             RoleArn: this._filesOptions.roleArn,
-        });
+        };
 
+        const job = await this._s3Control.send(new CreateJobCommand(input));
         return {
             id: jobId,
             type: 'files',
