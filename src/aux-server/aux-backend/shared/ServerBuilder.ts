@@ -916,6 +916,7 @@ export class ServerBuilder implements SubscriptionLike {
             rekognition: this._ensureRekognition(options),
             s3Control: this._ensureS3Control(options),
             filesJob: {
+                accountId: options.rekognition.moderation.files.job?.accountId,
                 lambdaFunctionArn:
                     options.rekognition.moderation.files.job?.lambdaFunctionArn,
                 sourceBucket:

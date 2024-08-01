@@ -43,6 +43,11 @@ export interface RekognitionModerationJobProviderOptions {
 
 export interface RekognitionModerationFileJobOptions {
     /**
+     * The AWS Account ID that should be used to create the job.
+     */
+    accountId: string;
+
+    /**
      * The ARN lambda function that should be invoked to process the files.
      */
     lambdaFunctionArn: string;
@@ -128,6 +133,7 @@ export class RekognitionModerationJobProvider implements ModerationJobProvider {
         }
 
         const job = await this._s3.createJob({
+            AccountId: this._filesOptions.accountId,
             Priority: this._filesOptions.priority,
             Tags: this._filesOptions.tags?.map((t) => ({
                 Key: t.key,

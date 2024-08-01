@@ -14,6 +14,7 @@ export const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 export const REGION = process.env.AWS_REGION;
 export const WEBSOCKET_URL = process.env.WEBSOCKET_URL;
 
+export const MODERATION_JOB_ACCOUNT_ID = process.env.MODERATION_JOB_ACCOUNT_ID;
 export const MODERATION_JOB_REPORT_BUCKET =
     process.env.MODERATION_JOB_REPORT_BUCKET;
 export const MODERATION_JOB_LAMBDA_FUNCTION_ARN =
@@ -58,6 +59,7 @@ export function constructServerlessAwsServerBuilder() {
             moderation: {
                 files: {
                     job: {
+                        accountId: MODERATION_JOB_ACCOUNT_ID || undefined,
                         sourceBucket: FILES_BUCKET || undefined,
                         reportBucket: MODERATION_JOB_REPORT_BUCKET || undefined,
                         lambdaFunctionArn:

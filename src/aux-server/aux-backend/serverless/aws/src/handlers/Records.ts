@@ -183,5 +183,6 @@ export async function savePermanentBranches() {
 export async function scheduleModerationScans() {
     await builder.ensureInitialized();
 
-    await moderationController.scheduleModerationScans();
+    const result = await moderationController.scheduleModerationScans();
+    console.log('[Records] Scheduled moderation scans result:', result);
 }

@@ -826,6 +826,13 @@ const rekognitionSchema = z.object({
         files: z.object({
             job: z
                 .object({
+                    accountId: z
+                        .string()
+                        .describe(
+                            'The AWS Account ID that should be used to run the job.'
+                        )
+                        .min(1),
+
                     sourceBucket: z
                         .string()
                         .describe(
