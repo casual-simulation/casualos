@@ -70,20 +70,9 @@ Resources:
             MemorySize: 256
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
-            Policies:
-                # Give Create/Read/Update/Delete Permissions to the Bucket
-                - S3CrudPolicy:
-                      BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
-                - S3CrudPolicy:
-                      BucketName: !Sub '${ModerationJobReportBucket}'
-                - !If [
-                      UseSESCrud,
-                      !Ref SESIdentityNameParameter,
-                      !Ref 'AWS::NoValue',
-                  ]
-
-                  # Give the ability to detect moderation labels using Rekognition
-                - RekognitionLabelsPolicy: {}
+            Role: !GetAtt
+                - HandleRecordsRole
+                - Arn
             Environment:
                 Variables:
                     REGION: !Ref 'AWS::Region'
@@ -93,6 +82,11 @@ Resources:
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+                    MODERATION_JOB_ACCOUNT_ID: !Sub '${AWS::AccountId}'
+                    MODERATION_JOB_REPORT_BUCKET: !Ref ModerationJobReportBucket
+                    MODERATION_JOB_LAMBDA_FUNCTION_ARN: !GetAtt handleRecords.Arn
+                    MODERATION_JOB_ROLE_ARN: !GetAtt ModerationScanRole.Arn
+                    MODERATION_JOB_PRIORITY: !Ref ModerationJobPriorityParameter
                     MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
@@ -152,6 +146,75 @@ Resources:
         Properties:
             LogGroupName: !Sub '/aws/lambda/${handleRecords}'
             RetentionInDays: 14
+    HandleRecordsRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub '${AWS::StackName}-handle-records-role'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - lambda.amazonaws.com
+                      Action:
+                          - sts:AssumeRole
+            Policies:
+                - PolicyName: S3FilesPolicy
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'iam:PassRole'
+                            Resource:
+                                - !GetAtt ModerationScanRole.Arn
+                          - Effect: Allow
+                            Action:
+                                - 's3:GetObject'
+                                - 's3:ListBucket'
+                                - 's3:GetBucketLocation'
+                                - 's3:GetObjectVersion'
+                                - 's3:PutObject'
+                                - 's3:PutObjectAcl'
+                                - 's3:GetLifecycleConfiguration'
+                                - 's3:PutLifecycleConfiguration'
+                                - 's3:DeleteObject'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${FilesBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${FilesBucket}/*'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}/*'
+                          - Effect: Allow
+                            Action:
+                                - 's3:CreateJob'
+                            Resource:
+                                - '*'
+                - !If
+                  - UseSESCrud
+                  - PolicyName: SESCrudPolicy
+                    PolicyDocument:
+                        Version: 2012-10-17
+                        Statement:
+                            - Effect: Allow
+                              Action:
+                                  - 'ses:GetIdentityVerificationAttributes'
+                                  - 'ses:SendEmail'
+                                  - 'ses:SendRawEmail'
+                                  - 'ses:VerifyEmailIdentity'
+                              Resource:
+                                  - !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${SESIdentityNameParameter}'
+                  - !Ref 'AWS::NoValue'
+                - PolicyName: RekognitionLabelsPolicy
+                  PolicyDocument:
+                      Version: '2012-10-17'
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'rekognition:DetectLabels'
+                                - 'rekognition:DetectModerationLabels'
+                            Resource:
+                                - '*'
 
     SavePermanentBranchesFunction:
         Type: AWS::Serverless::Function
