@@ -278,6 +278,12 @@ Resources:
                                 - 's3:CreateJob'
                             Resource:
                                 - '*'
+                          - Effect: Allow
+                            Action:
+                                - 's3:PutObject'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}/*'
 
     # The role that is used by the S3 moderation batch job to grab files
     # and execute the lambda function
