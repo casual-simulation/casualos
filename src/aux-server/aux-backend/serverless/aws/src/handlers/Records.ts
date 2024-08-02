@@ -81,32 +81,50 @@ async function handleS3BatchEvent(event: S3BatchEvent) {
 
     const { jobId } = userArgumentsSchema.parse(event.job.userArguments);
 
-    await Promise.all(
-        event.tasks.map(async (task) => {
-            const key = task.s3Key;
-            const bucket = task.s3Bucket;
+    return {
+        invocationSchemaVersion: event.invocationSchemaVersion,
+        treatMissingKeysAs: 'PermanentFailure',
+        invocationId: event.invocationId,
+        results: await Promise.all(
+            event.tasks.map(async (task) => {
+                try {
+                    const key = task.s3Key;
+                    const bucket = task.s3Bucket;
 
-            const fileName = await filesStore.getFileInfo(bucket, key);
+                    const fileName = await filesStore.getFileInfo(bucket, key);
+                    if (fileName.success === false) {
+                        console.error(
+                            '[Records] Unable to get file info:',
+                            bucket,
+                            key,
+                            fileName
+                        );
+                        return;
+                    }
 
-            if (fileName.success === false) {
-                console.error(
-                    '[Records] Unable to get file info:',
-                    bucket,
-                    key,
-                    fileName
-                );
-                return;
-            }
+                    const result = await moderationController.scanFile({
+                        recordName: fileName.recordName,
+                        fileName: fileName.fileName,
+                        jobId: jobId,
+                    });
 
-            const result = await moderationController.scanFile({
-                recordName: fileName.recordName,
-                fileName: fileName.fileName,
-                jobId: jobId,
-            });
-
-            console.log('[Records] Scanned file:', fileName, result);
-        })
-    );
+                    console.log('[Records] Scanned file:', fileName, result);
+                    return {
+                        taskId: task.taskId,
+                        resultCode: 'Succeeded',
+                        resultString: `Scanned file: ${fileName}`,
+                    };
+                } catch (err) {
+                    console.error('[Records] Error scanning file:', err);
+                    return {
+                        taskId: task.taskId,
+                        resultCode: 'PermanentFailure',
+                        resultString: `Error scanning file: ${err}`,
+                    };
+                }
+            })
+        ),
+    };
 }
 
 export async function handleApiEvent(

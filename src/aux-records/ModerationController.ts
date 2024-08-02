@@ -158,16 +158,15 @@ export class ModerationController {
                 let filter: ModerationJobFilesFilter = {};
 
                 if (config.jobs.files.fileExtensions) {
-                    filter.keyNameConstraint = {
-                        matchAnySuffix: config.jobs.files.fileExtensions,
-                    };
+                    filter.fileExtensions =
+                        config.jobs.files.fileExtensions.slice();
                 }
 
                 const lastFileJob = await this._store.findMostRecentJobOfType(
                     'files'
                 );
                 if (lastFileJob) {
-                    filter.createdAfterMs = lastFileJob.createdAtMs;
+                    filter.uploadedAfterMs = lastFileJob.createdAtMs;
                 }
 
                 const job = await this._jobProvider.startFilesJob(filter);

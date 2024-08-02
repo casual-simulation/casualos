@@ -165,7 +165,7 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
 import { MinioFileRecordsStore } from 'aux-backend/minio/MinioFileRecordsStore';
-import { S3Control } from '@aws-sdk/client-s3-control';
+import { S3Control, S3ControlClient } from '@aws-sdk/client-s3-control';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -279,7 +279,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _redisWebsocketConnections: RedisClientType | null = null;
     private _redisRateLimit: RedisClientType | null = null;
     private _s3: S3;
-    private _s3Control: S3Control;
+    private _s3Control: S3ControlClient;
     private _rateLimitController: RateLimitController;
     private _websocketRateLimitController: RateLimitController;
 
@@ -915,6 +915,7 @@ export class ServerBuilder implements SubscriptionLike {
             filesStore: this._filesStore,
             rekognition: this._ensureRekognition(options),
             s3Control: this._ensureS3Control(options),
+            s3: this._ensureS3(options),
             filesJob: {
                 accountId: options.rekognition.moderation.files.job?.accountId,
                 lambdaFunctionArn:
@@ -1756,9 +1757,13 @@ export class ServerBuilder implements SubscriptionLike {
         return this._s3;
     }
 
-    private _ensureS3Control(options: Pick<ServerConfig, 's3'>): S3Control {
+    private _ensureS3Control(
+        options: Pick<ServerConfig, 's3'>
+    ): S3ControlClient {
         if (!this._s3Control) {
-            this._s3Control = new S3Control();
+            this._s3Control = new S3ControlClient({
+                region: options.s3.region,
+            });
             this._subscription.add(() => {
                 this._s3Control.destroy();
             });

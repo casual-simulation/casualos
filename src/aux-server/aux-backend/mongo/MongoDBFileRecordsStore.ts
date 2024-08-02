@@ -15,6 +15,8 @@ import {
     ListFilesLookupResult,
     ListFilesStoreResult,
     ListFilesStoreFailure,
+    ListAllFilesFilter,
+    ListAllFilesResult,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
 
@@ -285,6 +287,28 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
                 bucket: f.bucket,
             })),
             totalCount: count,
+        };
+    }
+
+    async listAllUploadedFilesMatching(
+        filter: ListAllFilesFilter
+    ): Promise<ListAllFilesResult> {
+        let query = {
+            uploaded: true,
+        } as FilterQuery<MongoFileRecord>;
+
+        const files = await this._collection
+            .find(query)
+            .sort({ fileName: 1 })
+            .toArray();
+
+        return {
+            success: true,
+            files: files.map((f) => ({
+                recordName: f.recordName,
+                fileName: f.fileName,
+                bucket: f.bucket,
+            })),
         };
     }
 
