@@ -861,6 +861,75 @@ model UserInstReport {
     @@index([reportReason, createdAt(sort: Desc), recordName, inst])
 }
 
+model ModerationJob {
+    id String @id @db.Uuid
+
+    // The ID of the s3 batch job
+    s3Id String? @unique
+
+    // The type of the moderation job.
+    // Usually for files, but there could be other types of moderation jobs.
+    type String
+
+    results FileModerationResult[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([type, createdAt(sort: Desc)])
+}
+
+model FileModerationResult {
+    // The ID of the moderation result.
+    id String @id @db.Uuid
+
+    // The job that this moderation result is associated with
+    jobId String? @db.Uuid
+    job ModerationJob? @relation(fields: [jobId], references: [id], onDelete: Cascade, map: "FileModerationResult_jobId_fkey1")
+
+    // The name of the record that was moderated
+    recordName String @db.String(128)
+
+    // The name of the file that was moderated
+    fileName String @db.String(512)
+
+    // Whether the file contains content that has been
+    // algorithmically determined to be banned.
+    appearsToMatchBannedContent Boolean
+
+    // The labels that were detected in the file
+    labels FileModerationLabel[]
+
+    // The version of the model that was used to produce this result
+    modelVersion String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Search by banned content status
+    @@index([appearsToMatchBannedContent, fileName, createdAt(sort: Desc)])
+}
+
+model FileModerationLabel {
+    // The ID of the moderation label
+    id String @id @db.Uuid
+
+    // The name of the label
+    name String @db.String(128)
+
+    // The category of the label
+    category String? @db.String(128)
+
+    // The confidence of the label
+    confidence Float
+
+    // The ID of the moderation result that this label is associated with
+    fileModerationId String @db.Uuid
+    fileModeration FileModerationResult @relation(fields: [fileModerationId], references: [id], onDelete: Cascade, map: "FileModerationLabel_fileModerationId_fkey1")
+
+    @@index([fileModerationId, name, confidence])
+}
+
 model StudioComIdRequest {
     id String @id @db.Uuid
 

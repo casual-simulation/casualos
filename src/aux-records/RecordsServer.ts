@@ -1426,6 +1426,70 @@ export class RecordsServer {
                     this._updateFile(data, context)
                 ),
 
+            scanFileForModeration: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/file/scan')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        fileName: z.string().min(1),
+                    })
+                )
+                .handler(async ({ recordName, fileName }, context) => {
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+                    if (!isSuperUserRole(validation.role)) {
+                        return {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                        } as const;
+                    }
+                    const result = await this._moderationController.scanFile({
+                        recordName,
+                        fileName,
+                    });
+
+                    return result;
+                }),
+
+            scheduleModerationScans: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/moderation/schedule/scan')
+                .inputs(z.object({}))
+                .handler(async (input, context) => {
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+                    if (!isSuperUserRole(validation.role)) {
+                        return {
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                        } as const;
+                    }
+
+                    const result =
+                        await this._moderationController.scheduleModerationScans();
+
+                    return result;
+                }),
+
             eraseData: procedure()
                 .origins('api')
                 .http('DELETE', '/api/v2/records/data')

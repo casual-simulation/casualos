@@ -120,6 +120,7 @@ import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
 import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
 import { EARTH_RADIUS } from './MapPortalGrid3D';
 import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
+import { Subscription } from 'rxjs';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -169,6 +170,7 @@ export class PlayerGame extends Game {
     private _miniAmbientLight: AmbientLight;
     private _miniDirectionalLight: DirectionalLight;
     private _miniHDRAddress: string;
+    private _simulationSubs: Map<string, Subscription> = new Map();
 
     // /**
     //  * A scene that is used to allow the main scene to render
@@ -729,20 +731,34 @@ export class PlayerGame extends Game {
     }
 
     private simulationAdded(sim: BrowserSimulation) {
+        const removeListeners = (s: Simulation3D) => {
+            s.onBotAdded.removeListener(this.onBotAdded.invoke);
+            s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
+            s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
+        };
+
+        let sub = new Subscription();
+        this._simulationSubs.set(sim.id, sub);
+
         const playerSim3D = new PlayerPageSimulation3D(this, sim);
         playerSim3D.init();
         playerSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
         playerSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
         playerSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
 
-        // this.subs.push(
-        //     // playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
-        //     //     this.onSimsUpdated();
-        //     // })
-        //     // playerSim3D.menuContext.itemsUpdated.subscribe(() => {
-        //     //     this.onMenuUpdated();
-        //     // })
-        // );
+        sub.add(() => {
+            const index = this.playerSimulations.findIndex(
+                (s) => s.simulation.id === sim.id
+            );
+            if (index >= 0) {
+                const removed = this.playerSimulations.splice(index, 1);
+                removed.forEach((s) => {
+                    removeListeners(s);
+                    s.unsubscribe();
+                    this.mainScene.remove(s);
+                });
+            }
+        });
 
         this.playerSimulations.push(playerSim3D);
         this.mainScene.add(playerSim3D);
@@ -759,6 +775,24 @@ export class PlayerGame extends Game {
         this.miniSimulations.push(miniPortalSim3D);
         this.miniScene.add(miniPortalSim3D);
 
+        sub.add(() => {
+            //
+            // Remove miniGridPortal Simulation
+            //
+            const index = this.miniSimulations.findIndex(
+                (s) => s.simulation.id == sim.id
+            );
+
+            if (index >= 0) {
+                const removed = this.miniSimulations.splice(index, 1);
+                removed.forEach((s) => {
+                    removeListeners(s);
+                    s.unsubscribe();
+                    this.miniScene.remove(s);
+                });
+            }
+        });
+
         const mapPortalSim3D = new PlayerMapSimulation3D(this, sim);
         mapPortalSim3D.coordinateTransformer =
             this.gameView.getMapCoordinateTransformer();
@@ -771,6 +805,21 @@ export class PlayerGame extends Game {
         this.mapSimulations.push(mapPortalSim3D);
         this.mapScene.add(mapPortalSim3D);
 
+        sub.add(() => {
+            const index = this.mapSimulations.findIndex(
+                (s) => s.simulation.id == sim.id
+            );
+
+            if (index >= 0) {
+                const removed = this.mapSimulations.splice(index, 1);
+                removed.forEach((s) => {
+                    removeListeners(s);
+                    s.unsubscribe();
+                    this.mapScene.remove(s);
+                });
+            }
+        });
+
         const miniMapPortalSim3D = new MiniMapSimulation3D(this, sim);
         miniMapPortalSim3D.coordinateTransformer =
             this.gameView.getMiniMapCoordinateTransformer();
@@ -782,6 +831,21 @@ export class PlayerGame extends Game {
 
         this.miniMapSimulations.push(miniMapPortalSim3D);
         this.miniMapScene.add(miniMapPortalSim3D);
+
+        sub.add(() => {
+            const index = this.miniMapSimulations.findIndex(
+                (s) => s.simulation.id == sim.id
+            );
+
+            if (index >= 0) {
+                const removed = this.miniMapSimulations.splice(index, 1);
+                removed.forEach((s) => {
+                    removeListeners(s);
+                    s.unsubscribe();
+                    this.miniMapScene.remove(s);
+                });
+            }
+        });
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe((e) => {
@@ -923,8 +987,18 @@ export class PlayerGame extends Game {
                 } else if (e.type === 'capture_portal_screenshot') {
                     this._capturePortalScreenshot(sim, e);
                 }
-            })
+            }),
+            sub
         );
+    }
+
+    private simulationRemoved(sim: BrowserSimulation) {
+        const sub = this._simulationSubs.get(sim.id);
+
+        if (sub) {
+            this._simulationSubs.delete(sim.id);
+            sub.unsubscribe();
+        }
     }
 
     private _capturePortalScreenshot(
@@ -1334,43 +1408,6 @@ export class PlayerGame extends Game {
         let list = [] as BotAction[];
         enqueueAsyncResult(list, event, null, false);
         sim.helper.transaction(...list);
-    }
-
-    private simulationRemoved(sim: BrowserSimulation) {
-        //
-        // Remove Player Simulation
-        //
-        const playerSimIndex = this.playerSimulations.findIndex(
-            (s) => s.simulation.id === sim.id
-        );
-        if (playerSimIndex >= 0) {
-            const removed = this.playerSimulations.splice(playerSimIndex, 1);
-            removed.forEach((s) => {
-                s.onBotAdded.removeListener(this.onBotAdded.invoke);
-                s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
-                s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
-                s.unsubscribe();
-                this.mainScene.remove(s);
-            });
-        }
-
-        //
-        // Remove miniGridPortal Simulation
-        //
-        const invSimIndex = this.miniSimulations.findIndex(
-            (s) => s.simulation.id == sim.id
-        );
-
-        if (invSimIndex >= 0) {
-            const removed = this.miniSimulations.splice(invSimIndex, 1);
-            removed.forEach((s) => {
-                s.onBotAdded.removeListener(this.onBotAdded.invoke);
-                s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
-                s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
-                s.unsubscribe();
-                this.miniScene.remove(s);
-            });
-        }
     }
 
     resetCameras() {

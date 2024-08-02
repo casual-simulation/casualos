@@ -4,6 +4,8 @@ import {
     EraseFileStoreResult,
     FileRecord,
     FileRecordsLookup,
+    ListAllFilesFilter,
+    ListAllFilesResult,
     ListFilesLookupResult,
     MarkFileRecordAsUploadedResult,
     UpdateFileResult,
@@ -63,6 +65,32 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
                 description: f.description,
             })),
             totalCount: count,
+        };
+    }
+
+    async listAllUploadedFilesMatching(
+        filter: ListAllFilesFilter
+    ): Promise<ListAllFilesResult> {
+        let files = sortBy(
+            [...this._files.values()].filter((f) => f.uploaded),
+            (f) => f.fileName
+        );
+
+        if (filter.fileExtensions) {
+            files = files.filter((f) => {
+                return filter.fileExtensions.some((ext) =>
+                    f.fileName.endsWith(ext)
+                );
+            });
+        }
+
+        return {
+            success: true,
+            files: files.slice(0, 10).map((f) => ({
+                recordName: f.recordName,
+                fileName: f.fileName,
+                bucket: f.bucket,
+            })),
         };
     }
 

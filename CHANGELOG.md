@@ -19,12 +19,24 @@
 -   Add support for [Minio](https://min.io/) for file records.
     -   Can be configured by using the `minio` property in `SERVER_CONFIG`.
 -   Added the ability to enable semantic error highlighting.
+-   Added the ability to scan files for moderation labels.
+    -   This functionality can be configured by the `SERVER_CONFIG.moderation.jobs.files` and `SERVER_CONFIG.rekognition.moderation` properties.
+    -   Once a (configured) banned label is detected, a notification can be sent based on the `SERVER_CONFIG.notifications` configuration.
+        -   If desired, the filter should be set to match `file` resources and `scanned` actions.
+    -   Currently, only image files are supported. The default list of supported file types is:
+        -   `.png`
+        -   `.webp`
+        -   `.jpg`
+        -   `.jpeg`
+        -   `.gif`
+    -   Additionally, it is possible to manually trigger moderation for a file as a `superUser` by using the `scanFileForModeration` procedure.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where an older version of session key hashes would be used when refreshing a session, leading to slowdowns when validating session keys.
 -   Fixed an issue where lines wouldn't draw to the center of the target bot when the bot was smaller than the arrow head length.
 -   Fixed an issue where the SystemPortal didn't support creating listeners from the "Add Tag" dialog.
+-   Fixed an issue where the `mapPortal` would not be able to be closed after having loaded the `mapPortal` for a different inst.
 
 ## V3.3.7
 

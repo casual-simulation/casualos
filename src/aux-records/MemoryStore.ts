@@ -135,7 +135,12 @@ import {
     StoredUpdates,
 } from './websockets';
 import { PrivoConfiguration } from './PrivoConfiguration';
-import { ModerationStore, UserInstReport } from './ModerationStore';
+import {
+    ModerationFileScanResult,
+    ModerationJob,
+    ModerationStore,
+    UserInstReport,
+} from './ModerationStore';
 import {
     NotificationMessenger,
     RecordsNotification,
@@ -236,6 +241,9 @@ export class MemoryStore
         };
     };
 
+    private _moderationJobs: ModerationJob[] = [];
+    private _moderationFileResults: ModerationFileScanResult[] = [];
+
     get aiSloydMetrics(): AISloydMetrics[] {
         return this._aiSloydMetrics;
     }
@@ -316,6 +324,14 @@ export class MemoryStore
         return this._userInstReports;
     }
 
+    get moderationJobs() {
+        return this._moderationJobs;
+    }
+
+    get moderationFileResults() {
+        return this._moderationFileResults;
+    }
+
     get recordsNotifications() {
         return this._recordNotifications;
     }
@@ -332,6 +348,8 @@ export class MemoryStore
         this.roles = {};
         this.roleAssignments = {};
     }
+
+    init?(): Promise<void>;
 
     /**
      * Constructs a deep clone of this memory store.
@@ -460,6 +478,28 @@ export class MemoryStore
         } else {
             this._userInstReports.push(report);
         }
+    }
+
+    async addModerationJob(job: ModerationJob): Promise<void> {
+        this._moderationJobs.push(job);
+    }
+
+    async findMostRecentJobOfType(
+        type: ModerationJob['type']
+    ): Promise<ModerationJob | null> {
+        const jobs = this._moderationJobs.filter((j) => j.type === type);
+        const mostRecent = orderBy(jobs, (j) => j.createdAtMs, 'desc');
+        if (mostRecent.length > 0) {
+            return mostRecent[0];
+        } else {
+            return null;
+        }
+    }
+
+    async addFileModerationResult(
+        result: ModerationFileScanResult
+    ): Promise<void> {
+        this._moderationFileResults.push(result);
     }
 
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null> {

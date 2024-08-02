@@ -129,6 +129,14 @@ Use the following to configure the records system:
 -   `RECORDS_ORIGIN`: The HTTP Origin that records should be loaded from and published to. Defaults to `null` in production and `http://localhost:3002` in development.
 -   `ENABLE_SMS_AUTHENTICATION`: Whether SMS phone numbers are allowed to be entered into the front-end and used for authentication. Defaults to `false`.
 
+#### Moderation
+
+-   `MODERATION_JOB_REPORT_BUCKET`: The S3 bucket that moderation job reports should be placed in.
+-   `MODERATION_JOB_LAMBDA_FUNCTION_ARN`: The ARN of the lambda function that should be triggered to scan files as part of a job.
+-   `MODERATION_JOB_ROLE_ARN`: The ARN of the role that should be used for the job.
+-   `MODERATION_JOB_PRIORITY`: The integer priority that moderation jobs should have. Higher values means higher priority.
+-   `MODERATION_PROJECT_VERSION`: The ARN of the AWS Rekognition project that should be used for moderation.
+
 #### Policies Customization
 
 -   `TERMS_OF_SERVICE`: The Markdown of the terms of service that the sites should use.

@@ -3,7 +3,10 @@ import {
     SendCodeResult,
 } from '@casual-simulation/aux-records/AuthMessenger';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import axios from 'axios';
+
+const TRACE_NAME = 'TextItAuthMessenger';
 
 /**
  * Defines a class that implements an AuthMessenger for TextIt.
@@ -17,12 +20,14 @@ export class TextItAuthMessenger implements AuthMessenger {
         this._flowId = flowId;
     }
 
+    @traced(TRACE_NAME)
     supportsAddressType(addressType: AddressType): Promise<boolean> {
         return Promise.resolve(
             addressType === 'email' || addressType === 'phone'
         );
     }
 
+    @traced(TRACE_NAME)
     async sendCode(
         address: string,
         addressType: AddressType,
