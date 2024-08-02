@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-deno",
-    "version": "3.3.8-alpha.10218986986",
+    "version": "3.3.8-alpha.10219756290",
     "description": "A set of utilities required to securely run an AUX in Deno.",
     "keywords": [
         "aux"
@@ -39,12 +39,12 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.3.8-alpha.10218986986",
-        "@casual-simulation/aux-runtime": "^3.3.8-alpha.10218986986",
-        "@casual-simulation/aux-vm": "^3.3.8-alpha.10218986986",
-        "@casual-simulation/aux-vm-client": "^3.3.8-alpha.10218986986",
-        "@casual-simulation/crypto": "^3.3.8-alpha.10218986986",
-        "@casual-simulation/crypto-browser": "^3.3.8-alpha.10218986986",
+        "@casual-simulation/aux-common": "^3.3.8-alpha.10219756290",
+        "@casual-simulation/aux-runtime": "^3.3.8-alpha.10219756290",
+        "@casual-simulation/aux-vm": "^3.3.8-alpha.10219756290",
+        "@casual-simulation/aux-vm-client": "^3.3.8-alpha.10219756290",
+        "@casual-simulation/crypto": "^3.3.8-alpha.10219756290",
+        "@casual-simulation/crypto-browser": "^3.3.8-alpha.10219756290",
         "comlink": "4.3.1",
         "deno-vm": "^0.8.1",
         "lodash": "4.17.21",
