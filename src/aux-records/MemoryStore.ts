@@ -2771,6 +2771,14 @@ export class MemoryStore
         };
     }
 
+    async getSubscriptionInfoForRecord(recordName: string) {
+        return await this._getSubscriptionInfo(recordName);
+    }
+
+    async listRecordsForSubscriptionByRecordName(recordName: string) {
+        return await this._listRecordsForSubscription(recordName);
+    }
+
     async getSubscriptionAiSloydMetrics(
         filter: SubscriptionFilter
     ): Promise<AISloydSubscriptionMetrics> {
