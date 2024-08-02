@@ -3069,6 +3069,40 @@ export class RecordsServer {
                     };
                 }),
 
+            webhook: procedure()
+                .origins(true)
+                .http('POST', '/webhook')
+                .inputs(z.any())
+                .handler(async (data, context) => {
+                    if (!context.httpRequest) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'webhooks have to be called from an http request',
+                        };
+                    }
+
+                    const querySchema = z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: z.string().min(1),
+                    });
+
+                    const queryResult = querySchema.safeParse(
+                        context.httpRequest.query
+                    );
+
+                    if (queryResult.success === false) {
+                        return returnZodError(queryResult.error);
+                    }
+
+                    const { recordName, address } = queryResult.data;
+
+                    return {
+                        success: true,
+                    };
+                }),
+
             listProcedures: procedure()
                 .origins(true)
                 .http('GET', '/api/v2/procedures')
