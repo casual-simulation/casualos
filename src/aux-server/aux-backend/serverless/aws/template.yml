@@ -503,6 +503,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
@@ -538,6 +540,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
@@ -573,6 +577,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
