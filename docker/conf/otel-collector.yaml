@@ -10,8 +10,15 @@ exporters:
         endpoint: tempo:4317
         tls:
             insecure: true
+    prometheus:
+        endpoint: 0.0.0.0:4319
+        namespace: casualos
+
 service:
     pipelines:
         traces:
             receivers: [otlp]
             exporters: [otlp]
+        metrics:
+            receivers: [otlp]
+            exporters: [prometheus]

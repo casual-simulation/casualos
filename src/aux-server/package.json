@@ -50,15 +50,17 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@aws-sdk/client-api-gateway": "^3.359.0",
-        "@aws-sdk/client-apigatewaymanagementapi": "^3.359.0",
-        "@aws-sdk/client-dynamodb": "^3.359.0",
-        "@aws-sdk/client-s3": "^3.359.0",
-        "@aws-sdk/client-sesv2": "^3.359.0",
-        "@aws-sdk/credential-providers": "^3.359.0",
-        "@aws-sdk/lib-dynamodb": "^3.359.0",
-        "@aws-sdk/s3-request-presigner": "^3.359.0",
-        "@aws-sdk/types": "^3.359.0",
+        "@aws-sdk/client-api-gateway": "^3.620.1",
+        "@aws-sdk/client-apigatewaymanagementapi": "^3.620.1",
+        "@aws-sdk/lib-dynamodb": "^3.620.1",
+        "@aws-sdk/s3-request-presigner": "^3.620.1",
+        "@aws-sdk/client-dynamodb": "^3.620.1",
+        "@aws-sdk/client-s3": "^3.620.1",
+        "@aws-sdk/client-s3-control": "^3.620.1",
+        "@aws-sdk/client-sesv2": "^3.620.1",
+        "@aws-sdk/credential-providers": "^3.620.1",
+        "@aws-sdk/client-rekognition": "^3.620.1",
+        "@aws-sdk/types": "^3.609.0",
         "@casual-simulation/aux-common": "^3.3.7",
         "@casual-simulation/aux-records": "^3.3.7",
         "@casual-simulation/aux-records-aws": "^3.3.7",
@@ -163,7 +165,8 @@
         "vue-property-decorator": "9.1.2",
         "vue-router": "3.5.4",
         "ws": "7.4.6",
-        "zod": "3.22.4"
+        "zod": "3.22.4",
+        "minio": "8.0.1"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.3.7",

@@ -446,6 +446,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 this._mapView.destroy();
                 this._mapView = null;
             }
+            this._coordinateTransformer = null;
             this.wantsMap = false;
             this.hasMap = false;
         } catch (err) {
@@ -466,6 +467,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 this._miniMapView.destroy();
                 this._miniMapView = null;
             }
+            this._miniMapCoordinateTransformer = null;
             this.wantsMiniMap = false;
             this.hasMiniMap = false;
         } catch (err) {

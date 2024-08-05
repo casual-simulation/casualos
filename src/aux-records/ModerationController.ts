@@ -1,15 +1,25 @@
 import { NotLoggedInError, ServerError } from '@casual-simulation/aux-common';
 import {
+    ModerationFileScanResultLabel,
+    ModerationFileScanResult,
+    ModerationJob,
     ModerationStore,
     ReportReason,
     UserInstReport,
 } from './ModerationStore';
 import { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
-import { NotificationMessenger } from './NotificationMessenger';
+import {
+    NotificationMessenger,
+    RecordsNotification,
+} from './NotificationMessenger';
 import { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import {
+    ModerationJobFilesFilter,
+    ModerationJobProvider,
+} from './ModerationJobProvider';
 
 const TRACE_NAME = 'ModerationController';
 
@@ -20,15 +30,18 @@ export class ModerationController {
     private _store: ModerationStore;
     private _config: ConfigurationStore;
     private _messenger: NotificationMessenger | null;
+    private _jobProvider: ModerationJobProvider;
 
     constructor(
         store: ModerationStore,
         config: ConfigurationStore,
-        messenger: NotificationMessenger | null
+        messenger: NotificationMessenger | null,
+        jobProvider: ModerationJobProvider | null
     ) {
         this._store = store;
         this._config = config;
         this._messenger = messenger;
+        this._jobProvider = jobProvider;
     }
 
     /**
@@ -100,6 +113,216 @@ export class ModerationController {
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error('[ModerationController] Failed to report inst:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Schedules a job to scan for moderation issues.
+     */
+    @traced(TRACE_NAME)
+    async scheduleModerationScans(): Promise<ScheduleModerationScansResult> {
+        try {
+            if (!this._jobProvider) {
+                console.warn(
+                    '[ModerationController] No job provider available to schedule moderation scans.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const config = await this._config.getModerationConfig();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const jobs: ModerationJob[] = [];
+
+            if (config.jobs?.files?.enabled) {
+                console.log(
+                    '[ModerationController] Starting file moderation job...'
+                );
+
+                let filter: ModerationJobFilesFilter = {};
+
+                if (config.jobs.files.fileExtensions) {
+                    filter.fileExtensions =
+                        config.jobs.files.fileExtensions.slice();
+                }
+
+                const lastFileJob = await this._store.findMostRecentJobOfType(
+                    'files'
+                );
+                if (lastFileJob) {
+                    filter.uploadedAfterMs = lastFileJob.createdAtMs;
+                }
+
+                const job = await this._jobProvider.startFilesJob(filter);
+
+                await this._store.addModerationJob(job);
+
+                jobs.push(job);
+
+                console.log(
+                    '[ModerationController] File moderation job started:',
+                    job
+                );
+            }
+
+            return {
+                success: true,
+                jobs,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[ModerationController] Failed to start moderation jobs:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Scans the given file for moderation labels.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async scanFile(request: ScanFileRequest): Promise<ScanFileResult> {
+        try {
+            if (!this._jobProvider) {
+                console.warn(
+                    '[ModerationController] No job provider available to scan files.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const config = await this._config.getModerationConfig();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            if (!config.jobs?.files?.enabled) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            if (config.jobs.files.fileExtensions) {
+                if (
+                    config.jobs.files.fileExtensions.every(
+                        (ext) => !request.fileName.endsWith(ext)
+                    )
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'The file extension is not supported.',
+                    };
+                }
+            }
+
+            const createdAtMs = Date.now();
+            const scan = await this._jobProvider.scanFile({
+                recordName: request.recordName,
+                fileName: request.fileName,
+                minConfidence: config.jobs.files.minConfidence,
+            });
+
+            const resultId = uuid();
+            let bannedLabel: ModerationFileScanResultLabel = null;
+            for (let label of config.jobs.files.bannedLabels) {
+                if (label.label) {
+                    bannedLabel = scan.labels.find(
+                        (l) =>
+                            l.name.localeCompare(label.label, undefined, {
+                                sensitivity: 'base',
+                            }) === 0 && l.confidence >= label.threshold
+                    );
+                }
+
+                if (bannedLabel) {
+                    console.log(
+                        `[ModerationController] Banned label (${bannedLabel.name}) detected in file: ${request.fileName}`
+                    );
+
+                    if (label.actions.includes('notify') && this._messenger) {
+                        await this._messenger.sendRecordNotification({
+                            resource: 'file',
+                            action: 'scanned',
+                            recordName: request.recordName,
+                            resourceId: request.fileName,
+                            resultId,
+                            labels: scan.labels,
+                            timeMs: createdAtMs,
+                            bannedLabel,
+                            message: `Banned label (${
+                                bannedLabel.category
+                                    ? bannedLabel.category + ':'
+                                    : ''
+                            }${bannedLabel.name ?? ''}) detected in file (${
+                                request.recordName
+                            }/${request.fileName}).`,
+                        });
+                    }
+
+                    break;
+                }
+            }
+
+            const result: ModerationFileScanResult = {
+                id: resultId,
+                recordName: request.recordName,
+                fileName: request.fileName,
+                jobId: request.jobId,
+                labels: scan.labels,
+                modelVersion: scan.modelVersion,
+                createdAtMs,
+                updatedAtMs: Date.now(),
+                appearsToMatchBannedContent: !!bannedLabel,
+            };
+            this._store.addFileModerationResult(result);
+
+            return {
+                success: true,
+                result,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error('[ModerationController] Failed to scan file:', err);
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -191,4 +414,65 @@ export interface ReportInstFailure {
      * The issues with parsing the request.
      */
     issues?: ZodIssue[];
+}
+
+export type ScheduleModerationScansResult =
+    | ScheduleModerationScansSuccess
+    | ScheduleModerationScansFailure;
+
+export interface ScheduleModerationScansSuccess {
+    success: true;
+
+    /**
+     * The jobs that were started.
+     */
+    jobs: ModerationJob[];
+}
+
+export interface ScheduleModerationScansFailure {
+    success: false;
+
+    /**
+     * The error code for the failure.
+     */
+    errorCode: ServerError | 'not_supported';
+
+    /**
+     * The error message for the failure.
+     */
+    errorMessage: string;
+}
+
+export interface ScanFileRequest {
+    /**
+     * The name of the record that the file is in.
+     */
+    recordName: string;
+
+    /**
+     * The file that should be scanned.
+     */
+    fileName: string;
+
+    /**
+     * The ID of the job that the scan is associated with.
+     */
+    jobId?: string;
+}
+
+export type ScanFileResult = ScanFileSuccess | ScanFileFailure;
+
+export interface ScanFileSuccess {
+    success: true;
+
+    /**
+     * The result of the file scan.
+     */
+    result: ModerationFileScanResult;
+}
+
+export interface ScanFileFailure {
+    success: false;
+    errorCode: ServerError | 'not_supported';
+    errorMessage: string;
 }

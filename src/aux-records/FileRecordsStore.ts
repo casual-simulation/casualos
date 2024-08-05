@@ -28,6 +28,14 @@ export interface FileRecordsLookup {
     ): Promise<ListFilesLookupResult>;
 
     /**
+     * Gets the entire list of files that have been uploaded and that match the given filter.
+     * @param filter The filter to use.
+     */
+    listAllUploadedFilesMatching(
+        filter: ListAllFilesFilter
+    ): Promise<ListAllFilesResult>;
+
+    /**
      * Attempts to add a record for a file to the store.
      * @param recordName The name of the record that the file was recorded in.
      * @param fileName The name of the file that should be recorded.
@@ -117,6 +125,11 @@ export interface FileRecordsVault {
  * Defines an interface that provides a way to store file records.
  */
 export interface FileRecordsStore extends FileRecordsVault {
+    /**
+     * Initializes the store.
+     */
+    init?(): Promise<void>;
+
     /**
      * Gets the file record for the file with the given name.
      * @param recordName The name of the record that the file is stored in.
@@ -553,4 +566,46 @@ export interface UpdateFileFailure {
     success: false;
     errorCode: ServerError | 'file_not_found';
     errorMessage: string;
+}
+
+export interface ListAllFilesFilter {
+    /**
+     * The file extensions that the files should have.
+     */
+    fileExtensions?: string[];
+
+    /**
+     * The unix time in milliseconds that the files should have been uploaded after.
+     */
+    uploadedAfterMs?: number;
+}
+
+export type ListAllFilesResult = ListAllFilesSuccess | ListAllFilesFailure;
+
+export interface ListAllFilesSuccess {
+    success: true;
+    files: AllListedFileRecord[];
+}
+
+export interface ListAllFilesFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export interface AllListedFileRecord {
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The name of the file.
+     */
+    fileName: string;
+
+    /**
+     * The bucket that the file is in.
+     */
+    bucket?: string;
 }

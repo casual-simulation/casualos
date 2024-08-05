@@ -4,7 +4,7 @@ import {
     createRandomPassword,
     hashPassword,
     verifyPassword,
-    hashPasswordWithSalt,
+    hashLowEntropyPasswordWithSalt,
     verifyPasswordAgainstHashes,
     hashHighEntropyPasswordWithSalt,
 } from './HashHelpers';
@@ -32,10 +32,10 @@ describe('HashHelpers', () => {
         });
     });
 
-    describe('hashPasswordWithSalt()', () => {
+    describe('hashLowEntropyPasswordWithSalt()', () => {
         it('should return a password hash', () => {
             const salt = fromByteArray(randomBytes(16));
-            const hash = hashPasswordWithSalt('password', salt);
+            const hash = hashLowEntropyPasswordWithSalt('password', salt);
             expect(hash.startsWith('vH1.')).toBe(true);
             expect(verifyPasswordAgainstHashes('password', salt, [hash])).toBe(
                 true
@@ -44,7 +44,7 @@ describe('HashHelpers', () => {
 
         it('should return a consistent hash', () => {
             const salt = 'GsVJeVGNV4+j1sjyfF13sg==';
-            const hash = hashPasswordWithSalt('password', salt);
+            const hash = hashLowEntropyPasswordWithSalt('password', salt);
             expect(hash.startsWith('vH1.')).toBe(true);
             expect(verifyPasswordAgainstHashes('password', salt, [hash])).toBe(
                 true
@@ -54,7 +54,7 @@ describe('HashHelpers', () => {
 
         it('should throw if given a null password', () => {
             expect(() => {
-                hashPasswordWithSalt(null, '');
+                hashLowEntropyPasswordWithSalt(null, '');
             }).toThrow(
                 new Error('Invalid password. Must not be null or undefined.')
             );
@@ -62,7 +62,7 @@ describe('HashHelpers', () => {
 
         it('should throw if given a null salt', () => {
             expect(() => {
-                hashPasswordWithSalt('password', null);
+                hashLowEntropyPasswordWithSalt('password', null);
             }).toThrow(
                 new Error('Invalid salt. Must not be null or undefined.')
             );

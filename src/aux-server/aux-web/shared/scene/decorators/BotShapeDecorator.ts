@@ -1,5 +1,6 @@
 import {
     BotCalculationContext,
+    BotMeshPositioningMode,
     BotScaleMode,
     BotShape,
     BotSubShape,
@@ -10,6 +11,7 @@ import {
     calculateBotValue,
     calculateNumericalTagValue,
     calculateStringTagValue,
+    getBotMeshPositioningMode,
     getBotScaleMode,
     getBotShape,
     getBotSubShape,
@@ -124,6 +126,7 @@ export class BotShapeDecorator
     private _ldrawPartsAddress: string = null;
     private _animation: any = null;
     private _scaleMode: BotScaleMode = null;
+    private _positioningMode: BotMeshPositioningMode;
     private _canHaveStroke = false;
     // private _animationMode: 'tag' | 'action' = 'tag';
     private _animationMixer: AnimationMixer;
@@ -189,6 +192,7 @@ export class BotShapeDecorator
         const shape = getBotShape(calc, this.bot3D.bot);
         const subShape = getBotSubShape(calc, this.bot3D.bot);
         const scaleMode = getBotScaleMode(calc, this.bot3D.bot);
+        const positioningMode = getBotMeshPositioningMode(calc, this.bot3D.bot);
         const address = calculateBotValue(
             calc,
             this.bot3D.bot,
@@ -228,6 +232,7 @@ export class BotShapeDecorator
                 shape,
                 subShape,
                 scaleMode,
+                positioningMode,
                 address,
                 aspectRatio,
                 animationAddress,
@@ -239,6 +244,7 @@ export class BotShapeDecorator
                 shape,
                 subShape,
                 scaleMode,
+                positioningMode,
                 address,
                 aspectRatio,
                 animationAddress,
@@ -299,6 +305,7 @@ export class BotShapeDecorator
         shape: string,
         subShape: string,
         scaleMode: string,
+        positioningMode: string,
         address: string,
         aspectRatio: number,
         animationAddress: string,
@@ -309,6 +316,7 @@ export class BotShapeDecorator
             this._shape !== shape ||
             this._subShape !== subShape ||
             this._scaleMode !== scaleMode ||
+            this._positioningMode !== positioningMode ||
             this._addressAspectRatio !== aspectRatio ||
             (shape === 'mesh' &&
                 (this._address !== address ||
@@ -908,6 +916,7 @@ export class BotShapeDecorator
         shape: BotShape,
         subShape: BotSubShape,
         scaleMode: BotScaleMode,
+        positioningMode: BotMeshPositioningMode,
         address: string,
         addressAspectRatio: number,
         animationAddress: string,
@@ -917,6 +926,7 @@ export class BotShapeDecorator
         this._shape = shape;
         this._subShape = subShape;
         this._scaleMode = scaleMode;
+        this._positioningMode = positioningMode;
         this._address = address;
         this._addressAspectRatio = addressAspectRatio;
         this._animationAddress = animationAddress;
@@ -1126,10 +1136,12 @@ export class BotShapeDecorator
             gltf.scene.scale.divideScalar(maxScale);
         }
 
-        let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
+        if (this._positioningMode !== 'absolute') {
+            let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
+            // Scene
+            gltf.scene.position.copy(bottomCenter);
+        }
 
-        // Scene
-        gltf.scene.position.copy(bottomCenter);
         this.scene = gltf.scene;
         this.container.add(gltf.scene);
 

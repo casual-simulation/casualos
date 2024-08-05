@@ -41,8 +41,11 @@ import {
     LoomController,
     ServerConfig,
     RedisServerOptions,
+    AnthropicAIChatInterface,
+    ModerationJobProvider,
 } from '@casual-simulation/aux-records';
 import {
+    RekognitionModerationJobProvider,
     S3FileRecordsStore,
     SimpleEmailServiceAuthMessenger,
     SimpleEmailServiceAuthMessengerOptions,
@@ -138,6 +141,7 @@ import {
     ModerationConfiguration,
     moderationSchema,
 } from '@casual-simulation/aux-records/ModerationConfiguration';
+import { Rekognition } from '@aws-sdk/client-rekognition';
 
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
@@ -160,6 +164,8 @@ import {
     SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
+import { MinioFileRecordsStore } from 'aux-backend/minio/MinioFileRecordsStore';
+import { S3Control, S3ControlClient } from '@aws-sdk/client-s3-control';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -185,6 +191,9 @@ export interface BuildReturn {
     mongoDatabase: Db;
     websocketMessenger: WebsocketMessenger;
     redisClient: RedisClientType;
+
+    moderationController: ModerationController;
+    moderationJobProvider: ModerationJobProvider;
 }
 
 export interface ServerPlugin {
@@ -254,6 +263,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _openAIChatInterface: AIChatInterface = null;
     private _googleAIChatInterface: AIChatInterface = null;
+    private _anthropicAIChatInterface: AnthropicAIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
     private _aiController: AIController;
 
@@ -269,8 +279,12 @@ export class ServerBuilder implements SubscriptionLike {
     private _redisWebsocketConnections: RedisClientType | null = null;
     private _redisRateLimit: RedisClientType | null = null;
     private _s3: S3;
+    private _s3Control: S3ControlClient;
     private _rateLimitController: RateLimitController;
     private _websocketRateLimitController: RateLimitController;
+
+    private _rekognition: Rekognition | null = null;
+    private _moderationJobProvider: ModerationJobProvider | null = null;
 
     private _allowedAccountOrigins: Set<string> = new Set([
         'http://localhost:3000',
@@ -560,6 +574,7 @@ export class ServerBuilder implements SubscriptionLike {
                     fileLookup,
                     mongodb.fileUploadUrl as string
                 );
+                this._ensureFileStoreInit();
             },
         });
         return this;
@@ -614,6 +629,65 @@ export class ServerBuilder implements SubscriptionLike {
             undefined,
             s3.publicFilesUrl
         );
+        this._ensureFileStoreInit();
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
+
+        return this;
+    }
+
+    usePrismaWithMinio(
+        options: Pick<
+            ServerConfig,
+            'prisma' | 'minio' | 'subscriptions' | 'moderation'
+        > = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Prisma with Minio.');
+        if (!options.prisma) {
+            throw new Error('Prisma options must be provided.');
+        }
+
+        if (!options.minio) {
+            throw new Error('Minio options must be provided.');
+        }
+
+        const prisma = options.prisma;
+        const minio = options.minio;
+
+        const prismaClient = this._ensurePrisma(options);
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
+        this._metricsStore = new PrismaMetricsStore(
+            prismaClient,
+            this._configStore
+        );
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        this._filesStore = new MinioFileRecordsStore(
+            {
+                endPoint: minio.endpoint,
+                port: minio.port,
+                accessKey: minio.accessKey,
+                secretKey: minio.secretKey,
+                useSSL: minio.useSSL,
+                region: minio.region,
+            },
+            minio.filesBucket,
+            minio.defaultFilesBucket ?? minio.filesBucket,
+            filesLookup,
+            minio.publicFilesUrl
+        );
+        this._ensureFileStoreInit();
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
 
@@ -669,6 +743,7 @@ export class ServerBuilder implements SubscriptionLike {
                     filesLookup,
                     mongodb.fileUploadUrl as string
                 );
+                this._ensureFileStoreInit();
             },
         });
 
@@ -806,6 +881,57 @@ export class ServerBuilder implements SubscriptionLike {
             ),
             new PrismaInstRecordsStore(prisma)
         );
+
+        return this;
+    }
+
+    /**
+     * Configures the server to use [AWS Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/moderation.html) for content moderation.
+     * @param options The options to use.
+     */
+    useRekognitionModeration(
+        options: Pick<ServerConfig, 'rekognition' | 's3'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using AWS Rekognition for moderation.');
+
+        if (!options.rekognition) {
+            throw new Error('Rekognition options must be provided.');
+        }
+
+        if (!options.s3) {
+            throw new Error('S3 options must be provided.');
+        }
+
+        if (
+            !this._filesStore ||
+            !(this._filesStore instanceof S3FileRecordsStore)
+        ) {
+            throw new Error(
+                'S3 must be the configured file store in order to use Rekognition moderation.'
+            );
+        }
+
+        this._moderationJobProvider = new RekognitionModerationJobProvider({
+            filesStore: this._filesStore,
+            rekognition: this._ensureRekognition(options),
+            s3Control: this._ensureS3Control(options),
+            s3: this._ensureS3(options),
+            filesJob: {
+                accountId: options.rekognition.moderation.files.job?.accountId,
+                lambdaFunctionArn:
+                    options.rekognition.moderation.files.job?.lambdaFunctionArn,
+                sourceBucket:
+                    options.rekognition.moderation.files.job?.sourceBucket,
+                reportBucket:
+                    options.rekognition.moderation.files.job?.reportBucket,
+                priority: options.rekognition.moderation.files.job?.priority,
+                roleArn: options.rekognition.moderation.files.job?.roleArn,
+                tags: options.rekognition.moderation.files.job?.tags as any,
+                projectVersionArn:
+                    options.rekognition.moderation.files.scan
+                        ?.projectVersionArn,
+            },
+        });
 
         return this;
     }
@@ -1104,6 +1230,7 @@ export class ServerBuilder implements SubscriptionLike {
             | 'blockadeLabs'
             | 'stabilityai'
             | 'googleai'
+            | 'anthropicai'
             | 'humeai'
             | 'sloydai'
         > = this._options
@@ -1124,6 +1251,13 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Using Google AI Chat.');
             this._googleAIChatInterface = new GoogleAIChatInterface({
                 apiKey: options.googleai.apiKey,
+            });
+        }
+
+        if (options.anthropicai) {
+            console.log('[ServerBuilder] Using Anthropic AI Chat.');
+            this._anthropicAIChatInterface = new AnthropicAIChatInterface({
+                apiKey: options.anthropicai.apiKey,
             });
         }
 
@@ -1184,6 +1318,7 @@ export class ServerBuilder implements SubscriptionLike {
                 interfaces: {
                     openai: this._openAIChatInterface,
                     google: this._googleAIChatInterface,
+                    anthropic: this._anthropicAIChatInterface,
                 },
                 options: {
                     defaultModel: options.ai.chat.defaultModel,
@@ -1392,7 +1527,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._moderationController = new ModerationController(
                 this._moderationStore,
                 this._configStore,
-                this._notificationMessenger
+                this._notificationMessenger,
+                this._moderationJobProvider
             );
         }
 
@@ -1449,6 +1585,9 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             policyController: this._policyController,
             websocketController: this._websocketController,
+
+            moderationController: this._moderationController,
+            moderationJobProvider: this._moderationJobProvider,
 
             dynamodbClient: this._docClient,
             mongoClient: this._mongoClient,
@@ -1618,6 +1757,32 @@ export class ServerBuilder implements SubscriptionLike {
         return this._s3;
     }
 
+    private _ensureS3Control(
+        options: Pick<ServerConfig, 's3'>
+    ): S3ControlClient {
+        if (!this._s3Control) {
+            this._s3Control = new S3ControlClient({
+                region: options.s3.region,
+            });
+            this._subscription.add(() => {
+                this._s3Control.destroy();
+            });
+        }
+        return this._s3Control;
+    }
+
+    private _ensureRekognition(
+        options: Pick<ServerConfig, 'rekognition'>
+    ): Rekognition {
+        if (!this._rekognition) {
+            this._rekognition = new Rekognition({});
+            this._subscription.add(() => {
+                this._rekognition.destroy();
+            });
+        }
+        return this._rekognition;
+    }
+
     private async _ensureMongoDB(
         options: Pick<ServerConfig, 'mongodb'>
     ): Promise<MongoClient> {
@@ -1673,6 +1838,17 @@ export class ServerBuilder implements SubscriptionLike {
             );
         } else {
             return configStore;
+        }
+    }
+
+    private _ensureFileStoreInit() {
+        if (this._filesStore?.init) {
+            this._initActions.push({
+                priority: 20,
+                action: async () => {
+                    await this._filesStore?.init();
+                },
+            });
         }
     }
 }

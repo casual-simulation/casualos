@@ -16,6 +16,8 @@ import {
 import {
     FileRecord,
     FileRecordsLookup,
+    ListAllFilesFilter,
+    ListAllFilesResult,
     ListFilesLookupResult,
     UpdateFileResult,
 } from '@casual-simulation/aux-records/FileRecordsStore';
@@ -116,6 +118,48 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 bucket: r.bucket,
             })),
             totalCount: count,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async listAllUploadedFilesMatching(
+        filter: ListAllFilesFilter
+    ): Promise<ListAllFilesResult> {
+        let query: Prisma.FileRecordWhereInput = {
+            uploadedAt: { not: null },
+        };
+
+        if (!!filter.uploadedAfterMs) {
+            query.uploadedAt = { gt: new Date(filter.uploadedAfterMs) };
+        }
+
+        if (!!filter.fileExtensions) {
+            query.OR = [];
+            for (let ext of filter.fileExtensions) {
+                query.OR.push({
+                    fileName: {
+                        endsWith: ext,
+                    },
+                });
+            }
+        }
+
+        const result = await this._client.fileRecord.findMany({
+            where: query,
+            orderBy: {
+                fileName: 'asc',
+            },
+            select: {
+                recordName: true,
+                fileName: true,
+                bucket: true,
+            },
+            take: 10,
+        });
+
+        return {
+            success: true,
+            files: result,
         };
     }
 
@@ -235,6 +279,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                         recordName,
                         fileName,
                     },
+                    uploadedAt: { equals: null },
                 },
                 data: {
                     uploadedAt: new Date(),

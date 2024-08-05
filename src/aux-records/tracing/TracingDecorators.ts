@@ -4,10 +4,16 @@ import {
     KnownErrorCodes,
 } from '@casual-simulation/aux-common';
 import {
+    Counter,
+    Histogram,
     SpanKind,
     SpanOptions,
     SpanStatusCode,
     trace,
+    MetricOptions as OTMetricOptions,
+    metrics,
+    Meter,
+    Attributes,
 } from '@opentelemetry/api';
 import { SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 
@@ -51,12 +57,61 @@ declare const GIT_TAG: string;
 //     // };
 // }
 
+export interface MeterConfig {
+    /**
+     * The name of the meter.
+     */
+    meter: string;
+
+    /**
+     * The name of the histogram.
+     */
+    name: string;
+
+    /**
+     * The options.
+     */
+    options: OTMetricOptions;
+
+    /**
+     * A function that gets the attributes for the metric.
+     * @param args The arguments that were passed to the method.
+     * @param ret The return value of the method.
+     */
+    attributes?: (args: any[], ret: any) => Attributes;
+}
+
+/**
+ * The options for the metric that is created.
+ */
+export interface MetricOptions {
+    /**
+     * The histogram that method durations should be recorded to.
+     */
+    histogram?: MeterConfig;
+
+    /**
+     * The counter that should be incremented when the method is called.
+     */
+    counter?: MeterConfig;
+
+    /**
+     * The counter that should be incremented when the method throws an error.
+     */
+    errorCounter?: MeterConfig;
+}
+
 /**
  * Modifies the given method so that it is traced.
  * @param tracerName The name of the tracer that the method spans should be created for.
  * @param options The options for the spans that are created.
+ * @param metricOptions The options for recording metrics.
  */
-export function traced(tracerName: string, options: SpanOptions = {}) {
+export function traced(
+    tracerName: string,
+    options: SpanOptions = {},
+    metricOptions: MetricOptions = {}
+) {
     const tracer = trace.getTracer(
         tracerName,
         typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -68,6 +123,10 @@ export function traced(tracerName: string, options: SpanOptions = {}) {
     ) {
         const originalMethod = descriptor.value;
         descriptor.value = function (...args: any[]) {
+            const histogram = getHistogram(metricOptions.histogram);
+            const counter = getCounter(metricOptions.counter);
+            const errorCounter = getCounter(metricOptions.errorCounter);
+            const startTime = histogram ? Date.now() : null;
             const _this = this;
             return tracer.startActiveSpan(propertyKey, options, (span) => {
                 try {
@@ -76,9 +135,35 @@ export function traced(tracerName: string, options: SpanOptions = {}) {
                         return ret.then(
                             (result) => {
                                 span.end();
+                                if (histogram) {
+                                    const endTime = Date.now();
+                                    histogram.record(
+                                        endTime - startTime,
+                                        metricOptions.histogram?.attributes?.(
+                                            args,
+                                            result
+                                        )
+                                    );
+                                }
+
+                                counter?.add(
+                                    1,
+                                    metricOptions.counter?.attributes?.(
+                                        args,
+                                        result
+                                    )
+                                );
+
                                 return result;
                             },
                             (err) => {
+                                errorCounter?.add(
+                                    1,
+                                    metricOptions.errorCounter?.attributes?.(
+                                        args,
+                                        err
+                                    )
+                                );
                                 span.recordException(err);
                                 span.setStatus({ code: SpanStatusCode.ERROR });
                                 throw err;
@@ -86,9 +171,18 @@ export function traced(tracerName: string, options: SpanOptions = {}) {
                         );
                     } else {
                         span.end();
+                        const endTime = Date.now();
+                        histogram?.record(
+                            endTime - startTime,
+                            metricOptions.histogram?.attributes?.(args, ret)
+                        );
                         return ret;
                     }
                 } catch (err) {
+                    errorCounter?.add(
+                        1,
+                        metricOptions.errorCounter?.attributes?.(args, err)
+                    );
                     span.recordException(err);
                     span.setStatus({ code: SpanStatusCode.ERROR });
                     throw err;
@@ -100,10 +194,49 @@ export function traced(tracerName: string, options: SpanOptions = {}) {
 }
 
 /**
+ * Gets the histogram for the given meter config.
+ * @param meter The meter config.
+ */
+function getHistogram(meter: MeterConfig) {
+    if (!meter) {
+        return null;
+    }
+    return metrics
+        .getMeter(
+            meter.meter,
+            typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
+        )
+        .createHistogram(meter.name, meter.options);
+}
+
+function getCounter(meter: MeterConfig) {
+    if (!meter) {
+        return null;
+    }
+    return metrics
+        .getMeter(
+            meter.meter,
+            typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
+        )
+        .createCounter(meter.name, meter.options);
+}
+
+/**
+ * The options for the metrics that should be recorded for the HTTP response.
+ */
+export interface HttpResponseMetricOptions {
+    /**
+     * The counter that should be incremented when a response is returned.
+     */
+    counter?: MeterConfig;
+}
+
+/**
  * Modifies the given method so that information about the HTTP response is added to the active span.
  * This should be used on methods that return a GenericHttpResponse.
+ * @param options The options for the metrics that should be recorded for the HTTP response.
  */
-export function traceHttpResponse() {
+export function traceHttpResponse(options: HttpResponseMetricOptions = {}) {
     return function (
         target: any,
         propertyKey: string,

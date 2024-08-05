@@ -20,10 +20,9 @@ import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPasswordWithSalt,
-    verifyPassword,
+    hashLowEntropyPasswordWithSalt,
     verifyPasswordAgainstHashes,
-} from '@casual-simulation/crypto';
+} from './InstrumentedHashHelpers';
 import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
 import {
@@ -256,7 +255,7 @@ export class AuthController {
 
                 // sessionSecret and sessionId are high-entropy (128 bits of random data)
                 // so we should use a hash that is optimized for high-entropy inputs.
-                secretHash: hashHighEntropyPasswordWithSalt(
+                secretHash: this.hashHighEntropyPasswordWithSalt(
                     sessionSecret,
                     sessionId
                 ),
@@ -304,6 +303,14 @@ export class AuthController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    hashHighEntropyPasswordWithSalt(
+        sessionSecret: string,
+        sessionId: string
+    ): string {
+        return hashHighEntropyPasswordWithSalt(sessionSecret, sessionId);
     }
 
     @traced(TRACE_NAME)
@@ -426,8 +433,7 @@ export class AuthController {
             );
             const code = randomCode();
 
-            const hash = hashPasswordWithSalt(code, requestId);
-
+            const hash = hashLowEntropyPasswordWithSalt(code, requestId);
             const loginRequest: AuthLoginRequest = {
                 userId: user.id,
                 requestId: requestId,
@@ -606,7 +612,7 @@ export class AuthController {
             let validCode = false;
             try {
                 if (
-                    verifyPasswordAgainstHashes(
+                    this.verifyPasswordAgainstHashes(
                         request.code,
                         loginRequest.requestId,
                         [loginRequest.secretHash]
@@ -668,7 +674,7 @@ export class AuthController {
                 requestId: loginRequest.requestId,
                 // sessionSecret and sessionId are high-entropy (128 bits of random data)
                 // so we should use a hash that is optimized for high-entropy inputs.
-                secretHash: hashHighEntropyPasswordWithSalt(
+                secretHash: this.hashHighEntropyPasswordWithSalt(
                     sessionSecret,
                     sessionId
                 ),
@@ -1070,7 +1076,7 @@ export class AuthController {
 
                 // sessionSecret and sessionId are high-entropy (128 bits of random data)
                 // so we should use a hash that is optimized for high-entropy inputs.
-                secretHash: hashHighEntropyPasswordWithSalt(
+                secretHash: this.hashHighEntropyPasswordWithSalt(
                     sessionSecret,
                     sessionId
                 ),
@@ -1303,7 +1309,7 @@ export class AuthController {
                 userId: userId,
                 sessionId: newSessionId,
                 requestId: null,
-                secretHash: hashPasswordWithSalt(
+                secretHash: hashHighEntropyPasswordWithSalt(
                     newSessionSecret,
                     newSessionId
                 ),
@@ -1759,7 +1765,7 @@ export class AuthController {
 
                 // sessionSecret and sessionId are high-entropy (128 bits of random data)
                 // so we should use a hash that is optimized for high-entropy inputs.
-                secretHash: hashHighEntropyPasswordWithSalt(
+                secretHash: this.hashHighEntropyPasswordWithSalt(
                     sessionSecret,
                     sessionId
                 ),
@@ -1946,9 +1952,11 @@ export class AuthController {
             }
 
             if (
-                !verifyPasswordAgainstHashes(sessionSecret, session.sessionId, [
-                    session.secretHash,
-                ])
+                !this.verifyPasswordAgainstHashes(
+                    sessionSecret,
+                    session.sessionId,
+                    [session.secretHash]
+                )
             ) {
                 console.log(
                     '[AuthController] [validateSessionKey] Session secret was invalid.'
@@ -2052,6 +2060,15 @@ export class AuthController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    verifyPasswordAgainstHashes(
+        sessionSecret: string,
+        sessionId: string,
+        hashes: string[]
+    ) {
+        return verifyPasswordAgainstHashes(sessionSecret, sessionId, hashes);
     }
 
     @traced(TRACE_NAME)
@@ -2453,7 +2470,7 @@ export class AuthController {
                 userId: userId,
                 sessionId: newSessionId,
                 requestId: null,
-                secretHash: hashPasswordWithSalt(
+                secretHash: hashHighEntropyPasswordWithSalt(
                     newSessionSecret,
                     newSessionId
                 ),
