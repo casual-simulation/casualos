@@ -6,6 +6,8 @@ import {
 /**
  * Defines an interface for objects that represent a webhook environment.
  * That is, they provide a way to call into the environment that the webhook is running in and shut it down.
+ *
+ * In addition to providing a way to manage the environment, it also should provide mechanisms for securely isolating the environment from the rest of the system.
  */
 export interface WebhookEnvironment {
     /**

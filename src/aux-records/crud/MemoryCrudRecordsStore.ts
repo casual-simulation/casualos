@@ -87,7 +87,7 @@ export class MemoryCrudRecordsStore<
         recordName: string,
         address: string
     ): Promise<ListCrudStoreSuccess<T>> {
-        const record = this._getItemRecord(recordName);
+        const record = this.getItemRecord(recordName);
         let items: T[] = [];
         const count = record.size;
         for (let [key, item] of record.entries()) {
@@ -112,7 +112,7 @@ export class MemoryCrudRecordsStore<
         request: ListCrudStoreByMarkerRequest
     ): Promise<ListCrudStoreSuccess<T>> {
         const marker = request.marker;
-        let record = this._getItemRecord(request.recordName);
+        let record = this.getItemRecord(request.recordName);
         let items = [] as T[];
         const address = request.startingAddress;
         const sortAscending = (request.sort ?? 'ascending') === 'ascending';
@@ -151,17 +151,13 @@ export class MemoryCrudRecordsStore<
         recordName: string
     ): Promise<TMetrics> {
         const info = await this._store.getSubscriptionInfoForRecord(recordName);
-        const records =
-            await this._store.listRecordsForSubscriptionByRecordName(
-                recordName
-            );
 
         return {
             ...info,
         } as unknown as TMetrics;
     }
 
-    private _getItemRecord(recordName: string): Map<string, T> {
+    protected getItemRecord(recordName: string): Map<string, T> {
         let record = this._itemBuckets.get(recordName);
         if (!record) {
             record = new Map();
