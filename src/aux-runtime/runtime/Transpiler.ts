@@ -91,6 +91,7 @@ const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     TSEnumDeclaration: [],
     TSTypeAliasDeclaration: [],
     TSDeclareFunction: [],
+    TSDeclareMethod: [],
 
     TSExternalModuleReference: [],
     TSQualifiedName: [],
@@ -495,6 +496,16 @@ export class Transpiler {
 
                     if (n.abstract === true) {
                         this._removeClassAbstract(n, doc, text);
+                    }
+                } else if (n.type === 'MethodDefinition') {
+                    if (n.abstract) {
+                        this._removeNodeOrReplaceWithUndefined(n, doc, text);
+                    } else if (n.accessibility) {
+                        this._removeAccessibility(n, doc, text);
+                    }
+                } else if (n.type === 'PropertyDefinition') {
+                    if (n.accessibility) {
+                        this._removeAccessibility(n, doc, text);
                     }
                 } else if (n.type === 'TSAsExpression') {
                     this._removeAsExpression(n, doc, text);
@@ -1227,6 +1238,32 @@ export class Transpiler {
             abstractStart.index,
             abstractEnd.index - abstractStart.index
         );
+    }
+
+    private _removeAccessibility(node: any, doc: Doc, text: Text): any {
+        doc.clientID += 1;
+        const version = { '0': getClock(doc, 0) };
+
+        const accessibility: string = node.accessibility + ' ';
+        const t = text.toString();
+
+        const indexOfAccessibility = t.indexOf(accessibility, node.start);
+
+        if (indexOfAccessibility < 0 || indexOfAccessibility > node.key.start) {
+            return;
+        }
+
+        const absoluteAccessibilityStart =
+            createAbsolutePositionFromStateVector(
+                doc,
+                text,
+                version,
+                indexOfAccessibility,
+                undefined,
+                true
+            );
+
+        text.delete(absoluteAccessibilityStart.index, accessibility.length);
     }
 
     private _removeAsExpression(node: any, doc: Doc, text: Text): any {

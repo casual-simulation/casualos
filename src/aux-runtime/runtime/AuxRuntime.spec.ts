@@ -9136,6 +9136,28 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast('def')]]);
                 });
 
+                it('should support loops in library modules', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@import { abc } from 'module.library'; abc();`,
+                            }),
+                            test2: createBot('test2', {
+                                system: 'module',
+                                library: `📄import { os } from "casualos"; export function abc() { for(let i = 0; i < 3; i++) { os.toast("def" + i) } }`,
+                            }),
+                            test3: createBot('test3', {}),
+                        })
+                    );
+                    await runtime.shout('hello');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [toast('def0'), toast('def1'), toast('def2')],
+                    ]);
+                });
+
                 it('should throw an error if os functions are not imported from the casualos module', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({

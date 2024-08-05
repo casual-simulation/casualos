@@ -3496,6 +3496,7 @@ export class AuxRuntime
             tagName: tag,
             globalThis: this._globalObject,
             [IMPORT_META_FACTORY]: meta,
+            __energyCheck: this._library.api.__energyCheck,
         };
 
         const specifics = {
