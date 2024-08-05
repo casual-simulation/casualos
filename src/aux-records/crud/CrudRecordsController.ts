@@ -31,8 +31,7 @@ import { ZodIssue } from 'zod';
 
 export interface CrudRecordsConfiguration<
     T extends CrudRecord,
-    TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics,
-    TStore extends CrudRecordsStore<T, TMetrics> = CrudRecordsStore<T, TMetrics>
+    TStore extends CrudRecordsStore<T> = CrudRecordsStore<T>
 > {
     /**
      * The name for the controller.
@@ -77,11 +76,7 @@ export interface CrudRecordsConfiguration<
  */
 export abstract class CrudRecordsController<
     T extends CrudRecord,
-    TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics,
-    TStore extends CrudRecordsStore<T, TMetrics> = CrudRecordsStore<
-        T,
-        TMetrics
-    >,
+    TStore extends CrudRecordsStore<T> = CrudRecordsStore<T>,
     TResult extends Partial<T> = T
 > {
     private _store: TStore;
@@ -115,7 +110,7 @@ export abstract class CrudRecordsController<
         return this._resourceKind;
     }
 
-    constructor(config: CrudRecordsConfiguration<T, TMetrics, TStore>) {
+    constructor(config: CrudRecordsConfiguration<T, TStore>) {
         this._name = config.name;
         this._allowRecordKeys = config.allowRecordKeys;
         this._store = config.store;

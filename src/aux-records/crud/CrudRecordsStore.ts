@@ -6,10 +6,7 @@ import { SubscriptionMetrics } from '../MetricsStore';
  * @param T The type of the records that the store can manage.
  * @param TMetrics The type of the metrics that the store can provide.
  */
-export interface CrudRecordsStore<
-    T extends CrudRecord,
-    TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics
-> {
+export interface CrudRecordsStore<T extends CrudRecord> {
     /**
      * Creates a new record.
      * @param recordName The name of the record.
@@ -64,12 +61,6 @@ export interface CrudRecordsStore<
     listItemsByMarker(
         request: ListCrudStoreByMarkerRequest
     ): Promise<ListCrudStoreSuccess<T>>;
-
-    /**
-     * Gets the item metrics for the subscription of the given record.
-     * @param recordName The name of the record.
-     */
-    getSubscriptionMetricsByRecordName(recordName: string): Promise<TMetrics>;
 }
 
 /**

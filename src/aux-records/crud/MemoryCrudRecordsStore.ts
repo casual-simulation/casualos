@@ -11,7 +11,7 @@ import { orderBy, sortBy } from 'lodash';
 export class MemoryCrudRecordsStore<
     T extends CrudRecord,
     TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics
-> implements CrudRecordsStore<T, TMetrics>
+> implements CrudRecordsStore<T>
 {
     private _itemBuckets: Map<string, Map<string, T>> = new Map();
     private _store: MemoryStore;

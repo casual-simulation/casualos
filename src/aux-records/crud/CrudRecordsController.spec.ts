@@ -997,7 +997,7 @@ export class TestController extends CrudRecordsController<TestItem> {
     }
 
     constructor(
-        config: CrudRecordsConfiguration<TestItem, CrudSubscriptionMetrics>,
+        config: CrudRecordsConfiguration<TestItem>,
         checkSubscriptionMetrics?: (
             action: ActionKinds,
             authorization: AuthorizeUserAndInstancesForResourcesSuccess,
