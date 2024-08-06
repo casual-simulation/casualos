@@ -33,11 +33,7 @@ import {
     RequestMissingPermissionResponseSuccessMessage,
     WebsocketEventTypes,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import {
-    createTestControllers,
-    createTestSubConfiguration,
-    createTestUser,
-} from '../TestUtils';
+import { createTestControllers, createTestUser } from '../TestUtils';
 import { generateV1ConnectionToken } from '../AuthUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';

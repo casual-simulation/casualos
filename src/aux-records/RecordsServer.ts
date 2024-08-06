@@ -3093,7 +3093,13 @@ export class RecordsServer {
                     );
 
                     if (queryResult.success === false) {
-                        return returnZodError(queryResult.error);
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'The request was invalid. One or more fields were invalid.',
+                            issues: queryResult.error.issues,
+                        };
                     }
 
                     const { recordName, address } = queryResult.data;

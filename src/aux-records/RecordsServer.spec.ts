@@ -145,6 +145,7 @@ import {
     AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
 import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -13334,28 +13335,14 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 privateKey: PRIVATE_KEY,
             });
 
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                loom: {
-                                    allowed: true,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withLoom()
+                    )
             );
         });
 
@@ -13492,40 +13479,18 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
         describe('comId', () => {
             beforeEach(async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    comId: {
-                                        allowCustomComId: true,
-                                        allowed: true,
-                                        maxStudios: 1,
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withComId({
+                                    allowed: true,
+                                    maxStudios: 1,
+                                })
+                        )
                 );
-
-                // await store.saveNewUser({
-                //     id: 'userId',
-                //     email: 'test@example.com',
-                //     name: 'test user',
-                //     phoneNumber: null,
-                //     allSessionRevokeTimeMs: null,
-                //     currentLoginRequestId: null,
-                // });
 
                 await store.createStudioForUser(
                     {

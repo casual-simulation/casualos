@@ -1,15 +1,10 @@
 import { MemoryStore } from './MemoryStore';
 import { LoomController, LoomGetTokenSuccess } from './LoomController';
-import { createTestControllers, createTestSubConfiguration } from './TestUtils';
+import { createTestControllers } from './TestUtils';
 import { RecordsController } from './RecordsController';
 import { PolicyController } from './PolicyController';
-import { merge } from 'lodash';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
 import * as jose from 'jose';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();
 
@@ -114,26 +109,11 @@ describe('LoomController', () => {
             privateKey: PRIVATE_KEY,
         });
 
-        store.subscriptionConfiguration = merge(createTestSubConfiguration(), {
-            subscriptions: [
-                {
-                    id: 'sub1',
-                    eligibleProducts: [],
-                    product: '',
-                    featureList: [],
-                    tier: 'tier1',
-                },
-            ],
-            tiers: {
-                tier1: {
-                    features: merge(allowAllFeatures(), {
-                        loom: {
-                            allowed: true,
-                        },
-                    } as Partial<FeaturesConfiguration>),
-                },
-            },
-        } as Partial<SubscriptionConfiguration>);
+        store.subscriptionConfiguration = buildSubscriptionConfig((config) =>
+            config.addSubscription('sub1', (sub) =>
+                sub.withTier('tier1').withAllDefaultFeatures().withLoom()
+            )
+        );
     });
 
     describe('getToken()', () => {
