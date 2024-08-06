@@ -39,6 +39,7 @@ import {
 import { PolicyController } from './PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { fromByteArray } from 'base64-js';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();
 
@@ -623,31 +624,19 @@ describe('AIController', () => {
 
         describe('subscriptions', () => {
             beforeEach(async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        chat: {
-                                            maxTokensPerPeriod: 100,
-                                            maxTokensPerRequest: 75,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    maxTokensPerPeriod: 100,
+                                    maxTokensPerRequest: 75,
+                                })
+                        )
                 );
 
                 await store.saveUser({
@@ -867,30 +856,17 @@ describe('AIController', () => {
                     })
                 );
 
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        chat: {
-                                            allowed: false,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: false,
+                                })
+                        )
                 );
 
                 const result = await controller.chat({
@@ -1529,31 +1505,19 @@ describe('AIController', () => {
 
         describe('subscriptions', () => {
             beforeEach(async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        chat: {
-                                            maxTokensPerPeriod: 100,
-                                            maxTokensPerRequest: 75,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    maxTokensPerPeriod: 100,
+                                    maxTokensPerRequest: 75,
+                                })
+                        )
                 );
 
                 await store.saveUser({
@@ -1802,30 +1766,17 @@ describe('AIController', () => {
                     ])
                 );
 
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        chat: {
-                                            allowed: false,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: false,
+                                })
+                        )
                 );
 
                 const result = await unwindAndCaptureAsync(
@@ -2134,30 +2085,18 @@ describe('AIController', () => {
 
         describe('subscriptions', () => {
             beforeEach(async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        skyboxes: {
-                                            maxSkyboxesPerPeriod: 4,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAISkyboxes({
+                                    allowed: true,
+                                    maxSkyboxesPerPeriod: 4,
+                                })
+                        )
                 );
 
                 await store.saveUser({
@@ -2172,30 +2111,17 @@ describe('AIController', () => {
             });
 
             it('should reject the request if the feature is not allowed', async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        skyboxes: {
-                                            allowed: false,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAISkyboxes({
+                                    allowed: false,
+                                })
+                        )
                 );
 
                 generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
@@ -2690,31 +2616,19 @@ describe('AIController', () => {
 
         describe('subscriptions', () => {
             beforeEach(async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        images: {
-                                            maxSquarePixelsPerRequest: 512,
-                                            maxSquarePixelsPerPeriod: 2048,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIImages({
+                                    allowed: true,
+                                    maxSquarePixelsPerRequest: 512,
+                                    maxSquarePixelsPerPeriod: 2048,
+                                })
+                        )
                 );
 
                 await store.saveUser({
@@ -2729,30 +2643,17 @@ describe('AIController', () => {
             });
 
             it('should reject the request if the feature is not allowed', async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    ai: {
-                                        images: {
-                                            allowed: false,
-                                        },
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIImages({
+                                    allowed: false,
+                                })
+                        )
                 );
 
                 generateImageInterface.generateImage.mockReturnValueOnce(
@@ -2854,19 +2755,11 @@ describe('AIController', () => {
 
     describe('getHumeAccessToken()', () => {
         beforeEach(() => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    defaultFeatures: {
-                        user: {
-                            ai: {
-                                hume: {
-                                    allowed: true,
-                                },
-                            },
-                        },
-                    },
-                }
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features.withAllDefaultFeatures().withAI().withAIHume()
+                    )
             );
         });
 
@@ -2949,10 +2842,14 @@ describe('AIController', () => {
         });
 
         it('should return not_authorized if the user isnt allowed to use hume', async () => {
-            store.subscriptionConfiguration = createTestSubConfiguration();
-            store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
-                allowed: false,
-            };
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features.withAllDefaultFeatures().withAI().withAIHume({
+                            allowed: false,
+                        })
+                    )
+            );
 
             const result = await controller.getHumeAccessToken({
                 userId,
@@ -3011,14 +2908,24 @@ describe('AIController', () => {
             });
 
             it('should return not_authorized if the studio doesnt have hume features', async () => {
-                store.subscriptionConfiguration = createTestSubConfiguration();
-                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
-                    allowed: true,
-                };
-                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
-                    {
-                        allowed: false,
-                    };
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume()
+                            )
+                            .withStudioDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume({
+                                        allowed: false,
+                                    })
+                            )
+                );
 
                 const result = await controller.getHumeAccessToken({
                     userId,
@@ -3034,14 +2941,24 @@ describe('AIController', () => {
             });
 
             it('should return invalid_request when the studio doesnt have a hume configuration', async () => {
-                store.subscriptionConfiguration = createTestSubConfiguration();
-                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
-                    allowed: false,
-                };
-                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
-                    {
-                        allowed: true,
-                    };
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume({
+                                        allowed: false,
+                                    })
+                            )
+                            .withStudioDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume()
+                            )
+                );
 
                 await store.updateStudioHumeConfig(studioId, null);
 
@@ -3059,14 +2976,24 @@ describe('AIController', () => {
             });
 
             it('should use the studios hume configuration', async () => {
-                store.subscriptionConfiguration = createTestSubConfiguration();
-                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
-                    allowed: false,
-                };
-                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
-                    {
-                        allowed: true,
-                    };
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume({
+                                        allowed: false,
+                                    })
+                            )
+                            .withStudioDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume()
+                            )
+                );
 
                 humeInterface.getAccessToken.mockResolvedValueOnce({
                     success: true,
@@ -3119,14 +3046,24 @@ describe('AIController', () => {
                     records: store,
                 });
 
-                store.subscriptionConfiguration = createTestSubConfiguration();
-                store.subscriptionConfiguration.defaultFeatures.user.ai.hume = {
-                    allowed: false,
-                };
-                store.subscriptionConfiguration.defaultFeatures.studio.ai.hume =
-                    {
-                        allowed: true,
-                    };
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume({
+                                        allowed: false,
+                                    })
+                            )
+                            .withStudioDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withAI()
+                                    .withAIHume()
+                            )
+                );
 
                 humeInterface.getAccessToken.mockResolvedValueOnce({
                     success: true,
@@ -3162,39 +3099,22 @@ describe('AIController', () => {
         const studioId = 'studioId';
         const otherUserId = 'otherUserId';
         beforeEach(async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    defaultFeatures: {
-                        user: {
-                            ai: {
-                                sloyd: {
-                                    allowed: true,
-                                },
-                            },
-                        },
-                    },
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                ai: {
-                                    sloyd: {
-                                        allowed: true,
-                                    },
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                }
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .withUserDefaultFeatures((features) =>
+                            features
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAISloyd()
+                        )
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAISloyd()
+                        )
             );
 
             await store.saveUser({
@@ -3366,10 +3286,14 @@ describe('AIController', () => {
         });
 
         it('should return not_authorized if the user doesnt have access to sloyd features', async () => {
-            store.subscriptionConfiguration = createTestSubConfiguration();
-            store.subscriptionConfiguration.defaultFeatures.user.ai.sloyd = {
-                allowed: false,
-            };
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features.withAllDefaultFeatures().withAI().withAISloyd({
+                            allowed: false,
+                        })
+                    )
+            );
 
             sloydInterface.createModel.mockResolvedValueOnce({
                 success: true,
@@ -3399,11 +3323,15 @@ describe('AIController', () => {
         });
 
         it('should return subscription_limit_reached if the user has too many model requests', async () => {
-            store.subscriptionConfiguration = createTestSubConfiguration();
-            store.subscriptionConfiguration.defaultFeatures.user.ai.sloyd = {
-                allowed: true,
-                maxModelsPerPeriod: 1,
-            };
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features.withAllDefaultFeatures().withAI().withAISloyd({
+                            allowed: true,
+                            maxModelsPerPeriod: 1,
+                        })
+                    )
+            );
 
             store.aiSloydMetrics.push({
                 modelId: 'modelId2',

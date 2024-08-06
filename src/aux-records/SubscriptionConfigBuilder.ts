@@ -139,35 +139,35 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withChatAI(features?: AIChatFeaturesConfiguration): this {
+    withAIChat(features?: AIChatFeaturesConfiguration): this {
         this._features.ai.chat = features ?? {
             allowed: true,
         };
         return this;
     }
 
-    withImagesAI(features?: AIImageFeaturesConfiguration): this {
+    withAIImages(features?: AIImageFeaturesConfiguration): this {
         this._features.ai.images = features ?? {
             allowed: true,
         };
         return this;
     }
 
-    withSkyboxesAI(features?: AISkyboxFeaturesConfiguration): this {
+    withAISkyboxes(features?: AISkyboxFeaturesConfiguration): this {
         this._features.ai.skyboxes = features ?? {
             allowed: true,
         };
         return this;
     }
 
-    withHumeAI(features?: AIHumeFeaturesConfiguration): this {
+    withAIHume(features?: AIHumeFeaturesConfiguration): this {
         this._features.ai.hume = features ?? {
             allowed: true,
         };
         return this;
     }
 
-    withSloydAI(features?: AISloydFeaturesConfiguration): this {
+    withAISloyd(features?: AISloydFeaturesConfiguration): this {
         this._features.ai.sloyd = features ?? {
             allowed: true,
         };
