@@ -2,7 +2,7 @@ import { ActionKinds } from '@casual-simulation/aux-common';
 import {
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
-} from 'PolicyController';
+} from '../PolicyController';
 import {
     CheckSubscriptionMetricsResult,
     CrudRecordsConfiguration,
@@ -13,6 +13,7 @@ import {
     WebhookRecordsStore,
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
+import { getWebhookFeatures } from '../SubscriptionConfiguration';
 
 /**
  * Defines the configuration for a webhook records controller.
@@ -20,7 +21,7 @@ import {
 export interface WebhookRecordsConfiguration
     extends Omit<
         CrudRecordsConfiguration<WebhookRecord, WebhookRecordsStore>,
-        'resourceKind' | 'allowRecordKeys'
+        'resourceKind' | 'allowRecordKeys' | 'name'
     > {}
 
 /**
@@ -34,7 +35,7 @@ export class WebhookRecordsController extends CrudRecordsController<
         super({
             ...config,
             resourceKind: 'webhook',
-            allowRecordKeys: true,
+            name: 'WebhookRecordsController',
         });
     }
 
@@ -45,6 +46,37 @@ export class WebhookRecordsController extends CrudRecordsController<
             | AuthorizeUserAndInstancesForResourcesSuccess,
         item?: WebhookRecord
     ): Promise<CheckSubscriptionMetricsResult> {
+        const config = await this.config.getSubscriptionConfiguration();
+        const metrics = await this.store.getSubscriptionMetricsByRecordName(
+            authorization.recordName
+        );
+
+        const features = getWebhookFeatures(
+            config,
+            metrics.subscriptionStatus,
+            metrics.subscriptionId,
+            metrics.subscriptionType
+        );
+
+        if (!features.allowed) {
+            return {
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Webhooks are not allowed for this subscription.',
+            };
+        }
+
+        if (action === 'create' && typeof features.maxItems === 'number') {
+            if (metrics.totalItems >= features.maxItems) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of webhook items has been reached for your subscription.',
+                };
+            }
+        }
+
         return {
             success: true,
         };

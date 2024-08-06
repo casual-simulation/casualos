@@ -283,6 +283,30 @@ export const subscriptionFeaturesSchema = z.object({
         .default({
             allowed: false,
         }),
+
+    webhooks: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether webhook features are granted for the subscription.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of webhook items that are allowed for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .optional(),
+        })
+        .describe(
+            'The configuration for webhook features. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -713,10 +737,10 @@ export interface FeaturesConfiguration {
      */
     loom?: StudioLoomFeaturesConfiguration;
 
-    // /**
-    //  * The configuration for studio hume features.
-    //  */
-    // hume?: StudioHumeFeaturesConfiguration;
+    /**
+     * The configuration for webhook features.
+     */
+    webhooks?: WebhooksFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -944,6 +968,10 @@ export type StudioLoomFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['loom'];
 
+export type WebhooksFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['webhooks'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -979,6 +1007,28 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
     };
+}
+
+/**
+ * Gets the webhook features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getWebhookFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio'
+): WebhooksFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type
+    );
+    return features.webhooks ?? { allowed: false };
 }
 
 /**
