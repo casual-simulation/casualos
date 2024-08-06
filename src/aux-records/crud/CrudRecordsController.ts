@@ -54,11 +54,6 @@ export interface CrudRecordsConfiguration<
     config: ConfigurationStore;
 
     /**
-     * Whether record keys can be used to access items.
-     */
-    allowRecordKeys: boolean;
-
-    /**
      * The kind of resource that the controller is for.
      */
     resourceKind: ResourceKinds;
@@ -83,14 +78,16 @@ export abstract class CrudRecordsController<
     private _policies: PolicyController;
     private _config: ConfigurationStore;
     private _name: string;
-    private _allowRecordKeys: boolean;
     private _resourceKind: ResourceKinds;
 
     protected get config() {
         return this._config;
     }
 
-    protected get name() {
+    /**
+     * Gets the name of the controller.
+     */
+    get name() {
         return this._name;
     }
 
@@ -102,17 +99,15 @@ export abstract class CrudRecordsController<
         return this._store;
     }
 
-    protected get allowRecordKeys() {
-        return this._allowRecordKeys;
-    }
-
-    protected get resourceKind() {
+    /**
+     * Gets the kind of resources that this controller is for.
+     */
+    get resourceKind() {
         return this._resourceKind;
     }
 
     constructor(config: CrudRecordsConfiguration<T, TStore>) {
         this._name = config.name;
-        this._allowRecordKeys = config.allowRecordKeys;
         this._store = config.store;
         this._policies = config.policies;
         this._config = config.config;
@@ -135,18 +130,6 @@ export abstract class CrudRecordsController<
 
             if (contextResult.success === false) {
                 return contextResult;
-            }
-
-            if (
-                !this._allowRecordKeys &&
-                contextResult.context.recordKeyProvided
-            ) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_record_key',
-                    errorMessage:
-                        'Record keys are not allowed for these items.',
-                };
             }
 
             const recordName = contextResult.context.recordName;
@@ -274,15 +257,6 @@ export abstract class CrudRecordsController<
                 return context;
             }
 
-            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_record_key',
-                    errorMessage:
-                        'Record keys are not allowed for these items.',
-                };
-            }
-
             const result = await this._store.getItemByAddress(
                 context.context.recordName,
                 request.address
@@ -343,15 +317,6 @@ export abstract class CrudRecordsController<
 
             if (context.success === false) {
                 return context;
-            }
-
-            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_record_key',
-                    errorMessage:
-                        'Record keys are not allowed for these items.',
-                };
             }
 
             const result = await this._store.getItemByAddress(
@@ -432,15 +397,6 @@ export abstract class CrudRecordsController<
                 return context;
             }
 
-            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_record_key',
-                    errorMessage:
-                        'Record keys are not allowed for these items.',
-                };
-            }
-
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -499,15 +455,6 @@ export abstract class CrudRecordsController<
 
             if (context.success === false) {
                 return context;
-            }
-
-            if (!this._allowRecordKeys && context.context.recordKeyProvided) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_record_key',
-                    errorMessage:
-                        'Record keys are not allowed for these items.',
-                };
             }
 
             const authorization =
