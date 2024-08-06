@@ -22,6 +22,10 @@ import {
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
 import { WebhookRecord, WebhookRecordsStore } from './WebhookRecordsStore';
+import {
+    buildSubscriptionConfig,
+    subscriptionConfigBuilder,
+} from '../SubscriptionConfigBuilder';
 
 console.log = jest.fn();
 
@@ -43,18 +47,11 @@ describe('WebhookRecordsController', () => {
             markers: item.markers,
         }),
         async (context) => {
-            context.store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    defaultFeatures: {
-                        user: merge(allowAllFeatures(), {
-                            webhooks: {
-                                allowed: true,
-                            },
-                        } as Partial<FeaturesConfiguration>),
-                    },
-                } as Partial<SubscriptionConfiguration>
+            const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
+                (features) => features.withAllDefaultFeatures().withWebhooks()
             );
+
+            context.store.subscriptionConfiguration = builder.config;
         }
     );
 
@@ -99,29 +96,15 @@ describe('WebhookRecordsController', () => {
     describe('recordItem()', () => {
         describe('create', () => {
             it('should return subscription_limit_reached when the user has reached their subscription limit', async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    webhooks: {
-                                        allowed: true,
-                                        maxItems: 1,
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withWebhooks()
+                                .withWebhooksMaxItems(1)
+                        )
                 );
 
                 const user = await store.findUser(userId);
