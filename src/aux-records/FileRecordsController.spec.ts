@@ -20,7 +20,6 @@ import { PolicyController } from './PolicyController';
 import {
     createTestControllers,
     createTestRecordKey,
-    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import {
@@ -28,13 +27,9 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { merge, sortBy } from 'lodash';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
+import { sortBy } from 'lodash';
 import { MemoryStore } from './MemoryStore';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();
 
@@ -719,28 +714,15 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                files: {
-                                    maxBytesPerFile: 10,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withFiles()
+                            .withMaxBytesPerFile(10)
+                    )
             );
 
             const user = await store.findUser(ownerId);
@@ -776,28 +758,15 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                files: {
-                                    maxBytesTotal: 10,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withFiles()
+                            .withFilesMaxBytesTotal(10)
+                    )
             );
 
             await store.addFileRecord(
@@ -844,28 +813,15 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                files: {
-                                    maxFiles: 1,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withFiles()
+                            .withMaxFiles(1)
+                    )
             );
 
             await store.addFileRecord(

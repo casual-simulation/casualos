@@ -8,11 +8,9 @@ import {
     UpdateEventRecordFailure,
     UpdateEventRecordSuccess,
 } from './EventRecordsController';
-import { EventRecordsStore } from './EventRecordsStore';
 import {
     createTestControllers,
     createTestRecordKey,
-    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import { PolicyController } from './PolicyController';
@@ -21,13 +19,8 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { merge } from 'lodash';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();
 
@@ -228,28 +221,16 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if event records are not allowed', async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                events: {
-                                    allowed: false,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withEvents({
+                                allowed: false,
+                            })
+                    )
             );
 
             store.roles[recordName] = {
@@ -644,28 +625,16 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if event records are not allowed', async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                events: {
-                                    allowed: false,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withEvents({
+                                allowed: false,
+                            })
+                    )
             );
 
             store.roles[recordName] = {

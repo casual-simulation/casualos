@@ -14,6 +14,7 @@ import {
     FeaturesConfiguration,
     FileFeaturesConfiguration,
     InstsFeaturesConfiguration,
+    PublicInstsConfiguration,
     RecordFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
@@ -78,7 +79,7 @@ export class FeaturesBuilder {
         return this;
     }
 
-    withFilesMaxBytesPerFile(maxBytesPerFile: number): this {
+    withMaxBytesPerFile(maxBytesPerFile: number): this {
         this._features.files.maxBytesPerFile = maxBytesPerFile;
         return this;
     }
@@ -310,6 +311,13 @@ export class SubscriptionConfigBuilder {
         this._config.defaultFeatures.studio = build(
             new FeaturesBuilder()
         ).features;
+        return this;
+    }
+
+    withPublicInsts(features?: PublicInstsConfiguration): this {
+        this._config.defaultFeatures.publicInsts = features ?? {
+            allowed: true,
+        };
         return this;
     }
 

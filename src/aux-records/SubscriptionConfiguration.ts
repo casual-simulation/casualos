@@ -678,22 +678,24 @@ export interface DefaultFeaturesConfiguration {
     /**
      * The configuration for temporary insts.
      */
-    publicInsts?: {
-        /**
-         * Whether they are allowed to be created.
-         */
-        allowed: boolean;
+    publicInsts?: PublicInstsConfiguration;
+}
 
-        /**
-         * The maximum number of bytes that each inst can store.
-         */
-        maxBytesPerInst?: number;
+export interface PublicInstsConfiguration {
+    /**
+     * Whether they are allowed to be created.
+     */
+    allowed: boolean;
 
-        /**
-         * The maximum number of active connections that each inst can have.
-         */
-        maxActiveConnectionsPerInst?: number;
-    };
+    /**
+     * The maximum number of bytes that each inst can store.
+     */
+    maxBytesPerInst?: number;
+
+    /**
+     * The maximum number of active connections that each inst can have.
+     */
+    maxActiveConnectionsPerInst?: number;
 }
 
 /**
