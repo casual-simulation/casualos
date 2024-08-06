@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
-import { max } from 'lodash';
+import { merge } from '@casual-simulation/aux-common';
 
 export const subscriptionFeaturesSchema = z.object({
     records: z
@@ -1005,6 +1005,43 @@ export function allowAllFeatures(): FeaturesConfiguration {
         },
         insts: {
             allowed: true,
+        },
+    };
+}
+
+export function denyAllFeatures(): FeaturesConfiguration {
+    return {
+        records: {
+            allowed: false,
+        },
+        ai: {
+            chat: {
+                allowed: false,
+            },
+            images: {
+                allowed: false,
+            },
+            skyboxes: {
+                allowed: false,
+            },
+            hume: {
+                allowed: false,
+            },
+            sloyd: {
+                allowed: false,
+            },
+        },
+        data: {
+            allowed: false,
+        },
+        events: {
+            allowed: false,
+        },
+        files: {
+            allowed: false,
+        },
+        insts: {
+            allowed: false,
         },
     };
 }
