@@ -7744,6 +7744,124 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/moderation/schedule/scan', () => {
+        beforeEach(async () => {
+            store.moderationConfiguration = {
+                allowUnauthenticatedReports: true,
+                jobs: {
+                    files: {
+                        enabled: true,
+                        bannedLabels: [
+                            {
+                                label: 'banned',
+                                threshold: 0.7,
+                                actions: ['notify'],
+                            },
+                        ],
+                        fileExtensions: [
+                            '.png',
+                            '.webp',
+                            '.jpg',
+                            '.jpeg',
+                            '.gif',
+                        ],
+                    },
+                },
+            };
+        });
+
+        describe('superUser', () => {
+            beforeEach(async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    role: 'superUser',
+                });
+            });
+
+            it('should schedule the moderation scan', async () => {
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/moderation/schedule/scan',
+                        JSON.stringify({}),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        jobs: [
+                            {
+                                id: expect.any(String),
+                                type: 'files',
+                                filter: {
+                                    fileExtensions: [
+                                        '.png',
+                                        '.webp',
+                                        '.jpg',
+                                        '.jpeg',
+                                        '.gif',
+                                    ],
+                                },
+                                createdAtMs: expect.any(Number),
+                                updatedAtMs: expect.any(Number),
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                expect(jobProvider.jobs).toEqual([
+                    {
+                        id: expect.any(String),
+                        type: 'files',
+                        filter: {
+                            fileExtensions: [
+                                '.png',
+                                '.webp',
+                                '.jpg',
+                                '.jpeg',
+                                '.gif',
+                            ],
+                        },
+                        createdAtMs: expect.any(Number),
+                        updatedAtMs: expect.any(Number),
+                    },
+                ]);
+            });
+        });
+
+        it('should return not_authorized if the user is not a superUser', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/moderation/schedule/scan',
+                    JSON.stringify({}),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/moderation/schedule/scan',
+            () => JSON.stringify({}),
+            () => authenticatedHeaders
+        );
+    });
+
     describe('DELETE /api/v2/records/data', () => {
         beforeEach(async () => {
             await dataController.recordData(

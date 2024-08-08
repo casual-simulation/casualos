@@ -1,8 +1,20 @@
 # CasualOS Changelog
 
-## V3.3.8
+## V3.3.9
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Improved CasualOS to understand and process Typescript class method and property accessibility modifiers correctly.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where library scripts would always error when executing a loop (for, while, etc.).
+
+## V3.3.8
+
+#### Date: 8/5/2024
 
 ### :rocket: Features
 

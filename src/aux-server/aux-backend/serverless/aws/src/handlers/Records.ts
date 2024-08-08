@@ -108,12 +108,29 @@ async function handleS3BatchEvent(event: S3BatchEvent) {
                         jobId: jobId,
                     });
 
-                    console.log('[Records] Scanned file:', fileName, result);
-                    return {
-                        taskId: task.taskId,
-                        resultCode: 'Succeeded',
-                        resultString: `Scanned file: ${fileName}`,
-                    };
+                    if (result.success === true) {
+                        console.log(
+                            '[Records] Scanned file:',
+                            fileName,
+                            result.result
+                        );
+                        return {
+                            taskId: task.taskId,
+                            resultCode: 'Succeeded',
+                            resultString: `Scanned file: ${fileName.recordName}/${fileName.fileName}`,
+                        };
+                    } else {
+                        console.error(
+                            '[Records] Failed to scan file:',
+                            fileName,
+                            result
+                        );
+                        return {
+                            taskId: task.taskId,
+                            resultCode: 'PermanentFailure',
+                            resultString: `Error scanning file (${fileName.recordName}/${fileName.fileName}): ${result.errorCode}\n${result.errorMessage}`,
+                        };
+                    }
                 } catch (err) {
                     console.error('[Records] Error scanning file:', err);
                     return {

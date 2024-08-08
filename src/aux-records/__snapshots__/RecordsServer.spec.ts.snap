@@ -961,6 +961,18 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/moderation/schedule/scan",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "scheduleModerationScans",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
         "method": "DELETE",
         "path": "/api/v2/records/data",
       },
@@ -3895,6 +3907,18 @@ Object {
         "type": "object",
       },
       "name": "scanFileForModeration",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/moderation/schedule/scan",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "scheduleModerationScans",
       "origins": "account",
     },
     Object {

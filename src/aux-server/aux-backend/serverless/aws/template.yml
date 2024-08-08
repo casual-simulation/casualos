@@ -278,6 +278,12 @@ Resources:
                                 - 's3:CreateJob'
                             Resource:
                                 - '*'
+                          - Effect: Allow
+                            Action:
+                                - 's3:PutObject'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}/*'
 
     # The role that is used by the S3 moderation batch job to grab files
     # and execute the lambda function
@@ -497,6 +503,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
@@ -532,6 +540,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
@@ -567,6 +577,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
