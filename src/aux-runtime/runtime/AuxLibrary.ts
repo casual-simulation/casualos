@@ -15,6 +15,7 @@ import {
     Bot,
     BOT_SPACE_TAG,
     toast as toastMessage,
+    getScriptIssues as scriptIssues,
     tip as tipMessage,
     hideTips as hideTipMessages,
     showJoinCode as calcShowJoinCode,
@@ -3011,6 +3012,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 sleep,
                 toast,
+                getScriptIssues,
                 tip,
                 hideTips,
                 showJoinCode,
@@ -5451,6 +5453,61 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             toastMessage(convertToCopiableValue(message), duration)
         );
     }
+
+    function getScriptIssues(bot: Bot, tag: string): Promise<string[]> {
+        console.log('getScriptIssues');
+        return new Promise((resolve, reject) => {
+            try {
+                // Retrieve the script content from the bot using the provided tag
+                const scriptContent = bot.tags[tag];
+
+                // Initialize an array to hold the identified issues
+                const issues: string[] = [];
+
+                // Perform analysis on the script content to identify issues
+                if (!scriptContent) {
+                    issues.push('Script content is empty.');
+                } else {
+                    // Example checks (these can be expanded based on actual requirements)
+                    if (scriptContent.includes('eval(')) {
+                        issues.push('Usage of eval() is not allowed.');
+                    }
+                    if (scriptContent.length > 1000) {
+                        issues.push('Script content is too long.');
+                    }
+                }
+
+                // Resolve the promise with the identified issues
+                console.log('Issues:', issues);
+                resolve(issues);
+            } catch (error) {
+                // Reject the promise if an error occurs
+                console.log('Error fetching issues:', error);
+                reject(error);
+            }
+        });
+    }
+
+    // async function getIssuesForScript(bot: Bot, tag: string): Promise<Issue[]> {
+    //     try {
+    //         // Retrieve the script content from the bot using the provided tag
+    //         const scriptContent = bot.tags[tag];
+
+    //         // Initialize an array to hold the identified issues
+    //         const issues: Issue[] = [];
+
+    //         // Basic check: ensure no major issues
+    //         const majorIssues = issues.filter(issue => issue.severity === 'major');
+    //         if (majorIssues.length > 0) {
+    //             throw new Error('The project has major issues.');
+    //         }
+
+    //         return issues;
+    //     } catch (error) {
+    //         console.error('Error fetching issues:', error);
+    //         throw error;
+    //     }
+    // }
 
     /**
      * Shows a temporary "tooltip" message on the screen. Optionally placed at the specified position and shown for the given duration.

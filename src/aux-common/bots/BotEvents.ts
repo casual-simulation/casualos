@@ -4007,6 +4007,14 @@ export function toast(
     };
 }
 
+export function getScriptIssues(bot: Bot, tag: string): any {
+    return {
+        type: 'get_script_issues',
+        bot: bot,
+        tag: tag,
+    };
+}
+
 /**
  * Creates a new ShowTooltipAction.
  * @param message The message to show with the event.
