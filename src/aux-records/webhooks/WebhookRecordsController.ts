@@ -1,15 +1,20 @@
 import {
     ActionKinds,
+    BotsState,
+    DenialReason,
     GenericHttpRequest,
     GenericHttpResponse,
+    getBotsStateFromStoredAux,
     ServerError,
 } from '@casual-simulation/aux-common';
 import {
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
     ConstructAuthorizationContextFailure,
+    AuthorizeSubjectFailure,
 } from '../PolicyController';
 import {
+    CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsResult,
     CrudRecordsConfiguration,
     CrudRecordsController,
@@ -20,9 +25,25 @@ import {
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
 import { getWebhookFeatures } from '../SubscriptionConfiguration';
-import { traced } from 'tracing/TracingDecorators';
+import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { WebhookEnvironmentFactory } from './WebhookEnvironment';
+import {
+    HandleHttpRequestFailure,
+    HandleHttpRequestResult,
+    WebhookEnvironment,
+} from './WebhookEnvironment';
+import {
+    DataRecordsConfiguration,
+    DataRecordsController,
+    GetDataFailure,
+    GetDataResult,
+} from '../DataRecordsController';
+import {
+    FileRecordsController,
+    ReadFileFailure,
+    ReadFileResult,
+} from '../FileRecordsController';
+import { tryParseJson } from '../Utils';
 
 const TRACE_NAME = 'WebhookRecordsController';
 
@@ -35,9 +56,19 @@ export interface WebhookRecordsConfiguration
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {
     /**
-     * The factory that should be used to create webhook environments.
+     * The environment that should be used to handle webhooks.
      */
-    factory: WebhookEnvironmentFactory;
+    environment: WebhookEnvironment;
+
+    /**
+     * The controller that should be used to get data records.
+     */
+    data: DataRecordsController;
+
+    /**
+     * The controller that should be used to get file records.
+     */
+    files: FileRecordsController;
 }
 
 /**
@@ -47,7 +78,9 @@ export class WebhookRecordsController extends CrudRecordsController<
     WebhookRecord,
     WebhookRecordsStore
 > {
-    private _factory: WebhookEnvironmentFactory;
+    private _environment: WebhookEnvironment;
+    private _data: DataRecordsController;
+    private _files: FileRecordsController;
 
     constructor(config: WebhookRecordsConfiguration) {
         super({
@@ -55,7 +88,9 @@ export class WebhookRecordsController extends CrudRecordsController<
             resourceKind: 'webhook',
             name: 'WebhookRecordsController',
         });
-        this._factory = config.factory;
+        this._environment = config.environment;
+        this._data = config.data;
+        this._files = config.files;
     }
 
     /**
@@ -67,14 +102,115 @@ export class WebhookRecordsController extends CrudRecordsController<
         request: HandleWebhookRequest
     ): Promise<HandleWebhookResult> {
         try {
-            const context = await this.policies.constructAuthorizationContext({
-                recordKeyOrRecordName: request.recordName,
-                userId: request.userId,
-            });
+            const webhookContext =
+                await this.policies.constructAuthorizationContext({
+                    recordKeyOrRecordName: request.recordName,
+                    userId: request.userId,
+                });
 
-            if (context.success === false) {
-                return context;
+            if (webhookContext.success === false) {
+                return webhookContext;
             }
+
+            const webhook = await this.store.getItemByAddress(
+                webhookContext.context.recordName,
+                request.address
+            );
+
+            if (!webhook) {
+                return {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'Webhook not found.',
+                };
+            }
+
+            const webhookAuthorization =
+                await this.policies.authorizeUserAndInstancesForResources(
+                    webhookContext.context,
+                    {
+                        instances: request.instances,
+                        userId: request.userId,
+                        resources: [
+                            {
+                                resourceKind: 'webhook',
+                                resourceId: webhook.address,
+                                action: 'run',
+                                markers: webhook.markers,
+                            },
+                        ],
+                    }
+                );
+
+            if (webhookAuthorization.success === false) {
+                return webhookAuthorization;
+            }
+
+            const checkMetrics = await this._checkSubscriptionMetrics(
+                'run',
+                webhookAuthorization,
+                webhook
+            );
+
+            if (checkMetrics.success === false) {
+                return checkMetrics;
+            }
+
+            const targetContext =
+                await this.policies.constructAuthorizationContext({
+                    recordKeyOrRecordName: webhook.targetRecordName,
+                    userId: webhook.userId,
+                });
+
+            if (targetContext.success === false) {
+                return targetContext;
+            }
+
+            let state: BotsState = {};
+            if (webhook.targetResourceKind === 'data') {
+                const data = await this._data.getData(
+                    webhook.targetRecordName,
+                    webhook.targetAddress,
+                    webhook.userId,
+                    request.instances
+                );
+                if (data.success === false) {
+                    return data;
+                }
+
+                if (typeof data.data === 'string') {
+                    const stored = tryParseJson(data.data);
+                    if (stored.success === true) {
+                        state = getBotsStateFromStoredAux(stored.value);
+                    }
+                } else if (typeof data.data === 'object') {
+                    state = getBotsStateFromStoredAux(data.data);
+                }
+            } else if (webhook.targetResourceKind === 'file') {
+                const file = await this._files.readFile(
+                    webhook.targetRecordName,
+                    webhook.targetAddress,
+                    webhook.userId,
+                    request.instances
+                );
+                if (file.success === false) {
+                    return file;
+                }
+            }
+
+            if (!state) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_webhook_target',
+                    errorMessage:
+                        'Invalid webhook target. The targeted record does not contain a valid AUX.',
+                };
+            }
+
+            return await this._environment.handleHttpRequest({
+                state: state,
+                request: request.request,
+            });
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
@@ -157,6 +293,11 @@ export interface HandleWebhookRequest {
      * The request that should be made to the webhook.
      */
     request: GenericHttpRequest;
+
+    /**
+     * The instances that the request is coming from.
+     */
+    instances: string[];
 }
 
 export type HandleWebhookResult = HandleWebhookSuccess | HandleWebhookFailure;
@@ -167,7 +308,7 @@ export interface HandleWebhookSuccess {
     /**
      * The result of the webhook.
      */
-    result: GenericHttpResponse;
+    response: GenericHttpResponse;
 }
 
 export interface HandleWebhookFailure {
@@ -179,10 +320,24 @@ export interface HandleWebhookFailure {
     /**
      * The error code if the webhook was not successfully handled.
      */
-    errorCode: ServerError | ConstructAuthorizationContextFailure['errorCode'];
+    errorCode:
+        | ServerError
+        | ConstructAuthorizationContextFailure['errorCode']
+        | 'not_found'
+        | AuthorizeSubjectFailure['errorCode']
+        | CheckSubscriptionMetricsFailure['errorCode']
+        | GetDataFailure['errorCode']
+        | ReadFileFailure['errorCode']
+        | 'invalid_webhook_target'
+        | HandleHttpRequestFailure['errorCode'];
 
     /**
      * The error message if the webhook was not successfully handled.
      */
     errorMessage: string;
+
+    /**
+     * The denial reason.
+     */
+    reason?: DenialReason;
 }

@@ -14,6 +14,12 @@ import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
 } from '../SubscriptionConfigBuilder';
+import { DataRecordsController } from '../DataRecordsController';
+import { FileRecordsController } from '../FileRecordsController';
+import {
+    HandleHttpRequestRequest,
+    HandleHttpRequestResult,
+} from './WebhookEnvironment';
 
 console.log = jest.fn();
 
@@ -29,10 +35,29 @@ describe('WebhookRecordsController', () => {
         (config, services) =>
             new WebhookRecordsController({
                 ...config,
+                data: new DataRecordsController({
+                    config: services.store,
+                    metrics: services.store,
+                    policies: services.policies,
+                    store: services.store,
+                }),
+                files: new FileRecordsController({
+                    config: services.store,
+                    metrics: services.store,
+                    policies: services.policies,
+                    store: services.store,
+                }),
+                environment: {
+                    handleHttpRequest: jest.fn(),
+                },
             }),
         (item) => ({
             address: item.address,
             markers: item.markers,
+            targetResourceKind: 'data',
+            targetRecordName: 'recordName',
+            targetAddress: 'data1',
+            userId: null,
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -55,8 +80,18 @@ describe('WebhookRecordsController', () => {
     let sessionKey: string;
     let otherUserId: string;
     let recordName: string;
+    let environment: {
+        handleHttpRequest: jest.Mock<
+            Promise<HandleHttpRequestResult>,
+            [HandleHttpRequestRequest]
+        >;
+    };
 
     beforeEach(async () => {
+        environment = {
+            handleHttpRequest: jest.fn(),
+        };
+
         const context = await setupTestContext<
             WebhookRecord,
             WebhookRecordsStore,
@@ -66,6 +101,19 @@ describe('WebhookRecordsController', () => {
             (config, services) =>
                 new WebhookRecordsController({
                     ...config,
+                    data: new DataRecordsController({
+                        config: services.store,
+                        metrics: services.store,
+                        policies: services.policies,
+                        store: services.store,
+                    }),
+                    files: new FileRecordsController({
+                        config: services.store,
+                        metrics: services.store,
+                        policies: services.policies,
+                        store: services.store,
+                    }),
+                    environment: environment,
                 })
         );
 
@@ -79,6 +127,12 @@ describe('WebhookRecordsController', () => {
         userId = context.userId;
         sessionKey = context.sessionKey;
         recordName = context.recordName;
+
+        const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
+            (features) => features.withAllDefaultFeatures().withWebhooks()
+        );
+
+        store.subscriptionConfiguration = builder.config;
     });
 
     describe('recordItem()', () => {
@@ -105,6 +159,10 @@ describe('WebhookRecordsController', () => {
                 await itemsStore.createItem(recordName, {
                     address: 'item1',
                     markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'data',
+                    targetRecordName: 'recordName',
+                    targetAddress: 'data1',
+                    userId: null,
                 });
 
                 const result = await manager.recordItem({
@@ -112,6 +170,10 @@ describe('WebhookRecordsController', () => {
                     item: {
                         address: 'item2',
                         markers: [PUBLIC_READ_MARKER],
+                        targetResourceKind: 'data',
+                        targetRecordName: 'recordName',
+                        targetAddress: 'data1',
+                        userId: null,
                     },
                     userId,
                     instances: [],
@@ -128,6 +190,72 @@ describe('WebhookRecordsController', () => {
     });
 
     describe('handleWebhook()', () => {
-        it('should trigger a @onWebhook shout in the webhook code', async () => {});
+        beforeEach(async () => {
+            await store.addRecord({
+                name: 'recordName',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+        });
+
+        describe('data', () => {
+            it('should call into the factory ', async () => {
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'data',
+                    targetRecordName: 'recordName',
+                    targetAddress: 'data1',
+                    userId: null,
+                });
+
+                await store.setData(
+                    'recordName',
+                    'data1',
+                    {
+                        abc: 'def',
+                    },
+                    'user1',
+                    'user2',
+                    true,
+                    true,
+                    [PUBLIC_READ_MARKER]
+                );
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+            });
+        });
     });
 });

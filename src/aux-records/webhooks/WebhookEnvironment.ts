@@ -1,6 +1,8 @@
 import {
+    BotsState,
     GenericHttpRequest,
     GenericHttpResponse,
+    ServerError,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -11,33 +13,45 @@ import {
  */
 export interface WebhookEnvironment {
     /**
-     * Whether the environment has been closed.
-     * Once closed, it cannot be opened again.
-     */
-    closed: boolean;
-
-    /**
-     * Disposes of the environment.
-     * This should set closed to true and clean up any resources.
-     */
-    unsubscribe(): void;
-
-    /**
      * Handles the given HTTP request.
      * Returns a promise that resolves with the response.
      * @param request The request that should be handled.
      */
     handleHttpRequest(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse>;
+        request: HandleHttpRequestRequest
+    ): Promise<HandleHttpRequestResult>;
 }
 
-/**
- * Defines an interface for objects that can create webhook environments.
- */
-export interface WebhookEnvironmentFactory {
+export interface HandleHttpRequestRequest {
     /**
-     * Creates a new webhook environment.
+     * The request that should be handled.
      */
-    create(): WebhookEnvironment;
+    request: GenericHttpRequest;
+
+    /**
+     * The state that should be injected into the environment.
+     */
+    state: BotsState;
+}
+
+export type HandleHttpRequestResult =
+    | HandleHttpRequestSuccess
+    | HandleHttpRequestFailure;
+
+export interface HandleHttpRequestSuccess {
+    success: true;
+    response: GenericHttpResponse;
+}
+
+export interface HandleHttpRequestFailure {
+    success: false;
+    errorCode: 'unacceptable_request' | ServerError;
+    errorMessage: string;
+}
+
+export interface CreateEnvironmentRequest {
+    /**
+     * The state that should be injected into the environment.
+     */
+    state: BotsState;
 }
