@@ -20,7 +20,7 @@ export interface WebhookEnvironment {
      * Disposes of the environment.
      * This should set closed to true and clean up any resources.
      */
-    dispose(): void;
+    unsubscribe(): void;
 
     /**
      * Handles the given HTTP request.

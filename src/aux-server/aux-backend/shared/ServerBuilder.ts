@@ -1394,6 +1394,16 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    // useWebhooks(options: Pick<ServerConfig, 'webhooks'> = this._options): this {
+    //     console.log('[ServerBuilder] Using webhooks.');
+    //     if (!options.webhooks) {
+    //         throw new Error('Webhook options must be provided.');
+    //     }
+
+    //     this._webhooks = options.webhooks;
+    //     return this;
+    // }
+
     async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
