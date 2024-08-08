@@ -141,6 +141,7 @@ export function testCrudRecordsController<
         services: TestControllers
     ) => TController,
     createTestItem: (item: CrudRecord) => TItem,
+
     configureEnvironment?: (
         context: TestContext<TItem, TStore, TController>
     ) => Promise<void>
@@ -184,13 +185,14 @@ export function testCrudRecordsController<
     describe('recordItem()', () => {
         describe('create', () => {
             it('should store the item in the store', async () => {
+                const item = createTestItem({
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                });
                 const result = (await manager.recordItem({
                     recordKeyOrRecordName: recordName,
                     userId,
-                    item: createTestItem({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    }),
+                    item,
                     instances: [],
                 })) as CrudRecordItemSuccess;
 
@@ -202,10 +204,7 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toEqual({
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
+                ).resolves.toEqual(item);
             });
 
             it('should reject the request if given an invalid key', async () => {
@@ -357,13 +356,14 @@ export function testCrudRecordsController<
             });
 
             it('should update the markers in the store', async () => {
+                const item = createTestItem({
+                    address: 'address',
+                    markers: [PRIVATE_MARKER],
+                });
                 const result = (await manager.recordItem({
                     recordKeyOrRecordName: recordName,
                     userId,
-                    item: createTestItem({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    }),
+                    item,
                     instances: [],
                 })) as CrudRecordItemSuccess;
 
@@ -375,20 +375,18 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toEqual({
-                    address: 'address',
-                    markers: [PRIVATE_MARKER],
-                });
+                ).resolves.toEqual(item);
             });
 
             it('should reject the request if given an invalid key', async () => {
+                const item = createTestItem({
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                });
                 const result = (await manager.recordItem({
                     recordKeyOrRecordName: 'not_a_key',
                     userId,
-                    item: createTestItem({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    }),
+                    item,
                     instances: [],
                 })) as CrudRecordItemSuccess;
 
@@ -400,21 +398,19 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toEqual({
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
+                ).resolves.toEqual(item);
             });
 
             if (allowRecordKeys) {
                 it('should support using a record key', async () => {
+                    const item = createTestItem({
+                        address: 'address',
+                        markers: [PRIVATE_MARKER],
+                    });
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: key,
                         userId,
-                        item: createTestItem({
-                            address: 'address',
-                            markers: [PRIVATE_MARKER],
-                        }),
+                        item,
                         instances: [],
                     })) as CrudRecordItemSuccess;
 
@@ -426,20 +422,18 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    });
+                    ).resolves.toEqual(item);
                 });
 
                 it('should be able to use subjectless keys', async () => {
+                    const item = createTestItem({
+                        address: 'address',
+                        markers: [PRIVATE_MARKER],
+                    });
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: subjectlessKey,
                         userId,
-                        item: createTestItem({
-                            address: 'address',
-                            markers: [PRIVATE_MARKER],
-                        }),
+                        item,
                         instances: [],
                     })) as CrudRecordItemSuccess;
 
@@ -451,20 +445,18 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    });
+                    ).resolves.toEqual(item);
                 });
             } else {
                 it('should reject the request if record keys are not allowed', async () => {
+                    const item = createTestItem({
+                        address: 'address',
+                        markers: [PRIVATE_MARKER],
+                    });
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: key,
                         userId: otherUserId,
-                        item: createTestItem({
-                            address: 'address',
-                            markers: [PRIVATE_MARKER],
-                        }),
+                        item,
                         instances: [],
                     })) as CrudRecordItemSuccess;
 
@@ -485,20 +477,23 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    });
+                    ).resolves.toEqual(
+                        createTestItem({
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                        })
+                    );
                 });
 
                 it('should reject the request if subjectless keys are not allowed', async () => {
+                    const item = createTestItem({
+                        address: 'address',
+                        markers: [PRIVATE_MARKER],
+                    });
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: subjectlessKey,
                         userId: otherUserId,
-                        item: createTestItem({
-                            address: 'address',
-                            markers: [PRIVATE_MARKER],
-                        }),
+                        item,
                         instances: [],
                     })) as CrudRecordItemSuccess;
 
@@ -519,10 +514,12 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    });
+                    ).resolves.toEqual(
+                        createTestItem({
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                        })
+                    );
                 });
             }
         });
@@ -565,10 +562,10 @@ export function testCrudRecordsController<
 
             expect(result).toEqual({
                 success: true,
-                item: {
+                item: createTestItem({
                     address: 'address2',
                     markers: [PRIVATE_MARKER],
-                },
+                }),
             });
         });
 
@@ -613,10 +610,10 @@ export function testCrudRecordsController<
 
                 expect(result).toEqual({
                     success: true,
-                    item: {
+                    item: createTestItem({
                         address: 'address2',
                         markers: [PRIVATE_MARKER],
-                    },
+                    }),
                 });
             });
         } else {
