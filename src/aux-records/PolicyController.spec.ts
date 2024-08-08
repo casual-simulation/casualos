@@ -16,6 +16,7 @@ import {
     FILE_RESOURCE_KIND,
     INST_RESOURCE_KIND,
     MARKER_RESOURCE_KIND,
+    PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
     ResourceKinds,
@@ -3493,13 +3494,21 @@ describe('PolicyController', () => {
                 ],
             ],
             ['loom', [['create', 'resourceId']]],
+            [
+                'marker',
+                [
+                    ['assign', PUBLIC_READ_MARKER],
+                    ['assign', PRIVATE_MARKER],
+                ],
+            ],
         ];
 
         describe.each(studioMemberResourceKindCases)(
             '%s',
             (resourceKind, actions) => {
                 describe.each(actions)('%s', (action, resourceId) => {
-                    const marker = 'marker';
+                    const marker =
+                        resourceKind !== 'marker' ? 'marker' : ACCOUNT_MARKER;
 
                     it('should allow the action if the user is a member of the studio', async () => {
                         const context =
@@ -3588,7 +3597,8 @@ describe('PolicyController', () => {
             '%s',
             (resourceKind, actions) => {
                 describe.each(actions)('%s', (action, resourceId) => {
-                    const marker = 'marker';
+                    const marker =
+                        resourceKind !== 'marker' ? 'marker' : ACCOUNT_MARKER;
                     const inst = 'inst';
                     let instId: string;
 
