@@ -28,6 +28,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { ValidatePublicRecordKeyFailure } from '../RecordsController';
 import { ZodIssue } from 'zod';
+import { traced } from '../tracing/TracingDecorators';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 export interface CrudRecordsConfiguration<
     T extends CrudRecord,
@@ -58,6 +60,8 @@ export interface CrudRecordsConfiguration<
      */
     resourceKind: ResourceKinds;
 }
+
+const TRACE_NAME = 'CrudRecordsController';
 
 /**
  * Defines a controller that can be used to present a CRUD API for a record.
@@ -118,6 +122,7 @@ export abstract class CrudRecordsController<
      * Creates or updates an item in the given record.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async recordItem(
         request: CrudRecordItemRequest<T>
     ): Promise<CrudRecordItemResult> {
@@ -226,6 +231,10 @@ export abstract class CrudRecordsController<
                 address: item.address,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(`[${this._name}] Error recording item:`, err);
             return {
                 success: false,
@@ -239,6 +248,7 @@ export abstract class CrudRecordsController<
      * Gets the item with the given address from the given record.
      * @param request The request to get the item.
      */
+    @traced(TRACE_NAME)
     async getItem(
         request: CrudGetItemRequest
     ): Promise<CrudGetItemResult<TResult>> {
@@ -293,6 +303,10 @@ export abstract class CrudRecordsController<
                 item: this._convertItemToResult(result, context.context),
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(`[${this._name}] Error getting item:`, err);
             return {
                 success: false,
@@ -306,6 +320,7 @@ export abstract class CrudRecordsController<
      * Deletes the item with the given address from the given record.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async eraseItem(
         request: CrudEraseItemRequest
     ): Promise<CrudEraseItemResult> {
@@ -367,6 +382,10 @@ export abstract class CrudRecordsController<
                 success: true,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(`[${this._name}] Error erasing item:`, err);
             return {
                 success: false,
@@ -380,6 +399,7 @@ export abstract class CrudRecordsController<
      * Lists items in the given record.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async listItems(
         request: CrudListItemsRequest
     ): Promise<CrudListItemsResult<TResult>> {
@@ -427,6 +447,10 @@ export abstract class CrudRecordsController<
                 totalCount: result2.totalCount,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(`[${this._name}] Error listing items:`, err);
             return {
                 success: false,
@@ -440,6 +464,7 @@ export abstract class CrudRecordsController<
      * Lists items in the given record by the given marker.
      * @param request The request.
      */
+    @traced(TRACE_NAME)
     async listItemsByMarker(
         request: CrudListItemsByMarkerRequest
     ): Promise<CrudListItemsResult<TResult>> {
@@ -489,6 +514,10 @@ export abstract class CrudRecordsController<
                 totalCount: result2.totalCount,
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error(`[${this._name}] Error listing items:`, err);
             return {
                 success: false,
