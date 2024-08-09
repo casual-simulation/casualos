@@ -30,6 +30,16 @@ export interface HandleHttpRequestRequest {
     request: GenericHttpRequest;
 
     /**
+     * The name of the record that the webhook is running in.
+     */
+    recordName: string;
+
+    /**
+     * The inst that the webhook is running in.
+     */
+    inst?: string;
+
+    /**
      * The state that should be injected into the environment.
      */
     state: WebhookState;

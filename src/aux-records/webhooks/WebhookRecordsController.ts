@@ -144,8 +144,9 @@ export class WebhookRecordsController extends CrudRecordsController<
                 return webhookContext;
             }
 
+            const recordName = webhookContext.context.recordName;
             const webhook = await this.store.getItemByAddress(
-                webhookContext.context.recordName,
+                recordName,
                 request.address
             );
 
@@ -274,6 +275,7 @@ export class WebhookRecordsController extends CrudRecordsController<
 
             return await this._environment.handleHttpRequest({
                 state: state,
+                recordName,
                 request: request.request,
             });
         } catch (err) {
