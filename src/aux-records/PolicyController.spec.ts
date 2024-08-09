@@ -3037,7 +3037,7 @@ describe('PolicyController', () => {
                         });
                     });
 
-                    it('should deny the action if given a null user ID', async () => {
+                    it('should return not_logged_in if given a null user ID', async () => {
                         const context =
                             await controller.constructAuthorizationContext({
                                 recordKeyOrRecordName: recordName,
@@ -3061,6 +3061,43 @@ describe('PolicyController', () => {
                             errorCode: 'not_logged_in',
                             errorMessage:
                                 'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                        });
+                    });
+
+                    it('should return not_authorized if given a null user ID and configured to do so', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                                sendNotLoggedIn: false,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: null,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                            reason: {
+                                type: 'missing_permission',
+                                recordName: recordName,
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                subjectType: 'user',
+                                subjectId: null,
+                            },
                         });
                     });
 

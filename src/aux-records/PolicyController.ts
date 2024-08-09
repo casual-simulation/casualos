@@ -302,6 +302,7 @@ export class PolicyController {
             recordStudioMembers: studioMembers,
             userId: request.userId,
             userPrivacyFeatures,
+            sendNotLoggedIn: request.sendNotLoggedIn ?? true,
         };
 
         return {
@@ -1184,6 +1185,7 @@ export class PolicyController {
             }
 
             if (
+                context.sendNotLoggedIn &&
                 !subjectId &&
                 (!context.recordKeyProvided ||
                     !isAllowedRecordKeyResource(
@@ -2541,6 +2543,11 @@ export interface AuthorizationContext {
      * The ID of the user that is currently logged in.
      */
     userId: string;
+
+    /**
+     * Whether to send not_logged_in results when the user has not provided any authentication mechanism, but needs to.
+     */
+    sendNotLoggedIn: boolean;
 }
 
 export interface ConstructAuthorizationContextRequest {
@@ -2553,6 +2560,11 @@ export interface ConstructAuthorizationContextRequest {
      * The ID of the user that is currently logged in.
      */
     userId?: string | null;
+
+    /**
+     * Whether to return not_logged_in results when the user has not provided any authentication mechanism, but needs to.
+     */
+    sendNotLoggedIn?: boolean;
 }
 
 export interface GrantMarkerPermissionRequest {
