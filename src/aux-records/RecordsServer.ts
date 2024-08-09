@@ -117,6 +117,7 @@ import {
     STUDIO_ID_VALIDATION,
     UPDATE_FILE_SCHEMA,
 } from './Validations';
+import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -240,6 +241,105 @@ export interface Route<T> {
 
 const RECORDS_SERVER_METER = 'RecordsServer';
 
+export interface RecordsServerOptions {
+    /**
+     * The set of origins that are allowed to make requests to account endpoints.
+     */
+    allowedAccountOrigins: Set<string>;
+
+    /**
+     * The set of origins that are allowed to make requests to API endpoints.
+     */
+    allowedApiOrigins: Set<string>;
+
+    /**
+     * The controller that should be used for handling authentication requests.
+     */
+    authController: AuthController;
+
+    /**
+     * The controller that should be used for handling livekit requests.
+     */
+    livekitController: LivekitController;
+
+    /**
+     * The controller that should be used for handling records requests.
+     */
+    recordsController: RecordsController;
+
+    /**
+     * The controller that should be used for handling event records requests.
+     */
+    eventsController: EventRecordsController;
+
+    /**
+     * The controller that should be used for handling data records requests.
+     */
+    dataController: DataRecordsController;
+
+    /**
+     * The controller that should be used for handling manual data records requests.
+     */
+    manualDataController: DataRecordsController;
+
+    /**
+     * The controller that should be used for handling file requests.
+     */
+    filesController: FileRecordsController;
+
+    /**
+     * The controller that should be used for handling subscription requests.
+     * If null, then subscriptions are not supported.
+     */
+    subscriptionController?: SubscriptionController | null;
+
+    /**
+     * The controller that should be used for handling rate limits.
+     * If null, then rate limiting will not be used.
+     */
+    rateLimitController?: RateLimitController | null;
+
+    /**
+     * The controller that should be used for handling policy requests.
+     */
+    policyController: PolicyController;
+
+    /**
+     * The controller that should be used for handling AI requests.
+     */
+    aiController?: AIController | null;
+
+    /**
+     * The controller that should be used for handling websocket requests.
+     * If null, then websockets are not supported.
+     */
+    websocketController?: WebsocketController | null;
+
+    /**
+     * The controller that should be used for handling moderation requests.
+     * If null, then moderation is not supported.
+     */
+    moderationController?: ModerationController | null;
+
+    /**
+     * The controller that should be used for handling loom requests.
+     * If null, then loom is not supported.
+     */
+    loomController?: LoomController | null;
+
+    /**
+     * The controller that should be used for handling webhooks.
+     * If null, then webhooks are not supported.
+     */
+    webhooksController?: WebhookRecordsController | null;
+
+    /**
+     * The controller that should be used for handling rate limits for websockets.
+     * If null, then the default rate limit controller will be used.
+     */
+    websocketRateLimitController?: RateLimitController | null;
+}
+
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
@@ -256,6 +356,7 @@ export class RecordsServer {
     private _websocketController: WebsocketController | null;
     private _moderationController: ModerationController | null;
     private _loomController: LoomController | null;
+    private _webhooksController: WebhookRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -303,25 +404,26 @@ export class RecordsServer {
         return this._procedures;
     }
 
-    constructor(
-        allowedAccountOrigins: Set<string>,
-        allowedApiOrigins: Set<string>,
-        authController: AuthController,
-        livekitController: LivekitController,
-        recordsController: RecordsController,
-        eventsController: EventRecordsController,
-        dataController: DataRecordsController,
-        manualDataController: DataRecordsController,
-        filesController: FileRecordsController,
-        subscriptionController: SubscriptionController | null,
-        rateLimitController: RateLimitController,
-        policyController: PolicyController,
-        aiController: AIController | null,
-        websocketController: WebsocketController | null,
-        moderationController: ModerationController | null,
-        loomController: LoomController | null,
-        websocketRateLimitController: RateLimitController | null = null
-    ) {
+    constructor({
+        allowedAccountOrigins,
+        allowedApiOrigins,
+        authController,
+        livekitController,
+        recordsController,
+        eventsController,
+        dataController,
+        manualDataController,
+        filesController,
+        subscriptionController,
+        websocketController,
+        websocketRateLimitController,
+        rateLimitController,
+        policyController,
+        aiController,
+        moderationController,
+        loomController,
+        webhooksController,
+    }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
         this._auth = authController;
@@ -340,6 +442,7 @@ export class RecordsServer {
         this._websocketController = websocketController;
         this._moderationController = moderationController;
         this._loomController = loomController;
+        this._webhooksController = webhooksController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG

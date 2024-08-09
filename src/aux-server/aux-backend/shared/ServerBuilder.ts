@@ -1561,25 +1561,25 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
-        const server = new RecordsServer(
-            this._allowedAccountOrigins,
-            this._allowedApiOrigins,
-            this._authController,
-            this._livekitController,
-            this._recordsController,
-            this._eventsController,
-            this._dataController,
-            this._manualDataController,
-            this._filesController,
-            this._subscriptionController,
-            this._rateLimitController,
-            this._policyController,
-            this._aiController,
-            this._websocketController,
-            this._moderationController,
-            this._loomController,
-            this._websocketRateLimitController
-        );
+        const server = new RecordsServer({
+            allowedAccountOrigins: this._allowedAccountOrigins,
+            allowedApiOrigins: this._allowedApiOrigins,
+            authController: this._authController,
+            livekitController: this._livekitController,
+            recordsController: this._recordsController,
+            eventsController: this._eventsController,
+            dataController: this._dataController,
+            manualDataController: this._manualDataController,
+            filesController: this._filesController,
+            subscriptionController: this._subscriptionController,
+            rateLimitController: this._rateLimitController,
+            policyController: this._policyController,
+            aiController: this._aiController,
+            websocketController: this._websocketController,
+            moderationController: this._moderationController,
+            loomController: this._loomController,
+            websocketRateLimitController: this._websocketRateLimitController,
+        });
 
         const buildReturn: BuildReturn = {
             server,

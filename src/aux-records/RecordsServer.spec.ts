@@ -693,7 +693,7 @@ describe('RecordsServer', () => {
             policies: policyController,
         });
 
-        server = new RecordsServer(
+        server = new RecordsServer({
             allowedAccountOrigins,
             allowedApiOrigins,
             authController,
@@ -710,8 +710,8 @@ describe('RecordsServer', () => {
             websocketController,
             moderationController,
             loomController,
-            rateLimitController
-        );
+            websocketRateLimitController: rateLimitController,
+        });
         defaultHeaders = {
             origin: 'test.com',
         };
@@ -11705,7 +11705,7 @@ describe('RecordsServer', () => {
         });
 
         it('should not_supported if the server has a null Websocket Controller', async () => {
-            server = new RecordsServer(
+            server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -11716,13 +11716,8 @@ describe('RecordsServer', () => {
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any,
                 policyController,
-                null,
-                null,
-                null,
-                null
-            );
+            });
 
             const result = await server.handleHttpRequest(
                 httpGet(
@@ -12216,7 +12211,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsServer(
+            server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -12227,13 +12222,8 @@ describe('RecordsServer', () => {
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any,
                 policyController,
-                null,
-                null,
-                null,
-                null
-            );
+            });
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -12416,7 +12406,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsServer(
+            server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -12427,13 +12417,8 @@ describe('RecordsServer', () => {
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any,
                 policyController,
-                null,
-                null,
-                null,
-                null
-            );
+            });
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -12621,7 +12606,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsServer(
+            server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -12632,13 +12617,8 @@ describe('RecordsServer', () => {
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any,
                 policyController,
-                null,
-                null,
-                null,
-                null
-            );
+            });
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -12783,7 +12763,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsServer(
+            server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -12794,13 +12774,8 @@ describe('RecordsServer', () => {
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any,
                 policyController,
-                null,
-                null,
-                null,
-                null
-            );
+            });
 
             const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/ai/skybox?skyboxId=id`, apiHeaders)
@@ -12865,7 +12840,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsServer(
+            server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -12876,13 +12851,8 @@ describe('RecordsServer', () => {
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any,
                 policyController,
-                null,
-                null,
-                null,
-                null
-            );
+            });
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -17588,7 +17558,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         windowMs: 1000000,
                     }
                 );
-                server = new RecordsServer(
+                server = new RecordsServer({
                     allowedAccountOrigins,
                     allowedApiOrigins,
                     authController,
@@ -17605,8 +17575,8 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     websocketController,
                     moderationController,
                     loomController,
-                    websocketRateLimiter
-                );
+                    websocketRateLimitController: websocketRateLimiter,
+                });
 
                 const ip = '123.456.789';
                 expect(rateLimiter.getHits(ip)).toBe(0);
@@ -18270,7 +18240,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 now: 0,
             });
 
-            server = new RecordsServer(
+            server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -18281,13 +18251,11 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any,
                 policyController,
                 aiController,
                 websocketController,
                 moderationController,
-                null
-            );
+            });
 
             await rateLimiter.increment(ip, 100);
 
