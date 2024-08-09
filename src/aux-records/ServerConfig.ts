@@ -899,6 +899,14 @@ const rekognitionSchema = z.object({
     }),
 });
 
+const webhooksSchema = z.object({
+    environment: z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('deno'),
+        }),
+    ]),
+});
+
 export const serverConfigSchema = z.object({
     s3: s3Schema
         .describe(
@@ -1052,6 +1060,12 @@ export const serverConfigSchema = z.object({
     moderation: moderationSchema
         .describe(
             'Moderation configuration options. If omitted, then moderation features will be disabled unless overridden in the database.'
+        )
+        .optional(),
+
+    webhooks: webhooksSchema
+        .describe(
+            'Webhook configuration options. If omitted, then webhook features will be disabled.'
         )
         .optional(),
 });

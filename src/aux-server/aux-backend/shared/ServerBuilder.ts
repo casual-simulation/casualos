@@ -43,6 +43,9 @@ import {
     RedisServerOptions,
     AnthropicAIChatInterface,
     ModerationJobProvider,
+    WebhookRecordsController,
+    WebhookRecordsStore,
+    WebhookEnvironment,
 } from '@casual-simulation/aux-records';
 import {
     RekognitionModerationJobProvider,
@@ -166,6 +169,8 @@ import {
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
 import { MinioFileRecordsStore } from 'aux-backend/minio/MinioFileRecordsStore';
 import { S3Control, S3ControlClient } from '@aws-sdk/client-s3-control';
+import { SimulationWebhookEnvironment } from './webhooks/SimulationWebhookEnvironment';
+import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -256,6 +261,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _tempInstRecordsStore: TemporaryInstRecordsStore;
     private _instRecordsStore: InstRecordsStore;
     private _websocketController: WebsocketController;
+
+    private _webhooksStore: WebhookRecordsStore;
+    private _webhookEnvironment: WebhookEnvironment;
+    private _webhooksController: WebhookRecordsController;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -1394,15 +1403,28 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    // useWebhooks(options: Pick<ServerConfig, 'webhooks'> = this._options): this {
-    //     console.log('[ServerBuilder] Using webhooks.');
-    //     if (!options.webhooks) {
-    //         throw new Error('Webhook options must be provided.');
-    //     }
+    useWebhooks(options: Pick<ServerConfig, 'webhooks'> = this._options): this {
+        console.log('[ServerBuilder] Using webhooks.');
+        if (!options.webhooks) {
+            throw new Error('Webhook options must be provided.');
+        }
 
-    //     this._webhooks = options.webhooks;
-    //     return this;
-    // }
+        if (!this._webhooksStore) {
+            throw new Error('Webhook store must be configured.');
+        }
+
+        const env = options.webhooks.environment;
+        if (env.type === 'deno') {
+            console.log('[ServerBuilder] Using Deno Webhook Environment.');
+            this._webhookEnvironment = new SimulationWebhookEnvironment(
+                (simId, indicator, origin, config) => {
+                    const vm = new DenoVM(simId, origin, config);
+                    return new DenoSimulationImpl(indicator, origin, vm);
+                }
+            );
+        }
+        return this;
+    }
 
     async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
@@ -1561,6 +1583,17 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
+        if (this._webhooksStore && this._webhookEnvironment) {
+            this._webhooksController = new WebhookRecordsController({
+                config: this._configStore,
+                data: this._dataController,
+                files: this._filesController,
+                store: this._webhooksStore,
+                policies: this._policyController,
+                environment: this._webhookEnvironment,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1579,6 +1612,7 @@ export class ServerBuilder implements SubscriptionLike {
             moderationController: this._moderationController,
             loomController: this._loomController,
             websocketRateLimitController: this._websocketRateLimitController,
+            webhooksController: this._webhooksController,
         });
 
         const buildReturn: BuildReturn = {

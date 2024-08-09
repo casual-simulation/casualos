@@ -211,6 +211,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.useRekognitionModeration();
     }
 
+    if (config.webhooks) {
+        builder.useWebhooks();
+    }
+
     builder.useAutomaticPlugins();
 
     return builder;
