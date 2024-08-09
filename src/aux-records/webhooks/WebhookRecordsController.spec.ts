@@ -521,6 +521,29 @@ describe('WebhookRecordsController', () => {
                         statusCode: 200,
                     },
                 });
+
+                expect(environment.handleHttpRequest).toHaveBeenCalledWith({
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    state: {
+                        type: 'url',
+                        requestUrl:
+                            'http://localhost:9191/recordName/file1.txt',
+                        requestMethod: 'GET',
+                        requestHeaders: {
+                            'record-name': 'recordName',
+                        },
+                    },
+                });
             });
 
             it('should return not_authorized if the webhook doesnt have the ability to read the data', async () => {
