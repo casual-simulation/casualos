@@ -79,6 +79,7 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
         ],
     ],
     ['loom', ['create']],
+    ['webhook', ['read', 'create', 'delete', 'update', 'list', 'run']],
 ];
 
 function constructAllowedResourcesLookup(
