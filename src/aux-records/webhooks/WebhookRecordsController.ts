@@ -6,12 +6,14 @@ import {
     GenericHttpResponse,
     getBotsStateFromStoredAux,
     ServerError,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
     ConstructAuthorizationContextFailure,
     AuthorizeSubjectFailure,
+    AuthorizeSubject,
 } from '../PolicyController';
 import {
     CheckSubscriptionMetricsFailure,
@@ -31,6 +33,7 @@ import {
     HandleHttpRequestFailure,
     HandleHttpRequestResult,
     WebhookEnvironment,
+    WebhookState,
 } from './WebhookEnvironment';
 import {
     DataRecordsConfiguration,
@@ -44,8 +47,37 @@ import {
     ReadFileResult,
 } from '../FileRecordsController';
 import { tryParseJson } from '../Utils';
+import { z } from 'zod';
 
 const TRACE_NAME = 'WebhookRecordsController';
+
+const STORED_AUX_VERSION_1_SCHEMA = z.object({
+    version: z.literal(1),
+    state: z.object({}).catchall(
+        z.object({
+            id: z.string(),
+            space: z.string().optional().nullable(),
+            tags: z.object({}).catchall(z.any()),
+            masks: z.object({}).catchall(z.object({}).catchall(z.any())),
+        })
+    ),
+});
+
+const STORED_AUX_VERSION_2_SCHEMA = z.object({
+    version: z.literal(2),
+    updates: z.array(
+        z.object({
+            id: z.number(),
+            update: z.string(),
+            timestamp: z.number(),
+        })
+    ),
+});
+
+const STORED_AUX_SCHEMA = z.discriminatedUnion('version', [
+    STORED_AUX_VERSION_1_SCHEMA,
+    STORED_AUX_VERSION_2_SCHEMA,
+]);
 
 /**
  * Defines the configuration for a webhook records controller.
@@ -156,17 +188,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                 return checkMetrics;
             }
 
-            const targetContext =
-                await this.policies.constructAuthorizationContext({
-                    recordKeyOrRecordName: webhook.targetRecordName,
-                    userId: webhook.userId,
-                });
-
-            if (targetContext.success === false) {
-                return targetContext;
-            }
-
-            let state: BotsState = {};
+            let state: WebhookState = null;
             if (webhook.targetResourceKind === 'data') {
                 const data = await this._data.getData(
                     webhook.targetRecordName,
@@ -174,18 +196,48 @@ export class WebhookRecordsController extends CrudRecordsController<
                     webhook.userId,
                     request.instances
                 );
+
                 if (data.success === false) {
-                    return data;
+                    return {
+                        success: false,
+                        errorCode: 'invalid_webhook_target',
+                        errorMessage:
+                            'Invalid webhook target. The targeted record was not able to be retrieved.',
+                        internalError: data,
+                    };
                 }
 
+                let auxData: any;
                 if (typeof data.data === 'string') {
                     const stored = tryParseJson(data.data);
                     if (stored.success === true) {
-                        state = getBotsStateFromStoredAux(stored.value);
+                        auxData = stored;
                     }
                 } else if (typeof data.data === 'object') {
-                    state = getBotsStateFromStoredAux(data.data);
+                    auxData = data.data;
                 }
+
+                const parseResult = STORED_AUX_SCHEMA.safeParse(auxData);
+                if (parseResult.success === false) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_webhook_target',
+                        errorMessage:
+                            'Invalid webhook target. The targeted record does not contain valid data.',
+                        internalError: {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'The data record does not contain valid AUX data.',
+                            issues: parseResult.error.issues,
+                        },
+                    };
+                }
+
+                state = {
+                    type: 'aux',
+                    state: parseResult.data as StoredAux,
+                };
             } else if (webhook.targetResourceKind === 'file') {
                 const file = await this._files.readFile(
                     webhook.targetRecordName,
@@ -194,8 +246,21 @@ export class WebhookRecordsController extends CrudRecordsController<
                     request.instances
                 );
                 if (file.success === false) {
-                    return file;
+                    return {
+                        success: false,
+                        errorCode: 'invalid_webhook_target',
+                        errorMessage:
+                            'Invalid webhook target. The targeted record does not contain valid data.',
+                        internalError: file,
+                    };
                 }
+
+                state = {
+                    type: 'url',
+                    requestUrl: file.requestUrl,
+                    requestMethod: file.requestMethod,
+                    requestHeaders: file.requestHeaders,
+                };
             }
 
             if (!state) {
@@ -326,8 +391,6 @@ export interface HandleWebhookFailure {
         | 'not_found'
         | AuthorizeSubjectFailure['errorCode']
         | CheckSubscriptionMetricsFailure['errorCode']
-        | GetDataFailure['errorCode']
-        | ReadFileFailure['errorCode']
         | 'invalid_webhook_target'
         | HandleHttpRequestFailure['errorCode'];
 
@@ -340,4 +403,18 @@ export interface HandleWebhookFailure {
      * The denial reason.
      */
     reason?: DenialReason;
+
+    /**
+     * The internal reason why this error was produced.
+     */
+    internalError?:
+        | AuthorizeSubjectFailure
+        | GetDataFailure
+        | ReadFileFailure
+        | {
+              success: false;
+              errorCode: 'unacceptable_request';
+              errorMessage: string;
+              issues: z.ZodIssue[];
+          };
 }

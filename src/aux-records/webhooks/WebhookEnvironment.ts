@@ -3,6 +3,7 @@ import {
     GenericHttpRequest,
     GenericHttpResponse,
     ServerError,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -31,7 +32,45 @@ export interface HandleHttpRequestRequest {
     /**
      * The state that should be injected into the environment.
      */
-    state: BotsState;
+    state: WebhookState;
+}
+
+export type WebhookState = WebhookAuxState | WebhookUrlState;
+
+/**
+ * Defines an object that represents an aux file that should be injected into the webhook environment.
+ */
+export interface WebhookAuxState {
+    type: 'aux';
+
+    /**
+     * The state that should be injected into the environment.
+     */
+    state: StoredAux;
+}
+
+/**
+ * Defines an object that represents a URL that contains an aux file that should be injected into the webhook environment.
+ */
+export interface WebhookUrlState {
+    type: 'url';
+
+    /**
+     * The URL that the request to get the file should be made to.
+     */
+    requestUrl: string;
+
+    /**
+     * The HTTP method that should be used to make the request.
+     */
+    requestMethod: string;
+
+    /**
+     * The HTTP headers that should be included in the request.
+     */
+    requestHeaders: {
+        [name: string]: string;
+    };
 }
 
 export type HandleHttpRequestResult =

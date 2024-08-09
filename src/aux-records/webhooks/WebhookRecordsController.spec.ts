@@ -4,7 +4,10 @@ import { PolicyController } from '../PolicyController';
 import { RecordsController } from '../RecordsController';
 import { WebhookRecordsController } from './WebhookRecordsController';
 import { MemoryWebhookRecordsStore } from './MemoryWebhookRecordsStore';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
 import {
     setupTestContext,
     testCrudRecordsController,
@@ -125,6 +128,7 @@ describe('WebhookRecordsController', () => {
         key = context.key;
         subjectlessKey = context.subjectlessKey;
         userId = context.userId;
+        otherUserId = context.otherUserId;
         sessionKey = context.sessionKey;
         recordName = context.recordName;
 
@@ -200,6 +204,128 @@ describe('WebhookRecordsController', () => {
             });
         });
 
+        it('should return not_authorized if the user doesnt have the ability to run the webhook', async () => {
+            await itemsStore.createItem(recordName, {
+                address: 'item1',
+                markers: [PRIVATE_MARKER],
+                targetResourceKind: 'data',
+                targetRecordName: 'recordName',
+                targetAddress: 'data1',
+                userId: null,
+            });
+
+            await store.setData(
+                'recordName',
+                'data1',
+                {
+                    version: 1,
+                    state: {},
+                },
+                'user1',
+                'user2',
+                true,
+                true,
+                [PUBLIC_READ_MARKER]
+            );
+
+            environment.handleHttpRequest.mockResolvedValueOnce({
+                success: true,
+                response: {
+                    statusCode: 200,
+                },
+            });
+
+            const result = await manager.handleWebhook({
+                recordName,
+                address: 'item1',
+                userId: otherUserId,
+                request: {
+                    method: 'GET',
+                    path: '/',
+                    headers: {},
+                    body: JSON.stringify({
+                        abc: 'def',
+                    }),
+                    ipAddress: null,
+                    pathParams: {},
+                    query: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'webhook',
+                    resourceId: 'item1',
+                    action: 'run',
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                },
+            });
+        });
+
+        it('should allow anonymous users to call public webhooks', async () => {
+            await itemsStore.createItem(recordName, {
+                address: 'item1',
+                markers: [PUBLIC_READ_MARKER],
+                targetResourceKind: 'data',
+                targetRecordName: 'recordName',
+                targetAddress: 'data1',
+                userId: null,
+            });
+
+            await store.setData(
+                'recordName',
+                'data1',
+                {
+                    version: 1,
+                    state: {},
+                },
+                'user1',
+                'user2',
+                true,
+                true,
+                [PUBLIC_READ_MARKER]
+            );
+
+            environment.handleHttpRequest.mockResolvedValueOnce({
+                success: true,
+                response: {
+                    statusCode: 200,
+                },
+            });
+
+            const result = await manager.handleWebhook({
+                recordName,
+                address: 'item1',
+                userId: null,
+                request: {
+                    method: 'GET',
+                    path: '/',
+                    headers: {},
+                    body: JSON.stringify({
+                        abc: 'def',
+                    }),
+                    ipAddress: null,
+                    pathParams: {},
+                    query: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                },
+            });
+        });
+
         describe('data', () => {
             it('should call into the factory ', async () => {
                 await itemsStore.createItem(recordName, {
@@ -215,7 +341,8 @@ describe('WebhookRecordsController', () => {
                     'recordName',
                     'data1',
                     {
-                        abc: 'def',
+                        version: 1,
+                        state: {},
                     },
                     'user1',
                     'user2',
@@ -253,6 +380,207 @@ describe('WebhookRecordsController', () => {
                     success: true,
                     response: {
                         statusCode: 200,
+                    },
+                });
+
+                expect(environment.handleHttpRequest).toHaveBeenCalledWith({
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    state: {
+                        type: 'aux',
+                        state: {
+                            version: 1,
+                            state: {},
+                        },
+                    },
+                });
+            });
+
+            it('should return not_authorized if the webhook doesnt have the ability to read the data', async () => {
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'data',
+                    targetRecordName: 'recordName',
+                    targetAddress: 'data1',
+                    userId: null,
+                });
+
+                await store.setData(
+                    'recordName',
+                    'data1',
+                    {
+                        version: 1,
+                        state: {},
+                    },
+                    'user1',
+                    'user2',
+                    true,
+                    true,
+                    [PRIVATE_MARKER]
+                );
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_webhook_target',
+                    errorMessage:
+                        'Invalid webhook target. The targeted record was not able to be retrieved.',
+                    internalError: {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                    },
+                });
+            });
+        });
+
+        describe('file', () => {
+            it('should call into the factory ', async () => {
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'file',
+                    targetRecordName: 'recordName',
+                    targetAddress: 'file1.txt',
+                    userId: 'testUser',
+                });
+
+                await store.addFileRecord(
+                    'recordName',
+                    'file1.txt',
+                    'user1',
+                    'user2',
+                    123,
+                    'description',
+                    [PUBLIC_READ_MARKER]
+                );
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+            });
+
+            it('should return not_authorized if the webhook doesnt have the ability to read the data', async () => {
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'data',
+                    targetRecordName: 'recordName',
+                    targetAddress: 'data1',
+                    userId: null,
+                });
+
+                await store.setData(
+                    'recordName',
+                    'data1',
+                    {
+                        abc: 'def',
+                    },
+                    'user1',
+                    'user2',
+                    true,
+                    true,
+                    [PRIVATE_MARKER]
+                );
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_webhook_target',
+                    errorMessage:
+                        'Invalid webhook target. The targeted record was not able to be retrieved.',
+                    internalError: {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user must be logged in. Please provide a sessionKey or a recordKey.',
                     },
                 });
             });
