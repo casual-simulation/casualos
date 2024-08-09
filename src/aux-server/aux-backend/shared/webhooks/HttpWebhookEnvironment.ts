@@ -2,7 +2,11 @@ import {
     GenericHttpRequest,
     GenericHttpResponse,
 } from '@casual-simulation/aux-common';
-import { WebhookEnvironment } from '@casual-simulation/aux-records';
+import {
+    HandleHttpRequestRequest,
+    HandleHttpRequestResult,
+    WebhookEnvironment,
+} from '@casual-simulation/aux-records';
 import { Subscription } from 'rxjs';
 
 /**
@@ -35,8 +39,8 @@ export class HttpWebhookEnvironment implements WebhookEnvironment {
     }
 
     async handleHttpRequest(
-        request: GenericHttpRequest
-    ): Promise<GenericHttpResponse> {
+        request: HandleHttpRequestRequest
+    ): Promise<HandleHttpRequestResult> {
         const result = await fetch(this._endpoint, {
             method: 'POST',
             body: JSON.stringify(request),
