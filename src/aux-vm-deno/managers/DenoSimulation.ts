@@ -111,7 +111,6 @@ export class DenoSimulationImpl
     constructor(
         indicator: ConnectionIndicator,
         origin: SimulationOrigin,
-        id: string,
         vm: DenoVM
     ) {
         super(vm);
