@@ -146,6 +146,12 @@ import {
 } from './AISloydInterface';
 import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import { MemoryWebhookRecordsStore } from './webhooks/MemoryWebhookRecordsStore';
+import {
+    HandleHttpRequestRequest,
+    HandleHttpRequestResult,
+} from './webhooks/WebhookEnvironment';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -304,6 +310,14 @@ describe('RecordsServer', () => {
     let loomController: LoomController;
 
     let policyController: PolicyController;
+    let webhookController: WebhookRecordsController;
+    let webhookStore: MemoryWebhookRecordsStore;
+    let webhookEnvironment: {
+        handleHttpRequest: jest.Mock<
+            Promise<HandleHttpRequestResult>,
+            [HandleHttpRequestRequest]
+        >;
+    };
 
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
@@ -557,6 +571,19 @@ describe('RecordsServer', () => {
             store
         );
 
+        webhookStore = new MemoryWebhookRecordsStore(store);
+        webhookEnvironment = {
+            handleHttpRequest: jest.fn(),
+        };
+        webhookController = new WebhookRecordsController({
+            config: store,
+            store: webhookStore,
+            data: dataController,
+            files: filesController,
+            policies: policyController,
+            environment: webhookEnvironment,
+        });
+
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
             getProductAndPriceInfo: jest.fn(),
@@ -708,6 +735,7 @@ describe('RecordsServer', () => {
             moderationController,
             loomController,
             websocketRateLimitController: rateLimitController,
+            webhooksController: webhookController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -9104,6 +9132,169 @@ describe('RecordsServer', () => {
                 }),
                 defaultHeaders
             )
+        );
+    });
+
+    describe('POST /api/v2/records/webhook', () => {
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/webhook`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data1',
+                            userId: null,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This action is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual(null);
+        });
+
+        it('should save the given webhook record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/webhook`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data1',
+                            userId: null,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual({
+                address: 'testAddress',
+                targetResourceKind: 'data',
+                targetRecordName: recordName,
+                targetAddress: 'data1',
+                userId: null,
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/webhook`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data1',
+                            userId: null,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'webhook',
+                        resourceId: 'testAddress',
+                        action: 'create',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual(null);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/webhook',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'testAddress',
+                        targetResourceKind: 'data',
+                        targetRecordName: recordName,
+                        targetAddress: 'data1',
+                        userId: null,
+                    },
+                }),
+            () => apiHeaders
         );
     });
 

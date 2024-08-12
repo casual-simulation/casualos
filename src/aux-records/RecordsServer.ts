@@ -6,7 +6,9 @@ import {
     MAX_EMAIL_ADDRESS_LENGTH,
     MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
+    NoSessionKeyResult,
     PRIVO_OPEN_ID_PROVIDER,
+    validateSessionKey,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { isSuperUserRole, parseSessionKey } from './AuthUtils';
@@ -29,6 +31,7 @@ import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
     DenialReason,
+    PRIVATE_MARKER,
     Procedure,
     ProcedureOutput,
     ProcedureOutputError,
@@ -118,6 +121,7 @@ import {
     UPDATE_FILE_SCHEMA,
 } from './Validations';
 import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import { recordItemProcedure } from './crud/CrudHelpers';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -1456,6 +1460,24 @@ export class RecordsServer {
                 .handler(async (data, context) =>
                     this._baseRecordData(this._data, data, context)
                 ),
+
+            recordWebhook: recordItemProcedure(
+                this._auth,
+                this._webhooksController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    targetResourceKind: z.enum(['file', 'inst', 'data']),
+                    targetRecordName: RECORD_NAME_VALIDATION,
+                    targetAddress: ADDRESS_VALIDATION,
+                    userId: z.string().optional().nullable().default(null),
+                    markers: MARKERS_VALIDATION.optional().default([
+                        PRIVATE_MARKER,
+                    ]),
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/webhook')
+            ),
 
             listRecords: procedure()
                 .origins('api')
