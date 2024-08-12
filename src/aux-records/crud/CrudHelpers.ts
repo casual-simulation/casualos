@@ -182,8 +182,12 @@ export function listItemsProcedure<
  */
 export function eraseItemProcedure<
     TController extends CrudRecordsController<any, any, any>
->(auth: AuthController, controller: TController | null) {
-    return procedure()
+>(
+    auth: AuthController,
+    controller: TController | null,
+    builder: InputlessProcedureBuilder
+) {
+    return builder
         .inputs(
             z.object({
                 recordName: RECORD_NAME_VALIDATION,
@@ -192,6 +196,14 @@ export function eraseItemProcedure<
             })
         )
         .handler(async ({ recordName, address, instances }, context) => {
+            if (!controller) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                };
+            }
+
             const validation = await validateSessionKey(
                 auth,
                 context.sessionKey

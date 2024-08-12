@@ -9658,6 +9658,147 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('DELETE /api/v2/records/webhook', () => {
+        beforeEach(async () => {
+            await webhookStore.createItem(recordName, {
+                address: 'testAddress',
+                markers: [PRIVATE_MARKER],
+                targetResourceKind: 'data',
+                targetAddress: 'data1',
+                targetRecordName: recordName,
+                userId: null,
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/webhook`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).not.toBe(null);
+        });
+
+        it('should delete the given webhook record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/webhook`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toBe(null);
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/webhook`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'webhook',
+                        resourceId: 'testAddress',
+                        action: 'delete',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).not.toBe(null);
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/webhook',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'testAddress',
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(

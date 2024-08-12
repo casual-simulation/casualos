@@ -122,6 +122,7 @@ import {
 } from './Validations';
 import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 import {
+    eraseItemProcedure,
     getItemProcedure,
     listItemsProcedure,
     recordItemProcedure,
@@ -1496,6 +1497,14 @@ export class RecordsServer {
                 procedure()
                     .origins('api')
                     .http('GET', '/api/v2/records/webhook/list')
+            ),
+
+            eraseWebhook: eraseItemProcedure(
+                this._auth,
+                this._webhooksController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/webhook')
             ),
 
             listRecords: procedure()
