@@ -424,25 +424,22 @@ describe('RecordsServer', () => {
         allowedApiOrigins = new Set([apiOrigin]);
 
         store = savedMemoryStore.clone();
-        store.subscriptionConfiguration = {
-            subscriptions: [
-                {
-                    id: 'sub_id',
-                    eligibleProducts: ['product_id'],
-                    featureList: ['Feature 1', 'Feature 2'],
-                    product: 'product_id',
-                },
-            ],
-            webhookSecret: 'webhook_secret',
-            cancelUrl: 'http://cancel_url',
-            successUrl: 'http://success_url',
-            returnUrl: 'http://return_url',
-            tiers: {},
-            defaultFeatures: {
-                user: allowAllFeatures(),
-                studio: allowAllFeatures(),
-            },
-        };
+        store.subscriptionConfiguration = createTestSubConfiguration((config) =>
+            config
+                .addSubscription('sub_id', (sub) =>
+                    sub
+                        .withProduct('product_id')
+                        .withEligibleProducts(['product_id'])
+                        .withFeaturesList(['Feature 1', 'Feature 2'])
+                        .withAllDefaultFeatures()
+                )
+                .withUserDefaultFeatures((features) =>
+                    features.withAllDefaultFeatures().withWebhooks()
+                )
+                .withStudioDefaultFeatures((features) =>
+                    features.withAllDefaultFeatures().withWebhooks()
+                )
+        );
 
         sessionKey = savedSessionKey;
         connectionKey = savedConnectionKey;
