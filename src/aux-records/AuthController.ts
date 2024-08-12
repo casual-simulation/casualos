@@ -74,6 +74,7 @@ import {
 } from './Base64UrlUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
 
 const TRACE_NAME = 'AuthController';
 
@@ -3118,6 +3119,47 @@ export class AuthController {
             };
         }
     }
+}
+
+/**
+ * Validates the given session key using the given auth controller.
+ * @param sessionKey The session key to validate.
+ */
+export async function validateSessionKey(
+    auth: AuthController,
+    sessionKey: string | null
+): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
+    if (!sessionKey) {
+        return {
+            success: false,
+            userId: null,
+            errorCode: 'no_session_key',
+            errorMessage:
+                'A session key was not provided, but it is required for this operation.',
+        };
+    }
+    const result = await auth.validateSessionKey(sessionKey);
+    if (result.success === true) {
+        const span = trace.getActiveSpan();
+        if (span) {
+            span.setAttributes({
+                [SEMATTRS_ENDUSER_ID]: result.userId,
+                ['request.userId']: result.userId,
+                ['request.userRole']: result.role,
+                ['request.sessionId']: result.sessionId,
+                ['request.subscriptionId']: result.subscriptionId,
+                ['request.subscriptionTier']: result.subscriptionTier,
+            });
+        }
+    }
+    return result;
+}
+
+export interface NoSessionKeyResult {
+    success: false;
+    userId: null;
+    errorCode: 'no_session_key';
+    errorMessage: string;
 }
 
 export interface PrivoSignUpRequest {

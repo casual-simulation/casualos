@@ -6912,49 +6912,10 @@ export class RecordsServer {
         });
     }
 
-    private async _validateHttpSessionKey(
-        event: GenericHttpRequest
-    ): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
-        const sessionKey = getSessionKey(event);
-        if (!sessionKey) {
-            return {
-                success: false,
-                userId: null,
-                errorCode: 'no_session_key',
-                errorMessage:
-                    'A session key was not provided, but it is required for this operation.',
-            };
-        }
-        return await this._auth.validateSessionKey(sessionKey);
-    }
-
     private async _validateSessionKey(
         sessionKey: string | null
     ): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
-        if (!sessionKey) {
-            return {
-                success: false,
-                userId: null,
-                errorCode: 'no_session_key',
-                errorMessage:
-                    'A session key was not provided, but it is required for this operation.',
-            };
-        }
-        const result = await this._auth.validateSessionKey(sessionKey);
-        if (result.success === true) {
-            const span = trace.getActiveSpan();
-            if (span) {
-                span.setAttributes({
-                    [SEMATTRS_ENDUSER_ID]: result.userId,
-                    ['request.userId']: result.userId,
-                    ['request.userRole']: result.role,
-                    ['request.sessionId']: result.sessionId,
-                    ['request.subscriptionId']: result.subscriptionId,
-                    ['request.subscriptionTier']: result.subscriptionTier,
-                });
-            }
-        }
-        return result;
+        return validateSessionKey(this._auth, sessionKey);
     }
 }
 
@@ -7115,13 +7076,6 @@ export function wrapHandler(
         const response = await func(request);
         return formatResponse(request, response, allowedOrigins);
     };
-}
-
-export interface NoSessionKeyResult {
-    success: false;
-    userId: null;
-    errorCode: 'no_session_key';
-    errorMessage: string;
 }
 
 /**
