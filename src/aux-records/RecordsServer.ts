@@ -121,7 +121,11 @@ import {
     UPDATE_FILE_SCHEMA,
 } from './Validations';
 import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
-import { getItemProcedure, recordItemProcedure } from './crud/CrudHelpers';
+import {
+    getItemProcedure,
+    listItemsProcedure,
+    recordItemProcedure,
+} from './crud/CrudHelpers';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -1484,6 +1488,14 @@ export class RecordsServer {
                 procedure()
                     .origins('api')
                     .http('GET', '/api/v2/records/webhook')
+            ),
+
+            listWebhooks: listItemsProcedure(
+                this._auth,
+                this._webhooksController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/webhook/list')
             ),
 
             listRecords: procedure()

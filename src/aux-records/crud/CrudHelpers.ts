@@ -20,7 +20,7 @@ export function getItemProcedure<
     TController extends CrudRecordsController<any, any, any>
 >(
     auth: AuthController,
-    controller: TController,
+    controller: TController | null,
     builder: InputlessProcedureBuilder
 ) {
     return builder
@@ -71,7 +71,7 @@ export function recordItemProcedure<
     TItemSchema extends z.ZodObject<any, any>
 >(
     auth: AuthController,
-    controller: TController,
+    controller: TController | null,
     itemSchema: TItemSchema,
     builder: InputlessProcedureBuilder
 ) {
@@ -117,12 +117,16 @@ export function recordItemProcedure<
  */
 export function listItemsProcedure<
     TController extends CrudRecordsController<any, any, any>
->(auth: AuthController, controller: TController) {
-    return procedure()
+>(
+    auth: AuthController,
+    controller: TController | null,
+    builder: InputlessProcedureBuilder
+) {
+    return builder
         .inputs(
             z.object({
                 recordName: RECORD_NAME_VALIDATION,
-                startingAddress: z.string().optional(),
+                address: z.string().optional(),
                 marker: MARKER_VALIDATION.optional(),
                 sort: z.enum(['ascending', 'descending']).optional(),
                 instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -130,9 +134,16 @@ export function listItemsProcedure<
         )
         .handler(
             async (
-                { recordName, startingAddress, marker, sort, instances },
+                { recordName, address, marker, sort, instances },
                 context
             ) => {
+                if (!controller) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This feature is not supported.',
+                    };
+                }
                 const validation = await validateSessionKey(
                     auth,
                     context.sessionKey
@@ -150,7 +161,7 @@ export function listItemsProcedure<
                         marker,
                         userId: validation.userId,
                         instances,
-                        startingAddress,
+                        startingAddress: address,
                         sort,
                     });
                 }
@@ -159,7 +170,7 @@ export function listItemsProcedure<
                     recordName,
                     userId: validation.userId,
                     instances,
-                    startingAddress,
+                    startingAddress: address,
                 });
             }
         );
@@ -171,7 +182,7 @@ export function listItemsProcedure<
  */
 export function eraseItemProcedure<
     TController extends CrudRecordsController<any, any, any>
->(auth: AuthController, controller: TController) {
+>(auth: AuthController, controller: TController | null) {
     return procedure()
         .inputs(
             z.object({

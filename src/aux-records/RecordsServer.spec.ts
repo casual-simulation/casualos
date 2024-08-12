@@ -9297,7 +9297,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('GET /api/v2/records/webhook', () => {
+    describe('GET /api/v2/records/webhook', () => {
         beforeEach(async () => {
             await webhookStore.createItem(recordName, {
                 address: 'testAddress',
@@ -9419,6 +9419,242 @@ describe('RecordsServer', () => {
         testRateLimit(
             'GET',
             `/api/v2/records/webhook?recordName=${recordName}&address=testAddress`
+        );
+    });
+
+    describe('GET /api/v2/records/webhook/list', () => {
+        beforeEach(async () => {
+            await webhookStore.createItem(recordName, {
+                address: 'testAddress3',
+                markers: [PRIVATE_MARKER],
+                targetResourceKind: 'data',
+                targetAddress: 'data3',
+                targetRecordName: recordName,
+                userId: null,
+            });
+
+            await webhookStore.createItem(recordName, {
+                address: 'testAddress',
+                markers: [PRIVATE_MARKER],
+                targetResourceKind: 'data',
+                targetAddress: 'data1',
+                targetRecordName: recordName,
+                userId: null,
+            });
+
+            await webhookStore.createItem(recordName, {
+                address: 'testAddress2',
+                markers: [PUBLIC_READ_MARKER],
+                targetResourceKind: 'data',
+                targetAddress: 'data2',
+                targetRecordName: recordName,
+                userId: null,
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the webhooks', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'testAddress3',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data3',
+                            markers: [PRIVATE_MARKER],
+                            userId: null,
+                        },
+                        {
+                            address: 'testAddress',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data1',
+                            markers: [PRIVATE_MARKER],
+                            userId: null,
+                        },
+                        {
+                            address: 'testAddress2',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data2',
+                            markers: [PUBLIC_READ_MARKER],
+                            userId: null,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the webhooks after the given address', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook/list?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'testAddress3',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data3',
+                            markers: [PRIVATE_MARKER],
+                            userId: null,
+                        },
+                        {
+                            address: 'testAddress2',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data2',
+                            markers: [PUBLIC_READ_MARKER],
+                            userId: null,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should be able to list webhooks by marker', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 1,
+                    items: [
+                        {
+                            address: 'testAddress2',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data2',
+                            markers: [PUBLIC_READ_MARKER],
+                            userId: null,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'webhook',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/webhook/list?recordName=${recordName}&address=testAddress`
+        );
+        testAuthorization(() =>
+            httpRequest(
+                'GET',
+                `/api/v2/records/webhook/list?recordName=${recordName}&address=testAddress`,
+                undefined,
+                apiHeaders
+            )
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/webhook/list?recordName=${recordName}&address=testAddress`
         );
     });
 
