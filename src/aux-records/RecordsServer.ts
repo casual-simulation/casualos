@@ -121,7 +121,7 @@ import {
     UPDATE_FILE_SCHEMA,
 } from './Validations';
 import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
-import { recordItemProcedure } from './crud/CrudHelpers';
+import { getItemProcedure, recordItemProcedure } from './crud/CrudHelpers';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -1469,7 +1469,6 @@ export class RecordsServer {
                     targetResourceKind: z.enum(['file', 'inst', 'data']),
                     targetRecordName: RECORD_NAME_VALIDATION,
                     targetAddress: ADDRESS_VALIDATION,
-                    userId: z.string().optional().nullable().default(null),
                     markers: MARKERS_VALIDATION.optional().default([
                         PRIVATE_MARKER,
                     ]),
@@ -1477,6 +1476,14 @@ export class RecordsServer {
                 procedure()
                     .origins('api')
                     .http('POST', '/api/v2/records/webhook')
+            ),
+
+            getWebhook: getItemProcedure(
+                this._auth,
+                this._webhooksController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/webhook')
             ),
 
             listRecords: procedure()

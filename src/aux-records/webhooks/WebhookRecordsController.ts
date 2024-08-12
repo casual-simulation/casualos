@@ -338,6 +338,11 @@ export class WebhookRecordsController extends CrudRecordsController<
             success: true,
         };
     }
+
+    protected _transformInputItem(item: WebhookRecord): WebhookRecord {
+        delete item.userId;
+        return item;
+    }
 }
 
 export interface HandleWebhookRequest {

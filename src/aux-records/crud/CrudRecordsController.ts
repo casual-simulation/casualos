@@ -213,7 +213,7 @@ export abstract class CrudRecordsController<
                 };
             }
 
-            const item = request.item;
+            const item = this._transformInputItem(request.item);
             const subscriptionResult = await this._checkSubscriptionMetrics(
                 action,
                 authorization,
@@ -554,6 +554,15 @@ export abstract class CrudRecordsController<
         context: AuthorizationContext
     ): TResult {
         return item as unknown as TResult;
+    }
+
+    /**
+     * Transforms the given input item and returns the transformed item.
+     * Useful for transforming items before they are stored.
+     * @param item The item that should be transformed.
+     */
+    protected _transformInputItem(item: T): T {
+        return item;
     }
 }
 

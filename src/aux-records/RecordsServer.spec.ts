@@ -9177,7 +9177,7 @@ describe('RecordsServer', () => {
                 body: {
                     success: false,
                     errorCode: 'not_supported',
-                    errorMessage: 'This action is not supported.',
+                    errorMessage: 'This feature is not supported.',
                 },
                 headers: apiCorsHeaders,
             });
@@ -9230,7 +9230,6 @@ describe('RecordsServer', () => {
                 targetResourceKind: 'data',
                 targetRecordName: recordName,
                 targetAddress: 'data1',
-                userId: null,
                 markers: [PRIVATE_MARKER],
             });
         });
@@ -9295,6 +9294,131 @@ describe('RecordsServer', () => {
                     },
                 }),
             () => apiHeaders
+        );
+    });
+
+    describe.only('GET /api/v2/records/webhook', () => {
+        beforeEach(async () => {
+            await webhookStore.createItem(recordName, {
+                address: 'testAddress',
+                markers: [PRIVATE_MARKER],
+                targetResourceKind: 'data',
+                targetAddress: 'data1',
+                targetRecordName: recordName,
+                userId: null,
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the given webhook record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'testAddress',
+                        targetResourceKind: 'data',
+                        targetRecordName: recordName,
+                        targetAddress: 'data1',
+                        markers: [PRIVATE_MARKER],
+                        userId: null,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'webhook',
+                        resourceId: 'testAddress',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/webhook?recordName=${recordName}&address=testAddress`
+        );
+        testAuthorization(() =>
+            httpRequest(
+                'GET',
+                `/api/v2/records/webhook?recordName=${recordName}&address=testAddress`,
+                undefined,
+                apiHeaders
+            )
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/webhook?recordName=${recordName}&address=testAddress`
         );
     });
 

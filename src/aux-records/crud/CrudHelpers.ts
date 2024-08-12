@@ -18,8 +18,12 @@ import { AuthController, validateSessionKey } from '../AuthController';
  */
 export function getItemProcedure<
     TController extends CrudRecordsController<any, any, any>
->(auth: AuthController, controller: TController) {
-    return procedure()
+>(
+    auth: AuthController,
+    controller: TController,
+    builder: InputlessProcedureBuilder
+) {
+    return builder
         .inputs(
             z.object({
                 recordName: RECORD_NAME_VALIDATION,
@@ -28,6 +32,14 @@ export function getItemProcedure<
             })
         )
         .handler(async ({ recordName, address }, context) => {
+            if (!controller) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                };
+            }
+
             const validation = await validateSessionKey(
                 auth,
                 context.sessionKey
@@ -76,7 +88,7 @@ export function recordItemProcedure<
                 return {
                     success: false,
                     errorCode: 'not_supported',
-                    errorMessage: 'This action is not supported.',
+                    errorMessage: 'This feature is not supported.',
                 };
             }
 

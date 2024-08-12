@@ -42,7 +42,7 @@ export interface WebhookRecord extends CrudRecord {
      *
      * If null, then the webhook does not use any authentication.
      */
-    userId: string | null;
+    userId?: string | null;
 }
 
 export interface WebhookSubscriptionMetrics extends CrudSubscriptionMetrics {

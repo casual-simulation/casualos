@@ -60,7 +60,6 @@ describe('WebhookRecordsController', () => {
             targetResourceKind: 'data',
             targetRecordName: 'recordName',
             targetAddress: 'data1',
-            userId: null,
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -110,6 +109,7 @@ describe('WebhookRecordsController', () => {
                         policies: services.policies,
                         store: services.store,
                     }),
+
                     files: new FileRecordsController({
                         config: services.store,
                         metrics: services.store,
