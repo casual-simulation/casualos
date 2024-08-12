@@ -1,4 +1,8 @@
-import { procedure } from '@casual-simulation/aux-common';
+import {
+    InputlessProcedureBuilder,
+    procedure,
+    ProcedureBuilder,
+} from '@casual-simulation/aux-common';
 import { CrudRecordsController } from './CrudRecordsController';
 import { z } from 'zod';
 import {
@@ -6,14 +10,15 @@ import {
     MARKER_VALIDATION,
     RECORD_NAME_VALIDATION,
 } from '../Validations';
+import { AuthController, validateSessionKey } from '../AuthController';
 
 /**
  * Gets a procedure that can be used to get an item from the given controller.
  * @param controller The controller to use.
  */
 export function getItemProcedure<
-    TController extends CrudRecordsController<any, any, any, any>
->(controller: TController) {
+    TController extends CrudRecordsController<any, any, any>
+>(auth: AuthController, controller: TController) {
     return procedure()
         .inputs(
             z.object({
@@ -23,7 +28,8 @@ export function getItemProcedure<
             })
         )
         .handler(async ({ recordName, address }, context) => {
-            const validation = await this._validateSessionKey(
+            const validation = await validateSessionKey(
+                auth,
                 context.sessionKey
             );
             if (
@@ -49,10 +55,15 @@ export function getItemProcedure<
  * @param schema The schema to use for the controller input.
  */
 export function recordItemProcedure<
-    TController extends CrudRecordsController<any, any, any, any>,
+    TController extends CrudRecordsController<any, any, any>,
     TItemSchema extends z.ZodObject<any, any>
->(controller: TController, itemSchema: TItemSchema) {
-    return procedure()
+>(
+    auth: AuthController,
+    controller: TController,
+    itemSchema: TItemSchema,
+    builder: InputlessProcedureBuilder
+) {
+    return builder
         .inputs(
             z.object({
                 recordName: RECORD_NAME_VALIDATION,
@@ -61,7 +72,16 @@ export function recordItemProcedure<
             })
         )
         .handler(async ({ recordName, item, instances }, context) => {
-            const validation = await this._validateSessionKey(
+            if (!controller) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This action is not supported.',
+                };
+            }
+
+            const validation = await validateSessionKey(
+                auth,
                 context.sessionKey
             );
             if (
@@ -84,8 +104,8 @@ export function recordItemProcedure<
  * @param controller The controller to use.
  */
 export function listItemsProcedure<
-    TController extends CrudRecordsController<any, any, any, any>
->(controller: TController) {
+    TController extends CrudRecordsController<any, any, any>
+>(auth: AuthController, controller: TController) {
     return procedure()
         .inputs(
             z.object({
@@ -101,7 +121,8 @@ export function listItemsProcedure<
                 { recordName, startingAddress, marker, sort, instances },
                 context
             ) => {
-                const validation = await this._validateSessionKey(
+                const validation = await validateSessionKey(
+                    auth,
                     context.sessionKey
                 );
                 if (
@@ -137,8 +158,8 @@ export function listItemsProcedure<
  * @param controller The controller to use.
  */
 export function eraseItemProcedure<
-    TController extends CrudRecordsController<any, any, any, any>
->(controller: TController) {
+    TController extends CrudRecordsController<any, any, any>
+>(auth: AuthController, controller: TController) {
     return procedure()
         .inputs(
             z.object({
@@ -148,7 +169,8 @@ export function eraseItemProcedure<
             })
         )
         .handler(async ({ recordName, address, instances }, context) => {
-            const validation = await this._validateSessionKey(
+            const validation = await validateSessionKey(
+                auth,
                 context.sessionKey
             );
             if (
