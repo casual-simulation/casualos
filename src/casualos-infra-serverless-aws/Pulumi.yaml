@@ -1,0 +1,10 @@
+name: casualos-infra-serverless-aws
+runtime:
+    name: nodejs
+    options:
+        packagemanager: pnpm
+description: A TypeScript program to deploy a serverless application on AWS
+config:
+    pulumi:tags:
+        value:
+            pulumi:template: serverless-aws-typescript
