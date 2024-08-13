@@ -8,37 +8,18 @@ import { readdir, mkdir, writeFile } from 'fs/promises';
 import { createOAuthDeviceAuth } from '@octokit/auth-oauth-device';
 import { Octokit, App } from 'octokit';
 import simpleGit from 'simple-git';
-import { exec } from 'child_process';
+import { exec as nodeExec } from 'child_process';
 import { existsSync } from 'fs';
 import { v4 as uuid } from 'uuid';
+import { promisify } from 'util';
+
+const exec = promisify(nodeExec);
 
 export function setupInfraCommands(program: Command, config: CliConfig) {
-    program
-        .command('status')
-        .description('Get the status of the infrastructure for this project')
-        .action(async () => {
-            const cwd = process.cwd();
-            const infra = getInfraConfig(cwd, config);
-
-            console.log('Infra Status:');
-            console.log('  sshKey:', infra.sshKey ?? '<not set>');
-        });
-
-    // program.command('login')
-    //     .description('Sets the authentication information needed for the infrastructure repository')
-    //     .action(async () => {
-    //         const cwd = process.cwd();
-    //         const infra = getInfraConfig(cwd, config);
-
-    //         const sshKey = await getAndSaveSshKey(cwd, config, infra);
-
-    //         console.log('SSH Key set:', sshKey);
-    //     });
-
     // new infra repo
     program
         .command('new [name]')
-        .description('Create a new repository for storing infrastructure')
+        .description('Create a new infrastructure project')
         .action(async (name: string) => {
             console.log('Creating a new repository for storing infrastructure');
 
@@ -57,7 +38,7 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                 return;
             }
 
-            const fullPath = resolve(name);
+            const fullPath = getRepoPath(name);
 
             if (existsSync(fullPath)) {
                 console.error('Directory already exists:', fullPath);
@@ -77,8 +58,10 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
             const { createGithub } = await prompts({
                 type: 'confirm',
                 name: 'createGithub',
-                message: 'Create a GitHub repository for the infrastructure?',
+                message: 'Create a GitHub repository for the project?',
             });
+
+            const repoName = getRepoName(name);
 
             if (createGithub) {
                 const kit = await getOctokit(fullPath, config);
@@ -108,8 +91,6 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                     return;
                 }
 
-                const repoName = getRepoName(name);
-
                 const { enteredName } = await prompts({
                     type: 'text',
                     name: 'enteredName',
@@ -134,22 +115,69 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                 await git.addRemote('origin', repo.data.ssh_url);
             }
 
-            // const projectId = uuid();
+            const projectId = uuid();
 
-            // const projectMeta: InfraMetadata = {
-            //     id: projectId
-            // };
+            const projectMeta: InfraMetadata = {
+                id: projectId,
+                name: repoName,
+            };
 
-            // await writeFile(resolve(fullPath, '.infra.json'), JSON.stringify(projectMeta, null, 2));
+            await writeFile(
+                resolve(fullPath, '.infra.json'),
+                JSON.stringify(projectMeta, null, 2)
+            );
 
-            // await git.add('.infra.json');
+            await git.checkoutLocalBranch('main');
+            await git.add('.infra.json');
+            await git.commit('Initial commit');
+
+            if (createGithub) {
+                await git.push('origin', 'main', ['--set-upstream']);
+            }
+
+            await exec('pulumi login file://' + fullPath);
+
+            await git.add('.');
+            await git.commit('Add Pulumi Metadata');
+
+            if (createGithub) {
+                await git.push('origin', 'main', ['--set-upstream']);
+            }
 
             console.log('Repository setup complete!');
+        });
+
+    program
+        .command('switch <name>')
+        .description('Switch to a different infrastructure project')
+        .action(async (name: string) => {
+            const fullPath = getRepoPath(name);
+            await exec('pulumi login file://' + fullPath);
+        });
+
+    program
+        .command('status <name>')
+        .description('Get info about a infrastructure project')
+        .action(async (name: string) => {
+            const fullPath = getRepoPath(name);
+
+            const git = simpleGit(fullPath);
+            const status = await git.status();
+
+            console.log('Project Info:');
+            console.log('Path:', fullPath);
+            console.log('Status:', status.isClean() ? 'Clean' : 'Dirty');
+
+            if (!status.isClean()) {
+                console.log('Changes:');
+                console.log(status.files.map((f) => f.path).join('\n'));
+            }
         });
 }
 
 export interface InfraMetadata {
     id: string;
+    name: string;
 }
 
 const INFRA_CONFIG_SCHEMA = z.object({
@@ -212,7 +240,6 @@ async function requestGithubToken() {
 
 function getInfraConfig(cwd: string, config: CliConfig) {
     return INFRA_CONFIG_SCHEMA.parse({
-        sshKey: config.get(`${cwd}.infra.sshKey`),
         githubToken: config.get(`infra.githubToken`),
     });
 }
@@ -273,4 +300,8 @@ function getInfraConfig(cwd: string, config: CliConfig) {
 
 export function getRepoName(path: string) {
     return path.replace(/^(?:\w:|~)?[\.\/\\]*/g, '').replace(/[\/\\]/g, '-');
+}
+
+export function getRepoPath(name: string) {
+    return resolve(homedir(), '.casualos-infra', name);
 }
