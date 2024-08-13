@@ -2,6 +2,7 @@
     "name": "casualos",
     "version": "3.3.8",
     "description": "Command line interface for CasualOS.",
+    "type": "module",
     "main": "./dist/index.js",
     "types": "index.d.ts",
     "module": "./dist/index.js",
@@ -41,7 +42,13 @@
         "commander": "12.0.0",
         "conf": "12.0.0",
         "open": "10.1.0",
-        "prompts": "2.4.2"
+        "prompts": "2.4.2",
+        "zod": "3.22.4",
+        "octokit": "^4.0.2",
+        "@octokit/auth-oauth-device": "^7.1.1",
+        "@octokit/core": "^6.1.2",
+        "@octokit/app": "^15.1.0",
+        "simple-git": "^3.24.0"
     },
     "devDependencies": {
         "@types/prompts": "^2.4.9"
