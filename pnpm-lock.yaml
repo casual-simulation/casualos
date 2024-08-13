@@ -1601,6 +1601,9 @@ importers:
       simple-git:
         specifier: ^3.24.0
         version: 3.25.0
+      tweetnacl:
+        specifier: 1.0.3
+        version: 1.0.3
       zod:
         specifier: 3.22.4
         version: 3.22.4

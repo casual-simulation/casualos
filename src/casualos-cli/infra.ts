@@ -4,24 +4,15 @@ import { z } from 'zod';
 import prompts from 'prompts';
 import { homedir } from 'os';
 import { resolve } from 'path';
-import { readdir, mkdir } from 'fs/promises';
+import { readdir, mkdir, writeFile } from 'fs/promises';
 import { createOAuthDeviceAuth } from '@octokit/auth-oauth-device';
 import { Octokit, App } from 'octokit';
 import simpleGit from 'simple-git';
+import { exec } from 'child_process';
+import { existsSync } from 'fs';
+import { v4 as uuid } from 'uuid';
 
 export function setupInfraCommands(program: Command, config: CliConfig) {
-    const kit = new Octokit({
-        authStrategy: createOAuthDeviceAuth,
-        auth: {
-            clientType: 'github-app',
-            clientId: 'lv1.Iv23li10jiTgXpOGRrWJ.',
-            onVerification: (verification: any) => {
-                console.log('Open this URL:', verification.verification_uri);
-                console.log('Enter code:', verification.user_code);
-            },
-        },
-    });
-
     program
         .command('status')
         .description('Get the status of the infrastructure for this project')
@@ -68,6 +59,12 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
 
             const fullPath = resolve(name);
 
+            if (existsSync(fullPath)) {
+                console.error('Directory already exists:', fullPath);
+                process.exit(1);
+                return;
+            }
+
             console.log('Creating repository in:', fullPath);
 
             await mkdir(fullPath, { recursive: true });
@@ -75,7 +72,7 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
             const git = simpleGit(fullPath);
             await git.init();
 
-            console.log('Git Repository created:', fullPath);
+            console.log('Local Git Repository created:', fullPath);
 
             const { createGithub } = await prompts({
                 type: 'confirm',
@@ -84,14 +81,24 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
             });
 
             if (createGithub) {
+                const kit = await getOctokit(fullPath, config);
+
+                const orgs = (
+                    await kit.rest.apps.listInstallationsForAuthenticatedUser(
+                        {}
+                    )
+                ).data.installations.filter(
+                    (i) => i.target_type === 'Organization'
+                );
+
                 const { org } = await prompts({
                     type: 'autocomplete',
                     name: 'org',
-                    choices: (
-                        await kit.rest.orgs.listForAuthenticatedUser()
-                    ).data.map((org) => ({
-                        title: org.description,
-                        value: org.id,
+                    message:
+                        'Select the organization to create the repository in',
+                    choices: orgs.map((org) => ({
+                        title: (org.account as any).login,
+                        value: (org.account as any).login,
                     })),
                 });
 
@@ -101,84 +108,169 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                     return;
                 }
 
-                await kit.rest.repos.createInOrg({
-                    org: org,
-                    name: name,
+                const repoName = getRepoName(name);
+
+                const { enteredName } = await prompts({
+                    type: 'text',
+                    name: 'enteredName',
+                    message: 'Enter the name of the repository',
+                    initial: repoName,
                 });
 
-                console.log('GitHub Repository created:', name);
+                if (!enteredName) {
+                    console.error('No repository name provided');
+                    process.exit(1);
+                    return;
+                }
 
-                await getAndSaveSshKey(
-                    fullPath,
-                    config,
-                    getInfraConfig(fullPath, config)
-                );
+                const repo = await kit.rest.repos.createInOrg({
+                    org: org,
+                    name: enteredName,
+                    visibility: 'private',
+                });
+
+                console.log('GitHub Repository created:', repo.data.html_url);
+
+                await git.addRemote('origin', repo.data.ssh_url);
             }
+
+            // const projectId = uuid();
+
+            // const projectMeta: InfraMetadata = {
+            //     id: projectId
+            // };
+
+            // await writeFile(resolve(fullPath, '.infra.json'), JSON.stringify(projectMeta, null, 2));
+
+            // await git.add('.infra.json');
+
+            console.log('Repository setup complete!');
         });
 }
 
+export interface InfraMetadata {
+    id: string;
+}
+
 const INFRA_CONFIG_SCHEMA = z.object({
-    sshKey: z.coerce.string().nullable().optional(),
+    githubToken: z
+        .object({
+            token: z.string(),
+            refreshToken: z.string().optional().nullable(),
+            expiresAt: z.coerce.date(),
+        })
+        .optional()
+        .nullable(),
 });
 
 export type InfraConfig = z.infer<typeof INFRA_CONFIG_SCHEMA>;
 
+async function getOctokit(cwd: string, config: CliConfig) {
+    const token = await getOrRequestGithubToken(cwd, config);
+    const kit = new Octokit({
+        auth: token.token,
+    });
+
+    return kit;
+}
+
+const CLIENT_ID = 'Iv23li10jiTgXpOGRrWJ';
+
+async function getOrRequestGithubToken(cwd: string, config: CliConfig) {
+    const infra = getInfraConfig(cwd, config);
+
+    if (!infra.githubToken || infra.githubToken.expiresAt < new Date()) {
+        if (infra.githubToken && infra.githubToken.expiresAt < new Date()) {
+            console.log('Token expired, refreshing');
+        }
+        const token = await requestGithubToken();
+        config.set(`infra.githubToken`, token);
+        return token;
+    }
+
+    return infra.githubToken;
+}
+
+async function requestGithubToken() {
+    const auth = createOAuthDeviceAuth({
+        clientType: 'github-app',
+        clientId: CLIENT_ID,
+        onVerification: (verification) => {
+            console.log('\nVerification required.\n');
+            console.log('Open this URL:', verification.verification_uri);
+            console.log('Enter code:', verification.user_code);
+        },
+    });
+
+    const token = await auth({
+        type: 'oauth',
+    });
+
+    console.log('Token:', token);
+    return token;
+}
+
 function getInfraConfig(cwd: string, config: CliConfig) {
     return INFRA_CONFIG_SCHEMA.parse({
         sshKey: config.get(`${cwd}.infra.sshKey`),
+        githubToken: config.get(`infra.githubToken`),
     });
 }
 
-async function getAndSaveSshKey(
-    cwd: string,
-    config: CliConfig,
-    infra: InfraConfig
-) {
-    const sshKey = await getInfraSshKey(cwd, infra);
-    config.set(`${cwd}.infra.sshKey`, sshKey);
-    return sshKey;
-}
+// async function getAndSaveSshKey(
+//     cwd: string,
+//     config: CliConfig,
+//     infra: InfraConfig
+// ) {
+//     const sshKey = await getInfraSshKey(cwd, infra);
+//     config.set(`${cwd}.infra.sshKey`, sshKey);
+//     return sshKey;
+// }
 
-async function getInfraSshKey(cwd: string, config: InfraConfig) {
-    if (!config.sshKey) {
-        const home = homedir();
-        const sshDir = resolve(home, '.ssh');
+// async function getInfraSshKey(cwd: string, config: InfraConfig) {
+//     if (!config.sshKey) {
+//         const home = homedir();
+//         const sshDir = resolve(home, '.ssh');
 
-        // get list of files in .ssh directory
-        let sshFiles: string[] = [];
+//         // get list of files in .ssh directory
+//         let sshFiles: string[] = [];
 
-        try {
-            sshFiles = await readdir(sshDir);
-        } catch (e) {
-            // ignore
-            console.warn('Unable to read .ssh directory:');
-        }
+//         try {
+//             sshFiles = await readdir(sshDir);
+//         } catch (e) {
+//             // ignore
+//             console.warn('Unable to read .ssh directory:');
+//         }
 
-        const { selectOrEnter } = await prompts({
-            type: 'autocomplete',
-            name: 'selectOrEnter',
-            message: `Select an SSH key for the repository`,
-            choices: [
-                { title: 'None', value: 'none' },
-                { title: 'Enter SSH Key Path', value: 'enter' },
-                ...sshFiles.map((file) => ({ title: file, value: file })),
-            ],
-        });
+//         const { selectOrEnter } = await prompts({
+//             type: 'autocomplete',
+//             name: 'selectOrEnter',
+//             message: `Select an SSH key for the repository`,
+//             choices: [
+//                 { title: 'None', value: 'none' },
+//                 { title: 'Enter SSH Key Path', value: 'enter' },
+//                 ...sshFiles.map((file) => ({ title: file, value: file })),
+//             ],
+//         });
 
-        if (selectOrEnter === 'none') {
-            return null;
-        } else if (selectOrEnter === 'enter') {
-            const { path } = await prompts({
-                type: 'text',
-                name: 'path',
-                message: 'Enter the path to the SSH key file',
-            });
+//         if (selectOrEnter === 'none') {
+//             return null;
+//         } else if (selectOrEnter === 'enter') {
+//             const { path } = await prompts({
+//                 type: 'text',
+//                 name: 'path',
+//                 message: 'Enter the path to the SSH key file',
+//             });
 
-            return resolve(cwd, path);
-        } else {
-            return resolve(sshDir, selectOrEnter);
-        }
-    }
+//             return resolve(cwd, path);
+//         } else {
+//             return resolve(sshDir, selectOrEnter);
+//         }
+//     }
 
-    return config.sshKey;
+//     return config.sshKey;
+// }
+
+export function getRepoName(path: string) {
+    return path.replace(/^(?:\w:|~)?[\.\/\\]*/g, '').replace(/[\/\\]/g, '-');
 }
