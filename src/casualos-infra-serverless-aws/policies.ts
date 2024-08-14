@@ -110,3 +110,80 @@ export function rekognitionLabelsPolicy() {
         ],
     });
 }
+
+export interface AttachLogsPolicyInputs {
+    /**
+     * The function that should be allowed to write logs.
+     */
+    function: aws.lambda.Function;
+
+    /**
+     * The region that is in use.
+     */
+    region?: pulumi.Input<string>;
+
+    /**
+     * The account ID that is in use.
+     */
+    accountId?: pulumi.Input<string>;
+}
+
+/**
+ * Attaches the a policy that allows a function to write logs to CloudWatch.
+ *
+ * Grants the following permissions:
+ * - logs:CreateLogStream
+ * - logs:CreateLogGroup
+ * - logs:PutLogEvents
+ *
+ * @param name The name of the resources.
+ * @param inputs The inputs for the resources.
+ * @param options The options for the resources.
+ */
+export function attachLogsPolicy(
+    name: string,
+    inputs: AttachLogsPolicyInputs,
+    options?: pulumi.ResourceOptions
+) {
+    const region = inputs.region ?? aws.config.region;
+    const accountId =
+        inputs.accountId ?? aws.getCallerIdentityOutput().accountId;
+    const functionName = inputs.function.name;
+    const policy = new aws.iam.Policy(
+        `${name}LogsPolicy`,
+        {
+            policy: {
+                Version: '2012-10-17',
+                Statement: [
+                    {
+                        Action: [
+                            'logs:CreateLogStream',
+                            'logs:CreateLogGroup',
+                            'logs:PutLogEvents',
+                        ],
+                        Effect: 'Allow',
+                        Resource: [
+                            pulumi.interpolate`arn:aws:logs:${region}:${accountId}:log-group:/aws/lambda/${functionName}:*`,
+                            pulumi.interpolate`arn:aws:logs:${region}:${accountId}:log-group:/aws/lambda/${functionName}:*:*`,
+                        ],
+                    },
+                ],
+            },
+        },
+        options
+    );
+
+    const attachment = new aws.iam.RolePolicyAttachment(
+        `${name}LogsPolicyAttachment`,
+        {
+            policyArn: policy.arn,
+            role: inputs.function.role,
+        },
+        options
+    );
+
+    return {
+        policy,
+        attachment,
+    };
+}
