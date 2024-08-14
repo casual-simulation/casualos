@@ -148,6 +148,63 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
         });
 
     program
+        .command('get-local-path [name]')
+        .description('Get the local path to an infrastructure project')
+        .action(async (name: string) => {
+            if (!name) {
+                const res = await prompts({
+                    type: 'text',
+                    name: 'name',
+                    message: 'Enter the name of the repository',
+                });
+                name = res.name;
+            }
+
+            const fullPath = getRepoPath(name);
+            console.log(fullPath);
+        });
+
+    program
+        .command('clone [url]')
+        .description('Clone an infrastructure project')
+        .action(async (url: string) => {
+            if (!url) {
+                const res = await prompts({
+                    type: 'text',
+                    name: 'url',
+                    message: 'Enter the url of the repository',
+                });
+                url = res.url;
+            }
+
+            const regex = /\/([\w-\.\s]+)\.git$/;
+            const match = regex.exec(url);
+
+            if (!match) {
+                console.error('Invalid repository URL');
+                process.exit(1);
+                return;
+            }
+
+            const repoName = match[1];
+
+            const fullPath = getRepoPath(repoName);
+
+            if (existsSync(fullPath)) {
+                console.error('Directory already exists:', fullPath);
+                process.exit(1);
+                return;
+            }
+
+            console.log('Cloning repository:', url);
+            await simpleGit().clone(url, fullPath);
+
+            await exec('pulumi login file://' + fullPath);
+
+            console.log('Done.');
+        });
+
+    program
         .command('switch <name>')
         .description('Switch to a different infrastructure project')
         .action(async (name: string) => {
@@ -171,6 +228,33 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
             if (!status.isClean()) {
                 console.log('Changes:');
                 console.log(status.files.map((f) => f.path).join('\n'));
+            }
+        });
+
+    program
+        .command('save <name>')
+        .description('Get info about a infrastructure project')
+        .option('-m, --message <message>', 'Commit message')
+        .action(async (name: string, options: any) => {
+            const fullPath = getRepoPath(name);
+
+            const git = simpleGit(fullPath);
+            await git.add('.');
+
+            const message = options.message || 'Save changes';
+            await git.commit(message);
+
+            console.log('Changes saved');
+
+            const { push } = await prompts({
+                type: 'confirm',
+                name: 'push',
+                message: 'Push changes to remote?',
+                initial: true,
+            });
+
+            if (push) {
+                await git.push();
             }
         });
 }
