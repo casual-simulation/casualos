@@ -9,7 +9,7 @@ import {
 } from '../policies';
 import { functionEnvironmentVariables } from './helpers';
 
-export interface CasualOSApiInputs {
+export interface ApiInputs {
     /**
      * The SES identity to allow the lambda function to send emails.
      * If omitted, then SES permissions will not be added.
@@ -68,7 +68,7 @@ export interface CasualOSApiInputs {
  * Defines a component that is able to setup the resources needed for the CasualOS HTTP API.
  * That is, serving the HTTP API of CasualOS.
  */
-export class CasualOSApiComponent extends pulumi.ComponentResource {
+export class ApiComponent extends pulumi.ComponentResource {
     /**
      * The role that was created for the function.
      */
@@ -91,10 +91,10 @@ export class CasualOSApiComponent extends pulumi.ComponentResource {
 
     constructor(
         name: string,
-        inputs: CasualOSApiInputs,
-        options: pulumi.ComponentResourceOptions
+        inputs: ApiInputs,
+        options?: pulumi.ComponentResourceOptions
     ) {
-        super('pkg:records:CasualOSApiComponent', name, {}, options);
+        super('pkg:records:ApiComponent', name, {}, options);
 
         this.handleRecordsRole = new aws.iam.Role(
             'handleRecordsRole',

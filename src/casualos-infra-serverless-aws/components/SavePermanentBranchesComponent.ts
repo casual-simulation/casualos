@@ -82,7 +82,7 @@ export class SavePermanentBranchesComponent extends pulumi.ComponentResource {
     constructor(
         name: string,
         inputs: SavePermanentBranchesInputs,
-        options: pulumi.ComponentResourceOptions
+        options?: pulumi.ComponentResourceOptions
     ) {
         super('pkg:records:SavePermanentBranchesComponent', name, {}, options);
 

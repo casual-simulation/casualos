@@ -77,7 +77,10 @@ export function messagesBucket(name: string, options?: pulumi.ResourceOptions) {
  * Creates a new S3 bucket with the configuration needed for storing files records.
  * @param name The name of the bucket.
  */
-export function filesBucket(name: string, options?: pulumi.ResourceOptions) {
+export function filesBucket(
+    name: string,
+    options: pulumi.ResourceOptions = {}
+) {
     return new awsNative.s3.Bucket(
         name,
         {

@@ -103,7 +103,7 @@ export class ScheduleModerationScansComponent extends pulumi.ComponentResource {
     constructor(
         name: string,
         inputs: ScheduleModerationScansInputs,
-        options: pulumi.ComponentResourceOptions
+        options?: pulumi.ComponentResourceOptions
     ) {
         super(
             'pkg:records:ScheduleModerationScansComponent',

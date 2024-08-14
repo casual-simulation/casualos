@@ -7,7 +7,7 @@ import { attachLogsPolicy } from '../policies';
 import { functionEnvironmentVariables, messagesBucket } from './helpers';
 import { websocketsExecutionRole } from '../roles';
 
-export interface CasualOSWebsocketsInputs {
+export interface WebsocketsInputs {
     /**
      * The bucket that is used for storing file records.
      */
@@ -49,7 +49,7 @@ export interface CasualOSWebsocketsInputs {
 /**
  * Defines a component that is able to spin up the resources needed for the CasualOS Websockets API.
  */
-export class CasualOSWebsocketsComponent extends pulumi.ComponentResource {
+export class WebsocketsComponent extends pulumi.ComponentResource {
     /**
      * The S3 bucket that was created for storing large websocket messages.
      */
@@ -176,10 +176,10 @@ export class CasualOSWebsocketsComponent extends pulumi.ComponentResource {
 
     constructor(
         name: string,
-        inputs: CasualOSWebsocketsInputs,
-        options: pulumi.ComponentResourceOptions
+        inputs: WebsocketsInputs,
+        options?: pulumi.ComponentResourceOptions
     ) {
-        super('pkg:records:CasualOSWebsocketsComponent', name, {}, options);
+        super('pkg:records:WebsocketsComponent', name, {}, options);
 
         const { bucket, bucketPolicy } = messagesBucket('messagesBucket', {
             parent: this,
