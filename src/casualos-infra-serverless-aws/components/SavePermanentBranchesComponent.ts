@@ -87,7 +87,7 @@ export class SavePermanentBranchesComponent extends pulumi.ComponentResource {
         super('pkg:records:SavePermanentBranchesComponent', name, {}, options);
 
         this.role = new aws.iam.Role(
-            'savePermanentBranchesRole',
+            'role',
             {
                 assumeRolePolicy: {
                     Version: '2012-10-17',
@@ -130,7 +130,7 @@ export class SavePermanentBranchesComponent extends pulumi.ComponentResource {
         );
 
         this.function = new aws.lambda.Function(
-            'savePermanentBranchesFunction',
+            'function',
             {
                 handler: 'Records.savePermanentBranches',
                 runtime: 'nodejs18.x',
@@ -148,7 +148,7 @@ export class SavePermanentBranchesComponent extends pulumi.ComponentResource {
         );
 
         this.logGroup = new aws.cloudwatch.LogGroup(
-            'savePermanentBranchesLogGroup',
+            'logGroup',
             {
                 name: pulumi.interpolate`/aws/lambda/${this.function.name}`,
                 retentionInDays: 14,
@@ -160,7 +160,7 @@ export class SavePermanentBranchesComponent extends pulumi.ComponentResource {
             inputs.scheduleExpression ?? 'rate(1 minute)';
 
         this.eventRule = new aws.cloudwatch.EventRule(
-            'savePermanentBranchesRule',
+            'rule',
             {
                 scheduleExpression,
             },
@@ -168,7 +168,7 @@ export class SavePermanentBranchesComponent extends pulumi.ComponentResource {
         );
 
         this.eventTarget = new aws.cloudwatch.EventTarget(
-            'savePermanentBranchesTarget',
+            'target',
             {
                 arn: this.function.arn,
                 rule: this.eventRule.name,

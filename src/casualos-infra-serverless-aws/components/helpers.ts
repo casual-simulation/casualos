@@ -147,3 +147,40 @@ export function functionEnvironmentVariables(
         variables: variables,
     };
 }
+
+export interface ModerationEnvironmentVariablesInputs {
+    accountId?: pulumi.Input<string>;
+    reportBucket: pulumi.Input<string>;
+    lambdaFunctionArn: pulumi.Input<string>;
+    roleArn: pulumi.Input<string>;
+    priority?: pulumi.Input<string>;
+    projectVersion?: pulumi.Input<string>;
+}
+
+/**
+ * Gets the environment variables that should be used for functions that handle moderation.
+ */
+export function moderationEnvironmentVariables(
+    inputs: ModerationEnvironmentVariablesInputs
+): aws.lambda.FunctionArgs['environment'] {
+    let variables: Record<string, pulumi.Input<string>> = {
+        MODERATION_JOB_ACCOUNT_ID:
+            inputs.accountId ??
+            aws.getCallerIdentity().then((id) => id.accountId),
+        MODERATION_JOB_REPORT_BUCKET: inputs.reportBucket,
+        MODERATION_JOB_LAMBDA_FUNCTION_ARN: inputs.lambdaFunctionArn,
+        MODERATION_JOB_ROLE_ARN: inputs.roleArn,
+    };
+
+    if (inputs.priority) {
+        variables.MODERATION_JOB_PRIORITY = inputs.priority;
+    }
+
+    if (inputs.projectVersion) {
+        variables.MODERATION_PROJECT_VERSION = inputs.projectVersion;
+    }
+
+    return {
+        variables,
+    };
+}
