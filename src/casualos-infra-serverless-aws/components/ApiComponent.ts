@@ -113,7 +113,6 @@ export class ApiComponent extends pulumi.ComponentResource {
                 }),
                 inlinePolicies: [
                     {
-                        name: '',
                         policy: s3CrudPolicy(
                             inputs.filesBucket.bucketName.apply((n) => n!)
                         ),
