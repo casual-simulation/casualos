@@ -1,10 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
-import {
-    rekognitionLabelsPolicy,
-    s3CrudPolicy,
-    sesCrudPolicy,
-} from '../../policies';
+import { s3CrudPolicy, sesCrudPolicy } from '../../policies';
 import {
     FunctionEnvironmentInputs,
     functionEnvironmentVariables,

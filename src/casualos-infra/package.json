@@ -13,7 +13,8 @@
         "@pulumi/aws-apigateway": "^2.0.0",
         "@pulumi/awsx": "^2.0.2",
         "@pulumi/pulumi": "^3.113.0",
-        "@pulumi/aws-native": "^0.116.0"
+        "@pulumi/aws-native": "^0.116.0",
+        "lodash": "4.17.21"
     },
     "repository": {
         "type": "git",

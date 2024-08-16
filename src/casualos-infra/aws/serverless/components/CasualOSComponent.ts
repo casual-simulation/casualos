@@ -1,13 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
-import * as aws from '@pulumi/aws';
-import * as apigateway from '@pulumi/aws-apigateway';
 import * as awsNative from '@pulumi/aws-native';
-import {
-    rekognitionLabelsPolicy,
-    s3CrudPolicy,
-    sesCrudPolicy,
-} from '../../policies';
-import { filesBucket, functionEnvironmentVariables } from '../../helpers';
+import { filesBucket } from '../../helpers';
 import { WebsocketsComponent } from './WebsocketsComponent';
 import { ApiComponent } from './ApiComponent';
 import { SavePermanentBranchesComponent } from './SavePermanentBranchesComponent';
