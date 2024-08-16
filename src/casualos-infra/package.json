@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/infra",
-    "version": "3.3.8",
+    "version": "3.3.8-alpha.0",
     "description": "Pulumi resources for hosting CasualOS",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -9,10 +9,6 @@
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",
-    "devDependencies": {
-        "@types/node": "^18",
-        "typescript": "^5.0.0"
-    },
     "dependencies": {
         "@pulumi/aws": "^6.0.0",
         "@pulumi/aws-apigateway": "^2.0.0",

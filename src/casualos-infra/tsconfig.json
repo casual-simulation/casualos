@@ -1,16 +1,22 @@
 {
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "strict": true,
-        "outDir": "bin",
         "target": "es2020",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "sourceMap": true,
+        "baseUrl": ".",
+        "outDir": ".",
         "experimentalDecorators": true,
         "pretty": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitReturns": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "declaration": true,
+        "declarationMap": true,
+        "composite": true,
+        "incremental": true,
+        "skipLibCheck": true
     },
-    "files": ["index.ts"]
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "references": [{ "path": "../aux-records" }, { "path": "../aux-common" }]
 }

@@ -1632,13 +1632,6 @@ importers:
       '@pulumi/pulumi':
         specifier: ^3.113.0
         version: 3.129.0(typescript@5.3.3)
-    devDependencies:
-      '@types/node':
-        specifier: ^18
-        version: 18.19.3
-      typescript:
-        specifier: ^5.0.0
-        version: 5.3.3
 
   src/chalk: {}
 
