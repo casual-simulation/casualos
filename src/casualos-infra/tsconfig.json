@@ -14,7 +14,8 @@
         "declarationMap": true,
         "composite": true,
         "incremental": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "module": "CommonJS"
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
