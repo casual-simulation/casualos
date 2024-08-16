@@ -4,7 +4,7 @@ import {
     FunctionEnvironmentInputs,
     functionEnvironmentVariables,
     moderationEnvironmentVariables,
-} from './helpers';
+} from '../../helpers';
 import { merge } from 'lodash';
 
 export interface ScheduleModerationScansInputs {

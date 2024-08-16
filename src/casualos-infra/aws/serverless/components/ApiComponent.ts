@@ -6,8 +6,8 @@ import {
     rekognitionLabelsPolicy,
     s3CrudPolicy,
     sesCrudPolicy,
-} from '../policies';
-import { functionEnvironmentVariables } from './helpers';
+} from '../../policies';
+import { functionEnvironmentVariables } from '../../helpers';
 
 export interface ApiInputs {
     /**

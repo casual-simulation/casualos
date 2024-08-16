@@ -4,7 +4,7 @@ import { z } from 'zod';
 import prompts from 'prompts';
 import { homedir } from 'os';
 import { resolve } from 'path';
-import { readdir, mkdir, writeFile } from 'fs/promises';
+import { readdir, mkdir, writeFile, cp } from 'fs/promises';
 import { createOAuthDeviceAuth } from '@octokit/auth-oauth-device';
 import { Octokit, App } from 'octokit';
 import simpleGit from 'simple-git';
@@ -122,20 +122,24 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                 name: repoName,
             };
 
+            await git.checkoutLocalBranch('main');
+
             await writeFile(
                 resolve(fullPath, '.infra.json'),
                 JSON.stringify(projectMeta, null, 2)
             );
+            // const casualOsPath = require.resolve('casualos');
+            // const templatePath = resolve(casualOsPath, 'templates');
 
-            await git.checkoutLocalBranch('main');
-            await git.add('.infra.json');
+            // await cp(templatePath, fullPath, { recursive: true })
+            await git.add('.');
             await git.commit('Initial commit');
 
             if (createGithub) {
                 await git.push('origin', 'main', ['--set-upstream']);
             }
 
-            await exec('pulumi login file://' + fullPath);
+            await exec('pulumi login file://' + getLoginPath(fullPath));
 
             await git.add('.');
             await git.commit('Add Pulumi Metadata');
@@ -145,23 +149,6 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
             }
 
             console.log('Repository setup complete!');
-        });
-
-    program
-        .command('get-local-path [name]')
-        .description('Get the local path to an infrastructure project')
-        .action(async (name: string) => {
-            if (!name) {
-                const res = await prompts({
-                    type: 'text',
-                    name: 'name',
-                    message: 'Enter the name of the repository',
-                });
-                name = res.name;
-            }
-
-            const fullPath = getRepoPath(name);
-            console.log(fullPath);
         });
 
     program
@@ -199,7 +186,7 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
             console.log('Cloning repository:', url);
             await simpleGit().clone(url, fullPath);
 
-            await exec('pulumi login file://' + fullPath);
+            await exec('pulumi login file://' + getLoginPath(fullPath));
 
             console.log('Done.');
         });
@@ -209,7 +196,7 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
         .description('Switch to a different infrastructure project')
         .action(async (name: string) => {
             const fullPath = getRepoPath(name);
-            await exec('pulumi login file://' + fullPath);
+            await exec('pulumi login file://' + getLoginPath(fullPath));
         });
 
     program
@@ -387,5 +374,9 @@ export function getRepoName(path: string) {
 }
 
 export function getRepoPath(name: string) {
-    return resolve(homedir(), '.casualos-infra', name);
+    return resolve(name);
+}
+
+export function getLoginPath(name: string) {
+    return resolve(name, '.state');
 }

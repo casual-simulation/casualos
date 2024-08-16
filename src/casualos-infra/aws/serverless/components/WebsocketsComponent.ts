@@ -1,11 +1,9 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
-import * as apigateway from '@pulumi/aws-apigateway';
 import * as awsNative from '@pulumi/aws-native';
-import {} from '../policies';
-import { attachLogsPolicy } from '../policies';
-import { functionEnvironmentVariables, messagesBucket } from './helpers';
-import { websocketsExecutionRole } from '../roles';
+import { attachLogsPolicy } from '../../policies';
+import { functionEnvironmentVariables, messagesBucket } from '../../helpers';
+import { websocketsExecutionRole } from '../../roles';
 
 export interface WebsocketsInputs {
     /**

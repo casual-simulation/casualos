@@ -1,16 +1,14 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
-import * as apigateway from '@pulumi/aws-apigateway';
-import * as awsNative from '@pulumi/aws-native';
 import {
     rekognitionLabelsPolicy,
     s3CrudPolicy,
     sesCrudPolicy,
-} from '../policies';
+} from '../../policies';
 import {
     FunctionEnvironmentInputs,
     functionEnvironmentVariables,
-} from './helpers';
+} from '../../helpers';
 
 export interface SavePermanentBranchesInputs {
     /**
