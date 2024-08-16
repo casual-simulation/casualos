@@ -101,10 +101,6 @@ export class CasualOSComponent extends pulumi.ComponentResource {
 
         this.filesBucket = filesBucket('filesBucket', { parent: this });
 
-        const archive = new pulumi.asset.FileArchive(
-            '../aux-server/aux-backend/serverless/aws/dist/handlers'
-        );
-
         const {
             allowedOrigins,
             allowedApiOrigins,
@@ -121,7 +117,7 @@ export class CasualOSComponent extends pulumi.ComponentResource {
                 allowedOrigins: allowedOrigins,
                 allowedApiOrigins: allowedApiOrigins,
                 filesBucket: this.filesBucket,
-                websocketsCode: archive,
+                websocketsCode: inputs.archive,
                 filesStorageClass,
             },
             { parent: this }
@@ -133,7 +129,7 @@ export class CasualOSComponent extends pulumi.ComponentResource {
                 allowedOrigins,
                 allowedApiOrigins,
                 filesBucket: this.filesBucket,
-                recordsCode: archive,
+                recordsCode: inputs.archive,
                 filesStorageClass,
                 messagesBucket: this.websockets.messagesBucket.bucketName.apply(
                     (name) => name!
@@ -162,7 +158,7 @@ export class CasualOSComponent extends pulumi.ComponentResource {
                 },
                 scheduleExpression: 'rate(1 minute)',
                 sesIdentityName,
-                code: archive,
+                code: inputs.archive,
             },
             { parent: this }
         );
@@ -194,7 +190,7 @@ export class CasualOSComponent extends pulumi.ComponentResource {
                     this.moderationJobReportBucket.bucketName.apply(
                         (name) => name!
                     ),
-                code: archive,
+                code: inputs.archive,
                 scheduleExpression: moderationJobScheduleExpression,
                 sesIdentityName,
                 jobPriority: moderationJobPriority,
