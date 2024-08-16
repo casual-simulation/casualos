@@ -2335,6 +2335,33 @@ export class AuxRuntime
                     newBots.splice(index, 1);
                     nextUpdate.addedBots.splice(index, 1);
                 }
+
+                let replacedBot = false;
+                if (existing.masks) {
+                    for (let space in existing.masks) {
+                        const masks = existing.masks[space];
+                        if (masks) {
+                            if (!replacedBot) {
+                                replacedBot = true;
+                                bot = {
+                                    ...bot,
+                                };
+                                if (bot.masks) {
+                                    bot.masks = {
+                                        ...bot.masks,
+                                    };
+                                } else {
+                                    bot.masks = {};
+                                }
+                                bot.masks[space] = Object.assign(
+                                    {},
+                                    bot.masks[space] ?? {},
+                                    masks
+                                );
+                            }
+                        }
+                    }
+                }
             }
 
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
@@ -2349,9 +2376,8 @@ export class AuxRuntime
                         newBot.script.changes[key] =
                             changes[key];
                 }
-                let maskTags = new Set<string>();
                 for (let space of TAG_MASK_SPACE_PRIORITIES) {
-                    const masks = maskChanges[space];
+                    const changedMasks = maskChanges[space];
                     let newMasks: BotTagMasks;
                     let addNewMasks = false;
                     let hasNewMasks = false;
@@ -2361,21 +2387,15 @@ export class AuxRuntime
                     } else {
                         newMasks = newBot.masks[space];
                     }
-                    if (masks) {
+                    if (changedMasks) {
                         if (!newBot.script.maskChanges[space]) {
                             newBot.script.maskChanges[space] = {};
                         }
-                        for (let key in masks) {
+                        for (let key in changedMasks) {
                             hasNewMasks = true;
-                            maskTags.add(key);
-                            const value =
-                                (newMasks[key] =
-                                newBot.script.maskChanges[space][key] =
-                                    masks[key]);
-
-                            if (!maskTags.has(key)) {
-                                newBot.values[key] = value;
-                            }
+                            newMasks[key] = newBot.script.maskChanges[space][
+                                key
+                            ] = changedMasks[key];
                         }
                     }
 
