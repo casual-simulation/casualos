@@ -12,6 +12,7 @@
 
 -   Fixed an issue where library scripts would always error when executing a loop (for, while, etc.).
 -   Fixed an issue where it was possible for tag masks to get overwritten by a bot's regular tags shortly after creation of the bot.
+-   Fixed an issue where AI Chat features would only be enabled if OpenAI Chat was configured.
 
 ## V3.3.8
 
