@@ -82,7 +82,10 @@ export interface TranspilerMacro {
     replacement: (val: string) => string;
 }
 
-const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
+/**
+ * The estraverse visitor keys that are used for TypeScript nodes.
+ */
+export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     TSTypeParameterDeclaration: [],
     TSCallSignatureDeclaration: [],
     TSConstructSignatureDeclaration: [],
