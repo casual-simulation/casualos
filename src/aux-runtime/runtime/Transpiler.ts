@@ -146,6 +146,7 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
     TSMethodSignature: [],
     TSPropertySignature: [],
     TSAsExpression: [],
+    TSParameterProperty: ['parameter'],
 
     ClassDeclaration: [
         ...VisitorKeys.ClassDeclaration,
@@ -500,6 +501,8 @@ export class Transpiler {
                     if (n.abstract === true) {
                         this._removeClassAbstract(n, doc, text);
                     }
+                } else if (n.type === 'TSParameterProperty') {
+                    // do nothing
                 } else if (n.type === 'MethodDefinition') {
                     if (n.abstract) {
                         this._removeNodeOrReplaceWithUndefined(n, doc, text);
@@ -1250,23 +1253,28 @@ export class Transpiler {
         const accessibility: string = node.accessibility + ' ';
         const t = text.toString();
 
-        const indexOfAccessibility = t.indexOf(accessibility, node.start);
+        const relativeStart = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.start,
+            -1,
+            true
+        );
+        const absoluteStart = createAbsolutePositionFromRelativePosition(
+            relativeStart,
+            doc
+        );
+
+        const indexOfAccessibility = t.indexOf(
+            accessibility,
+            absoluteStart.index
+        );
 
         if (indexOfAccessibility < 0 || indexOfAccessibility > node.key.start) {
             return;
         }
 
-        const absoluteAccessibilityStart =
-            createAbsolutePositionFromStateVector(
-                doc,
-                text,
-                version,
-                indexOfAccessibility,
-                undefined,
-                true
-            );
-
-        text.delete(absoluteAccessibilityStart.index, accessibility.length);
+        text.delete(indexOfAccessibility, accessibility.length);
     }
 
     private _removeAsExpression(node: any, doc: Doc, text: Text): any {
