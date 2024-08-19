@@ -1,4 +1,7 @@
-import { GenericHttpRequest } from '../http/GenericHttpInterface';
+import {
+    GenericHttpRequest,
+    GenericHttpResponse,
+} from '../http/GenericHttpInterface';
 import z, { input } from 'zod';
 import { KnownErrorCodes } from './ErrorCodes';
 import type { Span } from '@opentelemetry/api';
@@ -71,6 +74,16 @@ export interface Procedure<TInput, TOutput extends ProcedureOutput> {
      * @returns Returns a promise that resolves with the output of the RPC.
      */
     handler: (input: TInput, context: RPCContext) => Promise<TOutput>;
+
+    /**
+     * The function that can map the output of the handler to an HTTP response.
+     * @param output The output of the handler.
+     * @param context The context that the handler was called with.
+     */
+    mapToResponse?: (
+        output: TOutput,
+        context: RPCContext
+    ) => Promise<Partial<GenericHttpResponse>>;
 
     /**
      * The set of origins that are allowed for the route.
@@ -175,9 +188,14 @@ export interface InputlessProcedureBuilder extends ProcedureBuilder {
      * Configures the handler for the RPC.
      * Because this is an inputless procedure, the input is void.
      * @param handler The handler.
+     * @param mapToResponse The function that should be used to map the handler output to an HTTP response.
      */
     handler<TOutput extends ProcedureOutput>(
-        handler: (input: void, context: RPCContext) => Promise<TOutput>
+        handler: (input: void, context: RPCContext) => Promise<TOutput>,
+        mapToResponse?: (
+            output: TOutput,
+            context: RPCContext
+        ) => Promise<Partial<GenericHttpResponse>>
     ): Procedure<void, TOutput>;
 }
 
@@ -185,9 +203,14 @@ export interface OutputlessProcedureBuilder<TInput> extends ProcedureBuilder {
     /**
      * Configures the handler for the RPC.
      * @param handler The handler.
+     * @param mapToResponse The function that should be used to map the handler output to an HTTP response.
      */
     handler<TOutput extends ProcedureOutput>(
-        handler: (input: TInput, context: RPCContext) => Promise<TOutput>
+        handler: (input: TInput, context: RPCContext) => Promise<TOutput>,
+        mapToResponse?: (
+            output: TOutput,
+            context: RPCContext
+        ) => Promise<Partial<GenericHttpResponse>>
     ): Procedure<TInput, TOutput>;
 }
 
@@ -226,17 +249,30 @@ class ProcBuilder
     }
 
     handler<TOutput extends ProcedureOutput>(
-        handler: (input: any, context: RPCContext) => Promise<TOutput>
+        handler: (input: any, context: RPCContext) => Promise<TOutput>,
+        mapToResponse?: (
+            output: TOutput,
+            context: RPCContext
+        ) => Promise<Partial<GenericHttpResponse>>
     ): Procedure<any, TOutput>;
     handler<TOutput extends ProcedureOutput>(
-        handler: (input: void, context: RPCContext) => Promise<ProcedureOutput>
+        handler: (input: void, context: RPCContext) => Promise<ProcedureOutput>,
+        mapToResponse?: (
+            output: TOutput,
+            context: RPCContext
+        ) => Promise<Partial<GenericHttpResponse>>
     ): Procedure<void, TOutput>;
     handler<TOutput extends ProcedureOutput>(
-        handler: (input: any, context: RPCContext) => Promise<TOutput>
+        handler: (input: any, context: RPCContext) => Promise<TOutput>,
+        mapToResponse?: (
+            output: TOutput,
+            context: RPCContext
+        ) => Promise<Partial<GenericHttpResponse>>
     ): Procedure<any, TOutput> {
         return {
             schema: this._schema,
             handler: handler,
+            mapToResponse,
             allowedOrigins: this._allowedOrigins,
             http: this._http,
         };

@@ -5,6 +5,7 @@ import {
     ServerError,
     StoredAux,
 } from '@casual-simulation/aux-common';
+import { z } from 'zod';
 
 /**
  * Defines an interface for objects that represent a webhook environment.
@@ -94,8 +95,22 @@ export interface HandleHttpRequestSuccess {
 
 export interface HandleHttpRequestFailure {
     success: false;
-    errorCode: 'unacceptable_request' | ServerError;
+    errorCode: 'unacceptable_request' | 'invalid_webhook_target' | ServerError;
+
+    /**
+     * The error message that should be displayed to the user.
+     */
     errorMessage: string;
+
+    /**
+     * The internal reason why this error was produced.
+     */
+    internalError?: {
+        success: false;
+        errorCode: 'unacceptable_request';
+        errorMessage: string;
+        issues: z.ZodIssue[];
+    };
 }
 
 export interface CreateEnvironmentRequest {

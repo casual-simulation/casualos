@@ -101,7 +101,13 @@ import {
     WebsocketMessageEvent,
     WebsocketUploadRequestEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import { botAdded, createBot, toast } from '@casual-simulation/aux-common/bots';
+import {
+    botAdded,
+    createBot,
+    StoredAux,
+    StoredAuxVersion1,
+    toast,
+} from '@casual-simulation/aux-common/bots';
 import {
     device,
     remote,
@@ -152,6 +158,7 @@ import {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
+import { tryParseJson } from './Utils';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -9799,6 +9806,127 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/webhook/run', () => {
+        let aux: StoredAuxVersion1;
+
+        beforeEach(async () => {
+            aux = {
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                },
+            };
+
+            await store.setData(
+                recordName,
+                'data1',
+                JSON.stringify(aux),
+                userId,
+                userId,
+                true,
+                true,
+                [PUBLIC_READ_MARKER]
+            );
+            await webhookStore.createItem(recordName, {
+                address: 'testAddress',
+                markers: [PRIVATE_MARKER],
+                targetResourceKind: 'data',
+                targetAddress: 'data1',
+                targetRecordName: recordName,
+                userId: null,
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/webhook/run?recordName=${recordName}&address=testAddress`,
+                    JSON.stringify({
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(webhookEnvironment.handleHttpRequest).not.toHaveBeenCalled();
+        });
+
+        it('should run the given webhook record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            webhookEnvironment.handleHttpRequest.mockResolvedValue({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: 'hello, world',
+                },
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/webhook/run?recordName=${recordName}&address=testAddress&other=def`,
+                    JSON.stringify({
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: 'hello, world',
+                headers: apiCorsHeaders,
+            });
+
+            expect(webhookEnvironment.handleHttpRequest).toHaveBeenCalledWith({
+                recordName,
+                state: {
+                    type: 'aux',
+                    state: aux,
+                },
+                request: httpPost(
+                    `/api/v2/records/webhook/run?other=def`,
+                    JSON.stringify({
+                        data: 'hello, world',
+                    }),
+                    {
+                        origin: apiHeaders['origin'],
+                    }
+                ),
+            });
+        });
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(
@@ -18621,9 +18749,16 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 JSON.parse(result.result.trim()),
             ];
         } else {
-            body = response.body
-                ? JSON.parse(response.body as string)
-                : undefined;
+            if (!response.body) {
+                body = undefined;
+            } else {
+                const jsonResult = tryParseJson(response.body as string);
+                if (jsonResult.success) {
+                    body = jsonResult.value;
+                } else {
+                    body = response.body;
+                }
+            }
         }
 
         expect({

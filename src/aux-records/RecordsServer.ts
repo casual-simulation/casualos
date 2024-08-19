@@ -127,6 +127,7 @@ import {
     listItemsProcedure,
     recordItemProcedure,
 } from './crud/CrudHelpers';
+import { merge, omit } from 'lodash';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -1498,6 +1499,135 @@ export class RecordsServer {
                     .origins('api')
                     .http('GET', '/api/v2/records/webhook/list')
             ),
+
+            runWebhook: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/webhook/run')
+                .inputs(z.any())
+                .handler(
+                    async (data, context) => {
+                        if (!this._webhooksController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        if (!context.httpRequest) {
+                            return {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'webhooks have to be called from an http request',
+                            };
+                        }
+
+                        const querySchema = z.object({
+                            recordName: RECORD_NAME_VALIDATION,
+                            address: z.string().min(1),
+                            instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        });
+
+                        const queryResult = querySchema.safeParse(
+                            context.httpRequest.query
+                        );
+
+                        if (queryResult.success === false) {
+                            return {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'The request was invalid. One or more fields were invalid.',
+                                issues: queryResult.error.issues,
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const { recordName, address, instances } =
+                            queryResult.data;
+
+                        const bannedHeaders = [
+                            'authorization',
+                            'cookie',
+                            'set-cookie',
+                            'clear-site-data',
+                            'access-control-allow-origin',
+                            'access-control-max-age',
+                            'access-control-allow-credentials',
+                            'date',
+                            'server',
+                            'keep-alive',
+                            'connection',
+                            'transfer-encoding',
+                        ];
+
+                        const result =
+                            await this._webhooksController.handleWebhook({
+                                recordName,
+                                address,
+                                instances,
+                                userId: validation.userId,
+                                request: {
+                                    method: context.httpRequest.method,
+                                    ipAddress: context.httpRequest.ipAddress,
+                                    path: context.httpRequest.path,
+                                    body: context.httpRequest.body,
+                                    headers: omit(
+                                        context.httpRequest.headers,
+                                        ...bannedHeaders
+                                    ),
+                                    query: omit(
+                                        context.httpRequest.query,
+                                        'recordName',
+                                        'address'
+                                    ),
+                                    pathParams: {},
+                                },
+                            });
+
+                        if (result.success === false) {
+                            return result;
+                        }
+
+                        const headers: GenericHttpHeaders = {};
+                        if (result.response.headers) {
+                            for (let key in result.response.headers) {
+                                const lowerKey = key.toLowerCase();
+                                if (bannedHeaders.includes(lowerKey)) {
+                                    continue;
+                                }
+                                headers[lowerKey] =
+                                    result.response.headers[key];
+                            }
+                        }
+
+                        return {
+                            success: true,
+                            response: {
+                                statusCode: result.response.statusCode,
+                                headers,
+                                body: result.response.body,
+                            } as GenericHttpResponse,
+                        };
+                    },
+                    async (output, context) => {
+                        if (output.success === false) {
+                            // Use defaults
+                            return {};
+                        } else if (output.success === true) {
+                            return output.response;
+                        }
+                    }
+                ),
 
             eraseWebhook: eraseItemProcedure(
                 this._auth,
@@ -3222,46 +3352,6 @@ export class RecordsServer {
                     };
                 }),
 
-            webhook: procedure()
-                .origins(true)
-                .http('POST', '/webhook')
-                .inputs(z.any())
-                .handler(async (data, context) => {
-                    if (!context.httpRequest) {
-                        return {
-                            success: false,
-                            errorCode: 'unacceptable_request',
-                            errorMessage:
-                                'webhooks have to be called from an http request',
-                        };
-                    }
-
-                    const querySchema = z.object({
-                        recordName: RECORD_NAME_VALIDATION,
-                        address: z.string().min(1),
-                    });
-
-                    const queryResult = querySchema.safeParse(
-                        context.httpRequest.query
-                    );
-
-                    if (queryResult.success === false) {
-                        return {
-                            success: false,
-                            errorCode: 'unacceptable_request',
-                            errorMessage:
-                                'The request was invalid. One or more fields were invalid.',
-                            issues: queryResult.error.issues,
-                        };
-                    }
-
-                    const { recordName, address } = queryResult.data;
-
-                    return {
-                        success: true,
-                    };
-                }),
-
             listProcedures: procedure()
                 .origins(true)
                 .http('GET', '/api/v2/procedures')
@@ -3424,7 +3514,17 @@ export class RecordsServer {
                     origin: request.headers.origin ?? null,
                 };
                 const result = await procedure.handler(data, context);
-                return returnProcedureOutput(result);
+                const response = returnProcedureOutput(result);
+
+                if (procedure.mapToResponse) {
+                    const procedureResponse = await procedure.mapToResponse(
+                        result,
+                        context
+                    );
+                    return merge(response, procedureResponse);
+                }
+
+                return response;
             },
             allowedOrigins: procedure.allowedOrigins,
         };

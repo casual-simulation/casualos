@@ -81,6 +81,7 @@ describe('getStatusCode()', () => {
         ['user_already_exists', 400] as const,
         ['session_is_not_revokable', 400] as const,
         ['hume_api_error', 500] as const,
+        ['invalid_webhook_target', 501] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {

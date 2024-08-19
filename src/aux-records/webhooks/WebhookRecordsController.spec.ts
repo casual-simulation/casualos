@@ -2,7 +2,10 @@ import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import { MemoryStore } from '../MemoryStore';
 import { PolicyController } from '../PolicyController';
 import { RecordsController } from '../RecordsController';
-import { WebhookRecordsController } from './WebhookRecordsController';
+import {
+    STORED_AUX_SCHEMA,
+    WebhookRecordsController,
+} from './WebhookRecordsController';
 import { MemoryWebhookRecordsStore } from './MemoryWebhookRecordsStore';
 import {
     PRIVATE_MARKER,
@@ -406,6 +409,160 @@ describe('WebhookRecordsController', () => {
                 });
             });
 
+            it('should be able to parse JSON from the data', async () => {
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'data',
+                    targetRecordName: 'recordName',
+                    targetAddress: 'data1',
+                    userId: null,
+                });
+
+                await store.setData(
+                    'recordName',
+                    'data1',
+                    JSON.stringify({
+                        version: 1,
+                        state: {},
+                    }),
+                    'user1',
+                    'user2',
+                    true,
+                    true,
+                    [PUBLIC_READ_MARKER]
+                );
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                expect(environment.handleHttpRequest).toHaveBeenCalledWith({
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    recordName,
+                    state: {
+                        type: 'aux',
+                        state: {
+                            version: 1,
+                            state: {},
+                        },
+                    },
+                });
+            });
+
+            it('should return invalid_webhook_target if the target doesnt contain valid data', async () => {
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'data',
+                    targetRecordName: 'recordName',
+                    targetAddress: 'data1',
+                    userId: null,
+                });
+
+                await store.setData(
+                    'recordName',
+                    'data1',
+                    {
+                        // Wrong version for a stored aux
+                        version: 99,
+                        state: {},
+                    },
+                    'user1',
+                    'user2',
+                    true,
+                    true,
+                    [PUBLIC_READ_MARKER]
+                );
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_webhook_target',
+                    errorMessage:
+                        'Invalid webhook target. The targeted record does not contain valid data.',
+                    internalError: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The data record does not contain valid AUX data.',
+                        issues: [
+                            {
+                                code: 'invalid_union_discriminator',
+                                options: [1, 2],
+                                message:
+                                    'Invalid discriminator value. Expected 1 | 2',
+                                path: ['version'],
+                            },
+                        ],
+                    },
+                });
+
+                expect(environment.handleHttpRequest).not.toHaveBeenCalled();
+            });
+
             it('should return not_authorized if the webhook doesnt have the ability to read the data', async () => {
                 await itemsStore.createItem(recordName, {
                     address: 'item1',
@@ -609,6 +766,78 @@ describe('WebhookRecordsController', () => {
                     },
                 });
             });
+        });
+    });
+});
+
+describe('STORED_AUX_SCHEMA', () => {
+    describe('version 1', () => {
+        it('should be able to parse a valid aux', async () => {
+            const result = STORED_AUX_SCHEMA.parse({
+                version: 1,
+                state: {},
+            });
+
+            expect(result).toEqual({
+                version: 1,
+                state: {},
+            });
+        });
+
+        it('should allow bots to have masks', async () => {
+            const result = STORED_AUX_SCHEMA.parse({
+                version: 1,
+                state: {
+                    abc: {
+                        id: 'abc',
+                        tags: {},
+                        masks: {
+                            tempLocal: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                },
+            });
+
+            expect(result).toEqual({
+                version: 1,
+                state: {
+                    abc: {
+                        id: 'abc',
+                        tags: {},
+                        masks: {
+                            tempLocal: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should catch bots that are missing properties', async () => {
+            expect(() => {
+                STORED_AUX_SCHEMA.parse({
+                    version: 1,
+                    state: {
+                        abc: {},
+                    },
+                });
+            }).toThrow();
+        });
+
+        it('should catch bots that are missing tags', async () => {
+            expect(() => {
+                STORED_AUX_SCHEMA.parse({
+                    version: 1,
+                    state: {
+                        abc: {
+                            id: 'abc',
+                        },
+                    },
+                });
+            }).toThrow();
         });
     });
 });

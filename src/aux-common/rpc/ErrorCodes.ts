@@ -71,7 +71,8 @@ export type KnownErrorCodes =
     | 'invalid_connection_state'
     | 'user_already_exists'
     | 'session_is_not_revokable'
-    | 'hume_api_error';
+    | 'hume_api_error'
+    | 'invalid_webhook_target';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -136,6 +137,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'unacceptable_request') {
             return 400;
         } else if (response.errorCode === 'address_type_not_supported') {
+            return 501;
+        } else if (response.errorCode === 'invalid_webhook_target') {
             return 501;
         } else if (response.errorCode === 'server_error') {
             return 500;

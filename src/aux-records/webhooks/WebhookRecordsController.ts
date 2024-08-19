@@ -51,19 +51,29 @@ import { z } from 'zod';
 
 const TRACE_NAME = 'WebhookRecordsController';
 
-const STORED_AUX_VERSION_1_SCHEMA = z.object({
+/**
+ * The schema for version 1 stored AUX data.
+ */
+export const STORED_AUX_VERSION_1_SCHEMA = z.object({
     version: z.literal(1),
     state: z.object({}).catchall(
         z.object({
             id: z.string(),
             space: z.string().optional().nullable(),
             tags: z.object({}).catchall(z.any()),
-            masks: z.object({}).catchall(z.object({}).catchall(z.any())),
+            masks: z
+                .object({})
+                .catchall(z.object({}).catchall(z.any()))
+                .optional()
+                .nullable(),
         })
     ),
 });
 
-const STORED_AUX_VERSION_2_SCHEMA = z.object({
+/**
+ * The schema for version 2 stored AUX data.
+ */
+export const STORED_AUX_VERSION_2_SCHEMA = z.object({
     version: z.literal(2),
     updates: z.array(
         z.object({
@@ -74,7 +84,10 @@ const STORED_AUX_VERSION_2_SCHEMA = z.object({
     ),
 });
 
-const STORED_AUX_SCHEMA = z.discriminatedUnion('version', [
+/**
+ * The schema for stored AUX data.
+ */
+export const STORED_AUX_SCHEMA = z.discriminatedUnion('version', [
     STORED_AUX_VERSION_1_SCHEMA,
     STORED_AUX_VERSION_2_SCHEMA,
 ]);
@@ -212,7 +225,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                 if (typeof data.data === 'string') {
                     const stored = tryParseJson(data.data);
                     if (stored.success === true) {
-                        auxData = stored;
+                        auxData = stored.value;
                     }
                 } else if (typeof data.data === 'object') {
                     auxData = data.data;
