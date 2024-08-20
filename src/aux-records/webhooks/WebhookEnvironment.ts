@@ -8,6 +8,73 @@ import {
 import { z } from 'zod';
 
 /**
+ * The schema for version 1 stored AUX data.
+ */
+export const STORED_AUX_VERSION_1_SCHEMA = z.object({
+    version: z.literal(1),
+    state: z.object({}).catchall(
+        z.object({
+            id: z.string(),
+            space: z.string().optional().nullable(),
+            tags: z.object({}).catchall(z.any()),
+            masks: z
+                .object({})
+                .catchall(z.object({}).catchall(z.any()))
+                .optional()
+                .nullable(),
+        })
+    ),
+});
+
+/**
+ * The schema for version 2 stored AUX data.
+ */
+export const STORED_AUX_VERSION_2_SCHEMA = z.object({
+    version: z.literal(2),
+    updates: z.array(
+        z.object({
+            id: z.number(),
+            update: z.string(),
+            timestamp: z.number(),
+        })
+    ),
+});
+
+/**
+ * The schema for stored AUX data.
+ */
+export const STORED_AUX_SCHEMA = z.discriminatedUnion('version', [
+    STORED_AUX_VERSION_1_SCHEMA,
+    STORED_AUX_VERSION_2_SCHEMA,
+]);
+
+/**
+ * The schema for a webhook aux state.
+ */
+export const WEBHOOK_AUX_STATE_SCHEMA = z.object({
+    type: z.literal('aux'),
+    state: STORED_AUX_SCHEMA,
+});
+
+/**
+ * The schema for a webhook URL state.
+ */
+export const WEBHOOK_URL_STATE_SCHEMA = z.object({
+    type: z.literal('url'),
+    requestUrl: z.string(),
+    requestMethod: z.string(),
+    requestHeaders: z.record(z.string()),
+});
+
+/**
+ * The schema for a webhook state.
+ */
+export const WEBHOOK_STATE_SCHEMA = z.discriminatedUnion('type', [
+    WEBHOOK_AUX_STATE_SCHEMA,
+    WEBHOOK_URL_STATE_SCHEMA,
+]);
+
+/**
  * Defines an interface for objects that represent a webhook environment.
  * That is, they provide a way to call into the environment that the webhook is running in and shut it down.
  *
