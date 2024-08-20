@@ -3,8 +3,6 @@ import {
     HandleHttpRequestResult,
     WebhookEnvironment,
 } from '@casual-simulation/aux-records';
-import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
-import { getSimulationId } from '../../../aux-web/shared/AppManager';
 import { v4 as uuid } from 'uuid';
 import {
     AuxConfig,
@@ -18,6 +16,7 @@ import {
     first,
     remote,
 } from '@casual-simulation/aux-common';
+import { getSimulationId } from '../../../shared/SimulationHelpers';
 
 export type WebhookSimulationFactory = (
     simId: string,
