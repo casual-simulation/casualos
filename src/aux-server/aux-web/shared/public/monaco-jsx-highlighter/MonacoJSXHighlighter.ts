@@ -1,7 +1,7 @@
 import * as monaco from '../../MonacoLibs';
 import { reject } from 'lodash';
 import estraverse from 'estraverse';
-import { Transpiler } from '@casual-simulation/aux-runtime';
+import { Transpiler, TypeScriptVisistorKeys } from '@casual-simulation/aux-runtime';
 
 const defaultOptions = {
     isHighlightGlyph: false,
@@ -215,6 +215,7 @@ class MonacoJSXHighlighter {
             },
 
             keys: {
+                ...TypeScriptVisistorKeys,
                 JSXElement: ['openingElement', 'closingElement', 'children'],
                 JSXFragment: ['children'],
                 JSXOpeningElement: ['name', 'attributes'],

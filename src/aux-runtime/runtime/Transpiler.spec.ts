@@ -1621,6 +1621,156 @@ describe('Transpiler', () => {
                 );
             });
 
+            it('should remove method declaration visbility modifiers from classes', () => {
+                const transpiler = new Transpiler();
+
+                // private
+                expect(
+                    transpiler.transpile(
+                        `class Test { private abc(): void {} }`
+                    )
+                ).toBe(`class Test { abc() {} }`);
+
+                // public
+                expect(
+                    transpiler.transpile(`class Test { public abc(): void {} }`)
+                ).toBe(`class Test { abc() {} }`);
+
+                // private abstract
+                expect(
+                    transpiler.transpile(
+                        `abstract class Test { private abstract abc(): void; }`
+                    )
+                ).toBe(`class Test {  }`);
+
+                // public abstract
+                expect(
+                    transpiler.transpile(
+                        `abstract class Test { public abstract abc(): void; }`
+                    )
+                ).toBe(`class Test {  }`);
+
+                // abstract private
+                expect(
+                    transpiler.transpile(
+                        `abstract class Test { abstract private abc(): void; }`
+                    )
+                ).toBe(`class Test {  }`);
+
+                // abstract public
+                expect(
+                    transpiler.transpile(
+                        `abstract class Test { abstract public abc(): void; }`
+                    )
+                ).toBe(`class Test {  }`);
+
+                // private static
+                expect(
+                    transpiler.transpile(
+                        `class Test { private static abc(): void {} }`
+                    )
+                ).toBe(`class Test { static abc() {} }`);
+
+                // public static
+                expect(
+                    transpiler.transpile(
+                        `class Test { public static abc(): void {} }`
+                    )
+                ).toBe(`class Test { static abc() {} }`);
+
+                // private get
+                expect(
+                    transpiler.transpile(
+                        `class Test { private get abc(): number { return 123; } }`
+                    )
+                ).toBe(`class Test { get abc() { return 123; } }`);
+
+                // public get
+                expect(
+                    transpiler.transpile(
+                        `class Test { public get abc(): number { return 123; } }`
+                    )
+                ).toBe(`class Test { get abc() { return 123; } }`);
+
+                // private static get
+                expect(
+                    transpiler.transpile(
+                        `class Test { private static get abc(): number { return 123; } }`
+                    )
+                ).toBe(`class Test { static get abc() { return 123; } }`);
+
+                // public  static get
+                expect(
+                    transpiler.transpile(
+                        `class Test { public static get abc(): number { return 123; } }`
+                    )
+                ).toBe(`class Test { static get abc() { return 123; } }`);
+
+                // private abstract get
+                expect(
+                    transpiler.transpile(
+                        `abstract class Test { private abstract get abc(): number; }`
+                    )
+                ).toBe(`class Test {  }`);
+
+                // public abstract
+                expect(
+                    transpiler.transpile(
+                        `abstract class Test { public abstract get abc(): number; }`
+                    )
+                ).toBe(`class Test {  }`);
+            });
+
+            it('should remove property visbility modifiers from classes', () => {
+                const transpiler = new Transpiler();
+
+                // private
+                expect(
+                    transpiler.transpile(
+                        `class Test { private abc: number = 123; }`
+                    )
+                ).toBe(`class Test { abc = 123; }`);
+
+                // public
+                expect(
+                    transpiler.transpile(
+                        `class Test { public abc: number = 123; }`
+                    )
+                ).toBe(`class Test { abc = 123; }`);
+            });
+
+            it('should leave private methods', () => {
+                const transpiler = new Transpiler();
+
+                // private
+                expect(
+                    transpiler.transpile(`class Test { #abc(): void {} }`)
+                ).toBe(`class Test { #abc() {} }`);
+
+                // private static
+                expect(
+                    transpiler.transpile(
+                        `class Test { static #abc(): void {} }`
+                    )
+                ).toBe(`class Test { static #abc() {} }`);
+
+                // private static get
+                expect(
+                    transpiler.transpile(
+                        `class Test { static get #abc(): number { return 123; } }`
+                    )
+                ).toBe(`class Test { static get #abc() { return 123; } }`);
+            });
+
+            it('should leave private properties', () => {
+                const transpiler = new Transpiler();
+
+                // private
+                expect(
+                    transpiler.transpile(`class Test { #abc: number = 123; }`)
+                ).toBe(`class Test { #abc = 123; }`);
+            });
+
             it('should remove generic type arguments from class declarations and expressions', () => {
                 const transpiler = new Transpiler();
 
@@ -1721,6 +1871,26 @@ describe('Transpiler', () => {
                         `class Test { set #value(val: number) { } }`
                     )
                 ).toBe(`class Test { set #value(val) { } }`);
+            });
+
+            it('should keep visibility annotations from constructor parameters in classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `class Test { constructor(readonly prop: number) {} }`
+                    )
+                ).toBe(`class Test { constructor(readonly prop) {} }`);
+            });
+
+            it('should remove visibility annotations from constructors in exported classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `export class Test { public constructor(prop: number) {} }`
+                    )
+                ).toBe(
+                    `class Test { constructor(prop) {} }\nawait exports({ Test, });`
+                );
             });
         });
     });

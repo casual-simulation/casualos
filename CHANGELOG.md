@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V3.3.9
+
+#### Date: 8/20/2024
+
+### :rocket: Features
+
+-   Improved CasualOS to understand and process Typescript class method and property accessibility modifiers correctly.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where library scripts would always error when executing a loop (for, while, etc.).
+-   Fixed an issue where it was possible for tag masks to get overwritten by a bot's regular tags shortly after creation of the bot.
+-   Fixed an issue where AI Chat features would only be enabled if OpenAI Chat was configured.
+
 ## V3.3.8
 
 #### Date: 8/5/2024
