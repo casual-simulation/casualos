@@ -167,10 +167,11 @@ import {
     SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
-import { MinioFileRecordsStore } from 'aux-backend/minio/MinioFileRecordsStore';
+import { MinioFileRecordsStore } from '../minio/MinioFileRecordsStore';
 import { S3Control, S3ControlClient } from '@aws-sdk/client-s3-control';
 import { SimulationWebhookEnvironment } from './webhooks/SimulationWebhookEnvironment';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
+import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -604,29 +605,9 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('S3 options must be provided.');
         }
 
-        const prisma = options.prisma;
         const s3 = options.s3;
-
-        const prismaClient = this._ensurePrisma(options);
         const s3Client = this._ensureS3(options);
-        this._configStore = this._ensurePrismaConfigurationStore(
-            prismaClient,
-            options
-        );
-        this._metricsStore = new PrismaMetricsStore(
-            prismaClient,
-            this._configStore
-        );
-        this._authStore = new PrismaAuthStore(prismaClient);
-        this._privoStore = new PrismaPrivoStore(prismaClient);
-        this._recordsStore = new PrismaRecordsStore(prismaClient);
-        this._policyStore = this._ensurePrismaPolicyStore(
-            prismaClient,
-            options
-        );
-        this._dataStore = new PrismaDataRecordsStore(prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
-        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        const { filesLookup } = this._usePrismaStores(options);
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
@@ -639,10 +620,46 @@ export class ServerBuilder implements SubscriptionLike {
             s3.publicFilesUrl
         );
         this._ensureFileStoreInit();
-        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
-        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         return this;
+    }
+
+    private _usePrismaStores(
+        options: Pick<
+            ServerConfig,
+            'prisma' | 'subscriptions' | 'moderation'
+        > = this._options
+    ) {
+        const prismaClient = this._ensurePrisma(options);
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
+        const metricsStore = (this._metricsStore = new PrismaMetricsStore(
+            prismaClient,
+            this._configStore
+        ));
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
+        this._webhooksStore = new PrismaWebhookRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        return {
+            prismaClient,
+            filesLookup,
+        };
     }
 
     usePrismaWithMinio(
@@ -660,28 +677,9 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Minio options must be provided.');
         }
 
-        const prisma = options.prisma;
         const minio = options.minio;
 
-        const prismaClient = this._ensurePrisma(options);
-        this._configStore = this._ensurePrismaConfigurationStore(
-            prismaClient,
-            options
-        );
-        this._metricsStore = new PrismaMetricsStore(
-            prismaClient,
-            this._configStore
-        );
-        this._authStore = new PrismaAuthStore(prismaClient);
-        this._privoStore = new PrismaPrivoStore(prismaClient);
-        this._recordsStore = new PrismaRecordsStore(prismaClient);
-        this._policyStore = this._ensurePrismaPolicyStore(
-            prismaClient,
-            options
-        );
-        this._dataStore = new PrismaDataRecordsStore(prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
-        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        const { filesLookup } = this._usePrismaStores(options);
         this._filesStore = new MinioFileRecordsStore(
             {
                 endPoint: minio.endpoint,
@@ -697,8 +695,6 @@ export class ServerBuilder implements SubscriptionLike {
             minio.publicFilesUrl
         );
         this._ensureFileStoreInit();
-        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
-        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         return this;
     }
@@ -719,29 +715,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         const mongodb = options.mongodb;
-        const prismaClient = this._ensurePrisma(options);
-        this._configStore = this._ensurePrismaConfigurationStore(
-            prismaClient,
-            options
-        );
-        this._metricsStore = new PrismaMetricsStore(
-            prismaClient,
-            this._configStore
-        );
-        this._authStore = new PrismaAuthStore(prismaClient);
-        this._privoStore = new PrismaPrivoStore(prismaClient);
-        this._recordsStore = new PrismaRecordsStore(prismaClient);
-
-        this._policyStore = this._ensurePrismaPolicyStore(
-            prismaClient,
-            options
-        );
-        this._dataStore = new PrismaDataRecordsStore(prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
-        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
-        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
-        this._moderationStore = new PrismaModerationStore(prismaClient);
-
+        const { filesLookup } = this._usePrismaStores(options);
         this._actions.push({
             priority: 0,
             action: async () => {

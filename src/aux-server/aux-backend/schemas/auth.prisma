@@ -79,6 +79,8 @@ model User {
     comIdRequests StudioComIdRequest[]
     authenticators UserAuthenticator[]
 
+    webhookRecords WebhookRecord[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -323,6 +325,8 @@ model Record {
     instRecords InstRecord[]
     instBranches InstBranch[]
     branchUpdates BranchUpdate[]
+    webhookRecords WebhookRecord[] @relation("WebhookRecord")
+    targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
@@ -565,6 +569,8 @@ model DataRecord {
 
     markers String[]
 
+    targetWebhookRecords WebhookRecord[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -617,6 +623,8 @@ model FileRecord {
     uploadedAt DateTime?
 
     markers String[]
+
+    targetWebhookRecords WebhookRecord[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -691,6 +699,32 @@ model BranchUpdate {
     updated DateTime @updatedAt
 
     @@index([recordName, instName, branchName, id])
+}
+
+model WebhookRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation("WebhookRecord", fields: [recordName], references: [name], onDelete: Cascade, map: "WebhookRecord_recordName_fkey1")
+
+    address String @db.String(512)
+
+    markers String[]
+
+    targetRecordName String? @db.String(128)
+    targetRecord Record? @relation("TargetWebookRecord", fields: [targetRecordName], references: [name], onDelete: SetNull, map: "WebhookRecord_targetRecordName_fkey1")
+
+    targetDataRecordAddress String? @db.String(512)
+    targetDataRecord DataRecord? @relation(fields: [targetRecordName, targetDataRecordAddress], references: [recordName, address], onDelete: SetNull, map: "WebhookRecord_targetDataRecordAddress_fkey1")
+
+    targetFileRecordFileName String? @db.String(512)
+    targetFileRecord FileRecord? @relation(fields: [targetRecordName, targetFileRecordFileName], references: [recordName, fileName], onDelete: SetNull, map: "WebhookRecord_targetFileRecordFileName_fkey1")
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Configuration {
