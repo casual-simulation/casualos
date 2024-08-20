@@ -2506,13 +2506,13 @@ export interface AuthorizationContext {
      * The ID of the user that owns the record.
      * Null if the record is owned by a studio.
      */
-    recordOwnerId: string;
+    recordOwnerId: string | null;
 
     /**
      * The ID of the studio that owns the record.
      * Null if the record is owned by a user.
      */
-    recordStudioId: string;
+    recordStudioId: string | null;
 
     /**
      * The list of members that are assigned to the studio.
