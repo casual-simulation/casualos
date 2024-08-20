@@ -216,6 +216,7 @@ export abstract class CrudRecordsController<
             const item = this._transformInputItem(request.item);
             const subscriptionResult = await this._checkSubscriptionMetrics(
                 action,
+                contextResult.context,
                 authorization,
                 item
             );
@@ -369,6 +370,7 @@ export abstract class CrudRecordsController<
             const recordName = context.context.recordName;
             const subscriptionResult = await this._checkSubscriptionMetrics(
                 'delete',
+                context.context,
                 authorization
             );
 
@@ -536,6 +538,7 @@ export abstract class CrudRecordsController<
      */
     protected abstract _checkSubscriptionMetrics(
         action: ActionKinds,
+        context: AuthorizationContext,
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,

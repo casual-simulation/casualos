@@ -14,6 +14,7 @@ import {
     ConstructAuthorizationContextFailure,
     AuthorizeSubjectFailure,
     AuthorizeSubject,
+    AuthorizationContext,
 } from '../PolicyController';
 import {
     CheckSubscriptionMetricsFailure,
@@ -154,6 +155,7 @@ export class WebhookRecordsController extends CrudRecordsController<
 
             const checkMetrics = await this._checkSubscriptionMetrics(
                 'run',
+                webhookContext.context,
                 webhookAuthorization,
                 webhook
             );
@@ -271,15 +273,17 @@ export class WebhookRecordsController extends CrudRecordsController<
     @traced(TRACE_NAME)
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
+        context: AuthorizationContext,
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
         item?: WebhookRecord
     ): Promise<CheckSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
-        const metrics = await this.store.getSubscriptionMetricsByRecordName(
-            authorization.recordName
-        );
+        const metrics = await this.store.getSubscriptionMetrics({
+            ownerId: context.recordOwnerId,
+            studioId: context.recordStudioId,
+        });
 
         const features = getWebhookFeatures(
             config,

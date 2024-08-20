@@ -1,3 +1,4 @@
+import { SubscriptionFilter } from '../MetricsStore';
 import {
     CrudRecord,
     CrudRecordsStore,
@@ -9,11 +10,11 @@ import {
  */
 export interface WebhookRecordsStore extends CrudRecordsStore<WebhookRecord> {
     /**
-     * Gets the item metrics for the subscription of the given record.
-     * @param recordName The name of the record.
+     * Gets the item metrics for the subscription of the given user or studio.
+     * @param filter The filter to use.
      */
-    getSubscriptionMetricsByRecordName(
-        recordName: string
+    getSubscriptionMetrics(
+        filter: SubscriptionFilter
     ): Promise<WebhookSubscriptionMetrics>;
 }
 
