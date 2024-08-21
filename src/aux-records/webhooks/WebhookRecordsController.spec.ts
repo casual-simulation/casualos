@@ -2,10 +2,7 @@ import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import { MemoryStore } from '../MemoryStore';
 import { PolicyController } from '../PolicyController';
 import { RecordsController } from '../RecordsController';
-import {
-    STORED_AUX_SCHEMA,
-    WebhookRecordsController,
-} from './WebhookRecordsController';
+import { WebhookRecordsController } from './WebhookRecordsController';
 import { MemoryWebhookRecordsStore } from './MemoryWebhookRecordsStore';
 import {
     PRIVATE_MARKER,
@@ -25,6 +22,7 @@ import { FileRecordsController } from '../FileRecordsController';
 import {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
+    STORED_AUX_SCHEMA,
 } from './WebhookEnvironment';
 
 console.log = jest.fn();

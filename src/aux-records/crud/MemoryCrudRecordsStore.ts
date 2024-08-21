@@ -1,3 +1,4 @@
+import { SubscriptionFilter } from '../MetricsStore';
 import { MemoryStore } from '../MemoryStore';
 import {
     CrudRecord,
@@ -157,6 +158,16 @@ export class MemoryCrudRecordsStore<
         } as unknown as TMetrics;
     }
 
+    async getSubscriptionMetrics(
+        filter: SubscriptionFilter
+    ): Promise<TMetrics> {
+        const info = await this._store.getSubscriptionRecordMetrics(filter);
+
+        return {
+            ...info,
+        } as unknown as TMetrics;
+    }
+
     protected getItemRecord(recordName: string): Map<string, T> {
         let record = this._itemBuckets.get(recordName);
         if (!record) {
@@ -165,5 +176,9 @@ export class MemoryCrudRecordsStore<
         }
 
         return record;
+    }
+
+    protected getItemRecords(): Map<string, Map<string, T>> {
+        return this._itemBuckets;
     }
 }
