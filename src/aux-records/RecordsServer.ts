@@ -1513,9 +1513,22 @@ export class RecordsServer {
             runWebhook: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/records/webhook/run')
-                .inputs(z.any())
+                .inputs(
+                    z.any(),
+                    z
+                        .object({
+                            recordName: RECORD_NAME_VALIDATION,
+                            address: z.string().min(1),
+                            instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        })
+                        .catchall(z.string())
+                )
                 .handler(
-                    async (data, context) => {
+                    async (
+                        data,
+                        context,
+                        { recordName, address, instances, ...rest }
+                    ) => {
                         if (!this._webhooksController) {
                             return {
                                 success: false,
@@ -1532,26 +1545,6 @@ export class RecordsServer {
                             };
                         }
 
-                        const querySchema = z.object({
-                            recordName: RECORD_NAME_VALIDATION,
-                            address: z.string().min(1),
-                            instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                        });
-
-                        const queryResult = querySchema.safeParse(
-                            context.httpRequest.query
-                        );
-
-                        if (queryResult.success === false) {
-                            return {
-                                success: false,
-                                errorCode: 'unacceptable_request',
-                                errorMessage:
-                                    'The request was invalid. One or more fields were invalid.',
-                                issues: queryResult.error.issues,
-                            };
-                        }
-
                         const validation = await this._validateSessionKey(
                             context.sessionKey
                         );
@@ -1561,9 +1554,6 @@ export class RecordsServer {
                         ) {
                             return validation;
                         }
-
-                        const { recordName, address, instances } =
-                            queryResult.data;
 
                         const bannedHeaders = [
                             'authorization',
@@ -1595,11 +1585,7 @@ export class RecordsServer {
                                         context.httpRequest.headers,
                                         ...bannedHeaders
                                     ),
-                                    query: omit(
-                                        context.httpRequest.query,
-                                        'recordName',
-                                        'address'
-                                    ),
+                                    query: rest,
                                     pathParams: {},
                                 },
                             });
@@ -3466,7 +3452,11 @@ export class RecordsServer {
                         queryData = parseResult.data;
                     }
 
-                    result = await proc.handler(parseResult.data, context, queryData);
+                    result = await proc.handler(
+                        parseResult.data,
+                        context,
+                        queryData
+                    );
                 } else {
                     result = await proc.handler(input, context);
                 }

@@ -9926,6 +9926,43 @@ describe('RecordsServer', () => {
                 ),
             });
         });
+
+        it('should support procedures', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            webhookEnvironment.handleHttpRequest.mockResolvedValue({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: 'hello, world',
+                },
+            });
+
+            const result = await server.handleHttpRequest(
+                procedureRequest('runWebhook', {}, apiHeaders, {
+                    recordName,
+                    address: 'testAddress',
+                    other: 'def',
+                })
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                        body: 'hello, world',
+                        headers: {},
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(body).toMatchSnapshot();
+        });
     });
 
     describe('POST /api/v2/records/key', () => {
