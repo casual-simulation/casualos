@@ -168,7 +168,7 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
 import { MinioFileRecordsStore } from '../minio/MinioFileRecordsStore';
-import { S3Control, S3ControlClient } from '@aws-sdk/client-s3-control';
+import { S3ControlClient } from '@aws-sdk/client-s3-control';
 import { SimulationWebhookEnvironment } from './webhooks/SimulationWebhookEnvironment';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
@@ -1392,7 +1392,13 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Using Deno Webhook Environment.');
             this._webhookEnvironment = new SimulationWebhookEnvironment(
                 (simId, indicator, origin, config) => {
-                    const vm = new DenoVM(simId, origin, config);
+                    const vm = new DenoVM(env.scriptPath, simId, origin, {
+                        ...config,
+                        config: {
+                            ...config.config,
+                            debug: true,
+                        },
+                    });
                     return new DenoSimulationImpl(indicator, origin, vm);
                 }
             );

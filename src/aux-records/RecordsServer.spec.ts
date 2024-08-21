@@ -208,7 +208,7 @@ verifyAuthenticationResponseMock.mockImplementation(async (opts) => {
 });
 
 console.log = jest.fn();
-console.error = jest.fn();
+// console.error = jest.fn();
 
 describe('RecordsServer', () => {
     let savedMemoryStore: MemoryStore;

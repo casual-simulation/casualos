@@ -903,6 +903,7 @@ const webhooksSchema = z.object({
     environment: z.discriminatedUnion('type', [
         z.object({
             type: z.literal('deno'),
+            scriptPath: z.string().nonempty(),
         }),
     ]),
 });

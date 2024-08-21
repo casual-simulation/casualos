@@ -64,6 +64,7 @@ export class DenoVM implements AuxVM {
     private _proxy: Remote<AuxChannel>;
     private _id: string;
     private _origin: SimulationOrigin;
+    private _script: string | URL;
 
     closed: boolean;
 
@@ -84,8 +85,15 @@ export class DenoVM implements AuxVM {
 
     /**
      * Creates a new Simulation VM.
+     * @param script The script that should be loaded for the Deno Worker.
      */
-    constructor(id: string, origin: SimulationOrigin, config: AuxConfig) {
+    constructor(
+        script: string | URL,
+        id: string,
+        origin: SimulationOrigin,
+        config: AuxConfig
+    ) {
+        this._script = script;
         this._id = id;
         this._origin = origin;
         this._config = config;
@@ -138,16 +146,13 @@ export class DenoVM implements AuxVM {
         });
 
         const debug = !!this._config.config.debug;
-        this._worker = new DenoWorker(
-            new URL('http://localhost:3000/deno.js'),
-            {
-                logStderr: debug,
-                logStdout: debug,
-                permissions: {
-                    allowNet: true,
-                },
-            }
-        );
+        this._worker = new DenoWorker(this._script, {
+            logStderr: debug,
+            logStdout: debug,
+            permissions: {
+                allowNet: true,
+            },
+        });
 
         this._connectionStateChanged.next({
             type: 'progress',

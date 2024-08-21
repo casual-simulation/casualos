@@ -81,6 +81,7 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
+                external: ['deno-vm'],
                 minify: !dev,
                 plugins: [replaceThreePlugin(), ImportGlobPlugin()],
             },
