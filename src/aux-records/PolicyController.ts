@@ -21,6 +21,8 @@ import {
     DenialReason,
     PrivacyFeatures,
     PermissionOptions,
+    PUBLIC_WRITE_MARKER,
+    PRIVATE_MARKER,
 } from '@casual-simulation/aux-common';
 import { ListedStudioAssignment, PublicRecordKeyPolicy } from './RecordsStore';
 import {
@@ -952,37 +954,45 @@ export class PolicyController {
                                 explanation:
                                     "User is an admin in the record's studio.",
                             };
-                        } else if (
-                            member.role === 'member' &&
-                            isAllowedStudioMemberResource(
-                                request.resourceKind,
-                                request.action
-                            )
-                        ) {
-                            return {
-                                success: true,
-                                recordName: recordName,
-                                permission: {
-                                    id: null,
+                        } else if (member.role === 'member') {
+                            let isAssigningDefaultMarker =
+                                (request.resourceKind === 'marker' &&
+                                    request.resourceId ===
+                                        PUBLIC_READ_MARKER) ||
+                                request.resourceId === PRIVATE_MARKER;
+
+                            if (
+                                isAssigningDefaultMarker ||
+                                isAllowedStudioMemberResource(
+                                    request.resourceKind,
+                                    request.action
+                                )
+                            ) {
+                                return {
+                                    success: true,
                                     recordName: recordName,
+                                    permission: {
+                                        id: null,
+                                        recordName: recordName,
 
-                                    // Members in a studio are treated as if they are granted direct access to most resources
-                                    // in the record.
-                                    userId: subjectId,
-                                    subjectType: 'user',
-                                    subjectId: subjectId,
+                                        // Members in a studio are treated as if they are granted direct access to most resources
+                                        // in the record.
+                                        userId: subjectId,
+                                        subjectType: 'user',
+                                        subjectId: subjectId,
 
-                                    // Not all actions or resources are granted though
-                                    resourceKind: request.resourceKind,
-                                    action: request.action,
+                                        // Not all actions or resources are granted though
+                                        resourceKind: request.resourceKind,
+                                        action: request.action,
 
-                                    marker: markers[0],
-                                    options: {},
-                                    expireTimeMs: null,
-                                },
-                                explanation:
-                                    "User is a member in the record's studio.",
-                            };
+                                        marker: markers[0],
+                                        options: {},
+                                        expireTimeMs: null,
+                                    },
+                                    explanation:
+                                        "User is a member in the record's studio.",
+                                };
+                            }
                         }
                     }
                 }
