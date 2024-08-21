@@ -1103,8 +1103,8 @@ importers:
         specifier: 2.8.5
         version: 2.8.5
       deno-vm:
-        specifier: ^0.8.1
-        version: 0.8.4
+        specifier: ^0.12.0
+        version: 0.12.0
       downloadjs:
         specifier: ^1.4.7
         version: 1.4.7
@@ -12515,16 +12515,6 @@ packages:
   /deno-vm@0.12.0:
     resolution: {integrity: sha512-JcQroHIjemG7kwADvdW9mjVqSuCsTHyQbL8INwZFAch+kKNUvhWiDcBG3KBCSeIRoErW3MoU5/7riPyimzTFUg==}
     engines: {node: '>= 12'}
-    dependencies:
-      base64-js: 1.5.1
-      ws: 7.5.9
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-    dev: false
-
-  /deno-vm@0.8.4:
-    resolution: {integrity: sha512-CkJW5vMTlLf31OpCnPkLXEfCmkrjwm89VKXSvvRtnv04vJ4xcwQzvM1o/YVcec5VjXAAcujniUt3197Id2yDzQ==}
     dependencies:
       base64-js: 1.5.1
       ws: 7.5.9
