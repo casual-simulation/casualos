@@ -306,12 +306,18 @@ export class DenoVM implements AuxVM {
             this._proxy.unsubscribe();
             this._proxy = null;
         }
-        this._worker.terminate();
-        this._worker = null;
-        this._connectionStateChanged.unsubscribe();
-        this._connectionStateChanged = null;
-        this._localEvents.unsubscribe();
-        this._localEvents = null;
+        if (this._worker) {
+            this._worker.terminate();
+            this._worker = null;
+        }
+        if (this._connectionStateChanged) {
+            this._connectionStateChanged.unsubscribe();
+            this._connectionStateChanged = null;
+        }
+        if (this._localEvents) {
+            this._localEvents.unsubscribe();
+            this._localEvents = null;
+        }
     }
 
     protected _createSubVM(
