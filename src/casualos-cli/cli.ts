@@ -284,6 +284,12 @@ async function query(
 
     console.log('Your selected operation:', operation);
 
+    let query: any;
+    if (operation.query) {
+        query = await askForInputs(operation.query, operation.name, repl);
+        console.log('Your query:', query);
+    }
+
     if (!input) {
         input = await askForInputs(operation.inputs, operation.name, repl);
     } else if (!isJavaScriptInput) {
@@ -305,7 +311,12 @@ async function query(
     }
 
     if (continueRequest) {
-        const result = await callProcedure(client, operation.name, input);
+        const result = await callProcedure(
+            client,
+            operation.name,
+            input,
+            query
+        );
         if (shouldConfirm) {
             if (typeof result === 'object' && Symbol.asyncIterator in result) {
                 console.log('Result:');
@@ -328,12 +339,18 @@ async function query(
 async function callProcedure(
     client: ReturnType<typeof createRecordsClient>,
     operation: string,
-    input: any
+    input: any,
+    query: any
 ) {
     while (true) {
-        const result = await client.callProcedure(operation, input, {
-            headers: getHeaders(client),
-        });
+        const result = await client.callProcedure(
+            operation,
+            input,
+            {
+                headers: getHeaders(client),
+            },
+            query
+        );
 
         if (result.success === false && result.errorCode === 'not_logged_in') {
             const loginResponse = await prompts({

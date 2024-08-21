@@ -51,17 +51,19 @@ export class RecordsClient {
      * @param name The name of the procedure to call.
      * @param input The input to the procedure.
      * @param options The options to use for the procedure.
+     * @param query The query to use for the procedure.
      */
     async callProcedure(
         name: string,
         input: any,
-        options?: CallProcedureOptions
+        options?: CallProcedureOptions,
+        query?: any
     ): Promise<any> {
         const response = await fetch(
             `${options?.endpoint ?? this._endpoint}/api/v3/callProcedure`,
             {
                 method: 'POST',
-                body: JSON.stringify({ procedure: name, input }),
+                body: JSON.stringify({ procedure: name, input, query }),
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
                     Accept: 'application/json,application/x-ndjson',
