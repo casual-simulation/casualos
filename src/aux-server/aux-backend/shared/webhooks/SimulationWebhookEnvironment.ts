@@ -17,6 +17,7 @@ import {
     remote,
 } from '@casual-simulation/aux-common';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
+import mime from 'mime';
 
 export type WebhookSimulationFactory = (
     simId: string,
@@ -80,7 +81,21 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 }
             }
 
-            const results = await sim.helper.shout('onWebhook', null, {});
+            let data: any = request.request.body;
+            if (
+                request.request.headers &&
+                mime.getExtension(request.request.headers['content-type']) ===
+                    'json'
+            ) {
+                data = JSON.parse(request.request.body);
+            }
+
+            const results = await sim.helper.shout('onWebhook', null, {
+                method: request.request.method,
+                url: request.request.path,
+                data: data,
+                headers: request.request.headers,
+            });
 
             return {
                 success: true,
