@@ -48,6 +48,14 @@ describe('getProcedureMetadata()', () => {
                     success: true,
                     value: `hello`,
                 })),
+            query: procedure()
+                .origins('account')
+                .http('POST', '/api/query')
+                .inputs(z.boolean(), z.string())
+                .handler(async (input) => ({
+                    success: true,
+                    value: `hello ${input}`,
+                })),
         };
 
         const meta = getProcedureMetadata(procedures);
@@ -85,6 +93,20 @@ describe('getProcedureMetadata()', () => {
                     http: {
                         method: 'POST',
                         path: '/api/proc2',
+                    },
+                },
+                {
+                    name: 'query',
+                    origins: 'account',
+                    inputs: {
+                        type: 'boolean',
+                    },
+                    query: {
+                        type: 'string',
+                    },
+                    http: {
+                        method: 'POST',
+                        path: '/api/query',
                     },
                 },
             ],

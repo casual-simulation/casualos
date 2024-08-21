@@ -2305,6 +2305,7 @@ describe('RecordsServer', () => {
                     `replaceSession`,
                     null,
                     authenticatedHeaders,
+                    undefined,
                     '999.999.999.999'
                 )
             );
@@ -17085,7 +17086,11 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 headers: corsHeaders(defaultHeaders['origin']),
             });
 
-            expect(handler).toHaveBeenCalledWith(request, { type: 'custom' });
+            expect(handler).toHaveBeenCalledWith(
+                request,
+                { type: 'custom' },
+                undefined
+            );
         });
 
         it('should be able to use schemas for GET requests', async () => {
@@ -17126,7 +17131,11 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 headers: corsHeaders(defaultHeaders['origin']),
             });
 
-            expect(handler).toHaveBeenCalledWith(request, { type: 'custom' });
+            expect(handler).toHaveBeenCalledWith(
+                request,
+                { type: 'custom' },
+                undefined
+            );
         });
 
         it('should be able to use the account origins', async () => {
@@ -19129,6 +19138,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         name: string,
         input: any,
         headers: GenericHttpHeaders = defaultHeaders,
+        query?: any,
         ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
         return httpRequest(
@@ -19137,6 +19147,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             JSON.stringify({
                 procedure: name,
                 input: input,
+                query,
             }),
             headers,
             ipAddress

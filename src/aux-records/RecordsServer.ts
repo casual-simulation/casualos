@@ -205,7 +205,7 @@ export const MODERATION_NOT_SUPPORTED_RESULT = {
 /**
  * Defines a basic interface for an HTTP route.
  */
-export interface Route<T> {
+export interface Route<T, TQuery = any> {
     /**
      * The path that the route must match.
      */
@@ -217,6 +217,14 @@ export interface Route<T> {
      * Otherwise, it will apply to the query parameters.
      */
     schema?: z.ZodType<T, z.ZodTypeDef, any>;
+
+    /**
+     * The schema that should be used for the query parameters.
+     * If omitted, then the query parameters will not be validated using this schema.
+     *
+     * Additionally, this only works if a schema is provided.
+     */
+    querySchema?: z.ZodType<TQuery, z.ZodTypeDef, any>;
 
     /**
      * The method for the route.
@@ -233,10 +241,12 @@ export interface Route<T> {
      * The handler that should be called when the route is matched.
      * @param request The request.
      * @param data The data that was parsed from the request.
+     * @param query The query parameters that were parsed from the request.
      */
     handler: (
         request: GenericHttpRequest,
-        data?: T
+        data?: T,
+        query?: TQuery
     ) => Promise<GenericHttpResponse>;
 
     /**
@@ -3388,11 +3398,13 @@ export class RecordsServer {
             schema: z.object({
                 procedure: z.string().nonempty(),
                 input: z.any().optional(),
+                query: z.any().optional(),
             }),
-            handler: async (request, { procedure, input }) => {
+            handler: async (request, { procedure, input, query }) => {
                 const proc = (procs as any)[procedure] as Procedure<
                     any,
-                    ProcedureOutput
+                    ProcedureOutput,
+                    any
                 >;
                 if (!proc) {
                     return returnResult({
@@ -3440,7 +3452,21 @@ export class RecordsServer {
                             origins
                         );
                     }
-                    result = await proc.handler(parseResult.data, context);
+
+                    let queryData: any;
+                    if (proc.querySchema) {
+                        const parseResult = proc.querySchema.safeParse(query);
+                        if (parseResult.success === false) {
+                            return formatResponse(
+                                request,
+                                returnZodError(parseResult.error),
+                                origins
+                            );
+                        }
+                        queryData = parseResult.data;
+                    }
+
+                    result = await proc.handler(parseResult.data, context, queryData);
                 } else {
                     result = await proc.handler(input, context);
                 }
@@ -3463,9 +3489,9 @@ export class RecordsServer {
      * @param name The name of the procedure.
      * @param procedure The procedure that should be added.
      */
-    addProcedure<TInput, TOutput extends ProcedureOutput>(
+    addProcedure<TInput, TOutput extends ProcedureOutput, TQuery>(
         name: string,
-        procedure: Procedure<TInput, TOutput>
+        procedure: Procedure<TInput, TOutput, TQuery>
     ) {
         if (name in this._procedures) {
             throw new Error(
@@ -3492,8 +3518,8 @@ export class RecordsServer {
      * Adds the given procedural route to the server.
      * @param route The route that should be added.
      */
-    private _addProcedureRoute<T>(
-        procedure: Procedure<T, ProcedureOutput>,
+    private _addProcedureRoute<T, TQuery>(
+        procedure: Procedure<T, ProcedureOutput, TQuery>,
         name: string
     ): void {
         if (!procedure.http) {
@@ -3505,15 +3531,16 @@ export class RecordsServer {
             method: route.method,
             path: route.path,
             schema: procedure.schema,
+            querySchema: procedure.querySchema,
             name: name,
-            handler: async (request, data) => {
+            handler: async (request, data, query) => {
                 const context: RPCContext = {
                     ipAddress: request.ipAddress,
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
                 };
-                const result = await procedure.handler(data, context);
+                const result = await procedure.handler(data, context, query);
                 const response = returnProcedureOutput(result);
 
                 if (procedure.mapToResponse) {
@@ -3782,7 +3809,22 @@ export class RecordsServer {
                         data = parseResult.data;
                     }
 
-                    response = await route.handler(request, data);
+                    let query: any;
+                    if (route.querySchema) {
+                        const parseResult = route.schema.safeParse(
+                            request.query
+                        );
+                        if (parseResult.success === false) {
+                            return formatResponse(
+                                request,
+                                returnZodError(parseResult.error),
+                                origins
+                            );
+                        }
+                        query = parseResult.data;
+                    }
+
+                    response = await route.handler(request, data, query);
                 } else {
                     response = await route.handler(request);
                 }

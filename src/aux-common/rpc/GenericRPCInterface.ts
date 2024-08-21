@@ -62,18 +62,29 @@ export interface ProcedureOutputStream
 /**
  * Defines a basic interface for a single RPC call.
  */
-export interface Procedure<TInput, TOutput extends ProcedureOutput> {
+export interface Procedure<TInput, TOutput extends ProcedureOutput, TQuery> {
     /**
      * The schema that should be used for the input into the RPC.
      */
     schema: z.ZodType<TInput, z.ZodTypeDef, any>;
 
     /**
+     * The schema that should be used for the query parameters into the RPC.
+     */
+    querySchema: z.ZodType<TQuery, z.ZodTypeDef, any> | null;
+
+    /**
      * The handler for the RPC.
      * @param input The input that was parsed from the request.
+     * @param context The context that the handler was called with.
+     * @param query The query parameters that were parsed from the request.
      * @returns Returns a promise that resolves with the output of the RPC.
      */
-    handler: (input: TInput, context: RPCContext) => Promise<TOutput>;
+    handler: (
+        input: TInput,
+        context: RPCContext,
+        query?: TQuery
+    ) => Promise<TOutput>;
 
     /**
      * The function that can map the output of the handler to an HTTP response.
@@ -111,7 +122,7 @@ export interface Procedure<TInput, TOutput extends ProcedureOutput> {
 }
 
 export interface Procedures {
-    [key: string]: Procedure<any, any>;
+    [key: string]: Procedure<any, any, any>;
 }
 
 export interface CallProcedureOptions {
@@ -180,9 +191,10 @@ export interface InputlessProcedureBuilder extends ProcedureBuilder {
      * Configures the input schema for the RPC.
      * @param schema The schema that inputs should conform to.
      */
-    inputs<TInput>(
-        schema: z.ZodType<TInput, z.ZodTypeDef, any>
-    ): OutputlessProcedureBuilder<TInput>;
+    inputs<TInput, TQuery = any>(
+        schema: z.ZodType<TInput, z.ZodTypeDef, any>,
+        query?: z.ZodType<TQuery, z.ZodTypeDef, any>
+    ): OutputlessProcedureBuilder<TInput, TQuery>;
 
     /**
      * Configures the handler for the RPC.
@@ -196,22 +208,27 @@ export interface InputlessProcedureBuilder extends ProcedureBuilder {
             output: TOutput,
             context: RPCContext
         ) => Promise<Partial<GenericHttpResponse>>
-    ): Procedure<void, TOutput>;
+    ): Procedure<void, TOutput, void>;
 }
 
-export interface OutputlessProcedureBuilder<TInput> extends ProcedureBuilder {
+export interface OutputlessProcedureBuilder<TInput, TQuery>
+    extends ProcedureBuilder {
     /**
      * Configures the handler for the RPC.
      * @param handler The handler.
      * @param mapToResponse The function that should be used to map the handler output to an HTTP response.
      */
     handler<TOutput extends ProcedureOutput>(
-        handler: (input: TInput, context: RPCContext) => Promise<TOutput>,
+        handler: (
+            input: TInput,
+            context: RPCContext,
+            query?: TQuery
+        ) => Promise<TOutput>,
         mapToResponse?: (
             output: TOutput,
             context: RPCContext
         ) => Promise<Partial<GenericHttpResponse>>
-    ): Procedure<TInput, TOutput>;
+    ): Procedure<TInput, TOutput, TQuery>;
 }
 
 /**
@@ -222,11 +239,12 @@ export function procedure(): InputlessProcedureBuilder {
 }
 
 class ProcBuilder
-    implements OutputlessProcedureBuilder<any>, InputlessProcedureBuilder
+    implements OutputlessProcedureBuilder<any, any>, InputlessProcedureBuilder
 {
     private _allowedOrigins: Set<string> | true | 'account' | 'api' | undefined;
     private _schema: z.ZodType<any, z.ZodTypeDef, any>;
-    private _http: Procedure<any, any>['http'];
+    private _querySchema: z.ZodType<any, z.ZodTypeDef, any>;
+    private _http: Procedure<any, any, any>['http'];
 
     origins(allowedOrigins: Set<string> | true | 'account' | 'api'): this {
         this._allowedOrigins = allowedOrigins;
@@ -241,10 +259,12 @@ class ProcBuilder
         return this;
     }
 
-    inputs<TInput>(
-        schema: z.ZodType<TInput, z.ZodTypeDef, any>
-    ): OutputlessProcedureBuilder<TInput> {
+    inputs<TInput, TQuery = any>(
+        schema: z.ZodType<TInput, z.ZodTypeDef, any>,
+        query?: z.ZodType<TQuery, z.ZodTypeDef, any>
+    ): OutputlessProcedureBuilder<TInput, TQuery> {
         this._schema = schema;
+        this._querySchema = query;
         return this;
     }
 
@@ -254,23 +274,24 @@ class ProcBuilder
             output: TOutput,
             context: RPCContext
         ) => Promise<Partial<GenericHttpResponse>>
-    ): Procedure<any, TOutput>;
+    ): Procedure<any, TOutput, any>;
     handler<TOutput extends ProcedureOutput>(
         handler: (input: void, context: RPCContext) => Promise<ProcedureOutput>,
         mapToResponse?: (
             output: TOutput,
             context: RPCContext
         ) => Promise<Partial<GenericHttpResponse>>
-    ): Procedure<void, TOutput>;
+    ): Procedure<void, TOutput, any>;
     handler<TOutput extends ProcedureOutput>(
         handler: (input: any, context: RPCContext) => Promise<TOutput>,
         mapToResponse?: (
             output: TOutput,
             context: RPCContext
         ) => Promise<Partial<GenericHttpResponse>>
-    ): Procedure<any, TOutput> {
+    ): Procedure<any, TOutput, any> {
         return {
             schema: this._schema,
+            querySchema: this._querySchema,
             handler: handler,
             mapToResponse,
             allowedOrigins: this._allowedOrigins,
@@ -296,6 +317,12 @@ export interface ProcedureMetadata {
      * The schema that should be used for the input into the RPC.
      */
     inputs: SchemaMetadata;
+
+    /**
+     * The schema that should be used for the query parameters into the RPC.
+     * Most procedures do not have distinct query parameters, but some that deal directly with HTTP requests do (such as webhooks).
+     */
+    query?: SchemaMetadata;
 
     /**
      * The set of origins that are allowed for the route.
@@ -335,6 +362,9 @@ export function getProcedureMetadata(
         metadatas.push({
             name: procedure,
             inputs: proc.schema ? getSchemaMetadata(proc.schema) : undefined,
+            query: proc.querySchema
+                ? getSchemaMetadata(proc.querySchema)
+                : undefined,
             origins: proc.allowedOrigins,
             http: proc.http,
         });
