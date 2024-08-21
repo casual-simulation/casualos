@@ -1,5 +1,6 @@
 import { MemoryStore } from '../MemoryStore';
 import {
+    AuthorizationContext,
     AuthorizeUserAndInstancesForResourcesSuccess,
     PolicyController,
 } from '../PolicyController';
@@ -104,6 +105,7 @@ export class TestController extends CrudRecordsController<TestItem> {
 
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
+        context: AuthorizationContext,
         authorization: AuthorizeUserAndInstancesForResourcesSuccess,
         item?: TestItem
     ): Promise<CheckSubscriptionMetricsResult> {
