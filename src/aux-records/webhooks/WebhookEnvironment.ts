@@ -162,7 +162,11 @@ export interface HandleHttpRequestSuccess {
 
 export interface HandleHttpRequestFailure {
     success: false;
-    errorCode: 'unacceptable_request' | 'invalid_webhook_target' | ServerError;
+    errorCode:
+        | 'unacceptable_request'
+        | 'invalid_webhook_target'
+        | 'took_too_long'
+        | ServerError;
 
     /**
      * The error message that should be displayed to the user.

@@ -72,7 +72,8 @@ export type KnownErrorCodes =
     | 'user_already_exists'
     | 'session_is_not_revokable'
     | 'hume_api_error'
-    | 'invalid_webhook_target';
+    | 'invalid_webhook_target'
+    | 'took_too_long';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -182,6 +183,8 @@ export function getStatusCode(
             return 400;
         } else if (response.errorCode === 'hume_api_error') {
             return 500;
+        } else if (response.errorCode === 'took_too_long') {
+            return 504;
         } else {
             return 400;
         }

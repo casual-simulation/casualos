@@ -1,6 +1,7 @@
 import {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
+    STORED_AUX_SCHEMA,
     WebhookEnvironment,
 } from '@casual-simulation/aux-records';
 import { v4 as uuid } from 'uuid';
@@ -15,9 +16,12 @@ import {
     ConnectionIndicator,
     first,
     remote,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
 import mime from 'mime';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 export type WebhookSimulationFactory = (
     simId: string,
@@ -26,16 +30,56 @@ export type WebhookSimulationFactory = (
     config: AuxConfig
 ) => Simulation;
 
+export interface SimulationEnvironmentOptions {
+    /**
+     * The number of miliseconds that the environment should wait for the simulation to initialize.
+     * Default is 5000.
+     */
+    initTimeoutMs?: number;
+
+    /**
+     * The maximum number of miliseconds that the environment should wait for the request to complete.
+     * Default is 5000.
+     */
+    requestTimeoutMs?: number;
+
+    /**
+     * The maximum number of miliseconds that the environment should wait for fetching the state to complete.
+     * Default is 5000.
+     */
+    fetchTimeoutMs?: number;
+
+    /**
+     * The maximum number of miliseconds that the environment should wait for adding the state.
+     * Default is 1000.
+     */
+    addStateTimeoutMs?: number;
+}
+
+const TRACE_NAME = 'SimulationWebhookEnvironment';
+
 /**
  * Defines a webhook environment that is able to run webhooks in a Simulation.
  */
 export class SimulationWebhookEnvironment implements WebhookEnvironment {
     private _factory: WebhookSimulationFactory;
+    private _initTimeoutMs: number;
+    private _requestTimeoutMs: number;
+    private _fetchTimeoutMs: number;
+    private _addStateTimeoutMs: number;
 
-    constructor(factory: WebhookSimulationFactory) {
+    constructor(
+        factory: WebhookSimulationFactory,
+        options?: SimulationEnvironmentOptions
+    ) {
         this._factory = factory;
+        this._initTimeoutMs = options?.initTimeoutMs ?? 5000;
+        this._requestTimeoutMs = options?.requestTimeoutMs ?? 5000;
+        this._fetchTimeoutMs = options?.fetchTimeoutMs ?? 5000;
+        this._addStateTimeoutMs = options?.addStateTimeoutMs ?? 1000;
     }
 
+    @traced(TRACE_NAME)
     async handleHttpRequest(
         request: HandleHttpRequestRequest
     ): Promise<HandleHttpRequestResult> {
@@ -64,20 +108,88 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
 
         const sim = this._factory(simId, indicator, origin, config);
         try {
-            await sim.init();
+            const initErr = await timeout(sim.init(), this._initTimeoutMs);
+
+            if (initErr) {
+                return {
+                    success: false,
+                    errorCode: 'took_too_long',
+                    errorMessage: 'The inst took too long to start.',
+                };
+            }
 
             if (request.state) {
+                let state: StoredAux;
                 if (request.state.type === 'aux') {
-                    const state = request.state.state;
+                    state = request.state.state;
+                } else if (request.state.type === 'url') {
+                    // TODO: Handle other state types.
+                    const fetchPromise = fetch(request.state.requestUrl, {
+                        method: request.state.requestMethod,
+                        headers: request.state.requestHeaders,
+                        credentials: 'omit',
+                        mode: 'no-cors',
+                        cache: 'no-store',
+                    }).then((response) => response.json());
+
+                    const data = await timeout(
+                        fetchPromise,
+                        this._fetchTimeoutMs
+                    );
+
+                    if (data instanceof Error) {
+                        return {
+                            success: false,
+                            errorCode: 'took_too_long',
+                            errorMessage:
+                                'The inst took too long to fetch the state.',
+                        };
+                    }
+
+                    const parseResult = STORED_AUX_SCHEMA.safeParse(data);
+
+                    if (parseResult.success === false) {
+                        return {
+                            success: false,
+                            errorCode: 'invalid_webhook_target',
+                            errorMessage:
+                                'Invalid webhook target. The targeted record does not contain valid data.',
+                            internalError: {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'The data record does not contain valid AUX data.',
+                                issues: parseResult.error.issues,
+                            },
+                        };
+                    }
+                    state = parseResult.data as StoredAux;
+                }
+
+                if (state) {
+                    let addStatePromise: Promise<void>;
                     if (state.version === 1) {
-                        await sim.helper.transaction(addState(state.state));
+                        addStatePromise = sim.helper.transaction(
+                            addState(state.state)
+                        );
                     } else if (state.version === 2) {
-                        await sim.helper.transaction(
+                        addStatePromise = sim.helper.transaction(
                             remote(applyUpdatesToInst(state.updates))
                         );
                     }
-                } else if (request.state.type === 'url') {
-                    // TODO: Handle other state types.
+
+                    const addStateResult = await timeout(
+                        addStatePromise,
+                        this._addStateTimeoutMs
+                    );
+                    if (addStateResult instanceof Error) {
+                        return {
+                            success: false,
+                            errorCode: 'took_too_long',
+                            errorMessage:
+                                'The inst took too long to apply the fetched state.',
+                        };
+                    }
                 }
             }
 
@@ -90,12 +202,24 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 data = JSON.parse(request.request.body);
             }
 
-            const results = await sim.helper.shout('onWebhook', null, {
-                method: request.request.method,
-                url: request.request.path,
-                data: data,
-                headers: request.request.headers,
-            });
+            const results = await timeout(
+                sim.helper.shout('onWebhook', null, {
+                    method: request.request.method,
+                    url: request.request.path,
+                    data: data,
+                    headers: request.request.headers,
+                }),
+                this._requestTimeoutMs
+            );
+
+            if (results instanceof Error) {
+                return {
+                    success: false,
+                    errorCode: 'took_too_long',
+                    errorMessage:
+                        'The inst took too long to respond to the webhook.',
+                };
+            }
 
             return {
                 success: true,
@@ -108,6 +232,10 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 },
             };
         } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
             console.error('[DenoWebhookEnvironment] Error occurred:', err);
             return {
                 success: false,
@@ -119,4 +247,25 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             sim.unsubscribe();
         }
     }
+}
+
+/**
+ * Races the given promise against a timeout.
+ * Returns the result of the promise if it resolves before the timeout.
+ * Returns an error if the timeout is reached.
+ * @param promise The promise.
+ * @param timeoutMs The number of miliseconds to wait before timing out.
+ */
+export async function timeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number
+): Promise<T | Error> {
+    return await Promise.race([
+        promise,
+        new Promise<Error>((resolve) => {
+            setTimeout(() => {
+                resolve(new Error('Simulation took too long to start.'));
+            }, timeoutMs);
+        }),
+    ]);
 }
