@@ -905,6 +905,9 @@ const webhooksSchema = z.object({
             type: z.literal('deno'),
             scriptPath: z.string().nonempty(),
         }),
+        z.object({
+            type: z.literal('node'),
+        }),
     ]),
 });
 

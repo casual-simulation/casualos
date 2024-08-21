@@ -173,6 +173,11 @@ import { S3ControlClient } from '@aws-sdk/client-s3-control';
 import { SimulationWebhookEnvironment } from './webhooks/SimulationWebhookEnvironment';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
+import {
+    AuxVMNode,
+    NodeSimulation,
+    nodeSimulationWithConfig,
+} from '@casual-simulation/aux-vm-node';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1405,6 +1410,19 @@ export class ServerBuilder implements SubscriptionLike {
                         },
                     });
                     return new DenoSimulationImpl(indicator, origin, vm);
+                }
+            );
+        } else if (env.type === 'node') {
+            console.log('[ServerBuilder] Using Node Webhook Environment.');
+            this._webhookEnvironment = new SimulationWebhookEnvironment(
+                (simId, indicator, origin, config) => {
+                    const sim = nodeSimulationWithConfig(
+                        indicator,
+                        simId,
+                        origin,
+                        config
+                    );
+                    return sim;
                 }
             );
         }
