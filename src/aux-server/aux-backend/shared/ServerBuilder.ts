@@ -178,6 +178,7 @@ import {
     NodeSimulation,
     nodeSimulationWithConfig,
 } from '@casual-simulation/aux-vm-node';
+import { MessageChannel, MessagePort } from 'deno-vm';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1400,15 +1401,25 @@ export class ServerBuilder implements SubscriptionLike {
         const env = options.webhooks.environment;
         if (env.type === 'deno') {
             console.log('[ServerBuilder] Using Deno Webhook Environment.');
+
+            const anyGlobalThis = globalThis as any;
+            anyGlobalThis.MessageChannel = MessageChannel;
+            anyGlobalThis.MessagePort = MessagePort;
+
             this._webhookEnvironment = new SimulationWebhookEnvironment(
                 (simId, indicator, origin, config) => {
-                    const vm = new DenoVM(env.scriptPath, simId, origin, {
-                        ...config,
-                        config: {
-                            ...config.config,
-                            debug: true,
-                        },
-                    });
+                    const vm = new DenoVM(
+                        new URL(env.scriptPath),
+                        simId,
+                        origin,
+                        {
+                            ...config,
+                            config: {
+                                ...config.config,
+                                debug: true,
+                            },
+                        }
+                    );
                     return new DenoSimulationImpl(indicator, origin, vm);
                 }
             );
