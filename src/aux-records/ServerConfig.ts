@@ -510,7 +510,7 @@ const prismaSchema = z.object({
         .positive()
         .nullable()
         .optional()
-        .default(60),
+        .default(60 * 60 * 24), // 24 hours in seconds,
 });
 
 const openAiSchema = z.object({
