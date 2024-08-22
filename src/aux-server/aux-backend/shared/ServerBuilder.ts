@@ -1420,6 +1420,9 @@ export class ServerBuilder implements SubscriptionLike {
                             },
                         }
                     );
+                    if (env.denoPath) {
+                        vm.denoExecutable = env.denoPath;
+                    }
                     return new DenoSimulationImpl(indicator, origin, vm);
                 }
             );

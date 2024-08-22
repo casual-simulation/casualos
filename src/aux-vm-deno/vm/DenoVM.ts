@@ -66,6 +66,12 @@ export class DenoVM implements AuxVM {
     private _origin: SimulationOrigin;
     private _script: string | URL;
 
+    /**
+     * The path to the deno executable that should be used.
+     * If null or undefined, then the default deno executable will be used.
+     */
+    denoExecutable: string;
+
     closed: boolean;
 
     /**
@@ -152,6 +158,7 @@ export class DenoVM implements AuxVM {
             permissions: {
                 allowNet: true,
             },
+            denoExecutable: this.denoExecutable,
         });
 
         this._connectionStateChanged.next({

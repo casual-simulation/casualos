@@ -903,7 +903,18 @@ const webhooksSchema = z.object({
     environment: z.discriminatedUnion('type', [
         z.object({
             type: z.literal('deno'),
-            scriptPath: z.string().nonempty(),
+            scriptPath: z
+                .string()
+                .describe('The path to the Deno script that should be run.')
+                .min(1),
+            denoPath: z
+                .string()
+                .describe(
+                    'The path to the Deno executable that should be used.'
+                )
+                .min(1)
+                .optional()
+                .nullable(),
         }),
         z.object({
             type: z.literal('node'),
