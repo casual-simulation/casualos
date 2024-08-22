@@ -69,7 +69,7 @@ import {
     RedisClientType,
     createClient as createRedisClient,
 } from 'redis';
-import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
+import { TracedRedisRateLimitStore } from '../redis/TracedRedisRateLimitStore';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
 import Stripe from 'stripe';
@@ -1028,7 +1028,7 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Rate limit options must be provided.');
         }
         const client = this._ensureRedisRateLimit(options);
-        const store = new RedisRateLimitStore({
+        const store = new TracedRedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
                 return client.sendCommand([command, ...args]);
             },
@@ -1064,7 +1064,7 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Websocket rate limit options must be provided.');
         }
         const client = this._ensureRedisRateLimit(options);
-        const store = new RedisRateLimitStore({
+        const store = new TracedRedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
                 return client.sendCommand([command, ...args]);
             },
