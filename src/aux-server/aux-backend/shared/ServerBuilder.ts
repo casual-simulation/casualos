@@ -179,6 +179,7 @@ import {
     nodeSimulationWithConfig,
 } from '@casual-simulation/aux-vm-node';
 import { MessageChannel, MessagePort } from 'deno-vm';
+import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1439,6 +1440,13 @@ export class ServerBuilder implements SubscriptionLike {
                     return sim;
                 }
             );
+        } else if (env.type === 'lambda') {
+            console.log('[ServerBuilder] Using Lambda Webhook Environment.');
+            this._webhookEnvironment = new LambdaWebhookEnvironment({
+                functionName: env.functionName,
+            });
+        } else {
+            throw new Error('Invalid webhook environment type.');
         }
         return this;
     }

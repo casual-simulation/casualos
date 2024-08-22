@@ -919,6 +919,15 @@ const webhooksSchema = z.object({
         z.object({
             type: z.literal('node'),
         }),
+        z.object({
+            type: z.literal('lambda'),
+            functionName: z
+                .string()
+                .describe(
+                    'The name or ARN of the lambda function that should be called to process a webhook.'
+                )
+                .min(1),
+        }),
     ]),
 });
 

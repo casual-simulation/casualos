@@ -6,41 +6,35 @@ import {
     WebhookState,
 } from '@casual-simulation/aux-records';
 import { z } from 'zod';
+import { resolve } from 'path';
+import {
+    HANDLE_WEBHOOK_PAYLOAD_SCHEMA,
+    HandleWebhookPayload,
+} from '../../../../shared/webhooks/LambdaWebhookPayload';
+
+const scriptPath = `file://${resolve('./deno.js')}`;
 
 const environment = new SimulationWebhookEnvironment(
     (simId, indicator, origin, config) =>
         new DenoSimulationImpl(
             indicator,
             origin,
-            new DenoVM(simId, origin, config)
+            new DenoVM(scriptPath, simId, origin, config)
         )
 );
 
-export const HANDLE_WEBHOOK_PAYLOAD_SCHEMA = z.object({
-    recordName: z.string(),
-    inst: z.string().optional().nullable(),
-    request: z.object({
-        method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']),
-        path: z.string(),
-        query: z.record(z.string()),
-        pathParams: z.record(z.string()),
-        headers: z.record(z.string()),
-        body: z.string().nullable(),
-        ipAddress: z.string(),
-    }),
-    state: WEBHOOK_STATE_SCHEMA,
-});
-
-export type HandleWebhookPayload = z.infer<
-    typeof HANDLE_WEBHOOK_PAYLOAD_SCHEMA
->;
-
 export async function handleWebhook(payload: HandleWebhookPayload) {
+    const parseResult = HANDLE_WEBHOOK_PAYLOAD_SCHEMA.safeParse(payload);
+    if (!parseResult.success) {
+        throw new Error('Invalid payload!');
+    }
+    const request = parseResult.data;
+
     const response = await environment.handleHttpRequest({
-        recordName: payload.recordName,
-        inst: payload.inst,
-        state: payload.state as WebhookState,
-        request: payload.request as GenericHttpRequest,
+        recordName: request.recordName,
+        inst: request.inst,
+        state: request.state as WebhookState,
+        request: request.request as GenericHttpRequest,
     });
 
     return response;
