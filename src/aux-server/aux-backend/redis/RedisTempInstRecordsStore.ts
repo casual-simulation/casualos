@@ -5,7 +5,7 @@ import {
     TemporaryInstRecordsStore,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import { SpanKind, SpanOptions, trace } from '@opentelemetry/api';
 import {
     SEMATTRS_DB_NAME,
     SEMRESATTRS_SERVICE_NAME,
@@ -270,6 +270,15 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         const branchesKey = this._getInstBranchesKey(recordName, inst);
         const branchInfoKey = this._getBranchInfoKey(recordName, inst, branch);
         const finalUpdates = updates.map((u) => `${u}:${Date.now()}`);
+
+        const span = trace.getActiveSpan();
+        if (span) {
+            span.setAttribute('key', key);
+            span.setAttribute('branchesKey', branchesKey);
+            span.setAttribute('branchInfoKey', branchInfoKey);
+            span.setAttribute('numUpdates', updates.length);
+            span.setAttribute('sizeInBytes', sizeInBytes);
+        }
 
         // Always reset the expiration for updates if it is for a private record.
         // Otherwise, we can follow the expiration mode.
