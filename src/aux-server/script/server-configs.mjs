@@ -10,6 +10,7 @@ import {
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
 import ImportGlobPlugin from './esbuild-plugin-import-glob.mjs';
+import { readFileSync } from 'fs';
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');
@@ -40,6 +41,10 @@ const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
 let SERVER_CONFIG = null;
 if (process.env.SERVER_CONFIG) {
     SERVER_CONFIG = JSON.parse(process.env.SERVER_CONFIG);
+} else if (process.env.SERVER_CONFIG_FILE) {
+    SERVER_CONFIG = JSON.parse(
+        readFileSync(process.env.SERVER_CONFIG_FILE, 'utf-8')
+    );
 }
 
 console.log('glob', ImportGlobPlugin);

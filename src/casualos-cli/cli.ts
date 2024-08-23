@@ -15,17 +15,18 @@ import {
     AddressType,
     CompleteLoginSuccess,
     CompleteOpenIDLoginSuccess,
-    getExpireTime,
     serverConfigSchema,
 } from '@casual-simulation/aux-records';
-import { Duplex, PassThrough, Readable } from 'node:stream';
+import { PassThrough } from 'node:stream';
 import { getSchemaMetadata } from '@casual-simulation/aux-common';
 import path from 'path';
 import { readFile } from 'fs/promises';
+import { setupInfraCommands } from 'infra';
+import { CliConfig } from './config';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
-const config = new Conf({
+const config: CliConfig = new Conf({
     projectName: 'casualos-cli',
 });
 const program = new Command();
@@ -246,6 +247,8 @@ program
             process.exit(1);
         }
     });
+
+setupInfraCommands(program.command('infra'), config);
 
 async function query(
     client: ReturnType<typeof createRecordsClient>,
