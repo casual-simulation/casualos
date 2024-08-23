@@ -71,7 +71,7 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                         {}
                     )
                 ).data.installations.filter(
-                    (i) => i.target_type === 'Organization'
+                    (i: any) => i.target_type === 'Organization'
                 );
 
                 const { org } = await prompts({
@@ -79,7 +79,7 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                     name: 'org',
                     message:
                         'Select the organization to create the repository in',
-                    choices: orgs.map((org) => ({
+                    choices: orgs.map((org: any) => ({
                         title: (org.account as any).login,
                         value: (org.account as any).login,
                     })),
