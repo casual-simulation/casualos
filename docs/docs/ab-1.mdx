@@ -1,8 +1,8 @@
 ---
-id: ab-1
-title: ab-1
-sidebar_label: ab-1
-description: ab-1 is a helper for building AUXes.
+id: abCore
+title: abCore
+sidebar_label: abCore
+description: abCore is a an AB (auto builder) helper that contains collection of functions and settings to assist in building and sharing experiences.
 ---
 
 import { 
@@ -13,33 +13,32 @@ import {
   PossibleValuesTable,
   PossibleValueCode,
   PossibleValue,
-} from './components.jsx';
+} from './components.mdx';
 import { GlossaryRef } from './glossary/index';
 
-## ab-1 Helper Variables
+## abCore Helper Variables
+
+### `ab`
+References the *ab.core.learn* bot, which handles management of AB skill sets and initialization.
 
 ### `abRemember`
+References the *ab.config.remember* bot, which holds on to inst specific data for abCore (i.e. `abAwakeState`, `abBotSnapState`, `abBaseColor`, etc).
 
-References the instMemory bot, which holds on to inst specific data for ab-1 (i.e. ab-1 sleep state, bot snap state, and grid snap state).
-
-### `abRecordSearch`
-
-References the search bot, which handles various aspects of looking up records.
+### `abSearch`
+References the *ab.shell.search* bot, which handles various aspects of looking up records and files.
 
 ### `abStore`
+References the *ab.shell.store* bot, which has several interfaces for initiating uploads via AB.
 
-References the publish bot, which has several interfaces for initiating uploads via ab-1.
 
-## ab-1 Functions
+## abCore Functions
 
 ### `shout("abPublishAB", options); || whisper(abStore, "abPublishAB", options);`
-
-Publishes a file and associates it with the egg addressed to the specified abID.  Returns a boolean based on success or failure.
-
+Publishes a file and associates it with the egg record addressed to the specified app bundle (ab).  Returns a boolean based on success or failure.
 ```typescript
 let options: {
     /**
-    * The abID of the egg you would like associated with the app bundle.
+    * The ab ID of the egg you would like associated with the app bundle.
     */
     ab: "string";
 
@@ -47,128 +46,58 @@ let options: {
     * The key used to encrypt/decrypt the file data.
     * If omitted, then the file will be unencrypted.
     */
-    Key?: "string";
+    key?: "string";
+
+    /**
+    * If set to true, will make the egg publicly readable
+    */
+    publicFacing?: boolean;
 
     /**
     * The bot(s) to publish in the file.
-    * If omitted, then all non ab-1 bots in the shared space will be used.
+    * If omitted, then all non AB bots in the shared space will be used.
     */
     target?: [array];
 };
 ```
 
 #### Examples
-
-```typescript title="Publish an AB via shout"
+```typescript title="Publish an egg via shout"
 let myAB = shout("abPublishAB",{
     ab: "myABID"
 });
 ```
 
-```typescript title="Publish an encrypted AB via whisper"
+```typescript title="Publish an encrypted egg via whisper"
 let myAB = whisper(abStore,"abPublishAB",{
     ab: "myABID",
     key: "myPassword"
 });
 ```
 
-```typescript title="Publish a specific bot AB via whisper"
+```typescript title="Publish a specific bot in an egg via whisper"
 let myBot = getBot("myBotTag");
-
 let myAB = await whisper(abStore,"abPublishAB",{
     ab: "myABID",
     target: myBot
 });
-
 os.toast(myAB);
 ```
 
-
-### `shout("abAddToFactory", options);`
-
-Adds a template bot, while consuming the target bot, to the abFactory menu.
-
-```typescript
-let options: {
-    /**
-    * The bot to be added as a factory template.
-    */
-    bot : bot;
-
-    /**
-    * The dimension that the target bot should be removed from.
-    */
-    dimension: "string";
-
-    /**
-    * The id that the bot will be listed in the ab factory under.
-    */
-    factoryID: "string";
-};
-```
-
-#### Examples
-
-```typescript title="Adding a bot to the factory"
-let myFactoryTemplate = shout("abAddToFactory",{
-    bot: myBot,
-    dimension: "home",
-    factoryID: "myTemplate"
-});
-```
-
-### `shout("abCreateFromFactory", options);`
-
-Adds a bot from a template in the abFactory.
-
-```typescript
-let options: {
-    /**
-    * Mods to determine a dimension for the bot to manifest.
-    */
-    position : {
-
-    /**
-    * The dimension that the target bot should be added to.
-    */
-    dimension: "string";
-
-    /**
-    * The x position in the above specified dimension.
-    */
-    x: number;
-
-    /**
-    * The y position in the above specified dimension.
-    */
-    y: number;
-    }
-};
-```
-
-#### Examples
-
-```typescript title="Creating a bot from a factory"
-let myFactoryTemplate = shout("abCreateFromFactory",{
-    factoryID: "myTemplate",
-    position: {
-        dimension: "home",
-        x: 0,
-        y: 0
-    }
-});
-```
-
-### `shout("onLookupabEggs", {abID: abID, key: key, autoHatch: boolean, returnType: data/null});`
-
-Allows the user to search for and/or hatch an ab.
-
+### `shout("hatch", {abID: abID, recordKey: studio, key: key, autoHatch: boolean, returnType: data/null, eggParameters: arg});`
+Allows the user to look up and/or hatch an egg.
 ```typescript
 let options: {
     /**
     * The ab that you want loaded.
     */
     abID : "string";
+
+    /**
+    * This is the studio that the egg record and file is held in.
+    * If not included, will use the authBot id (the player studio).
+    */
+    recordKey?: "string";
 
     /**
     * Desired key for optional encryption.
@@ -183,12 +112,16 @@ let options: {
     /**
     * If set to data, will return the ab as data instead of as an egg or bots.
     */
-    returnType?: "data";    
+    returnType?: "data";
+    
+    /**
+    * This is an argument that will be passed through to the ab bots inside of onEggHatch.
+    */
+    eggParameters?: "string or object";
 };
 ```
 
 #### Examples
-
 ```typescript title="Bring in an egg using a shout"
 let getEgg = shout("onLookupabEggs",{
     abID: "myABID"
@@ -208,115 +141,143 @@ let abData = whisper(abRecordSearch, "onLookupabEggs",{
     abID: "myABID",
     returnType: "data"
 });
-
 console.log(abData)
 ```
 
+### `shout("focus", {bot: bot, position: {x: number, y: number}, duration: number, zoom: number, rotation: object, easing: {type: string, mode: string}});`
+A helper function to more easily interface with `os.focusOn()`.  Please see documentation for `os.focusOn()` for optional options.
+```typescript
+let options: {
+    /**
+    * The the bot that the camera should move to.
+    */
+    bot?: bot;
 
-## ab-1 Specific Tags
+    /**
+    * The position that the camera should move to.
+    * Only used if no bot is provided.
+    */
+    position?: object;
+};
+```
 
-### `onEggHatch`
+### `shout("showConsole");`
+A shout to open the abCore chat log.
 
-A whisper that is sent to any bots that are hatched (whether manually or automatically) from an ab.
+### `shout('hideConsole');`
+A shout to close the abCore chat log.
 
+
+## abCore Listener Tags
+
+### `onABInitialized`
+A superShout sent out when AB has finished booting.
 ```typescript title="Arguments"
 let that = {
-    ab: "ab name",
-    version: "ab version number"
+    inst: "inst AB booted in"
+};
+```
+
+### `onEggHatch`
+A whisper that is sent to any bots that are hatched (manually or automatically) from an ab.
+```typescript title="Arguments"
+let that = {
+    ab: "egg name",
+    version: "egg version number",
+    inst: "inst it was hatched in",
+    eggParameters: "any arguments passed in via hatch()"
 };
 ```
 
 ### `onPreHatch`
-
-A shout that is sent after an ab has been added, but before the ab-1 ab tag has been assigned.  Allows for manual determiniation of full boot up if returned true.
+A shout that is sent after an ab has been added, but before the ab origin tag has been assigned.  Allows for manual determiniation of full boot up if returned true.
 
 ### `onAbAdded`
-
-A shout that occurs anytime an ab is added to the inst.
-
+A superShout that occurs anytime an ab is added to the inst.
 ```typescript title="Arguments"
 let that = {
     ab: "ab name",
-    version: "ab version number"
+    version: "ab version number",
+    inst: "inst it was hatched in"
 };
 ```
 
-### `onABPublished`
-
-A shout sent out when an ab is published.
-
+### `onAbPublished`
+A superShout sent out when an ab is published.
 ```typescript title="Arguments"
 let that = {
+    success: boolean,
     ab: "string",
     fileAddress: "string"
 };
 ```
 
-### `abIgnore`
 
+## abCore Settings Tags
+
+### `abIgnore`
 Tag that when set to 'true' will not be included in a general publish or download of an inst.
 
-## ab-1 Environment Tags
-
 ### `abBotSnapState`
-By default, ab-1 sets an os.addDropSnap (face) on any bot that is being dragged.  
-
-This can be turned off/on either through the ab-1 self select or by directly manipulating the variable on abRemember.
+By default, AB sets an os.addDropSnap (face) on any bot that is being dragged.  
+This can be turned off/on either through the AB self select or by directly manipulating the variable on `abRemember`.
 
 #### Examples
-
-```typescript title="Remove ab-1 bot snap"
+```typescript title="Remove AB bot snap"
 abRemember.tags.abBotSnapState = false;
 ```
 
-```typescript title="Turn ab-1 bot snap on"
+```typescript title="Turn AB bot snap on"
 abRemember.tags.abBotSnapState = "face";
 ```
 
 ### `baseAB`
-A tag on the abRemember that determines if the ab/autoLoad/auxCode has been loaded yet.  Can be set by user using the "onConfirmHatch" shout and passing through the ab name.
+A tag on the abRemember that rememembers the original pattern loaded (if hatched through the URL parameters).
 
 ### `abGridSnapState`
-By default, ab-1 sets an os.addDropSnap (grid) on any bot that is being dragged.  
-
-This can be turned off/on either through the ab-1 self select or by directly manipulating the variable on abRemember.
+By default, AB sets an os.addDropSnap (grid) on any bot that is being dragged.  
+This can be turned off/on either through the AB self select or by directly manipulating the variable on `abRemember`.
 
 #### Examples
-
-```typescript title="Remove ab-1 grid snap"
+```typescript title="Remove AB grid snap"
 abRemember.tags.abGridSnapState = false;
 ```
 
-```typescript title="Turn ab-1 grid snap on"
+```typescript title="Turn AB grid snap on"
 abRemember.tags.abGridSnapState = true;
 ```
 
 
-## ab-1 URL Variables
+## AB URL Variables
 
-### `ab`
-When set as a variable in the URL and opening the inst for the first time, this will automatically load the specified ab from records.
+### `pattern`
+When set as a variable in the URL and opening the inst for the first time, this will automatically load the specified ab from records using either the defined studio or the authBot id.
+
+### `studio`
+When set in the URL, this will be used to load any patterns unless otherwise directed.
 
 ### `key`
-When set as a variable in the URL, allows ab/autoLoad/auxCode to open an encrypted ab.
+When set as a variable in the URL, allows for automatic opening of the matching encrypted ab.
 
 ### `abVersion`
-Can be used to target a specific version of an ab when using ab/autoLoad/auxCode in the URL.
+Can be used to target a specific version of an egg/ab when using pattern in the URL.
 
 ### `prompt`
-Can be used to replace the default ask prompt in ab-1.
+Can be used to replace the default ask prompt in AB.
+
+### `ask`
+A global pattern containing specific public patterns.  Will behave like the `pattern` variable if no global pattern is found.
 
 
 ## Nuggets
 
-### `abNugget` / nuggets
-This is a skill inside of ab-1 that allows loading and publishing of code snippets while in the sheet, tag, or system portal.  It utilizes the codeButton form to offer several options to users while scripting in a tag.  This skill is present but not active when loading ab-1 in a development environment.
+### abNugget / nuggets
+This is a skill inside of AB that allows loading and publishing of code snippets while in the sheet, tag, or system portal.  It utilizes the codeButton form to offer several options to users while scripting in a tag.  This skill is present but not active when loading AB in a development environment.
 
-### `{name}`
+### `{}`
 To load a nugget, you can put the name of a nugget (no spaces) inside a set of brackets.  Adding a period and v with a number to the end of the nugget name (.v#) allows the user to specify the version of the nugget that they would like to load.
 
 #### Examples
-
 ```typescript title="loading a nugget"
 {hello}//loads the latest version of hello
 ```
@@ -327,7 +288,30 @@ To load a nugget, you can put the name of a nugget (no spaces) inside a set of b
 
 ### `.nug {}`
 To publish a nugget, you use a similar format to loading with the addition of .nug and a space before it.  Then, using the cursor, highlight the segment you wish to publish.  With it still highlighted, presse the codeButton.
-
 ```typescript title="publishing a nugget"
 .nug {myNugget}
 ```
+
+
+## AB Chat Commands
+
+### `.sleep`
+Put AB in a sleep state (default state when a pattern is loaded).
+
+### `..`
+Put AB in an awake state (listening).
+
+### `.system`
+Open the system portal.
+
+### `.sheet`
+Open sheet portal for currently active grid or map portal.
+
+### `.menuSheet`
+Open sheet portal for active menu portal.
+
+### `.download`
+Use AB's download function.
+
+### `.upload`
+Open and upload a file via a file picker.
