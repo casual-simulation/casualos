@@ -12,6 +12,7 @@ import { exec as nodeExec } from 'child_process';
 import { existsSync } from 'fs';
 import { v4 as uuid } from 'uuid';
 import { promisify } from 'util';
+import { getRepoName } from './infra-utils';
 
 const exec = promisify(nodeExec);
 
@@ -368,10 +369,6 @@ function getInfraConfig(cwd: string, config: CliConfig) {
 
 //     return config.sshKey;
 // }
-
-export function getRepoName(path: string) {
-    return path.replace(/^(?:\w:|~)?[\.\/\\]*/g, '').replace(/[\/\\]/g, '-');
-}
 
 export function getRepoPath(name: string) {
     return resolve(name);

@@ -1,4 +1,4 @@
-import { getRepoName } from './infra';
+import { getRepoName } from './infra-utils';
 
 describe('getRepoName()', () => {
     const cases = [
