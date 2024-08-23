@@ -1,0 +1,37 @@
+{
+    "name": "@casual-simulation/infra",
+    "version": "3.3.8-alpha.3",
+    "description": "Pulumi resources for hosting CasualOS",
+    "keywords": [],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/casualos",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "dependencies": {
+        "@pulumi/aws": "^6.0.0",
+        "@pulumi/aws-apigateway": "^2.0.0",
+        "@pulumi/awsx": "^2.0.2",
+        "@pulumi/pulumi": "^3.113.0",
+        "@pulumi/aws-native": "^0.116.0",
+        "lodash": "4.17.21"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts",
+        "**/*.def"
+    ]
+}
