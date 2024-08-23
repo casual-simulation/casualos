@@ -15,12 +15,11 @@ import {
 const scriptPath = `file://${resolve('./deno.js')}`;
 
 const environment = new SimulationWebhookEnvironment(
-    (simId, indicator, origin, config) =>
-        new DenoSimulationImpl(
-            indicator,
-            origin,
-            new DenoVM(scriptPath, simId, origin, config)
-        )
+    (simId, indicator, origin, config) => {
+        const vm = new DenoVM(scriptPath, simId, origin, config);
+        vm.denoExecutable = resolve('./deno');
+        return new DenoSimulationImpl(indicator, origin, vm);
+    }
 );
 
 export async function handleWebhook(payload: HandleWebhookPayload) {
