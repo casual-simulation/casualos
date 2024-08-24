@@ -821,10 +821,94 @@ const telemetrySchema = z.object({
         .default({}),
 });
 
+const rekognitionSchema = z.object({
+    moderation: z.object({
+        files: z.object({
+            job: z
+                .object({
+                    accountId: z
+                        .string()
+                        .describe(
+                            'The AWS Account ID that should be used to run the job.'
+                        )
+                        .min(1),
+
+                    sourceBucket: z
+                        .string()
+                        .describe(
+                            'The bucket that should be scanned when a job is started.'
+                        )
+                        .min(1),
+
+                    reportBucket: z
+                        .string()
+                        .describe(
+                            'The bucket that job reports should be placed in.'
+                        )
+                        .min(1),
+
+                    priority: z
+                        .number()
+                        .describe(
+                            'The priority of jobs that are created. Higher numbers are higher priority. Defaults to 10.'
+                        )
+                        .int()
+                        .optional()
+                        .default(10),
+
+                    roleArn: z
+                        .string()
+                        .describe(
+                            'The ARN of the role that should be used to run the job.'
+                        )
+                        .min(1),
+
+                    lambdaFunctionArn: z
+                        .string()
+                        .describe(
+                            'The ARN of the lambda function that should be invoked to process the files.'
+                        )
+                        .min(1),
+
+                    tags: z
+                        .array(
+                            z.object({
+                                key: z.string().min(1),
+                                value: z.string().min(1),
+                            })
+                        )
+                        .describe('The tags that should be placed on the job.')
+                        .optional(),
+                })
+                .describe('The options specific to starting batch jobs.')
+                .optional(),
+
+            scan: z
+                .object({
+                    projectVersionArn: z
+                        .string()
+                        .describe(
+                            'The ARN of the custom moderation model that should be used. If omitted, then the default model is used.'
+                        )
+                        .min(1)
+                        .optional(),
+                })
+                .describe('The options specific to scanning files.')
+                .optional(),
+        }),
+    }),
+});
+
 export const serverConfigSchema = z.object({
     s3: s3Schema
         .describe(
             'S3 Configuration Options. If omitted, then S3 cannot be used for file storage.'
+        )
+        .optional(),
+
+    rekognition: rekognitionSchema
+        .describe(
+            'AWS Rekognition configuration options. If omitted, then AWS Rekognition cannot be used for moderation/classification.'
         )
         .optional(),
 

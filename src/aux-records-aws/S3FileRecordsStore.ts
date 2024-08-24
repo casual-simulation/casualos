@@ -1,6 +1,8 @@
 import {
     FileRecordsStore,
     GetFileNameFromUrlResult,
+    ListAllFilesFilter,
+    ListAllFilesResult,
     ListFilesLookupFailure,
     ListFilesStoreResult,
     PresignFileReadRequest,
@@ -24,7 +26,9 @@ import {
     AwsCredentialIdentity,
 } from '@aws-sdk/types';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
+const TRACE_NAME = 'S3FileRecordsStore';
 export const EMPTY_STRING_SHA256_HASH_HEX =
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
@@ -96,11 +100,18 @@ export class S3FileRecordsStore implements FileRecordsStore {
         }
     }
 
+    listAllUploadedFilesMatching(
+        filter: ListAllFilesFilter
+    ): Promise<ListAllFilesResult> {
+        return this._lookup.listAllUploadedFilesMatching(filter);
+    }
+
     listUploadedFiles?(
         recordName: string,
         fileName: string
     ): Promise<ListFilesStoreResult>;
 
+    @traced(TRACE_NAME)
     getAllowedUploadHeaders(): string[] {
         return [
             'content-type',
@@ -112,6 +123,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         ];
     }
 
+    @traced(TRACE_NAME)
     async getFileNameFromUrl(
         fileUrl: string
     ): Promise<GetFileNameFromUrlResult> {
@@ -210,6 +222,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async presignFileUpload(
         request: PresignFileUploadRequest
     ): Promise<PresignFileUploadResult> {
@@ -269,6 +282,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async presignFileRead(
         request: PresignFileReadRequest
     ): Promise<PresignFileReadResult> {
@@ -330,6 +344,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getFileRecord(
         recordName: string,
         fileName: string
@@ -379,6 +394,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME)
     async addFileRecord(
         recordName: string,
         fileName: string,
@@ -400,6 +416,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         );
     }
 
+    @traced(TRACE_NAME)
     async updateFileRecord(
         recordName: string,
         fileName: string,
@@ -412,6 +429,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         );
     }
 
+    @traced(TRACE_NAME)
     async setFileRecordAsUploaded(
         recordName: string,
         fileName: string
@@ -419,6 +437,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         return await this._lookup.setFileRecordAsUploaded(recordName, fileName);
     }
 
+    @traced(TRACE_NAME)
     async eraseFileRecord(
         recordName: string,
         fileName: string
@@ -426,7 +445,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         try {
             await this._lookup.eraseFileRecord(recordName, fileName);
 
-            const key = this._fileKey(recordName, fileName);
+            const key = this.getFileKey(recordName, fileName);
 
             await this._s3.deleteObject({
                 Bucket: this._bucket,
@@ -449,6 +468,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
         }
     }
 
+    @traced(TRACE_NAME)
     private async _getCredentials(): Promise<{
         secretAccessKey: string;
         accessKeyId: string;
@@ -457,13 +477,51 @@ export class S3FileRecordsStore implements FileRecordsStore {
         return await this._credentialProvider();
     }
 
+    /**
+     * Gets the S3 object info for the given record and file name.
+     * @param recordName The name of the record.
+     * @param fileName The name of the file.
+     */
+    @traced(TRACE_NAME)
+    async getS3ObjectInfo(
+        recordName: string,
+        fileName: string
+    ): Promise<{
+        bucket: string;
+        name: string;
+    }> {
+        let file = await this._lookup.getFileRecord(recordName, fileName);
+
+        if (!file) {
+            return {
+                bucket: this._bucket,
+                name: this.getFileKey(recordName, fileName),
+            };
+        }
+
+        return {
+            bucket: file.bucket ?? this._bucket,
+            name: this.getFileKey(recordName, fileName),
+        };
+    }
+
+    async getFileInfo(
+        bucket: string,
+        name: string
+    ): Promise<GetFileNameFromUrlResult> {
+        return this.getFileNameFromUrl(
+            `https://${bucket}.s3.amazonaws.com/${name}`
+        );
+    }
+
+    @traced(TRACE_NAME)
     private _fileUrl(
         recordName: string,
         fileName: string,
         bucket: string,
         isPublic: boolean
     ): URL {
-        let filePath = this._fileKey(recordName, fileName);
+        let filePath = this.getFileKey(recordName, fileName);
 
         if (isPublic && this._publicFilesUrl) {
             return new URL(`${this._publicFilesUrl}/${filePath}`);
@@ -476,7 +534,8 @@ export class S3FileRecordsStore implements FileRecordsStore {
         return new URL(filePath, `https://${bucket}.s3.amazonaws.com`);
     }
 
-    private _fileKey(recordName: string, fileName: string): string {
+    @traced(TRACE_NAME)
+    getFileKey(recordName: string, fileName: string): string {
         return `${recordName}/${fileName}`;
     }
 }

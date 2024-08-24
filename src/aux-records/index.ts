@@ -48,6 +48,8 @@ export * from './CachingConfigStore';
 
 export * from './ModerationController';
 export * from './ModerationStore';
+export * from './ModerationConfiguration';
+export * from './ModerationJobProvider';
 export * from './NotificationMessenger';
 
 export * from './LoomController';

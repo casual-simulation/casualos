@@ -7,6 +7,27 @@ export interface ModerationStore {
      * @param report The report to save.
      */
     saveUserInstReport(report: UserInstReport): Promise<void>;
+
+    /**
+     * Inserts the given moderation job.
+     * @param job The job that should be saved.
+     */
+    addModerationJob(job: ModerationJob): Promise<void>;
+
+    /**
+     * Attempts to find the most recent job of the given type.
+     * If no job is found, returns null.
+     * @param type The type of the job.
+     */
+    findMostRecentJobOfType(
+        type: ModerationJob['type']
+    ): Promise<ModerationJob | null>;
+
+    /**
+     * Inserts the result of a file moderation scan.
+     * @param result The result to save.
+     */
+    addFileModerationResult(result: ModerationFileScanResult): Promise<void>;
 }
 
 export interface UserInstReport {
@@ -82,3 +103,94 @@ export type ReportReason =
     | 'obscene'
     | 'illegal'
     | 'other';
+
+export interface ModerationJob {
+    /**
+     * The ID of the moderation job.
+     */
+    id: string;
+
+    /**
+     * The type of the moderation job.
+     */
+    type: 'files';
+
+    /**
+     * The ID of the s3 batch job that is being used to scan the files.
+     */
+    s3Id?: string;
+
+    /**
+     * The unix time in milliseconds that the job was created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The unix time in milliseconds that the job was last updated.
+     */
+    updatedAtMs: number;
+}
+
+export interface ModerationFileScanResult {
+    /**
+     * The ID of the scan.
+     */
+    id: string;
+
+    /**
+     * The ID of the job that the scan is associated with.
+     */
+    jobId: string | null;
+
+    /**
+     * The name of the record that the file was stored inside.
+     */
+    recordName: string;
+
+    /**
+     * The name of the file.
+     */
+    fileName: string;
+
+    /**
+     * Whether the file has detected labels that are banned.
+     */
+    appearsToMatchBannedContent: boolean;
+
+    /**
+     * The labels that were detected in the file.
+     */
+    labels: ModerationFileScanResultLabel[];
+
+    /**
+     * The version of the model that was used to scan the file.
+     */
+    modelVersion: string;
+
+    /**
+     * The unix time in milliseconds that the scan was created.
+     */
+    createdAtMs: number;
+
+    /**
+     * The unix time in milliseconds that the scan was last updated.
+     */
+    updatedAtMs: number;
+}
+
+export interface ModerationFileScanResultLabel {
+    /**
+     * The name of the label.
+     */
+    name: string;
+
+    /**
+     * The category of the label.
+     */
+    category?: string;
+
+    /**
+     * The confidence of the label.
+     */
+    confidence: number;
+}

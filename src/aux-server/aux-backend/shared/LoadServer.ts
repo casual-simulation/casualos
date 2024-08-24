@@ -14,6 +14,16 @@ export const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 export const REGION = process.env.AWS_REGION;
 export const WEBSOCKET_URL = process.env.WEBSOCKET_URL;
 
+export const MODERATION_JOB_ACCOUNT_ID = process.env.MODERATION_JOB_ACCOUNT_ID;
+export const MODERATION_JOB_REPORT_BUCKET =
+    process.env.MODERATION_JOB_REPORT_BUCKET;
+export const MODERATION_JOB_LAMBDA_FUNCTION_ARN =
+    process.env.MODERATION_JOB_LAMBDA_FUNCTION_ARN;
+export const MODERATION_JOB_ROLE_ARN = process.env.MODERATION_JOB_ROLE_ARN;
+export const MODERATION_JOB_PRIORITY = process.env.MODERATION_JOB_PRIORITY;
+export const MODERATION_PROJECT_VERSION =
+    process.env.MODERATION_PROJECT_VERSION;
+
 /**
  * Creates a new server builder that uses environment variables that are specific to the serverless environment.
  * See GettingStarted-aws.md for more information.
@@ -43,6 +53,40 @@ export function constructServerlessAwsServerBuilder() {
             endpoint: DEVELOPMENT ? 'http://localhost:4001' : WEBSOCKET_URL,
         },
     };
+
+    if (MODERATION_JOB_REPORT_BUCKET) {
+        dynamicConfig.rekognition = {
+            moderation: {
+                files: {
+                    job: {
+                        accountId: MODERATION_JOB_ACCOUNT_ID || undefined,
+                        sourceBucket: FILES_BUCKET || undefined,
+                        reportBucket: MODERATION_JOB_REPORT_BUCKET || undefined,
+                        lambdaFunctionArn:
+                            MODERATION_JOB_LAMBDA_FUNCTION_ARN || undefined,
+                        roleArn: MODERATION_JOB_ROLE_ARN || undefined,
+                        priority: MODERATION_JOB_PRIORITY
+                            ? parseInt(MODERATION_JOB_PRIORITY)
+                            : undefined,
+                    },
+                },
+            },
+        };
+    }
+
+    if (MODERATION_PROJECT_VERSION) {
+        dynamicConfig.rekognition = merge(dynamicConfig.rekognition || {}, {
+            moderation: {
+                files: {
+                    scan: {
+                        projectVersionArn:
+                            MODERATION_PROJECT_VERSION || undefined,
+                    },
+                },
+            },
+        });
+    }
+
     return constructServerBuilder(dynamicConfig);
 }
 
@@ -50,9 +94,7 @@ export function constructServerlessAwsServerBuilder() {
  * Loads the server and configures it.
  */
 export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
-    const staticConfig = loadConfig();
-
-    const config = merge({}, staticConfig, dynamicConfig);
+    const config = loadConfig(true, dynamicConfig);
 
     const allowedApiOrigins = new Set([
         'http://localhost:3000',
@@ -163,6 +205,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
 
     if (config.webauthn) {
         builder.useWebAuthn();
+    }
+
+    if (config.rekognition?.moderation && config.s3) {
+        builder.useRekognitionModeration();
     }
 
     builder.useAutomaticPlugins();

@@ -14,10 +14,14 @@ import {
     constructServerlessAwsServerBuilder,
     FILES_BUCKET,
 } from '../../../../shared/LoadServer';
+import { S3FileRecordsStore } from '@casual-simulation/aux-records-aws';
+import { S3BatchEvent } from './S3Batch';
+import { z } from 'zod';
 
 const builder = constructServerlessAwsServerBuilder();
 
-const { server, filesStore, websocketController } = builder.build();
+const { server, filesStore, websocketController, moderationController } =
+    builder.build();
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
     console.log('[Records] Got EventBridge event:', event);
@@ -61,6 +65,83 @@ async function handleS3Event(event: S3Event) {
             }
         })
     );
+}
+
+async function handleS3BatchEvent(event: S3BatchEvent) {
+    console.log('[Records] Got S3 Batch event:', event);
+
+    if (!(filesStore instanceof S3FileRecordsStore)) {
+        console.error('[Records] Files store is not an S3 store:', filesStore);
+        return;
+    }
+
+    const userArgumentsSchema = z.object({
+        jobId: z.string(),
+    });
+
+    const { jobId } = userArgumentsSchema.parse(event.job.userArguments);
+
+    return {
+        invocationSchemaVersion: event.invocationSchemaVersion,
+        treatMissingKeysAs: 'PermanentFailure',
+        invocationId: event.invocationId,
+        results: await Promise.all(
+            event.tasks.map(async (task) => {
+                try {
+                    const key = task.s3Key;
+                    const bucket = task.s3Bucket;
+
+                    const fileName = await filesStore.getFileInfo(bucket, key);
+                    if (fileName.success === false) {
+                        console.error(
+                            '[Records] Unable to get file info:',
+                            bucket,
+                            key,
+                            fileName
+                        );
+                        return;
+                    }
+
+                    const result = await moderationController.scanFile({
+                        recordName: fileName.recordName,
+                        fileName: fileName.fileName,
+                        jobId: jobId,
+                    });
+
+                    if (result.success === true) {
+                        console.log(
+                            '[Records] Scanned file:',
+                            fileName,
+                            result.result
+                        );
+                        return {
+                            taskId: task.taskId,
+                            resultCode: 'Succeeded',
+                            resultString: `Scanned file: ${fileName.recordName}/${fileName.fileName}`,
+                        };
+                    } else {
+                        console.error(
+                            '[Records] Failed to scan file:',
+                            fileName,
+                            result
+                        );
+                        return {
+                            taskId: task.taskId,
+                            resultCode: 'PermanentFailure',
+                            resultString: `Error scanning file (${fileName.recordName}/${fileName.fileName}): ${result.errorCode}\n${result.errorMessage}`,
+                        };
+                    }
+                } catch (err) {
+                    console.error('[Records] Error scanning file:', err);
+                    return {
+                        taskId: task.taskId,
+                        resultCode: 'PermanentFailure',
+                        resultString: `Error scanning file: ${err}`,
+                    };
+                }
+            })
+        ),
+    };
 }
 
 export async function handleApiEvent(
@@ -109,13 +190,19 @@ export async function handleApiEvent(
 }
 
 export async function handleRecords(
-    event: APIGatewayProxyEvent | S3Event | EventBridgeEvent<any, any>
+    event:
+        | APIGatewayProxyEvent
+        | S3Event
+        | S3BatchEvent
+        | EventBridgeEvent<any, any>
 ) {
     await builder.ensureInitialized();
     if ('httpMethod' in event) {
         return handleApiEvent(event);
     } else if ('source' in event) {
         return handleEventBridgeEvent(event);
+    } else if ('job' in event) {
+        return handleS3BatchEvent(event);
     } else {
         return handleS3Event(event);
     }
@@ -126,4 +213,11 @@ export async function savePermanentBranches() {
 
     // 15 minute timeout to match the lambda timeout.
     await websocketController.savePermanentBranches(900 * 1000);
+}
+
+export async function scheduleModerationScans() {
+    await builder.ensureInitialized();
+
+    const result = await moderationController.scheduleModerationScans();
+    console.log('[Records] Scheduled moderation scans result:', result);
 }

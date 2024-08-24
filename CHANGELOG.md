@@ -1,8 +1,22 @@
 # CasualOS Changelog
 
+## V3.3.9
+
+#### Date: 8/20/2024
+
+### :rocket: Features
+
+-   Improved CasualOS to understand and process Typescript class method and property accessibility modifiers correctly.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where library scripts would always error when executing a loop (for, while, etc.).
+-   Fixed an issue where it was possible for tag masks to get overwritten by a bot's regular tags shortly after creation of the bot.
+-   Fixed an issue where AI Chat features would only be enabled if OpenAI Chat was configured.
+
 ## V3.3.8
 
-#### Date: TBD
+#### Date: 8/5/2024
 
 ### :rocket: Features
 
@@ -19,6 +33,17 @@
 -   Add support for [Minio](https://min.io/) for file records.
     -   Can be configured by using the `minio` property in `SERVER_CONFIG`.
 -   Added the ability to enable semantic error highlighting.
+-   Added the ability to scan files for moderation labels.
+    -   This functionality can be configured by the `SERVER_CONFIG.moderation.jobs.files` and `SERVER_CONFIG.rekognition.moderation` properties.
+    -   Once a (configured) banned label is detected, a notification can be sent based on the `SERVER_CONFIG.notifications` configuration.
+        -   If desired, the filter should be set to match `file` resources and `scanned` actions.
+    -   Currently, only image files are supported. The default list of supported file types is:
+        -   `.png`
+        -   `.webp`
+        -   `.jpg`
+        -   `.jpeg`
+        -   `.gif`
+    -   Additionally, it is possible to manually trigger moderation for a file as a `superUser` by using the `scanFileForModeration` procedure.
 
 ### :bug: Bug Fixes
 

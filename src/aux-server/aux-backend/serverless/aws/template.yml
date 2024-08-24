@@ -26,9 +26,23 @@ Parameters:
         Type: String
         Description: The Simple Email Service (SES) Identity that the lambda function should be allowed to send emails from.
         Default: ''
+    ModerationProjectVersionParameter:
+        Type: String
+        Description: The project version that should be used for Rekognition moderation.
+        Default: ''
+    ModerationJobPriorityParameter:
+        Type: String
+        Description: The priority of jobs that are started for moderation.
+        Default: ''
+    ModerationJobScheduleParameter:
+        Type: String
+        Description: The schedule that the moderation job should be run at. If empty, then the job will not be run on a schedule.
+        Default: ''
 
 Conditions:
     UseSESCrud: !Not [!Equals [!Ref SESIdentityNameParameter, '']]
+    UseModerationJobSchedule:
+        !Not [!Equals [!Ref ModerationJobScheduleParameter, '']]
 
 Globals:
     Api:
@@ -60,11 +74,16 @@ Resources:
                 # Give Create/Read/Update/Delete Permissions to the Bucket
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                - S3CrudPolicy:
+                      BucketName: !Sub '${ModerationJobReportBucket}'
                 - !If [
                       UseSESCrud,
                       !Ref SESIdentityNameParameter,
                       !Ref 'AWS::NoValue',
                   ]
+
+                  # Give the ability to detect moderation labels using Rekognition
+                - RekognitionLabelsPolicy: {}
             Environment:
                 Variables:
                     REGION: !Ref 'AWS::Region'
@@ -74,6 +93,7 @@ Resources:
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+                    MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
             Events:
@@ -133,7 +153,6 @@ Resources:
             LogGroupName: !Sub '/aws/lambda/${handleRecords}'
             RetentionInDays: 14
 
-    # This is a Lambda function config associated with the source code: services.js
     SavePermanentBranchesFunction:
         Type: AWS::Serverless::Function
         Properties:
@@ -176,12 +195,137 @@ Resources:
             LogGroupName: !Sub '/aws/lambda/${SavePermanentBranchesFunction}'
             RetentionInDays: 14
 
+    # The lambda function that is used to schedule S3 batch jobs
+    # for moderation
+    ScheduleModerationScansFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: Records.scheduleModerationScans
+            CodeUri: dist/handlers
+            Runtime: nodejs18.x
+            MemorySize: 1024
+            Timeout: 900
+            Description: A function that periodically schedules moderation scans.
+            Role: !GetAtt
+                - ScheduleModerationScanRole
+                - Arn
+            Environment:
+                Variables:
+                    REGION: !Ref 'AWS::Region'
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
+                    ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
+                    ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+                    MODERATION_JOB_ACCOUNT_ID: !Sub '${AWS::AccountId}'
+                    MODERATION_JOB_REPORT_BUCKET: !Ref ModerationJobReportBucket
+                    MODERATION_JOB_LAMBDA_FUNCTION_ARN: !GetAtt handleRecords.Arn
+                    MODERATION_JOB_ROLE_ARN: !GetAtt ModerationScanRole.Arn
+                    MODERATION_JOB_PRIORITY: !Ref ModerationJobPriorityParameter
+                    MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
+            Layers:
+                - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
+            Events:
+                ScheduleModerationJob:
+                    Type: ScheduleV2
+                    Properties:
+                        OmitName: true
+                        Description: 'Schedule for scanning files.'
+                        ScheduleExpression:
+                            !If [
+                                UseModerationJobSchedule,
+                                !Ref ModerationJobScheduleParameter,
+                                'rate(1 day)',
+                            ]
+                        State:
+                            !If [
+                                UseModerationJobSchedule,
+                                'ENABLED',
+                                'DISABLED',
+                            ]
+    ScheduleModerationScansLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${ScheduleModerationScansFunction}'
+            RetentionInDays: 14
+
+    ScheduleModerationScanRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub '${AWS::StackName}-schedule-moderation-scan-role'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - lambda.amazonaws.com
+                      Action:
+                          - sts:AssumeRole
+            Policies:
+                - PolicyName: CreateBatchJob
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'iam:PassRole'
+                            Resource:
+                                - !GetAtt ModerationScanRole.Arn
+                          - Effect: Allow
+                            Action:
+                                - 's3:CreateJob'
+                            Resource:
+                                - '*'
+                          - Effect: Allow
+                            Action:
+                                - 's3:PutObject'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}/*'
+
+    # The role that is used by the S3 moderation batch job to grab files
+    # and execute the lambda function
+    ModerationScanRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub '${AWS::StackName}-moderation-scan-role'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - batchoperations.s3.amazonaws.com
+                      Action:
+                          - sts:AssumeRole
+            Policies:
+                - PolicyName: !Sub '${AWS::StackName}-moderation-batch-scan-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 's3:GetObject'
+                                - 's3:GetObjectVersion'
+                                - 's3:PutObject'
+                                - 's3:ListBucket'
+                                - 'lambda:InvokeFunction'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${FilesBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${FilesBucket}/*'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}/*'
+                                - !GetAtt handleRecords.Arn
+
     # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
 
     FilesBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
         Properties:
             BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             CorsConfiguration:
@@ -204,6 +348,13 @@ Resources:
             OwnershipControls:
                 Rules:
                     - ObjectOwnership: BucketOwnerPreferred
+
+    ModerationJobReportBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+        UpdateReplacePolicy: Retain
+        Properties:
+            BucketName: !Sub '${AWS::StackName}-moderation-job-reports-${AWS::AccountId}'
 
     WebsocketsApi:
         Type: AWS::ApiGatewayV2::Api
@@ -352,6 +503,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
@@ -387,6 +540,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
@@ -422,6 +577,8 @@ Resources:
                 - Arn
             Environment:
                 Variables:
+                    FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                    FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter

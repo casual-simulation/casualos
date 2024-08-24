@@ -42,8 +42,11 @@ import {
     ServerConfig,
     RedisServerOptions,
     AnthropicAIChatInterface,
+    ModerationJobProvider,
+    cleanupObject,
 } from '@casual-simulation/aux-records';
 import {
+    RekognitionModerationJobProvider,
     S3FileRecordsStore,
     SimpleEmailServiceAuthMessenger,
     SimpleEmailServiceAuthMessengerOptions,
@@ -139,6 +142,7 @@ import {
     ModerationConfiguration,
     moderationSchema,
 } from '@casual-simulation/aux-records/ModerationConfiguration';
+import { Rekognition } from '@aws-sdk/client-rekognition';
 
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
@@ -162,6 +166,7 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
 import { MinioFileRecordsStore } from 'aux-backend/minio/MinioFileRecordsStore';
+import { S3Control, S3ControlClient } from '@aws-sdk/client-s3-control';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -187,6 +192,9 @@ export interface BuildReturn {
     mongoDatabase: Db;
     websocketMessenger: WebsocketMessenger;
     redisClient: RedisClientType;
+
+    moderationController: ModerationController;
+    moderationJobProvider: ModerationJobProvider;
 }
 
 export interface ServerPlugin {
@@ -272,8 +280,12 @@ export class ServerBuilder implements SubscriptionLike {
     private _redisWebsocketConnections: RedisClientType | null = null;
     private _redisRateLimit: RedisClientType | null = null;
     private _s3: S3;
+    private _s3Control: S3ControlClient;
     private _rateLimitController: RateLimitController;
     private _websocketRateLimitController: RateLimitController;
+
+    private _rekognition: Rekognition | null = null;
+    private _moderationJobProvider: ModerationJobProvider | null = null;
 
     private _allowedAccountOrigins: Set<string> = new Set([
         'http://localhost:3000',
@@ -874,6 +886,57 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    /**
+     * Configures the server to use [AWS Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/moderation.html) for content moderation.
+     * @param options The options to use.
+     */
+    useRekognitionModeration(
+        options: Pick<ServerConfig, 'rekognition' | 's3'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using AWS Rekognition for moderation.');
+
+        if (!options.rekognition) {
+            throw new Error('Rekognition options must be provided.');
+        }
+
+        if (!options.s3) {
+            throw new Error('S3 options must be provided.');
+        }
+
+        if (
+            !this._filesStore ||
+            !(this._filesStore instanceof S3FileRecordsStore)
+        ) {
+            throw new Error(
+                'S3 must be the configured file store in order to use Rekognition moderation.'
+            );
+        }
+
+        this._moderationJobProvider = new RekognitionModerationJobProvider({
+            filesStore: this._filesStore,
+            rekognition: this._ensureRekognition(options),
+            s3Control: this._ensureS3Control(options),
+            s3: this._ensureS3(options),
+            filesJob: {
+                accountId: options.rekognition.moderation.files.job?.accountId,
+                lambdaFunctionArn:
+                    options.rekognition.moderation.files.job?.lambdaFunctionArn,
+                sourceBucket:
+                    options.rekognition.moderation.files.job?.sourceBucket,
+                reportBucket:
+                    options.rekognition.moderation.files.job?.reportBucket,
+                priority: options.rekognition.moderation.files.job?.priority,
+                roleArn: options.rekognition.moderation.files.job?.roleArn,
+                tags: options.rekognition.moderation.files.job?.tags as any,
+                projectVersionArn:
+                    options.rekognition.moderation.files.scan
+                        ?.projectVersionArn,
+            },
+        });
+
+        return this;
+    }
+
     get allowedApiOrigins() {
         return this._allowedApiOrigins;
     }
@@ -1178,11 +1241,13 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('AI options must be provided.');
         }
 
+        let hasChatInterface = false;
         if (options.openai) {
             console.log('[ServerBuilder] Using OpenAI Chat.');
             this._openAIChatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
             });
+            hasChatInterface = true;
         }
 
         if (options.googleai) {
@@ -1190,6 +1255,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._googleAIChatInterface = new GoogleAIChatInterface({
                 apiKey: options.googleai.apiKey,
             });
+            hasChatInterface = true;
         }
 
         if (options.anthropicai) {
@@ -1197,6 +1263,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._anthropicAIChatInterface = new AnthropicAIChatInterface({
                 apiKey: options.anthropicai.apiKey,
             });
+            hasChatInterface = true;
         }
 
         if (
@@ -1251,13 +1318,13 @@ export class ServerBuilder implements SubscriptionLike {
             records: this._recordsStore,
         };
 
-        if (this._openAIChatInterface && options.ai.chat) {
+        if (hasChatInterface && options.ai.chat) {
             this._aiConfiguration.chat = {
-                interfaces: {
+                interfaces: cleanupObject({
                     openai: this._openAIChatInterface,
                     google: this._googleAIChatInterface,
                     anthropic: this._anthropicAIChatInterface,
-                },
+                }),
                 options: {
                     defaultModel: options.ai.chat.defaultModel,
                     defaultModelProvider: options.ai.chat.provider,
@@ -1465,7 +1532,8 @@ export class ServerBuilder implements SubscriptionLike {
             this._moderationController = new ModerationController(
                 this._moderationStore,
                 this._configStore,
-                this._notificationMessenger
+                this._notificationMessenger,
+                this._moderationJobProvider
             );
         }
 
@@ -1522,6 +1590,9 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             policyController: this._policyController,
             websocketController: this._websocketController,
+
+            moderationController: this._moderationController,
+            moderationJobProvider: this._moderationJobProvider,
 
             dynamodbClient: this._docClient,
             mongoClient: this._mongoClient,
@@ -1689,6 +1760,32 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
         return this._s3;
+    }
+
+    private _ensureS3Control(
+        options: Pick<ServerConfig, 's3'>
+    ): S3ControlClient {
+        if (!this._s3Control) {
+            this._s3Control = new S3ControlClient({
+                region: options.s3.region,
+            });
+            this._subscription.add(() => {
+                this._s3Control.destroy();
+            });
+        }
+        return this._s3Control;
+    }
+
+    private _ensureRekognition(
+        options: Pick<ServerConfig, 'rekognition'>
+    ): Rekognition {
+        if (!this._rekognition) {
+            this._rekognition = new Rekognition({});
+            this._subscription.add(() => {
+                this._rekognition.destroy();
+            });
+        }
+        return this._rekognition;
     }
 
     private async _ensureMongoDB(
