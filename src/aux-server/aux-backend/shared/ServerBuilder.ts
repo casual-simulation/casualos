@@ -1618,6 +1618,7 @@ export class ServerBuilder implements SubscriptionLike {
                 store: this._webhooksStore,
                 policies: this._policyController,
                 environment: this._webhookEnvironment,
+                auth: this._authController,
             });
         }
 
