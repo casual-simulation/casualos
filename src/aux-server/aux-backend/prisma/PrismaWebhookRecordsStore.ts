@@ -3,6 +3,7 @@ import {
     SubscriptionFilter,
     WebhookRecord,
     WebhookRecordsStore,
+    WebhookRunInfo,
     WebhookSubscriptionMetrics,
 } from '@casual-simulation/aux-records';
 import {
@@ -16,6 +17,7 @@ import {
 } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { PrismaMetricsStore } from './PrismaMetricsStore';
+import { convertToDate, convertToMillis } from './Utils';
 
 const TRACE_NAME = 'PrismaWebhookRecordsStore';
 
@@ -268,6 +270,76 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
             totalCount: count,
+            marker: null,
+        };
+    }
+
+    async recordWebhookRun(run: WebhookRunInfo): Promise<void> {
+        await this._client.webhookRun.create({
+            data: {
+                id: run.runId,
+                recordName: run.recordName,
+                webhookAddress: run.webhookAddress,
+                requestTime: convertToDate(run.requestTimeMs),
+                responseTime: convertToDate(run.responseTimeMs),
+                statusCode: run.statusCode,
+                stateSha256: run.stateSha256,
+                errorResult: run.errorResult,
+                infoFileRecordName: run.infoRecordName,
+                infoFileName: run.infoFileName,
+            },
+        });
+    }
+
+    async listWebhookRunsForWebhook(
+        recordName: string,
+        webhookAddress: string,
+        startingRequestTime: number = null
+    ): Promise<ListCrudStoreSuccess<WebhookRunInfo>> {
+        const filter: Prisma.WebhookRunWhereInput = {
+            recordName: recordName,
+            webhookAddress: webhookAddress,
+        };
+
+        if (startingRequestTime) {
+            filter.requestTime = {
+                lt: convertToDate(startingRequestTime),
+            };
+        }
+
+        const [count, records] = await Promise.all([
+            this._client.webhookRun.count({
+                where: {
+                    recordName: recordName,
+                    webhookAddress: webhookAddress,
+                },
+            }),
+            this._client.webhookRun.findMany({
+                where: filter,
+                orderBy: {
+                    requestTime: 'desc',
+                },
+                take: 10,
+            }),
+        ]);
+
+        return {
+            success: true,
+            totalCount: count,
+            items: records.map((r) => {
+                return {
+                    runId: r.id,
+                    recordName: r.recordName,
+                    webhookAddress: r.webhookAddress,
+                    requestTimeMs: convertToMillis(r.requestTime),
+                    responseTimeMs: convertToMillis(r.responseTime),
+                    statusCode: r.statusCode,
+                    errorResult: r.errorResult,
+                    stateSha256: r.stateSha256,
+                    infoRecordName: r.infoFileRecordName,
+                    infoFileName: r.infoFileName,
+                };
+            }),
             marker: null,
         };
     }

@@ -275,8 +275,9 @@ export class WebhookRecordsController extends CrudRecordsController<
             const runId = uuidv7();
 
             let infoFileName: string = null;
-            const infoRecordName = webhook.userId;
-            if (infoRecordName) {
+            let infoRecordName: string = null;
+            if (webhook.userId) {
+                const recordName = webhook.userId;
                 const dataFile: WebhookInfoFile = {
                     runId,
                     version: 1,
@@ -289,8 +290,8 @@ export class WebhookRecordsController extends CrudRecordsController<
                 const json = stringify(dataFile);
                 const data = new TextEncoder().encode(json);
                 const recordResult = await this._files.recordFile(
-                    infoRecordName,
-                    infoRecordName,
+                    recordName,
+                    recordName,
                     {
                         fileSha256Hex: sha256().update(data).digest('hex'),
                         fileByteLength: data.byteLength,
@@ -303,10 +304,12 @@ export class WebhookRecordsController extends CrudRecordsController<
 
                 if (recordResult.success === false) {
                     console.error(
-                        '[WebhookRecordsController] Error recording webhook data file:',
+                        '[WebhookRecordsController] Error recording webhook info file:',
                         recordResult
                     );
                 } else {
+                    infoRecordName = recordName;
+                    infoRecordName = recordResult.fileName;
                     const requestResult = await axios.request({
                         method: recordResult.uploadMethod,
                         headers: recordResult.uploadHeaders,
@@ -320,11 +323,9 @@ export class WebhookRecordsController extends CrudRecordsController<
                         requestResult.status >= 300
                     ) {
                         console.error(
-                            '[WebhookRecordsController] Error uploading webhook data file:',
+                            '[WebhookRecordsController] Error uploading webhook info file:',
                             requestResult
                         );
-                    } else {
-                        infoFileName = recordResult.fileName;
                     }
                 }
             }

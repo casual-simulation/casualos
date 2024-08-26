@@ -327,6 +327,7 @@ model Record {
     branchUpdates BranchUpdate[]
     webhookRecords WebhookRecord[] @relation("WebhookRecord")
     targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
+    webhookRuns WebhookRun[]
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
@@ -626,6 +627,8 @@ model FileRecord {
 
     targetWebhookRecords WebhookRecord[]
 
+    webhookRuns WebhookRun[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -723,6 +726,33 @@ model WebhookRecord {
     userId String?
     user User? @relation(fields: [userId], references: [id])
 
+    runs WebhookRun[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model WebhookRun {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "WebhookRun_recordName_fkey1")
+
+    webhookAddress String @db.String(512)
+    webhook WebhookRecord @relation(fields: [recordName, webhookAddress], references: [recordName, address], onDelete: Cascade, map: "WebhookRun_webhookAddress_fkey1")
+
+    statusCode Int?
+    stateSha256 String @db.String(64)
+
+    requestTime DateTime
+    responseTime DateTime
+
+    errorResult Json?
+
+    infoFileRecordName String? @db.String(128)
+    infoFileName String? @db.String(512)
+    infoFile FileRecord? @relation(fields: [infoFileRecordName, infoFileName], references: [recordName, fileName], onDelete: SetNull, map: "WebhookRun_infoFile_fkey1")
+    
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
