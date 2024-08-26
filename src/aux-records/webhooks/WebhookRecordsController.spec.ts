@@ -26,6 +26,7 @@ import {
     STORED_AUX_SCHEMA,
 } from './WebhookEnvironment';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
+import { AuthController } from '../AuthController';
 
 console.log = jest.fn();
 
@@ -53,6 +54,7 @@ describe('WebhookRecordsController', () => {
                     policies: services.policies,
                     store: services.store,
                 }),
+                auth: services.auth,
                 environment: {
                     handleHttpRequest: jest.fn(),
                 },
@@ -112,13 +114,13 @@ describe('WebhookRecordsController', () => {
                         policies: services.policies,
                         store: services.store,
                     }),
-
                     files: new FileRecordsController({
                         config: services.store,
                         metrics: services.store,
                         policies: services.policies,
                         store: services.store,
                     }),
+                    auth: services.auth,
                     environment: environment,
                 })
         );
@@ -215,6 +217,44 @@ describe('WebhookRecordsController', () => {
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
                         'The maximum number of webhook items has been reached for your subscription.',
+                });
+            });
+
+            it('should create a user for the webhook', async () => {
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item1',
+                        markers: [PUBLIC_READ_MARKER],
+                        targetResourceKind: 'data',
+                        targetRecordName: 'recordName',
+                        targetAddress: 'data1',
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item1',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item1'
+                );
+
+                expect(item.userId).toBeTruthy();
+
+                const user = await store.findUser(item.userId);
+
+                expect(user).toEqual({
+                    id: item.userId,
+                    email: null,
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
                 });
             });
         });

@@ -56,6 +56,7 @@ import { v7 as uuidv7 } from 'uuid';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
+import { AuthController } from '../AuthController';
 
 const TRACE_NAME = 'WebhookRecordsController';
 
@@ -81,6 +82,11 @@ export interface WebhookRecordsConfiguration
      * The controller that should be used to get file records.
      */
     files: FileRecordsController;
+
+    /**
+     * The controller that should be used to for auth-related operations.
+     */
+    auth: AuthController;
 }
 
 /**
@@ -93,6 +99,7 @@ export class WebhookRecordsController extends CrudRecordsController<
     private _environment: WebhookEnvironment;
     private _data: DataRecordsController;
     private _files: FileRecordsController;
+    private _auth: AuthController;
 
     constructor(config: WebhookRecordsConfiguration) {
         super({
@@ -103,6 +110,7 @@ export class WebhookRecordsController extends CrudRecordsController<
         this._environment = config.environment;
         this._data = config.data;
         this._files = config.files;
+        this._auth = config.auth;
     }
 
     /**
@@ -394,6 +402,23 @@ export class WebhookRecordsController extends CrudRecordsController<
                     errorMessage:
                         'The maximum number of webhook items has been reached for your subscription.',
                 };
+            }
+        }
+
+        if (action === 'create') {
+            // create a user for the webhook
+            if (!item.userId) {
+                const result = await this._auth.createAccount({
+                    userRole: 'superUser', // The system gets superUser permissions when performing administrative tasks
+                    ipAddress: null,
+                    createSession: false,
+                });
+
+                if (result.success === false) {
+                    return result;
+                } else {
+                    item.userId = result.userId;
+                }
             }
         }
 
