@@ -80,9 +80,20 @@ export interface CrudRecord {
 
 export interface ListCrudStoreSuccess<T> {
     success: true;
+    /**
+     * The items that were listed.
+     */
     items: T[];
+
+    /**
+     * The total number of items in the record.
+     */
     totalCount: number;
-    marker: string;
+
+    /**
+     * The marker that was listed.
+     */
+    marker: string | null;
 }
 
 export interface ListCrudStoreByMarkerRequest {

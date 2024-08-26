@@ -141,7 +141,6 @@ export function testCrudRecordsController<
         services: TestControllers
     ) => TController,
     createTestItem: (item: CrudRecord) => TItem,
-
     configureEnvironment?: (
         context: TestContext<TItem, TStore, TController>
     ) => Promise<void>
@@ -204,7 +203,7 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toEqual(item);
+                ).resolves.toMatchObject(item);
             });
 
             it('should reject the request if given an invalid key', async () => {
@@ -375,7 +374,7 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toEqual(item);
+                ).resolves.toMatchObject(item);
             });
 
             it('should reject the request if given an invalid key', async () => {
@@ -398,7 +397,7 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toEqual(item);
+                ).resolves.toMatchObject(item);
             });
 
             if (allowRecordKeys) {
@@ -422,7 +421,7 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual(item);
+                    ).resolves.toMatchObject(item);
                 });
 
                 it('should be able to use subjectless keys', async () => {
@@ -445,7 +444,7 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual(item);
+                    ).resolves.toMatchObject(item);
                 });
             } else {
                 it('should reject the request if record keys are not allowed', async () => {
@@ -477,7 +476,7 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual(
+                    ).resolves.toMatchObject(
                         createTestItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
@@ -514,7 +513,7 @@ export function testCrudRecordsController<
 
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual(
+                    ).resolves.toMatchObject(
                         createTestItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],

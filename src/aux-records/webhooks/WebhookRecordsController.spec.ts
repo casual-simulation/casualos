@@ -7,6 +7,7 @@ import { MemoryWebhookRecordsStore } from './MemoryWebhookRecordsStore';
 import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
+    webhook,
 } from '@casual-simulation/aux-common';
 import {
     setupTestContext,
@@ -24,6 +25,7 @@ import {
     HandleHttpRequestResult,
     STORED_AUX_SCHEMA,
 } from './WebhookEnvironment';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
 
 console.log = jest.fn();
 
@@ -140,6 +142,30 @@ describe('WebhookRecordsController', () => {
         store.subscriptionConfiguration = builder.config;
     });
 
+    function setResponse(response: any) {
+        require('axios').__setResponse(response);
+    }
+
+    function setNextResponse(response: any) {
+        require('axios').__setNextResponse(response);
+    }
+
+    function getLastPost() {
+        return require('axios').__getLastPost();
+    }
+
+    function getLastGet() {
+        return require('axios').__getLastGet();
+    }
+
+    function getLastDelete() {
+        return require('axios').__getLastDelete();
+    }
+
+    function getRequests() {
+        return require('axios').__getRequests();
+    }
+
     describe('recordItem()', () => {
         describe('create', () => {
             it('should return subscription_limit_reached when the user has reached their subscription limit', async () => {
@@ -234,6 +260,7 @@ describe('WebhookRecordsController', () => {
                 response: {
                     statusCode: 200,
                 },
+                logs: ['abc'],
             });
 
             const result = await manager.handleWebhook({
@@ -299,6 +326,7 @@ describe('WebhookRecordsController', () => {
                 response: {
                     statusCode: 200,
                 },
+                logs: ['abc'],
             });
 
             const result = await manager.handleWebhook({
@@ -325,6 +353,174 @@ describe('WebhookRecordsController', () => {
                     statusCode: 200,
                 },
             });
+
+            const runs = await itemsStore.listWebhookRunsForWebhook(
+                recordName,
+                'item1'
+            );
+            expect(runs).toEqual({
+                success: true,
+                items: [
+                    {
+                        runId: expect.any(String),
+                        recordName: recordName,
+                        webhookAddress: 'item1',
+                        requestTimeMs: expect.any(Number),
+                        responseTimeMs: expect.any(Number),
+                        statusCode: 200,
+                        errorResult: null,
+
+                        // Cannot record run data because the webhook
+                        // has an anonymous user.
+                        dataRecordName: null,
+                        dataFileName: null,
+                    },
+                ],
+                totalCount: 1,
+                marker: null,
+            });
+        });
+
+        it('should record webhook runs', async () => {
+            // request to record the data file
+            setResponse({
+                status: 200,
+                data: {
+                    success: true,
+                },
+            });
+
+            const webhookUserId = 'webhookUser';
+            await store.saveUser({
+                id: webhookUserId,
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await itemsStore.createItem(recordName, {
+                address: 'item1',
+                markers: [PUBLIC_READ_MARKER],
+                targetResourceKind: 'data',
+                targetRecordName: 'recordName',
+                targetAddress: 'data1',
+                userId: webhookUserId,
+            });
+
+            await store.setData(
+                'recordName',
+                'data1',
+                {
+                    version: 1,
+                    state: {},
+                },
+                'user1',
+                'user2',
+                true,
+                true,
+                [PUBLIC_READ_MARKER]
+            );
+
+            environment.handleHttpRequest.mockResolvedValueOnce({
+                success: true,
+                response: {
+                    statusCode: 200,
+                },
+                logs: ['abc'],
+            });
+
+            const result = await manager.handleWebhook({
+                recordName,
+                address: 'item1',
+                userId: null,
+                request: {
+                    method: 'GET',
+                    path: '/',
+                    headers: {},
+                    body: JSON.stringify({
+                        abc: 'def',
+                    }),
+                    ipAddress: null,
+                    pathParams: {},
+                    query: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                },
+            });
+
+            const runs = await itemsStore.listWebhookRunsForWebhook(
+                recordName,
+                'item1'
+            );
+            expect(runs).toEqual({
+                success: true,
+                items: [
+                    {
+                        runId: expect.any(String),
+                        recordName: recordName,
+                        webhookAddress: 'item1',
+                        requestTimeMs: expect.any(Number),
+                        responseTimeMs: expect.any(Number),
+                        statusCode: 200,
+                        errorResult: null,
+                        dataRecordName: webhookUserId,
+                        dataFileName: expect.any(String),
+                    },
+                ],
+                totalCount: 1,
+                marker: null,
+            });
+
+            const file = await store.getFileRecord(
+                webhookUserId,
+                runs.items[0].dataFileName
+            );
+            expect(file).toEqual({
+                success: true,
+                recordName: webhookUserId,
+                fileName: runs.items[0].dataFileName,
+                description: expect.stringContaining('Webhook data for run'),
+                url: `http://localhost:9191/${webhookUserId}/${runs.items[0].dataFileName}`,
+                sizeInBytes: expect.any(Number),
+                uploaded: false,
+                markers: ['private:logs'],
+                publisherId: webhookUserId,
+                subjectId: webhookUserId,
+            });
+
+            const [url, data] = getLastPost();
+
+            const json = new TextDecoder().decode(data);
+
+            expect([url, JSON.parse(json)]).toEqual([
+                `http://localhost:9191/${webhookUserId}/${runs.items[0].dataFileName}`,
+                {
+                    runId: expect.any(String),
+                    version: 1,
+                    logs: ['abc'],
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                        headers: {},
+                    },
+                    response: {
+                        statusCode: 200,
+                    },
+                },
+            ]);
         });
 
         describe('data', () => {
@@ -357,6 +553,7 @@ describe('WebhookRecordsController', () => {
                     response: {
                         statusCode: 200,
                     },
+                    logs: ['abc'],
                 });
 
                 const result = await manager.handleWebhook({
@@ -436,6 +633,7 @@ describe('WebhookRecordsController', () => {
                     response: {
                         statusCode: 200,
                     },
+                    logs: ['abc'],
                 });
 
                 const result = await manager.handleWebhook({
@@ -516,6 +714,7 @@ describe('WebhookRecordsController', () => {
                     response: {
                         statusCode: 200,
                     },
+                    logs: ['abc'],
                 });
 
                 const result = await manager.handleWebhook({
@@ -590,6 +789,7 @@ describe('WebhookRecordsController', () => {
                     response: {
                         statusCode: 200,
                     },
+                    logs: ['abc'],
                 });
 
                 const result = await manager.handleWebhook({
@@ -651,6 +851,7 @@ describe('WebhookRecordsController', () => {
                     response: {
                         statusCode: 200,
                     },
+                    logs: ['abc'],
                 });
 
                 const result = await manager.handleWebhook({
@@ -731,6 +932,7 @@ describe('WebhookRecordsController', () => {
                     response: {
                         statusCode: 200,
                     },
+                    logs: ['abc'],
                 });
 
                 const result = await manager.handleWebhook({

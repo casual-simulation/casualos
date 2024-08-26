@@ -23,8 +23,10 @@ import {
     CrudRecordsController,
 } from '../crud/CrudRecordsController';
 import {
+    WebhookDataFile,
     WebhookRecord,
     WebhookRecordsStore,
+    WebhookRunInfo,
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
 import { getWebhookFeatures } from '../SubscriptionConfiguration';
@@ -50,6 +52,10 @@ import {
 } from '../FileRecordsController';
 import { tryParseJson } from '../Utils';
 import { z } from 'zod';
+import { v7 as uuidv7 } from 'uuid';
+import stringify from '@casual-simulation/fast-json-stable-stringify';
+import { sha256 } from 'hash.js';
+import axios from 'axios';
 
 const TRACE_NAME = 'WebhookRecordsController';
 
@@ -108,6 +114,7 @@ export class WebhookRecordsController extends CrudRecordsController<
         request: HandleWebhookRequest
     ): Promise<HandleWebhookResult> {
         try {
+            const requestTimeMs = Date.now();
             const webhookContext =
                 await this.policies.constructAuthorizationContext({
                     recordKeyOrRecordName: request.recordName,
@@ -248,11 +255,91 @@ export class WebhookRecordsController extends CrudRecordsController<
                 };
             }
 
-            return await this._environment.handleHttpRequest({
+            const result = await this._environment.handleHttpRequest({
                 state: state,
                 recordName,
                 request: request.request,
             });
+
+            const responseTimeMs = Date.now();
+            const runId = uuidv7();
+
+            let dataFileName: string = null;
+            const dataRecordName = webhook.userId;
+            if (dataRecordName) {
+                const dataFile: WebhookDataFile = {
+                    runId,
+                    version: 1,
+                    request: request.request,
+                    response: result.success === true ? result.response : null,
+                    logs: result.success === true ? result.logs : [],
+                };
+                const json = stringify(dataFile);
+                const data = new TextEncoder().encode(json);
+                const recordResult = await this._files.recordFile(
+                    dataRecordName,
+                    dataRecordName,
+                    {
+                        fileSha256Hex: sha256().update(data).digest('hex'),
+                        fileByteLength: data.byteLength,
+                        fileDescription: `Webhook data for run ${runId}`,
+                        fileMimeType: 'application/json',
+                        headers: {},
+                        markers: [`private:logs`],
+                    }
+                );
+
+                if (recordResult.success === false) {
+                    console.error(
+                        '[WebhookRecordsController] Error recording webhook data file:',
+                        recordResult
+                    );
+                } else {
+                    const requestResult = await axios.request({
+                        method: recordResult.uploadMethod,
+                        headers: recordResult.uploadHeaders,
+                        url: recordResult.uploadUrl,
+                        data: data,
+                        validateStatus: () => true,
+                    });
+
+                    if (
+                        requestResult.status <= 199 ||
+                        requestResult.status >= 300
+                    ) {
+                        console.error(
+                            '[WebhookRecordsController] Error uploading webhook data file:',
+                            requestResult
+                        );
+                    } else {
+                        dataFileName = recordResult.fileName;
+                    }
+                }
+            }
+
+            const run: WebhookRunInfo = {
+                runId: uuidv7(),
+                recordName: recordName,
+                webhookAddress: request.address,
+                errorResult: result.success === false ? result : null,
+                requestTimeMs,
+                responseTimeMs,
+                statusCode:
+                    result.success === true ? result.response.statusCode : null,
+                dataRecordName,
+                dataFileName,
+            };
+
+            await this.store.recordWebhookRun(run);
+
+            if (result.success === true) {
+                return {
+                    success: true,
+                    response: result.response,
+                };
+            } else {
+                return result;
+            }
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
@@ -299,7 +386,6 @@ export class WebhookRecordsController extends CrudRecordsController<
                 errorMessage: 'Webhooks are not allowed for this subscription.',
             };
         }
-
         if (action === 'create' && typeof features.maxItems === 'number') {
             if (metrics.totalItems >= features.maxItems) {
                 return {

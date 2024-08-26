@@ -1,9 +1,13 @@
-import { GenericHttpRequest } from '@casual-simulation/aux-common';
+import {
+    GenericHttpRequest,
+    GenericHttpResponse,
+} from '@casual-simulation/aux-common';
 import { SubscriptionFilter } from '../MetricsStore';
 import {
     CrudRecord,
     CrudRecordsStore,
     CrudSubscriptionMetrics,
+    ListCrudStoreSuccess,
 } from '../crud/CrudRecordsStore';
 
 /**
@@ -22,7 +26,17 @@ export interface WebhookRecordsStore extends CrudRecordsStore<WebhookRecord> {
      * Records the given webhook run in the store.
      * @param run The run to record.
      */
-    createWebhookRun(run: WebhookRunInfo): Promise<void>;
+    recordWebhookRun(run: WebhookRunInfo): Promise<void>;
+
+    /**
+     * Gets the list of webhook runs for the given webhook.
+     * @param recordName The name of the record.
+     * @param webhookAddress The address of the webhook.
+     */
+    listWebhookRunsForWebhook(
+        recordName: string,
+        webhookAddress: string
+    ): Promise<ListCrudStoreSuccess<WebhookRunInfo>>;
 }
 
 export interface WebhookRecord extends CrudRecord {
@@ -93,19 +107,61 @@ export interface WebhookRunInfo {
     responseTimeMs: number;
 
     /**
-     * The URL to the file that contains the request data.
+     * The status code of the response.
+     * If null, then the response was not recieved.
      */
-    requestFileUrl: string;
+    statusCode: number | null;
 
     /**
-     * The URL to the file that contains the response data.
+     * The error result of the webhook run.
      */
-    responseFileUrl: string | null;
+    errorResult: {
+        success: false;
+        errorCode: string;
+        errorMessage: string;
+    } | null;
 
     /**
-     * The URL to the file that contains the logs for the webhook run.
+     * The name of the record that the request data was stored in.
+     * Null if the data could not be recorded.
      */
-    logsFileUrl: string | null;
+    dataRecordName: string | null;
+
+    /**
+     * The name of the file record that contains the request and response data.
+     * Null if the data file could not be recorded.
+     */
+    dataFileName: string | null;
+}
+
+/**
+ * Defines a webhook data file that contains the request and response data for a webhook run.
+ */
+export interface WebhookDataFile {
+    /**
+     * The ID of the webhook run.
+     */
+    runId: string;
+
+    /**
+     * The version of the data file.
+     */
+    version: 1;
+
+    /**
+     * The request that was sent to the webhook.
+     */
+    request: GenericHttpRequest;
+
+    /**
+     * The response that was recieved from the webhook.
+     */
+    response: GenericHttpResponse;
+
+    /**
+     * The logs that were generated during the webhook run.
+     */
+    logs: string[];
 }
 
 export interface WebhookSubscriptionMetrics extends CrudSubscriptionMetrics {

@@ -4,15 +4,40 @@ import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import {
     WebhookRecord,
     WebhookRecordsStore,
+    WebhookRunInfo,
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
+import { ListCrudStoreSuccess } from '../crud/CrudRecordsStore';
 
 export class MemoryWebhookRecordsStore
     extends MemoryCrudRecordsStore<WebhookRecord, WebhookSubscriptionMetrics>
     implements WebhookRecordsStore
 {
+    private _webhookRuns: Map<string, WebhookRunInfo> = new Map();
+
     constructor(store: MemoryStore) {
         super(store);
+    }
+
+    async recordWebhookRun(run: WebhookRunInfo): Promise<void> {
+        this._webhookRuns.set(run.runId, run);
+    }
+
+    async listWebhookRunsForWebhook(
+        recordName: string,
+        webhookAddress: string
+    ): Promise<ListCrudStoreSuccess<WebhookRunInfo>> {
+        const runs = Array.from(this._webhookRuns.values()).filter(
+            (r) =>
+                r.recordName === recordName &&
+                r.webhookAddress === webhookAddress
+        );
+        return {
+            success: true,
+            items: runs,
+            totalCount: runs.length,
+            marker: null,
+        };
     }
 
     async getSubscriptionMetrics(

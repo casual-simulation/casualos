@@ -603,13 +603,7 @@ export interface CrudRecordItemSuccess {
 
 export interface CrudRecordItemFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotAuthorizedError
-        | ValidatePublicRecordKeyFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | 'invalid_request';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 }
 
@@ -623,11 +617,7 @@ export interface CheckSubscriptionMetricsSuccess {
 
 export interface CheckSubscriptionMetricsFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | 'subscription_limit_reached'
-        | NotAuthorizedError
-        | 'unacceptable_request';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
     issues?: ZodIssue[];
 }
@@ -664,13 +654,7 @@ export interface CrudGetItemSuccess<T> {
 
 export interface CrudGetItemFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotAuthorizedError
-        | ConstructAuthorizationContextFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | 'data_not_found';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 }
 
@@ -705,13 +689,7 @@ export interface CrudEraseItemSuccess {
 
 export interface CrudEraseItemFailure {
     success: false;
-    errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotAuthorizedError
-        | ConstructAuthorizationContextFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode']
-        | 'data_not_found';
+    errorCode: KnownErrorCodes;
     errorMessage: string;
 }
 
