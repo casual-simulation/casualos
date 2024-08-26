@@ -153,6 +153,46 @@ describe('EventRecordsController', () => {
             });
         });
 
+        it('should support custom markers with paths', async () => {
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'increment',
+                {},
+                null
+            );
+
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.updateEvent(recordName, 'address', {
+                markers: ['secret:custom'],
+            });
+
+            const result = (await manager.addCount(
+                recordName,
+                'address',
+                5,
+                userId
+            )) as AddCountSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.eventName).toBe('address');
+
+            await expect(
+                store.getEventCount('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 5,
+                markers: ['secret:custom'],
+            });
+        });
+
         it('should deny the request if the user does not have permissions', async () => {
             const result = (await manager.addCount(
                 recordName,
@@ -511,6 +551,74 @@ describe('EventRecordsController', () => {
                 success: true,
                 count: 10,
                 markers: ['secret'],
+            });
+        });
+
+        it('should support custom markers with paths', async () => {
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'update',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'update',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'assign',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'unassign',
+                {},
+                null
+            );
+
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: recordName,
+                eventName: 'address',
+                userId,
+                markers: ['secret:custom'],
+            })) as UpdateEventRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 10,
+                markers: ['secret:custom'],
             });
         });
 
