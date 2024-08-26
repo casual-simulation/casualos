@@ -589,6 +589,7 @@ describe('RecordsServer', () => {
             files: filesController,
             policies: policyController,
             environment: webhookEnvironment,
+            auth: authController,
         });
 
         stripe = stripeMock = {
@@ -9212,7 +9213,6 @@ describe('RecordsServer', () => {
                             targetResourceKind: 'data',
                             targetRecordName: recordName,
                             targetAddress: 'data1',
-                            userId: null,
                         },
                     }),
                     apiHeaders
@@ -9239,6 +9239,7 @@ describe('RecordsServer', () => {
                 targetRecordName: recordName,
                 targetAddress: 'data1',
                 markers: [PRIVATE_MARKER],
+                userId: expect.any(String),
             });
         });
 
@@ -9891,6 +9892,7 @@ describe('RecordsServer', () => {
                     statusCode: 200,
                     body: 'hello, world',
                 },
+                logs: ['abc'],
             });
 
             const result = await server.handleHttpRequest(
@@ -9938,6 +9940,7 @@ describe('RecordsServer', () => {
                     statusCode: 200,
                     body: 'hello, world',
                 },
+                logs: ['abc'],
             });
 
             const result = await server.handleHttpRequest(
