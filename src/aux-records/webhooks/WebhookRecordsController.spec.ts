@@ -25,8 +25,7 @@ import {
     HandleHttpRequestResult,
     STORED_AUX_SCHEMA,
 } from './WebhookEnvironment';
-import stringify from '@casual-simulation/fast-json-stable-stringify';
-import { AuthController } from '../AuthController';
+import { getHash } from '@casual-simulation/crypto';
 
 console.log = jest.fn();
 
@@ -412,8 +411,9 @@ describe('WebhookRecordsController', () => {
 
                         // Cannot record run data because the webhook
                         // has an anonymous user.
-                        dataRecordName: null,
-                        dataFileName: null,
+                        infoRecordName: null,
+                        infoFileName: null,
+                        stateSha256: expect.any(String),
                     },
                 ],
                 totalCount: 1,
@@ -510,8 +510,9 @@ describe('WebhookRecordsController', () => {
                         responseTimeMs: expect.any(Number),
                         statusCode: 200,
                         errorResult: null,
-                        dataRecordName: webhookUserId,
-                        dataFileName: expect.any(String),
+                        infoRecordName: webhookUserId,
+                        infoFileName: expect.any(String),
+                        stateSha256: expect.any(String),
                     },
                 ],
                 totalCount: 1,
@@ -520,14 +521,14 @@ describe('WebhookRecordsController', () => {
 
             const file = await store.getFileRecord(
                 webhookUserId,
-                runs.items[0].dataFileName
+                runs.items[0].infoFileName
             );
             expect(file).toEqual({
                 success: true,
                 recordName: webhookUserId,
-                fileName: runs.items[0].dataFileName,
+                fileName: runs.items[0].infoFileName,
                 description: expect.stringContaining('Webhook data for run'),
-                url: `http://localhost:9191/${webhookUserId}/${runs.items[0].dataFileName}`,
+                url: `http://localhost:9191/${webhookUserId}/${runs.items[0].infoFileName}`,
                 sizeInBytes: expect.any(Number),
                 uploaded: false,
                 markers: ['private:logs'],
@@ -540,11 +541,25 @@ describe('WebhookRecordsController', () => {
             const json = new TextDecoder().decode(data);
 
             expect([url, JSON.parse(json)]).toEqual([
-                `http://localhost:9191/${webhookUserId}/${runs.items[0].dataFileName}`,
+                `http://localhost:9191/${webhookUserId}/${runs.items[0].infoFileName}`,
                 {
                     runId: expect.any(String),
                     version: 1,
                     logs: ['abc'],
+                    state: {
+                        type: 'aux',
+                        state: {
+                            version: 1,
+                            state: {},
+                        },
+                    },
+                    stateSha256: getHash({
+                        type: 'aux',
+                        state: {
+                            version: 1,
+                            state: {},
+                        },
+                    }),
                     request: {
                         method: 'GET',
                         path: '/',

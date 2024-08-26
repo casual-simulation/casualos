@@ -9,6 +9,7 @@ import {
     CrudSubscriptionMetrics,
     ListCrudStoreSuccess,
 } from '../crud/CrudRecordsStore';
+import { WebhookState } from './WebhookEnvironment';
 
 /**
  * Defines a store that is able to store and retrieve information about webhooks.
@@ -122,22 +123,27 @@ export interface WebhookRunInfo {
     } | null;
 
     /**
+     * The SHA-256 hash of the state that was passed to the webhook.
+     */
+    stateSha256: string;
+
+    /**
      * The name of the record that the request data was stored in.
      * Null if the data could not be recorded.
      */
-    dataRecordName: string | null;
+    infoRecordName: string | null;
 
     /**
      * The name of the file record that contains the request and response data.
      * Null if the data file could not be recorded.
      */
-    dataFileName: string | null;
+    infoFileName: string | null;
 }
 
 /**
  * Defines a webhook data file that contains the request and response data for a webhook run.
  */
-export interface WebhookDataFile {
+export interface WebhookInfoFile {
     /**
      * The ID of the webhook run.
      */
@@ -157,6 +163,16 @@ export interface WebhookDataFile {
      * The response that was recieved from the webhook.
      */
     response: GenericHttpResponse;
+
+    /**
+     * The state that was passed to the webhook.
+     */
+    state: WebhookState;
+
+    /**
+     * The SHA-256 hash of the state that was passed to the webhook.
+     */
+    stateSha256: string;
 
     /**
      * The logs that were generated during the webhook run.

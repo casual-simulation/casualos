@@ -23,7 +23,7 @@ import {
     CrudRecordsController,
 } from '../crud/CrudRecordsController';
 import {
-    WebhookDataFile,
+    WebhookInfoFile,
     WebhookRecord,
     WebhookRecordsStore,
     WebhookRunInfo,
@@ -57,6 +57,7 @@ import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
 import { AuthController } from '../AuthController';
+import { getHash } from '@casual-simulation/crypto';
 
 const TRACE_NAME = 'WebhookRecordsController';
 
@@ -270,23 +271,26 @@ export class WebhookRecordsController extends CrudRecordsController<
             });
 
             const responseTimeMs = Date.now();
+            const stateHash = getHash(state);
             const runId = uuidv7();
 
-            let dataFileName: string = null;
-            const dataRecordName = webhook.userId;
-            if (dataRecordName) {
-                const dataFile: WebhookDataFile = {
+            let infoFileName: string = null;
+            const infoRecordName = webhook.userId;
+            if (infoRecordName) {
+                const dataFile: WebhookInfoFile = {
                     runId,
                     version: 1,
                     request: request.request,
                     response: result.success === true ? result.response : null,
                     logs: result.success === true ? result.logs : [],
+                    state,
+                    stateSha256: stateHash,
                 };
                 const json = stringify(dataFile);
                 const data = new TextEncoder().encode(json);
                 const recordResult = await this._files.recordFile(
-                    dataRecordName,
-                    dataRecordName,
+                    infoRecordName,
+                    infoRecordName,
                     {
                         fileSha256Hex: sha256().update(data).digest('hex'),
                         fileByteLength: data.byteLength,
@@ -320,7 +324,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                             requestResult
                         );
                     } else {
-                        dataFileName = recordResult.fileName;
+                        infoFileName = recordResult.fileName;
                     }
                 }
             }
@@ -334,8 +338,9 @@ export class WebhookRecordsController extends CrudRecordsController<
                 responseTimeMs,
                 statusCode:
                     result.success === true ? result.response.statusCode : null,
-                dataRecordName,
-                dataFileName,
+                stateSha256: stateHash,
+                infoRecordName,
+                infoFileName,
             };
 
             await this.store.recordWebhookRun(run);
