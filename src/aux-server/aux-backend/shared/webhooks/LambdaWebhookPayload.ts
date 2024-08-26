@@ -29,6 +29,7 @@ export const HANDLE_WEBHOOK_RESULT_SCHEMA = z.discriminatedUnion('success', [
             headers: z.record(z.string()),
             body: z.string(),
         }),
+        logs: z.array(z.string()),
     }),
     z.object({
         success: z.literal(false),

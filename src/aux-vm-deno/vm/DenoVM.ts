@@ -58,6 +58,7 @@ export class DenoVM implements AuxVM {
         }
     >;
     private _onAuthMessage: Subject<PartitionAuthMessage>;
+    private _onLogs: Subject<string[]>;
 
     private _config: AuxConfig;
     private _worker: DenoWorker;
@@ -135,6 +136,10 @@ export class DenoVM implements AuxVM {
         return this._onAuthMessage;
     }
 
+    get onLogs(): Observable<string[]> {
+        return this._onLogs;
+    }
+
     /**
      * Initaializes the VM.
      */
@@ -159,6 +164,13 @@ export class DenoVM implements AuxVM {
                 allowNet: true,
             },
             denoExecutable: this.denoExecutable,
+        });
+
+        this._worker.stderr.on('data', (data: string) => {
+            this._onLogs.next([data]);
+        });
+        this._worker.stdout.on('data', (data: string) => {
+            this._onLogs.next([data]);
         });
 
         this._connectionStateChanged.next({

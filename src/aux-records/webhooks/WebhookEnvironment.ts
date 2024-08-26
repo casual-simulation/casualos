@@ -158,6 +158,11 @@ export type HandleHttpRequestResult =
 export interface HandleHttpRequestSuccess {
     success: true;
     response: GenericHttpResponse;
+
+    /**
+     * The logs that were produced while handling the request.
+     */
+    logs: string[];
 }
 
 export interface HandleHttpRequestFailure {

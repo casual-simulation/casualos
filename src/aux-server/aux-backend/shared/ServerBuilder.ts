@@ -1413,18 +1413,17 @@ export class ServerBuilder implements SubscriptionLike {
                         new URL(env.scriptPath),
                         simId,
                         origin,
-                        {
-                            ...config,
-                            config: {
-                                ...config.config,
-                                debug: true,
-                            },
-                        }
+                        config
                     );
                     if (env.denoPath) {
                         vm.denoExecutable = env.denoPath;
                     }
-                    return new DenoSimulationImpl(indicator, origin, vm);
+                    const sim = new DenoSimulationImpl(indicator, origin, vm);
+
+                    return {
+                        sim,
+                        onLogs: vm.onLogs,
+                    };
                 }
             );
         } else if (env.type === 'node') {
@@ -1437,7 +1436,10 @@ export class ServerBuilder implements SubscriptionLike {
                         origin,
                         config
                     );
-                    return sim;
+
+                    return {
+                        sim,
+                    };
                 }
             );
         } else if (env.type === 'lambda') {

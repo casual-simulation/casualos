@@ -5,7 +5,6 @@ import {
     WEBHOOK_STATE_SCHEMA,
     WebhookState,
 } from '@casual-simulation/aux-records';
-import { z } from 'zod';
 import { resolve } from 'path';
 import {
     HANDLE_WEBHOOK_PAYLOAD_SCHEMA,
@@ -18,7 +17,12 @@ const environment = new SimulationWebhookEnvironment(
     (simId, indicator, origin, config) => {
         const vm = new DenoVM(scriptPath, simId, origin, config);
         vm.denoExecutable = resolve('./deno');
-        return new DenoSimulationImpl(indicator, origin, vm);
+        const sim = new DenoSimulationImpl(indicator, origin, vm);
+
+        return {
+            sim,
+            onLogs: vm.onLogs,
+        };
     }
 );
 

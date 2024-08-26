@@ -7,6 +7,7 @@ import {
 import { v4 as uuid } from 'uuid';
 import {
     AuxConfig,
+    AuxVM,
     Simulation,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
@@ -22,13 +23,17 @@ import { getSimulationId } from '../../../shared/SimulationHelpers';
 import mime from 'mime';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { Observable, Subscription } from 'rxjs';
 
 export type WebhookSimulationFactory = (
     simId: string,
     indicator: ConnectionIndicator,
     origin: SimulationOrigin,
     config: AuxConfig
-) => Simulation;
+) => {
+    sim: Simulation;
+    onLogs?: Observable<string[]>;
+};
 
 export interface SimulationEnvironmentOptions {
     /**
@@ -106,8 +111,10 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             connectionId: configBotId,
         };
 
-        const sim = this._factory(simId, indicator, origin, config);
+        const sub = new Subscription();
+        const { sim, onLogs } = this._factory(simId, indicator, origin, config);
         try {
+            sub.add(sim);
             const initErr = await timeout(sim.init(), this._initTimeoutMs);
 
             if (initErr) {
@@ -202,6 +209,10 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 data = JSON.parse(request.request.body);
             }
 
+            const logs: string[] = [];
+            if (onLogs) {
+                sub.add(onLogs.subscribe((log) => logs.push(...log)));
+            }
             const results = await timeout(
                 sim.helper.shout('onWebhook', null, {
                     method: request.request.method,
@@ -230,6 +241,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                         'Content-Type': 'application/json',
                     },
                 },
+                logs,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -244,7 +256,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     'An error occurred while trying to handle the request.',
             };
         } finally {
-            sim.unsubscribe();
+            sub.unsubscribe();
         }
     }
 }
