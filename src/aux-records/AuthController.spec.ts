@@ -337,6 +337,51 @@ describe('AuthController', () => {
             const user = await store.findUser('uuid1');
             expect(user).toBeFalsy();
         });
+
+        it('should be able to create an account without creating a session key', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const result = await controller.createAccount({
+                userRole: 'superUser',
+                ipAddress: null,
+                createSession: false,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'uuid1',
+                sessionKey: null,
+                connectionKey: null,
+                expireTimeMs: null,
+            });
+
+            const user = await store.findUser('uuid1');
+
+            expect(user).toEqual({
+                id: 'uuid1',
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const session = await store.findSession(
+                'uuid1',
+                fromByteArray(sessionId)
+            );
+
+            expect(session).toBeFalsy();
+        });
     });
 
     describe('requestLogin()', () => {

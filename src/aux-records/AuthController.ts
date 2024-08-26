@@ -216,6 +216,7 @@ export class AuthController {
         request: CreateAccountRequest
     ): Promise<CreateAccountResult> {
         try {
+            const createSession = request.createSession ?? true;
             if (!isSuperUserRole(request.userRole)) {
                 return {
                     success: false,
@@ -238,57 +239,67 @@ export class AuthController {
                 return result;
             }
 
-            const sessionId = fromByteArray(
-                randomBytes(SESSION_ID_BYTE_LENGTH)
-            );
-            const sessionSecret = fromByteArray(
-                randomBytes(SESSION_SECRET_BYTE_LENGTH)
-            );
-            const connectionSecret = fromByteArray(
-                randomBytes(SESSION_SECRET_BYTE_LENGTH)
-            );
-            const now = Date.now();
+            if (createSession) {
+                const sessionId = fromByteArray(
+                    randomBytes(SESSION_ID_BYTE_LENGTH)
+                );
+                const sessionSecret = fromByteArray(
+                    randomBytes(SESSION_SECRET_BYTE_LENGTH)
+                );
+                const connectionSecret = fromByteArray(
+                    randomBytes(SESSION_SECRET_BYTE_LENGTH)
+                );
+                const now = Date.now();
 
-            const session: AuthSession = {
-                userId: newUser.id,
-                sessionId: sessionId,
-                requestId: null,
+                const session: AuthSession = {
+                    userId: newUser.id,
+                    sessionId: sessionId,
+                    requestId: null,
 
-                // sessionSecret and sessionId are high-entropy (128 bits of random data)
-                // so we should use a hash that is optimized for high-entropy inputs.
-                secretHash: this.hashHighEntropyPasswordWithSalt(
-                    sessionSecret,
-                    sessionId
-                ),
-                connectionSecret: connectionSecret,
-                grantedTimeMs: now,
-                revokeTimeMs: null,
-                expireTimeMs: null,
-                previousSessionId: null,
-                nextSessionId: null,
-                ipAddress: request.ipAddress,
+                    // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                    // so we should use a hash that is optimized for high-entropy inputs.
+                    secretHash: this.hashHighEntropyPasswordWithSalt(
+                        sessionSecret,
+                        sessionId
+                    ),
+                    connectionSecret: connectionSecret,
+                    grantedTimeMs: now,
+                    revokeTimeMs: null,
+                    expireTimeMs: null,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    ipAddress: request.ipAddress,
 
-                revocable: false,
-            };
-            await this._store.saveSession(session);
+                    revocable: false,
+                };
+                await this._store.saveSession(session);
 
-            return {
-                success: true,
-                userId: session.userId,
-                sessionKey: formatV1SessionKey(
-                    newUser.id,
-                    sessionId,
-                    sessionSecret,
-                    session.expireTimeMs ?? Infinity
-                ),
-                connectionKey: formatV1ConnectionKey(
-                    newUser.id,
-                    sessionId,
-                    connectionSecret,
-                    session.expireTimeMs ?? Infinity
-                ),
-                expireTimeMs: session.expireTimeMs,
-            };
+                return {
+                    success: true,
+                    userId: session.userId,
+                    sessionKey: formatV1SessionKey(
+                        newUser.id,
+                        sessionId,
+                        sessionSecret,
+                        session.expireTimeMs ?? Infinity
+                    ),
+                    connectionKey: formatV1ConnectionKey(
+                        newUser.id,
+                        sessionId,
+                        connectionSecret,
+                        session.expireTimeMs ?? Infinity
+                    ),
+                    expireTimeMs: session.expireTimeMs,
+                };
+            } else {
+                return {
+                    success: true,
+                    userId: newUser.id,
+                    sessionKey: null,
+                    connectionKey: null,
+                    expireTimeMs: null,
+                };
+            }
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
@@ -3379,8 +3390,15 @@ export interface CreateAccountRequest {
 
     /**
      * The IP Address that the request is being made from.
+     * Can be set to null if not creating a session.
      */
-    ipAddress: string;
+    ipAddress: string | null;
+
+    /**
+     * Whether or not to create a session for the user.
+     * Defaults to true.
+     */
+    createSession?: boolean;
 }
 
 export type CreateAccountResult = CreateAccountSuccess | CreateAccountFailure;
