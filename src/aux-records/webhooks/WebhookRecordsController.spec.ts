@@ -1215,6 +1215,44 @@ describe('WebhookRecordsController', () => {
             });
         });
 
+        it('should omit the info file if the run doesnt have any info', async () => {
+            await itemsStore.recordWebhookRun({
+                runId: `run1`,
+                recordName,
+                webhookAddress: `item1`,
+                requestTimeMs: 123,
+                responseTimeMs: 456,
+                statusCode: 200,
+                stateSha256: 'sha256',
+                errorResult: null,
+                infoRecordName: null,
+                infoFileName: null,
+            });
+
+            const result = await manager.getWebhookRun({
+                runId: 'run1',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                run: {
+                    runId: 'run1',
+                    recordName,
+                    webhookAddress: 'item1',
+                    requestTimeMs: 123,
+                    responseTimeMs: 456,
+                    statusCode: 200,
+                    stateSha256: 'sha256',
+                    errorResult: null,
+                    infoRecordName: null,
+                    infoFileName: null,
+                },
+                infoFileResult: null,
+            });
+        });
+
         it('should return not_authorized if the user doesnt have read access to the webhook', async () => {
             const result = await manager.getWebhookRun({
                 runId: 'run1',
