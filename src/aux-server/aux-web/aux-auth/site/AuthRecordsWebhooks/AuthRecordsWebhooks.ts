@@ -113,6 +113,18 @@ export default class AuthRecordsWebhooks extends Vue {
         this.selectedItem = item;
     }
 
+    async deleteWebhook(item: WebhookRecord) {
+        const result = await authManager.client.eraseWebhook({
+            recordName: this.recordName,
+            address: item.address,
+        });
+        if (result.success === true) {
+            this.items.mdData = this.items.mdData.filter(
+                (i) => i.address !== item.address
+            );
+        }
+    }
+
     async updatePagination(page: number, pageSize: number) {
         let nextPage = await this._helper.loadPage(page, pageSize);
         if (nextPage) {

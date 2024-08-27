@@ -24,6 +24,18 @@
                         @click="onMarkerClick(marker)"
                     ></auth-marker>
                 </md-table-cell>
+                <md-table-cell md-label="Options">
+                    <md-menu md-align-trigger>
+                        <md-button md-menu-trigger class="md-icon-button">
+                            <md-icon>more_vert</md-icon>
+                            <span class="sr-only">Webhook Options</span>
+                            <md-tooltip>Webhook Options</md-tooltip>
+                        </md-button>
+                        <md-menu-content>
+                            <md-menu-item @click="deleteWebhook(item)">Delete Webhook</md-menu-item>
+                        </md-menu-content>
+                    </md-menu>
+                </md-table-cell>
             </md-table-row>
 
             <template v-slot:md-table-pagination v-if="items.mdData.length > 0">
