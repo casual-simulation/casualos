@@ -1131,6 +1131,113 @@ describe('WebhookRecordsController', () => {
             });
         });
     });
+
+    describe('getWebhookRun()', () => {
+        beforeEach(async () => {
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+
+            await store.saveUser({
+                id: 'webhookUserId',
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await itemsStore.createItem(recordName, {
+                address: 'item1',
+                targetAddress: 'data1',
+                targetRecordName: recordName,
+                targetResourceKind: 'data',
+                userId: 'webhookUserId',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await itemsStore.recordWebhookRun({
+                runId: `run1`,
+                recordName,
+                webhookAddress: `item1`,
+                requestTimeMs: 123,
+                responseTimeMs: 456,
+                statusCode: 200,
+                stateSha256: 'sha256',
+                errorResult: null,
+                infoRecordName: 'webhookUserId',
+                infoFileName: `file1`,
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'file1',
+                'webhookUserId',
+                'webhookUserId',
+                123,
+                'description',
+                ['private:logs']
+            );
+        });
+
+        it('should return the webhook run', async () => {
+            const result = await manager.getWebhookRun({
+                runId: 'run1',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                run: {
+                    runId: 'run1',
+                    recordName,
+                    webhookAddress: 'item1',
+                    requestTimeMs: 123,
+                    responseTimeMs: 456,
+                    statusCode: 200,
+                    stateSha256: 'sha256',
+                    errorResult: null,
+                    infoRecordName: 'webhookUserId',
+                    infoFileName: `file1`,
+                },
+                infoFileResult: {
+                    success: true,
+                    requestMethod: 'GET',
+                    requestUrl: 'http://localhost:9191/webhookUserId/file1',
+                    requestHeaders: {
+                        'record-name': 'webhookUserId',
+                    },
+                },
+            });
+        });
+
+        it('should return not_authorized if the user doesnt have read access to the webhook', async () => {
+            const result = await manager.getWebhookRun({
+                runId: 'run1',
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'webhook',
+                    resourceId: 'item1',
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                    action: 'read',
+                },
+            });
+        });
+    });
 });
 
 describe('STORED_AUX_SCHEMA', () => {

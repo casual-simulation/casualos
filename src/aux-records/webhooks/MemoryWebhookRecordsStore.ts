@@ -5,6 +5,7 @@ import {
     WebhookRecord,
     WebhookRecordsStore,
     WebhookRunInfo,
+    WebhookRunInfoWithWebhook,
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
 import { ListCrudStoreSuccess } from '../crud/CrudRecordsStore';
@@ -64,6 +65,30 @@ export class MemoryWebhookRecordsStore
         return {
             ...info,
             totalItems,
+        };
+    }
+
+    async getWebhookRunInfo(
+        runId: string
+    ): Promise<WebhookRunInfoWithWebhook | null> {
+        const run = this._webhookRuns.get(runId);
+
+        if (!run) {
+            return null;
+        }
+
+        const webhook = await this.getItemByAddress(
+            run.recordName,
+            run.webhookAddress
+        );
+
+        if (!webhook) {
+            return null;
+        }
+
+        return {
+            run,
+            webhook,
         };
     }
 }

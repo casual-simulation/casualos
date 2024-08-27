@@ -42,6 +42,12 @@ export interface WebhookRecordsStore extends CrudRecordsStore<WebhookRecord> {
         webhookAddress: string,
         requestTimeMs?: number
     ): Promise<ListCrudStoreSuccess<WebhookRunInfo>>;
+
+    /**
+     * Gets the information about the given webhook run.
+     * @param runId The ID of the webhook run.
+     */
+    getWebhookRunInfo(runId: string): Promise<WebhookRunInfoWithWebhook | null>;
 }
 
 export interface WebhookRecord extends CrudRecord {
@@ -189,4 +195,9 @@ export interface WebhookSubscriptionMetrics extends CrudSubscriptionMetrics {
      * The total number of webhook items that are stored in the subscription.
      */
     totalItems: number;
+}
+
+export interface WebhookRunInfoWithWebhook {
+    run: WebhookRunInfo;
+    webhook: WebhookRecord;
 }

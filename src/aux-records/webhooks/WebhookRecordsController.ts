@@ -440,7 +440,78 @@ export class WebhookRecordsController extends CrudRecordsController<
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[WebhookRecordsController] Error handling webhook:',
+                '[WebhookRecordsController] Error listing webhook runs:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    @traced(TRACE_NAME)
+    async getWebhookRun(
+        request: GetWebhookRunRequest
+    ): Promise<GetWebhookRunResult> {
+        try {
+            const run = await this.store.getWebhookRunInfo(request.runId);
+            if (!run) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The webhook run was not found.',
+                };
+            }
+
+            const context = await this.policies.constructAuthorizationContext({
+                userId: request.userId,
+                recordKeyOrRecordName: run.run.recordName,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authorization = await this.policies.authorizeUserAndInstances(
+                context.context,
+                {
+                    action: 'read',
+                    resourceKind: 'webhook',
+                    resourceId: run.webhook.address,
+                    markers: run.webhook.markers,
+                    instances: request.instances,
+                    userId: context.context.userId,
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            let infoFileResult: ReadFileResult = null;
+            if (run.run.infoRecordName && run.run.infoFileName) {
+                infoFileResult = await this._files.readFile(
+                    run.run.infoRecordName,
+                    run.run.infoFileName,
+                    run.webhook.userId,
+                    request.instances
+                );
+            }
+
+            return {
+                success: true,
+                run: run.run,
+                infoFileResult,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[WebhookRecordsController] Error getting webhook run:',
                 err
             );
             return {
@@ -628,4 +699,57 @@ export interface ListWebhookRunsRequest {
      * Formatted as the unix time in milliseconds.
      */
     requestTimeMs?: number;
+}
+
+export interface GetWebhookRunRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the webhook run that is being requested.
+     */
+    runId: string;
+
+    /**
+     * The instances that the request is coming from.
+     */
+    instances: string[];
+}
+
+export type GetWebhookRunResult = GetWebhookRunSuccess | GetWebhookRunFailure;
+
+export interface GetWebhookRunSuccess {
+    success: true;
+
+    /**
+     * The run that was requested.
+     */
+    run: WebhookRunInfo;
+
+    /**
+     * The result of the read file operation for the info file for the run.
+     * If the run doesn't have an info file, then this will be null.
+     * If the run has an info file but it could not be read, then this will be a ReadFileFailure.
+     */
+    infoFileResult: ReadFileResult | null;
+}
+
+export interface GetWebhookRunFailure {
+    success: false;
+
+    /**
+     * The error code if the webhook run was not successfully retrieved.
+     */
+    errorCode:
+        | ServerError
+        | 'data_not_found'
+        | AuthorizeSubjectFailure['errorCode']
+        | ConstructAuthorizationContextFailure['errorCode'];
+
+    /**
+     * The error message if the webhook run was not successfully retrieved.
+     */
+    errorMessage: string;
 }
