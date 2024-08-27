@@ -1,29 +1,29 @@
 <template>
-    <div>
-        <md-table v-model="items.mdData" md-card md-fixed-header @md-selected="onSelectItem">
+    <div class="webhook-container">
+        <md-table v-model="items.mdData" md-card md-fixed-header>
             <md-table-toolbar>
-                <h1 class="md-title">Webhooks</h1>
+                <h1 class="md-title">{{ webhook.address }} Runs</h1>
             </md-table-toolbar>
 
             <md-table-empty-state
-                md-label="No webhooks found"
-                :md-description="`No webhooks found for this query.`"
+                md-label="No runs found"
+                :md-description="`No runs found for this webhook.`"
             >
             </md-table-empty-state>
 
             <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
-                <md-table-cell md-label="Address" md-sort-by="address">{{
-                    item.address
+                <md-table-cell md-label="ID" md-sort-by="runId">{{
+                    item.runId.substring(0, 8)
                 }}</md-table-cell>
-                <md-table-cell md-label="URL">{{ getWebhookUrl(item) }}</md-table-cell>
-                <md-table-cell md-label="Markers" md-sort-by="markers">
-                    <auth-marker
-                        v-for="marker in item.markers"
-                        :key="marker"
-                        :marker="marker"
-                        @click="onMarkerClick(marker)"
-                    ></auth-marker>
+                <md-table-cell md-label="Request Time" md-sort-by="requestTimeMs">
+                    <relative-time :millis="item.requestTimeMs"></relative-time>
                 </md-table-cell>
+                <md-table-cell md-label="Response Time" md-sort-by="responseTimeMs">
+                    <relative-time :millis="item.responseTimeMs"></relative-time>
+                </md-table-cell>
+                <md-table-cell md-label="Status Code" md-sort-by="statusCode">{{
+                    item.statusCode
+                }}</md-table-cell>
             </md-table-row>
 
             <template v-slot:md-table-pagination v-if="items.mdData.length > 0">
@@ -48,18 +48,7 @@
                 </div>
             </template>
         </md-table>
-
-        <auth-webhook v-if="selectedItem" :recordName="recordName" :webhook="selectedItem">
-        </auth-webhook>
-
-        <auth-permissions
-            :recordName="recordName"
-            :marker="permissionsMarker"
-            :resourceKind="permissionsResourceKind"
-            :resourceId="permissionsResourceId"
-        >
-        </auth-permissions>
     </div>
 </template>
-<script src="./AuthRecordsWebhooks.ts"></script>
-<style src="./AuthRecordsWebhooks.css" scoped></style>
+<script src="./AuthWebhook.ts"></script>
+<style src="./AuthWebhook.css" scoped></style>

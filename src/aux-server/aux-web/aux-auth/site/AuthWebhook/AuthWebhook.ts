@@ -4,12 +4,14 @@ import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import type { WebhookRecord } from '@casual-simulation/aux-records';
+import type {
+    WebhookRecord,
+    WebhookRunInfo,
+} from '@casual-simulation/aux-records';
 import { LoadingHelper } from '../LoadingHelper';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import AuthPermissions from '../AuthPermissions/AuthPermissions';
-import AuthWebhook from '../AuthWebhook/AuthWebhook';
 
 const PAGE_SIZE = 10;
 
@@ -19,14 +21,16 @@ const PAGE_SIZE = 10;
         'auth-marker': AuthMarker,
         'relative-time': RelativeTime,
         'auth-permissions': AuthPermissions,
-        'auth-webhook': AuthWebhook,
     },
 })
-export default class AuthRecordsWebhooks extends Vue {
-    private _helper: LoadingHelper<WebhookRecord>;
+export default class AuthWebhook extends Vue {
+    private _helper: LoadingHelper<WebhookRunInfo>;
 
     @Prop({ required: true })
     recordName: string;
+
+    @Prop({ required: true })
+    webhook: WebhookRecord;
 
     loading: boolean = false;
     items: {
@@ -34,7 +38,7 @@ export default class AuthRecordsWebhooks extends Vue {
         mdPage: number;
         startIndex: number;
         endIndex: number;
-        mdData: WebhookRecord[];
+        mdData: WebhookRunInfo[];
     } = {
         mdCount: 0,
         mdPage: 0,
@@ -45,13 +49,16 @@ export default class AuthRecordsWebhooks extends Vue {
 
     selectedItem: WebhookRecord = null;
 
-    permissionsMarker: string = null;
-    permissionsResourceKind: string = null;
-    permissionsResourceId: string = null;
-
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
         if (last !== next) {
+            this._reset();
+        }
+    }
+
+    @Watch('webhook', {})
+    onWebhookChanged(last: WebhookRecord, next: WebhookRecord) {
+        if (last?.address !== next?.address) {
             this._reset();
         }
     }
@@ -71,11 +78,11 @@ export default class AuthRecordsWebhooks extends Vue {
     }
 
     private _reset() {
-        this.selectedItem = null;
         this._helper = new LoadingHelper(async (lastItem) => {
-            const result = await authManager.client.listWebhooks({
+            const result = await authManager.client.listWebhookRuns({
                 recordName: this.recordName,
-                address: lastItem?.address,
+                address: this.webhook.address,
+                requestTimeMs: lastItem?.requestTimeMs,
             });
 
             if (result.success === true) {
@@ -103,14 +110,6 @@ export default class AuthRecordsWebhooks extends Vue {
 
     changePage(change: number) {
         this.updatePagination(this.items.mdPage + change, PAGE_SIZE);
-    }
-
-    onMarkerClick(marker: string) {
-        this.permissionsMarker = marker;
-    }
-
-    onSelectItem(item: WebhookRecord) {
-        this.selectedItem = item;
     }
 
     async updatePagination(page: number, pageSize: number) {
