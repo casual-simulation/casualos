@@ -9966,6 +9966,16 @@ describe('RecordsServer', () => {
 
             expect(body).toMatchSnapshot();
         });
+
+        testUrl(
+            'POST',
+            `/api/v2/records/webhook/run?recordName=${recordName}&address=testAddress`,
+            () =>
+                JSON.stringify({
+                    data: 'hello, world',
+                }),
+            () => apiHeaders
+        );
     });
 
     describe('POST /api/v2/records/key', () => {
