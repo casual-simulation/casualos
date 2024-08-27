@@ -1335,6 +1335,38 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/records/webhook/runs/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "requestTimeMs": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listWebhookRuns",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/records/list",
       },
       "inputs": Object {
@@ -4517,6 +4549,38 @@ Object {
         "type": "object",
       },
       "name": "eraseWebhook",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/webhook/runs/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "requestTimeMs": Object {
+            "optional": true,
+            "type": "number",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listWebhookRuns",
       "origins": "api",
     },
     Object {

@@ -1633,6 +1633,53 @@ export class RecordsServer {
                     .http('DELETE', '/api/v2/records/webhook')
             ),
 
+            listWebhookRuns: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/webhook/runs/list')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        requestTimeMs: z.number().int().optional(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, requestTimeMs, instances },
+                        context
+                    ) => {
+                        if (!this._webhooksController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._webhooksController.listWebhookRuns({
+                                recordName,
+                                address,
+                                userId: validation.userId,
+                                requestTimeMs,
+                                instances,
+                            });
+
+                        return result;
+                    }
+                ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
