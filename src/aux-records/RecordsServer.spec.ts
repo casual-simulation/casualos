@@ -9944,11 +9944,18 @@ describe('RecordsServer', () => {
             });
 
             const result = await server.handleHttpRequest(
-                procedureRequest('runWebhook', {}, apiHeaders, {
-                    recordName,
-                    address: 'testAddress',
-                    other: 'def',
-                })
+                procedureRequest(
+                    'runWebhook',
+                    {
+                        value: 'abc',
+                    },
+                    apiHeaders,
+                    {
+                        recordName,
+                        address: 'testAddress',
+                        other: 'def',
+                    }
+                )
             );
 
             const body = await expectResponseBodyToEqual(result, {
@@ -9965,6 +9972,29 @@ describe('RecordsServer', () => {
             });
 
             expect(body).toMatchSnapshot();
+
+            expect(webhookEnvironment.handleHttpRequest).toHaveBeenCalledWith({
+                recordName,
+                state: {
+                    type: 'aux',
+                    state: aux,
+                },
+                request: {
+                    method: 'POST',
+                    path: `/api/v2/records/webhook/run`,
+                    ipAddress: '123.456.789',
+                    body: JSON.stringify({
+                        value: 'abc',
+                    }),
+                    headers: {
+                        origin: apiHeaders['origin'],
+                    },
+                    query: {
+                        other: 'def',
+                    },
+                    pathParams: {},
+                },
+            });
         });
 
         testUrl(

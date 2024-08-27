@@ -1525,7 +1525,7 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        data,
+                        data: any,
                         context,
                         { recordName, address, instances, ...rest }
                     ) => {
@@ -1579,8 +1579,8 @@ export class RecordsServer {
                                 request: {
                                     method: context.httpRequest.method,
                                     ipAddress: context.httpRequest.ipAddress,
-                                    path: context.httpRequest.path,
-                                    body: context.httpRequest.body,
+                                    path: '/api/v2/records/webhook/run',
+                                    body: JSON.stringify(data),
                                     headers: omit(
                                         context.httpRequest.headers,
                                         ...bannedHeaders
