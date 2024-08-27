@@ -10115,6 +10115,156 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/webhook/runs/info', () => {
+        let aux: StoredAuxVersion1;
+        const webhookUserId = 'webhookUserId';
+
+        beforeEach(async () => {
+            aux = {
+                version: 1,
+                state: {
+                    test1: createBot('test1'),
+                },
+            };
+
+            await store.setData(
+                recordName,
+                'data1',
+                JSON.stringify(aux),
+                userId,
+                userId,
+                true,
+                true,
+                [PUBLIC_READ_MARKER]
+            );
+
+            await store.saveUser({
+                id: webhookUserId,
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await webhookStore.createItem(recordName, {
+                address: 'testAddress',
+                markers: [PRIVATE_MARKER],
+                targetResourceKind: 'data',
+                targetAddress: 'data1',
+                targetRecordName: recordName,
+                userId: webhookUserId,
+            });
+
+            await webhookStore.recordWebhookRun({
+                runId: 'run1',
+                recordName,
+                webhookAddress: 'testAddress',
+                errorResult: null,
+                requestTimeMs: 1000,
+                responseTimeMs: 2000,
+                statusCode: 200,
+                stateSha256: 'sha256',
+                infoRecordName: webhookUserId,
+                infoFileName: 'info.json',
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'info.json',
+                webhookUserId,
+                webhookUserId,
+                123,
+                'info',
+                ['private:logs']
+            );
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook/runs/info?runId=${'run1'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the info for the run', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/webhook/runs/info?runId=${'run1'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    run: {
+                        runId: 'run1',
+                        recordName,
+                        webhookAddress: 'testAddress',
+                        errorResult: null,
+                        requestTimeMs: 1000,
+                        responseTimeMs: 2000,
+                        statusCode: 200,
+                        stateSha256: 'sha256',
+                        infoRecordName: webhookUserId,
+                        infoFileName: 'info.json',
+                    },
+                    infoFileResult: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: `http://localhost:9191/${webhookUserId}/info.json`,
+                        requestHeaders: {
+                            'record-name': webhookUserId,
+                        },
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'GET',
+            `/api/v2/records/webhook/runs/info?runId=${'run1'}`,
+            () => undefined,
+            () => apiHeaders
+        );
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(

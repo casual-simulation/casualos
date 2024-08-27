@@ -1680,6 +1680,45 @@ export class RecordsServer {
                     }
                 ),
 
+            getWebhookRun: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/webhook/runs/info')
+                .inputs(
+                    z.object({
+                        runId: z.string().min(1),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ runId, instances }, context) => {
+                    if (!this._webhooksController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._webhooksController.getWebhookRun(
+                        {
+                            runId,
+                            userId: validation.userId,
+                            instances,
+                        }
+                    );
+
+                    return result;
+                }),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
