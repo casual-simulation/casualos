@@ -4,6 +4,7 @@ import {
     WebhookRecord,
     WebhookRecordsStore,
     WebhookRunInfo,
+    WebhookRunInfoWithWebhook,
     WebhookSubscriptionMetrics,
 } from '@casual-simulation/aux-records';
 import {
@@ -14,11 +15,22 @@ import {
     Prisma,
     PrismaClient,
     WebhookRecord as PrismaWebhookRecord,
+    WebhookRun as PrismaWebhookRun,
 } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { PrismaMetricsStore } from './PrismaMetricsStore';
 import { convertToDate, convertToMillis } from './Utils';
 import { z } from 'zod';
+
+const ERROR_RESULT_SCHEMA = z
+    .object({
+        success: z.literal(false),
+        errorCode: z.string(),
+        errorMessage: z.string(),
+    })
+    .passthrough()
+    .optional()
+    .nullable();
 
 const TRACE_NAME = 'PrismaWebhookRecordsStore';
 
@@ -324,36 +336,33 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
             }),
         ]);
 
-        const errorResultSchema = z
-            .object({
-                success: z.literal(false),
-                errorCode: z.string(),
-                errorMessage: z.string(),
-            })
-            .passthrough()
-            .optional()
-            .nullable();
-
         return {
             success: true,
             totalCount: count,
-            items: records.map((r) => {
-                return {
-                    runId: r.id,
-                    recordName: r.recordName,
-                    webhookAddress: r.webhookAddress,
-                    requestTimeMs: convertToMillis(r.requestTime),
-                    responseTimeMs: convertToMillis(r.responseTime),
-                    statusCode: r.statusCode,
-                    errorResult: errorResultSchema.parse(
-                        r.errorResult
-                    ) as WebhookRunInfo['errorResult'],
-                    stateSha256: r.stateSha256,
-                    infoRecordName: r.infoFileRecordName,
-                    infoFileName: r.infoFileName,
-                };
-            }),
+            items: records.map((r) => this._convertWebhookRun(r)),
             marker: null,
+        };
+    }
+
+    async getWebhookRunInfo(
+        runId: string
+    ): Promise<WebhookRunInfoWithWebhook | null> {
+        const run = await this._client.webhookRun.findUnique({
+            where: {
+                id: runId,
+            },
+            include: {
+                webhook: true,
+            },
+        });
+
+        if (!run) {
+            return null;
+        }
+
+        return {
+            run: this._convertWebhookRun(run),
+            webhook: this._convertRecord(run.webhook),
         };
     }
 
@@ -377,6 +386,23 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                 record.targetFileRecordFileName ||
                 '',
             userId: record.userId,
+        };
+    }
+
+    private _convertWebhookRun(r: PrismaWebhookRun): WebhookRunInfo {
+        return {
+            runId: r.id,
+            recordName: r.recordName,
+            webhookAddress: r.webhookAddress,
+            requestTimeMs: convertToMillis(r.requestTime),
+            responseTimeMs: convertToMillis(r.responseTime),
+            statusCode: r.statusCode,
+            errorResult: ERROR_RESULT_SCHEMA.parse(
+                r.errorResult
+            ) as WebhookRunInfo['errorResult'],
+            stateSha256: r.stateSha256,
+            infoRecordName: r.infoFileRecordName,
+            infoFileName: r.infoFileName,
         };
     }
 
