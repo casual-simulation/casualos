@@ -25,7 +25,7 @@ import {
     remapProgressPercent,
     DeviceAction,
 } from '@casual-simulation/aux-common';
-import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
+import { DenoWorker, DenoWorkerOptions, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import {
@@ -58,7 +58,7 @@ export class DenoVM implements AuxVM {
         }
     >;
     private _onAuthMessage: Subject<PartitionAuthMessage>;
-    private _onLogs: Subject<string[]>;
+    private _onLogs: Subject<string[]> = new Subject();
 
     private _config: AuxConfig;
     private _worker: DenoWorker;
@@ -157,21 +157,17 @@ export class DenoVM implements AuxVM {
         });
 
         const debug = !!this._config.config.debug;
-        this._worker = new DenoWorker(this._script, {
+        const workerOptions: Partial<DenoWorkerOptions> = {
             logStderr: debug,
             logStdout: debug,
             permissions: {
                 allowNet: true,
             },
-            denoExecutable: this.denoExecutable,
-        });
-
-        this._worker.stderr.on('data', (data: string) => {
-            this._onLogs.next([data]);
-        });
-        this._worker.stdout.on('data', (data: string) => {
-            this._onLogs.next([data]);
-        });
+        };
+        if (this.denoExecutable) {
+            workerOptions.denoExecutable = this.denoExecutable;
+        }
+        this._worker = new DenoWorker(this._script, workerOptions);
 
         this._connectionStateChanged.next({
             type: 'progress',
@@ -180,6 +176,13 @@ export class DenoVM implements AuxVM {
         });
 
         await waitForInit(this._worker);
+
+        this._worker.stderr.on('data', (data: string) => {
+            this._onLogs.next([data]);
+        });
+        this._worker.stdout.on('data', (data: string) => {
+            this._onLogs.next([data]);
+        });
 
         const [seconds, nanoseconds] = process.hrtime(startTime);
         console.log(

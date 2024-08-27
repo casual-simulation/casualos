@@ -112,8 +112,13 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
         };
 
         const sub = new Subscription();
-        const { sim, onLogs } = this._factory(simId, indicator, origin, config);
         try {
+            const { sim, onLogs } = this._factory(
+                simId,
+                indicator,
+                origin,
+                config
+            );
             sub.add(sim);
             const initErr = await timeout(sim.init(), this._initTimeoutMs);
 
