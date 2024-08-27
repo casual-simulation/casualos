@@ -31,12 +31,16 @@ export interface WebhookRecordsStore extends CrudRecordsStore<WebhookRecord> {
 
     /**
      * Gets the list of webhook runs for the given webhook.
+     * The list is sorted by the request time in descending order.
+     *
      * @param recordName The name of the record.
      * @param webhookAddress The address of the webhook.
+     * @param requestTimeMs The time that listed requests should appear before.
      */
     listWebhookRunsForWebhook(
         recordName: string,
-        webhookAddress: string
+        webhookAddress: string,
+        requestTimeMs?: number
     ): Promise<ListCrudStoreSuccess<WebhookRunInfo>>;
 }
 

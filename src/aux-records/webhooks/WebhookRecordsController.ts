@@ -19,6 +19,7 @@ import {
 import {
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsResult,
+    CrudListItemsResult,
     CrudRecordsConfiguration,
     CrudRecordsController,
 } from '../crud/CrudRecordsController';
@@ -372,6 +373,85 @@ export class WebhookRecordsController extends CrudRecordsController<
     }
 
     @traced(TRACE_NAME)
+    async listWebhookRuns(
+        request: ListWebhookRunsRequest
+    ): Promise<CrudListItemsResult<WebhookRunInfo>> {
+        try {
+            const context = await this.policies.constructAuthorizationContext({
+                userId: request.userId,
+                recordKeyOrRecordName: request.recordName,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
+            const webhook = await this.store.getItemByAddress(
+                recordName,
+                request.address
+            );
+
+            if (!webhook) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The webhook was not found.',
+                };
+            }
+
+            const authorization =
+                await this.policies.authorizeUserAndInstancesForResources(
+                    context.context,
+                    {
+                        instances: request.instances,
+                        userId: context.context.userId,
+                        resources: [
+                            {
+                                resourceKind: 'webhook',
+                                resourceId: webhook.address,
+                                action: 'read',
+                                markers: webhook.markers,
+                            },
+                        ],
+                    }
+                );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const runs = await this.store.listWebhookRunsForWebhook(
+                recordName,
+                request.address,
+                request.requestTimeMs
+            );
+
+            return {
+                success: true,
+                recordName: recordName,
+                items: runs.items,
+                totalCount: runs.totalCount,
+                marker: runs.marker,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[WebhookRecordsController] Error handling webhook:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    @traced(TRACE_NAME)
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
         context: AuthorizationContext,
@@ -518,4 +598,34 @@ export interface HandleWebhookFailure {
               errorMessage: string;
               issues: z.ZodIssue[];
           };
+}
+
+export interface ListWebhookRunsRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The name of the record that the webhook is stored in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the webhook.
+     */
+    address: string;
+
+    /**
+     * The instances that the request is coming from.
+     */
+    instances: string[];
+
+    /**
+     * The time that listed requests should appear before.
+     * If null, then the most recent runs will be returned.
+     *
+     * Formatted as the unix time in milliseconds.
+     */
+    requestTimeMs?: number;
 }

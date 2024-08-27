@@ -13,7 +13,11 @@ import {
     setupTestContext,
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
-import { WebhookRecord, WebhookRecordsStore } from './WebhookRecordsStore';
+import {
+    WebhookRecord,
+    WebhookRecordsStore,
+    WebhookRunInfo,
+} from './WebhookRecordsStore';
 import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
@@ -26,6 +30,7 @@ import {
     STORED_AUX_SCHEMA,
 } from './WebhookEnvironment';
 import { getHash } from '@casual-simulation/crypto';
+import { sortBy } from 'lodash';
 
 console.log = jest.fn();
 
@@ -1020,6 +1025,109 @@ describe('WebhookRecordsController', () => {
                             'The user must be logged in. Please provide a sessionKey or a recordKey.',
                     },
                 });
+            });
+        });
+    });
+
+    describe('listWebhookRuns()', () => {
+        let webhookRuns: WebhookRunInfo[];
+
+        beforeEach(async () => {
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+
+            await store.saveUser({
+                id: 'webhookUserId',
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await itemsStore.createItem(recordName, {
+                address: 'item1',
+                targetAddress: 'data1',
+                targetRecordName: recordName,
+                targetResourceKind: 'data',
+                userId: 'webhookUserId',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            webhookRuns = [];
+
+            for (let i = 0; i < 10; i++) {
+                let run: WebhookRunInfo = {
+                    runId: `run${i}`,
+                    recordName,
+                    webhookAddress: `item1`,
+                    requestTimeMs: 123 * (i + 1),
+                    responseTimeMs: 456 * (i + 1),
+                    statusCode: 200,
+                    stateSha256: 'sha256',
+                    errorResult: null,
+                    infoRecordName: 'webhookUserId',
+                    infoFileName: `file${i}`,
+                };
+                webhookRuns.push(run);
+                await itemsStore.recordWebhookRun({
+                    ...run,
+                });
+
+                await store.addFileRecord(
+                    'webhookUserId',
+                    `file${i}`,
+                    'webhookUserId',
+                    'webhookUserId',
+                    123,
+                    'description',
+                    ['private:logs']
+                );
+            }
+        });
+
+        it('should return the list of webhook runs', async () => {
+            const result = await manager.listWebhookRuns({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
+                items: sortBy(webhookRuns, (r) => -r.requestTimeMs),
+                totalCount: 10,
+                marker: null,
+            });
+        });
+
+        it('should return not_authorized if the user doesnt have read access to the webhook', async () => {
+            const result = await manager.listWebhookRuns({
+                recordName,
+                address: 'item1',
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'webhook',
+                    resourceId: 'item1',
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                    action: 'read',
+                },
             });
         });
     });

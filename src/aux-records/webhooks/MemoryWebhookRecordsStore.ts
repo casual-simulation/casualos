@@ -8,6 +8,7 @@ import {
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
 import { ListCrudStoreSuccess } from '../crud/CrudRecordsStore';
+import { sortBy } from 'lodash';
 
 export class MemoryWebhookRecordsStore
     extends MemoryCrudRecordsStore<WebhookRecord, WebhookSubscriptionMetrics>
@@ -25,17 +26,23 @@ export class MemoryWebhookRecordsStore
 
     async listWebhookRunsForWebhook(
         recordName: string,
-        webhookAddress: string
+        webhookAddress: string,
+        requestTimeMs?: number
     ): Promise<ListCrudStoreSuccess<WebhookRunInfo>> {
-        const runs = Array.from(this._webhookRuns.values()).filter(
+        const webhookRuns = Array.from(this._webhookRuns.values()).filter(
             (r) =>
                 r.recordName === recordName &&
                 r.webhookAddress === webhookAddress
         );
+
+        const sorted = sortBy(webhookRuns, (r) => -r.requestTimeMs);
+        const filtered = sorted.filter(
+            (r) => !requestTimeMs || r.requestTimeMs < requestTimeMs
+        );
         return {
             success: true,
-            items: runs,
-            totalCount: runs.length,
+            items: filtered,
+            totalCount: webhookRuns.length,
             marker: null,
         };
     }
