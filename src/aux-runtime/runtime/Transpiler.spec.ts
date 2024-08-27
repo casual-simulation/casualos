@@ -1872,6 +1872,26 @@ describe('Transpiler', () => {
                     )
                 ).toBe(`class Test { set #value(val) { } }`);
             });
+
+            it('should keep visibility annotations from constructor parameters in classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `class Test { constructor(readonly prop: number) {} }`
+                    )
+                ).toBe(`class Test { constructor(readonly prop) {} }`);
+            });
+
+            it('should remove visibility annotations from constructors in exported classes', () => {
+                const transpiler = new Transpiler();
+                expect(
+                    transpiler.transpile(
+                        `export class Test { public constructor(prop: number) {} }`
+                    )
+                ).toBe(
+                    `class Test { constructor(prop) {} }\nawait exports({ Test, });`
+                );
+            });
         });
     });
 

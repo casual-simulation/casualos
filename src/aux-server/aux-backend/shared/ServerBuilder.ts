@@ -43,6 +43,7 @@ import {
     RedisServerOptions,
     AnthropicAIChatInterface,
     ModerationJobProvider,
+    cleanupObject,
 } from '@casual-simulation/aux-records';
 import {
     RekognitionModerationJobProvider,
@@ -1240,11 +1241,13 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('AI options must be provided.');
         }
 
+        let hasChatInterface = false;
         if (options.openai) {
             console.log('[ServerBuilder] Using OpenAI Chat.');
             this._openAIChatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
             });
+            hasChatInterface = true;
         }
 
         if (options.googleai) {
@@ -1252,6 +1255,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._googleAIChatInterface = new GoogleAIChatInterface({
                 apiKey: options.googleai.apiKey,
             });
+            hasChatInterface = true;
         }
 
         if (options.anthropicai) {
@@ -1259,6 +1263,7 @@ export class ServerBuilder implements SubscriptionLike {
             this._anthropicAIChatInterface = new AnthropicAIChatInterface({
                 apiKey: options.anthropicai.apiKey,
             });
+            hasChatInterface = true;
         }
 
         if (
@@ -1313,13 +1318,13 @@ export class ServerBuilder implements SubscriptionLike {
             records: this._recordsStore,
         };
 
-        if (this._openAIChatInterface && options.ai.chat) {
+        if (hasChatInterface && options.ai.chat) {
             this._aiConfiguration.chat = {
-                interfaces: {
+                interfaces: cleanupObject({
                     openai: this._openAIChatInterface,
                     google: this._googleAIChatInterface,
                     anthropic: this._anthropicAIChatInterface,
-                },
+                }),
                 options: {
                     defaultModel: options.ai.chat.defaultModel,
                     defaultModelProvider: options.ai.chat.provider,

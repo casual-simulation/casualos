@@ -145,7 +145,7 @@ export default {
                 },
                 'variables',
                 'glossary',
-                'ab-1',
+                'abCore',
             ]
         },
     ],

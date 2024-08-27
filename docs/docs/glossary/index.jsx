@@ -1,5 +1,5 @@
 import AUX from './AuxFile.mdx';
-import AB1 from './ab1.mdx';
+import ABCore from './abCore.mdx';
 import Bot from './Bot.mdx';
 import CasualOS from './CasualOS.mdx';
 import Dimension from './Dimension.mdx';
@@ -29,7 +29,7 @@ import 'rc-tooltip/assets/bootstrap.css';
 
 export const Glossary = [
     { id: 'aux', title: 'AUX', content: () => <AUX/> },
-    { id: 'ab-1', title: 'ab-1', content: () => <AB1/> },
+    { id: 'abCore', title: 'abCore', content: () => <AB1/> },
     { id: 'bot', title: 'Bot', content: () => <Bot/> },
     { id: 'casualos', title: 'CasualOS', content: () => <CasualOS/> },
     { id: 'dimension', title: 'Dimension', content: () => <Dimension/> },
@@ -72,7 +72,7 @@ export const GlossaryRef = ({term, children}) => {
 
 export {
     AUX,
-    AB1,
+    ABCore,
     Bot,
     CasualOS,
     Dimension,
