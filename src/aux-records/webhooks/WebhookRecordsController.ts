@@ -309,7 +309,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                     );
                 } else {
                     infoRecordName = recordName;
-                    infoRecordName = recordResult.fileName;
+                    infoFileName = recordResult.fileName;
                     const requestResult = await axios.request({
                         method: recordResult.uploadMethod,
                         headers: recordResult.uploadHeaders,
