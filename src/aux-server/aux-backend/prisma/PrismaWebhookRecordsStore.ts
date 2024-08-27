@@ -18,6 +18,7 @@ import {
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { PrismaMetricsStore } from './PrismaMetricsStore';
 import { convertToDate, convertToMillis } from './Utils';
+import { z } from 'zod';
 
 const TRACE_NAME = 'PrismaWebhookRecordsStore';
 
@@ -323,6 +324,16 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
             }),
         ]);
 
+        const errorResultSchema = z
+            .object({
+                success: z.literal(false),
+                errorCode: z.string(),
+                errorMessage: z.string(),
+            })
+            .passthrough()
+            .optional()
+            .nullable();
+
         return {
             success: true,
             totalCount: count,
@@ -334,7 +345,9 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                     requestTimeMs: convertToMillis(r.requestTime),
                     responseTimeMs: convertToMillis(r.responseTime),
                     statusCode: r.statusCode,
-                    errorResult: r.errorResult,
+                    errorResult: errorResultSchema.parse(
+                        r.errorResult
+                    ) as WebhookRunInfo['errorResult'],
                     stateSha256: r.stateSha256,
                     infoRecordName: r.infoFileRecordName,
                     infoFileName: r.infoFileName,
