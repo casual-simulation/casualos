@@ -150,10 +150,16 @@ program
     .action(async (options) => {
         const opts = program.optsWithGlobals();
         const endpoint = await getEndpoint(opts.endpoint);
-        const client = await getClient(
-            endpoint,
-            opts.key ?? (await getOrRefreshSessionKey(endpoint))
-        );
+        const key = opts.key ?? (await getOrRefreshSessionKey(endpoint));
+        const client = await getClient(endpoint, key);
+
+        let userId: string = null;
+        if (key) {
+            const parseResult = parseSessionKey(key);
+            if (parseResult) {
+                userId = parseResult[0];
+            }
+        }
 
         const replIn = new PassThrough();
 
@@ -197,6 +203,12 @@ program
                         replServer
                     );
                 }),
+            },
+            userId: {
+                configurable: false,
+                writable: false,
+                enumerable: true,
+                value: userId,
             },
         });
     });
