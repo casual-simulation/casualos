@@ -733,6 +733,21 @@ function registerEditorActionsForSimulation(simulation: Simulation) {
     return sub;
 }
 
+export async function getScriptIssues(
+    simulation: BrowserSimulation,
+    bot: Bot,
+    tag: string
+) {
+    const model = loadModel(simulation, bot, tag, null, () => null);
+    const worker = await monaco.languages.typescript.getTypeScriptWorker();
+    const client = await worker(model.uri);
+    return {
+        syntax: await client.getSyntacticDiagnostics(model.uri.toString()),
+        semantic: await client.getSemanticDiagnostics(model.uri.toString()),
+        suggestion: await client.getSuggestionDiagnostics(model.uri.toString()),
+    };
+}
+
 export function addDefinitionsForPortalBot(
     portalId: string,
     botId: string,

@@ -5454,60 +5454,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
     }
 
-    function getScriptIssues(bot: Bot, tag: string): Promise<string[]> {
+    /**
+     *
+     * @param bot the bot to get the script issues for.
+     * @param tag the tag of the bot to get the script issues for.
+     *
+     * @example Get the script issues for a bot.
+     * const issues = await os.getScriptIssues(bot, 'tag');
+     * console.log(issues);
+     */
+
+    function getScriptIssues(
+        bot: Bot | string,
+        tag: string
+    ): Promise<string[]> {
         console.log('getScriptIssues');
-        return new Promise((resolve, reject) => {
-            try {
-                // Retrieve the script content from the bot using the provided tag
-                const scriptContent = bot.tags[tag];
+        const botId = typeof bot === 'string' ? bot : bot.id;
+        const task = context.createTask();
+        const action = scriptIssues(botId, tag, task.taskId);
 
-                // Initialize an array to hold the identified issues
-                const issues: string[] = [];
-
-                // Perform analysis on the script content to identify issues
-                if (!scriptContent) {
-                    issues.push('Script content is empty.');
-                } else {
-                    // Example checks (these can be expanded based on actual requirements)
-                    if (scriptContent.includes('eval(')) {
-                        issues.push('Usage of eval() is not allowed.');
-                    }
-                    if (scriptContent.length > 1000) {
-                        issues.push('Script content is too long.');
-                    }
-                }
-
-                // Resolve the promise with the identified issues
-                console.log('Issues:', issues);
-                resolve(issues);
-            } catch (error) {
-                // Reject the promise if an error occurs
-                console.log('Error fetching issues:', error);
-                reject(error);
-            }
-        });
+        return addAsyncAction(task, action);
     }
-
-    // async function getIssuesForScript(bot: Bot, tag: string): Promise<Issue[]> {
-    //     try {
-    //         // Retrieve the script content from the bot using the provided tag
-    //         const scriptContent = bot.tags[tag];
-
-    //         // Initialize an array to hold the identified issues
-    //         const issues: Issue[] = [];
-
-    //         // Basic check: ensure no major issues
-    //         const majorIssues = issues.filter(issue => issue.severity === 'major');
-    //         if (majorIssues.length > 0) {
-    //             throw new Error('The project has major issues.');
-    //         }
-
-    //         return issues;
-    //     } catch (error) {
-    //         console.error('Error fetching issues:', error);
-    //         throw error;
-    //     }
-    // }
 
     /**
      * Shows a temporary "tooltip" message on the screen. Optionally placed at the specified position and shown for the given duration.

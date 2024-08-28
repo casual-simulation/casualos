@@ -186,7 +186,8 @@ export type AsyncActions =
     | CreateStaticHtmlAction
     | RecordLoomAction
     | WatchLoomAction
-    | GetLoomMetadataAction;
+    | GetLoomMetadataAction
+    | GetScriptIssuesAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3480,6 +3481,14 @@ export interface GetLoomMetadataAction extends AsyncAction {
     sharedUrl: string;
 }
 
+export interface GetScriptIssuesAction extends AsyncAction {
+    type: 'get_script_issues';
+
+    botId: string;
+
+    tag: string;
+}
+
 /**
  * Defines an interface that contains information for a loom video.
  *
@@ -4007,11 +4016,16 @@ export function toast(
     };
 }
 
-export function getScriptIssues(bot: Bot, tag: string): any {
+export function getScriptIssues(
+    botId: string,
+    tag: string,
+    taskId: string | number
+): GetScriptIssuesAction {
     return {
         type: 'get_script_issues',
-        bot: bot,
+        botId: botId,
         tag: tag,
+        taskId: taskId,
     };
 }
 
