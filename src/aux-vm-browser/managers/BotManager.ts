@@ -450,30 +450,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             return null;
         }
 
-        // let token: string = null;
         let headers: { [key: string]: string } = {};
-
         const token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
         if (hasValue(token)) {
             headers['Authorization'] = `Bearer ${token}`;
         }
-
-        // if ('recordKey' in event && isRecordKey(event.recordKey)) {
-        //     const policy = await auth.getRecordKeyPolicy(event.recordKey);
-
-        //     if (policy !== 'subjectless') {
-        //         token = await this._getAuthToken(
-        //             auth,
-        //             authenticateIfNotLoggedIn
-        //         );
-        //         headers['Authorization'] = `Bearer ${token}`;
-        //     }
-        // } else {
-        //     token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
-        //     if (hasValue(token)) {
-        //         headers['Authorization'] = `Bearer ${token}`;
-        //     }
-        // }
 
         return {
             error: false,
