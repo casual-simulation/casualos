@@ -27,6 +27,8 @@ import {
     getConnectionId,
     DEFAULT_BRANCH_NAME,
     BotsState,
+    hasValue,
+    asyncResult,
 } from '@casual-simulation/aux-common';
 import {
     AuxVM,
@@ -49,12 +51,14 @@ import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
 import {
     AuthHelperInterface,
+    RecordsEndpointInfo,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 import { LivekitManager } from './LivekitManager';
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
 import { WebsocketConnectionClient } from '@casual-simulation/aux-websocket';
+import { isRecordKey, RecordDataResult } from '@casual-simulation/aux-records';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -348,7 +352,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._recordsManager = new RecordsManager(
             this._config,
             this._helper,
-            (endpoint) => this._getAuthEndpointHelper(endpoint),
+            (endpoint, authenticateIfNotLoggedIn) =>
+                this._getRecordsEndpointInfo(
+                    endpoint,
+                    authenticateIfNotLoggedIn
+                ),
             undefined,
             (endpoint, protocol) => {
                 if (protocol === 'apiary-aws') {
@@ -430,6 +438,66 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         );
         sim._isSubSimulation = true;
         return sim;
+    }
+
+    private async _getRecordsEndpointInfo(
+        endpoint: string,
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<RecordsEndpointInfo | null> {
+        const auth = this._getAuthEndpointHelper(endpoint);
+
+        if (!auth) {
+            return null;
+        }
+
+        // let token: string = null;
+        let headers: { [key: string]: string } = {};
+
+        const token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
+        if (hasValue(token)) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        // if ('recordKey' in event && isRecordKey(event.recordKey)) {
+        //     const policy = await auth.getRecordKeyPolicy(event.recordKey);
+
+        //     if (policy !== 'subjectless') {
+        //         token = await this._getAuthToken(
+        //             auth,
+        //             authenticateIfNotLoggedIn
+        //         );
+        //         headers['Authorization'] = `Bearer ${token}`;
+        //     }
+        // } else {
+        //     token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
+        //     if (hasValue(token)) {
+        //         headers['Authorization'] = `Bearer ${token}`;
+        //     }
+        // }
+
+        return {
+            error: false,
+            recordsOrigin: await auth.getRecordsOrigin(),
+            websocketOrigin: await auth.getWebsocketOrigin(),
+            websocketProtocol: await auth.getWebsocketProtocol(),
+            headers,
+            token,
+        };
+    }
+
+    private async _getAuthToken(
+        auth: AuthHelperInterface,
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<string> {
+        if (!auth) {
+            return null;
+        }
+        if (authenticateIfNotLoggedIn) {
+            if (!(await auth.isAuthenticated())) {
+                await auth.authenticate();
+            }
+        }
+        return auth.getAuthToken();
     }
 
     private _getAuthEndpointHelper(endpoint: string): AuthHelperInterface {

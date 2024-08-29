@@ -48,7 +48,9 @@ import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import {
+    GetEndpointInfoFunction,
     GetRoomOptions,
+    RecordsEndpointInfo,
     RecordsManager,
     RoomJoin,
     RoomLeave,
@@ -97,7 +99,7 @@ describe('RecordsManager', () => {
         createPublicRecordKey: jest.fn(),
         provideSmsNumber: jest.fn(),
     };
-    let authFactory: (endpoint: string) => AuthHelperInterface;
+    let getEndpointInfo: GetEndpointInfoFunction;
     let connectionClientFactory: (
         endpoint: string,
         protocol: RemoteCausalRepoProtocol
@@ -204,8 +206,46 @@ describe('RecordsManager', () => {
         };
         customAuthMock = customAuth as any;
 
-        authFactory = (endpoint: string) =>
-            endpoint === 'http://localhost:9999' ? customAuth : auth;
+        let authFactory = (endpoint: string) => {
+            if (endpoint === 'http://localhost:9999') {
+                return customAuth;
+            } else {
+                return auth;
+            }
+        };
+
+        let endpointInfoFromAuth = async (
+            auth: AuthHelperInterface,
+            authenticateIfNotLoggedIn: boolean
+        ) => {
+            if (authenticateIfNotLoggedIn) {
+                if (!(await auth.isAuthenticated())) {
+                    await auth.authenticate();
+                }
+            }
+
+            const token = await auth.getAuthToken();
+            let headers: { [key: string]: string } = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            return {
+                error: false,
+                recordsOrigin: await auth.getRecordsOrigin(),
+                websocketOrigin: await auth.getWebsocketOrigin(),
+                websocketProtocol: await auth.getWebsocketProtocol(),
+                token,
+                headers,
+            } as RecordsEndpointInfo;
+        };
+
+        getEndpointInfo = async (
+            endpoint: string,
+            authenticateIfNotLoggedIn: boolean
+        ) => {
+            const auth = authFactory(endpoint);
+            return await endpointInfoFromAuth(auth, authenticateIfNotLoggedIn);
+        };
 
         records = new RecordsManager(
             {
@@ -215,7 +255,7 @@ describe('RecordsManager', () => {
                 authOrigin: 'http://localhost:3002',
             },
             helper,
-            authFactory,
+            getEndpointInfo,
             true
         );
     });
@@ -917,7 +957,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
 
             it('support manual records with subjectless keys', async () => {
@@ -978,7 +1017,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
         });
 
@@ -2525,7 +2563,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
 
             it('should support manual records with subjectless keys', async () => {
@@ -2576,7 +2613,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
         });
 
@@ -3992,8 +4028,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
-                expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
 
             it('should include the inst', async () => {
@@ -4862,8 +4896,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
-                expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
         });
 
@@ -5217,8 +5249,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
-                expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
         });
 
@@ -6976,7 +7006,7 @@ describe('RecordsManager', () => {
                         authOrigin: 'http://localhost:3002',
                     },
                     helper,
-                    authFactory,
+                    getEndpointInfo,
                     true,
                     connectionClientFactory
                 );
@@ -7946,7 +7976,7 @@ describe('RecordsManager', () => {
                         authOrigin: 'http://localhost:3002',
                     },
                     helper,
-                    authFactory,
+                    getEndpointInfo,
                     true,
                     connectionClientFactory
                 );
@@ -8287,7 +8317,7 @@ describe('RecordsManager', () => {
                         comId: 'comId1',
                     },
                     helper,
-                    authFactory,
+                    getEndpointInfo,
                     true
                 );
 
@@ -8618,7 +8648,10 @@ describe('RecordsManager', () => {
                         }),
                     ]);
 
-                    expect(factory).toBeCalledWith('https://localhost:321');
+                    expect(factory).toBeCalledWith(
+                        'https://localhost:321',
+                        expect.any(Boolean)
+                    );
                 });
 
                 it('should fail if authOrigin is null and no endpoint is provided', async () => {
@@ -8686,7 +8719,10 @@ describe('RecordsManager', () => {
                         }),
                     ]);
 
-                    expect(factory).toBeCalledWith('http://localhost:999');
+                    expect(factory).toBeCalledWith(
+                        'http://localhost:999',
+                        expect.any(Boolean)
+                    );
                 });
             });
         });

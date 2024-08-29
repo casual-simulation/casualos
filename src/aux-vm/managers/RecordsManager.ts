@@ -69,6 +69,8 @@ import {
     GrantResourcePermissionResult,
     RevokePermissionResult,
     formatInstId,
+    PublicRecordKeyPolicy,
+    parseRecordKey,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -125,13 +127,53 @@ export const UNSAFE_HEADERS = new Set([
 const USE_HTTP_STREAMING = false;
 
 /**
+ * Defines an interface that represents info about a records endpoint.
+ */
+export interface RecordsEndpointInfo {
+    /**
+     * The HTTP origin that API requests should be made to.
+     */
+    recordsOrigin: string;
+
+    /**
+     * The WebSocket origin that Websocket requests should be made to.
+     */
+    websocketOrigin?: string;
+
+    /**
+     * The protocol that websocket requests should be made over.
+     */
+    websocketProtocol?: RemoteCausalRepoProtocol;
+
+    /**
+     * The headers that should be included in HTTP requests to authenticate the user.
+     */
+    headers: { [key: string]: string };
+
+    /**
+     * The token that should be used for the request.
+     * Null if the user isn't logged in.
+     */
+    token: string | null;
+
+    /**
+     * Whether there was an error resolving the info.
+     */
+    error: boolean;
+}
+
+export type GetEndpointInfoFunction = (
+    endpoint: string,
+    authenticateIfNotLoggedIn: boolean
+) => Promise<RecordsEndpointInfo | null>;
+
+/**
  * Defines a class that provides capabilities for storing and retrieving records.
  */
 export class RecordsManager {
     private _config: AuxConfigParameters;
     private _helper: BotHelper;
-    private _auths: Map<string, AuthHelperInterface>;
-    private _authFactory: (endpoint: string) => AuthHelperInterface;
+    private _getEndpointInfo: GetEndpointInfoFunction;
     private _connectionClientFactory: (
         endpoint: string,
         protocol: RemoteCausalRepoProtocol
@@ -179,13 +221,13 @@ export class RecordsManager {
      * Creates a new RecordsManager that is able to consume records events from the AuxLibrary API.
      * @param config The AUX Config that should be used.
      * @param helper The Bot Helper that the simulation is using.
-     * @param authFactory The function that should be used to instantiate AuthHelperInterface objects for each potential records endpoint. It should return null if the given endpoint is not supported.
+     * @param getEndpointInfo The function that should be used to resolve the info for the given endpoint. Should return null if the endpoint is not supported.
      * @param skipTimers Whether to skip the timers used for skybox requests.
      */
     constructor(
         config: AuxConfigParameters,
         helper: BotHelper,
-        authFactory: (endpoint: string) => AuthHelperInterface,
+        getEndpointInfo: GetEndpointInfoFunction,
         skipTimers: boolean = false,
         connectionClientFactory: (
             endpoint: string,
@@ -194,8 +236,7 @@ export class RecordsManager {
     ) {
         this._config = config;
         this._helper = helper;
-        this._authFactory = authFactory;
-        this._auths = new Map();
+        this._getEndpointInfo = getEndpointInfo;
         this._axiosOptions = {
             validateStatus: (status) => {
                 return status < 500;
@@ -284,22 +325,22 @@ export class RecordsManager {
             'reportingUserId' | 'reportingIpAddress'
         >
     ): Promise<ReportInstResult> {
-        const auth = this._getAuth(null);
-        const token = await this._getAuthToken(auth, false);
-
-        let headers: { [key: string]: string } = {};
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+        const info = await this._getEndpointInfo(null, false);
+        if (info.error) {
+            return;
         }
 
         const result: AxiosResponse<ReportInstResult> = await axios.post(
-            await this._publishUrl(auth, '/api/v2/records/insts/report'),
+            await this._publishUrl(
+                info.recordsOrigin,
+                '/api/v2/records/insts/report'
+            ),
             {
                 ...request,
             },
             {
                 ...this._axiosOptions,
-                headers,
+                headers: info.headers,
             }
         );
 
@@ -319,7 +360,7 @@ export class RecordsManager {
             },
             {
                 sessionKey: info.token,
-                endpoint: await info.auth.getRecordsOrigin(),
+                endpoint: info.recordsOrigin,
             }
         );
 
@@ -372,7 +413,7 @@ export class RecordsManager {
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 await this._publishUrl(
-                    info.auth,
+                    info.recordsOrigin,
                     !event.requiresApproval
                         ? '/api/v2/records/data'
                         : '/api/v2/records/manual/data'
@@ -426,7 +467,7 @@ export class RecordsManager {
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
-                        info.auth,
+                        info.recordsOrigin,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data',
@@ -467,7 +508,6 @@ export class RecordsManager {
             if (info.error) {
                 return;
             }
-            const auth = info.auth;
 
             if (event.requiresApproval) {
                 if (hasValue(event.taskId)) {
@@ -507,7 +547,7 @@ export class RecordsManager {
 
                 const result: AxiosResponse<ListDataResult> = await axios.get(
                     await this._publishUrl(
-                        auth,
+                        info.recordsOrigin,
                         '/api/v2/records/data/list',
                         query
                     ),
@@ -558,7 +598,7 @@ export class RecordsManager {
                     ...this._axiosOptions,
                     method: 'DELETE',
                     url: await this._publishUrl(
-                        info.auth,
+                        info.recordsOrigin,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data'
@@ -705,7 +745,10 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/records/file'),
+                await this._publishUrl(
+                    info.recordsOrigin,
+                    '/api/v2/records/file'
+                ),
                 {
                     recordKey: event.recordKey,
                     fileSha256Hex: hash,
@@ -800,10 +843,14 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<ReadFileResult> = await axios.get(
-                await this._publishUrl(info.auth, '/api/v2/records/file', {
-                    fileUrl: event.fileUrl,
-                    instances,
-                }),
+                await this._publishUrl(
+                    info.recordsOrigin,
+                    '/api/v2/records/file',
+                    {
+                        fileUrl: event.fileUrl,
+                        instances,
+                    }
+                ),
                 {
                     ...this._axiosOptions,
                     headers: info.headers,
@@ -875,7 +922,10 @@ export class RecordsManager {
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 ...this._axiosOptions,
                 method: 'DELETE',
-                url: await this._publishUrl(info.auth, '/api/v2/records/file'),
+                url: await this._publishUrl(
+                    info.recordsOrigin,
+                    '/api/v2/records/file'
+                ),
                 data: {
                     recordKey: event.recordKey,
                     fileUrl: event.fileUrl,
@@ -923,7 +973,7 @@ export class RecordsManager {
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 await this._publishUrl(
-                    info.auth,
+                    info.recordsOrigin,
                     '/api/v2/records/events/count'
                 ),
                 {
@@ -963,8 +1013,6 @@ export class RecordsManager {
                 return;
             }
 
-            const auth = info.auth;
-
             if (hasValue(event.taskId)) {
                 let instances: string[] = undefined;
                 if (hasValue(this._helper.origin)) {
@@ -977,7 +1025,7 @@ export class RecordsManager {
                 }
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
-                        auth,
+                        info.recordsOrigin,
                         '/api/v2/records/events/count',
                         {
                             recordName: event.recordName,
@@ -1004,19 +1052,19 @@ export class RecordsManager {
 
     private async _joinRoom(event: JoinRoomAction) {
         try {
-            const auth = this._getAuthFromEvent(event.options);
+            const info = await this._resolveInfoForEvent(event);
 
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as IssueMeetTokenResult)
-                    );
-                }
+            if (info.error) {
+                // if (hasValue(event.taskId)) {
+                //     this._helper.transaction(
+                //         asyncResult(event.taskId, {
+                //             success: false,
+                //             errorCode: 'not_supported',
+                //             errorMessage:
+                //                 'Records are not supported on this inst.',
+                //         } as IssueMeetTokenResult)
+                //     );
+                // }
                 return;
             }
 
@@ -1024,7 +1072,10 @@ export class RecordsManager {
                 const userId = this._helper.userId;
                 const result: AxiosResponse<IssueMeetTokenResult> =
                     await axios.post(
-                        await this._publishUrl(auth, '/api/v2/meet/token'),
+                        await this._publishUrl(
+                            info.recordsOrigin,
+                            '/api/v2/meet/token'
+                        ),
                         {
                             roomName: event.roomName,
                             userName: userId,
@@ -1221,7 +1272,7 @@ export class RecordsManager {
                 GrantMarkerPermissionResult | GrantResourcePermissionResult
             > = await axios.post(
                 await this._publishUrl(
-                    info.auth,
+                    info.recordsOrigin,
                     '/api/v2/records/permissions'
                 ),
                 requestData,
@@ -1283,7 +1334,7 @@ export class RecordsManager {
             const result: AxiosResponse<RevokePermissionResult> =
                 await axios.post(
                     await this._publishUrl(
-                        info.auth,
+                        info.recordsOrigin,
                         '/api/v2/records/permissions/revoke'
                     ),
                     requestData,
@@ -1360,7 +1411,10 @@ export class RecordsManager {
             };
 
             const result: AxiosResponse<GrantRoleResult> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
+                await this._publishUrl(
+                    info.recordsOrigin,
+                    '/api/v2/records/role/grant'
+                ),
                 requestData,
                 {
                     ...this._axiosOptions,
@@ -1419,7 +1473,10 @@ export class RecordsManager {
             };
 
             const result: AxiosResponse<GrantRoleResult> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
+                await this._publishUrl(
+                    info.recordsOrigin,
+                    '/api/v2/records/role/grant'
+                ),
                 requestData,
                 {
                     ...this._axiosOptions,
@@ -1474,7 +1531,7 @@ export class RecordsManager {
 
             const result: AxiosResponse<RevokeRoleResult> = await axios.post(
                 await this._publishUrl(
-                    info.auth,
+                    info.recordsOrigin,
                     '/api/v2/records/role/revoke'
                 ),
                 requestData,
@@ -1540,7 +1597,7 @@ export class RecordsManager {
             }
 
             const result: AxiosResponse<AIChatResponse> = await axios.post(
-                await this._publishUrl(info.auth, '/api/v2/ai/chat'),
+                await this._publishUrl(info.recordsOrigin, '/api/v2/ai/chat'),
                 requestData,
                 {
                     ...this._axiosOptions,
@@ -1602,7 +1659,7 @@ export class RecordsManager {
             if (USE_HTTP_STREAMING) {
                 const result = await this._client.aiChatStream(requestData, {
                     sessionKey: info.token,
-                    endpoint: await info.auth.getRecordsOrigin(),
+                    endpoint: info.recordsOrigin,
                 });
 
                 if (hasValue(event.taskId)) {
@@ -1638,7 +1695,10 @@ export class RecordsManager {
                 return;
             }
 
-            const client = await this._getWebsocketClient(info.auth);
+            const client = await this._getWebsocketClient(
+                info.websocketOrigin,
+                info.websocketProtocol
+            );
             if (!client) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
@@ -1737,7 +1797,10 @@ export class RecordsManager {
 
             const result: AxiosResponse<AIGenerateSkyboxResponse> =
                 await axios.post(
-                    await this._publishUrl(info.auth, '/api/v2/ai/skybox'),
+                    await this._publishUrl(
+                        info.recordsOrigin,
+                        '/api/v2/ai/skybox'
+                    ),
                     {
                         ...requestData,
                         instances,
@@ -1780,10 +1843,14 @@ export class RecordsManager {
 
                 const getResult: AxiosResponse<AIGetSkyboxResponse> =
                     await axios.get(
-                        await this._publishUrl(info.auth, '/api/v2/ai/skybox', {
-                            skyboxId: result.data.skyboxId,
-                            instances,
-                        }),
+                        await this._publishUrl(
+                            info.recordsOrigin,
+                            '/api/v2/ai/skybox',
+                            {
+                                skyboxId: result.data.skyboxId,
+                                instances,
+                            }
+                        ),
                         {
                             ...this._axiosOptions,
                             headers: info.headers,
@@ -1859,7 +1926,9 @@ export class RecordsManager {
 
             const result =
                 await this._sendWebsocketSupportedRequest<AIGenerateImageResponse>(
-                    info.auth,
+                    info.recordsOrigin,
+                    info.websocketOrigin,
+                    info.websocketProtocol,
                     'POST',
                     '/api/v2/ai/image',
                     {},
@@ -1909,7 +1978,7 @@ export class RecordsManager {
                     recordName: event.recordName,
                 },
                 {
-                    endpoint: await info.auth.getRecordsOrigin(),
+                    endpoint: info.recordsOrigin,
                     sessionKey: info.token,
                 }
             );
@@ -1961,7 +2030,7 @@ export class RecordsManager {
                     thumbnail: event.thumbnail,
                 },
                 {
-                    endpoint: await info.auth.getRecordsOrigin(),
+                    endpoint: info.recordsOrigin,
                     sessionKey: info.token,
                 }
             );
@@ -1980,15 +2049,15 @@ export class RecordsManager {
     }
 
     private async _sendWebsocketSupportedRequest<TResponse>(
-        auth: AuthHelperInterface,
+        recordsOrigin: string,
+        websocketOrigin: string,
+        websocketProtocol: RemoteCausalRepoProtocol,
         method: GenericHttpRequest['method'],
         path: string,
         query: any,
         data: any,
         headers: any
     ): Promise<TResponse> {
-        const websocketOrigin = await auth.getWebsocketOrigin();
-        const websocketProtocol = await auth.getWebsocketProtocol();
         const client = this._getConnectionClient(
             websocketOrigin,
             websocketProtocol
@@ -1996,7 +2065,7 @@ export class RecordsManager {
 
         if (!client) {
             const result: AxiosResponse<TResponse> = await axios.request({
-                url: await this._publishUrl(auth, path, query),
+                url: await this._publishUrl(recordsOrigin, path, query),
                 method,
                 ...this._axiosOptions,
                 data: data,
@@ -2038,10 +2107,9 @@ export class RecordsManager {
     }
 
     private async _getWebsocketClient(
-        auth: AuthHelperInterface
+        websocketOrigin: string,
+        websocketProtocol: RemoteCausalRepoProtocol
     ): Promise<ConnectionClient> {
-        const websocketOrigin = await auth.getWebsocketOrigin();
-        const websocketProtocol = await auth.getWebsocketProtocol();
         const client = this._getConnectionClient(
             websocketOrigin,
             websocketProtocol
@@ -2144,7 +2212,7 @@ export class RecordsManager {
             const result: AxiosResponse<ListUserStudiosAction> =
                 await axios.get(
                     await this._publishUrl(
-                        info.auth,
+                        info.recordsOrigin,
                         '/api/v2/studios/list',
                         query
                     ),
@@ -2192,17 +2260,28 @@ export class RecordsManager {
             | AIGenerateImageAction
             | AIHumeGetAccessTokenAction
             | AISloydGenerateModelAction
-            | ListUserStudiosAction,
+            | ListUserStudiosAction
+            | RecordsAction,
         authenticateIfNotLoggedIn: boolean = true
-    ): Promise<{
-        error: boolean;
-        auth: AuthHelperInterface;
-        headers: { [key: string]: string };
-        token: string;
-    }> {
-        const auth = this._getAuthFromEvent(event.options);
+    ): Promise<RecordsEndpointInfo> {
+        let recordKeyPolicy: PublicRecordKeyPolicy = null;
+        if ('recordKey' in event && isRecordKey(event.recordKey)) {
+            const parsed = parseRecordKey(event.recordKey);
+            if (parsed) {
+                const [name, password, policy] = parsed;
+                recordKeyPolicy = policy;
+                if (recordKeyPolicy === 'subjectless') {
+                    authenticateIfNotLoggedIn = false;
+                }
+            }
+        }
 
-        if (!auth) {
+        const info = await this._getInfoFromEvent(
+            event.options,
+            authenticateIfNotLoggedIn
+        );
+
+        if (!info) {
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncResult(event.taskId, {
@@ -2214,107 +2293,57 @@ export class RecordsManager {
             }
             return {
                 error: true,
-                auth: null,
+                recordsOrigin: null,
                 headers: null,
                 token: null,
             };
         }
 
-        let token: string = null;
-        let headers: { [key: string]: string } = {};
-        if ('recordKey' in event && isRecordKey(event.recordKey)) {
-            const policy = await auth.getRecordKeyPolicy(event.recordKey);
-
-            if (policy !== 'subjectless') {
-                token = await this._getAuthToken(
-                    auth,
-                    authenticateIfNotLoggedIn
+        if (!hasValue(info.token) && recordKeyPolicy === 'subjectfull') {
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    } as RecordDataResult)
                 );
-                if (!token) {
-                    if (hasValue(event.taskId)) {
-                        this._helper.transaction(
-                            asyncResult(event.taskId, {
-                                success: false,
-                                errorCode: 'not_logged_in',
-                                errorMessage: 'The user is not logged in.',
-                            } as RecordDataResult)
-                        );
-                    }
-                    return {
-                        error: true,
-                        auth: null,
-                        headers: null,
-                        token: null,
-                    };
-                }
-
-                headers['Authorization'] = `Bearer ${token}`;
             }
-        } else {
-            token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
-            if (hasValue(token)) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            return {
+                error: true,
+                recordsOrigin: null,
+                headers: null,
+                token: null,
+            };
         }
 
-        return {
-            error: false,
-            auth,
-            headers,
-            token,
-        };
+        return info;
     }
 
-    private _getAuthFromEvent(event: {
-        endpoint?: string;
-    }): AuthHelperInterface {
+    private _getInfoFromEvent(
+        event: {
+            endpoint?: string;
+        },
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<RecordsEndpointInfo | null> {
         let endpoint: string = event.endpoint;
-        return this._getAuth(endpoint);
-    }
 
-    /**
-     * Gets the AuthHelperInterface for the given endpoint.
-     * Returns null if the given endpoint is unsupported.
-     * @param endpoint The endpoint.
-     */
-    private _getAuth(endpoint: string): AuthHelperInterface {
         if (!endpoint) {
             endpoint = this._config.authOrigin;
             if (!endpoint) {
-                return null;
+                return Promise.resolve(null);
             }
         }
-        let auth: AuthHelperInterface = null;
-        if (this._auths.has(endpoint)) {
-            auth = this._auths.get(endpoint);
-        } else {
-            auth = this._authFactory(endpoint);
-            this._auths.set(endpoint, auth);
-        }
-        return auth;
-    }
 
-    private async _getAuthToken(
-        auth: AuthHelperInterface,
-        authenticateIfNotLoggedIn: boolean
-    ): Promise<string> {
-        if (!auth) {
-            return null;
-        }
-        if (authenticateIfNotLoggedIn) {
-            if (!(await auth.isAuthenticated())) {
-                await auth.authenticate();
-            }
-        }
-        return auth.getAuthToken();
+        return this._getEndpointInfo(endpoint, authenticateIfNotLoggedIn);
     }
 
     private async _publishUrl(
-        auth: AuthHelperInterface,
+        recordsOrigin: string,
         path: string,
         queryParams: any = {}
     ): Promise<string> {
-        let url = new URL(path, await auth.getRecordsOrigin());
+        let url = new URL(path, recordsOrigin);
 
         for (let key in queryParams) {
             const val = queryParams[key];
