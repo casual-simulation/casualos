@@ -970,7 +970,7 @@ model XpUser {
     updatedAt DateTime @updatedAt
 }
 
-// Represents a account of money that can be used to track entries and transactions
+// Represents an account of money that can be used to track entries and transactions
 // The current balance of the account is the sum of all entries
 model XpAccount {
     id String @id @default(uuid()) @db.Uuid
@@ -983,7 +983,8 @@ model XpAccount {
     // The contract that the account is for
     contract XpContract?
 
-    // The currency of transactions in the account
+    // The currency (implementations are expected to support both alphabetic and numeric representations 
+    // e.g. "USD" | "840" ) of transactions in the account (Conforms to ISO 4217)
     currency String
 
     // Time that the account was closed
@@ -1009,14 +1010,16 @@ model XpAccountEntry {
     accountId String @db.Uuid
     account XpAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "XpAccountEntry_accountId_fkey1")
 
-    // The number of cents that were added to the ledger
+    // The number of cents (viable base unit) that were added to the ledger
     // positive for incoming money (deposits)
     // negative for outgoing money (withdrawals)
     amount Int
 
     // The new balance of the account after the entry was made
-    // If two entries have the same balance, or their amounts sum to conflicing balances,
-    // then the entries are in conflict and should be resolved
+    // This value can be used to quickly calculate the balance of the account
+    // without having to sum all entries.
+    // Be wary of using this value in non-transactional contexts, as in such cases it may not
+    // be in sync with the entries (causing a data state inconsistency introduced via implementation)
     balance Int
 
     // The time that the entry was created
@@ -1026,7 +1029,7 @@ model XpAccountEntry {
     // makes it easy to track the flow of money between accounts
     transactionId String @db.Uuid
 
-    // The note for the entry
+    // A (optional, yet advised) note for the entry
     note String?
 
     createdAt DateTime @default(now())
@@ -1075,9 +1078,9 @@ model XpInvoice {
     contractId String @db.Uuid
     contract XpContract @relation(fields: [contractId], references: [id], onDelete: Cascade, map: "XpInvoice_contractId_fkey1")
 
-    // The amount being invoiced
-    // the amount / rate = number of gigs being invoiced
-    // currency is the same as the contract account currency
+    // The amount (quantity of gigs) being invoiced for
+    //! Important: A gig is 6 minutes of work, the rate defines the worth of a gig
+    // The currency this gig is associated with, is the same as the contract account currency
     amount Int
 
     // The status of the invoice
