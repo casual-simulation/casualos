@@ -287,6 +287,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                     logs: result.success === true ? result.logs : [],
                     state,
                     stateSha256: stateHash,
+                    authorization: webhookAuthorization,
                 };
                 const json = stringify(dataFile);
                 const data = new TextEncoder().encode(json);

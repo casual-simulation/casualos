@@ -579,6 +579,62 @@ describe('WebhookRecordsController', () => {
                     response: {
                         statusCode: 200,
                     },
+                    authorization: {
+                        success: true,
+                        recordName,
+                        results: [
+                            {
+                                success: true,
+                                recordName,
+                                user: {
+                                    success: true,
+                                    recordName,
+                                    subjectType: 'user',
+                                    subjectId: null,
+                                    explanation:
+                                        'Resource has the publicRead marker.',
+                                    permission: {
+                                        id: null,
+                                        recordName,
+                                        resourceKind: 'webhook',
+                                        action: 'run',
+                                        marker: 'publicRead',
+                                        subjectType: 'user',
+                                        subjectId: null,
+                                        userId: null,
+                                        expireTimeMs: null,
+                                        options: {},
+                                    },
+                                },
+                                results: [
+                                    {
+                                        success: true,
+                                        recordName,
+                                        subjectType: 'user',
+                                        subjectId: null,
+                                        explanation:
+                                            'Resource has the publicRead marker.',
+                                        permission: {
+                                            id: null,
+                                            recordName,
+                                            resourceKind: 'webhook',
+                                            action: 'run',
+                                            marker: 'publicRead',
+                                            subjectType: 'user',
+                                            subjectId: null,
+                                            userId: null,
+                                            expireTimeMs: null,
+                                            options: {},
+                                        },
+                                    },
+                                ],
+                                resourceKind: 'webhook',
+                                resourceId: 'item1',
+                                action: 'run',
+                                markers: ['publicRead'],
+                            },
+                        ],
+                    },
                 },
             ]);
         });

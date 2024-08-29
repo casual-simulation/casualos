@@ -10,6 +10,7 @@ import {
     ListCrudStoreSuccess,
 } from '../crud/CrudRecordsStore';
 import { WebhookState } from './WebhookEnvironment';
+import { AuthorizeUserAndInstancesForResourcesResult } from '../PolicyController';
 
 /**
  * Defines a store that is able to store and retrieve information about webhooks.
@@ -188,6 +189,11 @@ export interface WebhookInfoFile {
      * The logs that were generated during the webhook run.
      */
     logs: string[];
+
+    /**
+     * The authorization result that allowed this webhook run.
+     */
+    authorization: AuthorizeUserAndInstancesForResourcesResult;
 }
 
 export interface WebhookSubscriptionMetrics extends CrudSubscriptionMetrics {
