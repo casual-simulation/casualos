@@ -1,6 +1,6 @@
 <template>
     <div class="webhook-container">
-        <md-table v-model="items.mdData" md-card md-fixed-header>
+        <md-table v-model="items.mdData" md-card md-fixed-header @md-selected="onSelectItem">
             <md-table-toolbar>
                 <h1 class="md-title">{{ webhook.address }} Runs</h1>
             </md-table-toolbar>
@@ -48,6 +48,8 @@
                 </div>
             </template>
         </md-table>
+
+        <webhook-run v-if="selectedItem" :run="selectedItem" />
     </div>
 </template>
 <script src="./AuthWebhook.ts"></script>

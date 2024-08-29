@@ -12,6 +12,7 @@ import { LoadingHelper } from '../LoadingHelper';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import AuthPermissions from '../AuthPermissions/AuthPermissions';
+import AuthWebhookRun from '../AuthWebhookRun/AuthWebhookRun';
 
 const PAGE_SIZE = 10;
 
@@ -20,7 +21,7 @@ const PAGE_SIZE = 10;
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
         'relative-time': RelativeTime,
-        'auth-permissions': AuthPermissions,
+        'webhook-run': AuthWebhookRun,
     },
 })
 export default class AuthWebhook extends Vue {
@@ -47,7 +48,7 @@ export default class AuthWebhook extends Vue {
         endIndex: 0,
     };
 
-    selectedItem: WebhookRecord = null;
+    selectedItem: WebhookRunInfo = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -110,6 +111,10 @@ export default class AuthWebhook extends Vue {
 
     changePage(change: number) {
         this.updatePagination(this.items.mdPage + change, PAGE_SIZE);
+    }
+
+    onSelectItem(item: WebhookRunInfo) {
+        this.selectedItem = item;
     }
 
     async updatePagination(page: number, pageSize: number) {
