@@ -66,6 +66,9 @@
                                 <md-tab id="state" md-label="State">
                                     <pre><code>{{ JSON.stringify(runFile.state, undefined, 2) }}</code></pre>
                                 </md-tab>
+                                <md-tab id="authorization" md-label="Authorization">
+                                    <pre><code>{{ JSON.stringify(runFile.authorization, undefined, 2) }}</code></pre>
+                                </md-tab>
                             </md-tabs>
                         </div>
                     </div>
