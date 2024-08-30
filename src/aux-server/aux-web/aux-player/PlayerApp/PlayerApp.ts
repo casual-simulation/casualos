@@ -1250,28 +1250,6 @@ export default class PlayerApp extends Vue {
                     this._getLoomMetadata(e, simulation);
                 } else if (e.type === 'get_script_issues') {
                     this._getScriptIssues(e, simulation);
-                    try {
-                        const helpers = await import(
-                            '../../shared/MonacoHelpers'
-                        );
-                        const bot = simulation.helper.botsState[e.botId];
-                        const issues = await helpers.getScriptIssues(
-                            simulation,
-                            bot,
-                            e.tag
-                        );
-
-                        simulation.helper.transaction(
-                            asyncResult(e.taskId, issues)
-                        );
-                    } catch (ex) {
-                        if (hasValue(e.taskId)) {
-                            simulation.helper.transaction(
-                                asyncError(e.taskId, ex.toString())
-                            );
-                            console.log('Error fetching issues:', ex);
-                        }
-                    }
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1430,11 +1408,24 @@ export default class PlayerApp extends Vue {
         e: GetScriptIssuesAction,
         simulation: BrowserSimulation
     ) {
-        const helpers = await import('../../shared/MonacoHelpers');
-        const bot = simulation.helper.botsState[e.botId];
-        const issues = await helpers.getScriptIssues(simulation, bot, e.tag);
+        try {
+            const helpers = await import('../../shared/MonacoHelpers');
+            const bot = simulation.helper.botsState[e.botId];
+            const issues = await helpers.getScriptIssues(
+                simulation,
+                bot,
+                e.tag
+            );
 
-        simulation.helper.transaction(asyncResult(e.taskId, issues));
+            simulation.helper.transaction(asyncResult(e.taskId, issues));
+        } catch (ex) {
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(e.taskId, ex.toString())
+                );
+            }
+            console.log('Error fetching issues:', ex);
+        }
     }
 
     private async _getLoomMetadata(
