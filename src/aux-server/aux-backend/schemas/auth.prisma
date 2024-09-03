@@ -956,12 +956,12 @@ model XpUser {
     userId String @unique
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
 
-    accountId String @db.Uuid @unique
-    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpUser_accountId_fkey1")
+    accountId String? @db.Uuid @unique
+    account XpAccount? @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpUser_accountId_fkey1")
 
     // The rate at which the user is requested to be paid per gig.
     // Should have the same currency as the account.
-    requestedRate Int
+    requestedRate Int?
 
     issuedContracts XpContract[] @relation("IssuerUser")
     heldContracts XpContract[] @relation("HoldingUser")
@@ -1054,7 +1054,7 @@ model XpContract {
     rate Int
 
     // The description of the contract
-    description String
+    description String?
 
     // The status of the contract
     // "open" - the contract is open and can be invoiced
@@ -1098,7 +1098,7 @@ model XpInvoice {
     transactionId String? @db.Uuid
 
     // Additional information about the invoice
-    note String
+    note String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
