@@ -1017,6 +1017,8 @@ describe('WebhookRecordsController', () => {
                             'record-name': 'recordName',
                         },
                     },
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
                 });
             });
 

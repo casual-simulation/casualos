@@ -111,6 +111,18 @@ export interface HandleHttpRequestRequest {
      * The state that should be injected into the environment.
      */
     state: WebhookState;
+
+    /**
+     * The session key that should be used by the environment for records requests.
+     * Not provided if the webhook is not running in a session.
+     */
+    sessionKey?: string;
+
+    /**
+     * The connection key that should be used by the environment for records requests.
+     * Not provided if the webhook is not running in a session.
+     */
+    connectionKey?: string;
 }
 
 export type WebhookState = WebhookAuxState | WebhookUrlState;

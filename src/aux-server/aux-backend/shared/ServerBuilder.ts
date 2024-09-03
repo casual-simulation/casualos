@@ -180,6 +180,11 @@ import {
 } from '@casual-simulation/aux-vm-node';
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
+import { getConnectionId } from '@casual-simulation/aux-common';
+import {
+    RemoteAuxChannel,
+    RemoteSimulationImpl,
+} from '@casual-simulation/aux-vm-client';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1423,6 +1428,7 @@ export class ServerBuilder implements SubscriptionLike {
                     return {
                         sim,
                         onLogs: vm.onLogs,
+                        vm,
                     };
                 }
             );
@@ -1430,15 +1436,27 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Using Node Webhook Environment.');
             this._webhookEnvironment = new SimulationWebhookEnvironment(
                 (simId, indicator, origin, config) => {
-                    const sim = nodeSimulationWithConfig(
-                        indicator,
+                    const configBotId = getConnectionId(indicator);
+                    const vm = new AuxVMNode(
                         simId,
                         origin,
-                        config
+                        configBotId,
+                        new RemoteAuxChannel(config, {})
+                    );
+                    const sim = new RemoteSimulationImpl(
+                        simId,
+                        {
+                            recordName: null,
+                            inst: null,
+                            isStatic: false,
+                        },
+                        vm
                     );
 
                     return {
                         sim,
+                        vm,
+                        onLogs: vm.onLogs,
                     };
                 }
             );

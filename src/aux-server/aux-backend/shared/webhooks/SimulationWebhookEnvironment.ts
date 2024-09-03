@@ -7,13 +7,16 @@ import {
 import { v4 as uuid } from 'uuid';
 import {
     AuxConfig,
+    AuxConfigParameters,
     AuxVM,
+    RecordsManager,
     Simulation,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import {
     addState,
     applyUpdatesToInst,
+    BotAction,
     ConnectionIndicator,
     first,
     remote,
@@ -23,7 +26,7 @@ import { getSimulationId } from '../../../shared/SimulationHelpers';
 import mime from 'mime';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, tap } from 'rxjs';
 
 export type WebhookSimulationFactory = (
     simId: string,
@@ -32,6 +35,7 @@ export type WebhookSimulationFactory = (
     config: AuxConfig
 ) => {
     sim: Simulation;
+    vm: AuxVM;
     onLogs?: Observable<string[]>;
 };
 
@@ -59,6 +63,11 @@ export interface SimulationEnvironmentOptions {
      * Default is 1000.
      */
     addStateTimeoutMs?: number;
+
+    /**
+     * The configuration parameters that should be passed to the simulation.
+     */
+    configParameters?: Partial<AuxConfigParameters>;
 }
 
 const TRACE_NAME = 'SimulationWebhookEnvironment';
@@ -72,6 +81,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
     private _requestTimeoutMs: number;
     private _fetchTimeoutMs: number;
     private _addStateTimeoutMs: number;
+    private _configParameters: Partial<AuxConfigParameters>;
 
     constructor(
         factory: WebhookSimulationFactory,
@@ -82,6 +92,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
         this._requestTimeoutMs = options?.requestTimeoutMs ?? 5000;
         this._fetchTimeoutMs = options?.fetchTimeoutMs ?? 5000;
         this._addStateTimeoutMs = options?.addStateTimeoutMs ?? 1000;
+        this._configParameters = options?.configParameters ?? {};
     }
 
     @traced(TRACE_NAME)
@@ -97,6 +108,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
         };
         const config: AuxConfig = {
             config: {
+                ...this._configParameters,
                 version: GIT_TAG,
                 versionHash: GIT_HASH,
             },
@@ -113,13 +125,57 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
 
         const sub = new Subscription();
         try {
-            const { sim, onLogs } = this._factory(
+            const { sim, onLogs, vm } = this._factory(
                 simId,
                 indicator,
                 origin,
                 config
             );
             sub.add(sim);
+
+            const sessionKey = request.sessionKey;
+            const recordsOrigin = config.config.recordsOrigin;
+            const websocketOrigin = config.config.causalRepoConnectionUrl;
+            const websocketProtocol =
+                config.config.causalRepoConnectionProtocol;
+            const recordsManager = new RecordsManager(
+                config.config,
+                sim.helper,
+                async (
+                    endpoint: string,
+                    authenticateIfNotLoggedIn: boolean
+                ) => {
+                    if (!recordsOrigin || endpoint !== recordsOrigin) {
+                        return null;
+                    }
+
+                    let headers: Record<string, string> = {};
+                    if (sessionKey) {
+                        headers.Authorization = `Bearer ${sessionKey}`;
+                    }
+
+                    return {
+                        error: false,
+                        recordsOrigin: endpoint,
+                        token: sessionKey,
+                        headers,
+                        websocketOrigin,
+                        websocketProtocol,
+                    };
+                },
+                undefined
+            );
+
+            sub.add(
+                vm.localEvents
+                    .pipe(
+                        tap((e) =>
+                            recordsManager.handleEvents(e as BotAction[])
+                        )
+                    )
+                    .subscribe()
+            );
+
             const initErr = await timeout(sim.init(), this._initTimeoutMs);
 
             if (initErr) {

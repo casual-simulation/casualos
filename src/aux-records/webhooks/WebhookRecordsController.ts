@@ -19,6 +19,7 @@ import {
 import {
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsResult,
+    CheckSubscriptionMetricsSuccess,
     CrudListItemsResult,
     CrudRecordsConfiguration,
     CrudRecordsController,
@@ -30,7 +31,10 @@ import {
     WebhookRunInfo,
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
-import { getWebhookFeatures } from '../SubscriptionConfiguration';
+import {
+    getWebhookFeatures,
+    WebhooksFeaturesConfiguration,
+} from '../SubscriptionConfiguration';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import {
@@ -265,10 +269,37 @@ export class WebhookRecordsController extends CrudRecordsController<
                 };
             }
 
+            let sessionKey: string;
+            let connectionKey: string;
+
+            if (webhook.userId) {
+                // Create a session for the user
+                const issueSessionResult = await this._auth.issueSession({
+                    userId: webhook.userId,
+                    requestingUserId: null,
+                    requestingUserRole: 'system',
+                    ipAddress: null,
+                    lifetimeMs:
+                        checkMetrics.features.tokenLifetimeMs ?? 5 * 60 * 1000,
+                });
+
+                if (issueSessionResult.success === true) {
+                    sessionKey = issueSessionResult.sessionKey;
+                    connectionKey = issueSessionResult.connectionKey;
+                } else {
+                    console.warn(
+                        '[WebhookRecordsController] Error issuing session for webhook:',
+                        issueSessionResult
+                    );
+                }
+            }
+
             const result = await this._environment.handleHttpRequest({
                 state: state,
                 recordName,
                 request: request.request,
+                sessionKey,
+                connectionKey,
             });
 
             const responseTimeMs = Date.now();
@@ -531,7 +562,7 @@ export class WebhookRecordsController extends CrudRecordsController<
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
         item?: WebhookRecord
-    ): Promise<CheckSubscriptionMetricsResult> {
+    ): Promise<CheckWebhookMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({
             ownerId: context.recordOwnerId,
@@ -582,6 +613,7 @@ export class WebhookRecordsController extends CrudRecordsController<
 
         return {
             success: true,
+            features,
         };
     }
 
@@ -754,3 +786,20 @@ export interface GetWebhookRunFailure {
      */
     errorMessage: string;
 }
+
+export type CheckWebhookMetricsResult =
+    | CheckWebhookMetricsSuccess
+    | CheckWebhookMetricsFailure;
+
+export interface CheckWebhookMetricsSuccess
+    extends CheckSubscriptionMetricsSuccess {
+    success: true;
+
+    /**
+     * The features that the user has access to.
+     */
+    features: WebhooksFeaturesConfiguration;
+}
+
+export interface CheckWebhookMetricsFailure
+    extends CheckSubscriptionMetricsFailure {}

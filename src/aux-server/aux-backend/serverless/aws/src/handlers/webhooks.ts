@@ -22,6 +22,7 @@ const environment = new SimulationWebhookEnvironment(
         return {
             sim,
             onLogs: vm.onLogs,
+            vm,
         };
     }
 );
@@ -38,6 +39,8 @@ export async function handleWebhook(payload: HandleWebhookPayload) {
         inst: request.inst,
         state: request.state as WebhookState,
         request: request.request as GenericHttpRequest,
+        sessionKey: request.sessionKey,
+        connectionKey: request.connectionKey,
     });
 
     return response;

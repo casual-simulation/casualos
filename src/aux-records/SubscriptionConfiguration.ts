@@ -298,6 +298,61 @@ export const subscriptionFeaturesSchema = z.object({
                 )
                 .int()
                 .optional(),
+
+            tokenLifetimeMs: z
+                .number()
+                .describe(
+                    'The lifetime of session tokens that are issued to the webhook in miliseconds. Defaults to 5 minutes.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5 * 60 * 1000),
+
+            initTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the webhook has to initialize. Defaults to 5000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            requestTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the webhook has to respond to a request after being initialized. Defaults to 5000ms'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            fetchTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook. Defaults to 5000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            addStateTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation. Defaults to 1000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(1000),
         })
         .describe(
             'The configuration for webhook features. Defaults to not allowed.'

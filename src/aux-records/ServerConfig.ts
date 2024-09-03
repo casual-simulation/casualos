@@ -924,9 +924,11 @@ const webhooksSchema = z.object({
             functionName: z
                 .string()
                 .describe(
-                    'The name or ARN of the lambda function that should be called to process a webhook.'
+                    'The name or ARN of the lambda function that should be called to process a webhook. If omitted, then the lambda function name will be taken from the WEBHOOK_LAMBDA_FUNCTION_NAME envrionment variable.'
                 )
-                .min(1),
+                .min(1)
+                .optional()
+                .nullable(),
         }),
     ]),
 });

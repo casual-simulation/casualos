@@ -14,8 +14,10 @@ export interface LambdaWebhookEnvironmentOptions {
      * The name of the lambda function that should be used to run the webhooks.
      *
      * This can be the name of the function, or the ARN of the function that should be called.
+     *
+     * If omitted, then the WEBHOOK_LAMBDA_FUNCTION_NAME environment variable will be used.
      */
-    functionName: string;
+    functionName?: string | null;
 }
 
 /**
@@ -28,6 +30,13 @@ export class LambdaWebhookEnvironment implements WebhookEnvironment {
     constructor(options: LambdaWebhookEnvironmentOptions) {
         this._lambda = new LambdaClient({});
         this._functionName = options.functionName;
+        if (
+            !this._functionName &&
+            typeof process === 'object' &&
+            process.env.WEBHOOK_LAMBDA_FUNCTION_NAME
+        ) {
+            this._functionName = process.env.WEBHOOK_LAMBDA_FUNCTION_NAME;
+        }
     }
 
     async handleHttpRequest(
@@ -38,6 +47,8 @@ export class LambdaWebhookEnvironment implements WebhookEnvironment {
             inst: request.inst,
             state: request.state,
             request: request.request,
+            sessionKey: request.sessionKey,
+            connectionKey: request.connectionKey,
         };
         const command = new InvokeCommand({
             FunctionName: this._functionName,

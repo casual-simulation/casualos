@@ -384,7 +384,7 @@ describe('AuthController', () => {
         });
     });
 
-    describe.only('issueSession()', () => {
+    describe('issueSession()', () => {
         const userId = 'myid';
         beforeEach(async () => {
             await store.saveUser({
@@ -412,7 +412,7 @@ describe('AuthController', () => {
                 userId,
                 requestingUserId: null,
                 requestingUserRole: 'system',
-                ipAddress: '127.0.0.1',
+                ipAddress: null,
             });
 
             expect(response).toEqual({

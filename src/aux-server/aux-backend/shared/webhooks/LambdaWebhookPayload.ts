@@ -15,6 +15,8 @@ export const HANDLE_WEBHOOK_PAYLOAD_SCHEMA = z.object({
         ipAddress: z.string(),
     }),
     state: WEBHOOK_STATE_SCHEMA,
+    sessionKey: z.string().optional().nullable(),
+    connectionKey: z.string().optional().nullable(),
 });
 
 export type HandleWebhookPayload = z.infer<
