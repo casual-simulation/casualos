@@ -465,7 +465,7 @@ export interface AuthUser {
     /**
      * The role that the user has been assigned in the system.
      */
-    role?: 'none' | 'superUser';
+    role?: UserRole;
 }
 
 /**

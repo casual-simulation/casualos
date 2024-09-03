@@ -185,6 +185,7 @@ import {
     RemoteAuxChannel,
     RemoteSimulationImpl,
 } from '@casual-simulation/aux-vm-client';
+import { AuxConfigParameters } from '@casual-simulation/aux-vm';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1394,7 +1395,9 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useWebhooks(options: Pick<ServerConfig, 'webhooks'> = this._options): this {
+    useWebhooks(
+        options: Pick<ServerConfig, 'webhooks' | 'meta'> = this._options
+    ): this {
         console.log('[ServerBuilder] Using webhooks.');
         if (!options.webhooks) {
             throw new Error('Webhook options must be provided.');
@@ -1405,6 +1408,27 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         const env = options.webhooks.environment;
+        let configParameters: Partial<AuxConfigParameters> = {
+            version: GIT_TAG,
+            versionHash: GIT_HASH,
+            device: {
+                isCollaborative: false,
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: false,
+                ab1BootstrapUrl: null,
+            },
+        };
+
+        if (options.meta) {
+            configParameters.recordsOrigin = configParameters.authOrigin =
+                options.meta.apiOrigin ?? undefined;
+            configParameters.causalRepoConnectionUrl =
+                options.meta.websocketOrigin ?? undefined;
+            configParameters.causalRepoConnectionProtocol =
+                options.meta.websocketProtocol ?? undefined;
+        }
+
         if (env.type === 'deno') {
             console.log('[ServerBuilder] Using Deno Webhook Environment.');
 
@@ -1430,6 +1454,9 @@ export class ServerBuilder implements SubscriptionLike {
                         onLogs: vm.onLogs,
                         vm,
                     };
+                },
+                {
+                    configParameters,
                 }
             );
         } else if (env.type === 'node') {
@@ -1456,8 +1483,10 @@ export class ServerBuilder implements SubscriptionLike {
                     return {
                         sim,
                         vm,
-                        onLogs: vm.onLogs,
                     };
+                },
+                {
+                    configParameters,
                 }
             );
         } else if (env.type === 'lambda') {

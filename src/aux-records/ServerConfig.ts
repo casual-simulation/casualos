@@ -1094,6 +1094,31 @@ export const serverConfigSchema = z.object({
             'Webhook configuration options. If omitted, then webhook features will be disabled.'
         )
         .optional(),
+
+    meta: z
+        .object({
+            apiOrigin: z
+                .string()
+                .describe('The HTTP origin that the API is available at.'),
+            websocketOrigin: z
+                .string()
+                .describe(
+                    'The HTTP origin that the Websocket API is available at.'
+                )
+                .optional()
+                .nullable(),
+            websocketProtocol: z
+                .enum(['websocket', 'apiary-aws'])
+                .describe(
+                    'The protocol that should be used to connect to the websocket origin.'
+                )
+                .optional()
+                .nullable(),
+        })
+        .describe(
+            'The metadata about the server deployment. If omitted, then the server will not be able to provide information about itself. This would result in records features not being supported in webhook handlers.'
+        )
+        .optional(),
 });
 
 export type S3Config = z.infer<typeof s3Schema>;
