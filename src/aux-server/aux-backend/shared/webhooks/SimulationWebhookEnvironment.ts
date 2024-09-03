@@ -117,7 +117,9 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                         return null;
                     }
 
-                    let headers: Record<string, string> = {};
+                    let headers: Record<string, string> = {
+                        Origin: endpoint,
+                    };
                     if (sessionKey) {
                         headers.Authorization = `Bearer ${sessionKey}`;
                     }
@@ -245,17 +247,23 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 sub.add(onLogs.subscribe((log) => logs.push(...log)));
             }
             const requestTimeoutMs = request.options?.requestTimeoutMs ?? 5000;
-            const results = await timeout(
-                sim.helper.shout('onWebhook', null, {
-                    method: request.request.method,
-                    url: request.request.path,
-                    data: data,
-                    headers: request.request.headers,
-                }),
+            const result = await timeout(
+                sim.helper
+                    .shout('onWebhook', null, {
+                        method: request.request.method,
+                        url: request.request.path,
+                        data: data,
+                        headers: request.request.headers,
+                    })
+                    .then((result) => {
+                        if (result.results.length > 0) {
+                            return first(result.results);
+                        }
+                    }),
                 requestTimeoutMs
             );
 
-            if (results instanceof Error) {
+            if (result instanceof Error) {
                 return {
                     success: false,
                     errorCode: 'took_too_long',
@@ -268,7 +276,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 success: true,
                 response: {
                     statusCode: 200,
-                    body: JSON.stringify(first(results.results)),
+                    body: JSON.stringify(result),
                     headers: {
                         'Content-Type': 'application/json',
                     },
