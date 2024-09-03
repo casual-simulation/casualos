@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.10
+
+#### Date: 9/3/2024
+
+### :rocket: Features
+
+-   Updated the abCore docs.
+
 ## V3.3.9
 
 #### Date: 8/20/2024

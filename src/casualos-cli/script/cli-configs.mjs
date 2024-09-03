@@ -1,12 +1,17 @@
 import path from 'path';
 import fs from 'fs';
-import { paths, cleanDirectory } from '../../../script/build-helpers.mjs';
+import {
+    paths,
+    cleanDirectory,
+    getExternals,
+} from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 
 const src = path.resolve(paths.root, 'src');
 const casualosCli = path.resolve(src, 'casualos-cli');
 const dist = path.resolve(casualosCli, 'dist');
 const outputFile = path.resolve(dist, 'cli.js');
+const packageJson = path.resolve(casualosCli, 'package.json');
 
 export function cleanDirectories() {
     cleanDirectory(dist);
