@@ -1,3 +1,4 @@
+import { addState } from '@casual-simulation/aux-common';
 import { WEBHOOK_STATE_SCHEMA } from '@casual-simulation/aux-records';
 import { error } from 'console';
 import { z } from 'zod';
@@ -17,6 +18,15 @@ export const HANDLE_WEBHOOK_PAYLOAD_SCHEMA = z.object({
     state: WEBHOOK_STATE_SCHEMA,
     sessionKey: z.string().optional().nullable(),
     connectionKey: z.string().optional().nullable(),
+    options: z
+        .object({
+            initTimeoutMs: z.number(),
+            requestTimeoutMs: z.number(),
+            fetchTimeoutMs: z.number(),
+            addStateTimeoutMs: z.number(),
+        })
+        .optional()
+        .nullable(),
 });
 
 export type HandleWebhookPayload = z.infer<

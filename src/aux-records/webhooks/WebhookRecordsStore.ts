@@ -9,7 +9,7 @@ import {
     CrudSubscriptionMetrics,
     ListCrudStoreSuccess,
 } from '../crud/CrudRecordsStore';
-import { WebhookState } from './WebhookEnvironment';
+import { HandleWebhookOptions, WebhookState } from './WebhookEnvironment';
 import { AuthorizeUserAndInstancesForResourcesResult } from '../PolicyController';
 
 /**
@@ -149,6 +149,11 @@ export interface WebhookRunInfo {
      * Null if the data file could not be recorded.
      */
     infoFileName: string | null;
+
+    /**
+     * The options that were included in the webhook run.
+     */
+    options?: HandleWebhookOptions | null;
 }
 
 /**

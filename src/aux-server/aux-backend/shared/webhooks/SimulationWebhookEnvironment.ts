@@ -41,30 +41,6 @@ export type WebhookSimulationFactory = (
 
 export interface SimulationEnvironmentOptions {
     /**
-     * The number of miliseconds that the environment should wait for the simulation to initialize.
-     * Default is 5000.
-     */
-    initTimeoutMs?: number;
-
-    /**
-     * The maximum number of miliseconds that the environment should wait for the request to complete.
-     * Default is 5000.
-     */
-    requestTimeoutMs?: number;
-
-    /**
-     * The maximum number of miliseconds that the environment should wait for fetching the state to complete.
-     * Default is 5000.
-     */
-    fetchTimeoutMs?: number;
-
-    /**
-     * The maximum number of miliseconds that the environment should wait for adding the state.
-     * Default is 1000.
-     */
-    addStateTimeoutMs?: number;
-
-    /**
      * The configuration parameters that should be passed to the simulation.
      */
     configParameters?: Partial<AuxConfigParameters>;
@@ -77,10 +53,6 @@ const TRACE_NAME = 'SimulationWebhookEnvironment';
  */
 export class SimulationWebhookEnvironment implements WebhookEnvironment {
     private _factory: WebhookSimulationFactory;
-    private _initTimeoutMs: number;
-    private _requestTimeoutMs: number;
-    private _fetchTimeoutMs: number;
-    private _addStateTimeoutMs: number;
     private _configParameters: Partial<AuxConfigParameters>;
 
     constructor(
@@ -88,10 +60,6 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
         options?: SimulationEnvironmentOptions
     ) {
         this._factory = factory;
-        this._initTimeoutMs = options?.initTimeoutMs ?? 5000;
-        this._requestTimeoutMs = options?.requestTimeoutMs ?? 5000;
-        this._fetchTimeoutMs = options?.fetchTimeoutMs ?? 5000;
-        this._addStateTimeoutMs = options?.addStateTimeoutMs ?? 1000;
         this._configParameters = options?.configParameters ?? {};
     }
 
@@ -176,7 +144,8 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     .subscribe()
             );
 
-            const initErr = await timeout(sim.init(), this._initTimeoutMs);
+            const initTimeoutMs = request.options?.initTimeoutMs ?? 5000;
+            const initErr = await timeout(sim.init(), initTimeoutMs);
 
             if (initErr) {
                 return {
@@ -200,10 +169,9 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                         cache: 'no-store',
                     }).then((response) => response.json());
 
-                    const data = await timeout(
-                        fetchPromise,
-                        this._fetchTimeoutMs
-                    );
+                    const fetchTimeoutMs =
+                        request.options?.fetchTimeoutMs ?? 5000;
+                    const data = await timeout(fetchPromise, fetchTimeoutMs);
 
                     if (data instanceof Error) {
                         return {
@@ -246,9 +214,11 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                         );
                     }
 
+                    const addStateTimeoutMs =
+                        request.options?.addStateTimeoutMs ?? 1000;
                     const addStateResult = await timeout(
                         addStatePromise,
-                        this._addStateTimeoutMs
+                        addStateTimeoutMs
                     );
                     if (addStateResult instanceof Error) {
                         return {
@@ -274,6 +244,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             if (onLogs) {
                 sub.add(onLogs.subscribe((log) => logs.push(...log)));
             }
+            const requestTimeoutMs = request.options?.requestTimeoutMs ?? 5000;
             const results = await timeout(
                 sim.helper.shout('onWebhook', null, {
                     method: request.request.method,
@@ -281,7 +252,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     data: data,
                     headers: request.request.headers,
                 }),
-                this._requestTimeoutMs
+                requestTimeoutMs
             );
 
             if (results instanceof Error) {

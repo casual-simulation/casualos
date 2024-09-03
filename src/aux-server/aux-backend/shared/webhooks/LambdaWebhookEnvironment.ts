@@ -49,6 +49,7 @@ export class LambdaWebhookEnvironment implements WebhookEnvironment {
             request: request.request,
             sessionKey: request.sessionKey,
             connectionKey: request.connectionKey,
+            options: request.options,
         };
         const command = new InvokeCommand({
             FunctionName: this._functionName,

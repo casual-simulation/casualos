@@ -2,6 +2,7 @@ import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { SimulationWebhookEnvironment } from '../../../../shared/webhooks/SimulationWebhookEnvironment';
 import { GenericHttpRequest } from '@casual-simulation/aux-common';
 import {
+    HandleWebhookOptions,
     WEBHOOK_STATE_SCHEMA,
     WebhookState,
 } from '@casual-simulation/aux-records';
@@ -41,6 +42,7 @@ export async function handleWebhook(payload: HandleWebhookPayload) {
         request: request.request as GenericHttpRequest,
         sessionKey: request.sessionKey,
         connectionKey: request.connectionKey,
+        options: request.options as HandleWebhookOptions,
     });
 
     return response;

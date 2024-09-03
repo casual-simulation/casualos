@@ -40,6 +40,7 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import {
     HandleHttpRequestFailure,
     HandleHttpRequestResult,
+    HandleWebhookOptions,
     STORED_AUX_SCHEMA,
     WebhookEnvironment,
     WebhookState,
@@ -294,12 +295,22 @@ export class WebhookRecordsController extends CrudRecordsController<
                 }
             }
 
+            const options: HandleWebhookOptions = {
+                initTimeoutMs: checkMetrics.features.initTimeoutMs ?? 5000,
+                requestTimeoutMs:
+                    checkMetrics.features.requestTimeoutMs ?? 5000,
+                fetchTimeoutMs: checkMetrics.features.fetchTimeoutMs ?? 5000,
+                addStateTimeoutMs:
+                    checkMetrics.features.addStateTimeoutMs ?? 1000,
+            };
+
             const result = await this._environment.handleHttpRequest({
                 state: state,
                 recordName,
                 request: request.request,
                 sessionKey,
                 connectionKey,
+                options,
             });
 
             const responseTimeMs = Date.now();
@@ -375,6 +386,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                 stateSha256: stateHash,
                 infoRecordName,
                 infoFileName,
+                options,
             };
 
             await this.store.recordWebhookRun(run);

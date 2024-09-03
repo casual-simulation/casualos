@@ -419,6 +419,12 @@ describe('WebhookRecordsController', () => {
                         infoRecordName: null,
                         infoFileName: null,
                         stateSha256: expect.any(String),
+                        options: {
+                            initTimeoutMs: 5000,
+                            requestTimeoutMs: 5000,
+                            fetchTimeoutMs: 5000,
+                            addStateTimeoutMs: 1000,
+                        },
                     },
                 ],
                 totalCount: 1,
@@ -518,6 +524,12 @@ describe('WebhookRecordsController', () => {
                         infoRecordName: webhookUserId,
                         infoFileName: expect.any(String),
                         stateSha256: expect.any(String),
+                        options: {
+                            initTimeoutMs: 5000,
+                            requestTimeoutMs: 5000,
+                            fetchTimeoutMs: 5000,
+                            addStateTimeoutMs: 1000,
+                        },
                     },
                 ],
                 totalCount: 1,
@@ -717,6 +729,12 @@ describe('WebhookRecordsController', () => {
                             state: {},
                         },
                     },
+                    options: {
+                        initTimeoutMs: 5000,
+                        requestTimeoutMs: 5000,
+                        fetchTimeoutMs: 5000,
+                        addStateTimeoutMs: 1000,
+                    },
                 });
             });
 
@@ -796,6 +814,12 @@ describe('WebhookRecordsController', () => {
                             version: 1,
                             state: {},
                         },
+                    },
+                    options: {
+                        initTimeoutMs: 5000,
+                        requestTimeoutMs: 5000,
+                        fetchTimeoutMs: 5000,
+                        addStateTimeoutMs: 1000,
                     },
                 });
             });
@@ -1019,6 +1043,12 @@ describe('WebhookRecordsController', () => {
                     },
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
+                    options: {
+                        initTimeoutMs: 5000,
+                        requestTimeoutMs: 5000,
+                        fetchTimeoutMs: 5000,
+                        addStateTimeoutMs: 1000,
+                    },
                 });
             });
 

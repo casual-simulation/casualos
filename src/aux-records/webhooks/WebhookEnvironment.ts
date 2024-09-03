@@ -123,6 +123,33 @@ export interface HandleHttpRequestRequest {
      * Not provided if the webhook is not running in a session.
      */
     connectionKey?: string;
+
+    /**
+     * The extra options for the webhook run.
+     */
+    options?: HandleWebhookOptions;
+}
+
+export interface HandleWebhookOptions {
+    /**
+     * The maximum number of miliseconds that the webhook has to initialize.
+     */
+    initTimeoutMs: number;
+
+    /**
+     * The maximum number of miliseconds that the webhook has to respond to a request after being initialized.
+     */
+    requestTimeoutMs: number;
+
+    /**
+     * The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook.
+     */
+    fetchTimeoutMs: number;
+
+    /**
+     * The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation.
+     */
+    addStateTimeoutMs: number;
 }
 
 export type WebhookState = WebhookAuxState | WebhookUrlState;
