@@ -8,6 +8,9 @@ import {
     HANDLE_WEBHOOK_RESULT_SCHEMA,
     HandleWebhookPayload,
 } from './LambdaWebhookPayload';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'LambdaWebhookEnvironment';
 
 export interface LambdaWebhookEnvironmentOptions {
     /**
@@ -39,6 +42,7 @@ export class LambdaWebhookEnvironment implements WebhookEnvironment {
         }
     }
 
+    @traced(TRACE_NAME)
     async handleHttpRequest(
         request: HandleHttpRequestRequest
     ): Promise<HandleHttpRequestResult> {

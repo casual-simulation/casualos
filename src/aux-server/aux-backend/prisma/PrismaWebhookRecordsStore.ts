@@ -287,6 +287,7 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async recordWebhookRun(run: WebhookRunInfo): Promise<void> {
         await this._client.webhookRun.create({
             data: {
@@ -304,6 +305,7 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async listWebhookRunsForWebhook(
         recordName: string,
         webhookAddress: string,
@@ -344,6 +346,7 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
         };
     }
 
+    @traced(TRACE_NAME)
     async getWebhookRunInfo(
         runId: string
     ): Promise<WebhookRunInfoWithWebhook | null> {
