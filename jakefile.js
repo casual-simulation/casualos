@@ -36,6 +36,7 @@ let folders = [
     `${__dirname}/src/aux-websocket`,
     `${__dirname}/src/aux-websocket-aws`,
     `${__dirname}/src/casualos-cli`,
+    `${__dirname}/src/casualos-infra`,
 ];
 
 let patterns = [
