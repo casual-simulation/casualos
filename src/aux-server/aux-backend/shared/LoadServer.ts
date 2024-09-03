@@ -212,7 +212,13 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
     }
 
     if (config.webhooks) {
-        builder.useWebhooks();
+        if (config.privo) {
+            console.log(
+                '[LoadServer] Skipping webhooks because Privo is enabled.'
+            );
+        } else {
+            builder.useWebhooks();
+        }
     }
 
     builder.useAutomaticPlugins();
