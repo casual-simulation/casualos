@@ -175,7 +175,7 @@ model AuthSession {
     nextSession AuthSession? @relation("NextSession", fields: [nextSessionId], references: [sessionId])
     nextSession1 AuthSession? @relation("NextSession")
 
-    ipAddress String
+    ipAddress String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
