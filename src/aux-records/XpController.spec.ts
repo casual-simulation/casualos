@@ -1,35 +1,65 @@
 import { createTestControllers, createTestUser } from './TestUtils';
+import { MemoryAuthMessenger } from './MemoryAuthMessenger';
+import { AuthController, RelyingParty } from './AuthController';
+import { MemoryStore } from './MemoryStore';
+import { XpController } from '../aux-records/XpController';
 import { ParsePromiseGeneric } from '../xp-api/util/generic/TypeUtils';
-import { TestCache, TestConfig } from '../xp-api/util/test-util/Typings';
-import { RecordsServer } from './RecordsServer';
-
-const testConfig: TestConfig = {
-    userEmail: 'test+xp.user@localhost',
-};
 
 /**
  * XpController tests
  */
 describe('XpController', () => {
-    //* Setup cache in an appropriate scope
-    let cache: TestCache<
+    let services = createTestControllers();
+    /**
+     * Test cache
+     */
+    const _C: {
+        authController: AuthController;
+        authMessenger: MemoryAuthMessenger;
+        manualDataStore: MemoryStore;
+        memoryStore: MemoryStore;
+    } = {
+        authController: services.auth,
+        authMessenger: services.authMessenger,
+        manualDataStore: new MemoryStore({
+            subscriptions: null as any,
+        }),
+        memoryStore: services.store,
+    };
+
+    const _users: Map<
+        string,
         ParsePromiseGeneric<ReturnType<typeof createTestUser>>
-    >;
+    > = new Map();
 
     beforeAll(async () => {
-        //* Setup services
-        const services = createTestControllers();
+        //* Create test user(s) with the given role(s)
+        new Set(['player', 'owner']).forEach(async (role) => {
+            const email = `xp.test_${role}@localhost`;
+            _users.set(
+                email,
+                await createTestUser(
+                    {
+                        auth: _C['authController'],
+                        authMessenger: _C['authMessenger'],
+                    },
+                    email
+                )
+            );
+        });
 
-        // const server = new RecordsServer(
-        // TODO: Implement RecordsServer with minimal functionality
-        // )
-
-        //* Create login request with test user
-        const user = await createTestUser(services, testConfig.userEmail);
+        console.log(_users);
     });
 
     //* Test case until proper tests are implemented
     it('should be defined', () => {
-        expect(true).toBeTruthy();
+        expect(XpController).toBeTruthy();
     });
+
+    it('should get xp user meta', async () => {
+        //const meta = undefined;
+        //expect(meta).toBeDefined();
+    });
+
+    //it('should ');
 });
