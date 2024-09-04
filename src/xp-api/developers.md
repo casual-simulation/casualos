@@ -76,6 +76,16 @@ national language norms (American & British English).
   <td>Acronym (non-standard) for "End of Conceptual Scope"</td>
   <td>Used to mark the end of a previously specified conceptual scope. (See BOCS.)</td>
   </tr>
+  <tr>
+  <td>KASP</td>
+  <td>Acronym (non-standard) for "Keys And Specified Properties"</td>
+  <td>Used to denote a relationship including or between property keys an their associated values.</td>
+  </tr>
+  <tr>
+  <td>DMC</td>
+  <td>Acronym (non-standard) for "Data Model Configuration"</td>
+  <td>Used to denote entities involved in configuring a dynamic data model.</td>
+  </tr>
 </table>
 
 > Examples:
