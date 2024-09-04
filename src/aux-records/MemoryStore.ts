@@ -147,6 +147,16 @@ import {
 } from './NotificationMessenger';
 import { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
+import {
+    XpAccount,
+    XpAccountEntry,
+    XpAccountType,
+    XpContract,
+    XpInvoice,
+    XpStore,
+    XpUser,
+    XpUserDMC,
+} from './XpStore';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -166,7 +176,8 @@ export class MemoryStore
         ConfigurationStore,
         InstRecordsStore,
         ModerationStore,
-        NotificationMessenger
+        NotificationMessenger,
+        XpStore
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -210,6 +221,16 @@ export class MemoryStore
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
+
+    private _xpUsers: Map<XpUser['userId'], XpUser> = new Map();
+    private _xpAccounts: Map<
+        XpUser['id'] | XpContract['id'],
+        XpAccount<'contract' | 'user'>
+    > = new Map();
+    private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
+    private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
+    private _xpAccountEntries: Map<XpAccountEntry['id'], XpAccountEntry> =
+        new Map();
 
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
@@ -347,6 +368,30 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async saveXpAccount<T extends XpAccountType>(
+        associationId: string,
+        account: XpAccount<T>
+    ): Promise<XpAccount<T>> {
+        this._xpAccounts.set(associationId, account);
+        return account;
+    }
+
+    async saveXpUser(authUserId: string, user: XpUser): Promise<XpUser> {
+        this._xpUsers.set(authUserId, user);
+        return user;
+    }
+
+    async getXpUser(
+        authUserId: string,
+        omit?: XpUserDMC | 'default'
+    ): Promise<XpUser<typeof omit> | null> {
+        const user = this._xpUsers.get(authUserId);
+        if (!user) {
+            return null;
+        }
+        return this._xpUsers.get(authUserId);
     }
 
     init?(): Promise<void>;

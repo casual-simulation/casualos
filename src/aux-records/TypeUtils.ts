@@ -216,3 +216,70 @@ export type ArrayOfKASP<
           ]
         : never
 >;
+
+/**
+ * A Generic utility type which returns the opposite of the extends operator (!extends)
+ * @template T The type to check if it does not extend U
+ * @template U The type to check if T does not extend it
+ */
+export type NotExtends<T, U> = T extends U ? false : true;
+
+/**
+ * A Generic utility type which return the specified properties of a type
+ * @template T The type to extract properties from
+ * @template Keys The keys to extract from T
+ */
+export type PropertiesOf<T, K extends keyof T> = {
+    [Key in K]: T[K];
+}[K];
+
+/**
+ * A Generic utility type which converts a union of keys
+ * to another union of keys which conform to the paradigm `${P}${Key}${S}`
+ * @template T The Union of keys to apply the prefix/suffix to
+ * @template P The prefix to apply to each key
+ * @template S The suffix to apply to each key
+ * @template A A boolean flag to determine whether to apply the prefix/suffix or remove it
+ * @example
+ * type UnionToAlias = 'keyX' | 'keyY' | 'keyZ';
+ * type Aliased = AliasUnion<UnionToAlias, 'omit'>; // "omitKeyX" | "omitKeyY" | "omitKeyZ"
+ * type De_Aliased = AliasUnion<Aliased, 'omit', '', false>; // "keyX" | "keyY" | "keyZ"
+ */
+export type AliasUnion<
+    T extends string,
+    P extends string = '_',
+    S extends string = '',
+    A extends boolean = true
+> = A extends true
+    ? T extends string
+        ? `${P}${Capitalize<T>}${S}`
+        : never
+    : T extends string & `${P}${infer Key}${S}`
+    ? Uncapitalize<Key>
+    : never;
+
+/**
+ * A Generic utility type which maps original keys to aliased keys
+ * @template T The union of strings to map to aliases
+ * @template P The prefix to apply to each key
+ * @template S The suffix to apply to each key
+ * @template R A boolean flag to determine whether to reverse the mapping (true = original to alias)
+ * @example
+ * type UnionToAlias = 'keyX' | 'keyY' | 'keyZ';
+ * type AliasM = AliasMap<UnionToAlias, 'omit'>; // { "omitKeyX": "keyX", "omitKeyY": "keyY", "omitKeyZ": "keyZ" }
+ * type ReverseAliasM = AliasMap<UnionToAlias, 'omit', '', true>; //  { "keyX": "omitKeyX", "keyY": "omitKeyY", "keyZ": "omitKeyZ" }
+ */
+export type AliasMap<
+    T extends string,
+    P extends string = '_',
+    S extends string = '',
+    R extends boolean = false
+> = R extends true
+    ? { [K in T]: AliasUnion<K, P, S> }
+    : { [A in AliasUnion<T, P, S>]: AliasUnion<A, P, S, false> };
+
+/**
+ * A Generic utility type which allows a value to be either itself or null
+ * @template T The type to make nullable
+ */
+export type Nullable<T> = T | null;
