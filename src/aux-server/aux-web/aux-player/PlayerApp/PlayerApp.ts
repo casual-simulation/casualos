@@ -639,7 +639,7 @@ export default class PlayerApp extends Vue {
         return this.barcodeFormat || '';
     }
 
-    onQRStreamAquired(stream: MediaStream) {
+    onQRStreamAcquired(stream: MediaStream) {
         this._currentQRMediaStream = stream;
     }
 
