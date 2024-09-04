@@ -2,7 +2,7 @@ import _, { omitBy, padStart, sortBy } from 'lodash';
 import { sha256, hmac } from 'hash.js';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import axios from 'axios';
-import { ArrayOfKASP, ISO4217_Map } from 'TypeUtils';
+import { ArrayOfKASP, ISO4217_Map } from './TypeUtils';
 
 /**
  * Signs the given request and adds the related headers to it.
