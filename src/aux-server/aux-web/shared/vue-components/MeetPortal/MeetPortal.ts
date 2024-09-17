@@ -20,10 +20,11 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import JitsiMeet from '../JitsiMeet/JitsiMeet';
-import { tap } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import {
     BrowserSimulation,
     userBotChanged,
+    userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { MeetPortalConfig } from './MeetPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -47,7 +48,7 @@ export default class MeetPortal extends Vue {
 
     currentMeet: string = null;
     extraStyle: Object = {};
-    portalVisible: boolean = true;
+    portalVisible: boolean = false;
     meetJwt: string = null;
 
     get hasPortal(): boolean {
@@ -176,7 +177,7 @@ export default class MeetPortal extends Vue {
         this._simulations = new Map();
         this._portals = new Map();
         this.extraStyle = calculateMeetPortalAnchorPointOffset('fullscreen');
-        this.portalVisible = true;
+        this.portalVisible = false;
 
         window.addEventListener('resize', (e) => this._resize());
 
@@ -324,8 +325,11 @@ export default class MeetPortal extends Vue {
         this._simulations.set(sim, sub);
 
         sub.add(
-            userBotChanged(sim)
-                .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
+            userBotTagsChanged(sim)
+                .pipe(
+                    filter((update) => update.tags.has(MEET_PORTAL)),
+                    tap((update) => this._onUserBotUpdated(sim, update.bot))
+                )
                 .subscribe()
         );
 
