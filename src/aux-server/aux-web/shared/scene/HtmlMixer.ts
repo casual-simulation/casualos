@@ -55,9 +55,14 @@ export namespace HtmlMixer {
         }
 
         update(): void {
+            if (this.cssScene.children.length <= 0) {
+                return;
+            }
+
             this.mainCamera.updateMatrixWorld(false);
 
             // Update css camera to match this current main camera transform and projection.
+            // TODO: Make so that it doesn't have to create new objects every frame.
             let position = new Vector3();
             let scale = new Vector3();
             let quaternion = new Quaternion();
