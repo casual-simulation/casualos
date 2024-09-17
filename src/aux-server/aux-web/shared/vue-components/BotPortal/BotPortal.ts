@@ -5,14 +5,15 @@ import {
     PrecalculatedBot,
     calculateStringTagValue,
     calculateMeetPortalAnchorPointOffset,
-    BOT_PORTAL
+    BOT_PORTAL,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import {
     BrowserSimulation,
     userBotChanged,
+    userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { BotPortalConfig } from './BotPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -84,8 +85,11 @@ export default class BotPortal extends Vue {
         this._simulations.set(sim, sub);
 
         sub.add(
-            userBotChanged(sim)
-                .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
+            userBotTagsChanged(sim)
+                .pipe(
+                    filter((update) => update.tags.has(BOT_PORTAL)),
+                    tap((update) => this._onUserBotUpdated(sim, update.bot))
+                )
                 .subscribe()
         );
     }
@@ -153,7 +157,10 @@ export default class BotPortal extends Vue {
             const bot = sim.helper.botsState[botId];
             if (bot) {
                 const { id, tags, space } = bot;
-                this.currentBot = stableStringify({ id, tags, space}, { space: 2 })
+                this.currentBot = stableStringify(
+                    { id, tags, space },
+                    { space: 2 }
+                );
             } else {
                 this.currentBot = null;
             }
@@ -163,7 +170,6 @@ export default class BotPortal extends Vue {
         this._updateConfig();
     }
 
-    
     private _resize(): any {
         if (!this.portalElement || !this.othersElement) {
             return;
@@ -245,7 +251,7 @@ export default class BotPortal extends Vue {
         if (this._currentConfig) {
             this.extraStyle = this._currentConfig.style;
             this._resize();
-        } else {;
+        } else {
             this.extraStyle =
                 calculateMeetPortalAnchorPointOffset('fullscreen');
         }
