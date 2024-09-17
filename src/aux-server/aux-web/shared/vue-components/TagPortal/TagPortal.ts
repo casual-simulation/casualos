@@ -22,12 +22,13 @@ import {
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { tap } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import {
     BotManager,
     watchPortalConfigBot,
     BrowserSimulation,
     userBotChanged,
+    userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { TagPortalConfig } from './TagPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -229,8 +230,15 @@ export default class TagPortal extends Vue {
         this._simulations.set(sim, sub);
 
         sub.add(
-            userBotChanged(sim)
-                .pipe(tap((user) => this._onUserBotUpdated(sim, user)))
+            userBotTagsChanged(sim)
+                .pipe(
+                    filter(
+                        (update) =>
+                            update.tags.has(TAG_PORTAL) ||
+                            update.tags.has(TAG_PORTAL_SPACE)
+                    ),
+                    tap((update) => this._onUserBotUpdated(sim, update.bot))
+                )
                 .subscribe()
         );
         sub.add(
