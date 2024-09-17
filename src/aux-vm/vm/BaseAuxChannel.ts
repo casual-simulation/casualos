@@ -70,6 +70,7 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import {
     flatMap,
+    isEmpty,
     mapKeys,
     mapValues,
     partition,
@@ -752,7 +753,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (!this._hasInitialState) {
             this._hasInitialState = true;
             if (this._eventBuffer.length > 0) {
-                if (Object.keys(this._runtime.currentState).length <= 0) {
+                if (isEmpty(this._runtime.currentState)) {
                     console.log(
                         '[BaseAuxChannel] Sending event before bots are added!'
                     );

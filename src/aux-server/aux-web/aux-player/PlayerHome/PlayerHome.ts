@@ -36,7 +36,7 @@ import {
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import { intersection, isEqual, sortBy } from 'lodash';
+import { intersection, isEmpty, isEqual, sortBy } from 'lodash';
 import { Subscription } from 'rxjs';
 import { uniqueNamesGenerator, Config } from 'unique-names-generator';
 import adjectives from '../../shared/dictionaries/adjectives';
@@ -491,7 +491,7 @@ export default class PlayerHome extends Vue {
             update.gridPortal = 'home';
         }
 
-        if (Object.keys(update).length > 0) {
+        if (!isEmpty(update)) {
             this._updateQuery(update);
         }
 
@@ -522,7 +522,7 @@ export default class PlayerHome extends Vue {
             update.gridPortal = 'home';
         }
 
-        if (Object.keys(update).length > 0) {
+        if (!isEmpty(update)) {
             this._updateQuery(update);
         }
 
@@ -545,7 +545,7 @@ export default class PlayerHome extends Vue {
                 update.gridPortal = 'home';
             }
 
-            if (Object.keys(update).length > 0) {
+            if (!isEmpty(update)) {
                 this._updateQuery(update);
             }
 
@@ -565,7 +565,7 @@ export default class PlayerHome extends Vue {
             update.gridPortal = 'home';
         }
 
-        if (Object.keys(update).length > 0) {
+        if (!isEmpty(update)) {
             this._updateQuery(update);
         }
 
@@ -942,7 +942,7 @@ export default class PlayerHome extends Vue {
     }
 
     private _updateQuery(changes: Dictionary<any>) {
-        if (Object.keys(changes).length > 0) {
+        if (!isEmpty(changes)) {
             const final = {
                 ...this.$route,
                 query: {

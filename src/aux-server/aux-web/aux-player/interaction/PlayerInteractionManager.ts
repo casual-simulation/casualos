@@ -66,7 +66,7 @@ import {
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import { flatMap, isEqual } from 'lodash';
+import { flatMap, isEmpty, isEqual } from 'lodash';
 import { MiniPortalContextGroup3D } from '../scene/MiniPortalContextGroup3D';
 import {
     calculateHitFace,
@@ -1012,7 +1012,7 @@ async function applyUpdateToBot(
         }
     }
 
-    if (Object.keys(update).length > 0) {
+    if (!isEmpty(update)) {
         await simulation.helper.updateBot(bot, {
             tags: update,
         });

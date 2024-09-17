@@ -22,7 +22,7 @@ import {
 } from '../bots';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
-import { flatMap, union } from 'lodash';
+import { flatMap, isEmpty, union } from 'lodash';
 import { merge } from '../utils';
 import { applyTagEdit, edits, isTagEdit, TagEdit, TagEditOp } from '../bots';
 import { v4 as uuid } from 'uuid';
@@ -363,14 +363,11 @@ export class MemoryPartitionImpl implements MemoryPartition {
                                     delete newBot.masks[space][tag];
                                 }
                             }
-                            if (Object.keys(newBot.masks[space]).length <= 0) {
+                            if (isEmpty(newBot.masks[space])) {
                                 delete newBot.masks[space];
                             }
                         }
-                        if (
-                            !!newBot.masks &&
-                            Object.keys(newBot.masks).length <= 0
-                        ) {
+                        if (!!newBot.masks && isEmpty(newBot.masks)) {
                             delete newBot.masks;
                         }
                     }
@@ -379,10 +376,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                 }
 
                 const updatedBot = updatedState[event.id];
-                if (
-                    updatedBot?.tags &&
-                    Object.keys(updatedBot.tags).length <= 0
-                ) {
+                if (updatedBot?.tags && isEmpty(updatedBot.tags)) {
                     delete updatedBot.tags;
                 }
             }

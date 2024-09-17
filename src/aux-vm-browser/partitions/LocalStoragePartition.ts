@@ -29,7 +29,7 @@ import {
     Action,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { flatMap, union } from 'lodash';
+import { flatMap, isEmpty, union } from 'lodash';
 import {
     Subject,
     Subscription,
@@ -444,14 +444,11 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                                     delete newBot.masks[space][tag];
                                 }
                             }
-                            if (Object.keys(newBot.masks[space]).length <= 0) {
+                            if (!isEmpty(newBot.masks[space])) {
                                 delete newBot.masks[space];
                             }
                         }
-                        if (
-                            !!newBot.masks &&
-                            Object.keys(newBot.masks).length <= 0
-                        ) {
+                        if (!!newBot.masks && isEmpty(newBot.masks)) {
                             delete newBot.masks;
                         }
                     }
@@ -460,10 +457,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                 }
 
                 const updatedBot = updatedState[event.id];
-                if (
-                    updatedBot?.tags &&
-                    Object.keys(updatedBot.tags).length <= 0
-                ) {
+                if (updatedBot?.tags && isEmpty(updatedBot.tags)) {
                     delete updatedBot.tags;
                 }
             }

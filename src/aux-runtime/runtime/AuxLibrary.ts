@@ -311,6 +311,7 @@ import {
     isEqual,
     flatMap,
     indexOf,
+    isEmpty,
 } from 'lodash';
 import {
     Action,
@@ -2635,7 +2636,7 @@ function getBotSnapshot(bot: Bot) {
     let masks = isRuntimeBot(bot)
         ? bot[GET_TAG_MASKS_SYMBOL]()
         : cloneDeep(bot.masks ?? {});
-    if (Object.keys(masks).length > 0) {
+    if (!isEmpty(masks)) {
         b.masks = masks;
     }
     return b;
@@ -4479,7 +4480,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             let masks = isRuntimeBot(bot)
                 ? bot[GET_TAG_MASKS_SYMBOL]()
                 : cloneDeep(bot.masks ?? {});
-            if (Object.keys(masks).length > 0) {
+            if (!isEmpty(masks)) {
                 b.masks = masks;
             }
         }
@@ -14711,7 +14712,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return bot;
         });
 
-        if (bots.some((b) => Object.keys(b.tags).length <= 0)) {
+        if (bots.some((b) => isEmpty(b.tags))) {
             throw new Error('Cannot create a bot with zero tags.');
         }
 

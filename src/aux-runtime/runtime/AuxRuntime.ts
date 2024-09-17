@@ -152,7 +152,7 @@ import {
     AuxRealtimeEditModeProvider,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge, union, mapValues } from 'lodash';
+import { sortBy, forOwn, merge, union, mapValues, isEmpty } from 'lodash';
 import {
     applyTagEdit,
     isTagEdit,
@@ -2904,8 +2904,8 @@ export class AuxRuntime
 
         let updates = [] as UpdateBotAction[];
         for (let bot of updatedBots) {
-            const hasTagChange = Object.keys(bot.changes).length > 0;
-            const hasMaskChange = Object.keys(bot.maskChanges).length > 0;
+            const hasTagChange = !isEmpty(bot.changes);
+            const hasMaskChange = !isEmpty(bot.maskChanges);
             const hasChange = hasTagChange || hasMaskChange;
             if (hasChange) {
                 const isNewBot = this._newBots.has(bot.id);

@@ -7,6 +7,7 @@ import {
 import { splice } from '../utils';
 import { hasValue, convertToString } from '../bots/BotCalculations';
 import { VersionVector } from '../common';
+import { isEmpty } from 'lodash';
 
 /**
  * The name of the property that indicates an object represents a tag edit.
@@ -310,7 +311,7 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
                 delete bot.signatures[hash];
             }
         }
-        if (!!bot.signatures && Object.keys(bot.signatures).length <= 0) {
+        if (!!bot.signatures && isEmpty(bot.signatures)) {
             delete bot.signatures;
         }
         for (let space in botUpdate.masks) {
@@ -319,11 +320,11 @@ export function apply<T extends BotsState, U extends PartialBotsState>(
                     delete bot.masks[space][tag];
                 }
             }
-            if (Object.keys(bot.masks[space]).length <= 0) {
+            if (isEmpty(bot.masks[space])) {
                 delete bot.masks[space];
             }
         }
-        if (!!bot.masks && Object.keys(bot.masks).length <= 0) {
+        if (!!bot.masks && isEmpty(bot.masks)) {
             delete bot.masks;
         }
     }
