@@ -45,6 +45,8 @@ import {
 import {
     Rotation,
     Vector3 as CasualVector3,
+    LookRotation,
+    copySign,
 } from '@casual-simulation/aux-common/math';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
@@ -1020,28 +1022,103 @@ async function applyUpdateToBot(
 }
 
 function lookRotation(forward: Ray, up: Ray) {
-    const rotation = new Rotation({
-        direction: new CasualVector3(
-            forward.direction.x,
-            forward.direction.y,
-            forward.direction.z
-        ),
-        upwards: new CasualVector3(
-            up.direction.x,
-            up.direction.y,
-            up.direction.z
-        ),
-        errorHandling: 'error',
-    });
-    const rotationQuaternion = new Quaternion(
-        rotation.quaternion.x,
-        rotation.quaternion.y,
-        rotation.quaternion.z,
-        rotation.quaternion.w
+    const q = threeQuaternionLook(forward.direction, up.direction, 'error');
+    return {
+        euler: new Euler().setFromQuaternion(q),
+        quaternion: q,
+    };
+}
+
+const tempLookDirection = new Vector3();
+const tempUpDirection = new Vector3();
+const tempCrossXVector = new Vector3();
+const tempCrossZVector = new Vector3();
+
+/**
+ * Constructs a new Three.js Quaternion from the given look rotation.
+ * Based on Rotation.quaternionLook() but specialzied for three.js.
+ * @param look The object that contains the look rotation values.
+ */
+function threeQuaternionLook(
+    dir: Vector3,
+    upwards: Vector3,
+    errorHandling: LookRotation['errorHandling']
+): Quaternion {
+    if (errorHandling !== 'error' && errorHandling !== 'nudge') {
+        throw new Error(
+            'The errorHandling property must be provided. It must be a string that contains either "error" or "nudge".'
+        );
+    }
+
+    if (dir.lengthSq() < 0.0001) {
+        return new Quaternion();
+    }
+
+    tempLookDirection.copy(dir).normalize();
+    tempUpDirection.copy(upwards).normalize();
+    const lookUpDot = tempLookDirection.dot(tempUpDirection);
+    if (errorHandling === 'error') {
+        if (lookUpDot > 0.9998) {
+            throw new Error(
+                `The up and direction vectors must not be the same when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+            );
+        } else if (lookUpDot < -0.9998) {
+            throw new Error(
+                `The up and direction vectors must not be opposites when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
+            );
+        }
+    } else {
+        if (Math.abs(tempUpDirection.z) === 1) {
+            tempLookDirection
+                .set(
+                    tempLookDirection.x,
+                    tempLookDirection.y + 0.0001,
+                    tempLookDirection.z
+                )
+                .normalize();
+        } else {
+            tempLookDirection
+                .set(
+                    tempLookDirection.x + 0.00001,
+                    tempLookDirection.y,
+                    tempLookDirection.z
+                )
+                .normalize();
+        }
+    }
+
+    // Matrix version from:
+    // https://www.euclideanspace.com/maths/algebra/vectors/lookat/index.htm
+    // with changed order to use Y-up coordinate system
+    const y = tempLookDirection;
+    const x = tempCrossXVector.copy(y).cross(tempUpDirection).normalize();
+
+    const z = tempCrossZVector.copy(x).cross(y);
+
+    const m00 = x.x;
+    const m01 = y.x;
+    const m02 = z.x;
+    const m10 = x.y;
+    const m11 = y.y;
+    const m12 = z.y;
+    const m20 = x.z;
+    const m21 = y.z;
+    const m22 = z.z;
+
+    // https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+    const qw = Math.sqrt(Math.max(0, 1 + m00 + m11 + m22)) / 2;
+    let qx = copySign(
+        m21 - m12,
+        Math.sqrt(Math.max(0, 1 + m00 - m11 - m22)) / 2
+    );
+    let qy = copySign(
+        m02 - m20,
+        Math.sqrt(Math.max(0, 1 - m00 + m11 - m22)) / 2
+    );
+    let qz = copySign(
+        m10 - m01,
+        Math.sqrt(Math.max(0, 1 - m00 - m11 + m22)) / 2
     );
 
-    return {
-        euler: new Euler().setFromQuaternion(rotationQuaternion),
-        quaternion: rotationQuaternion,
-    };
+    return new Quaternion(qx, qy, qz, qw);
 }

@@ -118,7 +118,11 @@ export class Rotation {
             }
             this._q = q;
         } else if ('direction' in rotation) {
-            this._q = Rotation.quaternionLook(rotation);
+            this._q = Rotation.quaternionLook(
+                rotation.direction,
+                rotation.upwards,
+                rotation.errorHandling
+            );
         } else if (rotation instanceof Quaternion) {
             this._q = rotation.normalize();
         } else {
@@ -164,21 +168,25 @@ export class Rotation {
      * Constructs a new Quaternion from the given look rotation.
      * @param look The object that contains the look rotation values.
      */
-    static quaternionLook(look: LookRotation): Quaternion {
-        if (look.errorHandling !== 'error' && look.errorHandling !== 'nudge') {
+    static quaternionLook(
+        dir: Vector3,
+        upwards: Vector3,
+        errorHandling: LookRotation['errorHandling']
+    ): Quaternion {
+        if (errorHandling !== 'error' && errorHandling !== 'nudge') {
             throw new Error(
                 'The errorHandling property must be provided. It must be a string that contains either "error" or "nudge".'
             );
         }
 
-        if (look.direction.squareLength() < 0.0001) {
+        if (dir.squareLength() < 0.0001) {
             return new Quaternion();
         }
 
-        let direction = look.direction.normalize();
-        let up = look.upwards.normalize();
+        let direction = dir.normalize();
+        let up = upwards.normalize();
         const lookUpDot = direction.dot(up);
-        if (look.errorHandling === 'error') {
+        if (errorHandling === 'error') {
             if (lookUpDot > 0.9998) {
                 throw new Error(
                     `The up and direction vectors must not be the same when constructing a look rotation.\nThis is because vectors that are parallel don't have a valid cross product. (i.e. There are infinite vectors that are perpendicular to both)`
@@ -194,20 +202,20 @@ export class Rotation {
                     direction.x,
                     direction.y + 0.0001,
                     direction.z
-                );
+                ).normalize();
             } else {
                 direction = new Vector3(
                     direction.x + 0.00001,
                     direction.y,
                     direction.z
-                );
+                ).normalize();
             }
         }
 
         // Matrix version from:
         // https://www.euclideanspace.com/maths/algebra/vectors/lookat/index.htm
         // with changed order to use Y-up coordinate system
-        const y = direction.normalize();
+        const y = direction;
         const x = y.cross(up).normalize();
 
         const z = x.cross(y);
