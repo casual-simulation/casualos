@@ -444,7 +444,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                                     delete newBot.masks[space][tag];
                                 }
                             }
-                            if (!isEmpty(newBot.masks[space])) {
+                            if (isEmpty(newBot.masks[space])) {
                                 delete newBot.masks[space];
                             }
                         }
