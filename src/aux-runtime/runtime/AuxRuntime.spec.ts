@@ -8241,6 +8241,36 @@ describe('AuxRuntime', () => {
                             });
                         }
                     );
+
+                    it('should support creating bots with arrays from another bot', async () => {
+                        uuidMock.mockReturnValueOnce('uuid');
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    array: [1, 2, 3],
+                                    create: '@create({ array: tags.array })',
+                                }),
+                            })
+                        );
+                        await runtime.shout('create');
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('uuid', {
+                                        creator: 'test1',
+                                        array: [1, 2, 3],
+                                    })
+                                ),
+                            ],
+                        ]);
+
+                        expect(runtime.currentState['uuid'].tags.array).toEqual(
+                            [1, 2, 3]
+                        );
+                    });
                 });
             });
 
