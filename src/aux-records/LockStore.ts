@@ -1,15 +1,8 @@
 /**
- * Represents a memory lock store
- * * This is used to store and enforce locks in memory
+ * Represents a lock store.
+ * Locks are used to prevent multiple processes from accessing the same resource at the same time.
  */
-export interface MemoryLockStore {
-    /**
-     * The locks that are currently being held.
-     * * The key is the id of the lock and the value is the time at which the lock will be released
-     * ! Implementation advice (private _locks map)
-     * private _locks: Map<string, number> = new Map();
-     */
-
+export interface LockStore {
     /**
      * Acquire a lock for/with the given id
      * @param id The id to acquire the lock for
