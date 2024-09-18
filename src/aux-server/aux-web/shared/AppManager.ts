@@ -701,6 +701,10 @@ export class AppManager {
                     ...this._config,
                     ...config.playerConfig,
                 };
+
+                if (hasValue(this._config.ab1BootstrapURL)) {
+                    this._ab1BootstrapUrl = this._config.ab1BootstrapURL;
+                }
             }
         }
     }
