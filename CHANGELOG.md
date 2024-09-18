@@ -8,6 +8,10 @@
 
 -   Updated the abCore docs.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.
+
 ## V3.3.9
 
 #### Date: 8/20/2024
