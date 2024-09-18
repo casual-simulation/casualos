@@ -57,6 +57,8 @@
         -   `.jpeg`
         -   `.gif`
     -   Additionally, it is possible to manually trigger moderation for a file as a `superUser` by using the `scanFileForModeration` procedure.
+    -   Added `os.getScriptIssues` function.
+        -   This function will get a list of issues that have been raised for the script stored in the given tag
 
 ### :bug: Bug Fixes
 
