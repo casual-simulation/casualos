@@ -2094,7 +2094,7 @@ export class WebsocketController {
     async savePermanentBranches(timeout: number = 30_000): Promise<void> {
         const store = this._instStore;
         if (store instanceof SplitInstRecordsStore) {
-            const unlock = await store.temp.aquireLock(
+            const unlock = await store.temp.acquireLock(
                 SAVE_PERMANENT_BRANCHES_LOCK,
                 timeout
             );
@@ -2106,7 +2106,7 @@ export class WebsocketController {
                 return;
             }
             console.log(
-                '[WebsocketController] [savePermanentBranches] Lock aquired.'
+                '[WebsocketController] [savePermanentBranches] Lock acquired.'
             );
 
             try {

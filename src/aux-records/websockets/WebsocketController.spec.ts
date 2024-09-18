@@ -8994,7 +8994,7 @@ describe('WebsocketController', () => {
                 ).toEqual([]);
             });
 
-            it('should aquire a lock before trying to save branch data', async () => {
+            it('should acquire a lock before trying to save branch data', async () => {
                 const generation =
                     await instStore.temp.getDirtyBranchGeneration();
                 const beforeSaveUpdates = await instStore.getCurrentUpdates(
@@ -9010,7 +9010,7 @@ describe('WebsocketController', () => {
                         update1Base64.length + update2Base64.length,
                 });
 
-                const lock = await instStore.temp.aquireLock(
+                const lock = await instStore.temp.acquireLock(
                     SAVE_PERMANENT_BRANCHES_LOCK,
                     100_000
                 );
