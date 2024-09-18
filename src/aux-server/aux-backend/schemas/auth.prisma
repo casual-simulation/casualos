@@ -950,6 +950,7 @@ model StudioComIdRequest {
     updatedAt DateTime @updatedAt
 }
 
+// Represents information about a user that has been onboarded to the xpExchange
 model XpUser {
     id String @id @db.Uuid
 
@@ -963,9 +964,73 @@ model XpUser {
     // Should have the same currency as the account.
     requestedRate Int?
 
+    issuedEvents XpSystemEvent[] @relation()
     issuedContracts XpContract[] @relation("IssuerUser")
     heldContracts XpContract[] @relation("HoldingUser")
 
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Represents an event that affects the xpExchange system
+// This can be used to track inputs into the system, which will help us track down and reconcile any issues should they arise
+// For example, when a user calls the xpCreateContract procedure, the system will record an event with the type "createContract" and the data being the input and related context.
+model XpSystemEvent {
+    id String @id @db.Uuid
+
+    // The type of the event
+    // Currently there is only one special type of event
+    // - adjustment: An XpSystemEventAdjustment
+    type String
+
+    // The ID of the XpUser that sent the event
+    // Null if the event is not associated with a user
+    xpUserId String?
+    xpUser XpUser? @relation(fields: [xpUserId], references: [id], onDelete: SetNull, map: "XpEvent_xpUserId_fkey1")
+
+    // The data of the event
+    data Json
+
+    // The time that the event occurred
+    time DateTime
+
+    accountEntries XpAccountEntry[]
+    contracts XpContract[]
+    invoices XpInvoice[]
+
+    // The adjustment that tracks the adjusting and adjusted events for this event
+    adjustment XpSystemEventAdjustment? @relation()
+
+    // The ID of the adjustment that causes this event to be replaced
+    adjustingEventId String? @db.Uuid
+    adjustingEvent XpSystemEventAdjustment? @relation("AdjustingEvent", fields: [adjustingEventId], references: [id], onDelete: Restrict, map: "XpSystemEventAdjustment_adjustingEventId_fkey1")
+
+    // The ID of the adjustment that causes this event to replace other events
+    adjusterEventId String? @db.Uuid
+    adjusterEvent XpSystemEventAdjustment? @relation("AdjusterEvent", fields: [adjusterEventId], references: [id], onDelete: Restrict, map: "XpSystemEventAdjustment_adjusterEventId_fkey1")
+    
+    // The time the event was created in the system
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Represents a special event that is able to make adjustments to a set of events in the system
+// This can be used to correct mistakes in the system, or to make special adjustments to the system
+// This works by identifying a set of events that need to be replaced and a set of events as replacements for the old events
+// The system will then calculate the difference between the old events and the new events and apply the difference to the affected accounts
+model XpSystemEventAdjustment {
+    id String @id @db.Uuid
+    
+    // The event that contains the basic information for the adjustment
+    event XpSystemEvent @relation(fields: [id], references: [id], onDelete: Cascade, map: "XpSystemEventAdjustment_id_fkey1")
+
+    // The list of events that this adjustment replaces
+    oldEvents XpSystemEvent[] @relation("AdjustingEvent")
+
+    // The list of modified events
+    newEvents XpSystemEvent[] @relation("AdjusterEvent")
+
+    // The time the event was created in the system
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -1006,9 +1071,11 @@ model XpAccount {
 model XpAccountEntry {
     id String @id @db.Uuid
 
-    // The ID of the account
-    accountId String @db.Uuid
-    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "XpAccountEntry_accountId_fkey1")
+    // The ID of the account that the entry affects
+    // Null if the entry is not associated with an account. (this can happen for example when the entry affects an account outside the system)
+    // e.g. null for system entries, or entries that are associated with an account that is outside the system (adding money to a contract for example)
+    accountId String? @db.Uuid
+    account XpAccount? @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpAccountEntry_accountId_fkey1")
 
     // The number of cents (viable base unit) that were added to the ledger
     // positive for incoming money (deposits)
@@ -1022,17 +1089,26 @@ model XpAccountEntry {
     // be in sync with the entries (causing a data state inconsistency introduced via implementation)
     balance Int
 
-    // The time that the entry was created
+    // The time that the entry was created in the real world
     time DateTime
 
     // Entries with the same transaction ID are part of the same transaction
     // makes it easy to track the flow of money between accounts
+    // IMPORTANT: The amounts of the entries in a transaction should sum up to 0
+    // This means that valid transactions require at least 2 entries (assuming non-zero amounts)
     transactionId String @db.Uuid
 
     // A (optional, yet advised) note for the entry
     note String?
 
+    // The ID of the event that caused the entry to be created
+    systemEventId String @db.Uuid
+    systemEvent XpSystemEvent @relation(fields: [systemEventId], references: [id], onDelete: Restrict, map: "XpAccountEntry_systemEventId_fkey1")
+
+    // The time that the entry was created in the system
     createdAt DateTime @default(now())
+
+    // The last time the entry was updated
     updatedAt DateTime @updatedAt
 
     @@index([transactionId])
@@ -1042,11 +1118,15 @@ model XpAccountEntry {
 model XpContract {
     id String @id @db.Uuid
 
+    // The user that is issuing the contract
+    // That is, the user who is paying for the work
     issuerUserId String
-    issuer XpUser @relation(fields: [issuerUserId], references: [userId], onDelete: Cascade, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
+    issuer XpUser @relation(fields: [issuerUserId], references: [userId], onDelete: Restrict, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
 
+    // The user that is holding the contract
+    // That is, the user who is doing the work and getting paid
     holdingUserId String
-    holdingUser XpUser @relation(fields: [holdingUserId], references: [userId], onDelete: Cascade, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
+    holdingUser XpUser @relation(fields: [holdingUserId], references: [userId], onDelete: Restrict, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
 
     // The rate at which the contract is paid
     // This determines the number of gigs that can be paid for the contract
@@ -1063,7 +1143,11 @@ model XpContract {
 
     // The account that holds the money allocated to the contract
     accountId String @db.Uuid @unique
-    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "XpContract_accountId_fkey1")
+    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpContract_accountId_fkey1")
+
+    // The event that caused this contract to be created
+    creationEventId String @db.Uuid
+    creationEvent XpSystemEvent @relation(fields: [creationEventId], references: [id], onDelete: Restrict, map: "XpInvoice_creationEventId_fkey1")
 
     invoices XpInvoice[]
 
@@ -1076,7 +1160,7 @@ model XpInvoice {
     id String @id @db.Uuid
 
     contractId String @db.Uuid
-    contract XpContract @relation(fields: [contractId], references: [id], onDelete: Cascade, map: "XpInvoice_contractId_fkey1")
+    contract XpContract @relation(fields: [contractId], references: [id], onDelete: Restrict, map: "XpInvoice_contractId_fkey1")
 
     // The amount (quantity of gigs) being invoiced for
     //! Important: A gig is 6 minutes of work, the rate defines the worth of a gig
@@ -1099,6 +1183,10 @@ model XpInvoice {
 
     // Additional information about the invoice
     note String?
+
+    // The event that caused this invoice to be created
+    creationEventId String @db.Uuid
+    creationEvent XpSystemEvent @relation(fields: [creationEventId], references: [id], onDelete: Restrict, map: "XpInvoice_creationEventId_fkey1")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
