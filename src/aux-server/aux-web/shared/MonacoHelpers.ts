@@ -267,7 +267,8 @@ export function watchSimulation(
             }
         }
     }
-    function getShowScriptIssues(
+
+    function getSemanticHighlighting(
         context: BotCalculationContext,
         bot: Bot
     ): boolean {
@@ -280,8 +281,8 @@ export function watchSimulation(
         return value;
     }
 
-    function updateShowScriptIssues(bot: Bot) {
-        const showScriptIssues = getShowScriptIssues(null, bot);
+    function updateSemanticHighlighting(bot: Bot) {
+        const showScriptIssues = getSemanticHighlighting(null, bot);
         if (showScriptIssues) {
             monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
                 {
@@ -317,7 +318,7 @@ export function watchSimulation(
                 updateTheme(change.bot);
             }
             if (change.tags.has(SHOW_SCRIPT_ISSUES)) {
-                updateShowScriptIssues(change.bot);
+                updateSemanticHighlighting(change.bot);
             }
         })
     );
@@ -730,6 +731,21 @@ function registerEditorActionsForSimulation(simulation: Simulation) {
         codeButtons = new Map();
     });
     return sub;
+}
+
+export async function getScriptIssues(
+    simulation: BrowserSimulation,
+    bot: Bot,
+    tag: string
+) {
+    const model = loadModel(simulation, bot, tag, null, () => null);
+    const worker = await monaco.languages.typescript.getTypeScriptWorker();
+    const client = await worker(model.uri);
+    return {
+        syntax: await client.getSyntacticDiagnostics(model.uri.toString()),
+        semantic: await client.getSemanticDiagnostics(model.uri.toString()),
+        suggestion: await client.getSuggestionDiagnostics(model.uri.toString()),
+    };
 }
 
 export function addDefinitionsForPortalBot(

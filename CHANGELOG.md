@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.3.10
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Updated the abCore docs.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.
+-   Fixed an issue where it was impossible to configure a custom AB1 for a comId.
+
 ## V3.3.9
 
 #### Date: 8/20/2024
@@ -44,6 +57,8 @@
         -   `.jpeg`
         -   `.gif`
     -   Additionally, it is possible to manually trigger moderation for a file as a `superUser` by using the `scanFileForModeration` procedure.
+    -   Added `os.getScriptIssues` function.
+        -   This function will get a list of issues that have been raised for the script stored in the given tag
 
 ### :bug: Bug Fixes
 

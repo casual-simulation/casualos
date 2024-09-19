@@ -228,30 +228,56 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onAuthMessage?: (message: PartitionAuthMessage) => void
     ): Promise<void> {
         if (onLocalEvents) {
-            this.onLocalEvents.subscribe((e) => onLocalEvents(e));
+            this.onLocalEvents.subscribe(
+                handleTransferError((e) => onLocalEvents(e), 'onLocalEvents')
+            );
         }
         if (onStateUpdated) {
-            this.onStateUpdated.subscribe((s) => onStateUpdated(s));
+            this.onStateUpdated.subscribe(
+                handleTransferError((s) => onStateUpdated(s), 'onStateUpdated')
+            );
         }
         if (onVersionUpdated) {
-            this.onVersionUpdated.subscribe((v) => onVersionUpdated(v));
+            this.onVersionUpdated.subscribe(
+                handleTransferError(
+                    (v) => onVersionUpdated(v),
+                    'onVersionUpdated'
+                )
+            );
         }
         if (onConnectionStateChanged) {
-            this.onConnectionStateChanged.subscribe((s) =>
-                onConnectionStateChanged(s)
+            this.onConnectionStateChanged.subscribe(
+                handleTransferError(
+                    (s) => onConnectionStateChanged(s),
+                    'onConnectionStateChanged'
+                )
             );
         }
         if (onDeviceEvents) {
-            this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
+            this.onDeviceEvents.subscribe(
+                handleTransferError((e) => onDeviceEvents(e), 'onDeviceEvents')
+            );
         }
         if (onSubChannelAdded) {
-            this.onSubChannelAdded.subscribe((s) => onSubChannelAdded(s));
+            this.onSubChannelAdded.subscribe(
+                handleTransferError(
+                    (s) => onSubChannelAdded(s),
+                    'onSubChannelAdded'
+                )
+            );
         }
         if (onSubChannelRemoved) {
-            this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
+            this.onSubChannelRemoved.subscribe(
+                handleTransferError(
+                    (s) => onSubChannelRemoved(s),
+                    'onSubChannelRemoved'
+                )
+            );
         }
         if (onAuthMessage) {
-            this.onAuthMessage.subscribe((m) => onAuthMessage(m));
+            this.onAuthMessage.subscribe(
+                handleTransferError((m) => onAuthMessage(m), 'onAuthMessage')
+            );
         }
         // if (onError) {
         //     this.onError.subscribe(onError);
@@ -300,17 +326,29 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onAuthMessage?: (message: PartitionAuthMessage) => void
     ): Promise<void> {
         if (onLocalEvents) {
-            this.onLocalEvents.subscribe((e) => onLocalEvents(e));
+            this.onLocalEvents.subscribe(
+                handleTransferError((e) => onLocalEvents(e), 'onLocalEvents')
+            );
         }
         if (onStateUpdated) {
             this.onStateUpdated
                 .pipe(startWith(stateUpdatedEvent(this._helper.botsState)))
-                .subscribe((s) => onStateUpdated(s));
+                .subscribe(
+                    handleTransferError(
+                        (s) => onStateUpdated(s),
+                        'onStateUpdated'
+                    )
+                );
         }
         if (onVersionUpdated) {
             this.onVersionUpdated
                 .pipe(startWith(this._version))
-                .subscribe((v) => onVersionUpdated(v));
+                .subscribe(
+                    handleTransferError(
+                        (v) => onVersionUpdated(v),
+                        'onVersionUpdated'
+                    )
+                );
         }
         if (onConnectionStateChanged) {
             this.onConnectionStateChanged
@@ -322,19 +360,38 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         { type: 'sync', synced: true } as StatusUpdate
                     )
                 )
-                .subscribe((s) => onConnectionStateChanged(s));
+                .subscribe(
+                    handleTransferError(
+                        (s) => onConnectionStateChanged(s),
+                        'onConnectionStateChanged'
+                    )
+                );
         }
         if (onDeviceEvents) {
-            this.onDeviceEvents.subscribe((e) => onDeviceEvents(e));
+            this.onDeviceEvents.subscribe(
+                handleTransferError((e) => onDeviceEvents(e), 'onDeviceEvents')
+            );
         }
         if (onSubChannelAdded) {
-            this.onSubChannelAdded.subscribe((s) => onSubChannelAdded(s));
+            this.onSubChannelAdded.subscribe(
+                handleTransferError(
+                    (s) => onSubChannelAdded(s),
+                    'onSubChannelAdded'
+                )
+            );
         }
         if (onSubChannelRemoved) {
-            this.onSubChannelRemoved.subscribe((s) => onSubChannelRemoved(s));
+            this.onSubChannelRemoved.subscribe(
+                handleTransferError(
+                    (s) => onSubChannelRemoved(s),
+                    'onSubChannelRemoved'
+                )
+            );
         }
         if (onAuthMessage) {
-            this.onAuthMessage.subscribe((m) => onAuthMessage(m));
+            this.onAuthMessage.subscribe(
+                handleTransferError((m) => onAuthMessage(m), 'onAuthMessage')
+            );
         }
     }
 
@@ -1265,4 +1322,30 @@ function mapBotTagsAndSpace<T extends Partial<PrecalculatedBot>>(
     }
 
     return bot;
+}
+
+function handleTransferError<T>(
+    func: (val: T) => void | Promise<void>,
+    name: string
+): (val: T) => void | Promise<void> {
+    return (val) => {
+        try {
+            const res = func(val);
+            if (isPromise(res)) {
+                res.catch((err) => {
+                    console.error(
+                        `[BaseAuxChannel] Error transferring in ${name}:`,
+                        val
+                    );
+                    throw err;
+                });
+            }
+        } catch (err) {
+            console.error(
+                `[BaseAuxChannel] Error transferring in ${name}:`,
+                val
+            );
+            throw err;
+        }
+    };
 }
