@@ -341,7 +341,102 @@ describe('SimulationWebhookEnvironment', () => {
             });
         });
 
+        it('should be able to make records requests', async () => {
+            environment = new SimulationWebhookEnvironment(
+                (simId, indicator, origin, config) => {
+                    const configBotId = getConnectionId(indicator);
+                    const vm = new AuxVMNode(
+                        simId,
+                        origin,
+                        configBotId,
+                        new RemoteAuxChannel(config, {})
+                    );
+                    const sim = new RemoteSimulationImpl(
+                        simId,
+                        {
+                            recordName: null,
+                            inst: null,
+                            isStatic: false,
+                        },
+                        vm
+                    );
 
+                    return {
+                        sim,
+                        vm,
+                    };
+                },
+                {
+                    configParameters: {
+                        authOrigin: 'http://auth.example.com',
+                        recordsOrigin: 'http://records.example.com',
+                    },
+                }
+            );
+
+            setResponse({
+                data: {
+                    success: true,
+                    recordName: 'testRecord',
+                    address: 'address',
+                },
+            });
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook:
+                                    '@await os.recordData("testRecord", "address", 123); return "Done!";',
+                            }),
+                        },
+                    },
+                },
+                connectionKey: 'myConnection',
+                sessionKey: 'mySession',
+                recordName: 'testRecord',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: JSON.stringify('Done!'),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(getLastPost()).toEqual([
+                'http://records.example.com/api/v2/records/data',
+                {
+                    recordKey: 'testRecord',
+                    address: 'address',
+                    data: 123,
+                },
+                expect.objectContaining({
+                    headers: {
+                        Authorization: 'Bearer mySession',
+                        Origin: 'http://auth.example.com',
+                    },
+                }),
+            ]);
+        });
+    });
 });
 
 function setResponse(response: any) {

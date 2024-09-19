@@ -73,21 +73,24 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
         const configBotId = uuid();
         const inst = request.inst ?? uuid();
         const simId = getSimulationId(request.recordName, inst, false);
-        const origin: SimulationOrigin = {
-            recordName: request.recordName,
-            inst: inst,
-        };
+        const origin: SimulationOrigin = request.inst
+            ? {
+                  recordName: request.recordName,
+                  inst: inst,
+              }
+            : null;
         const config: AuxConfig = {
             config: {
                 ...this._configParameters,
                 version: typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG,
-                versionHash: typeof GIT_HASH === 'undefined' ? undefined : GIT_HASH,
+                versionHash:
+                    typeof GIT_HASH === 'undefined' ? undefined : GIT_HASH,
             },
             configBotId,
             partitions: {
                 shared: {
                     type: 'yjs',
-                    remoteEvents: true
+                    remoteEvents: true,
                 },
             },
         };
@@ -106,6 +109,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             sub.add(sim);
 
             const sessionKey = request.sessionKey;
+            const authOrigin = config.config.authOrigin;
             const recordsOrigin = config.config.recordsOrigin;
             const websocketOrigin = config.config.causalRepoConnectionUrl;
             const websocketProtocol =
@@ -117,12 +121,12 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     endpoint: string,
                     authenticateIfNotLoggedIn: boolean
                 ) => {
-                    if (!recordsOrigin || endpoint !== recordsOrigin) {
+                    if (!recordsOrigin || endpoint !== authOrigin) {
                         return null;
                     }
 
                     let headers: Record<string, string> = {
-                        Origin: endpoint,
+                        Origin: authOrigin,
                     };
                     if (sessionKey) {
                         headers.Authorization = `Bearer ${sessionKey}`;
@@ -130,7 +134,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
 
                     return {
                         error: false,
-                        recordsOrigin: endpoint,
+                        recordsOrigin,
                         token: sessionKey,
                         headers,
                         websocketOrigin,
