@@ -9917,6 +9917,12 @@ describe('RecordsServer', () => {
                     type: 'aux',
                     state: aux,
                 },
+                options: {
+                    addStateTimeoutMs: 1000,
+                    fetchTimeoutMs: 5000,
+                    initTimeoutMs: 5000,
+                    requestTimeoutMs: 5000,
+                },
                 request: httpPost(
                     `/api/v2/records/webhook/run?other=def`,
                     JSON.stringify({
@@ -9978,6 +9984,12 @@ describe('RecordsServer', () => {
                 state: {
                     type: 'aux',
                     state: aux,
+                },
+                options: {
+                    addStateTimeoutMs: 1000,
+                    fetchTimeoutMs: 5000,
+                    initTimeoutMs: 5000,
+                    requestTimeoutMs: 5000,
                 },
                 request: {
                     method: 'POST',

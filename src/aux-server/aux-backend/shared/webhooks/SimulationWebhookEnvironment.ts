@@ -28,6 +28,9 @@ import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { Observable, Subscription, tap } from 'rxjs';
 
+declare const GIT_TAG: string;
+declare const GIT_HASH: string;
+
 export type WebhookSimulationFactory = (
     simId: string,
     indicator: ConnectionIndicator,
@@ -77,13 +80,14 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
         const config: AuxConfig = {
             config: {
                 ...this._configParameters,
-                version: GIT_TAG,
-                versionHash: GIT_HASH,
+                version: typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG,
+                versionHash: typeof GIT_HASH === 'undefined' ? undefined : GIT_HASH,
             },
             configBotId,
             partitions: {
                 shared: {
                     type: 'yjs',
+                    remoteEvents: true
                 },
             },
         };

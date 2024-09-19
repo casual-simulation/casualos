@@ -104,6 +104,7 @@ export interface HandleHttpRequestRequest {
 
     /**
      * The inst that the webhook is running in.
+     * If null, then records requests won't include the instance that the request is coming from.
      */
     inst?: string;
 
