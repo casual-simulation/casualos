@@ -1,6 +1,51 @@
 <template>
     <div class="webhook-container">
-        <md-table v-model="items.mdData" md-card md-fixed-header @md-selected="onSelectItem">
+        <md-card>
+            <md-card-header>
+                <div class="md-title">{{ webhook.address }}</div>
+            </md-card-header>
+
+            <md-card-content>
+                <md-list>
+                    <md-list-item>
+                        <md-icon>info</md-icon>
+                        <span class="md-list-item-text"
+                            >Target Resource Kind: {{ webhook.targetResourceKind }}</span
+                        >
+                    </md-list-item>
+                    <md-list-item>
+                        <md-icon>info</md-icon>
+                        <span class="md-list-item-text"
+                            >Target Record Name: {{ webhook.targetRecordName }}</span
+                        >
+                    </md-list-item>
+                    <md-list-item>
+                        <md-icon>info</md-icon>
+                        <span class="md-list-item-text"
+                            >Target Address: {{ webhook.targetAddress }}</span
+                        >
+                    </md-list-item>
+                    <md-list-item>
+                        <md-icon>info</md-icon>
+                        <span class="md-list-item-text"
+                            >User ID: {{ webhook.userId || '(null)' }}</span
+                        >
+                    </md-list-item>
+                    <md-list-item>
+                        <md-icon>info</md-icon>
+                        <span class="md-list-item-text">URL: {{ getWebhookUrl(webhook) }}</span>
+                    </md-list-item>
+                </md-list>
+            </md-card-content>
+        </md-card>
+
+        <md-table
+            class="webhook-runs-table"
+            v-model="items.mdData"
+            md-card
+            md-fixed-header
+            @md-selected="onSelectItem"
+        >
             <md-table-toolbar>
                 <h1 class="md-title">{{ webhook.address }} Runs</h1>
             </md-table-toolbar>
