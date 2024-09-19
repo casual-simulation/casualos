@@ -9238,6 +9238,8 @@ describe('RecordsServer', () => {
                 targetResourceKind: 'data',
                 targetRecordName: recordName,
                 targetAddress: 'data1',
+
+                // Should default to the private marker
                 markers: [PRIVATE_MARKER],
                 userId: expect.any(String),
             });
