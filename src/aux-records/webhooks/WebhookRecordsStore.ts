@@ -206,6 +206,16 @@ export interface WebhookSubscriptionMetrics extends CrudSubscriptionMetrics {
      * The total number of webhook items that are stored in the subscription.
      */
     totalItems: number;
+
+    /**
+     * The number of webhook runs that have been recorded for the last subscription period.
+     */
+    totalRunsInPeriod: number;
+
+    /**
+     * The number of webhook runs that have been recorded in the last hour.
+     */
+    totalRunsInLastHour: number;
 }
 
 export interface WebhookRunInfoWithWebhook {

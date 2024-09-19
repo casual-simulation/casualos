@@ -201,6 +201,16 @@ export class FeaturesBuilder {
         return this;
     }
 
+    withWebhooksMaxRunsPerPeriod(maxRuns: number): this {
+        this._features.webhooks.maxRunsPerPeriod = maxRuns;
+        return this;
+    }
+
+    withWebhookMaxRunsPerHour(maxRuns: number): this {
+        this._features.webhooks.maxRunsPerHour = maxRuns;
+        return this;
+    }
+
     get features() {
         return this._features;
     }

@@ -54,6 +54,9 @@ export class MemoryWebhookRecordsStore
         const info = await super.getSubscriptionMetrics(filter);
 
         let totalItems = 0;
+        let totalRunsInPeriod = 0;
+        let totalRunsInLastHour = 0;
+        let oneHourAgoMs = Date.now() - 60 * 60 * 1000;
 
         const records = filter.ownerId
             ? await this.store.listRecordsByOwnerId(filter.ownerId)
@@ -62,9 +65,29 @@ export class MemoryWebhookRecordsStore
             totalItems += this.getItemRecord(record.name).size;
         }
 
+        for (let run of this._webhookRuns.values()) {
+            if (!records.some((r) => r.name === run.recordName)) {
+                continue;
+            }
+
+            if (
+                !info.currentPeriodStartMs ||
+                run.requestTimeMs >= info.currentPeriodStartMs ||
+                run.requestTimeMs <= info.currentPeriodEndMs
+            ) {
+                totalRunsInPeriod++;
+            }
+
+            if (run.requestTimeMs >= oneHourAgoMs) {
+                totalRunsInLastHour++;
+            }
+        }
+
         return {
             ...info,
             totalItems,
+            totalRunsInPeriod,
+            totalRunsInLastHour,
         };
     }
 

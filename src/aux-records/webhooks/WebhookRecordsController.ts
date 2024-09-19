@@ -623,6 +623,31 @@ export class WebhookRecordsController extends CrudRecordsController<
             }
         }
 
+        if (action === 'run') {
+            if (
+                typeof features.maxRunsPerPeriod === 'number' &&
+                metrics.totalRunsInPeriod >= features.maxRunsPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of webhook runs has been reached for your subscription.',
+                };
+            }
+            if (
+                typeof features.maxRunsPerHour === 'number' &&
+                metrics.totalRunsInLastHour >= features.maxRunsPerHour
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of webhook runs has been reached for your subscription.',
+                };
+            }
+        }
+
         return {
             success: true,
             features,

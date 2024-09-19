@@ -86,6 +86,8 @@ describe('WebhookRecordsController', () => {
     let manager: WebhookRecordsController;
     let key: string;
     let subjectlessKey: string;
+    let realDateNow: any;
+    let dateNowMock: jest.Mock<number>;
 
     let userId: string;
     let sessionKey: string;
@@ -99,6 +101,11 @@ describe('WebhookRecordsController', () => {
     };
 
     beforeEach(async () => {
+        realDateNow = Date.now;
+        dateNowMock = Date.now = jest.fn();
+
+        dateNowMock.mockReturnValue(123);
+
         environment = {
             handleHttpRequest: jest.fn(),
         };
@@ -146,6 +153,10 @@ describe('WebhookRecordsController', () => {
         );
 
         store.subscriptionConfiguration = builder.config;
+    });
+
+    afterEach(() => {
+        Date.now = realDateNow;
     });
 
     function setResponse(response: any) {
@@ -649,6 +660,172 @@ describe('WebhookRecordsController', () => {
                     },
                 },
             ]);
+        });
+
+        it('should return subscription_limit_reached if the request exceeds the max number of webhook runs per period', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withWebhooks()
+                            .withWebhooksMaxRunsPerPeriod(1)
+                    )
+            );
+
+            await itemsStore.createItem(recordName, {
+                address: 'item1',
+                markers: [PUBLIC_READ_MARKER],
+                targetResourceKind: 'data',
+                targetRecordName: 'recordName',
+                targetAddress: 'data1',
+                userId: null,
+            });
+
+            await store.setData(
+                'recordName',
+                'data1',
+                {
+                    version: 1,
+                    state: {},
+                },
+                'user1',
+                'user2',
+                true,
+                true,
+                [PUBLIC_READ_MARKER]
+            );
+
+            await itemsStore.recordWebhookRun({
+                runId: 'run1',
+                recordName,
+                webhookAddress: 'item1',
+                requestTimeMs: 10,
+                responseTimeMs: 20,
+                errorResult: null,
+                statusCode: 200,
+                stateSha256: 'sha256',
+                infoFileName: 'file1',
+                infoRecordName: 'webhookUserId',
+            });
+
+            environment.handleHttpRequest.mockResolvedValueOnce({
+                success: true,
+                response: {
+                    statusCode: 200,
+                },
+                logs: ['abc'],
+            });
+
+            const result = await manager.handleWebhook({
+                recordName,
+                address: 'item1',
+                userId: null,
+                request: {
+                    method: 'GET',
+                    path: '/',
+                    headers: {},
+                    body: JSON.stringify({
+                        abc: 'def',
+                    }),
+                    ipAddress: null,
+                    pathParams: {},
+                    query: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The maximum number of webhook runs has been reached for your subscription.',
+            });
+
+            expect(environment.handleHttpRequest).not.toHaveBeenCalled();
+        });
+
+        it('should return subscription_limit_reached if the request exceeds the max number of webhook runs per hour', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withWebhooks()
+                            .withWebhookMaxRunsPerHour(1)
+                    )
+            );
+
+            await itemsStore.createItem(recordName, {
+                address: 'item1',
+                markers: [PUBLIC_READ_MARKER],
+                targetResourceKind: 'data',
+                targetRecordName: 'recordName',
+                targetAddress: 'data1',
+                userId: null,
+            });
+
+            await store.setData(
+                'recordName',
+                'data1',
+                {
+                    version: 1,
+                    state: {},
+                },
+                'user1',
+                'user2',
+                true,
+                true,
+                [PUBLIC_READ_MARKER]
+            );
+
+            await itemsStore.recordWebhookRun({
+                runId: 'run1',
+                recordName,
+                webhookAddress: 'item1',
+                requestTimeMs: 10,
+                responseTimeMs: 20,
+                errorResult: null,
+                statusCode: 200,
+                stateSha256: 'sha256',
+                infoFileName: 'file1',
+                infoRecordName: 'webhookUserId',
+            });
+
+            environment.handleHttpRequest.mockResolvedValueOnce({
+                success: true,
+                response: {
+                    statusCode: 200,
+                },
+                logs: ['abc'],
+            });
+
+            const result = await manager.handleWebhook({
+                recordName,
+                address: 'item1',
+                userId: null,
+                request: {
+                    method: 'GET',
+                    path: '/',
+                    headers: {},
+                    body: JSON.stringify({
+                        abc: 'def',
+                    }),
+                    ipAddress: null,
+                    pathParams: {},
+                    query: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The maximum number of webhook runs has been reached for your subscription.',
+            });
+
+            expect(environment.handleHttpRequest).not.toHaveBeenCalled();
         });
 
         describe('data', () => {

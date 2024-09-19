@@ -52,26 +52,55 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
         );
 
         const where: Prisma.WebhookRecordWhereInput = {};
+        const whereRun: Prisma.WebhookRunWhereInput = {};
 
         if (filter.ownerId) {
             where.record = {
+                ownerId: filter.ownerId,
+            };
+            whereRun.record = {
                 ownerId: filter.ownerId,
             };
         } else if (filter.studioId) {
             where.record = {
                 studioId: filter.studioId,
             };
+            whereRun.record = {
+                studioId: filter.studioId,
+            };
         } else {
             throw new Error('Invalid filter');
         }
 
-        const totalItems = await this._client.webhookRecord.count({
-            where,
-        });
+        const [totalItems, totalRunsInPeriod, totalRunsInLastHour] =
+            await Promise.all([
+                this._client.webhookRecord.count({
+                    where,
+                }),
+                this._client.webhookRun.count({
+                    where: {
+                        ...whereRun,
+                        requestTime: {
+                            lt: new Date(metrics.currentPeriodEndMs),
+                            gte: new Date(metrics.currentPeriodStartMs),
+                        },
+                    },
+                }),
+                this._client.webhookRun.count({
+                    where: {
+                        ...whereRun,
+                        requestTime: {
+                            gte: new Date(Date.now() - 60 * 60 * 1000),
+                        },
+                    },
+                }),
+            ]);
 
         return {
             ...metrics,
             totalItems,
+            totalRunsInPeriod,
+            totalRunsInLastHour,
         };
     }
 

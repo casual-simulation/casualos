@@ -353,6 +353,24 @@ export const subscriptionFeaturesSchema = z.object({
                 .optional()
                 .nullable()
                 .default(1000),
+
+            maxRunsPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of webhook runs allowed per subscription period. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxRunsPerHour: z
+                .number()
+                .describe(
+                    'The maximum number of webhook runs allowed per hour for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
         })
         .describe(
             'The configuration for webhook features. Defaults to not allowed.'
