@@ -18,9 +18,13 @@ import {
     applyUpdatesToInst,
     BotAction,
     ConnectionIndicator,
+    COOKIE_BOT_PARTITION_ID,
+    createBot,
     first,
     remote,
     StoredAux,
+    TEMPORARY_BOT_PARTITION_ID,
+    TEMPORARY_SHARED_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 import { getSimulationId } from '../../../shared/SimulationHelpers';
 import mime from 'mime';
@@ -91,6 +95,26 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 shared: {
                     type: 'yjs',
                     remoteEvents: true,
+                },
+                [TEMPORARY_BOT_PARTITION_ID]: {
+                    type: 'memory',
+                    private: true,
+                    initialState: {
+                        [configBotId]: createBot(configBotId, {
+                            owner: request.recordName,
+                            inst: inst,
+                            staticInst: !origin ? inst : undefined,
+                        }),
+                    },
+                },
+                [COOKIE_BOT_PARTITION_ID]: {
+                    type: 'memory',
+                    private: true,
+                    initialState: {},
+                },
+                [TEMPORARY_SHARED_PARTITION_ID]: {
+                    type: 'memory',
+                    initialState: {},
                 },
             },
         };

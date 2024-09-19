@@ -14,10 +14,14 @@ import {
     HandleHttpRequestSuccess,
     tryParseJson,
 } from '@casual-simulation/aux-records';
+import { v4 as uuid } from 'uuid';
 
+const uuidMock: jest.Mock = <any>uuid;
 jest.mock('axios');
+jest.mock('uuid');
 
 console.log = jest.fn();
+console.warn = jest.fn();
 
 const originalFetch = globalThis.fetch;
 
@@ -60,6 +64,10 @@ describe('SimulationWebhookEnvironment', () => {
                 };
             }
         );
+    });
+
+    afterEach(() => {
+        uuidMock.mockClear();
     });
 
     afterAll(() => {
@@ -435,6 +443,204 @@ describe('SimulationWebhookEnvironment', () => {
                     },
                 }),
             ]);
+        });
+
+        it('should specify the owner and inst on the config bot if the inst is specified in the request', async () => {
+            uuidMock.mockReturnValueOnce('configBot');
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook: '@return configBot',
+                            }),
+                        },
+                    },
+                },
+                recordName: 'testRecord',
+                inst: 'inst',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: expect.any(String),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(tryParseJson(result.response.body as string)).toEqual({
+                success: true,
+                value: createBot(
+                    'configBot',
+                    {
+                        owner: 'testRecord',
+                        inst: 'inst',
+                    },
+                    'tempLocal'
+                ),
+            });
+        });
+
+        it('should specify the owner and static inst if no inst was specified in the request', async () => {
+            uuidMock
+                .mockReturnValueOnce('configBot')
+                .mockReturnValueOnce('instId');
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook: '@return configBot',
+                            }),
+                        },
+                    },
+                },
+                recordName: 'testRecord',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: expect.any(String),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(tryParseJson(result.response.body as string)).toEqual({
+                success: true,
+                value: createBot(
+                    'configBot',
+                    {
+                        owner: 'testRecord',
+                        inst: 'instId',
+                        staticInst: 'instId',
+                    },
+                    'tempLocal'
+                ),
+            });
+        });
+
+        it('should specify the correct partitions', async () => {
+            let counter = 1;
+            uuidMock
+                .mockReturnValueOnce('configBot')
+                .mockReturnValueOnce('instId')
+                .mockImplementation(() => `id${counter++}`);
+
+            const testBot = createBot('test', {
+                onWebhook:
+                    '@create({ space: "tempLocal", test: 1 }); create({ space: "shared", test: 2 }); create({ space: "tempShared", test: 3 }); create({ space: "local", test: 4 }); return getBots();',
+            });
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: testBot,
+                        },
+                    },
+                },
+                recordName: 'testRecord',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: expect.any(String),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            const value = JSON.parse(result.response.body as string);
+
+            expect(value).toContainEqual(
+                createBot(
+                    expect.any(String),
+                    {
+                        test: 1,
+                    },
+                    'tempLocal'
+                )
+            );
+
+            expect(value).toContainEqual(
+                createBot(
+                    expect.any(String),
+                    {
+                        creator: 'test',
+                        test: 2,
+                    },
+                    'shared'
+                )
+            );
+
+            expect(value).toContainEqual(
+                createBot(
+                    expect.any(String),
+                    {
+                        test: 3,
+                    },
+                    'tempShared'
+                )
+            );
+
+            expect(value).toContainEqual(
+                createBot(
+                    expect.any(String),
+                    {
+                        test: 4,
+                    },
+                    'local'
+                )
+            );
         });
     });
 });
