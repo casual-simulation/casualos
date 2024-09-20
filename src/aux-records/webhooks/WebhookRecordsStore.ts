@@ -62,8 +62,9 @@ export interface WebhookRecord extends CrudRecord {
 
     /**
      * The name of the record that is being targeted by this webhook.
+     * Null if the webhook is targeting a public inst.
      */
-    targetRecordName: string;
+    targetRecordName: string | null;
 
     /**
      * The address of the record that is being targeted by this webhook.

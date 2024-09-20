@@ -44,6 +44,7 @@ export interface TestContext<
     key: string;
     subjectlessKey: string;
     recordName: string;
+    connectionKey: string;
 }
 
 /**
@@ -79,6 +80,7 @@ export async function setupTestContext<
     const user = await createTestUser(services, 'test@example.com');
     const userId = user.userId;
     const sessionKey = user.sessionKey;
+    const connectionKey = user.connectionKey;
 
     const testRecordKey = await createTestRecordKey(
         services,
@@ -116,6 +118,7 @@ export async function setupTestContext<
         subjectlessKey,
         userId,
         recordName,
+        connectionKey,
     };
 }
 

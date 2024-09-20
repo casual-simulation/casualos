@@ -107,6 +107,8 @@ describe('RecordsManager', () => {
     let sub: Subscription;
 
     beforeEach(async () => {
+        require('axios').__reset();
+
         actions = [];
         sub = new Subscription();
         helper = createHelper();

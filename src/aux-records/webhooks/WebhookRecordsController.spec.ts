@@ -5,12 +5,18 @@ import { RecordsController } from '../RecordsController';
 import { WebhookRecordsController } from './WebhookRecordsController';
 import { MemoryWebhookRecordsStore } from './MemoryWebhookRecordsStore';
 import {
+    ADMIN_ROLE_NAME,
+    constructInitializationUpdate,
+    createBot,
+    createInitializationUpdate,
+    DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     webhook,
 } from '@casual-simulation/aux-common';
 import {
     setupTestContext,
+    TestControllers,
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
 import {
@@ -31,6 +37,15 @@ import {
 } from './WebhookEnvironment';
 import { getHash } from '@casual-simulation/crypto';
 import { sortBy } from 'lodash';
+import {
+    MemoryTempInstRecordsStore,
+    MemoryWebsocketConnectionStore,
+    MemoryWebsocketMessenger,
+    SplitInstRecordsStore,
+    WebsocketController,
+} from '../websockets';
+import { createTestUser } from '../TestUtils';
+import { generateV1ConnectionToken } from '../AuthUtils';
 
 console.log = jest.fn();
 
@@ -58,6 +73,20 @@ describe('WebhookRecordsController', () => {
                     policies: services.policies,
                     store: services.store,
                 }),
+                websockets: new WebsocketController(
+                    new MemoryWebsocketConnectionStore(),
+                    new MemoryWebsocketMessenger(),
+                    new SplitInstRecordsStore(
+                        new MemoryTempInstRecordsStore(),
+                        services.store
+                    ),
+                    new MemoryTempInstRecordsStore(),
+                    services.auth,
+                    services.policies,
+                    services.configStore,
+                    services.store,
+                    services.authStore
+                ),
                 auth: services.auth,
                 environment: {
                     handleHttpRequest: jest.fn(),
@@ -88,9 +117,11 @@ describe('WebhookRecordsController', () => {
     let subjectlessKey: string;
     let realDateNow: any;
     let dateNowMock: jest.Mock<number>;
+    let services: TestControllers;
 
     let userId: string;
     let sessionKey: string;
+    let connectionKey: string;
     let otherUserId: string;
     let recordName: string;
     let environment: {
@@ -101,6 +132,7 @@ describe('WebhookRecordsController', () => {
     };
 
     beforeEach(async () => {
+        require('axios').__reset();
         realDateNow = Date.now;
         dateNowMock = Date.now = jest.fn();
 
@@ -131,11 +163,26 @@ describe('WebhookRecordsController', () => {
                         policies: services.policies,
                         store: services.store,
                     }),
+                    websockets: new WebsocketController(
+                        new MemoryWebsocketConnectionStore(),
+                        new MemoryWebsocketMessenger(),
+                        new SplitInstRecordsStore(
+                            new MemoryTempInstRecordsStore(),
+                            services.store
+                        ),
+                        new MemoryTempInstRecordsStore(),
+                        services.auth,
+                        services.policies,
+                        services.configStore,
+                        services.store,
+                        services.authStore
+                    ),
                     auth: services.auth,
                     environment: environment,
                 })
         );
 
+        services = context.services;
         store = context.store;
         itemsStore = context.itemsStore as MemoryWebhookRecordsStore;
         records = context.services.records;
@@ -146,6 +193,7 @@ describe('WebhookRecordsController', () => {
         userId = context.userId;
         otherUserId = context.otherUserId;
         sessionKey = context.sessionKey;
+        connectionKey = context.connectionKey;
         recordName = context.recordName;
 
         const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -1144,6 +1192,14 @@ describe('WebhookRecordsController', () => {
 
         describe('file', () => {
             it('should call into the factory ', async () => {
+                // Record webhook run info result
+                setResponse({
+                    status: 200,
+                    data: {
+                        success: true,
+                    },
+                });
+
                 await itemsStore.createItem(recordName, {
                     address: 'item1',
                     markers: [PUBLIC_READ_MARKER],
@@ -1290,6 +1346,454 @@ describe('WebhookRecordsController', () => {
                             'The user must be logged in. Please provide a sessionKey or a recordKey.',
                     },
                 });
+            });
+        });
+
+        describe('inst', () => {
+            beforeEach(() => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config
+                            .withPublicInsts()
+                            .withUserDefaultFeatures((features) =>
+                                features
+                                    .withAllDefaultFeatures()
+                                    .withWebhooks()
+                                    .withInsts()
+                            )
+                );
+            });
+
+            const inst = 'myInst';
+
+            it('should be able to use a public inst', async () => {
+                // Record webhook run info result
+                setResponse({
+                    status: 200,
+                    data: {
+                        success: true,
+                    },
+                });
+
+                const serverConnectionId = 'serverConnectionId';
+                await manager.websockets.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionId: serverConnectionId,
+                });
+
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('test', {
+                            onWebhook: '@return "Second!"',
+                        }),
+                        createBot('abc', {
+                            onWebhook: '@return "First!"',
+                        }),
+                        createBot('other', {
+                            onWebhook: '@return "Third!"',
+                        }),
+                    ])
+                );
+
+                await manager.websockets.addUpdates(serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    updates: [update.update],
+                    updateId: 0,
+                });
+
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'inst',
+                    targetRecordName: null,
+                    targetAddress: inst,
+                    userId: 'testUser',
+                });
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                    logs: ['abc'],
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                expect(environment.handleHttpRequest).toHaveBeenCalledWith({
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    recordName,
+                    state: {
+                        type: 'aux',
+                        state: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    update: update.update,
+                                    timestamp: expect.any(Number),
+                                },
+                            ],
+                        },
+                    },
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    options: {
+                        initTimeoutMs: 5000,
+                        requestTimeoutMs: 5000,
+                        fetchTimeoutMs: 5000,
+                        addStateTimeoutMs: 1000,
+                    },
+                });
+            });
+
+            it('should be able to use a private inst', async () => {
+                // Record webhook run info result
+                setResponse({
+                    status: 200,
+                    data: {
+                        success: true,
+                    },
+                });
+
+                const serverConnectionId = 'serverConnectionId';
+                await manager.websockets.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionId: serverConnectionId,
+                    connectionToken: generateV1ConnectionToken(
+                        connectionKey,
+                        serverConnectionId,
+                        recordName,
+                        inst
+                    ),
+                });
+
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('test', {
+                            onWebhook: '@return "Second!"',
+                        }),
+                        createBot('abc', {
+                            onWebhook: '@return "First!"',
+                        }),
+                        createBot('other', {
+                            onWebhook: '@return "Third!"',
+                        }),
+                    ])
+                );
+
+                await manager.websockets.addUpdates(serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    updates: [update.update],
+                    updateId: 0,
+                });
+
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'inst',
+                    targetRecordName: recordName,
+                    targetAddress: inst,
+                    userId: 'testUser',
+                });
+
+                store.roles[recordName] = {
+                    ['testUser']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                    logs: ['abc'],
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                });
+
+                expect(environment.handleHttpRequest).toHaveBeenCalledWith({
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    recordName,
+                    state: {
+                        type: 'aux',
+                        state: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    update: update.update,
+                                    timestamp: expect.any(Number),
+                                },
+                            ],
+                        },
+                    },
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    options: {
+                        initTimeoutMs: 5000,
+                        requestTimeoutMs: 5000,
+                        fetchTimeoutMs: 5000,
+                        addStateTimeoutMs: 1000,
+                    },
+                });
+            });
+
+            it('should return invalid_webhook_target if there is no websocket controller', async () => {
+                itemsStore = new MemoryWebhookRecordsStore(services.store);
+                manager = new WebhookRecordsController({
+                    config: services.configStore,
+                    policies: services.policies,
+                    store: itemsStore,
+                    data: new DataRecordsController({
+                        config: services.store,
+                        metrics: services.store,
+                        policies: services.policies,
+                        store: services.store,
+                    }),
+                    files: new FileRecordsController({
+                        config: services.store,
+                        metrics: services.store,
+                        policies: services.policies,
+                        store: services.store,
+                    }),
+                    websockets: null,
+                    auth: services.auth,
+                    environment: environment,
+                });
+
+                // Record webhook run info result
+                setResponse({
+                    status: 200,
+                    data: {
+                        success: true,
+                    },
+                });
+
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'inst',
+                    targetRecordName: recordName,
+                    targetAddress: inst,
+                    userId: 'testUser',
+                });
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                    logs: ['abc'],
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_webhook_target',
+                    errorMessage:
+                        'Invalid webhook target. Inst records are not supported in this environment.',
+                    internalError: {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Inst records are not supported in this environment.',
+                    },
+                });
+
+                expect(environment.handleHttpRequest).not.toHaveBeenCalled();
+            });
+
+            it('should return not_authorized if the webhook doesnt have the ability to read the inst', async () => {
+                // Record webhook run info result
+                setResponse({
+                    status: 200,
+                    data: {
+                        success: true,
+                    },
+                });
+
+                const serverConnectionId = 'serverConnectionId';
+                await manager.websockets.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionId: serverConnectionId,
+                    connectionToken: generateV1ConnectionToken(
+                        connectionKey,
+                        serverConnectionId,
+                        recordName,
+                        inst
+                    ),
+                });
+
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('test', {
+                            onWebhook: '@return "Second!"',
+                        }),
+                        createBot('abc', {
+                            onWebhook: '@return "First!"',
+                        }),
+                        createBot('other', {
+                            onWebhook: '@return "Third!"',
+                        }),
+                    ])
+                );
+
+                await manager.websockets.addUpdates(serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    updates: [update.update],
+                    updateId: 0,
+                });
+
+                await itemsStore.createItem(recordName, {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    targetResourceKind: 'inst',
+                    targetRecordName: recordName,
+                    targetAddress: inst,
+                    userId: 'testUser',
+                });
+
+                environment.handleHttpRequest.mockResolvedValueOnce({
+                    success: true,
+                    response: {
+                        statusCode: 200,
+                    },
+                    logs: ['abc'],
+                });
+
+                const result = await manager.handleWebhook({
+                    recordName,
+                    address: 'item1',
+                    userId,
+                    request: {
+                        method: 'GET',
+                        path: '/',
+                        headers: {},
+                        body: JSON.stringify({
+                            abc: 'def',
+                        }),
+                        ipAddress: null,
+                        pathParams: {},
+                        query: {},
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_webhook_target',
+                    errorMessage:
+                        'Invalid webhook target. The targeted record was not able to be retrieved.',
+                    internalError: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            resourceId: inst,
+                            subjectType: 'user',
+                            subjectId: 'testUser',
+                            action: 'read',
+                        },
+                    },
+                });
+
+                expect(environment.handleHttpRequest).not.toHaveBeenCalled();
             });
         });
     });

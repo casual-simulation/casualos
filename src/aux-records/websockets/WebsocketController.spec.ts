@@ -7552,6 +7552,56 @@ describe('WebsocketController', () => {
                         },
                     });
                 });
+
+                it('should return the updates for the given branch if version 2 is requested', async () => {
+                    const partition = createYjsPartition({
+                        type: 'yjs',
+                    });
+
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                                ghi: 123,
+                            })
+                        ),
+                    ]);
+
+                    const updateBytes = encodeStateAsUpdate(
+                        (partition as YjsPartitionImpl).doc
+                    );
+                    const updateBase64 = fromByteArray(updateBytes);
+
+                    await instStore.addUpdates(
+                        null,
+                        inst,
+                        'testBranch',
+                        [updateBase64],
+                        updateBase64.length
+                    );
+
+                    const data = await server.getBranchData(
+                        null,
+                        null,
+                        inst,
+                        'testBranch',
+                        2
+                    );
+
+                    expect(data).toEqual({
+                        success: true,
+                        data: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    update: updateBase64,
+                                    timestamp: expect.any(Number),
+                                },
+                            ],
+                        },
+                    });
+                });
             });
 
             describe('records', () => {
@@ -7681,6 +7731,62 @@ describe('WebsocketController', () => {
                                     ghi: 123,
                                 }),
                             },
+                        },
+                    });
+                });
+
+                it('should return the updates if aux version 2 is requested', async () => {
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    const partition = createYjsPartition({
+                        type: 'yjs',
+                    });
+
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                                ghi: 123,
+                            })
+                        ),
+                    ]);
+
+                    const updateBytes = encodeStateAsUpdate(
+                        (partition as YjsPartitionImpl).doc
+                    );
+                    const updateBase64 = fromByteArray(updateBytes);
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        'testBranch',
+                        [updateBase64],
+                        updateBase64.length
+                    );
+
+                    const data = await server.getBranchData(
+                        userId,
+                        recordName,
+                        inst,
+                        'testBranch',
+                        2
+                    );
+
+                    expect(data).toEqual({
+                        success: true,
+                        data: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    update: updateBase64,
+                                    timestamp: expect.any(Number),
+                                },
+                            ],
                         },
                     });
                 });

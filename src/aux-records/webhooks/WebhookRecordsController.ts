@@ -1,6 +1,7 @@
 import {
     ActionKinds,
     BotsState,
+    DEFAULT_BRANCH_NAME,
     DenialReason,
     GenericHttpRequest,
     GenericHttpResponse,
@@ -64,6 +65,7 @@ import { sha256 } from 'hash.js';
 import axios from 'axios';
 import { AuthController } from '../AuthController';
 import { getHash } from '@casual-simulation/crypto';
+import { GetBranchDataFailure, WebsocketController } from '../websockets';
 
 const TRACE_NAME = 'WebhookRecordsController';
 
@@ -94,6 +96,11 @@ export interface WebhookRecordsConfiguration
      * The controller that should be used to for auth-related operations.
      */
     auth: AuthController;
+
+    /**
+     * The controller that should be used to get inst data.
+     */
+    websockets: WebsocketController | null;
 }
 
 /**
@@ -106,7 +113,12 @@ export class WebhookRecordsController extends CrudRecordsController<
     private _environment: WebhookEnvironment;
     private _data: DataRecordsController;
     private _files: FileRecordsController;
+    private _websockets: WebsocketController;
     private _auth: AuthController;
+
+    get websockets() {
+        return this._websockets;
+    }
 
     constructor(config: WebhookRecordsConfiguration) {
         super({
@@ -117,6 +129,7 @@ export class WebhookRecordsController extends CrudRecordsController<
         this._environment = config.environment;
         this._data = config.data;
         this._files = config.files;
+        this._websockets = config.websockets;
         this._auth = config.auth;
     }
 
@@ -248,7 +261,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                         success: false,
                         errorCode: 'invalid_webhook_target',
                         errorMessage:
-                            'Invalid webhook target. The targeted record does not contain valid data.',
+                            'Invalid webhook target. The targeted record was not able to be retrieved.',
                         internalError: file,
                     };
                 }
@@ -258,6 +271,43 @@ export class WebhookRecordsController extends CrudRecordsController<
                     requestUrl: file.requestUrl,
                     requestMethod: file.requestMethod,
                     requestHeaders: file.requestHeaders,
+                };
+            } else if (webhook.targetResourceKind === 'inst') {
+                if (!this._websockets) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_webhook_target',
+                        errorMessage:
+                            'Invalid webhook target. Inst records are not supported in this environment.',
+                        internalError: {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Inst records are not supported in this environment.',
+                        },
+                    };
+                }
+
+                const inst = await this._websockets.getBranchData(
+                    webhook.userId,
+                    webhook.targetRecordName,
+                    webhook.targetAddress,
+                    DEFAULT_BRANCH_NAME,
+                    2
+                );
+                if (inst.success === false) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_webhook_target',
+                        errorMessage:
+                            'Invalid webhook target. The targeted record was not able to be retrieved.',
+                        internalError: inst,
+                    };
+                }
+
+                state = {
+                    type: 'aux',
+                    state: inst.data,
                 };
             }
 
@@ -733,6 +783,7 @@ export interface HandleWebhookFailure {
         | AuthorizeSubjectFailure
         | GetDataFailure
         | ReadFileFailure
+        | GetBranchDataFailure
         | {
               success: false;
               errorCode: 'unacceptable_request';
