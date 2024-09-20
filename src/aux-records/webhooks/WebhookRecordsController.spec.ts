@@ -946,7 +946,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
-                    recordName,
+                    recordName: 'recordName',
                     state: {
                         type: 'aux',
                         state: {
@@ -1032,7 +1032,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
-                    recordName,
+                    recordName: 'recordName',
                     state: {
                         type: 'aux',
                         state: {
@@ -1264,7 +1264,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
-                    recordName,
+                    recordName: 'recordName',
                     state: {
                         type: 'url',
                         requestUrl:
@@ -1458,7 +1458,8 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
-                    recordName,
+                    recordName: null,
+                    inst: inst,
                     state: {
                         type: 'aux',
                         state: {
@@ -1586,6 +1587,7 @@ describe('WebhookRecordsController', () => {
                         query: {},
                     },
                     recordName,
+                    inst: inst,
                     state: {
                         type: 'aux',
                         state: {

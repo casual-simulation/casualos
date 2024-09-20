@@ -200,6 +200,8 @@ export class WebhookRecordsController extends CrudRecordsController<
             }
 
             let state: WebhookState = null;
+            const stateRecordName: string = webhook.targetRecordName;
+            let stateInstName: string = undefined;
             if (webhook.targetResourceKind === 'data') {
                 const data = await this._data.getData(
                     webhook.targetRecordName,
@@ -305,6 +307,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                     };
                 }
 
+                stateInstName = webhook.targetAddress;
                 state = {
                     type: 'aux',
                     state: inst.data,
@@ -356,7 +359,8 @@ export class WebhookRecordsController extends CrudRecordsController<
 
             const result = await this._environment.handleHttpRequest({
                 state: state,
-                recordName,
+                recordName: stateRecordName,
+                inst: stateInstName,
                 request: request.request,
                 sessionKey,
                 connectionKey,

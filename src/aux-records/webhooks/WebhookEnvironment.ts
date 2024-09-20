@@ -98,12 +98,13 @@ export interface HandleHttpRequestRequest {
     request: GenericHttpRequest;
 
     /**
-     * The name of the record that the webhook is running in.
+     * The name of the record that the webhook state came from.
+     * Null if the webhook state is not from a record (i.e. it is from a public inst).
      */
     recordName: string;
 
     /**
-     * The inst that the webhook is running in.
+     * The inst that the webhook state came from.
      * If null, then records requests won't include the instance that the request is coming from.
      */
     inst?: string;
