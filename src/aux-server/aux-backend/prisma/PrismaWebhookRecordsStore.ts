@@ -120,6 +120,14 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                     item.targetResourceKind === 'file'
                         ? item.targetAddress
                         : null,
+                targetInstRecordName:
+                    item.targetResourceKind === 'inst' && item.targetRecordName
+                        ? item.targetAddress
+                        : null,
+                targetPublicInstRecordName:
+                    item.targetResourceKind === 'inst' && !item.targetRecordName
+                        ? item.targetAddress
+                        : null,
                 userId: item.userId,
             },
         });
@@ -169,6 +177,14 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                     item.targetResourceKind === 'file'
                         ? item.targetAddress
                         : null,
+                targetInstRecordName:
+                    item.targetResourceKind === 'inst' && item.targetRecordName
+                        ? item.targetAddress
+                        : null,
+                targetPublicInstRecordName:
+                    item.targetResourceKind === 'inst' && !item.targetRecordName
+                        ? item.targetAddress
+                        : null,
                 userId: item.userId,
             }),
         });
@@ -199,6 +215,14 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                     item.targetResourceKind === 'file'
                         ? item.targetAddress
                         : null,
+                targetInstRecordName:
+                    item.targetResourceKind === 'inst' && item.targetRecordName
+                        ? item.targetAddress
+                        : null,
+                targetPublicInstRecordName:
+                    item.targetResourceKind === 'inst' && !item.targetRecordName
+                        ? item.targetAddress
+                        : null,
                 userId: item.userId,
             },
             update: cleanupObject({
@@ -210,6 +234,14 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                         : null,
                 targetFileRecordFileName:
                     item.targetResourceKind === 'file'
+                        ? item.targetAddress
+                        : null,
+                targetInstRecordName:
+                    item.targetResourceKind === 'inst' && item.targetRecordName
+                        ? item.targetAddress
+                        : null,
+                targetPublicInstRecordName:
+                    item.targetResourceKind === 'inst' && !item.targetRecordName
                         ? item.targetAddress
                         : null,
                 userId: item.userId,
@@ -258,6 +290,8 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                     targetRecordName: true,
                     targetDataRecordAddress: true,
                     targetFileRecordFileName: true,
+                    targetInstRecordName: true,
+                    targetPublicInstRecordName: true,
                     userId: true,
                 },
                 take: 10,
@@ -302,6 +336,8 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                     targetRecordName: true,
                     targetDataRecordAddress: true,
                     targetFileRecordFileName: true,
+                    targetInstRecordName: true,
+                    targetPublicInstRecordName: true,
                     userId: true,
                 },
                 take: 10,
@@ -412,10 +448,15 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
                 ? 'data'
                 : record.targetFileRecordFileName
                 ? 'file'
+                : record.targetInstRecordName ||
+                  record.targetPublicInstRecordName
+                ? 'inst'
                 : null,
             targetAddress:
                 record.targetDataRecordAddress ||
                 record.targetFileRecordFileName ||
+                record.targetInstRecordName ||
+                record.targetPublicInstRecordName ||
                 '',
             userId: record.userId,
         };

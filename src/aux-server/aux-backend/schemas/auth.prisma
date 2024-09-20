@@ -660,6 +660,7 @@ model InstRecord {
     branches InstBranch[]
     updates BranchUpdate[]
     userInstReports UserInstReport[]
+    webhookRecords WebhookRecord[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -722,6 +723,11 @@ model WebhookRecord {
 
     targetFileRecordFileName String? @db.String(512)
     targetFileRecord FileRecord? @relation(fields: [targetRecordName, targetFileRecordFileName], references: [recordName, fileName], onDelete: SetNull, map: "WebhookRecord_targetFileRecordFileName_fkey1")
+
+    targetInstRecordName String? @db.String(128)
+    targetInstRecord InstRecord? @relation(fields: [targetRecordName, targetInstRecordName], references: [recordName, name], onDelete: SetNull, map: "WebhookRecord_targetInstRecordName_fkey1")
+
+    targetPublicInstRecordName String? @db.String(128)
 
     userId String?
     user User? @relation(fields: [userId], references: [id])
