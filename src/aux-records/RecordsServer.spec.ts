@@ -590,6 +590,7 @@ describe('RecordsServer', () => {
             policies: policyController,
             environment: webhookEnvironment,
             auth: authController,
+            websockets: websocketController,
         });
 
         stripe = stripeMock = {
@@ -9244,6 +9245,100 @@ describe('RecordsServer', () => {
                 userId: expect.any(String),
             });
         });
+
+        it('should be able to save webhooks pointing to public insts', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/webhook`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            targetResourceKind: 'inst',
+                            targetRecordName: null,
+                            targetAddress: 'instName',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual({
+                address: 'testAddress',
+                targetResourceKind: 'inst',
+                targetRecordName: null,
+                targetAddress: 'instName',
+
+                // Should default to the private marker
+                markers: [PRIVATE_MARKER],
+                userId: expect.any(String),
+            });
+        });
+
+        const recordlessCases = [['data'], ['file']];
+
+        it.each(recordlessCases)(
+            'should reject the request if trying to save a %s webhook without a record name',
+            async (kind) => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        `/api/v2/records/webhook`,
+                        JSON.stringify({
+                            recordName,
+                            item: {
+                                address: 'testAddress',
+                                targetResourceKind: kind,
+                                targetRecordName: null,
+                                targetAddress: 'data',
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                received: 'null',
+                                message: 'recordName must be a string.',
+                                path: ['item', 'targetRecordName'],
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            }
+        );
 
         it('should reject the request if the user is not authorized', async () => {
             const result = await server.handleHttpRequest(

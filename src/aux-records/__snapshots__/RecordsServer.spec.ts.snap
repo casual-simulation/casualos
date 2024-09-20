@@ -1158,39 +1158,77 @@ Object {
             "type": "array",
           },
           "item": Object {
-            "schema": Object {
-              "address": Object {
-                "type": "string",
-              },
-              "markers": Object {
-                "defaultValue": Array [
-                  "private",
-                ],
-                "hasDefault": true,
-                "maxLength": 10,
-                "minLength": 1,
-                "optional": true,
+            "discriminator": "targetResourceKind",
+            "options": Array [
+              Object {
                 "schema": Object {
-                  "type": "string",
+                  "address": Object {
+                    "type": "string",
+                  },
+                  "markers": Object {
+                    "defaultValue": Array [
+                      "private",
+                    ],
+                    "hasDefault": true,
+                    "maxLength": 10,
+                    "minLength": 1,
+                    "optional": true,
+                    "schema": Object {
+                      "type": "string",
+                    },
+                    "type": "array",
+                  },
+                  "targetAddress": Object {
+                    "type": "string",
+                  },
+                  "targetRecordName": Object {
+                    "type": "string",
+                  },
+                  "targetResourceKind": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "data",
+                      "file",
+                    ],
+                  },
                 },
-                "type": "array",
+                "type": "object",
               },
-              "targetAddress": Object {
-                "type": "string",
+              Object {
+                "schema": Object {
+                  "address": Object {
+                    "type": "string",
+                  },
+                  "markers": Object {
+                    "defaultValue": Array [
+                      "private",
+                    ],
+                    "hasDefault": true,
+                    "maxLength": 10,
+                    "minLength": 1,
+                    "optional": true,
+                    "schema": Object {
+                      "type": "string",
+                    },
+                    "type": "array",
+                  },
+                  "targetAddress": Object {
+                    "type": "string",
+                  },
+                  "targetRecordName": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "targetResourceKind": Object {
+                    "type": "literal",
+                    "value": "inst",
+                  },
+                },
+                "type": "object",
               },
-              "targetRecordName": Object {
-                "type": "string",
-              },
-              "targetResourceKind": Object {
-                "type": "enum",
-                "values": Array [
-                  "file",
-                  "inst",
-                  "data",
-                ],
-              },
-            },
-            "type": "object",
+            ],
+            "type": "union",
           },
           "recordName": Object {
             "type": "string",
@@ -4402,39 +4440,77 @@ Object {
             "type": "array",
           },
           "item": Object {
-            "schema": Object {
-              "address": Object {
-                "type": "string",
-              },
-              "markers": Object {
-                "defaultValue": Array [
-                  "private",
-                ],
-                "hasDefault": true,
-                "maxLength": 10,
-                "minLength": 1,
-                "optional": true,
+            "discriminator": "targetResourceKind",
+            "options": Array [
+              Object {
                 "schema": Object {
-                  "type": "string",
+                  "address": Object {
+                    "type": "string",
+                  },
+                  "markers": Object {
+                    "defaultValue": Array [
+                      "private",
+                    ],
+                    "hasDefault": true,
+                    "maxLength": 10,
+                    "minLength": 1,
+                    "optional": true,
+                    "schema": Object {
+                      "type": "string",
+                    },
+                    "type": "array",
+                  },
+                  "targetAddress": Object {
+                    "type": "string",
+                  },
+                  "targetRecordName": Object {
+                    "type": "string",
+                  },
+                  "targetResourceKind": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "data",
+                      "file",
+                    ],
+                  },
                 },
-                "type": "array",
+                "type": "object",
               },
-              "targetAddress": Object {
-                "type": "string",
+              Object {
+                "schema": Object {
+                  "address": Object {
+                    "type": "string",
+                  },
+                  "markers": Object {
+                    "defaultValue": Array [
+                      "private",
+                    ],
+                    "hasDefault": true,
+                    "maxLength": 10,
+                    "minLength": 1,
+                    "optional": true,
+                    "schema": Object {
+                      "type": "string",
+                    },
+                    "type": "array",
+                  },
+                  "targetAddress": Object {
+                    "type": "string",
+                  },
+                  "targetRecordName": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "targetResourceKind": Object {
+                    "type": "literal",
+                    "value": "inst",
+                  },
+                },
+                "type": "object",
               },
-              "targetRecordName": Object {
-                "type": "string",
-              },
-              "targetResourceKind": Object {
-                "type": "enum",
-                "values": Array [
-                  "file",
-                  "inst",
-                  "data",
-                ],
-              },
-            },
-            "type": "object",
+            ],
+            "type": "union",
           },
           "recordName": Object {
             "type": "string",

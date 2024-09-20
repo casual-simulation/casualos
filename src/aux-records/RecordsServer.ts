@@ -1480,15 +1480,27 @@ export class RecordsServer {
             recordWebhook: recordItemProcedure(
                 this._auth,
                 this._webhooksController,
-                z.object({
-                    address: ADDRESS_VALIDATION,
-                    targetResourceKind: z.enum(['file', 'inst', 'data']),
-                    targetRecordName: RECORD_NAME_VALIDATION,
-                    targetAddress: ADDRESS_VALIDATION,
-                    markers: MARKERS_VALIDATION.optional().default([
-                        PRIVATE_MARKER,
-                    ]),
-                }),
+                z.discriminatedUnion('targetResourceKind', [
+                    z.object({
+                        address: ADDRESS_VALIDATION,
+                        targetResourceKind: z.enum(['data', 'file']),
+                        targetRecordName: RECORD_NAME_VALIDATION,
+                        targetAddress: ADDRESS_VALIDATION,
+                        markers: MARKERS_VALIDATION.optional().default([
+                            PRIVATE_MARKER,
+                        ]),
+                    }),
+                    z.object({
+                        address: ADDRESS_VALIDATION,
+                        targetResourceKind: z.literal('inst'),
+                        targetRecordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        targetAddress: ADDRESS_VALIDATION,
+                        markers: MARKERS_VALIDATION.optional().default([
+                            PRIVATE_MARKER,
+                        ]),
+                    }),
+                ]),
                 procedure()
                     .origins('api')
                     .http('POST', '/api/v2/records/webhook')

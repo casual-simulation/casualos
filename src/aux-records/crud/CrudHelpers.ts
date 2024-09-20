@@ -68,7 +68,7 @@ export function getItemProcedure<
  */
 export function recordItemProcedure<
     TController extends CrudRecordsController<any, any, any>,
-    TItemSchema extends z.ZodObject<any, any>
+    TItemSchema extends z.ZodType<any, any>
 >(
     auth: AuthController,
     controller: TController | null,
