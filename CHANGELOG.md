@@ -26,6 +26,7 @@
 -   Fixed an issue where library scripts would always error when executing a loop (for, while, etc.).
 -   Fixed an issue where it was possible for tag masks to get overwritten by a bot's regular tags shortly after creation of the bot.
 -   Fixed an issue where AI Chat features would only be enabled if OpenAI Chat was configured.
+-   Resolved an issue where the Monaco editor failed to refresh when navigating between the same tag in different spaces. The editor now correctly detects the context change and updates the displayed content accordingly.
 
 ## V3.3.8
 
