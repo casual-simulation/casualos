@@ -126,7 +126,7 @@ export function listItemsProcedure<
         .inputs(
             z.object({
                 recordName: RECORD_NAME_VALIDATION,
-                address: z.string().optional(),
+                address: z.string().nullable().optional(),
                 marker: MARKER_VALIDATION.optional(),
                 sort: z.enum(['ascending', 'descending']).optional(),
                 instances: INSTANCES_ARRAY_VALIDATION.optional(),

@@ -1275,6 +1275,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "address": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -4557,6 +4558,7 @@ Object {
       "inputs": Object {
         "schema": Object {
           "address": Object {
+            "nullable": true,
             "optional": true,
             "type": "string",
           },

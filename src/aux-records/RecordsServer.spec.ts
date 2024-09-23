@@ -12,6 +12,7 @@ import {
     GenericPathParameters,
     GenericQueryStringParameters,
     GenericWebsocketRequest,
+    procedure,
 } from '@casual-simulation/aux-common';
 import {
     AuthController,
@@ -9741,6 +9742,59 @@ describe('RecordsServer', () => {
                         subjectType: 'user',
                         subjectId: userId,
                     },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'listWebhooks',
+                    {
+                        recordName,
+                        address: null,
+                    },
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'testAddress3',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data3',
+                            markers: [PRIVATE_MARKER],
+                            userId: null,
+                        },
+                        {
+                            address: 'testAddress',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data1',
+                            markers: [PRIVATE_MARKER],
+                            userId: null,
+                        },
+                        {
+                            address: 'testAddress2',
+                            targetResourceKind: 'data',
+                            targetRecordName: recordName,
+                            targetAddress: 'data2',
+                            markers: [PUBLIC_READ_MARKER],
+                            userId: null,
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
