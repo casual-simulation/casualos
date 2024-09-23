@@ -303,6 +303,11 @@ import {
     aiHumeGetAccessToken,
     AISloydGenerateModelOptions,
     aiSloydGenerateModel,
+    recordWebhook as calcRecordWebhook,
+    getWebhook as calcGetWebhook,
+    listWebhooks as calcListWebhooks,
+    listWebhooksByMarker as calcListWebhooksByMarker,
+    eraseWebhook as calcEraseWebhook,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -406,6 +411,7 @@ import type {
     ListStudiosResult,
     ReportInstResult,
     RevokePermissionResult,
+    WebhookRecord,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -443,6 +449,12 @@ import {
     attachRuntime,
     detachRuntime,
 } from './RuntimeEvents';
+import {
+    CrudEraseItemResult,
+    CrudGetItemResult,
+    CrudListItemsResult,
+    CrudRecordItemResult,
+} from '@casual-simulation/aux-records/crud/CrudRecordsController';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3256,6 +3268,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listDataByMarker,
                 eraseData,
                 eraseManualApprovalData,
+
+                recordWebhook,
+                getWebhook,
+                eraseWebhook,
+                listWebhooks,
+                listWebhooksByMarker,
 
                 recordFile,
                 getFile,
@@ -9257,6 +9275,180 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates or updates a [webhook](glossary:webhook-record) in the given record using the given options.
+     *
+     * Returns a promise that resolves with an object that contains whether the operation succeeded.
+     *
+     * @param recordName the name of the record.
+     * @param webhook the webhook that should be created or updated.
+     * @param options the options that should be used.
+     *
+     * @example Create a publically-runnable webhook that runs from an inst.
+     * await os.recordWebhook('myRecord', {
+     *   address: 'webhookAddress',
+     *   targetResourceKind: 'inst',
+     *   targetRecordName: 'myRecord',
+     *   targetAddress: 'myInst',
+     *   markers: ['publicRead']
+     * });
+     *
+     * @example Create a private webhook that runs from a data record.
+     * await os.recordWebhook('myRecord', {
+     *   address: 'webhookAddress',
+     *   targetResourceKind: 'data',
+     *   targetRecordName: 'myRecord',
+     *   targetAddress: 'myDataAddress',
+     * });
+     *
+     * @example Create a private webhook that runs from a file record.
+     * await os.recordWebhook('myRecord', {
+     *   address: 'webhookAddress',
+     *   targetResourceKind: 'file',
+     *   targetRecordName: 'myRecord',
+     *   targetAddress: 'myFileName',
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.recordWebhook
+     */
+    function recordWebhook(
+        recordName: string,
+        webhook: WebhookRecord,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = calcRecordWebhook(
+            recordName,
+            webhook,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the [webhook](glossary:webhook-record) from the given record.
+     *
+     * Returns a promise that resolves with the webhook data.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the webhook.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.getWebhook
+     */
+    function getWebhook(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudGetItemResult<WebhookRecord>> {
+        const task = context.createTask();
+        const event = calcGetWebhook(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Deletes the [webhook](glossary:webhook-record) from the given record.
+     * @param recordName the name of the record.
+     * @param address the address of the webhook.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.eraseWebhook
+     */
+    function eraseWebhook(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcEraseWebhook(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the webhooks that are in the given record.
+     * @param recordName the name of the record.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.listWebhooks
+     */
+    function listWebhooks(
+        recordName: string,
+        startingAddress: string = null,
+        options?: RecordActionOptions
+    ): Promise<CrudListItemsResult<WebhookRecord>> {
+        const task = context.createTask();
+        const event = calcListWebhooks(
+            recordName,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the webhooks that are in the given record.
+     * @param recordName the name of the record.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.listWebhooksByMarker
+     */
+    function listWebhooksByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress: string = null,
+        options?: RecordActionOptions
+    ): Promise<CrudListItemsResult<WebhookRecord>> {
+        const task = context.createTask();
+        const event = calcListWebhooksByMarker(
+            recordName,
+            marker,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
     }
 
     /**

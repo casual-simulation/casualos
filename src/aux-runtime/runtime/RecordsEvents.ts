@@ -2,6 +2,7 @@ import type {
     AIChatMessage,
     PublicRecordKeyPolicy,
     RecordFileFailure,
+    WebhookRecord,
 } from '@casual-simulation/aux-records';
 import {
     APPROVED_SYMBOL,
@@ -41,7 +42,12 @@ export type RecordsAsyncActions =
     | GetRoomOptionsAction
     | GetRoomTrackOptionsAction
     | SetRoomTrackOptionsAction
-    | GetRoomRemoteOptionsAction;
+    | GetRoomRemoteOptionsAction
+    | RecordWebhookAction
+    | GetWebhookAction
+    | ListWebhooksAction
+    | ListWebhooksByMarkerAction
+    | EraseWebhookAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -533,6 +539,103 @@ export interface EraseRecordDataAction extends DataRecordAction {
      * The record key that should be used to erase the data.
      */
     recordKey: string;
+
+    /**
+     * The address that the data from.
+     */
+    address: string;
+}
+
+export interface WebhookRecordAction extends RecordsAction {}
+
+/**
+ * Defines an event that publishes data to a record.
+ */
+export interface RecordWebhookAction extends WebhookRecordAction {
+    type: 'record_webhook';
+
+    /**
+     * The record name the webhook should be recorded in.
+     */
+    recordName: string;
+
+    /**
+     * The item to record.
+     */
+    item: WebhookRecord;
+}
+
+/**
+ * Defines an event that requests info on a webhook.
+ */
+export interface GetWebhookAction extends WebhookRecordAction {
+    type: 'get_webhook';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address of the webhook that should be retrieved.
+     */
+    address: string;
+}
+
+export interface ListWebhooksAction extends WebhookRecordAction {
+    type: 'list_webhooks';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address that the list should start with.
+     */
+    startingAddress?: string;
+
+    /**
+     * The options for the action.
+     */
+    options: ListWebhooksOptions;
+}
+
+export interface ListWebhooksByMarkerAction
+    extends Omit<ListWebhooksAction, 'type'> {
+    type: 'list_webhooks_by_marker';
+
+    /**
+     * The marker that should be used to filter the list.
+     */
+    marker: string;
+}
+
+/**
+ * Defines an interface that represents the options for a list data action.
+ *
+ * @dochash types/records/data
+ * @docName ListDataOptions
+ */
+export interface ListWebhooksOptions extends RecordActionOptions {
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
+}
+
+/**
+ * Defines an event that erases a webhook from a record.
+ */
+export interface EraseWebhookAction extends WebhookRecordAction {
+    type: 'erase_webhook';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
 
     /**
      * The address that the data from.
@@ -1537,6 +1640,119 @@ export function eraseRecordData(
         recordKey,
         address,
         requiresApproval,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordWebhookAction.
+ * @param recordName The name of the record.
+ * @param item The item to record.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function recordWebhook(
+    recordName: string,
+    item: WebhookRecord,
+    options: RecordActionOptions,
+    taskId: number | string
+): RecordWebhookAction {
+    return {
+        type: 'record_webhook',
+        recordName,
+        item,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetWebhookAction.
+ * @param recordName The name of the record to retrieve.
+ * @param address The address of the data to retrieve.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function getWebhook(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): GetWebhookAction {
+    return {
+        type: 'get_webhook',
+        recordName,
+        address,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ListWebhooksAction.
+ * @param recordName The name of the record.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listWebhooks(
+    recordName: string,
+    startingAddress: string,
+    options: ListWebhooksOptions,
+    taskId?: number | string
+): ListWebhooksAction {
+    return {
+        type: 'list_webhooks',
+        recordName,
+        startingAddress,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ListWebhooksByMarkerAction.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listWebhooksByMarker(
+    recordName: string,
+    marker: string,
+    startingAddress: string,
+    options: ListWebhooksOptions,
+    taskId?: number | string
+): ListWebhooksByMarkerAction {
+    return {
+        type: 'list_webhooks_by_marker',
+        recordName,
+        marker,
+        startingAddress,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseWebhookAction.
+ * @param recordKey The name of the record.
+ * @param address The address of the data to erase.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function eraseWebhook(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): EraseWebhookAction {
+    return {
+        type: 'erase_webhook',
+        recordName,
+        address,
         options,
         taskId,
     };
