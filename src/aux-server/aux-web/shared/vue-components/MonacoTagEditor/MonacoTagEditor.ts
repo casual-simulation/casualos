@@ -86,6 +86,11 @@ export default class MonacoTagEditor extends Vue {
         this._updateModel();
     }
 
+    @Watch('space')
+    spaceChanged() {
+        this._updateModel();
+    }
+
     get docsLink() {
         if (this.isListenTag) {
             const tagLink = this.tag

@@ -3,7 +3,7 @@ import {
     BranchRecordWithInst,
     CurrentUpdates,
 } from './InstRecordsStore';
-import { MemoryLockStore } from './MemoryLockStore';
+import { LockStore } from '../LockStore';
 
 /**
  * Defines an interface for a store that keeps track of temporary inst records.
@@ -11,7 +11,7 @@ import { MemoryLockStore } from './MemoryLockStore';
  * A key feature of temporary records stores is that they act like a cache.
  * As a result, it may evict data based on configuration or other factors (like memory pressure).
  */
-export interface TemporaryInstRecordsStore extends MemoryLockStore {
+export interface TemporaryInstRecordsStore extends LockStore {
     /**
      * Gets info for the given branch.
      * @param branchKey The key for the branch.

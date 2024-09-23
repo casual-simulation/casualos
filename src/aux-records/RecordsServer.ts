@@ -3516,8 +3516,6 @@ export class RecordsServer {
                     ret: GenericHttpResponse
                 ) => ({
                     [SEMATTRS_HTTP_METHOD]: request.method,
-                    [SEMATTRS_HTTP_HOST]: request.headers.host,
-                    ['http.origin']: request.headers.origin,
                     ['http.status_code']: ret.statusCode,
                 }),
             },
@@ -3779,8 +3777,6 @@ export class RecordsServer {
                 },
                 attributes: ([request]: [GenericWebsocketRequest], ret) => ({
                     'websocket.type': request.type,
-                    'request.connectionId': request.connectionId,
-                    'http.origin': request.origin,
                 }),
             },
             errorCounter: {
@@ -3791,8 +3787,6 @@ export class RecordsServer {
                 },
                 attributes: ([request]: [GenericWebsocketRequest], ret) => ({
                     'websocket.type': request.type,
-                    'request.connectionId': request.connectionId,
-                    'http.origin': request.origin,
                 }),
             },
         }

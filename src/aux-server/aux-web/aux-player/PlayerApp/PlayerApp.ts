@@ -44,6 +44,7 @@ import {
     RecordLoomAction,
     WatchLoomAction,
     GetLoomMetadataAction,
+    GetScriptIssuesAction,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -1247,6 +1248,8 @@ export default class PlayerApp extends Vue {
                     this._watchLoom(e, simulation);
                 } else if (e.type === 'get_loom_metadata') {
                     this._getLoomMetadata(e, simulation);
+                } else if (e.type === 'get_script_issues') {
+                    this._getScriptIssues(e, simulation);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1399,6 +1402,30 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this.setTitleToID();
+    }
+
+    private async _getScriptIssues(
+        e: GetScriptIssuesAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            const helpers = await import('../../shared/MonacoHelpers');
+            const bot = simulation.helper.botsState[e.botId];
+            const issues = await helpers.getScriptIssues(
+                simulation,
+                bot,
+                e.tag
+            );
+
+            simulation.helper.transaction(asyncResult(e.taskId, issues));
+        } catch (ex) {
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(e.taskId, ex.toString())
+                );
+            }
+            console.log('Error fetching issues:', ex);
+        }
     }
 
     private async _getLoomMetadata(

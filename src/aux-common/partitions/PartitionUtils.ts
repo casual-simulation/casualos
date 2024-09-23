@@ -190,6 +190,10 @@ function _convertToCopiableValue(
             return formatBotVector(value);
         } else if (value instanceof Rotation) {
             return formatBotRotation(value);
+        } else if (ORIGINAL_OBJECT in value) {
+            const val = value[ORIGINAL_OBJECT];
+            map.set(value, val);
+            return val;
         } else {
             let result = {} as any;
             map.set(value, result);
@@ -200,6 +204,42 @@ function _convertToCopiableValue(
         }
     }
     return value;
+}
+
+/**
+ * Deeply traverses over all the keys in the given value and calls the given action for each stored value.
+ * To prevent infinite loops, the traversal will stop if the depth exceeds 1000.
+ *
+ * @param value The value to traverse.
+ * @param action The action to perform for each value. If the action returns false, then the traversal will stop.
+ * @param depth The depth of the traversal.
+ */
+function deepTraverse(
+    value: any,
+    action: (val: any) => void | boolean,
+    depth: number = 0
+) {
+    if (depth > 1000) {
+        throw new DeepObjectError();
+    }
+    if (hasValue(value) && typeof value === 'object') {
+        if (Array.isArray(value)) {
+            for (let val of value) {
+                if (action(val) === false) {
+                    return;
+                }
+                deepTraverse(val, action, depth + 1);
+            }
+        } else {
+            for (let key in value) {
+                const val = value[key];
+                if (action(val) === false) {
+                    return;
+                }
+                deepTraverse(val, action, depth + 1);
+            }
+        }
+    }
 }
 
 export class DeepObjectError extends Error {
@@ -223,12 +263,21 @@ export function ensureBotIsSerializable(bot: Bot): Bot {
             value instanceof Rotation
         ) {
             updateTag(tag, convertToCopiableValue(value));
-        } else if (
-            hasValue(value) &&
-            typeof value === 'object' &&
-            ORIGINAL_OBJECT in value
-        ) {
-            updateTag(tag, value[ORIGINAL_OBJECT]);
+        } else if (hasValue(value) && typeof value === 'object') {
+            if (ORIGINAL_OBJECT in value) {
+                updateTag(tag, value[ORIGINAL_OBJECT]);
+            } else {
+                deepTraverse(value, (val) => {
+                    if (
+                        hasValue(val) &&
+                        typeof val === 'object' &&
+                        ORIGINAL_OBJECT in val
+                    ) {
+                        updateTag(tag, convertToCopiableValue(value));
+                        return false;
+                    }
+                });
+            }
         }
     }
 
