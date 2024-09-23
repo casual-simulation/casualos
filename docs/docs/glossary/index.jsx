@@ -96,4 +96,5 @@ export {
     EventRecord,
     ManualApprovalDataRecord,
     ImageClassification,
+    WebhookRecord
 };
