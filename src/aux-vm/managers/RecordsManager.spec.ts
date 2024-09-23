@@ -6494,6 +6494,24 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'runWebhook',
+                    recordsCallProcedure(
+                        {
+                            runWebhook: {
+                                input: {
+                                    value: 123,
+                                },
+                                query: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {
@@ -6521,6 +6539,7 @@ describe('RecordsManager', () => {
                             body: JSON.stringify({
                                 procedure: name,
                                 input: event.procedure[name]?.input,
+                                query: event.procedure[name]?.query,
                             }),
                             headers: expect.objectContaining({
                                 Authorization: 'Bearer authToken',
@@ -6562,22 +6581,42 @@ describe('RecordsManager', () => {
 
                     await waitAsync();
 
-                    expect(fetch).toHaveBeenCalledWith(
-                        'http://localhost:3002/api/v3/callProcedure',
-                        {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                procedure: name,
-                                input: {
-                                    ...event.procedure[name]?.input,
-                                    instances: ['/myInst'],
-                                },
-                            }),
-                            headers: expect.objectContaining({
-                                Authorization: 'Bearer authToken',
-                            }),
-                        }
-                    );
+                    if (!event.procedure[name]?.query) {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:3002/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: {
+                                        ...event.procedure[name]?.input,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    } else {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:3002/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: event.procedure[name]?.input,
+                                    query: {
+                                        ...event.procedure[name]?.query,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    }
 
                     expect(vm.events).toEqual([
                         asyncResult(1, {
@@ -6643,19 +6682,42 @@ describe('RecordsManager', () => {
 
                     await waitAsync();
 
-                    expect(fetch).toHaveBeenCalledWith(
-                        'http://localhost:9999/api/v3/callProcedure',
-                        {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                procedure: name,
-                                input: event.procedure[name]?.input,
-                            }),
-                            headers: expect.objectContaining({
-                                Authorization: 'Bearer authToken',
-                            }),
-                        }
-                    );
+                    if (!event.procedure[name]?.query) {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:9999/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: {
+                                        ...event.procedure[name]?.input,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    } else {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:9999/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: event.procedure[name]?.input,
+                                    query: {
+                                        ...event.procedure[name]?.query,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    }
 
                     await waitAsync();
 

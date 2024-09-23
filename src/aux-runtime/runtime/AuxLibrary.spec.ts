@@ -188,6 +188,7 @@ import {
     eraseWebhook,
     listWebhooks,
     listWebhooksByMarker,
+    runWebhook,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -7537,6 +7538,27 @@ describe('AuxLibrary', () => {
                         targetAddress: 'targetAddress',
                         markers: ['private'],
                     },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.runWebhook()', () => {
+            it('should emit a RunWebhookAction', async () => {
+                const action: any = library.api.os.runWebhook(
+                    'recordName',
+                    'webhook',
+                    {
+                        data: true,
+                    }
+                );
+                const expected = runWebhook(
+                    'recordName',
+                    'webhook',
+                    { data: true },
                     {},
                     context.tasks.size
                 );

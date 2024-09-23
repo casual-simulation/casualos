@@ -1710,6 +1710,36 @@ export function recordWebhook(
 }
 
 /**
+ * Creates a RunWebhookAction.
+ * @param recordName The name of the record.
+ * @param address The address of the webhook to run.
+ * @param input The input for the webhook.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function runWebhook(
+    recordName: string,
+    address: string,
+    input: any,
+    options: RecordActionOptions,
+    taskId: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            runWebhook: {
+                query: {
+                    recordName,
+                    address,
+                },
+                input: input,
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
  * Creates a GetWebhookAction.
  * @param recordName The name of the record to retrieve.
  * @param address The address of the data to retrieve.

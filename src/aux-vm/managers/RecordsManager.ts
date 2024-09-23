@@ -196,6 +196,7 @@ export class RecordsManager {
         'getWebhook',
         'listWebhooks',
         'eraseWebhook',
+        'runWebhook',
     ]);
 
     /**
@@ -368,12 +369,17 @@ export class RecordsManager {
         }
 
         if (hasValue(this._helper.origin)) {
-            input.instances = [
+            const instances = [
                 formatInstId(
                     this._helper.origin.recordName,
                     this._helper.origin.inst
                 ),
             ];
+            if (query) {
+                query.instances = instances;
+            } else {
+                input.instances = instances;
+            }
         }
 
         const result = await this._client.callProcedure(

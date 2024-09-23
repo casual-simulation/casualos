@@ -308,6 +308,8 @@ import {
     listWebhooks as calcListWebhooks,
     listWebhooksByMarker as calcListWebhooksByMarker,
     eraseWebhook as calcEraseWebhook,
+    runWebhook as calcRunWebhook,
+    ListWebhooksOptions,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -449,12 +451,13 @@ import {
     attachRuntime,
     detachRuntime,
 } from './RuntimeEvents';
-import {
+import type {
     CrudEraseItemResult,
     CrudGetItemResult,
     CrudListItemsResult,
     CrudRecordItemResult,
 } from '@casual-simulation/aux-records/crud/CrudRecordsController';
+import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3270,6 +3273,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseManualApprovalData,
 
                 recordWebhook,
+                runWebhook,
                 getWebhook,
                 eraseWebhook,
                 listWebhooks,
@@ -9333,6 +9337,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Runs the webhook in the given record with the provided input.
+     * @param recordName the name of the record.
+     * @param address the address of the webhook.
+     * @param input the input to provide to the webhook.
+     * @param options the options to use.
+     *
+     * @example Run a webhook with some input.
+     * const result = await os.runWebhook('myRecord', 'myWebhookAddress', { myInput: 'myValue' });
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.runWebhook
+     */
+    function runWebhook(
+        recordName: string,
+        address: string,
+        input: any,
+        options?: RecordActionOptions
+    ): Promise<HandleWebhookResult> {
+        const task = context.createTask();
+        const event = calcRunWebhook(
+            recordName,
+            address,
+            input,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
      * Gets the [webhook](glossary:webhook-record) from the given record.
      *
      * Returns a promise that resolves with the webhook data.
@@ -9404,7 +9441,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function listWebhooks(
         recordName: string,
         startingAddress: string = null,
-        options?: RecordActionOptions
+        options?: ListWebhooksOptions
     ): Promise<CrudListItemsResult<WebhookRecord>> {
         const task = context.createTask();
         const event = calcListWebhooks(
@@ -9436,7 +9473,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         marker: string,
         startingAddress: string = null,
-        options?: RecordActionOptions
+        options?: ListWebhooksOptions
     ): Promise<CrudListItemsResult<WebhookRecord>> {
         const task = context.createTask();
         const event = calcListWebhooksByMarker(
