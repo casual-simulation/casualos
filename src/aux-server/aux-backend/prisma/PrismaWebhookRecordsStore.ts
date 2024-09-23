@@ -284,6 +284,9 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
             }),
             this._client.webhookRecord.findMany({
                 where: filter,
+                orderBy: {
+                    address: 'asc',
+                },
                 select: {
                     address: true,
                     markers: true,
@@ -328,7 +331,7 @@ export class PrismaWebhookRecordsStore implements WebhookRecordsStore {
             this._client.webhookRecord.findMany({
                 where: query,
                 orderBy: {
-                    address: 'asc',
+                    address: request.sort === 'descending' ? 'desc' : 'asc',
                 },
                 select: {
                     address: true,
