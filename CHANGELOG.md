@@ -12,6 +12,7 @@
 
 -   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.
 -   Fixed an issue where it was impossible to configure a custom AB1 for a comId.
+-   Resolved an issue where the Monaco editor failed to refresh when navigating between the same tag in different spaces. The editor now correctly detects the context change and updates the displayed content accordingly.
 
 ## V3.3.9
 
