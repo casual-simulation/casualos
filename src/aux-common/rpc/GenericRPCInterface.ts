@@ -172,6 +172,17 @@ export type ProcedureInputs<T extends Procedures> = {
     [K in keyof T]: z.infer<T[K]['schema']>;
 };
 
+export type ProcedureQueries<T extends Procedures> = {
+    [K in keyof T]: z.infer<T[K]['querySchema']>;
+};
+
+export type ProcedureActions<T extends Procedures> = {
+    [K in keyof T]: {
+        input: ProcedureInputs<T>[K];
+        query?: ProcedureQueries<T>[K];
+    };
+};
+
 export interface ProcedureBuilder {
     /**
      * Configures the origins that are allowed for the route.

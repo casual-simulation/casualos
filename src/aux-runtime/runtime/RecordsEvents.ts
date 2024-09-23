@@ -4,10 +4,14 @@ import type {
     RecordFileFailure,
     WebhookRecord,
 } from '@casual-simulation/aux-records';
+import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
 import {
     APPROVED_SYMBOL,
     AsyncAction,
     AvailablePermissions,
+    ProcedureInputs,
+    ProcedureQueries,
+    Procedures,
 } from '@casual-simulation/aux-common';
 
 export type RecordsActions = RecordsAsyncActions;
@@ -43,11 +47,7 @@ export type RecordsAsyncActions =
     | GetRoomTrackOptionsAction
     | SetRoomTrackOptionsAction
     | GetRoomRemoteOptionsAction
-    | RecordWebhookAction
-    | GetWebhookAction
-    | ListWebhooksAction
-    | ListWebhooksByMarkerAction
-    | EraseWebhookAction;
+    | RecordsCallProcedureAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -549,67 +549,79 @@ export interface EraseRecordDataAction extends DataRecordAction {
 export interface WebhookRecordAction extends RecordsAction {}
 
 /**
- * Defines an event that publishes data to a record.
+ * Defines an event that is able to call a procedure on the records server.
  */
-export interface RecordWebhookAction extends WebhookRecordAction {
-    type: 'record_webhook';
+export interface RecordsCallProcedureAction extends RecordsAction {
+    type: 'records_call_procedure';
 
     /**
-     * The record name the webhook should be recorded in.
+     * The procedure to call.
      */
-    recordName: string;
-
-    /**
-     * The item to record.
-     */
-    item: WebhookRecord;
+    procedure: Partial<RecordsClientActions>;
 }
 
-/**
- * Defines an event that requests info on a webhook.
- */
-export interface GetWebhookAction extends WebhookRecordAction {
-    type: 'get_webhook';
+// /**
+//  * Defines an event that publishes data to a record.
+//  */
+// export interface RecordWebhookAction extends WebhookRecordAction {
+//     type: 'record_webhook';
 
-    /**
-     * The name of the record.
-     */
-    recordName: string;
+//     /**
+//      * The record name the webhook should be recorded in.
+//      */
+//     recordName: string;
 
-    /**
-     * The address of the webhook that should be retrieved.
-     */
-    address: string;
-}
+//     /**
+//      * The item to record.
+//      */
+//     item: WebhookRecord;
+// }
 
-export interface ListWebhooksAction extends WebhookRecordAction {
-    type: 'list_webhooks';
+// /**
+//  * Defines an event that requests info on a webhook.
+//  */
+// export interface GetWebhookAction extends WebhookRecordAction {
+//     type: 'get_webhook';
 
-    /**
-     * The name of the record.
-     */
-    recordName: string;
+//     /**
+//      * The name of the record.
+//      */
+//     recordName: string;
 
-    /**
-     * The address that the list should start with.
-     */
-    startingAddress?: string;
+//     /**
+//      * The address of the webhook that should be retrieved.
+//      */
+//     address: string;
+// }
 
-    /**
-     * The options for the action.
-     */
-    options: ListWebhooksOptions;
-}
+// export interface ListWebhooksAction extends WebhookRecordAction {
+//     type: 'list_webhooks';
 
-export interface ListWebhooksByMarkerAction
-    extends Omit<ListWebhooksAction, 'type'> {
-    type: 'list_webhooks_by_marker';
+//     /**
+//      * The name of the record.
+//      */
+//     recordName: string;
 
-    /**
-     * The marker that should be used to filter the list.
-     */
-    marker: string;
-}
+//     /**
+//      * The address that the list should start with.
+//      */
+//     startingAddress?: string;
+
+//     /**
+//      * The options for the action.
+//      */
+//     options: ListWebhooksOptions;
+// }
+
+// export interface ListWebhooksByMarkerAction
+//     extends Omit<ListWebhooksAction, 'type'> {
+//     type: 'list_webhooks_by_marker';
+
+//     /**
+//      * The marker that should be used to filter the list.
+//      */
+//     marker: string;
+// }
 
 /**
  * Defines an interface that represents the options for a list data action.
@@ -626,22 +638,22 @@ export interface ListWebhooksOptions extends RecordActionOptions {
     sort?: 'ascending' | 'descending';
 }
 
-/**
- * Defines an event that erases a webhook from a record.
- */
-export interface EraseWebhookAction extends WebhookRecordAction {
-    type: 'erase_webhook';
+// /**
+//  * Defines an event that erases a webhook from a record.
+//  */
+// export interface EraseWebhookAction extends WebhookRecordAction {
+//     type: 'erase_webhook';
 
-    /**
-     * The name of the record.
-     */
-    recordName: string;
+//     /**
+//      * The name of the record.
+//      */
+//     recordName: string;
 
-    /**
-     * The address that the data from.
-     */
-    address: string;
-}
+//     /**
+//      * The address that the data from.
+//      */
+//     address: string;
+// }
 
 export interface RecordFileActionOptions extends RecordActionOptions {
     /**
@@ -1646,6 +1658,25 @@ export function eraseRecordData(
 }
 
 /**
+ * Creates a RecordsCallProcedureAction.
+ * @param procedure The procedure to call.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function recordsCallProcedure(
+    procedure: Partial<RecordsClientActions>,
+    options: RecordActionOptions,
+    taskId: number | string
+): RecordsCallProcedureAction {
+    return {
+        type: 'records_call_procedure',
+        procedure,
+        options,
+        taskId,
+    };
+}
+
+/**
  * Creates a RecordWebhookAction.
  * @param recordName The name of the record.
  * @param item The item to record.
@@ -1657,14 +1688,25 @@ export function recordWebhook(
     item: WebhookRecord,
     options: RecordActionOptions,
     taskId: number | string
-): RecordWebhookAction {
-    return {
-        type: 'record_webhook',
-        recordName,
-        item,
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            recordWebhook: {
+                input: {
+                    recordName,
+                    item: {
+                        address: item.address,
+                        targetResourceKind: item.targetResourceKind,
+                        targetRecordName: item.targetRecordName,
+                        targetAddress: item.targetAddress,
+                        markers: item.markers as any,
+                    },
+                },
+            },
+        },
         options,
-        taskId,
-    };
+        taskId
+    );
 }
 
 /**
@@ -1679,14 +1721,19 @@ export function getWebhook(
     address: string,
     options: RecordActionOptions,
     taskId?: number | string
-): GetWebhookAction {
-    return {
-        type: 'get_webhook',
-        recordName,
-        address,
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            getWebhook: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
         options,
-        taskId,
-    };
+        taskId
+    );
 }
 
 /**
@@ -1701,14 +1748,20 @@ export function listWebhooks(
     startingAddress: string,
     options: ListWebhooksOptions,
     taskId?: number | string
-): ListWebhooksAction {
-    return {
-        type: 'list_webhooks',
-        recordName,
-        startingAddress,
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listWebhooks: {
+                input: {
+                    recordName,
+                    address: startingAddress,
+                    sort: options?.sort,
+                },
+            },
+        },
         options,
-        taskId,
-    };
+        taskId
+    );
 }
 
 /**
@@ -1725,15 +1778,21 @@ export function listWebhooksByMarker(
     startingAddress: string,
     options: ListWebhooksOptions,
     taskId?: number | string
-): ListWebhooksByMarkerAction {
-    return {
-        type: 'list_webhooks_by_marker',
-        recordName,
-        marker,
-        startingAddress,
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listWebhooks: {
+                input: {
+                    recordName,
+                    address: startingAddress,
+                    sort: options?.sort,
+                    marker: marker,
+                },
+            },
+        },
         options,
-        taskId,
-    };
+        taskId
+    );
 }
 
 /**
@@ -1748,14 +1807,19 @@ export function eraseWebhook(
     address: string,
     options: RecordActionOptions,
     taskId?: number | string
-): EraseWebhookAction {
-    return {
-        type: 'erase_webhook',
-        recordName,
-        address,
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            eraseWebhook: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
         options,
-        taskId,
-    };
+        taskId
+    );
 }
 
 /**
