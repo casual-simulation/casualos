@@ -43,6 +43,7 @@ import {
     AIChatStreamAction,
     AIHumeGetAccessTokenAction,
     AISloydGenerateModelAction,
+    RecordsCallProcedureAction,
 } from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -97,6 +98,7 @@ import {
 import { RuntimeActions } from '@casual-simulation/aux-runtime';
 import {
     RecordsClientInputs,
+    RecordsClientActions,
     createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
 
@@ -188,6 +190,13 @@ export class RecordsManager {
     private _skipTimers: boolean = false;
     private _httpRequestId: number = 0;
     private _client: ReturnType<typeof createRecordsClient>;
+
+    private _allowedProcedures = new Set<keyof RecordsClientActions>([
+        'recordWebhook',
+        'getWebhook',
+        'listWebhooks',
+        'eraseWebhook',
+    ]);
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -303,6 +312,8 @@ export class RecordsManager {
                 this._listUserStudios(event);
             } else if (event.type === 'get_records_endpoint') {
                 this._getRecordsEndpoint(event);
+            } else if (event.type === 'records_call_procedure') {
+                this._recordsCallProcedure(event);
             }
         }
     }
@@ -312,6 +323,71 @@ export class RecordsManager {
             this._helper.transaction(
                 asyncResult(event.taskId, this._config.recordsOrigin)
             );
+        }
+    }
+
+    private async _recordsCallProcedure(event: RecordsCallProcedureAction) {
+        let name: keyof RecordsClientActions;
+        let input: any;
+        let query: any;
+        for (let key in event.procedure) {
+            if (Object.hasOwn(event.procedure, key)) {
+                const val = event.procedure[key as keyof RecordsClientActions];
+                if (val) {
+                    name = key as keyof RecordsClientActions;
+                    input = val.input;
+                    query = val.query;
+                    break;
+                }
+            }
+        }
+
+        if (!name || !this._allowedProcedures.has(name)) {
+            console.warn(
+                '[RecordsManager] No procedure found in the call procedure event.'
+            );
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'not_found',
+                        errorMessage: `The procedure was either not found or not allowed. (name: ${
+                            name ?? 'undefined'
+                        })`,
+                    })
+                );
+            }
+            return;
+        }
+
+        const info = await this._resolveInfoForEvent(event);
+
+        if (info.error) {
+            return;
+        }
+
+        if (hasValue(this._helper.origin)) {
+            input.instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+
+        const result = await this._client.callProcedure(
+            name,
+            input,
+            {
+                sessionKey: info.token,
+                endpoint: info.recordsOrigin,
+            },
+            query
+        );
+
+        if (hasValue(event.taskId)) {
+            this._helper.transaction(asyncResult(event.taskId, result));
         }
     }
 
@@ -1978,8 +2054,8 @@ export class RecordsManager {
                     recordName: event.recordName,
                 },
                 {
-                    endpoint: info.recordsOrigin,
                     sessionKey: info.token,
+                    endpoint: info.recordsOrigin,
                 }
             );
 

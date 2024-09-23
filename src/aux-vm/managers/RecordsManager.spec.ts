@@ -43,6 +43,8 @@ import {
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
+    recordWebhook,
+    recordsCallProcedure,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -6398,6 +6400,276 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('records_call_procedure', () => {
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    headers?: Headers;
+                    json?: () => Promise<any>;
+                    text?: () => Promise<string>;
+                    body?: ReadableStream;
+                }>
+            >;
+
+            const originalFetch = globalThis.fetch;
+
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+                fetch = globalThis.fetch = jest.fn();
+            });
+
+            afterAll(() => {
+                globalThis.fetch = originalFetch;
+            });
+
+            const allowedProcedures = [
+                [
+                    'recordWebhook',
+                    recordsCallProcedure(
+                        {
+                            recordWebhook: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'test',
+                                        targetResourceKind: 'data',
+                                        targetRecordName: 'testRecord',
+                                        targetAddress: 'address',
+                                        markers: ['marker'],
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getWebhook',
+                    recordsCallProcedure(
+                        {
+                            getWebhook: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listWebhooks',
+                    recordsCallProcedure(
+                        {
+                            listWebhooks: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    sort: 'ascending',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'eraseWebhook',
+                    recordsCallProcedure(
+                        {
+                            eraseWebhook: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+            ];
+
+            describe.each(allowedProcedures)('%s', (name, event) => {
+                it('should make a POST request to /api/v3/callProcedure', async () => {
+                    fetch.mockResolvedValueOnce({
+                        status: 200,
+                        json: async () => ({
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    });
+
+                    authMock.isAuthenticated.mockResolvedValueOnce(true);
+                    authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    expect(fetch).toHaveBeenCalledWith(
+                        'http://localhost:3002/api/v3/callProcedure',
+                        {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                procedure: name,
+                                input: event.procedure[name]?.input,
+                            }),
+                            headers: expect.objectContaining({
+                                Authorization: 'Bearer authToken',
+                            }),
+                        }
+                    );
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    ]);
+                    expect(authMock.isAuthenticated).toBeCalled();
+                    expect(authMock.authenticate).not.toBeCalled();
+                    expect(authMock.getAuthToken).toBeCalled();
+                });
+
+                it('should include the inst', async () => {
+                    fetch.mockResolvedValueOnce({
+                        status: 200,
+                        json: async () => ({
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    });
+
+                    authMock.isAuthenticated.mockResolvedValueOnce(true);
+                    authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                    vm.origin = {
+                        recordName: null,
+                        inst: 'myInst',
+                    };
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    expect(fetch).toHaveBeenCalledWith(
+                        'http://localhost:3002/api/v3/callProcedure',
+                        {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                procedure: name,
+                                input: {
+                                    ...event.procedure[name]?.input,
+                                    instances: ['/myInst'],
+                                },
+                            }),
+                            headers: expect.objectContaining({
+                                Authorization: 'Bearer authToken',
+                            }),
+                        }
+                    );
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    ]);
+                    expect(authMock.isAuthenticated).toBeCalled();
+                    expect(authMock.authenticate).not.toBeCalled();
+                    expect(authMock.getAuthToken).toBeCalled();
+                });
+
+                it('should fail if no recordsOrigin is set', async () => {
+                    records = new RecordsManager(
+                        {
+                            version: '1.0.0',
+                            versionHash: '1234567890abcdef',
+                            recordsOrigin: null,
+                        },
+                        helper,
+                        () => null
+                    );
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        }),
+                    ]);
+                });
+
+                it('should support custom endpoints', async () => {
+                    fetch.mockResolvedValueOnce({
+                        status: 200,
+                        json: async () => ({
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    });
+
+                    customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                    customAuthMock.getAuthToken.mockResolvedValueOnce(
+                        'authToken'
+                    );
+
+                    records.handleEvents([
+                        {
+                            ...event,
+                            options: {
+                                ...event.options,
+                                endpoint: 'http://localhost:9999',
+                            },
+                        },
+                    ]);
+
+                    await waitAsync();
+
+                    expect(fetch).toHaveBeenCalledWith(
+                        'http://localhost:9999/api/v3/callProcedure',
+                        {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                procedure: name,
+                                input: event.procedure[name]?.input,
+                            }),
+                            headers: expect.objectContaining({
+                                Authorization: 'Bearer authToken',
+                            }),
+                        }
+                    );
+
+                    await waitAsync();
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    ]);
+                    expect(customAuthMock.isAuthenticated).toBeCalled();
+                    expect(customAuthMock.authenticate).not.toBeCalled();
+                    expect(customAuthMock.getAuthToken).toBeCalled();
+                });
             });
         });
 
