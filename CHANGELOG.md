@@ -1,12 +1,11 @@
 # CasualOS Changelog
 
-## V3.3.10
+## V3.3.11
 
 #### Date: TBD
 
 ### :rocket: Features
 
--   Updated the abCore docs.
 -   Added webhook records.
     -   When enabled, webhook records make it possible to run AUX code inside a server.
     -   Webhook records work using a request/response model.
@@ -36,6 +35,14 @@
 -   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.
 -   Fixed an issue where it was impossible to configure a custom AB1 for a comId.
 -   Resolved an issue where the Monaco editor failed to refresh when navigating between the same tag in different spaces. The editor now correctly detects the context change and updates the displayed content accordingly.
+
+## V3.3.10
+
+#### Date: 9/3/2024
+
+### :rocket: Features
+
+-   Updated the abCore docs.
 
 ## V3.3.9
 
