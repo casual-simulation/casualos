@@ -159,7 +159,7 @@ export default {
           this.cameraInstance.stop();
         }
 
-        this.$emit('streamAquired', this.cameraInstance.stream);
+        this.$emit('streamAcquired', this.cameraInstance.stream);
       }
     },
 

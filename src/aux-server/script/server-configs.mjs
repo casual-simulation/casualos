@@ -5,6 +5,7 @@ import {
     getExternals,
     replaceEsbuildPlugin,
     replaceThreePlugin,
+    downloadFilePlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
@@ -30,6 +31,7 @@ const denoEntry = path.resolve(auxVmDeno, 'vm', 'DenoAuxChannel.worker.js');
 
 const serverless = path.resolve(auxBackend, 'serverless');
 const serverlessDist = path.resolve(serverless, 'aws', 'dist');
+const serverlessBin = path.resolve(serverless, 'aws', 'bin');
 const serverlessSrc = path.resolve(serverless, 'aws', 'src');
 const serverlessHandlers = path.resolve(serverlessSrc, 'handlers');
 
@@ -86,6 +88,7 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
+                external: ['deno-vm'],
                 minify: !dev,
                 plugins: [replaceThreePlugin(), ImportGlobPlugin()],
             },
@@ -148,6 +151,23 @@ export function createConfigs(dev, version) {
             },
         ],
         [
+            'Serverless Webhooks',
+            {
+                entryPoints: [path.resolve(serverlessHandlers, 'webhooks')],
+                outdir: path.resolve(serverlessDist, 'webhooks'),
+                platform: 'node',
+                target: ['node14.16'],
+                define: {
+                    ...versionVariables,
+                    ...developmentVariables,
+                    ...configVariables,
+                    ...extraVariables,
+                },
+                minify: !dev,
+                plugins: [ImportGlobPlugin()],
+            },
+        ],
+        [
             'Deno',
             {
                 entryPoints: [denoEntry],
@@ -158,7 +178,27 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                 },
                 minify: !dev,
-                plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceEsbuildPlugin(),
+                    copy({
+                        src: path.resolve(auxWebDist, 'deno.js'),
+                        dest: path.resolve(
+                            serverlessDist,
+                            'webhooks',
+                            'deno.js'
+                        ),
+                        force: true,
+                    }),
+                    downloadFilePlugin({
+                        // Deno v1.40.5
+                        src: 'https://github.com/denoland/deno/releases/download/v1.40.5/deno-x86_64-unknown-linux-gnu.zip',
+                        dest: path.resolve(serverlessDist, 'webhooks'),
+                        expectedFiles: ['deno'],
+                        unzip: true,
+                        cache: true,
+                    }),
+                ],
             },
         ],
     ];

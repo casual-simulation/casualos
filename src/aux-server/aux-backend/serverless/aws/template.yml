@@ -94,6 +94,7 @@ Resources:
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
+                    WEBHOOK_LAMBDA_FUNCTION_NAME: !Ref HandleWebhookFunction
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
             Events:
@@ -598,6 +599,22 @@ Resources:
         DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleMessageFunction}'
+            RetentionInDays: 14
+
+    HandleWebhookFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: webhooks.handleWebhook
+            CodeUri: dist/webhooks
+            Runtime: nodejs18.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function to handle webhook messages
+    HandleWebhookLogGroup:
+        Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleWebhookFunction}'
             RetentionInDays: 14
 
     # S3 Bucket to large messages

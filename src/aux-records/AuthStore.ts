@@ -465,7 +465,7 @@ export interface AuthUser {
     /**
      * The role that the user has been assigned in the system.
      */
-    role?: 'none' | 'superUser';
+    role?: UserRole;
 }
 
 /**
@@ -473,8 +473,9 @@ export interface AuthUser {
  *
  * - "none" means that the user has no special permissions.
  * - "superUser" means that the user has additional permissions that only special users should have.
+ * - "system" means that the user is the system and is performing a system operation.
  */
-export type UserRole = 'none' | 'superUser';
+export type UserRole = 'none' | 'superUser' | 'system';
 
 export interface AuthUserAuthenticator {
     /**

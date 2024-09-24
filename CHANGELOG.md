@@ -1,5 +1,41 @@
 # CasualOS Changelog
 
+## V3.3.11
+
+#### Date: 9/24/2024
+
+### :rocket: Features
+
+-   Added webhook records.
+    -   When enabled, webhook records make it possible to run AUX code inside a server.
+    -   Webhook records work using a request/response model.
+        -   When a request is made to execute the webhook, it grabs the configured target AUX file from another record and then executes it.
+    -   Currently, 3 types of targets are supported:
+        -   `data`
+        -   `file`
+        -   `inst`
+            -   Only supports reading from insts for now.
+    -   Webhooks are secured by markers, just like regular records.
+        -   `publicRead`: The `publicRead` marker can be used to allow anyone to execute the webhook.
+        -   `private`: The `private` marker can be used to only allow the record members to execute the webhook.
+    -   Webhooks have their own user ID.
+        -   By default, webhooks don't have access to anything except public records.
+        -   To allow webhooks to access other records, they need to be granted access to those resources.
+        -   You can find a webhook's user ID by calling `os.getWebhook()` or by inspecting the webhook through the admin panel.
+    -   Additionally, the following functions have been added:
+        -   `os.recordWebhook(recordName, webhook)`
+        -   `os.getWebhook(recordName, address)`
+        -   `os.runWebhook(recordName, address, input)`
+        -   `os.listWebhooks(recordName, address?)`
+        -   `os.listWebhooksByMarker(recordName, marker, address?)`
+        -   `os.eraseWebhook(recordName, address)`
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.
+-   Fixed an issue where it was impossible to configure a custom AB1 for a comId.
+-   Resolved an issue where the Monaco editor failed to refresh when navigating between the same tag in different spaces. The editor now correctly detects the context change and updates the displayed content accordingly.
+
 ## V3.3.10
 
 #### Date: 9/3/2024
@@ -52,6 +88,8 @@
         -   `.jpeg`
         -   `.gif`
     -   Additionally, it is possible to manually trigger moderation for a file as a `superUser` by using the `scanFileForModeration` procedure.
+    -   Added `os.getScriptIssues` function.
+        -   This function will get a list of issues that have been raised for the script stored in the given tag
 
 ### :bug: Bug Fixes
 

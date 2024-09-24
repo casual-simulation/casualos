@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src 'self' https://js.stripe.com; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; child-src 'self'; frame-src https://casualos.readyplayer.me https://js.stripe.com; script-src 'self' https://js.stripe.com https://scripts.simpleanalyticscdn.com <%= !production ? `'unsafe-eval'` : `` %>; connect-src 'self' <%= allowedFetchOrigins %> https://render.readyplayer.me https://scripts.simpleanalyticscdn.com"
+            content="default-src 'self' https://js.stripe.com; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; child-src 'self'; frame-src https://js.stripe.com; script-src 'self' https://js.stripe.com https://scripts.simpleanalyticscdn.com <%= !production ? `'unsafe-eval'` : `` %>; connect-src 'self' <%= allowedFetchOrigins %> https://scripts.simpleanalyticscdn.com http://localhost:9000 *.s3.amazonaws.com"
         />
         <meta
             name="viewport"

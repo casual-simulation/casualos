@@ -4,9 +4,13 @@ on:
     workflow_dispatch:
         inputs:
             branch:
-                description: 'Branch to deploy'
+                description: 'Branch to deploy to'
                 required: true
                 default: 'staging'
+            source:
+                description: 'Branch to deploy from'
+                required: true
+                default: 'develop'
 
 jobs:
     deploy:
@@ -22,10 +26,10 @@ jobs:
             - name: Corepack Enable
               run: |
                   corepack enable
-            - name: Checkout develop
+            - name: Checkout source
               run: |
-                  git checkout develop
-                  git reset origin/develop --hard
+                  git checkout ${{ github.event.inputs.source }}
+                  git reset origin/${{ github.event.inputs.source }} --hard
             - name: Update CHANGELOG
               run: |
                   CURRENT_DATE="$(date +%-m\/%-d\/%Y)"
@@ -38,12 +42,12 @@ jobs:
                   git config --global user.email devops@casualsimulation.org
                   git add ./CHANGELOG.md
                   git commit -m "chore: Update CHANGELOG Date"
-            - name: Merge develop into target branch
+            - name: Merge source into target branch
               run: |
                   git checkout "${{ github.event.inputs.branch }}"
                   git fetch origin
                   git reset "origin/${{ github.event.inputs.branch }}" --hard
-                  git merge -X theirs --no-ff develop
+                  git merge -X theirs --no-ff ${{ github.event.inputs.source }}
             - name: Update package versions
               run: |
                   if [ "${{ github.event.inputs.branch }}" == "master" ]; then

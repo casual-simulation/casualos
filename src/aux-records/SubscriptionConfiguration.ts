@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
-import { max } from 'lodash';
 
 export const subscriptionFeaturesSchema = z.object({
     records: z
@@ -278,6 +277,103 @@ export const subscriptionFeaturesSchema = z.object({
         })
         .describe(
             'The configuration for loom features for studios. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
+
+    webhooks: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether webhook features are granted for the subscription.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of webhook items that are allowed for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .optional(),
+
+            tokenLifetimeMs: z
+                .number()
+                .describe(
+                    'The lifetime of session tokens that are issued to the webhook in miliseconds. Defaults to 5 minutes.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5 * 60 * 1000),
+
+            initTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the webhook has to initialize. Defaults to 5000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            requestTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the webhook has to respond to a request after being initialized. Defaults to 5000ms'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            fetchTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook. Defaults to 5000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            addStateTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation. Defaults to 1000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(1000),
+
+            maxRunsPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of webhook runs allowed per subscription period. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxRunsPerHour: z
+                .number()
+                .describe(
+                    'The maximum number of webhook runs allowed per hour for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for webhook features. Defaults to not allowed.'
         )
         .optional()
         .default({
@@ -654,22 +750,24 @@ export interface DefaultFeaturesConfiguration {
     /**
      * The configuration for temporary insts.
      */
-    publicInsts?: {
-        /**
-         * Whether they are allowed to be created.
-         */
-        allowed: boolean;
+    publicInsts?: PublicInstsConfiguration;
+}
 
-        /**
-         * The maximum number of bytes that each inst can store.
-         */
-        maxBytesPerInst?: number;
+export interface PublicInstsConfiguration {
+    /**
+     * Whether they are allowed to be created.
+     */
+    allowed: boolean;
 
-        /**
-         * The maximum number of active connections that each inst can have.
-         */
-        maxActiveConnectionsPerInst?: number;
-    };
+    /**
+     * The maximum number of bytes that each inst can store.
+     */
+    maxBytesPerInst?: number;
+
+    /**
+     * The maximum number of active connections that each inst can have.
+     */
+    maxActiveConnectionsPerInst?: number;
 }
 
 /**
@@ -713,10 +811,10 @@ export interface FeaturesConfiguration {
      */
     loom?: StudioLoomFeaturesConfiguration;
 
-    // /**
-    //  * The configuration for studio hume features.
-    //  */
-    // hume?: StudioHumeFeaturesConfiguration;
+    /**
+     * The configuration for webhook features.
+     */
+    webhooks?: WebhooksFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -944,6 +1042,10 @@ export type StudioLoomFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['loom'];
 
+export type WebhooksFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['webhooks'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -979,6 +1081,65 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
     };
+}
+
+export function denyAllFeatures(): FeaturesConfiguration {
+    return {
+        records: {
+            allowed: false,
+        },
+        ai: {
+            chat: {
+                allowed: false,
+            },
+            images: {
+                allowed: false,
+            },
+            skyboxes: {
+                allowed: false,
+            },
+            hume: {
+                allowed: false,
+            },
+            sloyd: {
+                allowed: false,
+            },
+        },
+        data: {
+            allowed: false,
+        },
+        events: {
+            allowed: false,
+        },
+        files: {
+            allowed: false,
+        },
+        insts: {
+            allowed: false,
+        },
+    };
+}
+
+/**
+ * Gets the webhook features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getWebhookFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio'
+): WebhooksFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type
+    );
+    return features.webhooks ?? { allowed: false };
 }
 
 /**

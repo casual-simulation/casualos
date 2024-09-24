@@ -193,6 +193,10 @@ Use the following environment variables to configure infrastructure-related opti
 -   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
 -   `CODE_OF_CONDUCT`: The Markdown of the code of conduct that the sites should use.
 
+#### Webhooks
+
+-   `WEBHOOK_LAMBDA_FUNCTION_NAME`: The name of the lambda function that should be called to process webhooks. Only used when `webhooks.environment.type` is set to `lambda` and `webhooks.environment.functionName` is omitted.
+
 ## Security Note
 
 In the default configuration, CasualOS allows running arbitrary user scripts inside the web server process. Potential capabilities include filesystem access, executing commands, making arbitrary web requests, and reading environment variables.

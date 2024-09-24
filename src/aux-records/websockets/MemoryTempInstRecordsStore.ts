@@ -18,7 +18,7 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _currentGeneration: string = '0';
     private _locks: Map<string, number> = new Map();
 
-    async aquireLock(
+    async acquireLock(
         id: string,
         timeout: number
     ): Promise<() => Promise<boolean>> {

@@ -29,7 +29,7 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { getRootMarkersOrDefault } from './Utils';
+import { getMarkersOrDefault, getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
@@ -76,7 +76,8 @@ export class FileRecordsController {
         request: RecordFileRequest
     ): Promise<RecordFileResult> {
         try {
-            const markers = getRootMarkersOrDefault(request.markers);
+            const markers = getMarkersOrDefault(request.markers);
+            const rootMarkers = getRootMarkersOrDefault(markers);
 
             const contextResult =
                 await this._policies.constructAuthorizationContext({
@@ -104,9 +105,9 @@ export class FileRecordsController {
                                 resourceKind: 'file',
                                 resourceId: fileName,
                                 action: 'create',
-                                markers: markers,
+                                markers: rootMarkers,
                             },
-                            ...getMarkerResourcesForCreation(markers),
+                            ...getMarkerResourcesForCreation(rootMarkers),
                         ],
                     }
                 );
@@ -241,7 +242,7 @@ export class FileRecordsController {
                 fileSha256Hex: request.fileSha256Hex,
                 fileMimeType: request.fileMimeType,
                 fileByteLength: request.fileByteLength,
-                markers,
+                markers: rootMarkers,
                 headers: request.headers,
             });
 

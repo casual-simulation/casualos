@@ -420,6 +420,20 @@ describe('convertToCopiableValue()', () => {
             },
         });
     });
+
+    it('should grab the original object', () => {
+        const value = {
+            abc: 'def',
+            [ORIGINAL_OBJECT]: {
+                abc: 'abc',
+            },
+        };
+        let result = convertToCopiableValue(value);
+        expect(result).toEqual({
+            abc: 'abc',
+        });
+        expect(result !== value);
+    });
 });
 
 describe('ensureBotIsSerializable()', () => {
@@ -456,6 +470,95 @@ describe('ensureBotIsSerializable()', () => {
                 value: {
                     abc: 'abc',
                 },
+            })
+        );
+        expect(result !== inputBot).toBe(true);
+    });
+
+    it('should use the original object for values inside objects', () => {
+        const inputBot = createBot('test', {
+            value: {
+                abc: 'def',
+                other: {
+                    val: 123,
+                    [ORIGINAL_OBJECT]: {
+                        val: 456,
+                    },
+                },
+            },
+        });
+        let result = ensureBotIsSerializable(inputBot);
+
+        expect(result).toEqual(
+            createBot('test', {
+                value: {
+                    abc: 'def',
+                    other: {
+                        val: 456,
+                    },
+                },
+            })
+        );
+        expect(result !== inputBot).toBe(true);
+    });
+
+    it('should use the original object for deeply nested values inside objects', () => {
+        const inputBot = createBot('test', {
+            value: {
+                abc: 'def',
+                deep: {
+                    level: {
+                        other: {
+                            val: 123,
+                            [ORIGINAL_OBJECT]: {
+                                val: 456,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        let result = ensureBotIsSerializable(inputBot);
+
+        expect(result).toEqual(
+            createBot('test', {
+                value: {
+                    abc: 'def',
+                    deep: {
+                        level: {
+                            other: {
+                                val: 456,
+                            },
+                        },
+                    },
+                },
+            })
+        );
+        expect(result !== inputBot).toBe(true);
+    });
+
+    it('should use the original object for values inside arrays', () => {
+        const inputBot = createBot('test', {
+            value: [
+                'def',
+                {
+                    val: 123,
+                    [ORIGINAL_OBJECT]: {
+                        val: 456,
+                    },
+                },
+            ],
+        });
+        let result = ensureBotIsSerializable(inputBot);
+
+        expect(result).toEqual(
+            createBot('test', {
+                value: [
+                    'def',
+                    {
+                        val: 456,
+                    },
+                ],
             })
         );
         expect(result !== inputBot).toBe(true);

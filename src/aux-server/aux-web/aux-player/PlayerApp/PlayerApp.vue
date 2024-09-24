@@ -80,7 +80,7 @@
                         @decode="onQRCodeScanned"
                         :camera="camera"
                         :cameraId="selectedCameraId"
-                        @streamAquired="onQRStreamAquired"
+                        @streamAcquired="onQRStreamAcquired"
                     ></qrcode-stream>
                 </div>
                 <md-dialog-actions>
