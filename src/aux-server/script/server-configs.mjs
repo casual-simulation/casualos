@@ -190,14 +190,6 @@ export function createConfigs(dev, version) {
                         ),
                         force: true,
                     }),
-                    downloadFilePlugin({
-                        // Deno v1.40.5
-                        src: 'https://github.com/denoland/deno/releases/download/v1.40.5/deno-x86_64-unknown-linux-gnu.zip',
-                        dest: path.resolve(serverlessDist, 'webhooks'),
-                        expectedFiles: ['deno'],
-                        unzip: true,
-                        cache: true,
-                    }),
                 ],
             },
         ],
