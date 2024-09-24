@@ -17,7 +17,6 @@ const scriptPath = `file://${resolve('./deno.js')}`;
 const environment = new SimulationWebhookEnvironment(
     (simId, indicator, origin, config) => {
         const vm = new DenoVM(scriptPath, simId, origin, config);
-        vm.denoExecutable = resolve('./deno');
         const sim = new DenoSimulationImpl(indicator, origin, vm);
 
         return {
