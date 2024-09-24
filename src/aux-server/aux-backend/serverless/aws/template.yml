@@ -84,6 +84,10 @@ Resources:
 
                   # Give the ability to detect moderation labels using Rekognition
                 - RekognitionLabelsPolicy: {}
+
+                # Give the ability to invoke the handle webhook function
+                - LambdaInvokePolicy:
+                      FunctionName: !Ref HandleWebhookFunction
             Environment:
                 Variables:
                     REGION: !Ref 'AWS::Region'
