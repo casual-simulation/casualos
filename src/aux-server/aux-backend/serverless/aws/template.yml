@@ -590,6 +590,7 @@ Resources:
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
+                - 'arn:aws:lambda:us-east-1:404655125928:layer:deno-v1-40-5-x86_64-linux:1'
     HandleMessagePermission:
         Type: AWS::Lambda::Permission
         DependsOn:
