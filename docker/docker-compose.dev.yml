@@ -4,27 +4,42 @@ volumes:
     mongodata:
     minio-data:
 
+networks:
+    # ensure additional services are added to this network if they are expected to communicate with each other
+    enable_ipv6:
+        driver: bridge
+        enable_ipv6: true
+        ipam:
+            config:
+                - subnet: '172.19.0.0/16'
+                - subnet: 'fd00::/64'
+
+# Service instance configuration sort order is dictated heirarchically by importance (Best practice, not an ISO standard)
 services:
     minio:
         image: minio/minio:latest
         restart: always
-        command: minio server --console-address ":9001"
         ports:
             - '9000:9000'
             - '9001:9001'
-        environment:
-            MINIO_CONFIG_ENV_FILE: /etc/config.env
+        networks:
+            - enable_ipv6
         volumes:
             - './conf/minio.env:/etc/config.env'
             - minio-data:/mnt/data
+        environment:
+            MINIO_CONFIG_ENV_FILE: /etc/config.env
+        command: minio server --console-address ":9001"
     redis:
         image: 'redis:latest'
         restart: always
         ports:
             - '6379:6379'
+        networks:
+            - enable_ipv6
+        command: ['redis-server', '--bind', '0.0.0.0', '::']
     livekit:
         image: livekit/livekit-server:v1.6.1
-        command: --config /etc/livekit.yaml
         restart: always
         depends_on:
             - redis
@@ -32,5 +47,8 @@ services:
             - '7880:7880'
             - '7881:7881'
             - '7882:7882/udp'
+        networks:
+            - enable_ipv6
         volumes:
             - ./conf/livekit.yaml:/etc/livekit.yaml
+        command: --config /etc/livekit.yaml
