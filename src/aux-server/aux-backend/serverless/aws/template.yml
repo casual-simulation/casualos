@@ -611,7 +611,7 @@ Resources:
             Handler: webhooks.handleWebhook
             CodeUri: dist/webhooks
             Runtime: nodejs18.x
-            MemorySize: 256
+            MemorySize: 1536
             Timeout: 100
             Description: A function to handle webhook messages
             Layers:
