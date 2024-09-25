@@ -157,12 +157,32 @@ export class DenoVM implements AuxVM {
         });
 
         const debug = !!this._config.config.debug;
+        const permissions: DenoWorkerOptions['permissions'] = {
+            allowNet: true,
+        };
+
+        if (this._script instanceof URL) {
+            console.log('[DenoVM] Script:', this._script.href);
+            if (this._script.protocol === 'file:') {
+                let path = this._script.pathname;
+                if (/^\/\w:/.test(path)) {
+                    // Windows absolute path
+                    // For some reason, the URL class will always add a leading slash to the pathname,
+                    // even for Windows paths. So we need to remove it.
+                    path = path.slice(1);
+                }
+
+                console.log('[DenoVM] Allowing read for script file:', path);
+
+                // Allow read access to the script file.
+                permissions.allowRead = [path];
+            }
+        }
+
         const workerOptions: Partial<DenoWorkerOptions> = {
             logStderr: debug,
             logStdout: debug,
-            permissions: {
-                allowNet: true,
-            },
+            permissions,
         };
         if (this.denoExecutable) {
             workerOptions.denoExecutable = this.denoExecutable;
