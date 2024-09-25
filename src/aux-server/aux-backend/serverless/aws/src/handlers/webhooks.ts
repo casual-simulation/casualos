@@ -11,14 +11,23 @@ import {
     HANDLE_WEBHOOK_PAYLOAD_SCHEMA,
     HandleWebhookPayload,
 } from '../../../../shared/webhooks/LambdaWebhookPayload';
+import { statSync } from 'fs';
 
-const scriptPath = `file://${resolve('./deno.js')}`;
+const script = resolve('./deno.js');
+const scriptPath = `file://${script}`;
 
 console.log('[webhooks] Deno Script path:', scriptPath);
+console.log('[webhooks] script stat:', statSync(script));
 
 const environment = new SimulationWebhookEnvironment(
     (simId, indicator, origin, config) => {
-        const vm = new DenoVM(new URL(scriptPath), simId, origin, config);
+        const vm = new DenoVM(new URL(scriptPath), simId, origin, {
+            ...config,
+            config: {
+                ...config.config,
+                debug: true,
+            },
+        });
         const sim = new DenoSimulationImpl(indicator, origin, vm);
 
         return {
