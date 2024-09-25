@@ -614,6 +614,9 @@ Resources:
             MemorySize: 1536
             Timeout: 100
             Description: A function to handle webhook messages
+            Environment:
+                Variables:
+                    DENO_DIR: /tmp/deno
             Layers:
                 - 'arn:aws:lambda:us-east-1:404655125928:layer:deno-v1-40-5-x86_64-linux:1'
     HandleWebhookLogGroup:
