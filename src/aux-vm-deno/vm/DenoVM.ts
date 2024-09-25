@@ -175,6 +175,8 @@ export class DenoVM implements AuxVM {
             progress: 0.2,
         });
 
+        console.log('[DenoVM] Waiting for init...');
+
         await waitForInit(this._worker);
 
         this._worker.stderr.on('data', (data: string) => {
