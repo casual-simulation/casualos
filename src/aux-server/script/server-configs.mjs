@@ -14,6 +14,7 @@ import { readFileSync } from 'fs';
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');
+const auxServerNodeModules = path.resolve(auxServer, 'node_modules');
 const auxBackend = path.resolve(auxServer, 'aux-backend');
 const server = path.resolve(auxBackend, 'server');
 const serverDist = path.resolve(server, 'dist');
@@ -34,6 +35,9 @@ const serverlessDist = path.resolve(serverless, 'aws', 'dist');
 const serverlessBin = path.resolve(serverless, 'aws', 'bin');
 const serverlessSrc = path.resolve(serverless, 'aws', 'src');
 const serverlessHandlers = path.resolve(serverlessSrc, 'handlers');
+
+const denoVm = path.resolve(auxServerNodeModules, 'deno-vm');
+const denoBootstrapScripts = path.resolve(denoVm, 'deno');
 
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
 const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
@@ -189,6 +193,16 @@ export function createConfigs(dev, version) {
                             'deno.js'
                         ),
                         force: true,
+                    }),
+                    copy({
+                        src: denoBootstrapScripts,
+                        dest: path.resolve(
+                            serverlessDist,
+                            'webhooks',
+                            'deno-bootstrap'
+                        ),
+                        force: true,
+                        recursive: true,
                     }),
                 ],
             },
