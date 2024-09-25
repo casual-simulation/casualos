@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-benchmarks",
-    "version": "3.3.11-alpha.11037585545",
+    "version": "3.3.11-alpha.11038978109",
     "description": "The package for AUX-related benchmarks.",
     "main": "dist/index.js",
     "private": true,
@@ -29,7 +29,7 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.3.11-alpha.11037585545",
+        "@casual-simulation/aux-common": "^3.3.11-alpha.11038978109",
         "benchmark": "2.1.4",
         "lodash": "4.17.21",
         "platform": "1.3.5",
