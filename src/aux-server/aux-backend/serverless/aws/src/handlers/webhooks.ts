@@ -1,3 +1,4 @@
+import { MessageChannel, MessagePort } from 'deno-vm';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { SimulationWebhookEnvironment } from '../../../../shared/webhooks/SimulationWebhookEnvironment';
 import { GenericHttpRequest } from '@casual-simulation/aux-common';
@@ -12,6 +13,10 @@ import {
     HandleWebhookPayload,
 } from '../../../../shared/webhooks/LambdaWebhookPayload';
 import { statSync } from 'fs';
+
+const anyGlobalThis = globalThis as any;
+anyGlobalThis.MessageChannel = MessageChannel;
+anyGlobalThis.MessagePort = MessagePort;
 
 const script = resolve('./deno.js');
 const scriptPath = `file://${script}`;
