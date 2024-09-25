@@ -5,7 +5,6 @@ import {
     getExternals,
     replaceEsbuildPlugin,
     replaceThreePlugin,
-    downloadFilePlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
@@ -194,17 +193,25 @@ export function createConfigs(dev, version) {
                         ),
                         force: true,
                     }),
-                    copy({
-                        src: denoBootstrapScripts,
-                        dest: path.resolve(
-                            serverlessDist,
-                            'webhooks',
-                            'deno-bootstrap'
-                        ),
-                        force: true,
-                        recursive: true,
-                    }),
                 ],
+            },
+        ],
+        [
+            'Deno VM',
+            {
+                entryPoints: [path.resolve(denoBootstrapScripts, 'index.ts')],
+                outfile: path.resolve(
+                    serverlessDist,
+                    'webhooks',
+                    'deno-bootstrap.js'
+                ),
+                platform: 'browser',
+                define: {
+                    ...versionVariables,
+                    ...developmentVariables,
+                },
+                minify: !dev,
+                plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
             },
         ],
     ];

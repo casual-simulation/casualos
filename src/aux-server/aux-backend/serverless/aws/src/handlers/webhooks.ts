@@ -33,7 +33,7 @@ const environment = new SimulationWebhookEnvironment(
                 },
             },
             {
-                denoBootstrapScriptPath: resolve('./deno-bootstrap/index.ts'),
+                denoBootstrapScriptPath: resolve('./deno-bootstrap.js'),
             }
         );
         const sim = new DenoSimulationImpl(indicator, origin, vm);
