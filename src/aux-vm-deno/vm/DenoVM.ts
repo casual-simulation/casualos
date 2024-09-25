@@ -66,6 +66,7 @@ export class DenoVM implements AuxVM {
     private _id: string;
     private _origin: SimulationOrigin;
     private _script: string | URL;
+    private _workerOptions: Partial<DenoWorkerOptions>;
 
     /**
      * The path to the deno executable that should be used.
@@ -98,12 +99,14 @@ export class DenoVM implements AuxVM {
         script: string | URL,
         id: string,
         origin: SimulationOrigin,
-        config: AuxConfig
+        config: AuxConfig,
+        workerOptions?: Partial<DenoWorkerOptions>
     ) {
         this._script = script;
         this._id = id;
         this._origin = origin;
         this._config = config;
+        this._workerOptions = workerOptions;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -180,6 +183,7 @@ export class DenoVM implements AuxVM {
         }
 
         const workerOptions: Partial<DenoWorkerOptions> = {
+            ...(this._workerOptions || {}),
             logStderr: debug,
             logStdout: debug,
             permissions,
