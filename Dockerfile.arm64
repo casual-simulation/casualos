@@ -13,7 +13,8 @@ ENV PRISMA_QUERY_ENGINE_BINARY="/usr/src/app/aux-backend/prisma/generated/libque
 # Specify no sandbox since Deno doesn't support Arm64
 ENV SANDBOX_TYPE "none"
 
-RUN npm install -g prisma@^5.7.0 deno-vm@^0.12.0
+RUN npm install -g prisma@^5.7.0
+RUN npm install --no-package-lock --no-save deno-vm@^0.12.0
 
 COPY ./src/aux-server/package*.json ./
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
