@@ -18,7 +18,6 @@ COPY ./src/aux-server/aux-web/dist ./aux-web/dist/
 COPY ./src/aux-server/aux-web/aux-auth/dist ./aux-web/aux-auth/dist/
 COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 COPY ./src/aux-server/aux-backend/schemas/migrations ./aux-backend/schemas/migrations
-COPY ./src/aux-server/node_modules/deno-vm ./node_modules/deno-vm
 
 # HTTP
 EXPOSE 3000
