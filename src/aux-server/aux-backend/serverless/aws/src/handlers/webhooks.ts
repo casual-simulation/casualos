@@ -13,6 +13,7 @@ import {
     HandleWebhookPayload,
 } from '../../../../shared/webhooks/LambdaWebhookPayload';
 import { statSync } from 'fs';
+import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 
 const anyGlobalThis = globalThis as any;
 anyGlobalThis.MessageChannel = MessageChannel;
@@ -24,39 +25,42 @@ const scriptPath = `file://${script}`;
 console.log('[webhooks] Deno Script path:', scriptPath);
 console.log('[webhooks] script stat:', statSync(script));
 
-const environment = new SimulationWebhookEnvironment(
-    (simId, indicator, origin, config) => {
-        const vm = new DenoVM(
-            new URL(scriptPath),
-            simId,
-            origin,
-            {
-                ...config,
-                config: {
-                    ...config.config,
-                    debug: true,
-                },
-            },
-            {
-                denoBootstrapScriptPath: resolve('./deno-bootstrap.js'),
-            }
-        );
-        const sim = new DenoSimulationImpl(indicator, origin, vm);
-
-        return {
-            sim,
-            onLogs: vm.onLogs,
-            vm,
-        };
-    }
-);
-
 export async function handleWebhook(payload: HandleWebhookPayload) {
     const parseResult = HANDLE_WEBHOOK_PAYLOAD_SCHEMA.safeParse(payload);
     if (!parseResult.success) {
         throw new Error('Invalid payload!');
     }
     const request = parseResult.data;
+
+    const environment = new SimulationWebhookEnvironment(
+        (simId, indicator, origin, config) => {
+            const vm = new DenoVM(
+                new URL(scriptPath),
+                simId,
+                origin,
+                {
+                    ...config,
+                    config: {
+                        ...config.config,
+                        debug: true,
+                    },
+                },
+                {
+                    denoBootstrapScriptPath: resolve('./deno-bootstrap.js'),
+                }
+            );
+            const sim = new DenoSimulationImpl(indicator, origin, vm);
+
+            return {
+                sim,
+                onLogs: vm.onLogs,
+                vm,
+            };
+        },
+        {
+            configParameters: payload.configParameters as AuxConfigParameters,
+        }
+    );
 
     const response = await environment.handleHttpRequest({
         recordName: request.recordName,
