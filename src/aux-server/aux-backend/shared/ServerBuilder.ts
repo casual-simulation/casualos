@@ -1491,9 +1491,12 @@ export class ServerBuilder implements SubscriptionLike {
             );
         } else if (env.type === 'lambda') {
             console.log('[ServerBuilder] Using Lambda Webhook Environment.');
-            this._webhookEnvironment = new LambdaWebhookEnvironment({
-                functionName: env.functionName,
-            });
+            this._webhookEnvironment = new LambdaWebhookEnvironment(
+                {
+                    functionName: env.functionName,
+                },
+                configParameters
+            );
         } else {
             throw new Error('Invalid webhook environment type.');
         }

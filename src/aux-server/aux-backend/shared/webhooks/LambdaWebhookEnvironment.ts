@@ -9,6 +9,7 @@ import {
     HandleWebhookPayload,
 } from './LambdaWebhookPayload';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import { AuxConfigParameters } from '@casual-simulation/aux-vm';
 
 const TRACE_NAME = 'LambdaWebhookEnvironment';
 
@@ -29,10 +30,15 @@ export interface LambdaWebhookEnvironmentOptions {
 export class LambdaWebhookEnvironment implements WebhookEnvironment {
     private _lambda: LambdaClient;
     private _functionName: string;
+    private _configParameters: Partial<AuxConfigParameters>;
 
-    constructor(options: LambdaWebhookEnvironmentOptions) {
+    constructor(
+        options: LambdaWebhookEnvironmentOptions,
+        configParameters: Partial<AuxConfigParameters>
+    ) {
         this._lambda = new LambdaClient({});
         this._functionName = options.functionName;
+        this._configParameters = configParameters;
         if (
             !this._functionName &&
             typeof process === 'object' &&
@@ -54,6 +60,7 @@ export class LambdaWebhookEnvironment implements WebhookEnvironment {
             sessionKey: request.sessionKey,
             connectionKey: request.connectionKey,
             options: request.options,
+            configParameters: this._configParameters,
         };
         const command = new InvokeCommand({
             FunctionName: this._functionName,

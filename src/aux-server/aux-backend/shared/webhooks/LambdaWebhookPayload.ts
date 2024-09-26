@@ -27,6 +27,27 @@ export const HANDLE_WEBHOOK_PAYLOAD_SCHEMA = z.object({
         })
         .optional()
         .nullable(),
+    configParameters: z.object({
+        version: z.string().optional().nullable(),
+        versionHash: z.string().optional().nullable(),
+        authOrigin: z.string().optional().nullable(),
+        recordsOrigin: z.string().optional().nullable(),
+        causalRepoConnectionUrl: z.string().optional().nullable(),
+        causalRepoConnectionProtocol: z
+            .enum(['apiary-aws', 'websocket'])
+            .optional()
+            .nullable(),
+        device: z
+            .object({
+                isCollaborative: z.boolean(),
+                supportsAR: z.boolean(),
+                supportsVR: z.boolean(),
+                allowCollaborationUpgrade: z.boolean(),
+                ab1BootstrapUrl: z.string().optional().nullable(),
+            })
+            .optional()
+            .nullable(),
+    }),
 });
 
 export type HandleWebhookPayload = z.infer<
