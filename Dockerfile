@@ -14,7 +14,7 @@ ENV PRISMA_QUERY_ENGINE_BINARY="/usr/src/app/aux-backend/prisma/generated/libque
 # Install Deno Version v1.4.0
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v1.4.0
 
-RUN npm install -g prisma@^5.7.0
+RUN npm install -g prisma@^5.7.0 deno-vm@^0.12.0
 
 COPY ./src/aux-server/package*.json ./
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
@@ -23,7 +23,6 @@ COPY ./src/aux-server/aux-web/aux-auth/dist ./aux-web/aux-auth/dist/
 COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 COPY ./src/aux-server/aux-backend/schemas/migrations ./aux-backend/schemas/migrations
 COPY ./src/aux-server/aux-backend/prisma/generated/libquery_engine-debian-openssl-3.0.x.so.node ./aux-backend/prisma/generated/libquery_engine-debian-openssl-3.0.x.so.node
-COPY ./src/aux-server/node_modules/deno-vm ./node_modules/deno-vm
 
 # HTTP
 EXPOSE 3000
