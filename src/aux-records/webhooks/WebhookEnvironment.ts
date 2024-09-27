@@ -98,6 +98,12 @@ export interface HandleHttpRequestRequest {
     request: GenericHttpRequest;
 
     /**
+     * The ID of the user that is making the request.
+     * Null if the user is not logged in.
+     */
+    requestUserId: string | null;
+
+    /**
      * The name of the record that the webhook state came from.
      * Null if the webhook state is not from a record (i.e. it is from a public inst).
      */
@@ -113,6 +119,12 @@ export interface HandleHttpRequestRequest {
      * The state that should be injected into the environment.
      */
     state: WebhookState;
+
+    /**
+     * The ID of the user who owns the session key.
+     * Not provided if the webhook is not running in a session.
+     */
+    sessionUserId?: string | null;
 
     /**
      * The session key that should be used by the environment for records requests.

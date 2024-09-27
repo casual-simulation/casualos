@@ -177,6 +177,12 @@ export interface WebhookInfoFile {
     request: GenericHttpRequest;
 
     /**
+     * The ID of the user that was making the request.
+     * Null if the user is not logged in.
+     */
+    requestUserId: string | null;
+
+    /**
      * The response that was recieved from the webhook.
      */
     response: GenericHttpResponse;

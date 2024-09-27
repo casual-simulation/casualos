@@ -99,6 +99,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -153,6 +154,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             });
 
             expect(result).toEqual({
@@ -201,6 +203,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             });
 
             expect(result).toEqual({
@@ -248,6 +251,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -325,6 +329,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -416,6 +421,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -480,6 +486,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -529,6 +536,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -583,6 +591,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -643,6 +652,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({

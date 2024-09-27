@@ -647,6 +647,7 @@ describe('WebhookRecordsController', () => {
                         query: {},
                         headers: {},
                     },
+                    requestUserId: null,
                     response: {
                         statusCode: 200,
                     },
@@ -946,6 +947,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
+                    requestUserId: userId,
                     recordName: 'recordName',
                     state: {
                         type: 'aux',
@@ -1032,6 +1034,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
+                    requestUserId: userId,
                     recordName: 'recordName',
                     state: {
                         type: 'aux',
@@ -1264,6 +1267,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
+                    requestUserId: userId,
                     recordName: 'recordName',
                     state: {
                         type: 'url',
@@ -1274,6 +1278,7 @@ describe('WebhookRecordsController', () => {
                             'record-name': 'recordName',
                         },
                     },
+                    sessionUserId: 'testUser',
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     options: {
@@ -1458,6 +1463,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
+                    requestUserId: userId,
                     recordName: null,
                     inst: inst,
                     state: {
@@ -1473,6 +1479,7 @@ describe('WebhookRecordsController', () => {
                             ],
                         },
                     },
+                    sessionUserId: 'testUser',
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     options: {
@@ -1586,6 +1593,7 @@ describe('WebhookRecordsController', () => {
                         pathParams: {},
                         query: {},
                     },
+                    requestUserId: userId,
                     recordName,
                     inst: inst,
                     state: {
@@ -1601,6 +1609,7 @@ describe('WebhookRecordsController', () => {
                             ],
                         },
                     },
+                    sessionUserId: 'testUser',
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     options: {
