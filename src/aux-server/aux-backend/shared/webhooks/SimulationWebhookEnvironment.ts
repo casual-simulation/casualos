@@ -90,6 +90,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
 
         const initialState: BotsState = {
             [configBotId]: createBot(configBotId, {
+                ...request.request.query,
                 owner: request.recordName,
                 inst: inst,
                 staticInst: !origin ? inst : undefined,
@@ -309,6 +310,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     .shout('onWebhook', null, {
                         method: request.request.method,
                         url: request.request.path,
+                        query: request.request.query,
                         data: data,
                         headers: request.request.headers,
                         userId: request.requestUserId ?? undefined,
