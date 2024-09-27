@@ -17,9 +17,12 @@ import {
     addState,
     applyUpdatesToInst,
     BotAction,
+    botAdded,
+    BotsState,
     ConnectionIndicator,
     COOKIE_BOT_PARTITION_ID,
     createBot,
+    defineGlobalBot,
     first,
     remote,
     StoredAux,
@@ -31,6 +34,7 @@ import mime from 'mime';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { Observable, Subscription, tap } from 'rxjs';
+import { sendWebhook } from '../../../shared/WebhookUtils';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -83,6 +87,16 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                   inst: inst,
               }
             : null;
+
+        const initialState: BotsState = {
+            [configBotId]: createBot(configBotId, {
+                ...request.request.query,
+                owner: request.recordName,
+                inst: inst,
+                staticInst: !origin ? inst : undefined,
+            }),
+        };
+
         const config: AuxConfig = {
             config: {
                 ...this._configParameters,
@@ -99,13 +113,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 [TEMPORARY_BOT_PARTITION_ID]: {
                     type: 'memory',
                     private: true,
-                    initialState: {
-                        [configBotId]: createBot(configBotId, {
-                            owner: request.recordName,
-                            inst: inst,
-                            staticInst: !origin ? inst : undefined,
-                        }),
-                    },
+                    initialState,
                 },
                 [COOKIE_BOT_PARTITION_ID]: {
                     type: 'memory',
@@ -118,6 +126,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                 },
             },
         };
+
         const indicator: ConnectionIndicator = {
             connectionId: configBotId,
         };
@@ -171,9 +180,14 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             sub.add(
                 vm.localEvents
                     .pipe(
-                        tap((e) =>
-                            recordsManager.handleEvents(e as BotAction[])
-                        )
+                        tap((e) => {
+                            recordsManager.handleEvents(e as BotAction[]);
+                            for (let event of e) {
+                                if (event.type === 'send_webhook') {
+                                    sendWebhook(sim, event);
+                                }
+                            }
+                        })
                     )
                     .subscribe()
             );
@@ -187,6 +201,18 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     errorCode: 'took_too_long',
                     errorMessage: 'The inst took too long to start.',
                 };
+            }
+
+            if (request.sessionUserId) {
+                const authBot = createBot(
+                    request.sessionUserId,
+                    {},
+                    TEMPORARY_BOT_PARTITION_ID
+                );
+                sim.helper.transaction(
+                    botAdded(authBot),
+                    defineGlobalBot('auth', authBot.id)
+                );
             }
 
             if (request.state) {
@@ -284,8 +310,10 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     .shout('onWebhook', null, {
                         method: request.request.method,
                         url: request.request.path,
+                        query: request.request.query,
                         data: data,
                         headers: request.request.headers,
+                        userId: request.requestUserId ?? undefined,
                     })
                     .then((result) => {
                         if (result.results.length > 0) {

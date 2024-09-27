@@ -68,6 +68,7 @@ describe('SimulationWebhookEnvironment', () => {
 
     afterEach(() => {
         uuidMock.mockClear();
+        require('axios').__reset();
     });
 
     afterAll(() => {
@@ -98,6 +99,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -119,6 +121,7 @@ describe('SimulationWebhookEnvironment', () => {
                     headers: {},
                     method: 'POST',
                     url: '/api/v1/webhooks/test',
+                    query: {},
                 },
             });
         });
@@ -152,6 +155,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             });
 
             expect(result).toEqual({
@@ -200,6 +204,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             });
 
             expect(result).toEqual({
@@ -247,6 +252,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -268,6 +274,7 @@ describe('SimulationWebhookEnvironment', () => {
                     headers: {},
                     method: 'POST',
                     url: '/api/v1/webhooks/test',
+                    query: {},
                 },
             });
 
@@ -324,6 +331,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -415,6 +423,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -445,6 +454,64 @@ describe('SimulationWebhookEnvironment', () => {
             ]);
         });
 
+        it('should support web.get()', async () => {
+            setResponse({
+                data: {
+                    success: true,
+                    recordName: 'testRecord',
+                    address: 'address',
+                },
+            });
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook:
+                                    '@return await web.get("http://example.com/test");',
+                            }),
+                        },
+                    },
+                },
+                connectionKey: 'myConnection',
+                sessionKey: 'mySession',
+                recordName: 'testRecord',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+                requestUserId: null,
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        data: {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'address',
+                        },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(getLastGet()).toEqual(['http://example.com/test']);
+        });
+
         it('should specify the owner and inst on the config bot if the inst is specified in the request', async () => {
             uuidMock.mockReturnValueOnce('configBot');
 
@@ -471,6 +538,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -525,6 +593,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({
@@ -550,6 +619,172 @@ describe('SimulationWebhookEnvironment', () => {
                     },
                     'tempLocal'
                 ),
+            });
+        });
+
+        it('should add the request query to the config bot', async () => {
+            uuidMock.mockReturnValueOnce('configBot');
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook: '@return configBot',
+                            }),
+                        },
+                    },
+                },
+                recordName: 'testRecord',
+                inst: 'inst',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {
+                        inst: 'wrong',
+                        owner: 'wrong',
+                        recordName: 'allowed',
+                        test: 'test',
+                        other: '123',
+                        staticInst: 'wrong',
+                    },
+                },
+                requestUserId: null,
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: expect.any(String),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(tryParseJson(result.response.body as string)).toEqual({
+                success: true,
+                value: createBot(
+                    'configBot',
+                    {
+                        owner: 'testRecord',
+                        inst: 'inst',
+                        recordName: 'allowed',
+                        test: 'test',
+                        other: '123',
+                    },
+                    'tempLocal'
+                ),
+            });
+        });
+
+        it('should specify the authBot for the session user', async () => {
+            uuidMock.mockReturnValueOnce('configBot');
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook: '@return authBot;',
+                            }),
+                        },
+                    },
+                },
+                recordName: 'testRecord',
+                inst: 'inst',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+                requestUserId: null,
+                sessionUserId: 'authBotId',
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: expect.any(String),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(tryParseJson(result.response.body as string)).toEqual({
+                success: true,
+                value: createBot('authBotId', {}, 'tempLocal'),
+            });
+        });
+
+        it('should specify include the ID of the requesting user', async () => {
+            uuidMock.mockReturnValueOnce('configBot');
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook: '@return that;',
+                            }),
+                        },
+                    },
+                },
+                recordName: 'testRecord',
+                inst: 'inst',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+                requestUserId: 'requestUserId',
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: expect.any(String),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(tryParseJson(result.response.body as string)).toEqual({
+                success: true,
+                value: {
+                    data: 'Hello!',
+                    headers: {},
+                    method: 'POST',
+                    url: '/api/v1/webhooks/test',
+                    userId: 'requestUserId',
+                    query: {},
+                },
             });
         });
 
@@ -585,6 +820,7 @@ describe('SimulationWebhookEnvironment', () => {
                     pathParams: {},
                     query: {},
                 },
+                requestUserId: null,
             })) as HandleHttpRequestSuccess;
 
             expect(result).toEqual({

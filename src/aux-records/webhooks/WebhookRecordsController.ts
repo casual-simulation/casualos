@@ -323,6 +323,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                 };
             }
 
+            let sessionUserId: string;
             let sessionKey: string;
             let connectionKey: string;
 
@@ -338,6 +339,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                 });
 
                 if (issueSessionResult.success === true) {
+                    sessionUserId = issueSessionResult.userId;
                     sessionKey = issueSessionResult.sessionKey;
                     connectionKey = issueSessionResult.connectionKey;
                 } else {
@@ -362,6 +364,8 @@ export class WebhookRecordsController extends CrudRecordsController<
                 recordName: stateRecordName,
                 inst: stateInstName,
                 request: request.request,
+                requestUserId: request.userId,
+                sessionUserId,
                 sessionKey,
                 connectionKey,
                 options,
@@ -379,6 +383,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                     runId,
                     version: 1,
                     request: request.request,
+                    requestUserId: request.userId,
                     response: result.success === true ? result.response : null,
                     logs: result.success === true ? result.logs : [],
                     state,

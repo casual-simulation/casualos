@@ -10083,6 +10083,7 @@ describe('RecordsServer', () => {
                         origin: apiHeaders['origin'],
                     }
                 ),
+                requestUserId: userId,
             });
         });
 
@@ -10157,6 +10158,7 @@ describe('RecordsServer', () => {
                     },
                     pathParams: {},
                 },
+                requestUserId: userId,
             });
         });
 
