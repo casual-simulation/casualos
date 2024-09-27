@@ -31,6 +31,7 @@ import mime from 'mime';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { Observable, Subscription, tap } from 'rxjs';
+import { sendWebhook } from '../../../shared/WebhookUtils';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -171,9 +172,14 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             sub.add(
                 vm.localEvents
                     .pipe(
-                        tap((e) =>
-                            recordsManager.handleEvents(e as BotAction[])
-                        )
+                        tap((e) => {
+                            recordsManager.handleEvents(e as BotAction[]);
+                            for (let event of e) {
+                                if (event.type === 'send_webhook') {
+                                    sendWebhook(sim, event);
+                                }
+                            }
+                        })
                     )
                     .subscribe()
             );

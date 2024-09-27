@@ -68,6 +68,7 @@ describe('SimulationWebhookEnvironment', () => {
 
     afterEach(() => {
         uuidMock.mockClear();
+        require('axios').__reset();
     });
 
     afterAll(() => {
@@ -443,6 +444,63 @@ describe('SimulationWebhookEnvironment', () => {
                     },
                 }),
             ]);
+        });
+
+        it('should support web.get()', async () => {
+            setResponse({
+                data: {
+                    success: true,
+                    recordName: 'testRecord',
+                    address: 'address',
+                },
+            });
+
+            const result = (await environment.handleHttpRequest({
+                state: {
+                    type: 'aux',
+                    state: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                onWebhook:
+                                    '@return await web.get("http://example.com/test");',
+                            }),
+                        },
+                    },
+                },
+                connectionKey: 'myConnection',
+                sessionKey: 'mySession',
+                recordName: 'testRecord',
+                request: {
+                    body: 'Hello!',
+                    headers: {},
+                    ipAddress: '123.456.789',
+                    method: 'POST',
+                    path: '/api/v1/webhooks/test',
+                    pathParams: {},
+                    query: {},
+                },
+            })) as HandleHttpRequestSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                response: {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        data: {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'address',
+                        },
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+                logs: [],
+            });
+
+            expect(getLastGet()).toEqual(['http://example.com/test']);
         });
 
         it('should specify the owner and inst on the config bot if the inst is specified in the request', async () => {
