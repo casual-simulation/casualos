@@ -64,8 +64,10 @@
         "rxjs": "8.0.0-alpha.14",
         "seedrandom": "3.0.5",
         "stackframe": "^1.2.0",
-        "uuid": "^8.3.2",
-        "yjs": "13.6.8"
+        "uuid": "10.0.0",
+        "yjs": "13.6.8",
+        "@isomorphic-git/lightning-fs": "4.6.0",
+        "isomorphic-git": "1.27.1"
     },
     "devDependencies": {
         "@types/jsdom": "21.1.6",
