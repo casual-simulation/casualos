@@ -42,6 +42,16 @@ export interface PrivoClientInterface {
     getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse>;
 
     /**
+     * Resends the consent email for the given requester and approver service IDs.
+     * @param requesterServiceId The ID of the requester (child).
+     * @param approverServiceId The ID of the approver (parent).
+     */
+    resendConsentRequest(
+        requesterServiceId: string,
+        approverServiceId: string
+    ): Promise<ResendConsentRequestResponse>;
+
+    /**
      * Generates a URL that can be used to authorize a user.
      * @param state The state that should be included in the request.
      */
@@ -222,6 +232,49 @@ export class PrivoClient implements PrivoClientInterface {
             redirect_uris: [this._redirectUri],
             response_types: ['code'],
         });
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async resendConsentRequest(
+        requesterServiceId: string,
+        approverServiceId: string
+    ): Promise<ResendConsentRequestResponse> {
+        const config = await this._config.getPrivoConfiguration();
+
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+        const headers = await this._getRequestHeaders(config);
+        const url = `${config.gatewayEndpoint}/api/v1.0/consent/resend`;
+        const result = await axios.post(
+            url,
+            {
+                requester_service_id: requesterServiceId,
+                approverServiceId: approverServiceId,
+            },
+            {
+                headers,
+                validateStatus: (status) => status < 500,
+            }
+        );
+
+        if (result.status >= 400) {
+            console.error(
+                `[PrivoClient] [resendConsentRequest] Error resending consent request: ${result.status} ${result.statusText}`,
+                result.data
+            );
+
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The request contains one or more invalid fields.',
+            };
+        }
+
+        return {
+            success: true,
+        };
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
@@ -852,4 +905,18 @@ export interface PrivoPermission {
      * Whether the feature is active and available in the system.
      */
     active: boolean;
+}
+
+export type ResendConsentRequestResponse =
+    | ResendConsentRequestSuccess
+    | ResendConsentRequestFailure;
+
+export interface ResendConsentRequestSuccess {
+    success: true;
+}
+
+export interface ResendConsentRequestFailure {
+    success: false;
+    errorCode: ServerError | 'unacceptable_request';
+    errorMessage: string;
 }

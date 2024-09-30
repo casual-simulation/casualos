@@ -152,6 +152,9 @@ describe('AuthController', () => {
         generateLogoutUrl: jest.Mock<
             ReturnType<PrivoClientInterface['generateLogoutUrl']>
         >;
+        resendConsentRequest: jest.Mock<
+            ReturnType<PrivoClientInterface['resendConsentRequest']>
+        >;
     };
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
@@ -200,6 +203,7 @@ describe('AuthController', () => {
             checkEmail: jest.fn(),
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
+            resendConsentRequest: jest.fn(),
         };
 
         relyingParty = {
@@ -8479,6 +8483,185 @@ describe('AuthController', () => {
                 success: true,
                 user: null,
             });
+        });
+    });
+
+    describe('requestPrivacyFeaturesChange()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                privoServiceId: 'serviceId',
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 999,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            privoClientMock.resendConsentRequest.mockResolvedValue({
+                success: true,
+            });
+        });
+
+        it('should resend the consent request to the user', async () => {
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(privoClientMock.resendConsentRequest).toHaveBeenCalledWith(
+                'serviceId',
+                'serviceId'
+            );
+        });
+
+        it('should resend the consent request to the parent', async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                privoServiceId: 'serviceId',
+                privoParentServiceId: 'parentServiceId',
+            });
+
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(privoClientMock.resendConsentRequest).toHaveBeenCalledWith(
+                'serviceId',
+                'parentServiceId'
+            );
+        });
+
+        it('should return not_authorized if trying to send a request for another user', async () => {
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId: 'otherUserId',
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: 'The session key is invalid.',
+            });
+
+            expect(privoClientMock.resendConsentRequest).not.toHaveBeenCalled();
+        });
+
+        it('super users should be able to send requests for other users', async () => {
+            const superUserRequestId = 'superUserRequestId';
+            const superUserSessionId = toBase64String('superUserSessionId');
+            const superUserId = 'superUserId';
+            const superUserSessionKey = formatV1SessionKey(
+                superUserId,
+                superUserSessionId,
+                code,
+                200
+            );
+            await store.saveUser({
+                id: superUserId,
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                role: 'superUser',
+            });
+
+            await store.saveSession({
+                requestId: superUserRequestId,
+                sessionId: superUserSessionId,
+                secretHash: hashLowEntropyPasswordWithSalt(
+                    code,
+                    superUserSessionId
+                ),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 999,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId: superUserId,
+                ipAddress: '127.0.0.1',
+            });
+
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId,
+                sessionKey: superUserSessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(privoClientMock.resendConsentRequest).toHaveBeenCalledWith(
+                'serviceId',
+                'serviceId'
+            );
         });
     });
 
