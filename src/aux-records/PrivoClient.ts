@@ -250,7 +250,7 @@ export class PrivoClient implements PrivoClientInterface {
             url,
             {
                 requester_service_id: requesterServiceId,
-                approverServiceId: approverServiceId,
+                approver_service_id: approverServiceId,
             },
             {
                 headers,
