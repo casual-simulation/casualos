@@ -3306,6 +3306,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3346,6 +3347,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3392,6 +3394,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3438,6 +3441,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3498,6 +3502,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(

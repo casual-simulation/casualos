@@ -352,6 +352,15 @@ export class PrivoClient implements PrivoClientInterface {
                                     on: z.boolean(),
                                 })
                             ),
+                            consent_meta: z
+                                .object({
+                                    consent_url: z
+                                        .string()
+                                        .optional()
+                                        .nullable(),
+                                })
+                                .optional()
+                                .nullable(),
                         })
                     )
                     .min(1),
@@ -372,6 +381,8 @@ export class PrivoClient implements PrivoClientInterface {
                     on: f.on === true || f.on === 'true',
                 })
             ),
+            consentUrl:
+                validated.to.connected_profiles[0].consent_meta?.consent_url,
         };
     }
 
@@ -440,6 +451,12 @@ export class PrivoClient implements PrivoClientInterface {
                     })
                 ),
                 update_password_link: z.string(),
+                consent_meta: z
+                    .object({
+                        consent_url: z.string().optional().nullable(),
+                    })
+                    .optional()
+                    .nullable(),
             }),
         });
 
@@ -453,6 +470,7 @@ export class PrivoClient implements PrivoClientInterface {
                 featureId: f.feature_identifier,
                 on: f.on === true || f.on === 'true',
             })),
+            consentUrl: validated.to.consent_meta?.consent_url,
         };
     }
 
@@ -793,6 +811,11 @@ export interface CreateChildAccountSuccess {
      * The list of features and statuses for the child account.
      */
     features: PrivoFeatureStatus[];
+
+    /**
+     * The URL that can be used to grant consent for the child account.
+     */
+    consentUrl: string;
 }
 
 export interface CreateChildAccountFailure {
@@ -861,6 +884,11 @@ export interface CreateAdultAccountSuccess {
      * The list of features and statuses for the child account.
      */
     features: PrivoFeatureStatus[];
+
+    /**
+     * The URL that can be used to grant consent for the account.
+     */
+    consentUrl: string;
 }
 
 export interface CreateAdultAccountFailure {

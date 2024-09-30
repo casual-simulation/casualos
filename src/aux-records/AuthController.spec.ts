@@ -1699,6 +1699,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1742,6 +1743,7 @@ describe('AuthController', () => {
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -1806,6 +1808,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1849,6 +1852,7 @@ describe('AuthController', () => {
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -1905,6 +1909,7 @@ describe('AuthController', () => {
                     },
                 ],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1948,6 +1953,7 @@ describe('AuthController', () => {
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -1987,6 +1993,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -2017,6 +2024,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -2046,6 +2054,7 @@ describe('AuthController', () => {
                 adultServiceId: 'serviceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -2087,6 +2096,7 @@ describe('AuthController', () => {
                 email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -2142,6 +2152,7 @@ describe('AuthController', () => {
                     },
                 ],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -2183,6 +2194,7 @@ describe('AuthController', () => {
                 email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {

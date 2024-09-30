@@ -1115,6 +1115,7 @@ export class AuthController {
             let updatePasswordUrl: string;
             let serviceId: string;
             let parentServiceId: string;
+            let consentUrl: string;
             if (years < 0) {
                 return {
                     success: false,
@@ -1157,6 +1158,7 @@ export class AuthController {
                 serviceId = result.childServiceId;
                 parentServiceId = result.parentServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
+                consentUrl = result.consentUrl;
                 privacyFeatures = getPrivacyFeaturesFromPermissions(
                     config.featureIds,
                     result.features
@@ -1191,6 +1193,7 @@ export class AuthController {
 
                 serviceId = result.adultServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
+                consentUrl = result.consentUrl;
                 privacyFeatures = getPrivacyFeaturesFromPermissions(
                     config.featureIds,
                     result.features
@@ -1206,6 +1209,7 @@ export class AuthController {
                 currentLoginRequestId: null,
                 privoServiceId: serviceId,
                 privoParentServiceId: parentServiceId,
+                privoConsentUrl: consentUrl,
                 privacyFeatures,
             };
 
