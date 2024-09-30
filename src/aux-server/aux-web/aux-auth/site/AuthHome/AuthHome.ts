@@ -38,6 +38,9 @@ export default class AuthHome extends Vue {
     updated: boolean = false;
 
     subscriptionsSupported: boolean = false;
+    showPrivacyFeaturesModal: boolean = false;
+    requestPrivacyFeaturesMessage: string = '';
+    processingPrivacyFeaturesRequest: boolean = false;
 
     private _sub: Subscription;
 
@@ -135,6 +138,31 @@ export default class AuthHome extends Vue {
 
         if (hasChange) {
             this.updated = true;
+        }
+    }
+
+    showPrivacyFeaturesOptions() {
+        this.showPrivacyFeaturesModal = true;
+    }
+
+    async requestPrivacyFeatureChanges() {
+        try {
+            this.processingPrivacyFeaturesRequest = true;
+            this.requestPrivacyFeaturesMessage = '';
+            const result =
+                await authManager.client.requestPrivacyFeaturesChange({
+                    userId: authManager.userId,
+                });
+
+            if (result.success === true) {
+                this.requestPrivacyFeaturesMessage = 'Request sent!';
+            } else {
+                this.requestPrivacyFeaturesMessage = 'Failed to send request.';
+            }
+        } catch (err) {
+            this.requestPrivacyFeaturesMessage = 'Failed to send request.';
+        } finally {
+            this.processingPrivacyFeaturesRequest = false;
         }
     }
 }

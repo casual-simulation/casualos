@@ -31,3 +31,20 @@
     flex-direction: column;
     gap: 4px;
 }
+
+.privacy-card-title {
+    display: flex;
+    align-items: center;
+}
+
+.spacer {
+    flex: 1 1 auto;
+}
+
+.privacy-features-request-status {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
