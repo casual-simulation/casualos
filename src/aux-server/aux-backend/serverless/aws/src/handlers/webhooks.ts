@@ -70,6 +70,8 @@ export async function handleWebhook(payload: HandleWebhookPayload) {
         sessionKey: request.sessionKey,
         connectionKey: request.connectionKey,
         options: request.options as HandleWebhookOptions,
+        requestUserId: request.requestUserId,
+        sessionUserId: request.sessionUserId,
     });
 
     return response;

@@ -57,6 +57,8 @@ export class LambdaWebhookEnvironment implements WebhookEnvironment {
             inst: request.inst,
             state: request.state,
             request: request.request,
+            requestUserId: request.requestUserId,
+            sessionUserId: request.sessionUserId,
             sessionKey: request.sessionKey,
             connectionKey: request.connectionKey,
             options: request.options,
