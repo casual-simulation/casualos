@@ -10476,6 +10476,296 @@ export interface AISloydGenerateModelOptions {
     }
 }
 
+/**
+ * Defines an interface for a generic HTTP response.
+ */
+export interface GenericHttpResponse {
+    /**
+     * The status code for the response.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+     *
+     */
+    statusCode: number;
+
+    /**
+     * The list of headers to include in the response.
+     */
+    headers?: GenericHttpHeaders;
+
+    /**
+     * The body of the response.
+     *
+     * If given a string, then the body will be set to that string.
+     * If given an AsyncIterable, then each chunk will be written to the stream as a separate chunk.
+     */
+    body?: string | null | AsyncIterable<string>;
+}
+
+export interface GenericHttpHeaders {
+    [key: string]: string;
+}
+
+export type KnownErrorCodes =
+    | 'not_logged_in'
+    | 'not_supported'
+    | 'data_not_found'
+    | 'data_too_large'
+    | 'record_not_found'
+    | 'file_not_found'
+    | 'session_not_found'
+    | 'operation_not_found'
+    | 'studio_not_found'
+    | 'user_not_found'
+    | 'inst_not_found'
+    | 'session_already_revoked'
+    | 'invalid_code'
+    | 'invalid_key'
+    | 'invalid_request'
+    | 'invalid_origin'
+    | 'invalid_record_key'
+    | 'session_expired'
+    | 'unacceptable_address'
+    | 'unacceptable_user_id'
+    | 'unacceptable_code'
+    | 'unacceptable_session_key'
+    | 'unacceptable_session_id'
+    | 'unacceptable_request_id'
+    | 'unacceptable_ip_address'
+    | 'unacceptable_address_type'
+    | 'unacceptable_expire_time'
+    | 'unacceptable_request'
+    | 'unacceptable_update'
+    | 'address_type_not_supported'
+    | 'server_error'
+    | 'unauthorized_to_create_record_key'
+    | 'price_does_not_match'
+    | 'user_is_banned'
+    | 'rate_limit_exceeded'
+    | 'not_authorized'
+    | 'not_subscribed'
+    | 'invalid_subscription_tier'
+    | 'subscription_limit_reached'
+    | 'record_already_exists'
+    | 'action_not_supported'
+    | 'no_session_key'
+    | 'unacceptable_studio_id'
+    | 'email_already_exists'
+    | 'parent_email_already_exists'
+    | 'parent_email_required'
+    | 'invalid_room_name'
+    | 'invalid_username'
+    | 'invalid_update_policy'
+    | 'invalid_delete_policy'
+    | 'unacceptable_url'
+    | 'file_already_exists'
+    | 'invalid_file_data'
+    | 'invalid_model'
+    | 'roles_too_large'
+    | 'policy_not_found'
+    | 'policy_too_large'
+    | 'invalid_policy'
+    | 'not_completed'
+    | 'invalid_display_name'
+    | 'permission_already_exists'
+    | 'comId_not_found'
+    | 'comId_already_taken'
+    | 'permission_not_found'
+    | 'unacceptable_connection_token'
+    | 'invalid_token'
+    | 'unacceptable_connection_id'
+    | 'message_not_found'
+    | 'not_found'
+    | 'invalid_connection_state'
+    | 'user_already_exists'
+    | 'session_is_not_revokable'
+    | 'hume_api_error'
+    | 'invalid_webhook_target'
+    | 'took_too_long';
+
+/**
+ * Defines a base interface for a record that can be stored in a CrudStore.
+ */
+export interface CrudRecord {
+    /**
+     * The address of the record.
+     */
+    address: string;
+
+    /**
+     * The markers that are associated with the record.
+     */
+    markers: string[];
+}
+
+export type CrudRecordItemResult =
+    | CrudRecordItemSuccess
+    | CrudRecordItemFailure;
+
+export interface CrudRecordItemSuccess {
+    success: true;
+    recordName: string;
+    address: string;
+}
+
+export interface CrudRecordItemFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export type CrudGetItemResult<T> = CrudGetItemSuccess<T> | CrudGetItemFailure;
+
+export interface CrudGetItemSuccess<T> {
+    success: true;
+    item: T;
+}
+
+export interface CrudGetItemFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export type CrudEraseItemResult = CrudEraseItemSuccess | CrudEraseItemFailure;
+
+export interface CrudEraseItemSuccess {
+    success: true;
+}
+
+export interface CrudEraseItemFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+
+export type CrudListItemsResult<T> =
+    | CrudListItemsSuccess<T>
+    | CrudListItemsFailure;
+
+export interface CrudListItemsSuccess<T> {
+    success: true;
+    /**
+     * The name of the record that the items are from.
+     */
+    recordName: string;
+
+    /**
+     * The items that were listed.
+     */
+    items: T[];
+
+    /**
+     * The total number of items in the record.
+     */
+    totalCount: number;
+
+    /**
+     * The marker that was listed.
+     * If null, then all markers are listed.
+     */
+    marker?: string;
+}
+
+export interface CrudListItemsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'data_not_found';
+    errorMessage: string;
+}
+
+
+export type HandleWebhookResult = HandleWebhookSuccess | HandleWebhookFailure;
+
+export interface HandleWebhookSuccess {
+    success: true;
+
+    /**
+     * The result of the webhook.
+     */
+    response: GenericHttpResponse;
+}
+
+export interface HandleWebhookFailure {
+    /**
+     * Whether the webhook was successfully handled.
+     */
+    success: false;
+
+    /**
+     * The error code if the webhook was not successfully handled.
+     */
+    errorCode:
+        | ServerError
+        | 'not_found'
+        | NotAuthorizedError
+        | 'invalid_webhook_target';
+
+    /**
+     * The error message if the webhook was not successfully handled.
+     */
+    errorMessage: string;
+}
+
+
+/**
+ * Defines an interface that represents the options for a list data action.
+ *
+ * @dochash types/records/data
+ * @docName ListDataOptions
+ */
+export interface ListWebhooksOptions extends RecordActionOptions {
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
+}
+
+
+export interface WebhookRecord extends CrudRecord {
+    /**
+     * The resource kind of the webhook target.
+     * - 'file': The webhook target is a file record.
+     * - 'inst': The webhook target is an instance record.
+     * - 'data': The webhook target is a data record.
+     */
+    targetResourceKind: 'file' | 'inst' | 'data';
+
+    /**
+     * The name of the record that is being targeted by this webhook.
+     * Null if the webhook is targeting a public inst.
+     */
+    targetRecordName: string | null;
+
+    /**
+     * The address of the record that is being targeted by this webhook.
+     */
+    targetAddress: string;
+
+    // TODO:
+    /**
+     * The calling convention of the webhook.
+     * Different calling conventions support different capabilities.
+     *
+     * - `http`: The webhook is called with a HTTP request. This grants the most flexibility for working with HTTP, and doesn't enforce a strict structure for the request and response.
+     * - `rpc`: The webhook is called with a RPC request. This enforces a strict structure for the request and response.
+     */
+    // callingConvention?: 'http' | 'rpc';
+
+    /**
+     * The ID of the user that represents the webhook.
+     * This is used to authenticate the webhook for access to resources.
+     *
+     * If null, then the webhook does not use any authentication.
+     */
+    userId?: string | null;
+}
+
 
 interface Ai {
     /**
@@ -12426,6 +12716,141 @@ interface Os {
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     eraseManualApprovalData(recordKey: string, address: string, endpoint?: string): Promise<EraseDataResult>;
+
+    
+    /**
+     * Creates or updates a [webhook](glossary:webhook-record) in the given record using the given options.
+     *
+     * Returns a promise that resolves with an object that contains whether the operation succeeded.
+     *
+     * @param recordName the name of the record.
+     * @param webhook the webhook that should be created or updated.
+     * @param options the options that should be used.
+     *
+     * @example Create a publically-runnable webhook that runs from an inst.
+     * await os.recordWebhook('myRecord', {
+     *   address: 'webhookAddress',
+     *   targetResourceKind: 'inst',
+     *   targetRecordName: 'myRecord',
+     *   targetAddress: 'myInst',
+     *   markers: ['publicRead']
+     * });
+     *
+     * @example Create a private webhook that runs from a data record.
+     * await os.recordWebhook('myRecord', {
+     *   address: 'webhookAddress',
+     *   targetResourceKind: 'data',
+     *   targetRecordName: 'myRecord',
+     *   targetAddress: 'myDataAddress',
+     * });
+     *
+     * @example Create a private webhook that runs from a file record.
+     * await os.recordWebhook('myRecord', {
+     *   address: 'webhookAddress',
+     *   targetResourceKind: 'file',
+     *   targetRecordName: 'myRecord',
+     *   targetAddress: 'myFileName',
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.recordWebhook
+     */
+    recordWebhook(
+        recordName: string,
+        webhook: WebhookRecord,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult>;
+    
+    /**
+     * Runs the webhook in the given record with the provided input.
+     * @param recordName the name of the record.
+     * @param address the address of the webhook.
+     * @param input the input to provide to the webhook.
+     * @param options the options to use.
+     * 
+     * @example Run a webhook with some input.
+     * const result = await os.runWebhook('myRecord', 'myWebhookAddress', { myInput: 'myValue' });
+     * 
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.runWebhook
+     */
+    runWebhook(recordName: string, address: string, input: any, options?: RecordActionOptions): Promise<HandleWebhookResult>;
+
+    /**
+     * Gets the [webhook](glossary:webhook-record) from the given record.
+     *
+     * Returns a promise that resolves with the webhook data.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the webhook.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.getWebhook
+     */
+    getWebhook(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudGetItemResult<WebhookRecord>>;
+
+    /**
+     * Deletes the [webhook](glossary:webhook-record) from the given record.
+     * @param recordName the name of the record.
+     * @param address the address of the webhook.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.eraseWebhook
+     */
+    eraseWebhook(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudEraseItemResult>;
+
+    /**
+     * Lists the webhooks that are in the given record.
+     * @param recordName the name of the record.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.listWebhooks
+     */
+    listWebhooks(
+        recordName: string,
+        startingAddress?: string,
+        options?: ListWebhooksOptions
+    ): Promise<CrudListItemsResult<WebhookRecord>>;
+
+    /**
+     * Lists the webhooks that are in the given record.
+     * @param recordName the name of the record.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 05-records
+     * @docname os.listWebhooksByMarker
+     */
+    listWebhooksByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options?: ListWebhooksOptions
+    ): Promise<CrudListItemsResult<WebhookRecord>>;
 
     /**
      * Records the given data as a file.

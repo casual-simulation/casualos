@@ -24,6 +24,7 @@ export const INST_RESOURCE_KIND = 'inst';
 export const LOOM_RESOURCE_KIND = 'loom';
 export const SLOYD_RESOURCE_KIND = 'ai.sloyd';
 export const HUME_RESOURCE_KIND = 'ai.hume';
+export const WEBHOOK_RESOURCE_KIND = 'webhook';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -38,6 +39,7 @@ export type ResourceKinds =
     | 'marker'
     | 'role'
     | 'inst'
+    | 'webhook'
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume';
@@ -57,6 +59,7 @@ export const GRANT_ACTION = 'grant';
 export const REVOKE_ACTION = 'revoke';
 export const SEND_ACTION_ACTION = 'sendAction';
 export const UPDATE_DATA_ACTION = 'updateData';
+export const RUN_ACTION = 'run';
 
 /**
  * The possible types of actions that can be performed on resources.
@@ -79,7 +82,8 @@ export type ActionKinds =
     | 'grant'
     | 'revoke'
     | 'sendAction'
-    | 'updateData';
+    | 'updateData'
+    | 'run';
 
 /**
  * The possible types of actions that can be performed on data resources.
@@ -166,6 +170,20 @@ export type SloydActionKinds = 'create';
 export type HumeActionKinds = 'create';
 
 /**
+ * The possible types of actions that can be performed on webhook resources.
+ *
+ * @dochash types/permissions
+ * @docname WebhookActionKinds
+ */
+export type WebhookActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'run';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -183,7 +201,8 @@ export type AvailablePermissions =
     | InstPermission
     | LoomPermission
     | SloydPermission
-    | HumePermission;
+    | HumePermission
+    | WebhookPermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -242,6 +261,15 @@ export const SLOYD_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
 export const HUME_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
+export const WEBHOOK_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    RUN_ACTION,
+]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -252,6 +280,7 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     LOOM_RESOURCE_KIND,
     SLOYD_RESOURCE_KIND,
     HUME_RESOURCE_KIND,
+    WEBHOOK_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -274,6 +303,8 @@ export const ACTION_KINDS_VALIDATION = z.enum([
 
     GRANT_PERMISSION_ACTION,
     REVOKE_PERMISSION_ACTION,
+
+    RUN_ACTION,
 ]);
 
 /**
@@ -648,6 +679,34 @@ export const HUME_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
 type ZodHumePermission = z.infer<typeof HUME_PERMISSION_VALIDATION>;
 type ZodHumePermissionAssertion = HasType<ZodHumePermission, HumePermission>;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect webhook resources.
+ *
+ * @dochash types/permissions
+ * @docname WebhookPermission
+ */
+export interface WebhookPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'webhook';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: WebhookActionKinds | null;
+}
+export const WEBHOOK_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(WEBHOOK_RESOURCE_KIND),
+    action: WEBHOOK_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodWebhookPermission = z.infer<typeof WEBHOOK_PERMISSION_VALIDATION>;
+type ZodWebhookPermissionAssertion = HasType<
+    ZodWebhookPermission,
+    WebhookPermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -660,6 +719,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         LOOM_PERMISSION_VALIDATION,
         SLOYD_PERMISSION_VALIDATION,
         HUME_PERMISSION_VALIDATION,
+        WEBHOOK_PERMISSION_VALIDATION,
     ]
 );
 

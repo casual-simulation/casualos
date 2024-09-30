@@ -1,10 +1,14 @@
 import esbuild from 'esbuild';
-import path from 'path';
-import fs from 'fs';
+import path, { dirname } from 'path';
+import fs, { existsSync } from 'fs';
+import { writeFile, readFile } from 'fs/promises';
 import chalk from 'chalk';
 import chokidar from 'chokidar';
 import _ from 'lodash';
 import root from './root-path.cjs';
+import JSZip from 'jszip';
+import hash from 'hash.js';
+const { sha256 } = hash;
 
 const src = path.resolve(root, 'src');
 const nodeModules = path.resolve(root, 'node_modules');
@@ -293,6 +297,101 @@ function emptyModulePlugin(moduleId, filter = new RegExp(`^${moduleId}$`)) {
                     loader: 'js',
                 })
             );
+        },
+    };
+}
+
+/**
+ * Downloads a file from the given URL and saves it to the given destination.
+ * Optionally unzips the file.
+ * @param {*} options The options object.
+ * @returns
+ */
+export function downloadFilePlugin(options) {
+    const src = options.src;
+    const dest = options.dest;
+    const unzip = options.unzip;
+    const force = options.force;
+    const expectedFiles = options.expectedFiles;
+    const cache = options.cache;
+
+    return {
+        name: 'downloadFilePlugin',
+        setup: (build) => {
+            build.onEnd(async () => {
+                if (force || unzip || !existsSync(dest)) {
+                    if (expectedFiles) {
+                        if (
+                            expectedFiles.every((file) =>
+                                existsSync(path.resolve(dest, file))
+                            )
+                        ) {
+                            console.log(
+                                'Files already exist. Skipping download.'
+                            );
+                            return;
+                        }
+                    }
+
+                    const srcHash = sha256().update(src).digest('hex');
+                    const cachePath = path.resolve(
+                        nodeModules,
+                        '.build-cache',
+                        srcHash
+                    );
+
+                    let buffer = null;
+                    if (cache) {
+                        if (existsSync(cachePath)) {
+                            console.log('Using cached file.');
+                            buffer = await readFile(cachePath);
+                        } else {
+                            const cacheDir = dirname(cachePath);
+                            if (!existsSync(cacheDir)) {
+                                fs.mkdirSync(cacheDir, { recursive: true });
+                            }
+                        }
+                    }
+
+                    if (!buffer) {
+                        console.log(`Downloading ${src} to ${dest}...`);
+                        const response = await fetch(src);
+                        buffer = new Buffer(await response.arrayBuffer());
+
+                        if (cache) {
+                            await writeFile(cachePath, buffer);
+                        }
+                    }
+
+                    const dir = dirname(dest);
+                    if (!existsSync(dir)) {
+                        fs.mkdirSync(dir, { recursive: true });
+                    }
+
+                    if (unzip) {
+                        const zip = new JSZip();
+                        const zipFile = await zip.loadAsync(buffer);
+                        const files = zipFile.files;
+                        for (let file in files) {
+                            const finalPath = path.resolve(dest, file);
+
+                            if (force || !existsSync(finalPath)) {
+                                const content = await files[file].async(
+                                    'nodebuffer'
+                                );
+                                console.log(`Writing ${finalPath}...`);
+                                await writeFile(finalPath, content, {
+                                    flag: force ? 'w' : 'wx',
+                                });
+                            }
+                        }
+                    } else {
+                        console.log(`Writing ${dest}...`);
+                        await writeFile(dest, Buffer.from(buffer));
+                    }
+                    console.log('Download complete.');
+                }
+            });
         },
     };
 }

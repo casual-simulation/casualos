@@ -211,6 +211,16 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.useRekognitionModeration();
     }
 
+    if (config.webhooks) {
+        if (config.privo) {
+            console.log(
+                '[LoadServer] Skipping webhooks because Privo is enabled.'
+            );
+        } else {
+            builder.useWebhooks();
+        }
+    }
+
     builder.useAutomaticPlugins();
 
     return builder;

@@ -428,6 +428,18 @@ export function getRootMarkersOrDefault(markers: string[] | null): string[] {
 }
 
 /**
+ * Gets the list of markers that should be used, or the default list if none are provided.
+ * @param markers
+ */
+export function getMarkersOrDefault(markers: string[] | null): string[] {
+    if (markers === null || markers === undefined || markers.length <= 0) {
+        return [PUBLIC_READ_MARKER];
+    }
+
+    return markers;
+}
+
+/**
  * Gets the root marker from the given marker.
  * Markers have two parts, the root and the path: "root:path".
  * The root is the first part of the marker, and contains the security name of the marker. That is, the name of the marker that is used to retrieve permissions for the marker.

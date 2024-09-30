@@ -2533,6 +2533,7 @@ describe('PolicyController', () => {
             ['revokePermission', 'resourceId'],
             ['grant', 'resourceId'],
             ['revoke', 'resourceId'],
+            ['run', 'resourceId'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -2545,6 +2546,7 @@ describe('PolicyController', () => {
             ['loom'],
             ['ai.sloyd'],
             ['ai.hume'],
+            ['webhook'],
         ];
 
         // Admins can perform all actions on all resources
@@ -3038,7 +3040,7 @@ describe('PolicyController', () => {
                         });
                     });
 
-                    it('should deny the action if given a null user ID', async () => {
+                    it('should return not_logged_in if given a null user ID', async () => {
                         const context =
                             await controller.constructAuthorizationContext({
                                 recordKeyOrRecordName: recordName,
@@ -3062,6 +3064,43 @@ describe('PolicyController', () => {
                             errorCode: 'not_logged_in',
                             errorMessage:
                                 'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                        });
+                    });
+
+                    it('should return not_authorized if given a null user ID and configured to do so', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                                sendNotLoggedIn: false,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: null,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                            reason: {
+                                type: 'missing_permission',
+                                recordName: recordName,
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                subjectType: 'user',
+                                subjectId: null,
+                            },
                         });
                     });
 
@@ -3393,6 +3432,25 @@ describe('PolicyController', () => {
             ['loom', [['create', 'resourceId']]],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            [
+                'webhook',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                ],
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -3499,6 +3557,17 @@ describe('PolicyController', () => {
                 [
                     ['assign', PUBLIC_READ_MARKER],
                     ['assign', PRIVATE_MARKER],
+                ],
+            ],
+            [
+                'webhook',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['run', 'resourceId'],
                 ],
             ],
         ];
@@ -3966,6 +4035,7 @@ describe('PolicyController', () => {
             ['file', [['read', 'resourceId']]],
             ['event', [['count', 'resourceId']]],
             ['inst', [['read', 'resourceId']]],
+            ['webhook', [['run', 'resourceId']]],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -4076,6 +4146,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                 ],
             ],
+            ['webhook', [['run', 'resourceId']]],
         ];
 
         const publicWriteSubjectTypeCases: [

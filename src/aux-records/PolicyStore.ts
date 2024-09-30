@@ -773,6 +773,13 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if (resourceKind === 'webhook') {
+        if (action === 'run') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     }
 
     // All other actions are not allowed.
@@ -827,6 +834,13 @@ export function getPublicWritePermission(
             action === 'delete' ||
             action === 'create'
         ) {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'webhook') {
+        if (action === 'run') {
             return {
                 resourceKind,
                 action,

@@ -1,8 +1,4 @@
-import {
-    parseInstancesList,
-    tryDecodeUriComponent,
-    tryParseJson,
-} from './Utils';
+import { tryDecodeUriComponent, tryParseJson } from './Utils';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
@@ -10,7 +6,9 @@ import {
     MAX_EMAIL_ADDRESS_LENGTH,
     MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
+    NoSessionKeyResult,
     PRIVO_OPEN_ID_PROVIDER,
+    validateSessionKey,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { isSuperUserRole, parseSessionKey } from './AuthUtils';
@@ -33,6 +31,7 @@ import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
     DenialReason,
+    PRIVATE_MARKER,
     Procedure,
     ProcedureOutput,
     ProcedureOutputError,
@@ -99,6 +98,36 @@ import {
     SEMATTRS_HTTP_URL,
     SEMATTRS_HTTP_USER_AGENT,
 } from '@opentelemetry/semantic-conventions';
+import {
+    ADDRESS_VALIDATION,
+    COM_ID_VALIDATION,
+    DISPLAY_NAME_VALIDATION,
+    ERASE_DATA_SCHEMA,
+    ERASE_FILE_SCHEMA,
+    EVENT_NAME_VALIDATION,
+    GET_DATA_SCHEMA,
+    INSTANCES_ARRAY_VALIDATION,
+    LIST_FILES_SCHEMA,
+    MARKER_VALIDATION,
+    MARKERS_VALIDATION,
+    NAME_VALIDATION,
+    READ_FILE_SCHEMA,
+    RECORD_DATA_SCHEMA,
+    RECORD_FILE_SCHEMA,
+    RECORD_KEY_VALIDATION,
+    RECORD_NAME_VALIDATION,
+    STUDIO_DISPLAY_NAME_VALIDATION,
+    STUDIO_ID_VALIDATION,
+    UPDATE_FILE_SCHEMA,
+} from './Validations';
+import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import {
+    eraseItemProcedure,
+    getItemProcedure,
+    listItemsProcedure,
+    recordItemProcedure,
+} from './crud/CrudHelpers';
+import { merge, omit } from 'lodash';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -174,257 +203,9 @@ export const MODERATION_NOT_SUPPORTED_RESULT = {
 };
 
 /**
- * The Zod validation for record keys.
- */
-export const RECORD_KEY_VALIDATION = z
-    .string({
-        invalid_type_error: 'recordKey must be a string.',
-        required_error: 'recordKey is required.',
-    })
-    .nonempty('recordKey must not be empty.');
-
-/**
- * The Zod validation for addresses.
- */
-export const ADDRESS_VALIDATION = z
-    .string({
-        invalid_type_error: 'address must be a string.',
-        required_error: 'address is required.',
-    })
-    .min(1)
-    .max(512);
-
-/**
- * The Zod validation for event names.
- */
-export const EVENT_NAME_VALIDATION = z
-    .string({
-        invalid_type_error: 'eventName must be a string.',
-        required_error: 'eventName is required.',
-    })
-    .min(1)
-    .max(128);
-
-export const STUDIO_ID_VALIDATION = z
-    .string({
-        invalid_type_error: 'studioId must be a string.',
-        required_error: 'studioId is required.',
-    })
-    .min(1)
-    .max(128);
-
-export const COM_ID_VALIDATION = z
-    .string({
-        invalid_type_error: 'comId must be a string.',
-        required_error: 'comId is required.',
-    })
-    .min(1)
-    .max(128);
-
-export const STUDIO_DISPLAY_NAME_VALIDATION = z
-    .string({
-        invalid_type_error: 'displayName must be a string.',
-        required_error: 'displayName is required.',
-    })
-    .min(1)
-    .max(128);
-
-export const MARKER_VALIDATION = z
-    .string({
-        invalid_type_error: 'individual markers must be strings.',
-        required_error: 'invidiaul markers must not be null or empty.',
-    })
-    .nonempty('individual markers must not be null or empty.')
-    .max(100, 'individual markers must not be longer than 100 characters.');
-
-/**
- * The Zod validation for markers.
- */
-export const MARKERS_VALIDATION = z
-    .array(MARKER_VALIDATION, {
-        invalid_type_error: 'markers must be an array of strings.',
-        required_error: 'markers is required.',
-    })
-    .nonempty('markers must not be empty.')
-    .max(10, 'markers lists must not contain more than 10 markers.');
-
-export const NO_WHITESPACE_MESSAGE = 'The value cannot not contain spaces.';
-export const NO_WHITESPACE_REGEX = /^\S*$/g;
-export const NO_SPECIAL_CHARACTERS_MESSAGE =
-    'The value cannot not contain special characters.';
-export const NO_SPECIAL_CHARACTERS_REGEX =
-    /^[^!@#$%\^&*()\[\]{}\-_=+`~,./?;:'"\\<>|]*$/g;
-
-export const DISPLAY_NAME_VALIDATION = z
-    .string()
-    .trim()
-    .min(1)
-    .max(128)
-    .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
-    .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
-
-export const NAME_VALIDATION = z
-    .string()
-    .trim()
-    .min(1)
-    .max(128)
-    .regex(NO_WHITESPACE_REGEX, NO_WHITESPACE_MESSAGE)
-    .regex(NO_SPECIAL_CHARACTERS_REGEX, NO_SPECIAL_CHARACTERS_MESSAGE);
-
-export const RECORD_NAME_VALIDATION = z
-    .string({
-        required_error: 'recordName is required.',
-        invalid_type_error: 'recordName must be a string.',
-    })
-    .trim()
-    .min(1)
-    .max(128);
-
-export const INSTANCE_VALIDATION = z.string().min(1).max(128);
-
-export const INSTANCES_ARRAY_VALIDATION = z.preprocess((value) => {
-    if (typeof value === 'string') {
-        return parseInstancesList(value);
-    }
-    return value;
-}, z.array(INSTANCE_VALIDATION).min(1).max(3));
-
-export const INSTANCES_QUERY_VALIDATION = z
-    .string()
-    .min(1)
-    .max(128 * 3)
-    .transform((value) => parseInstancesList(value));
-
-const RECORD_FILE_SCHEMA = z.object({
-    recordKey: RECORD_KEY_VALIDATION,
-    fileSha256Hex: z
-        .string({
-            invalid_type_error: 'fileSha256Hex must be a string.',
-            required_error: 'fileSha256Hex is required.',
-        })
-        .min(1)
-        .max(128)
-        .nonempty('fileSha256Hex must be non-empty.'),
-    fileByteLength: z
-        .number({
-            invalid_type_error:
-                'fileByteLength must be a positive integer number.',
-            required_error: 'fileByteLength is required.',
-        })
-        .positive('fileByteLength must be a positive integer number.')
-        .int('fileByteLength must be a positive integer number.'),
-    fileMimeType: z
-        .string({
-            invalid_type_error: 'fileMimeType must be a string.',
-            required_error: 'fileMimeType is required.',
-        })
-        .min(1)
-        .max(128),
-    fileDescription: z
-        .string({
-            invalid_type_error: 'fileDescription must be a string.',
-            required_error: 'fileDescription is required.',
-        })
-        .min(1)
-        .max(128)
-        .optional(),
-    markers: MARKERS_VALIDATION.optional(),
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-const UPDATE_FILE_SCHEMA = z.object({
-    recordKey: RECORD_KEY_VALIDATION,
-    fileUrl: z
-        .string({
-            invalid_type_error: 'fileUrl must be a string.',
-            required_error: 'fileUrl is required.',
-        })
-        .nonempty('fileUrl must be non-empty.'),
-    markers: MARKERS_VALIDATION,
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-const READ_FILE_SCHEMA = z.object({
-    recordName: RECORD_NAME_VALIDATION.optional(),
-    fileName: z
-        .string({
-            invalid_type_error: 'fileName must be a string.',
-            required_error: 'fileName is required.',
-        })
-        .nonempty('fileName must be non-empty.')
-        .optional(),
-    fileUrl: z
-        .string({
-            invalid_type_error: 'fileUrl must be a string.',
-            required_error: 'fileUrl is required.',
-        })
-        .nonempty('fileUrl must be non-empty.')
-        .optional(),
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-const LIST_FILES_SCHEMA = z.object({
-    recordName: RECORD_NAME_VALIDATION,
-    fileName: z
-        .string({
-            invalid_type_error: 'fileName must be a string.',
-            required_error: 'fileName is required.',
-        })
-        .nonempty('fileName must be non-empty.')
-        .optional(),
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-const ERASE_FILE_SCHEMA = z.object({
-    recordKey: RECORD_KEY_VALIDATION,
-    fileUrl: z.string({
-        invalid_type_error: 'fileUrl must be a string.',
-        required_error: 'fileUrl is required.',
-    }),
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-const RECORD_DATA_SCHEMA = z.object({
-    recordKey: RECORD_KEY_VALIDATION,
-    address: ADDRESS_VALIDATION,
-    data: z.any(),
-    updatePolicy: z
-        .union([z.literal(true), z.array(z.string())], {
-            invalid_type_error:
-                'updatePolicy must be a boolean or an array of strings.',
-        })
-        .optional(),
-    deletePolicy: z
-        .union([z.literal(true), z.array(z.string())], {
-            invalid_type_error:
-                'deletePolicy must be a boolean or an array of strings.',
-        })
-        .optional(),
-    markers: MARKERS_VALIDATION.optional(),
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-const GET_DATA_SCHEMA = z.object({
-    recordName: RECORD_NAME_VALIDATION,
-    address: z
-        .string({
-            required_error: 'address is required.',
-            invalid_type_error: 'address must be a string.',
-        })
-        .nonempty('address must not be empty'),
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-const ERASE_DATA_SCHEMA = z.object({
-    recordKey: RECORD_KEY_VALIDATION,
-    address: ADDRESS_VALIDATION,
-    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-});
-
-/**
  * Defines a basic interface for an HTTP route.
  */
-export interface Route<T> {
+export interface Route<T, TQuery = any> {
     /**
      * The path that the route must match.
      */
@@ -436,6 +217,14 @@ export interface Route<T> {
      * Otherwise, it will apply to the query parameters.
      */
     schema?: z.ZodType<T, z.ZodTypeDef, any>;
+
+    /**
+     * The schema that should be used for the query parameters.
+     * If omitted, then the query parameters will not be validated using this schema.
+     *
+     * Additionally, this only works if a schema is provided.
+     */
+    querySchema?: z.ZodType<TQuery, z.ZodTypeDef, any>;
 
     /**
      * The method for the route.
@@ -452,10 +241,12 @@ export interface Route<T> {
      * The handler that should be called when the route is matched.
      * @param request The request.
      * @param data The data that was parsed from the request.
+     * @param query The query parameters that were parsed from the request.
      */
     handler: (
         request: GenericHttpRequest,
-        data?: T
+        data?: T,
+        query?: TQuery
     ) => Promise<GenericHttpResponse>;
 
     /**
@@ -469,6 +260,105 @@ export interface Route<T> {
 }
 
 const RECORDS_SERVER_METER = 'RecordsServer';
+
+export interface RecordsServerOptions {
+    /**
+     * The set of origins that are allowed to make requests to account endpoints.
+     */
+    allowedAccountOrigins: Set<string>;
+
+    /**
+     * The set of origins that are allowed to make requests to API endpoints.
+     */
+    allowedApiOrigins: Set<string>;
+
+    /**
+     * The controller that should be used for handling authentication requests.
+     */
+    authController: AuthController;
+
+    /**
+     * The controller that should be used for handling livekit requests.
+     */
+    livekitController: LivekitController;
+
+    /**
+     * The controller that should be used for handling records requests.
+     */
+    recordsController: RecordsController;
+
+    /**
+     * The controller that should be used for handling event records requests.
+     */
+    eventsController: EventRecordsController;
+
+    /**
+     * The controller that should be used for handling data records requests.
+     */
+    dataController: DataRecordsController;
+
+    /**
+     * The controller that should be used for handling manual data records requests.
+     */
+    manualDataController: DataRecordsController;
+
+    /**
+     * The controller that should be used for handling file requests.
+     */
+    filesController: FileRecordsController;
+
+    /**
+     * The controller that should be used for handling subscription requests.
+     * If null, then subscriptions are not supported.
+     */
+    subscriptionController?: SubscriptionController | null;
+
+    /**
+     * The controller that should be used for handling rate limits.
+     * If null, then rate limiting will not be used.
+     */
+    rateLimitController?: RateLimitController | null;
+
+    /**
+     * The controller that should be used for handling policy requests.
+     */
+    policyController: PolicyController;
+
+    /**
+     * The controller that should be used for handling AI requests.
+     */
+    aiController?: AIController | null;
+
+    /**
+     * The controller that should be used for handling websocket requests.
+     * If null, then websockets are not supported.
+     */
+    websocketController?: WebsocketController | null;
+
+    /**
+     * The controller that should be used for handling moderation requests.
+     * If null, then moderation is not supported.
+     */
+    moderationController?: ModerationController | null;
+
+    /**
+     * The controller that should be used for handling loom requests.
+     * If null, then loom is not supported.
+     */
+    loomController?: LoomController | null;
+
+    /**
+     * The controller that should be used for handling webhooks.
+     * If null, then webhooks are not supported.
+     */
+    webhooksController?: WebhookRecordsController | null;
+
+    /**
+     * The controller that should be used for handling rate limits for websockets.
+     * If null, then the default rate limit controller will be used.
+     */
+    websocketRateLimitController?: RateLimitController | null;
+}
 
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
@@ -486,6 +376,7 @@ export class RecordsServer {
     private _websocketController: WebsocketController | null;
     private _moderationController: ModerationController | null;
     private _loomController: LoomController | null;
+    private _webhooksController: WebhookRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -533,25 +424,26 @@ export class RecordsServer {
         return this._procedures;
     }
 
-    constructor(
-        allowedAccountOrigins: Set<string>,
-        allowedApiOrigins: Set<string>,
-        authController: AuthController,
-        livekitController: LivekitController,
-        recordsController: RecordsController,
-        eventsController: EventRecordsController,
-        dataController: DataRecordsController,
-        manualDataController: DataRecordsController,
-        filesController: FileRecordsController,
-        subscriptionController: SubscriptionController | null,
-        rateLimitController: RateLimitController,
-        policyController: PolicyController,
-        aiController: AIController | null,
-        websocketController: WebsocketController | null,
-        moderationController: ModerationController | null,
-        loomController: LoomController | null,
-        websocketRateLimitController: RateLimitController | null = null
-    ) {
+    constructor({
+        allowedAccountOrigins,
+        allowedApiOrigins,
+        authController,
+        livekitController,
+        recordsController,
+        eventsController,
+        dataController,
+        manualDataController,
+        filesController,
+        subscriptionController,
+        websocketController,
+        websocketRateLimitController,
+        rateLimitController,
+        policyController,
+        aiController,
+        moderationController,
+        loomController,
+        webhooksController,
+    }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
         this._auth = authController;
@@ -570,6 +462,7 @@ export class RecordsServer {
         this._websocketController = websocketController;
         this._moderationController = moderationController;
         this._loomController = loomController;
+        this._webhooksController = webhooksController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -1583,6 +1476,260 @@ export class RecordsServer {
                 .handler(async (data, context) =>
                     this._baseRecordData(this._data, data, context)
                 ),
+
+            recordWebhook: recordItemProcedure(
+                this._auth,
+                this._webhooksController,
+                z.discriminatedUnion('targetResourceKind', [
+                    z.object({
+                        address: ADDRESS_VALIDATION,
+                        targetResourceKind: z.enum(['data', 'file']),
+                        targetRecordName: RECORD_NAME_VALIDATION,
+                        targetAddress: ADDRESS_VALIDATION,
+                        markers: MARKERS_VALIDATION.optional().default([
+                            PRIVATE_MARKER,
+                        ]),
+                    }),
+                    z.object({
+                        address: ADDRESS_VALIDATION,
+                        targetResourceKind: z.literal('inst'),
+                        targetRecordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        targetAddress: ADDRESS_VALIDATION,
+                        markers: MARKERS_VALIDATION.optional().default([
+                            PRIVATE_MARKER,
+                        ]),
+                    }),
+                ]),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/webhook')
+            ),
+
+            getWebhook: getItemProcedure(
+                this._auth,
+                this._webhooksController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/webhook')
+            ),
+
+            listWebhooks: listItemsProcedure(
+                this._auth,
+                this._webhooksController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/webhook/list')
+            ),
+
+            runWebhook: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/webhook/run')
+                .inputs(
+                    z.any(),
+                    z
+                        .object({
+                            recordName: RECORD_NAME_VALIDATION,
+                            address: z.string().min(1),
+                            instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        })
+                        .catchall(z.string())
+                )
+                .handler(
+                    async (
+                        data: any,
+                        context,
+                        { recordName, address, instances, ...rest }
+                    ) => {
+                        if (!this._webhooksController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        if (!context.httpRequest) {
+                            return {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'webhooks have to be called from an http request',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const bannedHeaders = [
+                            'authorization',
+                            'cookie',
+                            'set-cookie',
+                            'clear-site-data',
+                            'access-control-allow-origin',
+                            'access-control-max-age',
+                            'access-control-allow-credentials',
+                            'date',
+                            'server',
+                            'keep-alive',
+                            'connection',
+                            'transfer-encoding',
+                        ];
+
+                        const result =
+                            await this._webhooksController.handleWebhook({
+                                recordName,
+                                address,
+                                instances,
+                                userId: validation.userId,
+                                request: {
+                                    method: context.httpRequest.method,
+                                    ipAddress: context.httpRequest.ipAddress,
+                                    path: '/api/v2/records/webhook/run',
+                                    body: JSON.stringify(data),
+                                    headers: omit(
+                                        context.httpRequest.headers,
+                                        ...bannedHeaders
+                                    ),
+                                    query: rest,
+                                    pathParams: {},
+                                },
+                            });
+
+                        if (result.success === false) {
+                            return result;
+                        }
+
+                        const headers: GenericHttpHeaders = {};
+                        if (result.response.headers) {
+                            for (let key in result.response.headers) {
+                                const lowerKey = key.toLowerCase();
+                                if (bannedHeaders.includes(lowerKey)) {
+                                    continue;
+                                }
+                                headers[lowerKey] =
+                                    result.response.headers[key];
+                            }
+                        }
+
+                        return {
+                            success: true,
+                            response: {
+                                statusCode: result.response.statusCode,
+                                headers,
+                                body: result.response.body,
+                            } as GenericHttpResponse,
+                        };
+                    },
+                    async (output, context) => {
+                        if (output.success === false) {
+                            // Use defaults
+                            return {};
+                        } else if (output.success === true) {
+                            return output.response;
+                        }
+                    }
+                ),
+
+            eraseWebhook: eraseItemProcedure(
+                this._auth,
+                this._webhooksController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/webhook')
+            ),
+
+            listWebhookRuns: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/webhook/runs/list')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        requestTimeMs: z.number().int().optional(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, requestTimeMs, instances },
+                        context
+                    ) => {
+                        if (!this._webhooksController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._webhooksController.listWebhookRuns({
+                                recordName,
+                                address,
+                                userId: validation.userId,
+                                requestTimeMs,
+                                instances,
+                            });
+
+                        return result;
+                    }
+                ),
+
+            getWebhookRun: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/webhook/runs/info')
+                .inputs(
+                    z.object({
+                        runId: z.string().min(1),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ runId, instances }, context) => {
+                    if (!this._webhooksController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._webhooksController.getWebhookRun(
+                        {
+                            runId,
+                            userId: validation.userId,
+                            instances,
+                        }
+                    );
+
+                    return result;
+                }),
 
             listRecords: procedure()
                 .origins('api')
@@ -3335,11 +3482,13 @@ export class RecordsServer {
             schema: z.object({
                 procedure: z.string().nonempty(),
                 input: z.any().optional(),
+                query: z.any().optional(),
             }),
-            handler: async (request, { procedure, input }) => {
+            handler: async (request, { procedure, input, query }) => {
                 const proc = (procs as any)[procedure] as Procedure<
                     any,
-                    ProcedureOutput
+                    ProcedureOutput,
+                    any
                 >;
                 if (!proc) {
                     return returnResult({
@@ -3387,7 +3536,25 @@ export class RecordsServer {
                             origins
                         );
                     }
-                    result = await proc.handler(parseResult.data, context);
+
+                    let queryData: any;
+                    if (proc.querySchema) {
+                        const parseResult = proc.querySchema.safeParse(query);
+                        if (parseResult.success === false) {
+                            return formatResponse(
+                                request,
+                                returnZodError(parseResult.error),
+                                origins
+                            );
+                        }
+                        queryData = parseResult.data;
+                    }
+
+                    result = await proc.handler(
+                        parseResult.data,
+                        context,
+                        queryData
+                    );
                 } else {
                     result = await proc.handler(input, context);
                 }
@@ -3410,9 +3577,9 @@ export class RecordsServer {
      * @param name The name of the procedure.
      * @param procedure The procedure that should be added.
      */
-    addProcedure<TInput, TOutput extends ProcedureOutput>(
+    addProcedure<TInput, TOutput extends ProcedureOutput, TQuery>(
         name: string,
-        procedure: Procedure<TInput, TOutput>
+        procedure: Procedure<TInput, TOutput, TQuery>
     ) {
         if (name in this._procedures) {
             throw new Error(
@@ -3439,8 +3606,8 @@ export class RecordsServer {
      * Adds the given procedural route to the server.
      * @param route The route that should be added.
      */
-    private _addProcedureRoute<T>(
-        procedure: Procedure<T, ProcedureOutput>,
+    private _addProcedureRoute<T, TQuery>(
+        procedure: Procedure<T, ProcedureOutput, TQuery>,
         name: string
     ): void {
         if (!procedure.http) {
@@ -3452,16 +3619,27 @@ export class RecordsServer {
             method: route.method,
             path: route.path,
             schema: procedure.schema,
+            querySchema: procedure.querySchema,
             name: name,
-            handler: async (request, data) => {
+            handler: async (request, data, query) => {
                 const context: RPCContext = {
                     ipAddress: request.ipAddress,
                     sessionKey: getSessionKey(request),
                     httpRequest: request,
                     origin: request.headers.origin ?? null,
                 };
-                const result = await procedure.handler(data, context);
-                return returnProcedureOutput(result);
+                const result = await procedure.handler(data, context, query);
+                const response = returnProcedureOutput(result);
+
+                if (procedure.mapToResponse) {
+                    const procedureResponse = await procedure.mapToResponse(
+                        result,
+                        context
+                    );
+                    return merge(response, procedureResponse);
+                }
+
+                return response;
             },
             allowedOrigins: procedure.allowedOrigins,
         };
@@ -3717,7 +3895,22 @@ export class RecordsServer {
                         data = parseResult.data;
                     }
 
-                    response = await route.handler(request, data);
+                    let query: any;
+                    if (route.querySchema) {
+                        const parseResult = route.schema.safeParse(
+                            request.query
+                        );
+                        if (parseResult.success === false) {
+                            return formatResponse(
+                                request,
+                                returnZodError(parseResult.error),
+                                origins
+                            );
+                        }
+                        query = parseResult.data;
+                    }
+
+                    response = await route.handler(request, data, query);
                 } else {
                     response = await route.handler(request);
                 }
@@ -6993,49 +7186,10 @@ export class RecordsServer {
         });
     }
 
-    private async _validateHttpSessionKey(
-        event: GenericHttpRequest
-    ): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
-        const sessionKey = getSessionKey(event);
-        if (!sessionKey) {
-            return {
-                success: false,
-                userId: null,
-                errorCode: 'no_session_key',
-                errorMessage:
-                    'A session key was not provided, but it is required for this operation.',
-            };
-        }
-        return await this._auth.validateSessionKey(sessionKey);
-    }
-
     private async _validateSessionKey(
         sessionKey: string | null
     ): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
-        if (!sessionKey) {
-            return {
-                success: false,
-                userId: null,
-                errorCode: 'no_session_key',
-                errorMessage:
-                    'A session key was not provided, but it is required for this operation.',
-            };
-        }
-        const result = await this._auth.validateSessionKey(sessionKey);
-        if (result.success === true) {
-            const span = trace.getActiveSpan();
-            if (span) {
-                span.setAttributes({
-                    [SEMATTRS_ENDUSER_ID]: result.userId,
-                    ['request.userId']: result.userId,
-                    ['request.userRole']: result.role,
-                    ['request.sessionId']: result.sessionId,
-                    ['request.subscriptionId']: result.subscriptionId,
-                    ['request.subscriptionTier']: result.subscriptionTier,
-                });
-            }
-        }
-        return result;
+        return validateSessionKey(this._auth, sessionKey);
     }
 }
 
@@ -7196,13 +7350,6 @@ export function wrapHandler(
         const response = await func(request);
         return formatResponse(request, response, allowedOrigins);
     };
-}
-
-export interface NoSessionKeyResult {
-    success: false;
-    userId: null;
-    errorCode: 'no_session_key';
-    errorMessage: string;
 }
 
 /**

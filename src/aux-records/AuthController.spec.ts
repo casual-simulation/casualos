@@ -337,6 +337,137 @@ describe('AuthController', () => {
             const user = await store.findUser('uuid1');
             expect(user).toBeFalsy();
         });
+
+        it('should be able to create an account without creating a session key', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const result = await controller.createAccount({
+                userRole: 'superUser',
+                ipAddress: null,
+                createSession: false,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'uuid1',
+                sessionKey: null,
+                connectionKey: null,
+                expireTimeMs: null,
+            });
+
+            const user = await store.findUser('uuid1');
+
+            expect(user).toEqual({
+                id: 'uuid1',
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const session = await store.findSession(
+                'uuid1',
+                fromByteArray(sessionId)
+            );
+
+            expect(session).toBeFalsy();
+        });
+    });
+
+    describe('issueSession()', () => {
+        const userId = 'myid';
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+        });
+
+        it('should issue a new session for the user for the system role', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const response = await controller.issueSession({
+                userId,
+                requestingUserId: null,
+                requestingUserRole: 'system',
+                ipAddress: null,
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId,
+                sessionKey: formatV1SessionKey(
+                    userId,
+                    fromByteArray(sessionId),
+                    fromByteArray(sessionSecret),
+                    150 + SESSION_LIFETIME_MS
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    fromByteArray(sessionId),
+                    fromByteArray(connectionSecret),
+                    150 + SESSION_LIFETIME_MS
+                ),
+                expireTimeMs: 150 + SESSION_LIFETIME_MS,
+            });
+        });
+
+        const notAuthorizedCases = [
+            ['superUser'] as const,
+            ['none'] as const,
+        ] as const;
+
+        it.each(notAuthorizedCases)(
+            'should return not_authorized if the requesting user role is %s',
+            async (role) => {
+                const sessionId = new Uint8Array([7, 8, 9]);
+                const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
+
+                nowMock.mockReturnValue(150);
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
+                uuidMock.mockReturnValueOnce('uuid1');
+
+                const response = await controller.issueSession({
+                    userId,
+                    requestingUserId: null,
+                    requestingUserRole: role,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+        );
     });
 
     describe('requestLogin()', () => {

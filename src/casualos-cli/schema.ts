@@ -323,7 +323,13 @@ async function askForDiscriminatedUnionInputs(
         message: `Select a ${inputs.discriminator} for ${name}.`,
         choices: inputs.options.map((option) => {
             const prop = option.schema[inputs.discriminator];
-            if (prop.type !== 'literal') {
+            if (prop.type === 'enum') {
+                return {
+                    title: prop.values.join(', '),
+                    description: option.description,
+                    value: option,
+                };
+            } else if (prop.type !== 'literal') {
                 return {
                     title: option.type,
                     description: option.description,

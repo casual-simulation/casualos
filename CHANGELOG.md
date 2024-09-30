@@ -4,6 +4,39 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added webhook records.
+    -   When enabled, webhook records make it possible to run AUX code inside a server.
+    -   Webhook records work using a request/response model.
+        -   When a request is made to execute the webhook, it grabs the configured target AUX file from another record and then executes it.
+    -   A webhook gets its state from one of 3 different targets:
+        -   `data`: The webhook will use the bots from a data record.
+        -   `file`: The webhook will use the bots from a file record.
+        -   `inst`: The webhook will use the bots from an inst record.
+            -   Only supports reading from insts for now.
+    -   Webhooks are secured by markers, just like regular records.
+        -   `publicRead`: The `publicRead` marker can be used to allow anyone to execute the webhook.
+        -   `private`: The `private` marker can be used to only allow the record members to execute the webhook.
+    -   Webhooks have their own user ID.
+        -   By default, webhooks don't have access to anything except public records.
+        -   To allow webhooks to access other records, they need to be granted access to those resources.
+        -   You can find a webhook's user ID by calling `os.getWebhook()` or by inspecting the webhook through the admin panel.
+    -   Additionally, the following functions have been added:
+        -   `os.recordWebhook(recordName, webhook)`
+        -   `os.getWebhook(recordName, address)`
+        -   `os.runWebhook(recordName, address, input)`
+        -   `os.listWebhooks(recordName, address?)`
+        -   `os.listWebhooksByMarker(recordName, marker, address?)`
+        -   `os.eraseWebhook(recordName, address)`
+    -   Webhooks have the following limitations:
+        -   15 seconds maximum runtime (including lambda cold start and initialization).
+        -   Most OS functions do nothing. (`os.toast()`, `os.showInput()`, etc.)
+            -   The most notable exception to this are records-related actions (`os.recordData()`).
+        -   Webhooks do not automatically install abCore. They only use the bots that are stored in the target.
+        -   Webhooks always act like static insts.
+            -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.

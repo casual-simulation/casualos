@@ -361,7 +361,7 @@ export interface PresignFileUploadRequest {
     };
 
     /**
-     * The markers that should be associated with the file.
+     * The root markers that should be associated with the file.
      */
     markers: string[];
 

@@ -43,6 +43,9 @@ import {
     RedisServerOptions,
     AnthropicAIChatInterface,
     ModerationJobProvider,
+    WebhookRecordsController,
+    WebhookRecordsStore,
+    WebhookEnvironment,
     cleanupObject,
 } from '@casual-simulation/aux-records';
 import {
@@ -66,7 +69,7 @@ import {
     RedisClientType,
     createClient as createRedisClient,
 } from 'redis';
-import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
+import { TracedRedisRateLimitStore } from '../redis/TracedRedisRateLimitStore';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
 import Stripe from 'stripe';
@@ -165,8 +168,24 @@ import {
     SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { SloydInterface } from '@casual-simulation/aux-records/SloydInterface';
-import { MinioFileRecordsStore } from 'aux-backend/minio/MinioFileRecordsStore';
-import { S3Control, S3ControlClient } from '@aws-sdk/client-s3-control';
+import { MinioFileRecordsStore } from '../minio/MinioFileRecordsStore';
+import { S3ControlClient } from '@aws-sdk/client-s3-control';
+import { SimulationWebhookEnvironment } from './webhooks/SimulationWebhookEnvironment';
+import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
+import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
+import {
+    AuxVMNode,
+    NodeSimulation,
+    nodeSimulationWithConfig,
+} from '@casual-simulation/aux-vm-node';
+import { MessageChannel, MessagePort } from 'deno-vm';
+import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
+import { getConnectionId } from '@casual-simulation/aux-common';
+import {
+    RemoteAuxChannel,
+    RemoteSimulationImpl,
+} from '@casual-simulation/aux-vm-client';
+import { AuxConfigParameters } from '@casual-simulation/aux-vm';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -257,6 +276,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _tempInstRecordsStore: TemporaryInstRecordsStore;
     private _instRecordsStore: InstRecordsStore;
     private _websocketController: WebsocketController;
+
+    private _webhooksStore: WebhookRecordsStore;
+    private _webhookEnvironment: WebhookEnvironment;
+    private _webhooksController: WebhookRecordsController;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -596,29 +619,9 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('S3 options must be provided.');
         }
 
-        const prisma = options.prisma;
         const s3 = options.s3;
-
-        const prismaClient = this._ensurePrisma(options);
         const s3Client = this._ensureS3(options);
-        this._configStore = this._ensurePrismaConfigurationStore(
-            prismaClient,
-            options
-        );
-        this._metricsStore = new PrismaMetricsStore(
-            prismaClient,
-            this._configStore
-        );
-        this._authStore = new PrismaAuthStore(prismaClient);
-        this._privoStore = new PrismaPrivoStore(prismaClient);
-        this._recordsStore = new PrismaRecordsStore(prismaClient);
-        this._policyStore = this._ensurePrismaPolicyStore(
-            prismaClient,
-            options
-        );
-        this._dataStore = new PrismaDataRecordsStore(prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
-        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        const { filesLookup } = this._usePrismaStores(options);
         this._filesStore = new S3FileRecordsStore(
             s3.region,
             s3.filesBucket,
@@ -631,10 +634,46 @@ export class ServerBuilder implements SubscriptionLike {
             s3.publicFilesUrl
         );
         this._ensureFileStoreInit();
-        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
-        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         return this;
+    }
+
+    private _usePrismaStores(
+        options: Pick<
+            ServerConfig,
+            'prisma' | 'subscriptions' | 'moderation'
+        > = this._options
+    ) {
+        const prismaClient = this._ensurePrisma(options);
+        this._configStore = this._ensurePrismaConfigurationStore(
+            prismaClient,
+            options
+        );
+        const metricsStore = (this._metricsStore = new PrismaMetricsStore(
+            prismaClient,
+            this._configStore
+        ));
+        this._authStore = new PrismaAuthStore(prismaClient);
+        this._privoStore = new PrismaPrivoStore(prismaClient);
+        this._recordsStore = new PrismaRecordsStore(prismaClient);
+        this._policyStore = this._ensurePrismaPolicyStore(
+            prismaClient,
+            options
+        );
+        this._dataStore = new PrismaDataRecordsStore(prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
+        this._webhooksStore = new PrismaWebhookRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+
+        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        return {
+            prismaClient,
+            filesLookup,
+        };
     }
 
     usePrismaWithMinio(
@@ -652,28 +691,9 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Minio options must be provided.');
         }
 
-        const prisma = options.prisma;
         const minio = options.minio;
 
-        const prismaClient = this._ensurePrisma(options);
-        this._configStore = this._ensurePrismaConfigurationStore(
-            prismaClient,
-            options
-        );
-        this._metricsStore = new PrismaMetricsStore(
-            prismaClient,
-            this._configStore
-        );
-        this._authStore = new PrismaAuthStore(prismaClient);
-        this._privoStore = new PrismaPrivoStore(prismaClient);
-        this._recordsStore = new PrismaRecordsStore(prismaClient);
-        this._policyStore = this._ensurePrismaPolicyStore(
-            prismaClient,
-            options
-        );
-        this._dataStore = new PrismaDataRecordsStore(prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
-        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        const { filesLookup } = this._usePrismaStores(options);
         this._filesStore = new MinioFileRecordsStore(
             {
                 endPoint: minio.endpoint,
@@ -689,8 +709,6 @@ export class ServerBuilder implements SubscriptionLike {
             minio.publicFilesUrl
         );
         this._ensureFileStoreInit();
-        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
-        this._moderationStore = new PrismaModerationStore(prismaClient);
 
         return this;
     }
@@ -711,29 +729,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         const mongodb = options.mongodb;
-        const prismaClient = this._ensurePrisma(options);
-        this._configStore = this._ensurePrismaConfigurationStore(
-            prismaClient,
-            options
-        );
-        this._metricsStore = new PrismaMetricsStore(
-            prismaClient,
-            this._configStore
-        );
-        this._authStore = new PrismaAuthStore(prismaClient);
-        this._privoStore = new PrismaPrivoStore(prismaClient);
-        this._recordsStore = new PrismaRecordsStore(prismaClient);
-
-        this._policyStore = this._ensurePrismaPolicyStore(
-            prismaClient,
-            options
-        );
-        this._dataStore = new PrismaDataRecordsStore(prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
-        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
-        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
-        this._moderationStore = new PrismaModerationStore(prismaClient);
-
+        const { filesLookup } = this._usePrismaStores(options);
         this._actions.push({
             priority: 0,
             action: async () => {
@@ -1039,7 +1035,7 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Rate limit options must be provided.');
         }
         const client = this._ensureRedisRateLimit(options);
-        const store = new RedisRateLimitStore({
+        const store = new TracedRedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
                 return client.sendCommand([command, ...args]);
             },
@@ -1075,7 +1071,7 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Websocket rate limit options must be provided.');
         }
         const client = this._ensureRedisRateLimit(options);
-        const store = new RedisRateLimitStore({
+        const store = new TracedRedisRateLimitStore({
             sendCommand: (command: string, ...args: string[]) => {
                 return client.sendCommand([command, ...args]);
             },
@@ -1399,6 +1395,114 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useWebhooks(
+        options: Pick<ServerConfig, 'webhooks' | 'meta'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using webhooks.');
+        if (!options.webhooks) {
+            throw new Error('Webhook options must be provided.');
+        }
+
+        if (!this._webhooksStore) {
+            throw new Error('Webhook store must be configured.');
+        }
+
+        const env = options.webhooks.environment;
+        let configParameters: Partial<AuxConfigParameters> = {
+            version: GIT_TAG,
+            versionHash: GIT_HASH,
+            device: {
+                isCollaborative: false,
+                supportsAR: false,
+                supportsVR: false,
+                allowCollaborationUpgrade: false,
+                ab1BootstrapUrl: null,
+            },
+        };
+
+        if (options.meta) {
+            configParameters.recordsOrigin = configParameters.authOrigin =
+                options.meta.apiOrigin ?? undefined;
+            configParameters.causalRepoConnectionUrl =
+                options.meta.websocketOrigin ?? undefined;
+            configParameters.causalRepoConnectionProtocol =
+                options.meta.websocketProtocol ?? undefined;
+        }
+
+        if (env.type === 'deno') {
+            console.log('[ServerBuilder] Using Deno Webhook Environment.');
+
+            const anyGlobalThis = globalThis as any;
+            anyGlobalThis.MessageChannel = MessageChannel;
+            anyGlobalThis.MessagePort = MessagePort;
+
+            this._webhookEnvironment = new SimulationWebhookEnvironment(
+                (simId, indicator, origin, config) => {
+                    const vm = new DenoVM(
+                        new URL(env.scriptPath),
+                        simId,
+                        origin,
+                        config
+                    );
+                    if (env.denoPath) {
+                        vm.denoExecutable = env.denoPath;
+                    }
+                    const sim = new DenoSimulationImpl(indicator, origin, vm);
+
+                    return {
+                        sim,
+                        onLogs: vm.onLogs,
+                        vm,
+                    };
+                },
+                {
+                    configParameters,
+                }
+            );
+        } else if (env.type === 'node') {
+            console.log('[ServerBuilder] Using Node Webhook Environment.');
+            this._webhookEnvironment = new SimulationWebhookEnvironment(
+                (simId, indicator, origin, config) => {
+                    const configBotId = getConnectionId(indicator);
+                    const vm = new AuxVMNode(
+                        simId,
+                        origin,
+                        configBotId,
+                        new RemoteAuxChannel(config, {})
+                    );
+                    const sim = new RemoteSimulationImpl(
+                        simId,
+                        {
+                            recordName: null,
+                            inst: null,
+                            isStatic: false,
+                        },
+                        vm
+                    );
+
+                    return {
+                        sim,
+                        vm,
+                    };
+                },
+                {
+                    configParameters,
+                }
+            );
+        } else if (env.type === 'lambda') {
+            console.log('[ServerBuilder] Using Lambda Webhook Environment.');
+            this._webhookEnvironment = new LambdaWebhookEnvironment(
+                {
+                    functionName: env.functionName,
+                },
+                configParameters
+            );
+        } else {
+            throw new Error('Invalid webhook environment type.');
+        }
+        return this;
+    }
+
     async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
@@ -1556,25 +1660,39 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
-        const server = new RecordsServer(
-            this._allowedAccountOrigins,
-            this._allowedApiOrigins,
-            this._authController,
-            this._livekitController,
-            this._recordsController,
-            this._eventsController,
-            this._dataController,
-            this._manualDataController,
-            this._filesController,
-            this._subscriptionController,
-            this._rateLimitController,
-            this._policyController,
-            this._aiController,
-            this._websocketController,
-            this._moderationController,
-            this._loomController,
-            this._websocketRateLimitController
-        );
+        if (this._webhooksStore && this._webhookEnvironment) {
+            this._webhooksController = new WebhookRecordsController({
+                config: this._configStore,
+                data: this._dataController,
+                files: this._filesController,
+                store: this._webhooksStore,
+                policies: this._policyController,
+                environment: this._webhookEnvironment,
+                auth: this._authController,
+                websockets: this._websocketController,
+            });
+        }
+
+        const server = new RecordsServer({
+            allowedAccountOrigins: this._allowedAccountOrigins,
+            allowedApiOrigins: this._allowedApiOrigins,
+            authController: this._authController,
+            livekitController: this._livekitController,
+            recordsController: this._recordsController,
+            eventsController: this._eventsController,
+            dataController: this._dataController,
+            manualDataController: this._manualDataController,
+            filesController: this._filesController,
+            subscriptionController: this._subscriptionController,
+            rateLimitController: this._rateLimitController,
+            policyController: this._policyController,
+            aiController: this._aiController,
+            websocketController: this._websocketController,
+            moderationController: this._moderationController,
+            loomController: this._loomController,
+            websocketRateLimitController: this._websocketRateLimitController,
+            webhooksController: this._webhooksController,
+        });
 
         const buildReturn: BuildReturn = {
             server,

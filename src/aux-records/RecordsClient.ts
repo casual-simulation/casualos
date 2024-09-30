@@ -1,13 +1,21 @@
 import type {
     CallProcedureOptions,
     Procedure,
+    ProcedureActions,
     ProcedureInputs,
+    ProcedureQueries,
     RemoteProcedures,
 } from '@casual-simulation/aux-common';
 import type { RecordsServer } from './RecordsServer';
 
 export type RecordsClientType = RemoteProcedures<RecordsServer['procedures']>;
 export type RecordsClientInputs = ProcedureInputs<RecordsServer['procedures']>;
+export type RecordsClientQueries = ProcedureQueries<
+    RecordsServer['procedures']
+>;
+export type RecordsClientActions = ProcedureActions<
+    RecordsServer['procedures']
+>;
 
 /**
  * Defines a client that can be used to interact with the records API.
@@ -51,17 +59,19 @@ export class RecordsClient {
      * @param name The name of the procedure to call.
      * @param input The input to the procedure.
      * @param options The options to use for the procedure.
+     * @param query The query to use for the procedure.
      */
     async callProcedure(
         name: string,
         input: any,
-        options?: CallProcedureOptions
+        options?: CallProcedureOptions,
+        query?: any
     ): Promise<any> {
         const response = await fetch(
             `${options?.endpoint ?? this._endpoint}/api/v3/callProcedure`,
             {
                 method: 'POST',
-                body: JSON.stringify({ procedure: name, input }),
+                body: JSON.stringify({ procedure: name, input, query }),
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8',
                     Accept: 'application/json,application/x-ndjson',

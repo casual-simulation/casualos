@@ -79,6 +79,8 @@ model User {
     comIdRequests StudioComIdRequest[]
     authenticators UserAuthenticator[]
 
+    webhookRecords WebhookRecord[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -173,7 +175,7 @@ model AuthSession {
     nextSession AuthSession? @relation("NextSession", fields: [nextSessionId], references: [sessionId])
     nextSession1 AuthSession? @relation("NextSession")
 
-    ipAddress String
+    ipAddress String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -323,6 +325,9 @@ model Record {
     instRecords InstRecord[]
     instBranches InstBranch[]
     branchUpdates BranchUpdate[]
+    webhookRecords WebhookRecord[] @relation("WebhookRecord")
+    targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
+    webhookRuns WebhookRun[]
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
@@ -565,6 +570,8 @@ model DataRecord {
 
     markers String[]
 
+    targetWebhookRecords WebhookRecord[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -618,6 +625,10 @@ model FileRecord {
 
     markers String[]
 
+    targetWebhookRecords WebhookRecord[]
+
+    webhookRuns WebhookRun[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -649,6 +660,7 @@ model InstRecord {
     branches InstBranch[]
     updates BranchUpdate[]
     userInstReports UserInstReport[]
+    webhookRecords WebhookRecord[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -691,6 +703,64 @@ model BranchUpdate {
     updated DateTime @updatedAt
 
     @@index([recordName, instName, branchName, id])
+}
+
+model WebhookRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation("WebhookRecord", fields: [recordName], references: [name], onDelete: Cascade, map: "WebhookRecord_recordName_fkey1")
+
+    address String @db.String(512)
+
+    markers String[]
+
+    targetRecordName String? @db.String(128)
+    targetRecord Record? @relation("TargetWebookRecord", fields: [targetRecordName], references: [name], onDelete: SetNull, map: "WebhookRecord_targetRecordName_fkey1")
+
+    targetDataRecordAddress String? @db.String(512)
+    targetDataRecord DataRecord? @relation(fields: [targetRecordName, targetDataRecordAddress], references: [recordName, address], onDelete: SetNull, map: "WebhookRecord_targetDataRecordAddress_fkey1")
+
+    targetFileRecordFileName String? @db.String(512)
+    targetFileRecord FileRecord? @relation(fields: [targetRecordName, targetFileRecordFileName], references: [recordName, fileName], onDelete: SetNull, map: "WebhookRecord_targetFileRecordFileName_fkey1")
+
+    targetInstRecordName String? @db.String(128)
+    targetInstRecord InstRecord? @relation(fields: [targetRecordName, targetInstRecordName], references: [recordName, name], onDelete: SetNull, map: "WebhookRecord_targetInstRecordName_fkey1")
+
+    targetPublicInstRecordName String? @db.String(128)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    runs WebhookRun[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model WebhookRun {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "WebhookRun_recordName_fkey1")
+
+    webhookAddress String @db.String(512)
+    webhook WebhookRecord @relation(fields: [recordName, webhookAddress], references: [recordName, address], onDelete: Cascade, map: "WebhookRun_webhookAddress_fkey1")
+
+    statusCode Int?
+    stateSha256 String @db.String(64)
+
+    requestTime DateTime
+    responseTime DateTime
+
+    errorResult Json?
+
+    infoFileRecordName String? @db.String(128)
+    infoFileName String? @db.String(512)
+    infoFile FileRecord? @relation(fields: [infoFileRecordName, infoFileName], references: [recordName, fileName], onDelete: SetNull, map: "WebhookRun_infoFile_fkey1")
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Configuration {

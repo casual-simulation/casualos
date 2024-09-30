@@ -25,7 +25,7 @@ import {
     remapProgressPercent,
     DeviceAction,
 } from '@casual-simulation/aux-common';
-import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
+import { DenoWorker, DenoWorkerOptions, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import {
@@ -58,12 +58,21 @@ export class DenoVM implements AuxVM {
         }
     >;
     private _onAuthMessage: Subject<PartitionAuthMessage>;
+    private _onLogs: Subject<string[]> = new Subject();
 
     private _config: AuxConfig;
     private _worker: DenoWorker;
     private _proxy: Remote<AuxChannel>;
     private _id: string;
     private _origin: SimulationOrigin;
+    private _script: string | URL;
+    private _workerOptions: Partial<DenoWorkerOptions>;
+
+    /**
+     * The path to the deno executable that should be used.
+     * If null or undefined, then the default deno executable will be used.
+     */
+    denoExecutable: string;
 
     closed: boolean;
 
@@ -84,11 +93,20 @@ export class DenoVM implements AuxVM {
 
     /**
      * Creates a new Simulation VM.
+     * @param script The script that should be loaded for the Deno Worker.
      */
-    constructor(id: string, origin: SimulationOrigin, config: AuxConfig) {
+    constructor(
+        script: string | URL,
+        id: string,
+        origin: SimulationOrigin,
+        config: AuxConfig,
+        workerOptions?: Partial<DenoWorkerOptions>
+    ) {
+        this._script = script;
         this._id = id;
         this._origin = origin;
         this._config = config;
+        this._workerOptions = workerOptions;
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -121,6 +139,10 @@ export class DenoVM implements AuxVM {
         return this._onAuthMessage;
     }
 
+    get onLogs(): Observable<string[]> {
+        return this._onLogs;
+    }
+
     /**
      * Initaializes the VM.
      */
@@ -138,16 +160,38 @@ export class DenoVM implements AuxVM {
         });
 
         const debug = !!this._config.config.debug;
-        this._worker = new DenoWorker(
-            new URL('http://localhost:3000/deno.js'),
-            {
-                logStderr: debug,
-                logStdout: debug,
-                permissions: {
-                    allowNet: true,
-                },
+        const permissions: DenoWorkerOptions['permissions'] = {
+            allowNet: true,
+        };
+
+        if (this._script instanceof URL) {
+            console.log('[DenoVM] Script:', this._script.href);
+            if (this._script.protocol === 'file:') {
+                let path = this._script.pathname;
+                if (/^\/\w:/.test(path)) {
+                    // Windows absolute path
+                    // For some reason, the URL class will always add a leading slash to the pathname,
+                    // even for Windows paths. So we need to remove it.
+                    path = path.slice(1);
+                }
+
+                console.log('[DenoVM] Allowing read for script file:', path);
+
+                // Allow read access to the script file.
+                permissions.allowRead = [path];
             }
-        );
+        }
+
+        const workerOptions: Partial<DenoWorkerOptions> = {
+            ...(this._workerOptions || {}),
+            logStderr: debug,
+            logStdout: debug,
+            permissions,
+        };
+        if (this.denoExecutable) {
+            workerOptions.denoExecutable = this.denoExecutable;
+        }
+        this._worker = new DenoWorker(this._script, workerOptions);
 
         this._connectionStateChanged.next({
             type: 'progress',
@@ -155,7 +199,16 @@ export class DenoVM implements AuxVM {
             progress: 0.2,
         });
 
+        console.log('[DenoVM] Waiting for init...');
+
         await waitForInit(this._worker);
+
+        this._worker.stderr.on('data', (data: string) => {
+            this._onLogs.next([data]);
+        });
+        this._worker.stdout.on('data', (data: string) => {
+            this._onLogs.next([data]);
+        });
 
         const [seconds, nanoseconds] = process.hrtime(startTime);
         console.log(
@@ -301,12 +354,18 @@ export class DenoVM implements AuxVM {
             this._proxy.unsubscribe();
             this._proxy = null;
         }
-        this._worker.terminate();
-        this._worker = null;
-        this._connectionStateChanged.unsubscribe();
-        this._connectionStateChanged = null;
-        this._localEvents.unsubscribe();
-        this._localEvents = null;
+        if (this._worker) {
+            this._worker.terminate();
+            this._worker = null;
+        }
+        if (this._connectionStateChanged) {
+            this._connectionStateChanged.unsubscribe();
+            this._connectionStateChanged = null;
+        }
+        if (this._localEvents) {
+            this._localEvents.unsubscribe();
+            this._localEvents = null;
+        }
     }
 
     protected _createSubVM(

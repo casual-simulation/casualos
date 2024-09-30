@@ -40,12 +40,12 @@ export function formatV1SessionKey(
     userId: string,
     sessionId: string,
     sessionSecret: string,
-    expireTimeMs: number
+    expireTimeMs: number | null
 ): string {
     return `vSK1.${toBase64String(userId)}.${toBase64String(
         sessionId
     )}.${toBase64String(sessionSecret)}.${toBase64String(
-        expireTimeMs.toString()
+        (expireTimeMs ?? Infinity).toString()
     )}`;
 }
 
@@ -134,7 +134,9 @@ export function parseV1SessionKey(
         const userId = fromBase64String(userIdBase64);
         const sessionId = fromBase64String(sessionIdBase64);
         const password = fromBase64String(passwordBase64);
-        const expireTime = parseInt(fromBase64String(expireTimeBase64));
+        const expireTimeText = fromBase64String(expireTimeBase64);
+        const expireTime =
+            expireTimeText === 'Infinity' ? null : parseInt(expireTimeText);
 
         return [userId, sessionId, password, expireTime];
     } catch (err) {
@@ -153,12 +155,12 @@ export function formatV1ConnectionKey(
     userId: string,
     sessionId: string,
     connectionSecret: string,
-    expireTimeMs: number
+    expireTimeMs: number | null
 ): string {
     return `vCK1.${toBase64String(userId)}.${toBase64String(
         sessionId
     )}.${toBase64String(connectionSecret)}.${toBase64String(
-        expireTimeMs.toString()
+        (expireTimeMs ?? Infinity).toString()
     )}`;
 }
 
@@ -247,7 +249,9 @@ export function parseV1ConnectionKey(
         const userId = fromBase64String(userIdBase64);
         const sessionId = fromBase64String(sessionIdBase64);
         const password = fromBase64String(passwordBase64);
-        const expireTime = parseInt(fromBase64String(expireTimeBase64));
+        const expireTimeText = fromBase64String(expireTimeBase64);
+        const expireTime =
+            expireTimeText === 'Infinity' ? null : parseInt(expireTimeText);
 
         return [userId, sessionId, password, expireTime];
     } catch (err) {
