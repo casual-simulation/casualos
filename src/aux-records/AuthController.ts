@@ -2807,7 +2807,7 @@ export class AuthController {
                 keyResult.role !== 'superUser'
             ) {
                 console.log(
-                    '[AuthController] [updateUserInfo] Request User ID doesnt match session key User ID!'
+                    '[AuthController] [requestPrivacyFeaturesChange] Request User ID doesnt match session key User ID!'
                 );
                 return {
                     success: false,
@@ -2841,6 +2841,10 @@ export class AuthController {
             if (result.success === false) {
                 return result;
             }
+
+            console.log(
+                `[AuthController] [requestPrivacyFeaturesChange] [userId: ${request.userId}] Requested privacy features change.`
+            );
 
             return {
                 success: true,
