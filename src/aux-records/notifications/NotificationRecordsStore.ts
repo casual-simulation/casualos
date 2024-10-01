@@ -5,7 +5,49 @@ import { CrudRecord, CrudRecordsStore } from '../crud';
  * Defines a store that contains notification records.
  */
 export interface NotificationRecordsStore
-    extends CrudRecordsStore<NotificationRecord> {}
+    extends CrudRecordsStore<NotificationRecord> {
+    /**
+     * Saves the given subscription.
+     * @param subscription The subscription to save.
+     */
+    saveSubscription(subscription: NotificationSubscription): Promise<void>;
+
+    /**
+     * Deletes the given subscription.
+     * @param id The ID of the subscription.
+     */
+    deleteSubscription(id: string): Promise<void>;
+
+    /**
+     * Saves the given sent notification.
+     * @param notification The notification to save as sent.
+     */
+    saveSentNotification(notification: SentNotification): Promise<void>;
+
+    /**
+     * Saves the given sent notification user.
+     * @param user The user that the notification was sent to.
+     */
+    saveSentNotificationUser(user: SentNotificationUser): Promise<void>;
+
+    /**
+     * Gets the list of subscriptions for the given notification.
+     * @param recordName The record that the notification is in.
+     * @param notificationAddress The address that the notification is at.
+     */
+    listSubscriptionsForNotification(
+        recordName: string,
+        notificationAddress: string
+    ): Promise<NotificationSubscription[]>;
+
+    /**
+     * Gets the list of subscriptions for the given user.
+     * @param userId The ID of the user.
+     */
+    listSubscriptionsForUser(
+        userId: string
+    ): Promise<NotificationSubscription[]>;
+}
 
 /**
  * Defines a record that represents a notification.
