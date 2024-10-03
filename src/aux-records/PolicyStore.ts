@@ -781,12 +781,7 @@ export function getPublicReadPermission(
             };
         }
     } else if (resourceKind === 'notification') {
-        if (
-            action === 'read' ||
-            action === 'list' ||
-            action === 'subscribe' ||
-            action === 'unsubscribe'
-        ) {
+        if (action === 'read' || action === 'list' || action === 'subscribe') {
             return {
                 resourceKind,
                 action,
@@ -859,12 +854,7 @@ export function getPublicWritePermission(
             };
         }
     } else if (resourceKind === 'notification') {
-        if (
-            action === 'read' ||
-            action === 'list' ||
-            action === 'subscribe' ||
-            action === 'unsubscribe'
-        ) {
+        if (action === 'read' || action === 'list' || action === 'subscribe') {
             return {
                 resourceKind,
                 action,

@@ -1,5 +1,7 @@
 import { GenericHttpRequest } from '@casual-simulation/aux-common';
-import { CrudRecord, CrudRecordsStore } from '../crud';
+import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '../crud';
+import { z } from 'zod';
+import { SubscriptionFilter } from '../MetricsStore';
 
 /**
  * Defines a store that contains notification records.
@@ -17,6 +19,13 @@ export interface NotificationRecordsStore
      * @param id The ID of the subscription.
      */
     deleteSubscription(id: string): Promise<void>;
+
+    /**
+     * Finds the subscription with the given ID.
+     * Returns null if no subscription was found.
+     * @param id The ID of the subscription.
+     */
+    getSubscriptionById(id: string): Promise<NotificationSubscription | null>;
 
     /**
      * Saves the given sent notification.
@@ -47,6 +56,24 @@ export interface NotificationRecordsStore
     listSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]>;
+
+    /**
+     * Gets the item metrics for the subscription of the given user or studio.
+     * @param filter The filter to use.
+     */
+    getSubscriptionMetrics(
+        filter: SubscriptionFilter
+    ): Promise<NotificationSubscriptionMetrics>;
+
+    /**
+     * Gets the total number of subscriptions that are currently active for the given notification.
+     * @param recordName The name of the record that the notification is in.
+     * @param address The address of the notification.
+     */
+    countSubscriptionsForNotification(
+        recordName: string,
+        address: string
+    ): Promise<number>;
 }
 
 /**
@@ -59,6 +86,17 @@ export interface NotificationRecord extends CrudRecord {
      */
     description: string | null;
 }
+
+/**
+ * The schema for a [PushSubscription](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription).
+ */
+export const PUSH_SUBSCRIPTION_SCHEMA = z.object({
+    endpoint: z.string(),
+    expirationTime: z.number().optional(),
+    keys: z.record(z.string()),
+});
+
+export type PushSubscriptionType = z.infer<typeof PUSH_SUBSCRIPTION_SCHEMA>;
 
 /**
  * Defines an active subscription to a notification.
@@ -88,7 +126,7 @@ export interface NotificationSubscription {
      * The JSON of the [push subscription](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription).
      * Null if none was provided.
      */
-    pushSubscriptionJson: string | null;
+    pushSubscription: PushSubscriptionType | null;
 }
 
 /**
@@ -150,6 +188,11 @@ export interface SentNotification {
      * The actions that should be displayed on the notification.
      */
     actions: NotificationActionUI[];
+
+    /**
+     * The time that the notification was sent.
+     */
+    sentTimeMs: number;
 }
 
 /**
@@ -224,4 +267,22 @@ export interface WebhookNotificationAction {
      * The headers to include in the request.
      */
     headers?: GenericHttpRequest['headers'];
+}
+
+export interface NotificationSubscriptionMetrics
+    extends CrudSubscriptionMetrics {
+    /**
+     * The total number of notification items that are stored in the subscription.
+     */
+    totalItems: number;
+
+    /**
+     * The number of sent notifications that have been recorded for the last subscription period.
+     */
+    totalSentNotificationsInPeriod: number;
+
+    /**
+     * The number of sent push notifications that have been recorded for the last subscription period.
+     */
+    totalSentPushNotificationsInPeriod: number;
 }

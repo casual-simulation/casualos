@@ -3147,51 +3147,6 @@ describe('PolicyController', () => {
             );
         });
 
-        describe('notification', () => {
-            const marker = 'marker';
-            describe('unsubscribe', () => {
-                it('should always allow unsubscribing', async () => {
-                    const context =
-                        await controller.constructAuthorizationContext({
-                            recordKeyOrRecordName: recordName,
-                            userId: userId,
-                        });
-
-                    const result = await controller.authorizeSubject(context, {
-                        subjectId: userId,
-                        subjectType: 'user',
-                        resourceKind: 'notification',
-                        action: 'unsubscribe',
-                        resourceId: 'resourceId',
-                        markers: [marker],
-                    });
-
-                    expect(result).toEqual({
-                        success: true,
-                        recordName: recordName,
-                        permission: {
-                            id: null,
-                            recordName,
-                            userId: null,
-
-                            subjectType: 'user',
-                            subjectId: userId,
-
-                            // resourceKind and action are null because this permission
-                            // applies to all resources and actions.
-                            resourceKind: 'notification',
-                            action: 'unsubscribe',
-
-                            marker: null,
-                            options: {},
-                            expireTimeMs: null,
-                        },
-                        explanation: 'Unsubscribing is always allowed.',
-                    });
-                });
-            });
-        });
-
         const recordKeyResourceKindCases: [
             ResourceKinds,
             [ActionKinds, string | null][]

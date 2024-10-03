@@ -735,29 +735,6 @@ export class PolicyController {
                 subjectId = normalizeInstId(subjectId);
             }
 
-            if (
-                request.resourceKind === 'notification' &&
-                request.action === 'unsubscribe'
-            ) {
-                return {
-                    success: true,
-                    recordName,
-                    permission: {
-                        id: null,
-                        recordName: recordName,
-                        userId: null,
-                        subjectType: subjectType,
-                        subjectId: subjectId,
-                        resourceKind: 'notification',
-                        action: 'unsubscribe',
-                        marker: null,
-                        options: {},
-                        expireTimeMs: null,
-                    },
-                    explanation: 'Unsubscribing is always allowed.',
-                };
-            }
-
             const publicPermission = getPublicMarkersPermission(
                 markers,
                 request.resourceKind,
