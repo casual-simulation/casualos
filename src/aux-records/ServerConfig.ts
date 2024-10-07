@@ -1,5 +1,5 @@
 import { moderationSchema } from './ModerationConfiguration';
-import { notificationsSchema } from './NotificationMessenger';
+import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
 import { subscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
@@ -1080,7 +1080,7 @@ export const serverConfigSchema = z.object({
         .optional(),
     notifications: notificationsSchema
         .describe(
-            'Notification configuration options. If omitted, then server notifications will be disabled.'
+            'System notification configuration options. Used to send messages for various events like user inst reports and com ID requests. If omitted, then server notifications will be disabled.'
         )
         .optional(),
     moderation: moderationSchema

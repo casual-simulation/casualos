@@ -200,7 +200,7 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
     }
 
     if (config.notifications) {
-        builder.useNotifications();
+        builder.useSystemNotifications();
     }
 
     if (config.webauthn) {

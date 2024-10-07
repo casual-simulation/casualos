@@ -32,7 +32,7 @@ import {
     CachingPolicyStore,
     CachingConfigStore,
     notificationsSchema,
-    NotificationMessenger,
+    SystemNotificationMessenger,
     MultiNotificationMessenger,
     ModerationController,
     ModerationStore,
@@ -1161,10 +1161,10 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useNotifications(
+    useSystemNotifications(
         options: Pick<ServerConfig, 'notifications'> = this._options
     ): this {
-        console.log('[ServerBuilder] Using notifications.');
+        console.log('[ServerBuilder] Using system notifications.');
         if (!options.notifications) {
             throw new Error('Notifications options must be provided.');
         }
@@ -1175,14 +1175,14 @@ export class ServerBuilder implements SubscriptionLike {
         );
 
         if (notifications.slack) {
-            console.log('[ServerBuilder] Using Slack notifications.');
+            console.log('[ServerBuilder] Using Slack system notifications.');
             this._notificationMessenger.addMessenger(
                 new SlackNotificationMessenger(notifications.slack)
             );
         }
 
         if (notifications.telegram) {
-            console.log('[ServerBuilder] Using Telegram notifications.');
+            console.log('[ServerBuilder] Using Telegram system notifications.');
             this._notificationMessenger.addMessenger(
                 new TelegramNotificationMessenger(notifications.telegram)
             );

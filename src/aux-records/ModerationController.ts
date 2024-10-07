@@ -10,9 +10,9 @@ import {
 import { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
 import {
-    NotificationMessenger,
+    SystemNotificationMessenger,
     RecordsNotification,
-} from './NotificationMessenger';
+} from './SystemNotificationMessenger';
 import { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
@@ -29,13 +29,13 @@ const TRACE_NAME = 'ModerationController';
 export class ModerationController {
     private _store: ModerationStore;
     private _config: ConfigurationStore;
-    private _messenger: NotificationMessenger | null;
+    private _messenger: SystemNotificationMessenger | null;
     private _jobProvider: ModerationJobProvider;
 
     constructor(
         store: ModerationStore,
         config: ConfigurationStore,
-        messenger: NotificationMessenger | null,
+        messenger: SystemNotificationMessenger | null,
         jobProvider: ModerationJobProvider | null
     ) {
         this._store = store;

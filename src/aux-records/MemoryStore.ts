@@ -142,9 +142,9 @@ import {
     UserInstReport,
 } from './ModerationStore';
 import {
-    NotificationMessenger,
+    SystemNotificationMessenger,
     RecordsNotification,
-} from './NotificationMessenger';
+} from './SystemNotificationMessenger';
 import { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
 
@@ -166,7 +166,7 @@ export class MemoryStore
         ConfigurationStore,
         InstRecordsStore,
         ModerationStore,
-        NotificationMessenger
+        SystemNotificationMessenger
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
