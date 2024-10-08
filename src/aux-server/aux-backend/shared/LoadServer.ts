@@ -221,6 +221,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         }
     }
 
+    if (config.webPush) {
+        builder.useWebPushNotifications();
+    }
+
     builder.useAutomaticPlugins();
 
     return builder;

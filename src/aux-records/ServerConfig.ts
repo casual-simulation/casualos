@@ -1063,11 +1063,6 @@ export const serverConfigSchema = z.object({
         )
         .optional(),
 
-    // auth: authSchema
-    //     .describe('Authentication configuration options.')
-    //     .optional()
-    //     .default({}),
-
     subscriptions: subscriptionConfigSchema
         .describe(
             'The default subscription configuration. If omitted, then subscription features will be disabled.'
@@ -1092,6 +1087,32 @@ export const serverConfigSchema = z.object({
     webhooks: webhooksSchema
         .describe(
             'Webhook configuration options. If omitted, then webhook features will be disabled.'
+        )
+        .optional(),
+
+    webPush: z
+        .object({
+            vapidSubject: z
+                .string()
+                .describe(
+                    'The subject that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+            vapidPublicKey: z
+                .string()
+                .describe(
+                    'The public key that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+            vapidPrivateKey: z
+                .string()
+                .describe(
+                    'The private key that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+        })
+        .describe(
+            'Web Push configuration options. If omitted, then web push notifications will be disabled.'
         )
         .optional(),
 

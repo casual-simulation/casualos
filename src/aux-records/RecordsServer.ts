@@ -128,6 +128,7 @@ import {
     recordItemProcedure,
 } from './crud/CrudHelpers';
 import { merge, omit } from 'lodash';
+import { NotificationRecordsController } from './notifications/NotificationRecordsController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -358,6 +359,12 @@ export interface RecordsServerOptions {
      * If null, then the default rate limit controller will be used.
      */
     websocketRateLimitController?: RateLimitController | null;
+
+    /**
+     * The controller that should be used for handling notifications.
+     * If null, then notifications are not supported.
+     */
+    notificationsController?: NotificationRecordsController | null;
 }
 
 /**
@@ -377,6 +384,7 @@ export class RecordsServer {
     private _moderationController: ModerationController | null;
     private _loomController: LoomController | null;
     private _webhooksController: WebhookRecordsController | null;
+    private _notificationsController: NotificationRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -443,6 +451,7 @@ export class RecordsServer {
         moderationController,
         loomController,
         webhooksController,
+        notificationsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -463,6 +472,7 @@ export class RecordsServer {
         this._moderationController = moderationController;
         this._loomController = loomController;
         this._webhooksController = webhooksController;
+        this._notificationsController = notificationsController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
