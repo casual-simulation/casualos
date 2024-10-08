@@ -19,6 +19,9 @@ import {
 } from './generated';
 import { PrismaMetricsStore } from './PrismaMetricsStore';
 import { convertToDate } from './Utils';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+
+const TRACE_NAME = 'PrismaNotificationRecordsStore';
 
 export class PrismaNotificationRecordsStore
     implements NotificationRecordsStore
@@ -31,6 +34,7 @@ export class PrismaNotificationRecordsStore
         this._metrics = metrics;
     }
 
+    @traced(TRACE_NAME)
     async saveSubscription(
         subscription: NotificationSubscription
     ): Promise<void> {
@@ -56,6 +60,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async deleteSubscription(id: string): Promise<void> {
         await this._client.notificationSubscription.delete({
             where: {
@@ -64,6 +69,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async markSubscriptionsInactive(ids: string[]): Promise<void> {
         await this._client.notificationSubscription.updateMany({
             where: {
@@ -77,6 +83,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionById(
         id: string
     ): Promise<NotificationSubscription | null> {
@@ -104,6 +111,7 @@ export class PrismaNotificationRecordsStore
         };
     }
 
+    @traced(TRACE_NAME)
     async saveSentNotification(notification: SentNotification): Promise<void> {
         await this._client.sentNotification.upsert({
             where: {
@@ -141,6 +149,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async saveSentNotificationUser(user: SentNotificationUser): Promise<void> {
         await this._client.sentNotificationUser.upsert({
             where: {
@@ -164,6 +173,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async createSentNotificationUsers(
         users: SentNotificationUser[]
     ): Promise<void> {
@@ -178,6 +188,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async listActiveSubscriptionsForNotification(
         recordName: string,
         notificationAddress: string
@@ -196,6 +207,7 @@ export class PrismaNotificationRecordsStore
         );
     }
 
+    @traced(TRACE_NAME)
     async listActiveSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]> {
@@ -212,6 +224,7 @@ export class PrismaNotificationRecordsStore
         );
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<NotificationSubscriptionMetrics> {
@@ -278,6 +291,7 @@ export class PrismaNotificationRecordsStore
         };
     }
 
+    @traced(TRACE_NAME)
     async countSubscriptionsForNotification(
         recordName: string,
         address: string
@@ -290,6 +304,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async createItem(
         recordName: string,
         item: NotificationRecord
@@ -304,6 +319,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async getItemByAddress(
         recordName: string,
         address: string
@@ -328,6 +344,7 @@ export class PrismaNotificationRecordsStore
         };
     }
 
+    @traced(TRACE_NAME)
     async updateItem(
         recordName: string,
         item: Partial<NotificationRecord>
@@ -346,6 +363,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async putItem(
         recordName: string,
         item: Partial<NotificationRecord>
@@ -370,6 +388,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async deleteItem(recordName: string, address: string): Promise<void> {
         await this._client.notificationRecord.delete({
             where: {
@@ -381,6 +400,7 @@ export class PrismaNotificationRecordsStore
         });
     }
 
+    @traced(TRACE_NAME)
     async listItems(
         recordName: string,
         address: string | null
@@ -422,6 +442,7 @@ export class PrismaNotificationRecordsStore
         };
     }
 
+    @traced(TRACE_NAME)
     async listItemsByMarker(
         request: ListCrudStoreByMarkerRequest
     ): Promise<ListCrudStoreSuccess<NotificationRecord>> {
