@@ -61,3 +61,4 @@ export * from './ComIdConfig';
 export * from './ServerConfig';
 
 export * from './webhooks';
+export * from './notifications';

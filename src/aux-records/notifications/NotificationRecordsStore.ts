@@ -186,6 +186,13 @@ export interface SentNotification {
     tag?: string;
 
     /**
+     * The topic that the notification should be sent to.
+     * A message with a topic will replace any other message with the same topic.
+     * Null if no topic was specified.
+     */
+    topic?: string;
+
+    /**
      * The timestamp of the sent notification.
      */
     timestamp?: number;

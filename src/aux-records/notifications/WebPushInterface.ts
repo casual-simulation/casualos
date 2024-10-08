@@ -9,10 +9,12 @@ export interface WebPushInterface {
      * Sends a notification to the given push subscription.
      * @param pushSubscription The push subscription to send the notification to.
      * @param payload The payload to send.
+     * @param topic The topic that the notification is for. Topics can be used to replace existing notifications with a new notification.
      */
     sendNotification(
         pushSubscription: PushSubscriptionType,
-        payload: PushNotificationPayload
+        payload: PushNotificationPayload,
+        topic?: string
     ): Promise<SendPushNotificationResult>;
 
     /**

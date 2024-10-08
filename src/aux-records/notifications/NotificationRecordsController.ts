@@ -387,7 +387,11 @@ export class NotificationRecordsController extends CrudRecordsController<
             for (let sub of subscriptions) {
                 promises.push(
                     this._pushInterface
-                        .sendNotification(sub.pushSubscription, request.payload)
+                        .sendNotification(
+                            sub.pushSubscription,
+                            request.payload,
+                            request.topic
+                        )
                         .then((result) => {
                             return [sub, result] as const;
                         })
@@ -693,6 +697,13 @@ export interface SendNotificationRequest {
      * The payload that should be sent.
      */
     payload: PushNotificationPayload;
+
+    /**
+     * The topic that the notification should be sent to.
+     * A message with a topic will replace any other message with the same topic.
+     * If omitted, then no topic will be used.
+     */
+    topic?: string;
 
     /**
      * The instances that are currently loaded.

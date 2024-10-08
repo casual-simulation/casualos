@@ -689,6 +689,7 @@ describe('NotificationRecordsController', () => {
                         },
                     ],
                 },
+                topic: 'topic',
                 instances: [],
             });
 
@@ -731,14 +732,16 @@ describe('NotificationRecordsController', () => {
                     endpoint: 'endpoint1',
                     keys: {},
                 },
-                expectedPayload
+                expectedPayload,
+                'topic'
             );
             expect(pushInterface.sendNotification).toHaveBeenCalledWith(
                 {
                     endpoint: 'endpoint2',
                     keys: {},
                 },
-                expectedPayload
+                expectedPayload,
+                'topic'
             );
 
             expect(itemsStore.sentNotifications).toEqual([
@@ -752,6 +755,7 @@ describe('NotificationRecordsController', () => {
                     badge: 'badge',
                     silent: true,
                     tag: 'tag',
+                    topic: 'topic',
                     timestamp: 123,
                     defaultAction: {
                         type: 'open_url',
