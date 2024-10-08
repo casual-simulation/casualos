@@ -36,6 +36,7 @@
         -   Webhooks do not automatically install abCore. They only use the bots that are stored in the target.
         -   Webhooks always act like static insts.
             -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
+-   Added the ability to request consent again so that a parent can adjust the privacy features for their child.
 
 ### :bug: Bug Fixes
 
