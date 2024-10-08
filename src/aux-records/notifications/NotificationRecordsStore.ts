@@ -1,7 +1,7 @@
 import { GenericHttpRequest } from '@casual-simulation/aux-common';
 import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '../crud';
-import { z } from 'zod';
 import { SubscriptionFilter } from '../MetricsStore';
+import { PushSubscriptionType } from './WebPushInterface';
 
 /**
  * Defines a store that contains notification records.
@@ -19,6 +19,12 @@ export interface NotificationRecordsStore
      * @param id The ID of the subscription.
      */
     deleteSubscription(id: string): Promise<void>;
+
+    /**
+     * Marks the given list of subscriptions as inactive.
+     * @param ids The IDs of the subscriptions to inactivate.
+     */
+    markSubscriptionsInactive(ids: string[]): Promise<void>;
 
     /**
      * Finds the subscription with the given ID.
@@ -40,11 +46,17 @@ export interface NotificationRecordsStore
     saveSentNotificationUser(user: SentNotificationUser): Promise<void>;
 
     /**
-     * Gets the list of subscriptions for the given notification.
+     * Saves the given list of notifications that were sent to users.
+     * @param users The list of users that the notifications were sent to.
+     */
+    saveSentNotificationUsers(users: SentNotificationUser[]): Promise<void>;
+
+    /**
+     * Gets the list of active subscriptions for the given notification.
      * @param recordName The record that the notification is in.
      * @param notificationAddress The address that the notification is at.
      */
-    listSubscriptionsForNotification(
+    listActiveSubscriptionsForNotification(
         recordName: string,
         notificationAddress: string
     ): Promise<NotificationSubscription[]>;
@@ -53,7 +65,7 @@ export interface NotificationRecordsStore
      * Gets the list of subscriptions for the given user.
      * @param userId The ID of the user.
      */
-    listSubscriptionsForUser(
+    listActiveSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]>;
 
@@ -88,17 +100,6 @@ export interface NotificationRecord extends CrudRecord {
 }
 
 /**
- * The schema for a [PushSubscription](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription).
- */
-export const PUSH_SUBSCRIPTION_SCHEMA = z.object({
-    endpoint: z.string(),
-    expirationTime: z.number().optional(),
-    keys: z.record(z.string()),
-});
-
-export type PushSubscriptionType = z.infer<typeof PUSH_SUBSCRIPTION_SCHEMA>;
-
-/**
  * Defines an active subscription to a notification.
  */
 export interface NotificationSubscription {
@@ -106,6 +107,11 @@ export interface NotificationSubscription {
      * The ID of the subscription.
      */
     id: string;
+
+    /**
+     * Whether the subscription is active or not.
+     */
+    active: boolean;
 
     /**
      * The name of the record that the subscription is for.
@@ -180,6 +186,11 @@ export interface SentNotification {
     tag?: string;
 
     /**
+     * The timestamp of the sent notification.
+     */
+    timestamp?: number;
+
+    /**
      * The action that should be taken when the notification is clicked.
      */
     defaultAction?: NotificationAction | null;
@@ -205,9 +216,25 @@ export interface SentNotificationUser {
     sentNotificationId: string;
 
     /**
+     * The subscription that the notification was sent under.
+     */
+    subscriptionId: string;
+
+    /**
      * The ID of the user that the notification was sent to.
      */
     userId: string;
+
+    /**
+     * Whether the notification was successfully sent to the user.
+     */
+    success: boolean;
+
+    /**
+     * The error that occurred when sending the notification.
+     * Null if no error occurred.
+     */
+    errorCode: string | null;
 }
 
 /**

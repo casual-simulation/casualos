@@ -79,6 +79,26 @@ export class MemoryNotificationRecordsStore
         }
     }
 
+    async markSubscriptionsInactive(ids: string[]): Promise<void> {
+        for (let id of ids) {
+            const index = this._subscriptions.findIndex((s) => s.id === id);
+            if (index >= 0) {
+                this._subscriptions[index] = {
+                    ...this._subscriptions[index],
+                    active: false,
+                };
+            }
+        }
+    }
+
+    async saveSentNotificationUsers(
+        users: SentNotificationUser[]
+    ): Promise<void> {
+        for (let user of users) {
+            await this.saveSentNotificationUser(user);
+        }
+    }
+
     async saveSentNotification(notification: SentNotification): Promise<void> {
         const index = this._sentNotifications.findIndex(
             (s) => s.id === notification.id
@@ -98,7 +118,8 @@ export class MemoryNotificationRecordsStore
         const index = this._sentNotificationUsers.findIndex(
             (s) =>
                 s.sentNotificationId === user.sentNotificationId &&
-                s.userId === user.userId
+                s.userId === user.userId &&
+                s.subscriptionId === user.subscriptionId
         );
         if (index >= 0) {
             this._sentNotificationUsers[index] = {
@@ -111,21 +132,24 @@ export class MemoryNotificationRecordsStore
         }
     }
 
-    async listSubscriptionsForNotification(
+    async listActiveSubscriptionsForNotification(
         recordName: string,
         notificationAddress: string
     ): Promise<NotificationSubscription[]> {
         return this._subscriptions.filter(
             (s) =>
                 s.recordName === recordName &&
-                s.notificationAddress === notificationAddress
+                s.notificationAddress === notificationAddress &&
+                s.active === true
         );
     }
 
-    async listSubscriptionsForUser(
+    async listActiveSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]> {
-        return this._subscriptions.filter((s) => s.userId === userId);
+        return this._subscriptions.filter(
+            (s) => s.userId === userId && s.active === true
+        );
     }
 
     async getSubscriptionMetrics(
