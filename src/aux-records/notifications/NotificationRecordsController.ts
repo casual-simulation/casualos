@@ -455,7 +455,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             }
 
             if (sentNotificationUsers.length > 0) {
-                await this.store.saveSentNotificationUsers(
+                await this.store.createSentNotificationUsers(
                     sentNotificationUsers
                 );
             }

@@ -49,7 +49,7 @@ export interface NotificationRecordsStore
      * Saves the given list of notifications that were sent to users.
      * @param users The list of users that the notifications were sent to.
      */
-    saveSentNotificationUsers(users: SentNotificationUser[]): Promise<void>;
+    createSentNotificationUsers(users: SentNotificationUser[]): Promise<void>;
 
     /**
      * Gets the list of active subscriptions for the given notification.

@@ -91,7 +91,7 @@ export class MemoryNotificationRecordsStore
         }
     }
 
-    async saveSentNotificationUsers(
+    async createSentNotificationUsers(
         users: SentNotificationUser[]
     ): Promise<void> {
         for (let user of users) {
