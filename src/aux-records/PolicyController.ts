@@ -270,12 +270,23 @@ export class PolicyController {
         }
 
         if (!recordOwnerPrivacyFeatures) {
-            recordOwnerPrivacyFeatures = {
-                allowAI: true,
-                allowPublicData: true,
-                allowPublicInsts: true,
-                publishData: true,
-            };
+            // The record owner will most likely have privacy features,
+            // but this is just a sanity check in case they dont.
+            if (this._auth.privoEnabled) {
+                recordOwnerPrivacyFeatures = {
+                    allowAI: false,
+                    allowPublicData: false,
+                    allowPublicInsts: false,
+                    publishData: false,
+                };
+            } else {
+                recordOwnerPrivacyFeatures = {
+                    allowAI: true,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                };
+            }
         }
 
         if (request.userId) {
@@ -285,12 +296,21 @@ export class PolicyController {
         }
 
         if (!userPrivacyFeatures) {
-            userPrivacyFeatures = {
-                allowAI: true,
-                allowPublicData: true,
-                allowPublicInsts: true,
-                publishData: true,
-            };
+            if (this._auth.privoEnabled) {
+                userPrivacyFeatures = {
+                    allowAI: false,
+                    allowPublicData: false,
+                    allowPublicInsts: false,
+                    publishData: false,
+                };
+            } else {
+                userPrivacyFeatures = {
+                    allowAI: true,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                };
+            }
         }
 
         const context: AuthorizationContext = {

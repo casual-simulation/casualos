@@ -211,6 +211,13 @@ export class AuthController {
         this._webAuthNRelyingParties = relyingParties;
     }
 
+    /**
+     * Gets whether Privo-features are enabled.
+     */
+    get privoEnabled() {
+        return this._privoClient !== null;
+    }
+
     @traced(TRACE_NAME)
     async createAccount(
         request: CreateAccountRequest
