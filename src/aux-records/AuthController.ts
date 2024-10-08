@@ -965,6 +965,18 @@ export class AuthController {
             const serviceId = result.userInfo.serviceId;
             const email = result.userInfo.email;
 
+            if (
+                result.userInfo.roleIdentifier !== config.roleIds.adult &&
+                result.userInfo.roleIdentifier !== config.roleIds.child
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
+                };
+            }
+
             let user: AuthUser;
             if (serviceId) {
                 user = await this._store.findUserByPrivoServiceId(

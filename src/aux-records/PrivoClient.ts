@@ -508,21 +508,24 @@ export class PrivoClient implements PrivoClientInterface {
         const schema = z.object({
             sub: z.string(),
             locale: z.string(),
-            given_name: z.string(),
+            given_name: z.string().optional().nullable(),
             email: z.string().optional().nullable(),
             email_verified: z.boolean(),
             role_identifier: z.string(),
-            preferred_username: z.string(),
-            permissions: z.array(
-                z.object({
-                    on: z.boolean(),
-                    consent_time: z.number().nullable().optional(),
-                    request_time: z.number(),
-                    feature_identifier: z.string(),
-                    feature_category: z.string(),
-                    feature_active: z.boolean(),
-                })
-            ),
+            preferred_username: z.string().optional().nullable(),
+            permissions: z
+                .array(
+                    z.object({
+                        on: z.boolean(),
+                        consent_time: z.number().nullable().optional(),
+                        request_time: z.number(),
+                        feature_identifier: z.string(),
+                        feature_category: z.string(),
+                        feature_active: z.boolean(),
+                    })
+                )
+                .optional()
+                .nullable(),
         });
 
         const validated = schema.parse(data);
@@ -819,12 +822,32 @@ export interface CreateAdultAccountFailure {
 export interface PrivoGetUserInfoResponse {
     serviceId: string;
     locale: string;
-    givenName: string;
+
+    /**
+     * The given name of the user.
+     * This is the name that the user provided when they signed up.
+     * The user may not have a given name if their role does not require that they provide one. (e.g. parent accounts)
+     */
+    givenName: string | null | undefined;
     emailVerified: boolean;
     email: string;
+
+    /**
+     * The role identifier that the user has.
+     */
     roleIdentifier: string;
-    displayName: string;
-    permissions: PrivoPermission[];
+
+    /**
+     * The display name of the user.
+     * The user may not have a display name if their role does not require that they provide one. (e.g. parent accounts)
+     */
+    displayName: string | null | undefined;
+
+    /**
+     * The Privo permissions that the user has.
+     * The user may not have permissions if their role does not have any (e.g. parent accounts).
+     */
+    permissions: PrivoPermission[] | null | undefined;
 }
 
 export interface PrivoPermission {

@@ -3741,7 +3741,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -3876,7 +3876,124 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'joinAndCollaborate',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'publish',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'dev',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'buildaieggs',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                            ],
+                            displayName: 'displayName',
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: 'userId',
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                });
+
+                expect(await store.findUser('userId')).toEqual({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+
+                    // Should save the privacy features
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(
+                    privoClientMock.processAuthorizationCallback
+                ).toHaveBeenCalledWith({
+                    code: 'code',
+                    state: 'state',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                });
+            });
+
+            it('should support adult roles', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'adultRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -3993,7 +4110,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4055,7 +4172,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4115,7 +4232,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4177,7 +4294,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4239,7 +4356,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4301,7 +4418,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4355,7 +4472,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'DIFFERENT',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4418,7 +4535,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4448,6 +4565,130 @@ describe('AuthController', () => {
                     success: false,
                     errorCode: 'invalid_request',
                     errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if the user has a parent role', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'parentRole',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                            displayName: 'displayName',
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
+                });
+            });
+
+            it('should return invalid_request if the user has an unknown role', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'unknownRole',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                            displayName: 'displayName',
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
                 });
             });
         });
