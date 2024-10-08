@@ -51,6 +51,7 @@ import {
     PrivoClientInterface,
     PrivoFeatureStatus,
     PrivoPermission,
+    ResendConsentRequestFailure,
 } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { PrivoConfiguration } from './PrivoConfiguration';
@@ -1133,6 +1134,7 @@ export class AuthController {
             let updatePasswordUrl: string;
             let serviceId: string;
             let parentServiceId: string;
+            let consentUrl: string;
             if (years < 0) {
                 return {
                     success: false,
@@ -1175,6 +1177,7 @@ export class AuthController {
                 serviceId = result.childServiceId;
                 parentServiceId = result.parentServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
+                consentUrl = result.consentUrl;
                 privacyFeatures = getPrivacyFeaturesFromPermissions(
                     config.featureIds,
                     result.features
@@ -1209,6 +1212,7 @@ export class AuthController {
 
                 serviceId = result.adultServiceId;
                 updatePasswordUrl = result.updatePasswordLink;
+                consentUrl = result.consentUrl;
                 privacyFeatures = getPrivacyFeaturesFromPermissions(
                     config.featureIds,
                     result.features
@@ -1224,6 +1228,7 @@ export class AuthController {
                 currentLoginRequestId: null,
                 privoServiceId: serviceId,
                 privoParentServiceId: parentServiceId,
+                privoConsentUrl: consentUrl,
                 privacyFeatures,
             };
 
@@ -2786,6 +2791,101 @@ export class AuthController {
     }
 
     /**
+     * Attempts to request a change in privacy features for a user.
+     */
+    @traced(TRACE_NAME)
+    async requestPrivacyFeaturesChange(
+        request: RequestPrivacyFeaturesChangeRequest
+    ): Promise<RequestPrivacyFeaturesChangeResult> {
+        try {
+            if (!this._privoClient) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const config = await this._config.getPrivoConfiguration();
+
+            if (!config) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const keyResult = await this.validateSessionKey(request.sessionKey);
+            if (keyResult.success === false) {
+                return keyResult;
+            } else if (
+                keyResult.userId !== request.userId &&
+                keyResult.role !== 'superUser'
+            ) {
+                console.log(
+                    '[AuthController] [requestPrivacyFeaturesChange] Request User ID doesnt match session key User ID!'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            const user = await this._store.findUser(request.userId);
+
+            if (!user) {
+                throw new Error(
+                    'Unable to find user even though a valid session key was presented!'
+                );
+            }
+
+            if (!user.privoServiceId) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Privo features are not supported on this server.',
+                };
+            }
+
+            const result = await this._privoClient.resendConsentRequest(
+                user.privoServiceId,
+                user.privoParentServiceId ?? user.privoServiceId
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            console.log(
+                `[AuthController] [requestPrivacyFeaturesChange] [userId: ${request.userId}] Requested privacy features change.`
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[AuthController] Error ocurred while requesting a change in privacy features',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Lists the email rules that should be used.
      */
     @traced(TRACE_NAME)
@@ -4333,4 +4433,36 @@ export function findRelyingPartyForOrigin(
         const host = originUrl.host;
         return originOrHost === host;
     });
+}
+
+export interface RequestPrivacyFeaturesChangeRequest {
+    /**
+     * The ID of the user that the request is for.
+     */
+    userId: string;
+
+    /**
+     * The session key that should authorize the request.
+     */
+    sessionKey: string;
+}
+
+export type RequestPrivacyFeaturesChangeResult =
+    | RequestPrivacyFeaturesChangeSuccess
+    | RequestPrivacyFeaturesChangeFailure;
+
+export interface RequestPrivacyFeaturesChangeSuccess {
+    success: true;
+}
+
+export interface RequestPrivacyFeaturesChangeFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | NotSupportedError
+        | ValidateSessionKeyFailure['errorCode']
+        | ResendConsentRequestFailure['errorCode'];
+    errorMessage: string;
 }

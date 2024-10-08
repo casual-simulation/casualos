@@ -259,6 +259,22 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/privacyFeatures/change",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestPrivacyFeaturesChange",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/webauthn/register/options",
       },
@@ -3538,6 +3554,22 @@ Object {
         "type": "object",
       },
       "name": "requestPrivoSignUp",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/privacyFeatures/change",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "requestPrivacyFeaturesChange",
       "origins": "account",
     },
     Object {

@@ -438,6 +438,9 @@ describe('RecordsServer', () => {
         generateLogoutUrl: jest.Mock<
             ReturnType<PrivoClientInterface['generateLogoutUrl']>
         >;
+        resendConsentRequest: jest.Mock<
+            ReturnType<PrivoClientInterface['resendConsentRequest']>
+        >;
     };
 
     beforeEach(async () => {
@@ -489,6 +492,7 @@ describe('RecordsServer', () => {
             checkEmail: jest.fn(),
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
+            resendConsentRequest: jest.fn(),
         };
         relyingParty = {
             id: 'relying_party_id',
@@ -3302,6 +3306,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3342,6 +3347,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3388,6 +3394,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3434,6 +3441,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3494,6 +3502,7 @@ describe('RecordsServer', () => {
                 parentServiceId: 'parentServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const response = await server.handleHttpRequest(
@@ -3547,6 +3556,86 @@ describe('RecordsServer', () => {
                 parentEmail: 'parent@example.com',
                 displayName: 'displayName',
             })
+        );
+    });
+
+    describe('POST /api/v2/privacyFeatures/change', () => {
+        let tenYearsAgo: DateTime;
+
+        beforeEach(async () => {
+            tenYearsAgo = DateTime.now().minus({ years: 10 });
+
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                privoServiceId: 'serviceId',
+            });
+
+            privoClientMock.resendConsentRequest.mockResolvedValue({
+                success: true,
+            });
+        });
+
+        it('should return a 200 status code', async () => {
+            const response = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/privacyFeatures/change`,
+                    JSON.stringify({
+                        userId: userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(response, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(privoClientMock.resendConsentRequest).toHaveBeenCalledWith(
+                'serviceId',
+                'serviceId'
+            );
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/privacyFeatures/change',
+            () =>
+                JSON.stringify({
+                    userId,
+                }),
+            () => authenticatedHeaders
         );
     });
 
