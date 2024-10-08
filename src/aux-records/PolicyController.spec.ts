@@ -44,6 +44,8 @@ import {
     ResourcePermissionAssignment,
 } from './PolicyStore';
 import { formatInstId } from './websockets';
+import { AuthController } from './AuthController';
+import { PrivoClientInterface } from './PrivoClient';
 
 console.log = jest.fn();
 
@@ -4283,6 +4285,85 @@ describe('PolicyController', () => {
         );
 
         describe('privacy features', () => {
+            describe('missing', () => {
+                let privoClient: jest.Mocked<PrivoClientInterface>;
+                let auth: AuthController;
+                let records: RecordsController;
+
+                beforeEach(() => {
+                    privoClient = {
+                        createAdultAccount: jest.fn(),
+                        createChildAccount: jest.fn(),
+                        getUserInfo: jest.fn(),
+                        generateAuthorizationUrl: jest.fn(),
+                        processAuthorizationCallback: jest.fn(),
+                        checkEmail: jest.fn(),
+                        checkDisplayName: jest.fn(),
+                        generateLogoutUrl: jest.fn(),
+                    };
+                    auth = new AuthController(
+                        store,
+                        services.authMessenger,
+                        store,
+                        true,
+                        privoClient
+                    );
+                    records = new RecordsController({
+                        auth: store,
+                        config: store,
+                        messenger: store,
+                        metrics: store,
+                        store,
+                    });
+
+                    controller = new PolicyController(auth, records, store);
+                });
+
+                it('should default to not allowing any privacy features if privo is enabled and if the user is not logged in', async () => {
+                    const owner = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: null,
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId: null,
+                        });
+
+                    expect(context).toEqual({
+                        success: true,
+                        context: {
+                            recordName,
+                            recordKeyResult: null,
+                            subjectPolicy: 'subjectfull',
+                            recordKeyProvided: false,
+                            recordKeyCreatorId: undefined,
+                            recordOwnerId: ownerId,
+                            recordOwnerPrivacyFeatures: {
+                                allowAI: true,
+                                allowPublicData: true,
+                                allowPublicInsts: true,
+                                publishData: true,
+                            },
+                            recordStudioId: null,
+                            recordStudioMembers: undefined,
+                            userId: null,
+                            userPrivacyFeatures: {
+                                allowAI: false,
+                                allowPublicData: false,
+                                allowPublicInsts: false,
+                                publishData: false,
+                            },
+                            sendNotLoggedIn: true,
+                        },
+                    });
+
+                    expect(auth.privoEnabled).toBe(true);
+                });
+            });
+
             describe('publishData', () => {
                 it('should reject the request if the user is not allowed to publish data', async () => {
                     const owner = await store.findUser(ownerId);
