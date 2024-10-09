@@ -36,6 +36,7 @@
         -   Webhooks do not automatically install abCore. They only use the bots that are stored in the target.
         -   Webhooks always act like static insts.
             -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
+-   Added `ai.chat.allowedModels` feature to enforce model usage limits, restricting access to specific models based on configuration.
 
 ### :bug: Bug Fixes
 

@@ -449,45 +449,6 @@ describe('AIController', () => {
             });
         });
 
-        //     it('should return success when allowedModels includes the model', () => {
-        //         const allowedFeatures = {
-        //             ai: {
-        //                 chat: {
-        //                     allowedModels: ['model1', 'model2']
-        //                 }
-        //             }
-        //         };
-        //         const isStringInArray = (arr: Object, str: string): boolean => {
-        //             return arr.hasOwnProperty(str);
-        //           };
-        //         const model = 'model3';
-        //         const result = isStringInArray(allowedFeatures, model);
-        //         expect(result).toEqual({
-        //             success: true,
-        //             choice: result.choices
-        //         });
-        //     });
-
-        // it('should return not_authorized when allowedModels does not include the model', () => {
-        //     const allowedFeatures = {
-        //         ai: {
-        //             chat: {
-        //                 allowedModels: ['model1', 'model2']
-        //             }
-        //         }
-        //     };
-        //     const isStringInArray = (arr: Object, str: string): boolean => {
-        //         return arr.hasOwnProperty(str);
-        //       };
-        //     const model = 'model3';
-        //     const result = isStringInArray(allowedFeatures, model);
-        //     expect(result).toEqual({
-        //         success: false,
-        //         errorCode: 'not_authorized',
-        //         errorMessage: 'The subscription does not permit the given model for AI Chat features.'
-        //     });
-        // });
-
         it('should return an not_logged_in result if the given a null userId', async () => {
             const result = await controller.chat({
                 model: 'test-model1',
