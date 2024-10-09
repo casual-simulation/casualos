@@ -1796,6 +1796,14 @@ export class RecordsServer {
                     .http('GET', '/api/v2/records/notification/list')
             ),
 
+            eraseNotification: eraseItemProcedure(
+                this._auth,
+                this._notificationsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/notification')
+            ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
