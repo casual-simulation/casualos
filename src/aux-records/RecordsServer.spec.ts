@@ -11750,6 +11750,274 @@ describe('RecordsServer', () => {
             () => apiHeaders
         );
     });
+
+    describe('POST /api/v2/records/notification/send', () => {
+        beforeEach(async () => {
+            await notificationStore.createItem(recordName, {
+                address: 'testAddress',
+                description: 'my notification',
+                markers: [PRIVATE_MARKER],
+            });
+
+            await notificationStore.saveSubscription({
+                id: 'sub1',
+                recordName,
+                notificationAddress: 'testAddress',
+                pushSubscription: {
+                    endpoint: 'https://example.com',
+                    keys: {},
+                },
+                active: true,
+                userId,
+            });
+
+            webPushInterface.sendNotification.mockResolvedValue({
+                success: true,
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification/send`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                        payload: {
+                            title: 'A message',
+                            body: 'You have recieved a message!',
+                            icon: 'https://example.com/icon.png',
+                            badge: 'https://example.com/badge.png',
+                            silent: true,
+                            tag: 'message',
+                            timestamp: 123,
+                            action: {
+                                type: 'open_url',
+                                url: 'https://example.com',
+                            },
+                            actions: [
+                                {
+                                    title: 'Open',
+                                    action: {
+                                        type: 'open_url',
+                                        url: 'https://example.com',
+                                    },
+                                },
+                            ],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(notificationStore.sentNotifications).toEqual([]);
+        });
+
+        it('should send a notification to the subscribed users', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification/send`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                        payload: {
+                            title: 'A message',
+                            body: 'You have recieved a message!',
+                            icon: 'https://example.com/icon.png',
+                            badge: 'https://example.com/badge.png',
+                            silent: true,
+                            tag: 'message',
+                            timestamp: 123,
+                            action: {
+                                type: 'open_url',
+                                url: 'https://example.com',
+                            },
+                            actions: [
+                                {
+                                    title: 'Open',
+                                    action: {
+                                        type: 'open_url',
+                                        url: 'https://example.com',
+                                    },
+                                },
+                            ],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(notificationStore.sentNotifications).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName,
+                    notificationAddress: 'testAddress',
+                    title: 'A message',
+                    body: 'You have recieved a message!',
+                    icon: 'https://example.com/icon.png',
+                    badge: 'https://example.com/badge.png',
+                    silent: true,
+                    tag: 'message',
+                    timestamp: 123,
+                    defaultAction: {
+                        type: 'open_url',
+                        url: 'https://example.com',
+                    },
+                    actions: [
+                        {
+                            title: 'Open',
+                            action: {
+                                type: 'open_url',
+                                url: 'https://example.com',
+                            },
+                        },
+                    ],
+                    sentTimeMs: expect.any(Number),
+                },
+            ]);
+
+            expect(notificationStore.sentNotificationUsers).toEqual([
+                {
+                    sentNotificationId: expect.any(String),
+                    subscriptionId: 'sub1',
+                    userId: userId,
+                    success: true,
+                    errorCode: null,
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification/send`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'testAddress',
+                        payload: {
+                            title: 'A message',
+                            body: 'You have recieved a message!',
+                            icon: 'https://example.com/icon.png',
+                            badge: 'https://example.com/badge.png',
+                            silent: true,
+                            tag: 'message',
+                            timestamp: 123,
+                            action: {
+                                type: 'open_url',
+                                url: 'https://example.com',
+                            },
+                            actions: [
+                                {
+                                    title: 'Open',
+                                    action: {
+                                        type: 'open_url',
+                                        url: 'https://example.com',
+                                    },
+                                },
+                            ],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'notification',
+                        resourceId: 'testAddress',
+                        action: 'send',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(notificationStore.sentNotifications).toEqual([]);
+            expect(notificationStore.sentNotificationUsers).toEqual([]);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/notification/send',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'testAddress',
+                    payload: {
+                        title: 'A message',
+                        body: 'You have recieved a message!',
+                        icon: 'https://example.com/icon.png',
+                        badge: 'https://example.com/badge.png',
+                        silent: true,
+                        tag: 'message',
+                        timestamp: 123,
+                        action: {
+                            type: 'open_url',
+                            url: 'https://example.com',
+                        },
+                        actions: [
+                            {
+                                title: 'Open',
+                                action: {
+                                    type: 'open_url',
+                                    url: 'https://example.com',
+                                },
+                            },
+                        ],
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(

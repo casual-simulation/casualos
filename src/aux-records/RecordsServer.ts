@@ -1895,6 +1895,57 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            sendNotification: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/send')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        payload: PUSH_NOTIFICATION_PAYLOAD,
+                        topic: z.string().optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, instances, payload, topic },
+                        context
+                    ) => {
+                        if (!this._notificationsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._notificationsController.sendNotification(
+                                {
+                                    recordName,
+                                    address,
+                                    userId: validation.userId,
+                                    payload,
+                                    topic,
+                                    instances,
+                                }
+                            );
+
+                        return result;
+                    }
+                ),
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
