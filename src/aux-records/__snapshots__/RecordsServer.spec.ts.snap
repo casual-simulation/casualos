@@ -1593,6 +1593,263 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/notification/subscribe",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "pushSubscription": Object {
+            "schema": Object {
+              "endpoint": Object {
+                "type": "string",
+              },
+              "expirationTime": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "keys": Object {
+                "type": "record",
+                "valueSchema": Object {
+                  "type": "string",
+                },
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "subscribeToNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/notification/unsubscribe",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "subscriptionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "unsubscribeFromNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/notification/send",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "payload": Object {
+            "schema": Object {
+              "action": Object {
+                "discriminator": "type",
+                "nullable": true,
+                "optional": true,
+                "options": Array [
+                  Object {
+                    "schema": Object {
+                      "type": Object {
+                        "type": "literal",
+                        "value": "open_url",
+                      },
+                      "url": Object {
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  Object {
+                    "schema": Object {
+                      "headers": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "record",
+                        "valueSchema": Object {
+                          "type": "string",
+                        },
+                      },
+                      "method": Object {
+                        "type": "enum",
+                        "values": Array [
+                          "GET",
+                          "POST",
+                        ],
+                      },
+                      "type": Object {
+                        "type": "literal",
+                        "value": "webhook",
+                      },
+                      "url": Object {
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
+              },
+              "actions": Object {
+                "schema": Object {
+                  "schema": Object {
+                    "action": Object {
+                      "discriminator": "type",
+                      "options": Array [
+                        Object {
+                          "schema": Object {
+                            "type": Object {
+                              "type": "literal",
+                              "value": "open_url",
+                            },
+                            "url": Object {
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        Object {
+                          "schema": Object {
+                            "headers": Object {
+                              "nullable": true,
+                              "optional": true,
+                              "type": "record",
+                              "valueSchema": Object {
+                                "type": "string",
+                              },
+                            },
+                            "method": Object {
+                              "type": "enum",
+                              "values": Array [
+                                "GET",
+                                "POST",
+                              ],
+                            },
+                            "type": Object {
+                              "type": "literal",
+                              "value": "webhook",
+                            },
+                            "url": Object {
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                      ],
+                      "type": "union",
+                    },
+                    "icon": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "title": Object {
+                      "type": "string",
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "badge": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "body": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "icon": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "silent": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "boolean",
+              },
+              "tag": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "timestamp": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "title": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "topic": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "sendNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/notification/applicationServerKey",
+      },
+      "name": "getNotificationsApplicationServerKey",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/list",
       },
@@ -5084,6 +5341,263 @@ Object {
         "type": "object",
       },
       "name": "eraseNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/notification/subscribe",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "pushSubscription": Object {
+            "schema": Object {
+              "endpoint": Object {
+                "type": "string",
+              },
+              "expirationTime": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "keys": Object {
+                "type": "record",
+                "valueSchema": Object {
+                  "type": "string",
+                },
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "subscribeToNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/notification/unsubscribe",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "subscriptionId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "unsubscribeFromNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/notification/send",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "payload": Object {
+            "schema": Object {
+              "action": Object {
+                "discriminator": "type",
+                "nullable": true,
+                "optional": true,
+                "options": Array [
+                  Object {
+                    "schema": Object {
+                      "type": Object {
+                        "type": "literal",
+                        "value": "open_url",
+                      },
+                      "url": Object {
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                  Object {
+                    "schema": Object {
+                      "headers": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "record",
+                        "valueSchema": Object {
+                          "type": "string",
+                        },
+                      },
+                      "method": Object {
+                        "type": "enum",
+                        "values": Array [
+                          "GET",
+                          "POST",
+                        ],
+                      },
+                      "type": Object {
+                        "type": "literal",
+                        "value": "webhook",
+                      },
+                      "url": Object {
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
+              },
+              "actions": Object {
+                "schema": Object {
+                  "schema": Object {
+                    "action": Object {
+                      "discriminator": "type",
+                      "options": Array [
+                        Object {
+                          "schema": Object {
+                            "type": Object {
+                              "type": "literal",
+                              "value": "open_url",
+                            },
+                            "url": Object {
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                        Object {
+                          "schema": Object {
+                            "headers": Object {
+                              "nullable": true,
+                              "optional": true,
+                              "type": "record",
+                              "valueSchema": Object {
+                                "type": "string",
+                              },
+                            },
+                            "method": Object {
+                              "type": "enum",
+                              "values": Array [
+                                "GET",
+                                "POST",
+                              ],
+                            },
+                            "type": Object {
+                              "type": "literal",
+                              "value": "webhook",
+                            },
+                            "url": Object {
+                              "type": "string",
+                            },
+                          },
+                          "type": "object",
+                        },
+                      ],
+                      "type": "union",
+                    },
+                    "icon": Object {
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "title": Object {
+                      "type": "string",
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "badge": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "body": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "icon": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "silent": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "boolean",
+              },
+              "tag": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "timestamp": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "title": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "topic": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "sendNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/notification/applicationServerKey",
+      },
+      "name": "getNotificationsApplicationServerKey",
       "origins": "api",
     },
     Object {
