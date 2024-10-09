@@ -50,6 +50,7 @@ import {
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
+import { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
 import { PolicyController } from './PolicyController';
 import {
     ACCOUNT_MARKER,
@@ -160,6 +161,9 @@ import {
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
 import { tryParseJson } from './Utils';
+import { NotificationRecordsController } from './notifications/NotificationRecordsController';
+import { WebPushInterface } from './notifications/WebPushInterface';
+import { description } from 'esri/layers/support/VoxelVariable';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -326,6 +330,10 @@ describe('RecordsServer', () => {
             [HandleHttpRequestRequest]
         >;
     };
+
+    let notificationStore: MemoryNotificationRecordsStore;
+    let notificationController: NotificationRecordsController;
+    let webPushInterface: jest.Mocked<WebPushInterface>;
 
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
@@ -507,6 +515,12 @@ describe('RecordsServer', () => {
             privoClient,
             [relyingParty]
         );
+
+        // manually disable the Privo flag for tests
+        // (it is automatically set to true because a privo client is specified, but most tests
+        // assume privo isn't enabled)
+        authController.privoEnabled = false;
+
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
@@ -596,6 +610,18 @@ describe('RecordsServer', () => {
             environment: webhookEnvironment,
             auth: authController,
             websockets: websocketController,
+        });
+
+        notificationStore = new MemoryNotificationRecordsStore(store);
+        webPushInterface = {
+            getServerApplicationKey: jest.fn(),
+            sendNotification: jest.fn(),
+        };
+        notificationController = new NotificationRecordsController({
+            config: store,
+            policies: policyController,
+            store: notificationStore,
+            pushInterface: webPushInterface,
         });
 
         stripe = stripeMock = {
@@ -750,6 +776,7 @@ describe('RecordsServer', () => {
             loomController,
             websocketRateLimitController: rateLimitController,
             webhooksController: webhookController,
+            notificationsController: notificationController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -2804,6 +2831,8 @@ describe('RecordsServer', () => {
                 redirectUri: 'redirectUri',
                 ageOfConsent: 18,
             };
+
+            authController.privoEnabled = true;
         });
 
         it('should return a login request with the authorization URL', async () => {
@@ -2904,6 +2933,8 @@ describe('RecordsServer', () => {
                 redirectUri: 'redirectUri',
                 ageOfConsent: 18,
             };
+
+            authController.privoEnabled = true;
         });
 
         it('should save the authorization code', async () => {
@@ -3116,7 +3147,7 @@ describe('RecordsServer', () => {
                 idToken: 'idToken',
                 expiresIn: 1000,
                 userInfo: {
-                    roleIdentifier: 'roleIdentifier',
+                    roleIdentifier: 'adultRole',
                     serviceId: 'serviceId',
                     email: 'test@example.com',
                     emailVerified: true,
@@ -3187,7 +3218,7 @@ describe('RecordsServer', () => {
                 idToken: 'idToken',
                 expiresIn: 1000,
                 userInfo: {
-                    roleIdentifier: 'roleIdentifier',
+                    roleIdentifier: 'adultRole',
                     serviceId: 'serviceId',
                     email: 'test@example.com',
                     emailVerified: true,
@@ -3297,6 +3328,8 @@ describe('RecordsServer', () => {
                 redirectUri: 'redirectUri',
                 ageOfConsent: 18,
             };
+
+            authController.privoEnabled = true;
         });
 
         it('should return a 200 status code with the registration results', async () => {
@@ -3601,6 +3634,8 @@ describe('RecordsServer', () => {
             privoClientMock.resendConsentRequest.mockResolvedValue({
                 success: true,
             });
+
+            authController.privoEnabled = true;
         });
 
         it('should return a 200 status code', async () => {
@@ -10546,6 +10581,318 @@ describe('RecordsServer', () => {
             `/api/v2/records/webhook/runs/info?runId=${'run1'}`,
             () => undefined,
             () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/notification', () => {
+        it('should return not_implemented if the server doesnt have a notification controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            description: 'my notification',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await webhookStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual(null);
+        });
+
+        it('should save the given notification record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            description: 'my notification',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await notificationStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual({
+                address: 'testAddress',
+                description: 'my notification',
+
+                // Should default to the private marker
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should be able to save notifications with custom markers', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            description: 'my notification',
+                            markers: ['custom'],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await notificationStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual({
+                address: 'testAddress',
+                description: 'my notification',
+
+                // Should default to the private marker
+                markers: ['custom'],
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            description: 'my notification',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'notification',
+                        resourceId: 'testAddress',
+                        action: 'create',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await notificationStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual(null);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/notification',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'testAddress',
+                        description: 'my notification',
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/notification', () => {
+        beforeEach(async () => {
+            await notificationStore.createItem(recordName, {
+                address: 'testAddress',
+                description: 'my notification',
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a notifications controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the given notification record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'testAddress',
+                        description: 'my notification',
+                        markers: [PRIVATE_MARKER],
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'notification',
+                        resourceId: 'testAddress',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/notification?recordName=${recordName}&address=testAddress`
+        );
+        testAuthorization(() =>
+            httpRequest(
+                'GET',
+                `/api/v2/records/notification?recordName=${recordName}&address=testAddress`,
+                undefined,
+                apiHeaders
+            )
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/notification?recordName=${recordName}&address=testAddress`
         );
     });
 

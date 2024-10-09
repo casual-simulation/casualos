@@ -187,6 +187,7 @@ export class AuthController {
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
     private _webAuthNRelyingParties: RelyingParty[];
+    private _privoEnabled: boolean;
 
     get relyingParties() {
         return this._webAuthNRelyingParties;
@@ -210,13 +211,21 @@ export class AuthController {
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
         this._webAuthNRelyingParties = relyingParties;
+        this._privoEnabled = this._privoClient !== null;
     }
 
     /**
      * Gets whether Privo-features are enabled.
      */
     get privoEnabled() {
-        return this._privoClient !== null;
+        return this._privoEnabled;
+    }
+
+    /**
+     * Sets whether Privo-features are enabled.
+     */
+    set privoEnabled(value: boolean) {
+        this._privoEnabled = value;
     }
 
     @traced(TRACE_NAME)

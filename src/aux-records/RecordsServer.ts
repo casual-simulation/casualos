@@ -1765,6 +1765,29 @@ export class RecordsServer {
                     return result;
                 }),
 
+            recordNotification: recordItemProcedure(
+                this._auth,
+                this._notificationsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    description: z.string().min(1),
+                    markers: MARKERS_VALIDATION.optional().default([
+                        PRIVATE_MARKER,
+                    ]),
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/notification')
+            ),
+
+            getNotification: getItemProcedure(
+                this._auth,
+                this._notificationsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/notification')
+            ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
