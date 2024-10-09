@@ -129,6 +129,10 @@ import {
 } from './crud/CrudHelpers';
 import { merge, omit } from 'lodash';
 import { NotificationRecordsController } from './notifications/NotificationRecordsController';
+import {
+    PUSH_NOTIFICATION_PAYLOAD,
+    PUSH_SUBSCRIPTION_SCHEMA,
+} from './notifications';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -1804,6 +1808,93 @@ export class RecordsServer {
                     .http('DELETE', '/api/v2/records/notification')
             ),
 
+            subscribeToNotification: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/subscribe')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        pushSubscription: PUSH_SUBSCRIPTION_SCHEMA,
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, instances, pushSubscription },
+                        context
+                    ) => {
+                        if (!this._notificationsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._notificationsController.subscribeToNotification(
+                                {
+                                    recordName,
+                                    address,
+                                    userId: validation.userId,
+                                    pushSubscription,
+                                    instances,
+                                }
+                            );
+
+                        return result;
+                    }
+                ),
+
+            unsubscribeFromNotification: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/unsubscribe')
+                .inputs(
+                    z.object({
+                        subscriptionId: z.string(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ subscriptionId, instances }, context) => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._notificationsController.unsubscribeFromNotification(
+                            {
+                                subscriptionId,
+                                userId: validation.userId,
+                                instances,
+                            }
+                        );
+
+                    return result;
+                }),
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
