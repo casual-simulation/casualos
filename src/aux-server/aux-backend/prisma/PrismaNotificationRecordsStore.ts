@@ -128,8 +128,8 @@ export class PrismaNotificationRecordsStore
                 silent: notification.silent,
                 tag: notification.tag,
                 topic: notification.topic,
-                defaultAction: notification.defaultAction as any,
-                actions: notification.actions as any,
+                defaultAction: notification.defaultAction ?? (null as any),
+                actions: notification.actions ?? (null as any),
                 sentTime: convertToDate(notification.sentTimeMs),
             },
             update: {
@@ -142,8 +142,8 @@ export class PrismaNotificationRecordsStore
                 silent: notification.silent,
                 tag: notification.tag,
                 topic: notification.topic,
-                defaultAction: notification.defaultAction as any,
-                actions: notification.actions as any,
+                defaultAction: notification.defaultAction ?? (null as any),
+                actions: notification.actions ?? (null as any),
                 sentTime: convertToDate(notification.sentTimeMs),
             },
         });

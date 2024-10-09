@@ -717,6 +717,7 @@ export class AppManager {
         if ('serviceWorker' in navigator && !this._updateServiceWorker) {
             console.log('[AppManager] Registering Service Worker');
             this._updateServiceWorker = registerSW({
+                immediate: true,
                 onNeedRefresh: () => {
                     console.log('[ServiceWorker]: Updated.');
                     this._updateAvailable.next(true);

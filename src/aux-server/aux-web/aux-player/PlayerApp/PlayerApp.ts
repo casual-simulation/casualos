@@ -103,6 +103,10 @@ import {
     SDKResult as LoomSDKResult,
 } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
+import {
+    recordsCallProcedure,
+    SubscribeToNotificationAction,
+} from '@casual-simulation/aux-runtime';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -1250,6 +1254,8 @@ export default class PlayerApp extends Vue {
                     this._getLoomMetadata(e, simulation);
                 } else if (e.type === 'get_script_issues') {
                     this._getScriptIssues(e, simulation);
+                } else if (e.type === 'subscribe_to_notification') {
+                    this._subscribeToNotification(e, simulation);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1402,6 +1408,108 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this.setTitleToID();
+    }
+
+    private async _subscribeToNotification(
+        event: SubscribeToNotificationAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            console.log('Try to setup push notifications:', event);
+            const info = await simulation.records.getInfoForEndpoint(
+                event.options?.endpoint,
+                true
+            );
+
+            if (!info) {
+                sendNotSupported('Records are not supported on this inst.');
+                return;
+            }
+
+            if (!('serviceWorker' in navigator)) {
+                sendNotSupported(
+                    'Push notifications are not supported on this device.'
+                );
+                return;
+            }
+            appManager.updateServiceWorker();
+
+            const registration = (await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Service worker not ready.'));
+                    }, 15000);
+                }),
+            ])) as ServiceWorkerRegistration;
+
+            if (!registration.pushManager) {
+                sendNotSupported(
+                    'Push notifications are not supported on this device.'
+                );
+                return;
+            }
+
+            let sub = await registration.pushManager.getSubscription();
+
+            if (!sub) {
+                const key =
+                    await simulation.records.client.getNotificationsApplicationServerKey(
+                        undefined,
+                        {
+                            sessionKey: info.token,
+                            endpoint: info.recordsOrigin,
+                        }
+                    );
+
+                if (key.success === false) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, key)
+                    );
+                    return;
+                }
+
+                sub = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: key.key,
+                });
+            }
+
+            simulation.records.handleEvents([
+                recordsCallProcedure(
+                    {
+                        subscribeToNotification: {
+                            input: {
+                                recordName: event.recordName,
+                                address: event.address,
+                                pushSubscription: sub.toJSON(),
+                            },
+                        },
+                    },
+                    event.options,
+                    event.taskId
+                ),
+            ]);
+
+            function sendNotSupported(message: string) {
+                if (hasValue(event.taskId)) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: message,
+                        })
+                    );
+                }
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(event.taskId, err.toString())
+                );
+            }
+            console.error('Error subscribing to notification:', err);
+        }
     }
 
     private async _getScriptIssues(

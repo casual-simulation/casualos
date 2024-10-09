@@ -7,6 +7,7 @@ import {
     NetworkFirst,
 } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import type { PushNotificationPayload } from '@casual-simulation/aux-records';
 import '../shared/service-worker';
 
 declare let self: ServiceWorkerGlobalScope;
@@ -32,6 +33,53 @@ self.addEventListener('activate', (event) => {
         console.log('[sw.ts] Claim Clients');
         clientsClaim();
     }
+});
+
+globalThis.addEventListener('push', (event: any) => {
+    if (
+        !(
+            globalThis.Notification &&
+            globalThis.Notification.permission === 'granted'
+        )
+    ) {
+        return;
+    }
+
+    console.log('Got notification!', event);
+    const data: PushNotificationPayload = event.data?.json();
+
+    if (data) {
+        globalThis.showNotification(data.title, {
+            body: data.body ?? undefined,
+            icon: data.icon ?? undefined,
+            badge: data.badge ?? undefined,
+            silent: data.silent ?? undefined,
+            tag: data.tag ?? undefined,
+            timestamp: data.timestamp ?? undefined,
+            actions: data.actions?.map((a) => ({
+                title: a.title,
+                action: a.title,
+                icon: a.icon ?? undefined,
+            })),
+        });
+
+        // notification.addEventListener('click', () => {
+        //     if (data.action) {
+        //         if (data.action.type === 'open_url') {
+        //             globalThis.clients.openWindow(data.action.url);
+        //         } else if (data.action.type === 'webhook') {
+        //             globalThis.fetch(data.action.url, {
+        //                 method: data.action.method,
+        //                 headers: data.action.headers as any,
+        //             });
+        //         }
+        //     }
+        // });
+    }
+});
+
+globalThis.addEventListener('notificationclick', (event: any) => {
+    console.log('Clicked notification!', event);
 });
 
 registerRoute(

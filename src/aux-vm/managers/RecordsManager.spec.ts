@@ -6512,6 +6512,122 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'recordNotification',
+                    recordsCallProcedure(
+                        {
+                            recordNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'test',
+                                        description: 'description',
+                                        markers: ['marker'],
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getNotification',
+                    recordsCallProcedure(
+                        {
+                            getNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'eraseNotification',
+                    recordsCallProcedure(
+                        {
+                            eraseNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listNotifications',
+                    recordsCallProcedure(
+                        {
+                            listNotifications: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'subscribeToNotification',
+                    recordsCallProcedure(
+                        {
+                            subscribeToNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    pushSubscription: {
+                                        endpoint: 'endpoint',
+                                        keys: {},
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'unsubscribeFromNotification',
+                    recordsCallProcedure(
+                        {
+                            unsubscribeFromNotification: {
+                                input: {
+                                    subscriptionId: 'subscriptionId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'sendNotification',
+                    recordsCallProcedure(
+                        {
+                            sendNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    payload: {
+                                        title: 'title',
+                                    },
+                                    topic: 'topic',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

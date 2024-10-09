@@ -189,6 +189,14 @@ import {
     listWebhooks,
     listWebhooksByMarker,
     runWebhook,
+    recordNotification,
+    eraseNotification,
+    getNotification,
+    listNotifications,
+    listNotificationsByMarker,
+    subscribeToNotification,
+    unsubscribeFromNotification,
+    sendNotification,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -7629,6 +7637,155 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'marker',
                     'webhook',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.recordNotification(
+                    'recordName',
+                    {
+                        address: 'notification',
+                        description: 'description',
+                        markers: ['private'],
+                    }
+                );
+                const expected = recordNotification(
+                    'recordName',
+                    {
+                        address: 'notification',
+                        description: 'description',
+                        markers: ['private'],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.eraseNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = eraseNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.getNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = getNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotifications()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.listNotifications(
+                    'recordName',
+                    'notification'
+                );
+                const expected = listNotifications(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotificationsByMarker()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.listNotificationsByMarker(
+                    'recordName',
+                    'marker',
+                    'notification'
+                );
+                const expected = listNotificationsByMarker(
+                    'recordName',
+                    'marker',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.subscribeToNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.subscribeToNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = subscribeToNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.unsubscribeFromNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.unsubscribeFromNotification('subId');
+                const expected = unsubscribeFromNotification(
+                    'subId',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.sendNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.sendNotification(
+                    'recordName',
+                    'notification',
+                    {
+                        title: 'title',
+                    }
+                );
+                const expected = sendNotification(
+                    'recordName',
+                    'notification',
+                    {
+                        title: 'title',
+                    },
                     {},
                     context.tasks.size
                 );

@@ -28,7 +28,7 @@ export interface WebPushInterface {
  */
 export const PUSH_SUBSCRIPTION_SCHEMA = z.object({
     endpoint: z.string(),
-    expirationTime: z.number().optional(),
+    expirationTime: z.number().optional().nullable(),
     keys: z.record(z.string()),
 });
 
@@ -58,13 +58,16 @@ export const PUSH_NOTIFICATION_PAYLOAD = z.object({
 
     action: PUSH_NOTIFICATION_PAYLOAD_ACTION.optional().nullable(),
 
-    actions: z.array(
-        z.object({
-            title: z.string(),
-            icon: z.string().optional().nullable(),
-            action: PUSH_NOTIFICATION_PAYLOAD_ACTION,
-        })
-    ),
+    actions: z
+        .array(
+            z.object({
+                title: z.string(),
+                icon: z.string().optional().nullable(),
+                action: PUSH_NOTIFICATION_PAYLOAD_ACTION,
+            })
+        )
+        .optional()
+        .nullable(),
 });
 
 export type PushNotificationPayload = z.infer<typeof PUSH_NOTIFICATION_PAYLOAD>;
