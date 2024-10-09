@@ -1946,6 +1946,28 @@ export class RecordsServer {
                         return result;
                     }
                 ),
+
+            getNotificationsApplicationServerKey: procedure()
+                .origins('api')
+                .http(
+                    'GET',
+                    '/api/v2/records/notification/applicationServerKey'
+                )
+                .handler(async () => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const result =
+                        await this._notificationsController.getApplicationServerKey();
+
+                    return result;
+                }),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')

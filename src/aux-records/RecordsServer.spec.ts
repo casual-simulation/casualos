@@ -12018,6 +12018,62 @@ describe('RecordsServer', () => {
             () => apiHeaders
         );
     });
+
+    describe('GET /api/v2/records/notification/applicationServerKey', () => {
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/applicationServerKey`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the configured VAPID public key', async () => {
+            webPushInterface.getServerApplicationKey.mockReturnValue('testKey');
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/applicationServerKey`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    key: 'testKey',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(
@@ -20830,6 +20886,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         return errors;
     }
 
+    /**
+     * Tests that the response body of an HTTP request parses to equal the expected value.
+     * Returns the parsed body.
+     * @param response The response to test.
+     * @param expected The expected body.
+     * @returns
+     */
     async function expectResponseBodyToEqual<T = any>(
         response: GenericHttpResponse,
         expected: any
@@ -20942,7 +21005,12 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
     ) {
         testOrigin(method, url, createBody);
         testAuthorization(() =>
-            httpRequest(method, url, createBody(), getHeaders())
+            httpRequest(
+                method,
+                url,
+                createBody ? createBody() : null,
+                getHeaders()
+            )
         );
         if (method !== 'GET') {
             testBodyIsJson((body) =>
@@ -21251,7 +21319,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
     function httpRequest(
         method: GenericHttpRequest['method'],
         url: string,
-        body: GenericHttpRequest['body'],
+        body: GenericHttpRequest['body'] | null,
         headers: GenericHttpHeaders = defaultHeaders,
         ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
