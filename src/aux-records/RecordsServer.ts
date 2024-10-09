@@ -1788,6 +1788,14 @@ export class RecordsServer {
                     .http('GET', '/api/v2/records/notification')
             ),
 
+            listNotifications: listItemsProcedure(
+                this._auth,
+                this._notificationsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/notification/list')
+            ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')

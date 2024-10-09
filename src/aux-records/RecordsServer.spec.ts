@@ -10896,6 +10896,259 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/notification/list', () => {
+        beforeEach(async () => {
+            await notificationStore.createItem(recordName, {
+                address: 'testAddress3',
+                description: 'my notification 3',
+                markers: [PRIVATE_MARKER],
+            });
+
+            await notificationStore.createItem(recordName, {
+                address: 'testAddress',
+                description: 'my notification',
+                markers: [PRIVATE_MARKER],
+            });
+
+            await notificationStore.createItem(recordName, {
+                address: 'testAddress2',
+                description: 'my notification 2',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a notifications controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the notifications', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'testAddress3',
+                            description: 'my notification 3',
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'testAddress',
+                            description: 'my notification',
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            description: 'my notification 2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the notifications after the given address', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'testAddress3',
+                            description: 'my notification 3',
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            description: 'my notification 2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should be able to list notifications by marker', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 1,
+                    items: [
+                        {
+                            address: 'testAddress2',
+                            description: 'my notification 2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'notification',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should support procedures', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                procedureRequest(
+                    'listNotifications',
+                    {
+                        recordName,
+                        address: null,
+                    },
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'testAddress3',
+                            description: 'my notification 3',
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'testAddress',
+                            description: 'my notification',
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            description: 'my notification 2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/notification/list?recordName=${recordName}&address=testAddress`
+        );
+        testAuthorization(() =>
+            httpRequest(
+                'GET',
+                `/api/v2/records/notification/list?recordName=${recordName}&address=testAddress`,
+                undefined,
+                apiHeaders
+            )
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/notification/list?recordName=${recordName}&address=testAddress`
+        );
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(
