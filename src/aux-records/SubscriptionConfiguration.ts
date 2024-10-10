@@ -945,6 +945,10 @@ export interface AIChatFeaturesConfiguration {
      */
     maxTokensPerPeriod?: number;
 
+    /**
+     * The list of model IDs that are allowed for the subscription.
+     * If omitted, then all models are allowed.
+     */
     allowedModels?: string[];
 }
 

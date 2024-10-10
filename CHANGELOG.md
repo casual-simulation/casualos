@@ -37,6 +37,7 @@
         -   Webhooks always act like static insts.
             -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
 -   Added the ability to request consent again so that a parent can adjust the privacy features for their child.
+-   Added `ai.chat.allowedModels` feature to enforce model usage limits, restricting access to specific models based on configuration.
 
 ### :bug: Bug Fixes
 
