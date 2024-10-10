@@ -89,7 +89,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[WebhookRecordsController] Error subscribing to notification:',
+                '[NotificationRecordsController] Error subscribing to notification:',
                 err
             );
             return {
@@ -166,6 +166,10 @@ export class NotificationRecordsController extends CrudRecordsController<
                 active: true,
             });
 
+            console.log(
+                `[NotificationRecordsController] [userId: ${userId} subscriptionId: ${subscriptionId}] Subscribed to notification`
+            );
+
             return {
                 success: true,
                 subscriptionId,
@@ -176,7 +180,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[WebhookRecordsController] Error subscribing to notification:',
+                '[NotificationRecordsController] Error subscribing to notification:',
                 err
             );
             return {
@@ -278,6 +282,11 @@ export class NotificationRecordsController extends CrudRecordsController<
             await this.store.markSubscriptionsInactive([
                 request.subscriptionId,
             ]);
+
+            console.log(
+                `[NotificationRecordsController] [userId: ${userId} subscriptionId: ${request.subscriptionId}] Unsubscribed from notification`
+            );
+
             return {
                 success: true,
             };
@@ -287,7 +296,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[WebhookRecordsController] Error subscribing to notification:',
+                '[NotificationRecordsController] Error subscribing to notification:',
                 err
             );
             return {
@@ -423,7 +432,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             for (let promiseResult of results) {
                 if (promiseResult.status === 'rejected') {
                     console.error(
-                        '[WebhookRecordsController] Error sending notification:',
+                        '[NotificationRecordsController] Error sending notification:',
                         promiseResult.reason
                     );
                 } else {
@@ -440,7 +449,7 @@ export class NotificationRecordsController extends CrudRecordsController<
 
                     if (result.success === false) {
                         console.error(
-                            `[WebhookRecordsController] Error sending notification for ${sub.id}:`,
+                            `[NotificationRecordsController] Error sending notification for ${sub.id}:`,
                             result.errorCode
                         );
 
@@ -464,6 +473,10 @@ export class NotificationRecordsController extends CrudRecordsController<
                 await this.store.markSubscriptionsInactive(failedSubscriptions);
             }
 
+            console.log(
+                `[NotificationRecordsController] [userId: ${userId} notificationId: ${notificationId} sent: ${sentNotificationUsers.length} failed: ${failedSubscriptions.length}] Sent notification`
+            );
+
             return {
                 success: true,
             };
@@ -473,7 +486,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
-                '[WebhookRecordsController] Error sending notification:',
+                '[NotificationRecordsController] Error sending notification:',
                 err
             );
             return {

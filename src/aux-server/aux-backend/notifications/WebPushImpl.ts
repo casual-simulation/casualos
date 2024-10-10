@@ -5,8 +5,8 @@ import {
     WebPushInterface,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { trace } from '@opentelemetry/api';
-import webpush from 'web-push';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
+import webpush, { WebPushError } from 'web-push';
 
 export const TRACE_NAME = 'WebPushImpl';
 
@@ -43,60 +43,67 @@ export class WebPushImpl implements WebPushInterface {
         payload: PushNotificationPayload,
         topic?: string
     ): Promise<SendPushNotificationResult> {
-        const result = await webpush.sendNotification(
-            pushSubscription as webpush.PushSubscription,
-            JSON.stringify(payload),
-            {
-                vapidDetails: {
-                    subject: this._config.vapidSubject,
-                    publicKey: this._config.vapidPublicKey,
-                    privateKey: this._config.vapidPrivateKey,
-                },
-                topic,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-        const span = trace.getActiveSpan();
-        if (span) {
-            span.setAttributes({
-                'webpush.statusCode': result.statusCode,
-            });
-        }
-
-        if (result.statusCode >= 400) {
-            console.error(
-                `[WebPushImpl] Error while sending notification: `,
-                result
+        try {
+            const result = await webpush.sendNotification(
+                pushSubscription as webpush.PushSubscription,
+                JSON.stringify(payload),
+                {
+                    vapidDetails: {
+                        subject: this._config.vapidSubject,
+                        publicKey: this._config.vapidPublicKey,
+                        privateKey: this._config.vapidPrivateKey,
+                    },
+                    topic,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
             );
-            if (result.body) {
-                span?.setAttributes({
-                    'webpush.error': result.body,
+
+            const span = trace.getActiveSpan();
+            if (span) {
+                span.setStatus({
+                    code: SpanStatusCode.OK,
                 });
             }
-            if (result.statusCode === 410) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_gone',
-                };
-            } else if (result.statusCode === 404) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_not_found',
-                };
-            } else {
-                return {
-                    success: false,
-                    errorCode: 'server_error',
-                };
-            }
-        }
 
-        return {
-            success: true,
-        };
+            return {
+                success: true,
+            };
+        } catch (err) {
+            if (err instanceof WebPushError) {
+                if (err.statusCode >= 400) {
+                    console.error(
+                        `[WebPushImpl] Error while sending notification: `,
+                        err
+                    );
+                    if (err.body) {
+                        const span = trace.getActiveSpan();
+                        span?.setAttributes({
+                            'webpush.error': err.body,
+                            'webpush.statusCode': err.statusCode,
+                        });
+                    }
+                    if (err.statusCode === 410) {
+                        return {
+                            success: false,
+                            errorCode: 'subscription_gone',
+                        };
+                    } else if (err.statusCode === 404) {
+                        return {
+                            success: false,
+                            errorCode: 'subscription_not_found',
+                        };
+                    } else {
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                        };
+                    }
+                }
+            }
+            throw err;
+        }
     }
 
     getServerApplicationKey(): string {
