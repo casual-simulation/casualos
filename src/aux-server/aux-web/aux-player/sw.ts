@@ -49,37 +49,54 @@ globalThis.addEventListener('push', (event: any) => {
     const data: PushNotificationPayload = event.data?.json();
 
     if (data) {
-        globalThis.showNotification(data.title, {
-            body: data.body ?? undefined,
-            icon: data.icon ?? undefined,
-            badge: data.badge ?? undefined,
-            silent: data.silent ?? undefined,
-            tag: data.tag ?? undefined,
-            timestamp: data.timestamp ?? undefined,
-            actions: data.actions?.map((a) => ({
-                title: a.title,
-                action: a.title,
-                icon: a.icon ?? undefined,
-            })),
-        });
+        const notificationPromise = globalThis.registration.showNotification(
+            data.title,
+            {
+                body: data.body ?? undefined,
+                icon: data.icon ?? undefined,
+                badge: data.badge ?? undefined,
+                silent: data.silent ?? undefined,
+                tag: data.tag ?? undefined,
+                timestamp: data.timestamp ?? undefined,
+                actions: data.actions?.map((a) => ({
+                    title: a.title,
+                    action: JSON.stringify(a.action),
+                    icon: a.icon ?? undefined,
+                })),
+                data: data,
+            }
+        );
 
-        // notification.addEventListener('click', () => {
-        //     if (data.action) {
-        //         if (data.action.type === 'open_url') {
-        //             globalThis.clients.openWindow(data.action.url);
-        //         } else if (data.action.type === 'webhook') {
-        //             globalThis.fetch(data.action.url, {
-        //                 method: data.action.method,
-        //                 headers: data.action.headers as any,
-        //             });
-        //         }
-        //     }
-        // });
+        event.waitUntil(notificationPromise);
     }
 });
 
 globalThis.addEventListener('notificationclick', (event: any) => {
     console.log('Clicked notification!', event);
+
+    const notification = event.notification;
+    let action: PushNotificationPayload['action'];
+    if (notification.action) {
+        action = JSON.parse(notification.action);
+    } else {
+        action = notification.data.action;
+    }
+
+    let promise: Promise<any> | null = null;
+    if (action) {
+        if (action.type === 'open_url') {
+            promise = globalThis.clients.openWindow(action.url);
+        } else {
+            promise = globalThis.fetch(action.url, {
+                method: action.method,
+                headers: action.headers as any,
+            });
+        }
+    }
+
+    if (promise) {
+        event.waitUntil(promise);
+    }
 });
 
 registerRoute(
