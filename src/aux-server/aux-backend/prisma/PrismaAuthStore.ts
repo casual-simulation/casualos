@@ -190,6 +190,7 @@ export class PrismaAuthStore implements AuthStore {
             banReason: user.banReason as string,
             privoServiceId: user.privoServiceId as string,
             privoParentServiceId: user.privoParentServiceId as string,
+            privoConsentUrl: user.privoConsentUrl,
             allowPublishData: user.privacyFeatures?.publishData ?? true,
             allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
             allowAI: user.privacyFeatures?.allowAI ?? true,
@@ -232,6 +233,7 @@ export class PrismaAuthStore implements AuthStore {
                 banReason: user.banReason as string,
                 privoServiceId: user.privoServiceId as string,
                 privoParentServiceId: user.privoParentServiceId as string,
+                privoConsentUrl: user.privoConsentUrl,
                 allowPublishData: user.privacyFeatures?.publishData ?? true,
                 allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
                 allowAI: user.privacyFeatures?.allowAI ?? true,
@@ -1239,6 +1241,7 @@ export class PrismaAuthStore implements AuthStore {
                 privoParentServiceId: user.privoParentServiceId as
                     | string
                     | undefined,
+                privoConsentUrl: user.privoConsentUrl,
                 privacyFeatures: {
                     publishData: user.allowPublishData ?? true,
                     allowPublicData: user.allowPublicData ?? true,
