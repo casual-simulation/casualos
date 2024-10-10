@@ -4,6 +4,7 @@ import {
     NotificationSubscription,
     NotificationSubscriptionMetrics,
     PUSH_SUBSCRIPTION_SCHEMA,
+    SaveSubscriptionResult,
     SentNotification,
     SentNotificationUser,
     SubscriptionFilter,
@@ -37,27 +38,36 @@ export class PrismaNotificationRecordsStore
     @traced(TRACE_NAME)
     async saveSubscription(
         subscription: NotificationSubscription
-    ): Promise<void> {
-        await this._client.notificationSubscription.upsert({
-            where: {
-                id: subscription.id,
-            },
-            create: {
-                id: subscription.id,
-                recordName: subscription.recordName,
-                notificationAddress: subscription.notificationAddress,
-                userId: subscription.userId,
-                active: subscription.active,
-                pushSubscription: subscription.pushSubscription,
-            },
-            update: {
-                recordName: subscription.recordName,
-                notificationAddress: subscription.notificationAddress,
-                userId: subscription.userId,
-                active: subscription.active,
-                pushSubscription: subscription.pushSubscription,
-            },
-        });
+    ): Promise<SaveSubscriptionResult> {
+        try {
+            await this._client.notificationSubscription.upsert({
+                where: {
+                    id: subscription.id,
+                },
+                create: {
+                    id: subscription.id,
+                    recordName: subscription.recordName,
+                    notificationAddress: subscription.notificationAddress,
+                    userId: subscription.userId,
+                    active: subscription.active,
+                    pushSubscriptionId: subscription.pushSubscriptionId,
+                    pushSubscription: subscription.pushSubscription,
+                },
+                update: {
+                    recordName: subscription.recordName,
+                    notificationAddress: subscription.notificationAddress,
+                    userId: subscription.userId,
+                    active: subscription.active,
+                    pushSubscriptionId: subscription.pushSubscriptionId,
+                    pushSubscription: subscription.pushSubscription,
+                },
+            });
+            return {
+                success: true,
+            };
+        } catch (err) {
+            throw err;
+        }
     }
 
     @traced(TRACE_NAME)
@@ -107,6 +117,7 @@ export class PrismaNotificationRecordsStore
             notificationAddress: sub.notificationAddress,
             userId: sub.userId,
             active: sub.active,
+            pushSubscriptionId: sub.pushSubscriptionId,
             pushSubscription: pushSubscription,
         };
     }

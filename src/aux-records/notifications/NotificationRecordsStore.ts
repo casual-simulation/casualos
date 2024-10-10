@@ -1,4 +1,4 @@
-import { GenericHttpRequest } from '@casual-simulation/aux-common';
+import { GenericHttpRequest, ServerError } from '@casual-simulation/aux-common';
 import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '../crud';
 import { SubscriptionFilter } from '../MetricsStore';
 import { PushSubscriptionType } from './WebPushInterface';
@@ -9,10 +9,28 @@ import { PushSubscriptionType } from './WebPushInterface';
 export interface NotificationRecordsStore
     extends CrudRecordsStore<NotificationRecord> {
     /**
+     * Saves the given push subscription.
+     * @param pushSubscription The push subscription to save.
+     */
+    savePushSubscription(
+        pushSubscription: StorePushSubscription
+    ): Promise<void>;
+
+    /**
+     * Saves the given push subscription for the given user.
+     * @param pushSubscription The push subscription to save.
+     */
+    savePushSubscriptionUser(
+        pushSubscription: PushSubscriptionUser
+    ): Promise<void>;
+
+    /**
      * Saves the given subscription.
      * @param subscription The subscription to save.
      */
-    saveSubscription(subscription: NotificationSubscription): Promise<void>;
+    saveSubscription(
+        subscription: NotificationSubscription
+    ): Promise<SaveSubscriptionResult>;
 
     /**
      * Deletes the given subscription.
@@ -21,10 +39,10 @@ export interface NotificationRecordsStore
     deleteSubscription(id: string): Promise<void>;
 
     /**
-     * Marks the given list of subscriptions as inactive.
+     * Marks the given list of push subscriptions as inactive.
      * @param ids The IDs of the subscriptions to inactivate.
      */
-    markSubscriptionsInactive(ids: string[]): Promise<void>;
+    markPushSubscriptionsInactive(ids: string[]): Promise<void>;
 
     /**
      * Finds the subscription with the given ID.
@@ -34,22 +52,37 @@ export interface NotificationRecordsStore
     getSubscriptionById(id: string): Promise<NotificationSubscription | null>;
 
     /**
+     * Finds the subscription with the given record, address and user ID.
+     * Returns null if no subscription was found.
+     * @param recordName The name of the record.
+     * @param notificationAddress The address of the notification.
+     * @param userId The ID of the user.
+     */
+    getSubscriptionByRecordAddressAndUserId(
+        recordName: string,
+        notificationAddress: string,
+        userId: string
+    ): Promise<NotificationSubscription | null>;
+
+    /**
      * Saves the given sent notification.
      * @param notification The notification to save as sent.
      */
     saveSentNotification(notification: SentNotification): Promise<void>;
 
     /**
-     * Saves the given sent notification user.
-     * @param user The user that the notification was sent to.
+     * Saves the given sent push notification.
+     * @param push The notification that was sent.
      */
-    saveSentNotificationUser(user: SentNotificationUser): Promise<void>;
+    saveSentPushNotification(push: SentPushNotification): Promise<void>;
 
     /**
-     * Saves the given list of notifications that were sent to users.
-     * @param users The list of users that the notifications were sent to.
+     * Saves the given list of notifications that were sent.
+     * @param notifications The list notifications that were sent.
      */
-    createSentNotificationUsers(users: SentNotificationUser[]): Promise<void>;
+    createSentPushNotifications(
+        notifications: SentPushNotification[]
+    ): Promise<void>;
 
     /**
      * Gets the list of active subscriptions for the given notification.
@@ -68,6 +101,16 @@ export interface NotificationRecordsStore
     listActiveSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]>;
+
+    /**
+     * Gets the list of active push subscriptions for the given notification.
+     * @param recordName The name of the record.
+     * @param notificationAddress The address of the notification.
+     */
+    listActivePushSubscriptionsForNotification(
+        recordName: string,
+        notificationAddress: string
+    ): Promise<UserPushSubscription[]>;
 
     /**
      * Gets the item metrics for the subscription of the given user or studio.
@@ -100,6 +143,46 @@ export interface NotificationRecord extends CrudRecord {
 }
 
 /**
+ * Defines a push subscription that is stored in the store.
+ */
+export interface StorePushSubscription {
+    /**
+     * The ID of the push subscription.
+     */
+    id: string;
+
+    /**
+     * The endpoint that should be used to send push notifications.
+     */
+    endpoint: string;
+
+    /**
+     * The keys that should be used to send push notifications.
+     */
+    keys: Record<string, string>;
+
+    /**
+     * Whether the push subscription is active.
+     */
+    active: boolean;
+}
+
+/**
+ * Defines a relation between a push subscription and a user.
+ */
+export interface PushSubscriptionUser {
+    /**
+     * The ID of the push subscription.
+     */
+    pushSubscriptionId: string;
+
+    /**
+     * The ID of the user that the push subscription is for.
+     */
+    userId: string;
+}
+
+/**
  * Defines an active subscription to a notification.
  */
 export interface NotificationSubscription {
@@ -107,11 +190,6 @@ export interface NotificationSubscription {
      * The ID of the subscription.
      */
     id: string;
-
-    /**
-     * Whether the subscription is active or not.
-     */
-    active: boolean;
 
     /**
      * The name of the record that the subscription is for.
@@ -127,12 +205,6 @@ export interface NotificationSubscription {
      * The ID of the user that is subscribed.
      */
     userId: string;
-
-    /**
-     * The JSON of the [push subscription](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription).
-     * Null if none was provided.
-     */
-    pushSubscription: PushSubscriptionType | null;
 }
 
 /**
@@ -214,9 +286,9 @@ export interface SentNotification {
 }
 
 /**
- * Relates a sent notification to a user.
+ * Defines a model that represents a push notification that was sent.
  */
-export interface SentNotificationUser {
+export interface SentPushNotification {
     /**
      * The ID of the notification that was sent.
      */
@@ -231,6 +303,11 @@ export interface SentNotificationUser {
      * The ID of the user that the notification was sent to.
      */
     userId: string;
+
+    /**
+     * The ID of the push subscription that the notification was sent to.
+     */
+    pushSubscriptionId: string;
 
     /**
      * Whether the notification was successfully sent to the user.
@@ -319,4 +396,41 @@ export interface NotificationSubscriptionMetrics
      * The number of sent push notifications that have been recorded for the last subscription period.
      */
     totalSentPushNotificationsInPeriod: number;
+}
+
+export type SaveSubscriptionResult =
+    | SaveSubscriptionSuccess
+    | SaveSubscriptionFailure;
+
+export interface SaveSubscriptionSuccess {
+    success: true;
+}
+
+export interface SaveSubscriptionFailure {
+    success: false;
+
+    /**
+     * The error that occurred.
+     */
+    errorCode: ServerError | 'subscription_already_exists';
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines a push subscription that is related to a user.
+ */
+export interface UserPushSubscription extends StorePushSubscription {
+    /**
+     * The ID of the user that the push subscription is for.
+     */
+    userId: string;
+
+    /**
+     * The ID of the subscription.
+     */
+    subscriptionId: string;
 }

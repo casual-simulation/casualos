@@ -24,7 +24,8 @@ import {
     NotificationRecordsStore,
     NotificationSubscription,
     NotificationSubscriptionMetrics,
-    SentNotificationUser,
+    SentPushNotification,
+    UserPushSubscription,
 } from './NotificationRecordsStore';
 import {
     getNotificationFeatures,
@@ -33,7 +34,7 @@ import {
 } from '../SubscriptionConfiguration';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { v7 as uuidv7 } from 'uuid';
+import { v7 as uuidv7, v5 as uuidv5 } from 'uuid';
 import {
     PushNotificationPayload,
     PushSubscriptionType,
@@ -42,6 +43,8 @@ import {
 } from './WebPushInterface';
 
 const TRACE_NAME = 'NotificationRecordsController';
+
+export const SUBSCRIPTION_ID_NAMESPACE = 'f12953a9-21e2-47d4-b7b7-f699bd9a5550';
 
 /**
  * Defines the configuration for a webhook records controller.
@@ -156,18 +159,32 @@ export class NotificationRecordsController extends CrudRecordsController<
                 return metrics;
             }
 
+            const pushSubscriptionId = uuidv5(
+                request.pushSubscription.endpoint,
+                SUBSCRIPTION_ID_NAMESPACE
+            );
+            await this.store.savePushSubscription({
+                id: pushSubscriptionId,
+                active: true,
+                endpoint: request.pushSubscription.endpoint,
+                keys: request.pushSubscription.keys,
+            });
+
+            await this.store.savePushSubscriptionUser({
+                pushSubscriptionId: pushSubscriptionId,
+                userId: userId,
+            });
+
             const subscriptionId = uuidv7();
             await this.store.saveSubscription({
                 id: subscriptionId,
                 recordName,
                 notificationAddress: notification.address,
-                pushSubscription: request.pushSubscription,
                 userId: userId,
-                active: true,
             });
 
             console.log(
-                `[NotificationRecordsController] [userId: ${userId} subscriptionId: ${subscriptionId}] Subscribed to notification`
+                `[NotificationRecordsController] [userId: ${userId} pushSubscriptionId: ${pushSubscriptionId} subscriptionId: ${subscriptionId}] Subscribed to notification`
             );
 
             return {
@@ -279,9 +296,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             }
 
             // allowed
-            await this.store.markSubscriptionsInactive([
-                request.subscriptionId,
-            ]);
+            await this.store.deleteSubscription(request.subscriptionId);
 
             console.log(
                 `[NotificationRecordsController] [userId: ${userId} subscriptionId: ${request.subscriptionId}] Unsubscribed from notification`
@@ -365,7 +380,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             }
 
             const subscriptions =
-                await this.store.listActiveSubscriptionsForNotification(
+                await this.store.listActivePushSubscriptionsForNotification(
                     recordName,
                     notification.address
                 );
@@ -389,7 +404,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             }
 
             let promises = [] as Promise<
-                [NotificationSubscription, SendPushNotificationResult]
+                [UserPushSubscription, SendPushNotificationResult]
             >[];
 
             const sentTimeMs = Date.now();
@@ -397,7 +412,10 @@ export class NotificationRecordsController extends CrudRecordsController<
                 promises.push(
                     this._pushInterface
                         .sendNotification(
-                            sub.pushSubscription,
+                            {
+                                endpoint: sub.endpoint,
+                                keys: sub.keys as any,
+                            },
                             request.payload,
                             request.topic
                         )
@@ -424,9 +442,10 @@ export class NotificationRecordsController extends CrudRecordsController<
                 tag: request.payload.tag,
                 timestamp: request.payload.timestamp,
                 sentTimeMs: sentTimeMs,
+                topic: request.topic,
             });
 
-            let sentNotificationUsers = [] as SentNotificationUser[];
+            let sentNotificationUsers = [] as SentPushNotification[];
             let failedSubscriptions = [] as string[];
 
             for (let promiseResult of results) {
@@ -439,6 +458,7 @@ export class NotificationRecordsController extends CrudRecordsController<
                     const [sub, result] = promiseResult.value;
 
                     sentNotificationUsers.push({
+                        pushSubscriptionId: sub.id,
                         sentNotificationId: notificationId,
                         userId: sub.userId,
                         subscriptionId: sub.id,
@@ -464,13 +484,15 @@ export class NotificationRecordsController extends CrudRecordsController<
             }
 
             if (sentNotificationUsers.length > 0) {
-                await this.store.createSentNotificationUsers(
+                await this.store.createSentPushNotifications(
                     sentNotificationUsers
                 );
             }
 
             if (failedSubscriptions.length > 0) {
-                await this.store.markSubscriptionsInactive(failedSubscriptions);
+                await this.store.markPushSubscriptionsInactive(
+                    failedSubscriptions
+                );
             }
 
             console.log(
@@ -642,14 +664,14 @@ export interface SubscribeToNotificationFailure {
 
 export interface UnsubscribeToNotificationRequest {
     /**
+     * The ID of the subscription.
+     */
+    subscriptionId: string;
+
+    /**
      * The ID of the user that is logged in.
      */
     userId: string;
-
-    /**
-     * The ID of the subscription to remove.
-     */
-    subscriptionId: string;
 
     /**
      * The instances that are currently loaded.

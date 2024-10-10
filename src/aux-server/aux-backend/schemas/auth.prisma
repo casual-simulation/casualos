@@ -79,8 +79,9 @@ model User {
     authenticators UserAuthenticator[]
 
     webhookRecords WebhookRecord[]
+    pushSubscriptions PushSubscriptionUser[]
     notificationSubscriptions NotificationSubscription[]
-    sentNotifications SentNotificationUser[]
+    sentNotifications SentPushNotification[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -787,6 +788,36 @@ model NotificationRecord {
     updatedAt DateTime @updatedAt
 }
 
+model PushSubscription {
+    id String @id @db.Uuid
+
+    endpoint String @db.String(1024)
+    keys Json
+
+    active Boolean
+
+    users PushSubscriptionUser[]
+    sentNotifications SentPushNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([active])
+}
+
+model PushSubscriptionUser {
+    @@id([pushSubscriptionId, userId])
+
+    pushSubscriptionId String @db.Uuid
+    pushSubscription PushSubscription @relation(fields: [pushSubscriptionId], references: [id], onDelete: Cascade, map: "PushSubscriptionUser_pushSubscriptionId_fkey1")
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "PushSubscriptionUser_userId_fkey1")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 model NotificationSubscription {
     id String @id @db.Uuid
 
@@ -796,19 +827,15 @@ model NotificationSubscription {
     notificationAddress String @db.String(512)
     notification NotificationRecord @relation(fields: [recordName, notificationAddress], references: [recordName, address], onDelete: Cascade, map: "NotificationSubscription_notificationAddress_fkey1")
 
-    active Boolean
-
     userId String
     user User @relation(fields: [userId], references: [id])
 
-    pushSubscription Json
-
-    sentNotifications SentNotificationUser[]
+    sentNotifications SentPushNotification[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([recordName, notificationAddress, active])
+    @@unique([recordName, notificationAddress, userId])
 }
 
 model SentNotification {
@@ -833,23 +860,26 @@ model SentNotification {
     actions Json
     sentTime DateTime
 
-    sentToUsers SentNotificationUser[]
+    sentToDevices SentPushNotification[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
-model SentNotificationUser {
-    @@id([sentNotificationId, userId, subscriptionId])
+model SentPushNotification {
+    id String @id @db.Uuid
 
     sentNotificationId String @db.Uuid
     sentNotification SentNotification @relation(fields: [sentNotificationId], references: [id], onDelete: Cascade, map: "SentNotificationUser_sentNotificationId_fkey1")
 
-    subscriptionId String @db.Uuid
-    subscription NotificationSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, map: "SentNotificationUser_subscriptionId_fkey1")
+    subscriptionId String? @db.Uuid
+    subscription NotificationSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull, map: "SentNotificationUser_subscriptionId_fkey1")
 
     userId String
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "SentNotificationUser_userId_fkey1")
+
+    pushSubscriptionId String @db.Uuid
+    pushSubscription PushSubscription @relation(fields: [pushSubscriptionId], references: [id], onDelete: Cascade, map: "SentNotificationUser_pushSubscriptionId_fkey1")
 
     success Boolean
     errorCode String?

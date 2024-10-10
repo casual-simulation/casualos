@@ -4,6 +4,7 @@ import {
     NotificationRecordsStore,
     NotificationSubscription,
     NotificationSubscriptionMetrics,
+    SaveSubscriptionResult,
     SentNotification,
     SentNotificationUser,
 } from './NotificationRecordsStore';
@@ -57,7 +58,23 @@ export class MemoryNotificationRecordsStore
 
     async saveSubscription(
         subscription: NotificationSubscription
-    ): Promise<void> {
+    ): Promise<SaveSubscriptionResult> {
+        const exists = this._subscriptions.some(
+            (s) =>
+                s.recordName === subscription.recordName &&
+                s.notificationAddress === subscription.notificationAddress &&
+                s.userId === subscription.userId
+        );
+
+        if (exists) {
+            return {
+                success: false,
+                errorCode: 'subscription_already_exists',
+                errorMessage:
+                    'This user is already subscribed to this notification.',
+            };
+        }
+
         const index = this._subscriptions.findIndex(
             (s) => s.id === subscription.id
         );
@@ -70,6 +87,10 @@ export class MemoryNotificationRecordsStore
                 ...subscription,
             });
         }
+
+        return {
+            success: true,
+        };
     }
 
     async deleteSubscription(id: string): Promise<void> {
