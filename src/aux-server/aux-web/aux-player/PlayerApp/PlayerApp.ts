@@ -319,6 +319,10 @@ export default class PlayerApp extends Vue {
     showChangeLogin: boolean = false;
     private _isLoggingIn: boolean = false;
 
+    showNotificationPermissionDialog: boolean = false;
+    private _showNotificationPermissionResolve: (result: boolean) => void =
+        null;
+
     get version() {
         return appManager.version.latestTaggedVersion;
     }
@@ -1415,17 +1419,6 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
-            console.log('Try to setup push notifications:', event);
-            const info = await simulation.records.getInfoForEndpoint(
-                event.options?.endpoint,
-                true
-            );
-
-            if (!info) {
-                sendNotSupported('Records are not supported on this inst.');
-                return;
-            }
-
             if (!('serviceWorker' in navigator)) {
                 sendNotSupported(
                     'Push notifications are not supported on this device.'
@@ -1453,6 +1446,24 @@ export default class PlayerApp extends Vue {
             let sub = await registration.pushManager.getSubscription();
 
             if (!sub) {
+                const granted = await this._requestNotificationPermission();
+                if (!granted) {
+                    sendNotSupported(
+                        'The user denied permission to send notifications.'
+                    );
+                    return;
+                }
+
+                const info = await simulation.records.getInfoForEndpoint(
+                    event.options?.endpoint,
+                    false
+                );
+
+                if (!info) {
+                    sendNotSupported('Records are not supported on this inst.');
+                    return;
+                }
+
                 const key =
                     await simulation.records.client.getNotificationsApplicationServerKey(
                         undefined,
@@ -1474,6 +1485,8 @@ export default class PlayerApp extends Vue {
                     applicationServerKey: key.key,
                 });
             }
+
+            // TODO: Ask the user if they want to subscribe to this specific notification
 
             simulation.records.handleEvents([
                 recordsCallProcedure(
@@ -1510,6 +1523,17 @@ export default class PlayerApp extends Vue {
             }
             console.error('Error subscribing to notification:', err);
         }
+    }
+
+    /**
+     * Requests that the user grant permission to send notifications.
+     * @returns A promise that resolves to true if the user granted permission.
+     */
+    private async _requestNotificationPermission() {
+        this.showNotificationPermissionDialog = true;
+        return new Promise<boolean>((resolve, reject) => {
+            this._showNotificationPermissionResolve = resolve;
+        });
     }
 
     private async _getScriptIssues(
@@ -1866,6 +1890,20 @@ export default class PlayerApp extends Vue {
 
         console.log('[PlayerApp] handleShowNavigation: ' + show);
         this.showNavigation = show;
+    }
+
+    async onNotificationDialogConfirm() {
+        let resolve = this._showNotificationPermissionResolve;
+        if (resolve) {
+            const result = await Notification.requestPermission();
+            resolve(result === 'granted');
+        }
+    }
+
+    onNotificationDialogCancel() {
+        if (this._showNotificationPermissionResolve) {
+            this._showNotificationPermissionResolve(false);
+        }
     }
 
     private onShowConfirmDialog(options: ConfirmDialogOptions) {
