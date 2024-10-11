@@ -798,6 +798,7 @@ model PushSubscription {
 
     users PushSubscriptionUser[]
     sentNotifications SentPushNotification[]
+    subscriptions NotificationSubscription[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -827,8 +828,11 @@ model NotificationSubscription {
     notificationAddress String @db.String(512)
     notification NotificationRecord @relation(fields: [recordName, notificationAddress], references: [recordName, address], onDelete: Cascade, map: "NotificationSubscription_notificationAddress_fkey1")
 
-    userId String
-    user User @relation(fields: [userId], references: [id])
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    pushSubscriptionId String?
+    pushSubscription PushSubscription? @relation(fields: [pushSubscriptionId], references: [id])
 
     sentNotifications SentPushNotification[]
 
@@ -836,6 +840,7 @@ model NotificationSubscription {
     updatedAt DateTime @updatedAt
 
     @@unique([recordName, notificationAddress, userId])
+    @@unique([recordName, notificationAddress, pushSubscriptionId])
 }
 
 model SentNotification {

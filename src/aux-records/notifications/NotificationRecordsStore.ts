@@ -13,7 +13,7 @@ export interface NotificationRecordsStore
      * @param pushSubscription The push subscription to save.
      */
     savePushSubscription(
-        pushSubscription: StorePushSubscription
+        pushSubscription: NotificationPushSubscription
     ): Promise<void>;
 
     /**
@@ -39,10 +39,13 @@ export interface NotificationRecordsStore
     deleteSubscription(id: string): Promise<void>;
 
     /**
-     * Marks the given list of push subscriptions as inactive.
+     * Marks the given list of push subscriptions as inactive and deletes the related
+     * PushSubscriptionUser relations.
      * @param ids The IDs of the subscriptions to inactivate.
      */
-    markPushSubscriptionsInactive(ids: string[]): Promise<void>;
+    markPushSubscriptionsInactiveAndDeleteUserRelations(
+        ids: string[]
+    ): Promise<void>;
 
     /**
      * Finds the subscription with the given ID.
@@ -62,6 +65,19 @@ export interface NotificationRecordsStore
         recordName: string,
         notificationAddress: string,
         userId: string
+    ): Promise<NotificationSubscription | null>;
+
+    /**
+     * Finds the subscription with the given record, address and push subscription ID.
+     * Returns null if no subscription was found.
+     * @param recordName The name of the record.
+     * @param notificationAddress The address of the notification.
+     * @param pushSubscriptionId The ID of the push subscription.
+     */
+    getSubscriptionByRecordAddressAndPushSubscriptionId(
+        recordName: string,
+        notificationAddress: string,
+        pushSubscriptionId: string
     ): Promise<NotificationSubscription | null>;
 
     /**
@@ -89,7 +105,7 @@ export interface NotificationRecordsStore
      * @param recordName The record that the notification is in.
      * @param notificationAddress The address that the notification is at.
      */
-    listActiveSubscriptionsForNotification(
+    listSubscriptionsForNotification(
         recordName: string,
         notificationAddress: string
     ): Promise<NotificationSubscription[]>;
@@ -98,7 +114,7 @@ export interface NotificationRecordsStore
      * Gets the list of subscriptions for the given user.
      * @param userId The ID of the user.
      */
-    listActiveSubscriptionsForUser(
+    listSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]>;
 
@@ -145,7 +161,7 @@ export interface NotificationRecord extends CrudRecord {
 /**
  * Defines a push subscription that is stored in the store.
  */
-export interface StorePushSubscription {
+export interface NotificationPushSubscription {
     /**
      * The ID of the push subscription.
      */
@@ -203,8 +219,15 @@ export interface NotificationSubscription {
 
     /**
      * The ID of the user that is subscribed.
+     * If null, then notifications should only be sent to the specified push subscription.
      */
-    userId: string;
+    userId: string | null;
+
+    /**
+     * The push subscription that the notification should be sent to.
+     * If null, then notifications should be sent to all push subscriptions for the user.
+     */
+    pushSubscriptionId: string | null;
 }
 
 /**
@@ -289,6 +312,11 @@ export interface SentNotification {
  * Defines a model that represents a push notification that was sent.
  */
 export interface SentPushNotification {
+    /**
+     * The ID of the sent notification.
+     */
+    id: string;
+
     /**
      * The ID of the notification that was sent.
      */
@@ -423,7 +451,7 @@ export interface SaveSubscriptionFailure {
 /**
  * Defines a push subscription that is related to a user.
  */
-export interface UserPushSubscription extends StorePushSubscription {
+export interface UserPushSubscription extends NotificationPushSubscription {
     /**
      * The ID of the user that the push subscription is for.
      */

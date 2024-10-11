@@ -175,13 +175,41 @@ export class NotificationRecordsController extends CrudRecordsController<
                 userId: userId,
             });
 
-            const subscriptionId = uuidv7();
-            await this.store.saveSubscription({
-                id: subscriptionId,
-                recordName,
-                notificationAddress: notification.address,
-                userId: userId,
-            });
+            let subscriptionId: string = null;
+            if (userId) {
+                const sub =
+                    await this.store.getSubscriptionByRecordAddressAndUserId(
+                        recordName,
+                        notification.address,
+                        userId
+                    );
+
+                if (sub) {
+                    subscriptionId = sub.id;
+                }
+            } else {
+                const sub =
+                    await this.store.getSubscriptionByRecordAddressAndPushSubscriptionId(
+                        recordName,
+                        notification.address,
+                        pushSubscriptionId
+                    );
+
+                if (sub) {
+                    subscriptionId = sub.id;
+                }
+            }
+
+            if (!subscriptionId) {
+                subscriptionId = uuidv7();
+                await this.store.saveSubscription({
+                    id: subscriptionId,
+                    recordName,
+                    notificationAddress: notification.address,
+                    userId: userId,
+                    pushSubscriptionId: !userId ? pushSubscriptionId : null,
+                });
+            }
 
             console.log(
                 `[NotificationRecordsController] [userId: ${userId} pushSubscriptionId: ${pushSubscriptionId} subscriptionId: ${subscriptionId}] Subscribed to notification`
@@ -379,7 +407,7 @@ export class NotificationRecordsController extends CrudRecordsController<
                 return metrics;
             }
 
-            const subscriptions =
+            const pushSubs =
                 await this.store.listActivePushSubscriptionsForNotification(
                     recordName,
                     notification.address
@@ -391,7 +419,7 @@ export class NotificationRecordsController extends CrudRecordsController<
             ) {
                 if (
                     metrics.metrics.totalSentNotificationsInPeriod +
-                        subscriptions.length >=
+                        pushSubs.length >=
                     metrics.features.maxSentPushNotificationsPerPeriod
                 ) {
                     return {
@@ -408,19 +436,19 @@ export class NotificationRecordsController extends CrudRecordsController<
             >[];
 
             const sentTimeMs = Date.now();
-            for (let sub of subscriptions) {
+            for (let push of pushSubs) {
                 promises.push(
                     this._pushInterface
                         .sendNotification(
                             {
-                                endpoint: sub.endpoint,
-                                keys: sub.keys as any,
+                                endpoint: push.endpoint,
+                                keys: push.keys as any,
                             },
                             request.payload,
                             request.topic
                         )
                         .then((result) => {
-                            return [sub, result] as const;
+                            return [push, result] as const;
                         })
                 );
             }
@@ -445,8 +473,8 @@ export class NotificationRecordsController extends CrudRecordsController<
                 topic: request.topic,
             });
 
-            let sentNotificationUsers = [] as SentPushNotification[];
-            let failedSubscriptions = [] as string[];
+            let sentPushNotifications = [] as SentPushNotification[];
+            let failedPushSubscriptions = [] as string[];
 
             for (let promiseResult of results) {
                 if (promiseResult.status === 'rejected') {
@@ -455,13 +483,14 @@ export class NotificationRecordsController extends CrudRecordsController<
                         promiseResult.reason
                     );
                 } else {
-                    const [sub, result] = promiseResult.value;
+                    const [push, result] = promiseResult.value;
 
-                    sentNotificationUsers.push({
-                        pushSubscriptionId: sub.id,
+                    sentPushNotifications.push({
+                        id: uuidv7(),
+                        pushSubscriptionId: push.id,
                         sentNotificationId: notificationId,
-                        userId: sub.userId,
-                        subscriptionId: sub.id,
+                        userId: push.userId,
+                        subscriptionId: push.subscriptionId,
                         success: result.success,
                         errorCode:
                             result.success === false ? result.errorCode : null,
@@ -469,7 +498,7 @@ export class NotificationRecordsController extends CrudRecordsController<
 
                     if (result.success === false) {
                         console.error(
-                            `[NotificationRecordsController] Error sending notification for ${sub.id}:`,
+                            `[NotificationRecordsController] Error sending notification for ${push.id}:`,
                             result.errorCode
                         );
 
@@ -477,26 +506,26 @@ export class NotificationRecordsController extends CrudRecordsController<
                             result.errorCode === 'subscription_gone' ||
                             result.errorCode === 'subscription_not_found'
                         ) {
-                            failedSubscriptions.push(sub.id);
+                            failedPushSubscriptions.push(push.id);
                         }
                     }
                 }
             }
 
-            if (sentNotificationUsers.length > 0) {
+            if (sentPushNotifications.length > 0) {
                 await this.store.createSentPushNotifications(
-                    sentNotificationUsers
+                    sentPushNotifications
                 );
             }
 
-            if (failedSubscriptions.length > 0) {
-                await this.store.markPushSubscriptionsInactive(
-                    failedSubscriptions
+            if (failedPushSubscriptions.length > 0) {
+                await this.store.markPushSubscriptionsInactiveAndDeleteUserRelations(
+                    failedPushSubscriptions
                 );
             }
 
             console.log(
-                `[NotificationRecordsController] [userId: ${userId} notificationId: ${notificationId} sent: ${sentNotificationUsers.length} failed: ${failedSubscriptions.length}] Sent notification`
+                `[NotificationRecordsController] [userId: ${userId} notificationId: ${notificationId} sent: ${sentPushNotifications.length} failed: ${failedPushSubscriptions.length}] Sent notification`
             );
 
             return {
@@ -620,7 +649,7 @@ export interface SubscribeToNotificationRequest {
     /**
      * The ID of the user that is logged in.
      */
-    userId: string;
+    userId: string | null;
 
     /**
      * The name of the record that the notification is in.

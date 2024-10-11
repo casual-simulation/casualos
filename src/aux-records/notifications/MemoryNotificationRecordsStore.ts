@@ -6,9 +6,13 @@ import {
     NotificationSubscriptionMetrics,
     SaveSubscriptionResult,
     SentNotification,
-    SentNotificationUser,
+    NotificationPushSubscription,
+    SentPushNotification,
+    PushSubscriptionUser,
+    UserPushSubscription,
 } from './NotificationRecordsStore';
 import { SubscriptionFilter } from '../MetricsStore';
+import { uniqBy } from 'lodash';
 
 /**
  * A Memory-based implementation of the NotificationRecordsStore.
@@ -17,9 +21,11 @@ export class MemoryNotificationRecordsStore
     extends MemoryCrudRecordsStore<NotificationRecord>
     implements NotificationRecordsStore
 {
+    private _pushSubscriptions: NotificationPushSubscription[] = [];
+    private _pushSubscriptionUsers: PushSubscriptionUser[] = [];
     private _subscriptions: NotificationSubscription[] = [];
     private _sentNotifications: SentNotification[] = [];
-    private _sentNotificationUsers: SentNotificationUser[] = [];
+    private _sentPushNotifications: SentPushNotification[] = [];
 
     get subscriptions() {
         return this._subscriptions;
@@ -29,8 +35,155 @@ export class MemoryNotificationRecordsStore
         return this._sentNotifications;
     }
 
-    get sentNotificationUsers() {
-        return this._sentNotificationUsers;
+    get sentPushNotifications() {
+        return this._sentPushNotifications;
+    }
+
+    get pushSubscriptions() {
+        return this._pushSubscriptions;
+    }
+
+    get pushSubscriptionUsers() {
+        return this._pushSubscriptionUsers;
+    }
+
+    async savePushSubscription(
+        pushSubscription: NotificationPushSubscription
+    ): Promise<void> {
+        const index = this._pushSubscriptions.findIndex(
+            (s) => s.id === pushSubscription.id
+        );
+
+        if (index >= 0) {
+            this._pushSubscriptions[index] = {
+                ...pushSubscription,
+            };
+        } else {
+            this._pushSubscriptions.push({
+                ...pushSubscription,
+            });
+        }
+    }
+
+    async savePushSubscriptionUser(
+        pushSubscription: PushSubscriptionUser
+    ): Promise<void> {
+        const index = this._pushSubscriptionUsers.findIndex(
+            (u) =>
+                u.pushSubscriptionId === pushSubscription.pushSubscriptionId &&
+                u.userId === pushSubscription.userId
+        );
+
+        if (index >= 0) {
+            this._pushSubscriptionUsers[index] = {
+                ...pushSubscription,
+            };
+        } else {
+            this._pushSubscriptionUsers.push({
+                ...pushSubscription,
+            });
+        }
+    }
+
+    async markPushSubscriptionsInactiveAndDeleteUserRelations(
+        ids: string[]
+    ): Promise<void> {
+        for (let id of ids) {
+            const index = this._pushSubscriptions.findIndex((s) => s.id === id);
+            if (index >= 0) {
+                this._pushSubscriptions[index] = {
+                    ...this._pushSubscriptions[index],
+                    active: false,
+                };
+            }
+        }
+
+        this._pushSubscriptionUsers = this._pushSubscriptionUsers.filter((u) =>
+            ids.every((id) => id !== u.pushSubscriptionId)
+        );
+    }
+
+    async getSubscriptionByRecordAddressAndUserId(
+        recordName: string,
+        notificationAddress: string,
+        userId: string
+    ): Promise<NotificationSubscription | null> {
+        const subscription = this._subscriptions.find(
+            (s) =>
+                s.recordName === recordName &&
+                s.notificationAddress === notificationAddress &&
+                s.userId === userId
+        );
+
+        return subscription || null;
+    }
+
+    async getSubscriptionByRecordAddressAndPushSubscriptionId(
+        recordName: string,
+        notificationAddress: string,
+        pushSubscriptionId: string
+    ): Promise<NotificationSubscription | null> {
+        const subscription = this._subscriptions.find(
+            (s) =>
+                s.recordName === recordName &&
+                s.notificationAddress === notificationAddress &&
+                s.pushSubscriptionId === pushSubscriptionId
+        );
+
+        return subscription || null;
+    }
+
+    async createSentPushNotifications(
+        notifications: SentPushNotification[]
+    ): Promise<void> {
+        for (let notification of notifications) {
+            await this.saveSentPushNotification(notification);
+        }
+    }
+
+    async listActivePushSubscriptionsForNotification(
+        recordName: string,
+        notificationAddress: string
+    ): Promise<UserPushSubscription[]> {
+        const subscriptions = this._subscriptions.filter(
+            (s) =>
+                s.recordName === recordName &&
+                s.notificationAddress === notificationAddress
+        );
+        const users: UserPushSubscription[] = [];
+
+        for (let subscription of subscriptions) {
+            if (subscription.userId) {
+                const subscribedUsers = this._pushSubscriptionUsers.filter(
+                    (u) => u.userId === subscription.userId
+                );
+                for (let user of subscribedUsers) {
+                    const sub = this._pushSubscriptions.find(
+                        (s) => s.active && s.id === user.pushSubscriptionId
+                    );
+                    if (sub) {
+                        users.push({
+                            ...sub,
+                            userId: user.userId,
+                            subscriptionId: subscription.id,
+                        });
+                    }
+                }
+            } else if (subscription.pushSubscriptionId) {
+                const sub = this._pushSubscriptions.find(
+                    (s) => s.active && s.id === subscription.pushSubscriptionId
+                );
+                if (sub) {
+                    users.push({
+                        ...sub,
+                        subscriptionId: subscription.id,
+                        userId: null,
+                    });
+                }
+            }
+        }
+
+        return uniqBy(users, (u) => u.id);
     }
 
     async getSubscriptionById(
@@ -63,7 +216,10 @@ export class MemoryNotificationRecordsStore
             (s) =>
                 s.recordName === subscription.recordName &&
                 s.notificationAddress === subscription.notificationAddress &&
-                s.userId === subscription.userId
+                ((s.userId && s.userId === subscription.userId) ||
+                    (s.pushSubscriptionId &&
+                        s.pushSubscriptionId ===
+                            subscription.pushSubscriptionId))
         );
 
         if (exists) {
@@ -100,26 +256,6 @@ export class MemoryNotificationRecordsStore
         }
     }
 
-    async markSubscriptionsInactive(ids: string[]): Promise<void> {
-        for (let id of ids) {
-            const index = this._subscriptions.findIndex((s) => s.id === id);
-            if (index >= 0) {
-                this._subscriptions[index] = {
-                    ...this._subscriptions[index],
-                    active: false,
-                };
-            }
-        }
-    }
-
-    async createSentNotificationUsers(
-        users: SentNotificationUser[]
-    ): Promise<void> {
-        for (let user of users) {
-            await this.saveSentNotificationUser(user);
-        }
-    }
-
     async saveSentNotification(notification: SentNotification): Promise<void> {
         const index = this._sentNotifications.findIndex(
             (s) => s.id === notification.id
@@ -135,42 +271,38 @@ export class MemoryNotificationRecordsStore
         }
     }
 
-    async saveSentNotificationUser(user: SentNotificationUser): Promise<void> {
-        const index = this._sentNotificationUsers.findIndex(
-            (s) =>
-                s.sentNotificationId === user.sentNotificationId &&
-                s.userId === user.userId &&
-                s.subscriptionId === user.subscriptionId
+    async saveSentPushNotification(
+        notification: SentPushNotification
+    ): Promise<void> {
+        const index = this._sentPushNotifications.findIndex(
+            (s) => s.id === notification.id
         );
         if (index >= 0) {
-            this._sentNotificationUsers[index] = {
-                ...user,
+            this._sentPushNotifications[index] = {
+                ...notification,
             };
         } else {
-            this._sentNotificationUsers.push({
-                ...user,
+            this._sentPushNotifications.push({
+                ...notification,
             });
         }
     }
 
-    async listActiveSubscriptionsForNotification(
+    async listSubscriptionsForNotification(
         recordName: string,
         notificationAddress: string
     ): Promise<NotificationSubscription[]> {
         return this._subscriptions.filter(
             (s) =>
                 s.recordName === recordName &&
-                s.notificationAddress === notificationAddress &&
-                s.active === true
+                s.notificationAddress === notificationAddress
         );
     }
 
-    async listActiveSubscriptionsForUser(
+    async listSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]> {
-        return this._subscriptions.filter(
-            (s) => s.userId === userId && s.active === true
-        );
+        return this._subscriptions.filter((s) => s.userId === userId);
     }
 
     async getSubscriptionMetrics(
@@ -202,7 +334,7 @@ export class MemoryNotificationRecordsStore
                 totalSentNotificationsInPeriod++;
             }
 
-            for (let u of this._sentNotificationUsers) {
+            for (let u of this._sentPushNotifications) {
                 if (u.sentNotificationId === send.id) {
                     totalSentPushNotificationsInPeriod++;
                 }

@@ -159,6 +159,44 @@ describe('NotificationRecordsController', () => {
         return require('axios').__getRequests();
     }
 
+    interface TestSubscription {
+        id: string;
+        userId: string | null;
+        recordName: string;
+        notificationAddress: string;
+        pushSubscription: {
+            endpoint: string;
+            keys: any;
+        };
+        active?: boolean;
+    }
+
+    async function saveTestSubscription(sub: TestSubscription) {
+        const pushSubId = uuidv5(
+            sub.pushSubscription.endpoint,
+            SUBSCRIPTION_ID_NAMESPACE
+        );
+        await itemsStore.savePushSubscription({
+            id: pushSubId,
+            active: sub.active ?? true,
+            endpoint: sub.pushSubscription.endpoint,
+            keys: sub.pushSubscription.keys,
+        });
+        if (sub.userId) {
+            await itemsStore.savePushSubscriptionUser({
+                userId: sub.userId,
+                pushSubscriptionId: pushSubId,
+            });
+        }
+        await itemsStore.saveSubscription({
+            id: sub.id,
+            recordName: sub.recordName,
+            notificationAddress: sub.notificationAddress,
+            userId: sub.userId,
+            pushSubscriptionId: !sub.userId ? pushSubId : null,
+        });
+    }
+
     describe('recordItem()', () => {
         describe('create', () => {
             it('should return subscription_limit_reached when the user has reached limit of notifications', async () => {
@@ -245,17 +283,36 @@ describe('NotificationRecordsController', () => {
                     recordName,
                     notificationAddress: 'public',
                     userId: otherUserId,
+                    pushSubscriptionId: null,
+                    // active: true,
+                    // pushSubscriptionId: expect.any(String),
+                    // pushSubscription: {
+                    //     endpoint: 'endpoint',
+                    //     keys: {},
+                    // },
+                },
+            ]);
+
+            expect(itemsStore.pushSubscriptions).toEqual([
+                {
+                    id: expect.any(String),
                     active: true,
-                    pushSubscriptionId: expect.any(String),
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            ]);
+
+            const [push] = itemsStore.pushSubscriptions;
+
+            expect(itemsStore.pushSubscriptionUsers).toEqual([
+                {
+                    userId: otherUserId,
+                    pushSubscriptionId: push.id,
                 },
             ]);
         });
 
-        it('should derive the subscription ID from the endpoint', async () => {
+        it('should derive the push subscription ID from the endpoint', async () => {
             const result = await manager.subscribeToNotification({
                 userId: otherUserId,
                 recordName,
@@ -267,7 +324,6 @@ describe('NotificationRecordsController', () => {
                 },
             });
 
-            const expectedId = uuidv5('endpoint', SUBSCRIPTION_ID_NAMESPACE);
             expect(result).toEqual({
                 success: true,
                 subscriptionId: expect.any(String),
@@ -279,12 +335,24 @@ describe('NotificationRecordsController', () => {
                     recordName,
                     notificationAddress: 'public',
                     userId: otherUserId,
+                    pushSubscriptionId: null,
+                },
+            ]);
+
+            const expectedId = uuidv5('endpoint', SUBSCRIPTION_ID_NAMESPACE);
+            expect(itemsStore.pushSubscriptions).toEqual([
+                {
+                    id: expectedId,
                     active: true,
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            ]);
+
+            expect(itemsStore.pushSubscriptionUsers).toEqual([
+                {
+                    userId: otherUserId,
                     pushSubscriptionId: expectedId,
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
                 },
             ]);
         });
@@ -306,18 +374,36 @@ describe('NotificationRecordsController', () => {
                 subscriptionId: expect.any(String),
             });
 
+            expect(itemsStore.pushSubscriptions).toEqual([
+                {
+                    id: expect.any(String),
+                    active: true,
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            ]);
+
+            const [push] = itemsStore.pushSubscriptionUsers;
+
             expect(itemsStore.subscriptions).toEqual([
                 {
                     id: expect.any(String),
                     recordName,
                     notificationAddress: 'public',
                     userId: null,
-                    active: true,
-                    pushSubscriptionId: expect.any(String),
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
+                    pushSubscriptionId: push.pushSubscriptionId,
+                    // active: true,
+                    // pushSubscription: {
+                    //     endpoint: 'endpoint',
+                    //     keys: {},
+                    // },
+                },
+            ]);
+
+            expect(itemsStore.pushSubscriptionUsers).toEqual([
+                {
+                    userId: null,
+                    pushSubscriptionId: push.pushSubscriptionId,
                 },
             ]);
         });
@@ -353,13 +439,11 @@ describe('NotificationRecordsController', () => {
         });
 
         it('should return subscription_limit_reached when the maximum number of subscriptions has been reached', async () => {
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
                 notificationAddress: 'public',
-                active: true,
-                pushSubscriptionId: 'pushSub1',
                 pushSubscription: {
                     endpoint: 'endpoint',
                     keys: {},
@@ -403,8 +487,8 @@ describe('NotificationRecordsController', () => {
             });
         });
 
-        it('should return already_subscribed when the endpoint matches another subscription', async () => {
-            const result1 = await manager.subscribeToNotification({
+        it('should return the existing subscription ID for the user', async () => {
+            const result1 = (await manager.subscribeToNotification({
                 userId: userId,
                 recordName,
                 address: 'public',
@@ -413,7 +497,7 @@ describe('NotificationRecordsController', () => {
                     endpoint: 'endpoint',
                     keys: {},
                 },
-            });
+            })) as SubscribeToNotificationSuccess;
 
             const result2 = await manager.subscribeToNotification({
                 userId: userId,
@@ -430,11 +514,44 @@ describe('NotificationRecordsController', () => {
                 success: true,
                 subscriptionId: expect.any(String),
             });
+
             expect(result2).toEqual({
-                success: false,
-                errorCode: 'subscription_already_exists',
-                errorMessage:
-                    'This device is already subscribed to this notification.',
+                success: true,
+                subscriptionId: result1.subscriptionId,
+            });
+        });
+
+        it('should be able to reuse subscriptions for anyonymous users', async () => {
+            const result1 = (await manager.subscribeToNotification({
+                userId: null,
+                recordName,
+                address: 'public',
+                instances: [],
+                pushSubscription: {
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            })) as SubscribeToNotificationSuccess;
+
+            const result2 = await manager.subscribeToNotification({
+                userId: null,
+                recordName,
+                address: 'public',
+                instances: [],
+                pushSubscription: {
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            });
+
+            expect(result1).toEqual({
+                success: true,
+                subscriptionId: expect.any(String),
+            });
+
+            expect(result2).toEqual({
+                success: true,
+                subscriptionId: result1.subscriptionId,
             });
         });
 
@@ -471,55 +588,53 @@ describe('NotificationRecordsController', () => {
                 subscriptionId: expect.any(String),
             });
 
-            const expectedId = uuidv5('endpoint', SUBSCRIPTION_ID_NAMESPACE);
             expect(itemsStore.subscriptions).toEqual([
                 {
                     id: expect.any(String),
                     recordName,
                     notificationAddress: 'public',
                     userId: userId,
-                    active: true,
-                    pushSubscriptionId: expectedId,
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
+                    pushSubscriptionId: null,
                 },
                 {
                     id: expect.any(String),
                     recordName,
                     notificationAddress: 'private',
                     userId: userId,
+                    pushSubscriptionId: null,
+                },
+            ]);
+
+            const expectedId = uuidv5('endpoint', SUBSCRIPTION_ID_NAMESPACE);
+            expect(itemsStore.pushSubscriptions).toEqual([
+                {
+                    id: expectedId,
                     active: true,
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            ]);
+
+            expect(itemsStore.pushSubscriptionUsers).toEqual([
+                {
+                    userId: userId,
                     pushSubscriptionId: expectedId,
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
                 },
             ]);
         });
 
-        it('should mark the subscription as active if trying to subscribe again', async () => {
-            const result1 = (await manager.subscribeToNotification({
+        it('should reactivate push subscriptions when subscribing', async () => {
+            await saveTestSubscription({
+                id: 'sub1',
                 userId: userId,
                 recordName,
-                address: 'public',
-                instances: [],
+                notificationAddress: 'public',
+                active: false,
                 pushSubscription: {
                     endpoint: 'endpoint',
                     keys: {},
                 },
-            })) as SubscribeToNotificationSuccess;
-
-            expect(result1).toEqual({
-                success: true,
-                subscriptionId: expect.any(String),
             });
-
-            await itemsStore.markSubscriptionsInactive([
-                result1.subscriptionId,
-            ]);
 
             const result2 = await manager.subscribeToNotification({
                 userId: userId,
@@ -534,22 +649,16 @@ describe('NotificationRecordsController', () => {
 
             expect(result2).toEqual({
                 success: true,
-                subscriptionId: result1.subscriptionId,
+                // should reuse the same user subscription, but create a new push subscription
+                subscriptionId: 'sub1',
             });
 
-            const expectedId = uuidv5('endpoint', SUBSCRIPTION_ID_NAMESPACE);
-            expect(itemsStore.subscriptions).toEqual([
+            expect(itemsStore.pushSubscriptions).toEqual([
                 {
-                    id: result1.subscriptionId,
-                    recordName,
-                    notificationAddress: 'public',
-                    userId: userId,
+                    id: expect.any(String),
                     active: true,
-                    pushSubscriptionId: expectedId,
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
+                    endpoint: 'endpoint',
+                    keys: {},
                 },
             ]);
         });
@@ -563,13 +672,12 @@ describe('NotificationRecordsController', () => {
                 description: 'public',
             });
 
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
                 notificationAddress: 'public',
                 active: true,
-                pushSubscriptionId: 'pushSub1',
                 pushSubscription: {
                     endpoint: 'endpoint',
                     keys: {},
@@ -582,13 +690,12 @@ describe('NotificationRecordsController', () => {
                 description: 'private',
             });
 
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub2',
                 userId: otherUserId,
                 recordName,
                 notificationAddress: 'private',
                 active: true,
-                pushSubscriptionId: 'pushSub2',
                 pushSubscription: {
                     endpoint: 'endpoint',
                     keys: {},
@@ -609,28 +716,11 @@ describe('NotificationRecordsController', () => {
 
             expect(itemsStore.subscriptions).toEqual([
                 {
-                    id: 'sub1',
-                    userId: otherUserId,
-                    recordName,
-                    notificationAddress: 'public',
-                    active: false,
-                    pushSubscriptionId: 'pushSub1',
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
-                },
-                {
                     id: 'sub2',
                     userId: otherUserId,
                     recordName,
                     notificationAddress: 'private',
-                    active: true,
-                    pushSubscriptionId: 'pushSub2',
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
+                    pushSubscriptionId: null,
                 },
             ]);
         });
@@ -652,24 +742,7 @@ describe('NotificationRecordsController', () => {
                     userId: otherUserId,
                     recordName,
                     notificationAddress: 'public',
-                    active: true,
-                    pushSubscriptionId: 'pushSub1',
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
-                },
-                {
-                    id: 'sub2',
-                    userId: otherUserId,
-                    recordName,
-                    notificationAddress: 'private',
-                    active: false,
-                    pushSubscriptionId: 'pushSub2',
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
+                    pushSubscriptionId: null,
                 },
             ]);
         });
@@ -687,40 +760,22 @@ describe('NotificationRecordsController', () => {
 
             expect(itemsStore.subscriptions).toEqual([
                 {
-                    id: 'sub1',
-                    userId: otherUserId,
-                    recordName,
-                    notificationAddress: 'public',
-                    active: false,
-                    pushSubscriptionId: 'pushSub1',
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
-                },
-                {
                     id: 'sub2',
                     userId: otherUserId,
                     recordName,
                     notificationAddress: 'private',
-                    active: true,
-                    pushSubscriptionId: 'pushSub2',
-                    pushSubscription: {
-                        endpoint: 'endpoint',
-                        keys: {},
-                    },
+                    pushSubscriptionId: null,
                 },
             ]);
         });
 
         it('should not allow random users to unsubscribe anyonymous subscriptions', async () => {
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub3',
                 userId: null,
                 recordName,
                 notificationAddress: 'public',
                 active: true,
-                pushSubscriptionId: 'pushSub3',
                 pushSubscription: {
                     endpoint: 'endpoint3',
                     keys: {},
@@ -748,24 +803,18 @@ describe('NotificationRecordsController', () => {
                     userId: null,
                     recordName,
                     notificationAddress: 'public',
-                    active: true,
-                    pushSubscriptionId: 'pushSub3',
-                    pushSubscription: {
-                        endpoint: 'endpoint3',
-                        keys: {},
-                    },
+                    pushSubscriptionId: expect.any(String),
                 },
             ]);
         });
 
         it('should not allow random users to unsubscribe subscriptions', async () => {
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub3',
                 userId: userId,
                 recordName,
                 notificationAddress: 'public',
                 active: true,
-                pushSubscriptionId: 'pushSub3',
                 pushSubscription: {
                     endpoint: 'endpoint3',
                     keys: {},
@@ -801,12 +850,7 @@ describe('NotificationRecordsController', () => {
                     userId: userId,
                     recordName,
                     notificationAddress: 'public',
-                    active: true,
-                    pushSubscriptionId: 'pushSub3',
-                    pushSubscription: {
-                        endpoint: 'endpoint3',
-                        keys: {},
-                    },
+                    pushSubscriptionId: null,
                 },
             ]);
         });
@@ -833,26 +877,25 @@ describe('NotificationRecordsController', () => {
                 description: 'public',
             });
 
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
                 notificationAddress: 'public',
                 active: true,
-                pushSubscriptionId: 'pushSub1',
                 pushSubscription: {
                     endpoint: 'endpoint1',
                     keys: {},
                 },
             });
 
-            await itemsStore.saveSubscription({
-                id: 'sub2',
+            // Add a push subscription for the same subscription
+            await saveTestSubscription({
+                id: 'sub1',
                 userId: otherUserId,
                 recordName,
                 notificationAddress: 'public',
                 active: true,
-                pushSubscriptionId: 'pushSub2',
                 pushSubscription: {
                     endpoint: 'endpoint2',
                     keys: {},
@@ -861,6 +904,18 @@ describe('NotificationRecordsController', () => {
         });
 
         it('should send a notification to all subscriptions', async () => {
+            await saveTestSubscription({
+                id: 'sub3',
+                userId: null,
+                recordName,
+                notificationAddress: 'public',
+                active: true,
+                pushSubscription: {
+                    endpoint: 'endpoint3',
+                    keys: {},
+                },
+            });
+
             pushInterface.sendNotification.mockResolvedValue({
                 success: true,
             });
@@ -904,7 +959,7 @@ describe('NotificationRecordsController', () => {
                 success: true,
             });
 
-            expect(pushInterface.sendNotification).toHaveBeenCalledTimes(2);
+            expect(pushInterface.sendNotification).toHaveBeenCalledTimes(3);
 
             const expectedPayload = {
                 title: 'title',
@@ -950,6 +1005,14 @@ describe('NotificationRecordsController', () => {
                 expectedPayload,
                 'topic'
             );
+            expect(pushInterface.sendNotification).toHaveBeenCalledWith(
+                {
+                    endpoint: 'endpoint3',
+                    keys: {},
+                },
+                expectedPayload,
+                'topic'
+            );
 
             expect(itemsStore.sentNotifications).toEqual([
                 {
@@ -985,18 +1048,40 @@ describe('NotificationRecordsController', () => {
                     sentTimeMs: expect.any(Number),
                 },
             ]);
-            expect(itemsStore.sentNotificationUsers).toEqual([
+            expect(itemsStore.sentPushNotifications).toEqual([
                 {
+                    id: expect.any(String),
                     sentNotificationId: expect.any(String),
                     subscriptionId: 'sub1',
+                    pushSubscriptionId: uuidv5(
+                        'endpoint1',
+                        SUBSCRIPTION_ID_NAMESPACE
+                    ),
                     userId: otherUserId,
                     success: true,
                     errorCode: null,
                 },
                 {
+                    id: expect.any(String),
                     sentNotificationId: expect.any(String),
-                    subscriptionId: 'sub2',
+                    subscriptionId: 'sub1',
+                    pushSubscriptionId: uuidv5(
+                        'endpoint2',
+                        SUBSCRIPTION_ID_NAMESPACE
+                    ),
                     userId: otherUserId,
+                    success: true,
+                    errorCode: null,
+                },
+                {
+                    id: expect.any(String),
+                    sentNotificationId: expect.any(String),
+                    subscriptionId: 'sub3',
+                    pushSubscriptionId: uuidv5(
+                        'endpoint3',
+                        SUBSCRIPTION_ID_NAMESPACE
+                    ),
+                    userId: null,
                     success: true,
                     errorCode: null,
                 },
@@ -1008,13 +1093,12 @@ describe('NotificationRecordsController', () => {
                 success: true,
             });
 
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub1',
                 userId: otherUserId,
                 recordName,
                 notificationAddress: 'public',
                 active: false,
-                pushSubscriptionId: 'pushSub1',
                 pushSubscription: {
                     endpoint: 'endpoint1',
                     keys: {},
@@ -1131,10 +1215,15 @@ describe('NotificationRecordsController', () => {
                     sentTimeMs: expect.any(Number),
                 },
             ]);
-            expect(itemsStore.sentNotificationUsers).toEqual([
+            expect(itemsStore.sentPushNotifications).toEqual([
                 {
+                    id: expect.any(String),
                     sentNotificationId: expect.any(String),
-                    subscriptionId: 'sub2',
+                    pushSubscriptionId: uuidv5(
+                        'endpoint2',
+                        SUBSCRIPTION_ID_NAMESPACE
+                    ),
+                    subscriptionId: 'sub1',
                     userId: otherUserId,
                     success: true,
                     errorCode: null,
@@ -1271,28 +1360,46 @@ describe('NotificationRecordsController', () => {
                     sentTimeMs: expect.any(Number),
                 },
             ]);
-            expect(itemsStore.sentNotificationUsers).toEqual([
+            expect(itemsStore.sentPushNotifications).toEqual([
                 {
+                    id: expect.any(String),
                     sentNotificationId: expect.any(String),
+                    pushSubscriptionId: uuidv5(
+                        'endpoint1',
+                        SUBSCRIPTION_ID_NAMESPACE
+                    ),
                     subscriptionId: 'sub1',
                     userId: otherUserId,
                     success: false,
                     errorCode: 'subscription_gone',
                 },
                 {
+                    id: expect.any(String),
                     sentNotificationId: expect.any(String),
-                    subscriptionId: 'sub2',
+                    pushSubscriptionId: uuidv5(
+                        'endpoint2',
+                        SUBSCRIPTION_ID_NAMESPACE
+                    ),
+                    subscriptionId: 'sub1',
                     userId: otherUserId,
                     success: false,
                     errorCode: 'subscription_not_found',
                 },
             ]);
 
-            expect(await itemsStore.getSubscriptionById('sub1')).toMatchObject({
+            expect(
+                itemsStore.pushSubscriptions.find(
+                    (s) => s.endpoint === 'endpoint1'
+                )
+            ).toMatchObject({
                 active: false,
             });
 
-            expect(await itemsStore.getSubscriptionById('sub2')).toMatchObject({
+            expect(
+                itemsStore.pushSubscriptions.find(
+                    (s) => s.endpoint === 'endpoint2'
+                )
+            ).toMatchObject({
                 active: false,
             });
         });
@@ -1354,7 +1461,7 @@ describe('NotificationRecordsController', () => {
             expect(pushInterface.sendNotification).toHaveBeenCalledTimes(0);
 
             expect(itemsStore.sentNotifications).toEqual([]);
-            expect(itemsStore.sentNotificationUsers).toEqual([]);
+            expect(itemsStore.sentPushNotifications).toEqual([]);
         });
 
         it('should return subscription_limit_reached if sending a notification would exceed the limit', async () => {
@@ -1436,7 +1543,7 @@ describe('NotificationRecordsController', () => {
             expect(pushInterface.sendNotification).toHaveBeenCalledTimes(0);
 
             expect(itemsStore.sentNotifications.slice(1)).toEqual([]);
-            expect(itemsStore.sentNotificationUsers).toEqual([]);
+            expect(itemsStore.sentPushNotifications).toEqual([]);
         });
 
         it('should return subscription_limit_reached if sending two messages would exceed the limit', async () => {
@@ -1444,13 +1551,12 @@ describe('NotificationRecordsController', () => {
                 success: true,
             });
 
-            await itemsStore.saveSubscription({
+            await saveTestSubscription({
                 id: 'sub1',
-                userId: userId,
+                userId: otherUserId,
                 recordName,
                 notificationAddress: 'public',
                 active: true,
-                pushSubscriptionId: 'pushSub1',
                 pushSubscription: {
                     endpoint: 'endpoint1',
                     keys: {},
@@ -1521,7 +1627,7 @@ describe('NotificationRecordsController', () => {
             expect(pushInterface.sendNotification).toHaveBeenCalledTimes(0);
 
             expect(itemsStore.sentNotifications.slice(1)).toEqual([]);
-            expect(itemsStore.sentNotificationUsers).toEqual([]);
+            expect(itemsStore.sentPushNotifications).toEqual([]);
         });
     });
 });
