@@ -103,6 +103,11 @@ export class NotificationRecordsController extends CrudRecordsController<
         }
     }
 
+    /**
+     * Subscribes the user to the given notification.
+     * Does nothing if the user is already subscribed.
+     * @param request The request.
+     */
     @traced(TRACE_NAME)
     async subscribeToNotification(
         request: SubscribeToNotificationRequest
@@ -159,9 +164,8 @@ export class NotificationRecordsController extends CrudRecordsController<
                 return metrics;
             }
 
-            const pushSubscriptionId = uuidv5(
-                request.pushSubscription.endpoint,
-                SUBSCRIPTION_ID_NAMESPACE
+            const pushSubscriptionId = this._getPushSubscriptionId(
+                request.pushSubscription.endpoint
             );
             await this.store.savePushSubscription({
                 id: pushSubscriptionId,
@@ -236,6 +240,14 @@ export class NotificationRecordsController extends CrudRecordsController<
         }
     }
 
+    private _getPushSubscriptionId(endpoint: string): string {
+        return uuidv5(endpoint, SUBSCRIPTION_ID_NAMESPACE);
+    }
+
+    /**
+     * Unsubscribes the user from the given notification.
+     * @param request The request.
+     */
     @traced(TRACE_NAME)
     async unsubscribeFromNotification(
         request: UnsubscribeToNotificationRequest
@@ -340,6 +352,64 @@ export class NotificationRecordsController extends CrudRecordsController<
 
             console.error(
                 '[NotificationRecordsController] Error subscribing to notification:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Registers a push subscription for the user.
+     * This will allow the device to recieve push notifications for the user.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async registerPushSubscription(
+        request: RegisterPushSubscriptionRequest
+    ): Promise<RegisterPushSubscriptionResult> {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            const pushSubscriptionId = this._getPushSubscriptionId(
+                request.pushSubscription.endpoint
+            );
+            await this.store.savePushSubscription({
+                id: pushSubscriptionId,
+                active: true,
+                endpoint: request.pushSubscription.endpoint,
+                keys: request.pushSubscription.keys,
+            });
+
+            await this.store.savePushSubscriptionUser({
+                pushSubscriptionId: pushSubscriptionId,
+                userId: request.userId,
+            });
+
+            console.log(
+                `[NotificationRecordsController] [userId: ${request.userId} pushSubscriptionId: ${pushSubscriptionId}] Registered push subscription`
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[NotificationRecordsController] Error registering push subscription:',
                 err
             );
             return {
@@ -784,6 +854,37 @@ export interface SendNotificationSuccess {
 }
 
 export interface SendNotificationFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export interface RegisterPushSubscriptionRequest {
+    /**
+     * The ID of the user that is logged in.
+     */
+    userId: string;
+
+    /**
+     * The push subscription that should be registered.
+     */
+    pushSubscription: PushSubscriptionType;
+
+    /**
+     * The instances that are currently loaded.
+     */
+    instances: string[];
+}
+
+export type RegisterPushSubscriptionResult =
+    | RegisterPushSubscriptionSuccess
+    | RegisterPushSubscriptionFailure;
+
+export interface RegisterPushSubscriptionSuccess {
+    success: true;
+}
+
+export interface RegisterPushSubscriptionFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;

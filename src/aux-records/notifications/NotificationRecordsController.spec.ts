@@ -856,6 +856,120 @@ describe('NotificationRecordsController', () => {
         });
     });
 
+    describe('registerPushSubscription()', () => {
+        beforeEach(async () => {
+            await itemsStore.createItem(recordName, {
+                address: 'public',
+                markers: [PUBLIC_READ_MARKER],
+                description: 'public',
+            });
+
+            await itemsStore.saveSubscription({
+                id: 'sub1',
+                recordName,
+                notificationAddress: 'public',
+                userId: otherUserId,
+                pushSubscriptionId: null,
+            });
+        });
+
+        it('should register a push subscription for the user', async () => {
+            const result = await manager.registerPushSubscription({
+                userId: otherUserId,
+                pushSubscription: {
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const expectedId = uuidv5('endpoint', SUBSCRIPTION_ID_NAMESPACE);
+            expect(itemsStore.pushSubscriptions).toEqual([
+                {
+                    id: expectedId,
+                    active: true,
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            ]);
+
+            expect(itemsStore.pushSubscriptionUsers).toEqual([
+                {
+                    userId: otherUserId,
+                    pushSubscriptionId: expectedId,
+                },
+            ]);
+        });
+
+        it('should activate an existing push subscription', async () => {
+            await saveTestSubscription({
+                id: 'sub1',
+                recordName,
+                notificationAddress: 'public',
+                userId: otherUserId,
+                pushSubscription: {
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+                active: false,
+            });
+
+            const result = await manager.registerPushSubscription({
+                userId: otherUserId,
+                pushSubscription: {
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const expectedId = uuidv5('endpoint', SUBSCRIPTION_ID_NAMESPACE);
+            expect(itemsStore.pushSubscriptions).toEqual([
+                {
+                    id: expectedId,
+                    active: true,
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+            ]);
+
+            expect(itemsStore.pushSubscriptionUsers).toEqual([
+                {
+                    userId: otherUserId,
+                    pushSubscriptionId: expectedId,
+                },
+            ]);
+        });
+
+        it('should return not_logged_in if the user is not logged in', async () => {
+            const result = await manager.registerPushSubscription({
+                userId: null,
+                pushSubscription: {
+                    endpoint: 'endpoint',
+                    keys: {},
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+            });
+
+            expect(itemsStore.pushSubscriptions).toEqual([]);
+        });
+    });
+
     describe('getApplicationServerKey()', () => {
         it('should return the server application key from the push interface', async () => {
             pushInterface.getServerApplicationKey.mockReturnValue('key');

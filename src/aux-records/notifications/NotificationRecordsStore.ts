@@ -172,6 +172,12 @@ export interface NotificationPushSubscription {
      */
     endpoint: string;
 
+    // TODO: Support this field.
+    // /**
+    //  * The expiration time of the subscription.
+    //  */
+    // expirationTimeMs?: number;
+
     /**
      * The keys that should be used to send push notifications.
      */
