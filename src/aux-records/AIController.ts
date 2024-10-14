@@ -450,6 +450,26 @@ export class AIController {
                 maxTokens,
             });
 
+            if (allowedFeatures.ai.chat.allowedModels) {
+                const allowedModels = allowedFeatures.ai.chat.allowedModels;
+                if (
+                    !allowedModels ||
+                    allowedModels.length === 0 ||
+                    allowedModels.includes(model)
+                ) {
+                    return {
+                        success: true,
+                        choices: result.choices,
+                    };
+                }
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the given model for AI Chat features.',
+                };
+            }
+
             if (result.totalTokens > 0) {
                 await this._metrics.recordChatMetrics({
                     userId: request.userId,
@@ -595,6 +615,25 @@ export class AIController {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'The subscription does not permit AI Chat features.',
+                };
+            }
+
+            if (allowedFeatures.ai.chat.allowedModels) {
+                const allowedModels = allowedFeatures.ai.chat.allowedModels;
+                if (
+                    !allowedModels ||
+                    allowedModels.length === 0 ||
+                    allowedModels.includes(model)
+                ) {
+                    return {
+                        success: true,
+                    };
+                }
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the given model for AI Chat features.',
                 };
             }
 
