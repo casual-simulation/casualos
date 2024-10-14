@@ -37,6 +37,9 @@
         -   Webhooks always act like static insts.
             -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
 -   Added the ability to request consent again so that a parent can adjust the privacy features for their child.
+-   Added the `jsonObject` form subtype.
+    -   Supports loading meshes stored in the [Three.js JSON Object Scene format](https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4).
+    -   Works similarly to `gltf`, but it uses [ObjectLoader](https://threejs.org/docs/?q=loader#api/en/loaders/ObjectLoader) to load meshes from the URL specified in the `formAddress` tag.
 
 ### :bug: Bug Fixes
 
