@@ -1616,6 +1616,7 @@ Object {
                 "type": "string",
               },
               "expirationTime": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
@@ -1731,6 +1732,8 @@ Object {
                 "type": "union",
               },
               "actions": Object {
+                "nullable": true,
+                "optional": true,
                 "schema": Object {
                   "schema": Object {
                     "action": Object {
@@ -5368,6 +5371,7 @@ Object {
                 "type": "string",
               },
               "expirationTime": Object {
+                "nullable": true,
                 "optional": true,
                 "type": "number",
               },
@@ -5483,6 +5487,8 @@ Object {
                 "type": "union",
               },
               "actions": Object {
+                "nullable": true,
+                "optional": true,
                 "schema": Object {
                   "schema": Object {
                     "action": Object {

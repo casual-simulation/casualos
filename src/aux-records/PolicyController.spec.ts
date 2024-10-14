@@ -4300,6 +4300,7 @@ describe('PolicyController', () => {
                         checkEmail: jest.fn(),
                         checkDisplayName: jest.fn(),
                         generateLogoutUrl: jest.fn(),
+                        resendConsentRequest: jest.fn(),
                     };
                     auth = new AuthController(
                         store,

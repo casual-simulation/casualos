@@ -161,9 +161,12 @@ import {
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
 import { tryParseJson } from './Utils';
-import { NotificationRecordsController } from './notifications/NotificationRecordsController';
+import {
+    NotificationRecordsController,
+    SUBSCRIPTION_ID_NAMESPACE,
+} from './notifications/NotificationRecordsController';
 import { WebPushInterface } from './notifications/WebPushInterface';
-import { description } from 'esri/layers/support/VoxelVariable';
+import { v5 as uuidv5 } from 'uuid';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -798,6 +801,46 @@ describe('RecordsServer', () => {
     afterEach(() => {
         jest.useRealTimers();
     });
+
+    interface TestNotificationSubscription {
+        id: string;
+        userId: string | null;
+        recordName: string;
+        notificationAddress: string;
+        pushSubscription: {
+            endpoint: string;
+            keys: any;
+        };
+        active?: boolean;
+    }
+
+    async function saveTestNotificationSubscription(
+        sub: TestNotificationSubscription
+    ) {
+        const pushSubId = uuidv5(
+            sub.pushSubscription.endpoint,
+            SUBSCRIPTION_ID_NAMESPACE
+        );
+        await notificationStore.savePushSubscription({
+            id: pushSubId,
+            active: sub.active ?? true,
+            endpoint: sub.pushSubscription.endpoint,
+            keys: sub.pushSubscription.keys,
+        });
+        if (sub.userId) {
+            await notificationStore.savePushSubscriptionUser({
+                userId: sub.userId,
+                pushSubscriptionId: pushSubId,
+            });
+        }
+        await notificationStore.saveSubscription({
+            id: sub.id,
+            recordName: sub.recordName,
+            notificationAddress: sub.notificationAddress,
+            userId: sub.userId,
+            pushSubscriptionId: !sub.userId ? pushSubId : null,
+        });
+    }
 
     describe('GET /api/v2/procedures', () => {
         it('should return the list of procedures', async () => {
@@ -11344,7 +11387,7 @@ describe('RecordsServer', () => {
             });
 
             const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+                await notificationStore.listActivePushSubscriptionsForNotification(
                     recordName,
                     'testAddress'
                 );
@@ -11383,25 +11426,37 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+            const subs =
+                await notificationStore.listSubscriptionsForNotification(
                     recordName,
                     'testAddress'
                 );
-            expect(items).toEqual([
+            expect(subs).toEqual([
                 {
                     id: body.subscriptionId,
                     recordName,
                     notificationAddress: 'testAddress',
                     userId,
-                    pushSubscription: {
-                        endpoint: 'https://example.com',
-                        keys: {
-                            p256dh: 'p256dh',
-                            auth: 'auth',
-                        },
+                    pushSubscriptionId: null,
+                },
+            ]);
+
+            expect(notificationStore.pushSubscriptions).toEqual([
+                {
+                    id: expect.any(String),
+                    endpoint: 'https://example.com',
+                    keys: {
+                        p256dh: 'p256dh',
+                        auth: 'auth',
                     },
                     active: true,
+                },
+            ]);
+
+            expect(notificationStore.pushSubscriptionUsers).toEqual([
+                {
+                    pushSubscriptionId: expect.any(String),
+                    userId,
                 },
             ]);
         });
@@ -11446,7 +11501,7 @@ describe('RecordsServer', () => {
             });
 
             const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+                await notificationStore.listActivePushSubscriptionsForNotification(
                     recordName,
                     'testAddress'
                 );
@@ -11489,24 +11544,21 @@ describe('RecordsServer', () => {
             });
 
             const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+                await notificationStore.listActivePushSubscriptionsForNotification(
                     recordName,
                     'publicAddress'
                 );
             expect(items).toEqual([
                 {
-                    id: body.subscriptionId,
-                    recordName,
-                    notificationAddress: 'publicAddress',
+                    id: expect.any(String),
                     userId: null,
-                    pushSubscription: {
-                        endpoint: 'https://example.com',
-                        keys: {
-                            p256dh: 'p256dh',
-                            auth: 'auth',
-                        },
+                    endpoint: 'https://example.com',
+                    keys: {
+                        p256dh: 'p256dh',
+                        auth: 'auth',
                     },
                     active: true,
+                    subscriptionId: body.subscriptionId,
                 },
             ]);
         });
@@ -11538,7 +11590,7 @@ describe('RecordsServer', () => {
                 markers: [PRIVATE_MARKER],
             });
 
-            await notificationStore.saveSubscription({
+            await saveTestNotificationSubscription({
                 id: 'sub1',
                 recordName,
                 notificationAddress: 'testAddress',
@@ -11551,7 +11603,7 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+        it('should return not_implemented if the server doesnt have a notifications controller', async () => {
             server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
@@ -11591,21 +11643,18 @@ describe('RecordsServer', () => {
             });
 
             const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+                await notificationStore.listActivePushSubscriptionsForNotification(
                     recordName,
                     'testAddress'
                 );
             expect(items).toEqual([
                 {
-                    id: 'sub1',
-                    recordName,
-                    notificationAddress: 'testAddress',
-                    pushSubscription: {
-                        endpoint: 'https://example.com',
-                        keys: {},
-                    },
+                    id: expect.any(String),
+                    endpoint: 'https://example.com',
+                    keys: {},
                     active: true,
                     userId,
+                    subscriptionId: 'sub1',
                 },
             ]);
         });
@@ -11630,7 +11679,7 @@ describe('RecordsServer', () => {
             });
 
             const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+                await notificationStore.listActivePushSubscriptionsForNotification(
                     recordName,
                     'testAddress'
                 );
@@ -11659,7 +11708,7 @@ describe('RecordsServer', () => {
             });
 
             const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+                await notificationStore.listActivePushSubscriptionsForNotification(
                     recordName,
                     'testAddress'
                 );
@@ -11667,7 +11716,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return not_authorized if the user doesnt have access', async () => {
-            await notificationStore.saveSubscription({
+            await saveTestNotificationSubscription({
                 id: 'sub2',
                 recordName,
                 notificationAddress: 'testAddress',
@@ -11710,31 +11759,28 @@ describe('RecordsServer', () => {
             });
 
             const items =
-                await notificationStore.listActiveSubscriptionsForNotification(
+                await notificationStore.listActivePushSubscriptionsForNotification(
                     recordName,
                     'testAddress'
                 );
             expect(items).toEqual([
                 {
-                    id: 'sub1',
-                    recordName,
-                    notificationAddress: 'testAddress',
-                    pushSubscription: {
-                        endpoint: 'https://example.com',
-                        keys: {},
-                    },
+                    id: expect.any(String),
+                    endpoint: 'https://example.com',
+                    keys: {},
                     active: true,
-                    userId,
+                    subscriptionId: 'sub1',
+                    userId: userId,
+                },
+            ]);
+
+            expect(notificationStore.pushSubscriptionUsers).toEqual([
+                {
+                    pushSubscriptionId: expect.any(String),
+                    userId: userId,
                 },
                 {
-                    id: 'sub2',
-                    recordName,
-                    notificationAddress: 'testAddress',
-                    pushSubscription: {
-                        endpoint: 'https://example.com',
-                        keys: {},
-                    },
-                    active: true,
+                    pushSubscriptionId: expect.any(String),
                     userId: 'otherUserId',
                 },
             ]);
@@ -11759,7 +11805,7 @@ describe('RecordsServer', () => {
                 markers: [PRIVATE_MARKER],
             });
 
-            await notificationStore.saveSubscription({
+            await saveTestNotificationSubscription({
                 id: 'sub1',
                 recordName,
                 notificationAddress: 'testAddress',
@@ -11916,9 +11962,11 @@ describe('RecordsServer', () => {
                 },
             ]);
 
-            expect(notificationStore.sentNotificationUsers).toEqual([
+            expect(notificationStore.sentPushNotifications).toEqual([
                 {
+                    id: expect.any(String),
                     sentNotificationId: expect.any(String),
+                    pushSubscriptionId: expect.any(String),
                     subscriptionId: 'sub1',
                     userId: userId,
                     success: true,
@@ -11982,7 +12030,7 @@ describe('RecordsServer', () => {
             });
 
             expect(notificationStore.sentNotifications).toEqual([]);
-            expect(notificationStore.sentNotificationUsers).toEqual([]);
+            expect(notificationStore.sentPushNotifications).toEqual([]);
         });
 
         testUrl(
