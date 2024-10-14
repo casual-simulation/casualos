@@ -1,13 +1,16 @@
 import {
+    NotificationPushSubscription,
     NotificationRecord,
     NotificationRecordsStore,
     NotificationSubscription,
     NotificationSubscriptionMetrics,
     PUSH_SUBSCRIPTION_SCHEMA,
+    PushSubscriptionUser,
     SaveSubscriptionResult,
     SentNotification,
-    SentNotificationUser,
+    SentPushNotification,
     SubscriptionFilter,
+    UserPushSubscription,
 } from '@casual-simulation/aux-records';
 import {
     ListCrudStoreSuccess,
@@ -36,6 +39,72 @@ export class PrismaNotificationRecordsStore
     }
 
     @traced(TRACE_NAME)
+    async savePushSubscription(
+        pushSubscription: NotificationPushSubscription
+    ): Promise<void> {
+        await this._client.pushSubscription.upsert({
+            where: {
+                id: pushSubscription.id,
+            },
+            create: {
+                id: pushSubscription.id,
+                endpoint: pushSubscription.endpoint,
+                keys: pushSubscription.keys,
+                active: pushSubscription.active,
+            },
+            update: {
+                endpoint: pushSubscription.endpoint,
+                keys: pushSubscription.keys,
+                active: pushSubscription.active,
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async savePushSubscriptionUser(
+        pushSubscription: PushSubscriptionUser
+    ): Promise<void> {
+        await this._client.pushSubscriptionUser.upsert({
+            where: {
+                pushSubscriptionId_userId: {
+                    pushSubscriptionId: pushSubscription.pushSubscriptionId,
+                    userId: pushSubscription.userId,
+                },
+            },
+            create: {
+                pushSubscriptionId: pushSubscription.pushSubscriptionId,
+                userId: pushSubscription.userId,
+            },
+            update: {},
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async markPushSubscriptionsInactiveAndDeleteUserRelations(
+        ids: string[]
+    ): Promise<void> {
+        await this._client.$transaction([
+            this._client.pushSubscription.updateMany({
+                where: {
+                    id: {
+                        in: ids,
+                    },
+                },
+                data: {
+                    active: false,
+                },
+            }),
+            this._client.pushSubscriptionUser.deleteMany({
+                where: {
+                    pushSubscriptionId: {
+                        in: ids,
+                    },
+                },
+            }),
+        ]);
+    }
+
+    @traced(TRACE_NAME)
     async saveSubscription(
         subscription: NotificationSubscription
     ): Promise<SaveSubscriptionResult> {
@@ -49,17 +118,13 @@ export class PrismaNotificationRecordsStore
                     recordName: subscription.recordName,
                     notificationAddress: subscription.notificationAddress,
                     userId: subscription.userId,
-                    active: subscription.active,
                     pushSubscriptionId: subscription.pushSubscriptionId,
-                    pushSubscription: subscription.pushSubscription,
                 },
                 update: {
                     recordName: subscription.recordName,
                     notificationAddress: subscription.notificationAddress,
                     userId: subscription.userId,
-                    active: subscription.active,
                     pushSubscriptionId: subscription.pushSubscriptionId,
-                    pushSubscription: subscription.pushSubscription,
                 },
             });
             return {
@@ -80,20 +145,6 @@ export class PrismaNotificationRecordsStore
     }
 
     @traced(TRACE_NAME)
-    async markSubscriptionsInactive(ids: string[]): Promise<void> {
-        await this._client.notificationSubscription.updateMany({
-            where: {
-                id: {
-                    in: ids,
-                },
-            },
-            data: {
-                active: false,
-            },
-        });
-    }
-
-    @traced(TRACE_NAME)
     async getSubscriptionById(
         id: string
     ): Promise<NotificationSubscription | null> {
@@ -103,23 +154,45 @@ export class PrismaNotificationRecordsStore
             },
         });
 
-        if (!sub) {
-            return null;
-        }
+        return this._convertNotificationSubscription(sub);
+    }
 
-        const pushSubscription = PUSH_SUBSCRIPTION_SCHEMA.parse(
-            sub.pushSubscription
-        );
+    @traced(TRACE_NAME)
+    async getSubscriptionByRecordAddressAndUserId(
+        recordName: string,
+        notificationAddress: string,
+        userId: string
+    ): Promise<NotificationSubscription | null> {
+        const sub = await this._client.notificationSubscription.findUnique({
+            where: {
+                recordName_notificationAddress_userId: {
+                    recordName: recordName,
+                    notificationAddress: notificationAddress,
+                    userId: userId,
+                },
+            },
+        });
 
-        return {
-            id: sub.id,
-            recordName: sub.recordName,
-            notificationAddress: sub.notificationAddress,
-            userId: sub.userId,
-            active: sub.active,
-            pushSubscriptionId: sub.pushSubscriptionId,
-            pushSubscription: pushSubscription,
-        };
+        return this._convertNotificationSubscription(sub);
+    }
+
+    @traced(TRACE_NAME)
+    async getSubscriptionByRecordAddressAndPushSubscriptionId(
+        recordName: string,
+        notificationAddress: string,
+        pushSubscriptionId: string
+    ): Promise<NotificationSubscription | null> {
+        const sub = await this._client.notificationSubscription.findUnique({
+            where: {
+                recordName_notificationAddress_pushSubscriptionId: {
+                    recordName: recordName,
+                    notificationAddress: notificationAddress,
+                    pushSubscriptionId: pushSubscriptionId,
+                },
+            },
+        });
+
+        return this._convertNotificationSubscription(sub);
     }
 
     @traced(TRACE_NAME)
@@ -161,46 +234,50 @@ export class PrismaNotificationRecordsStore
     }
 
     @traced(TRACE_NAME)
-    async saveSentNotificationUser(user: SentNotificationUser): Promise<void> {
-        await this._client.sentNotificationUser.upsert({
+    async saveSentPushNotification(push: SentPushNotification): Promise<void> {
+        await this._client.sentPushNotification.upsert({
             where: {
-                sentNotificationId_userId_subscriptionId: {
-                    sentNotificationId: user.sentNotificationId,
-                    userId: user.userId,
-                    subscriptionId: user.subscriptionId,
-                },
+                id: push.id,
             },
             create: {
-                sentNotificationId: user.sentNotificationId,
-                userId: user.userId,
-                subscriptionId: user.subscriptionId,
-                success: user.success,
-                errorCode: user.errorCode,
+                id: push.id,
+                sentNotificationId: push.sentNotificationId,
+                pushSubscriptionId: push.pushSubscriptionId,
+                userId: push.userId,
+                subscriptionId: push.subscriptionId,
+                success: push.success,
+                errorCode: push.errorCode,
             },
             update: {
-                success: user.success,
-                errorCode: user.errorCode,
+                sentNotificationId: push.sentNotificationId,
+                pushSubscriptionId: push.pushSubscriptionId,
+                userId: push.userId,
+                subscriptionId: push.subscriptionId,
+                success: push.success,
+                errorCode: push.errorCode,
             },
         });
     }
 
     @traced(TRACE_NAME)
-    async createSentNotificationUsers(
-        users: SentNotificationUser[]
+    async createSentPushNotifications(
+        notifications: SentPushNotification[]
     ): Promise<void> {
-        await this._client.sentNotificationUser.createMany({
-            data: users.map((u) => ({
-                sentNotificationId: u.sentNotificationId,
-                userId: u.userId,
-                subscriptionId: u.subscriptionId,
-                success: u.success,
-                errorCode: u.errorCode,
+        await this._client.sentPushNotification.createMany({
+            data: notifications.map((p) => ({
+                id: p.id,
+                sentNotificationId: p.sentNotificationId,
+                pushSubscriptionId: p.pushSubscriptionId,
+                userId: p.userId,
+                subscriptionId: p.subscriptionId,
+                success: p.success,
+                errorCode: p.errorCode,
             })),
         });
     }
 
     @traced(TRACE_NAME)
-    async listActiveSubscriptionsForNotification(
+    async listSubscriptionsForNotification(
         recordName: string,
         notificationAddress: string
     ): Promise<NotificationSubscription[]> {
@@ -209,7 +286,6 @@ export class PrismaNotificationRecordsStore
                 where: {
                     recordName: recordName,
                     notificationAddress: notificationAddress,
-                    active: true,
                 },
             });
 
@@ -219,20 +295,69 @@ export class PrismaNotificationRecordsStore
     }
 
     @traced(TRACE_NAME)
-    async listActiveSubscriptionsForUser(
+    async listSubscriptionsForUser(
         userId: string
     ): Promise<NotificationSubscription[]> {
         const subscriptions =
             await this._client.notificationSubscription.findMany({
                 where: {
                     userId: userId,
-                    active: true,
                 },
             });
 
         return subscriptions.map((sub) =>
             this._convertNotificationSubscription(sub)
         );
+    }
+
+    @traced(TRACE_NAME)
+    async listActivePushSubscriptionsForNotification(
+        recordName: string,
+        notificationAddress: string
+    ): Promise<UserPushSubscription[]> {
+        const subscriptions = await this._client.$queryRaw<
+            UserPushSubscription[]
+        >`
+            SELECT DISTINCT ON ("id")
+                "id",
+                "endpoint",
+                "keys",
+                "active",
+                "subscriptionId",
+                "userId"
+            FROM (
+                SELECT
+                "PushSubscription"."id" as "id",
+                "PushSubscription"."endpoint",
+                "PushSubscription"."keys",
+                "PushSubscription"."active",
+                "NotificationSubscription"."id" as "subscriptionId",
+                NULL as "userId"
+                FROM "PushSubscription"
+                INNER JOIN "NotificationSubscription" ON "NotificationSubscription"."pushSubscriptionId" = "PushSubscription"."id"
+                WHERE 
+                    "NotificationSubscription"."recordName" = ${recordName} AND 
+                    "NotificationSubscription"."notificationAddress" = ${notificationAddress} AND
+                    "PushSubscription"."active" = TRUE
+                UNION
+                SELECT
+                    "PushSubscription"."id" as "id",
+                    "PushSubscription"."endpoint",
+                    "PushSubscription"."keys",
+                    "PushSubscription"."active",
+                    "NotificationSubscription"."id" as "subscriptionId",
+                    "NotificationSubscription"."userId" as "userId"
+                FROM "PushSubscription"
+                INNER JOIN "PushSubscriptionUser" ON "PushSubscriptionUser"."pushSubscriptionId" = "PushSubscription"."id"
+                INNER JOIN "NotificationSubscription" ON "PushSubscriptionUser"."userId" = "NotificationSubscription"."userId"
+                WHERE 
+                    "PushSubscription".active = TRUE AND
+                    "NotificationSubscription"."recordName" = ${recordName} AND 
+                    "NotificationSubscription"."notificationAddress" = ${notificationAddress}
+            );
+        `;
+
+        return subscriptions;
     }
 
     @traced(TRACE_NAME)
@@ -281,7 +406,7 @@ export class PrismaNotificationRecordsStore
                     },
                 },
             }),
-            this._client.sentNotificationUser.count({
+            this._client.sentPushNotification.count({
                 where: {
                     sentNotification: {
                         ...whereRun,
@@ -499,17 +624,16 @@ export class PrismaNotificationRecordsStore
     private _convertNotificationSubscription(
         sub: PrismaNotificationSubscription
     ): NotificationSubscription {
-        const pushSubscription = PUSH_SUBSCRIPTION_SCHEMA.parse(
-            sub.pushSubscription
-        );
+        if (!sub) {
+            return null;
+        }
 
         return {
             id: sub.id,
             recordName: sub.recordName,
             notificationAddress: sub.notificationAddress,
             userId: sub.userId,
-            active: sub.active,
-            pushSubscription: pushSubscription,
+            pushSubscriptionId: sub.pushSubscriptionId,
         };
     }
 }

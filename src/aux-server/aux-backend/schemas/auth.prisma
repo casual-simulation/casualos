@@ -831,7 +831,7 @@ model NotificationSubscription {
     userId String?
     user User? @relation(fields: [userId], references: [id])
 
-    pushSubscriptionId String?
+    pushSubscriptionId String? @db.Uuid
     pushSubscription PushSubscription? @relation(fields: [pushSubscriptionId], references: [id])
 
     sentNotifications SentPushNotification[]
@@ -880,11 +880,11 @@ model SentPushNotification {
     subscriptionId String? @db.Uuid
     subscription NotificationSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull, map: "SentNotificationUser_subscriptionId_fkey1")
 
-    userId String
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "SentNotificationUser_userId_fkey1")
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "SentNotificationUser_userId_fkey1")
 
-    pushSubscriptionId String @db.Uuid
-    pushSubscription PushSubscription @relation(fields: [pushSubscriptionId], references: [id], onDelete: Cascade, map: "SentNotificationUser_pushSubscriptionId_fkey1")
+    pushSubscriptionId String? @db.Uuid
+    pushSubscription PushSubscription? @relation(fields: [pushSubscriptionId], references: [id], onDelete: SetNull, map: "SentNotificationUser_pushSubscriptionId_fkey1")
 
     success Boolean
     errorCode String?
