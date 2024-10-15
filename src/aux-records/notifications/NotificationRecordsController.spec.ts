@@ -11,7 +11,6 @@ import {
 import {
     NotificationRecordsController,
     SubscribeToNotificationSuccess,
-    SUBSCRIPTION_ID_NAMESPACE,
 } from './NotificationRecordsController';
 import {
     buildSubscriptionConfig,
@@ -25,7 +24,10 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { WebPushInterface } from './WebPushInterface';
+import {
+    SUBSCRIPTION_ID_NAMESPACE,
+    WebPushInterface,
+} from './WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 
 console.log = jest.fn();

@@ -39,12 +39,11 @@ import {
     PushNotificationPayload,
     PushSubscriptionType,
     SendPushNotificationResult,
+    SUBSCRIPTION_ID_NAMESPACE,
     WebPushInterface,
 } from './WebPushInterface';
 
 const TRACE_NAME = 'NotificationRecordsController';
-
-export const SUBSCRIPTION_ID_NAMESPACE = 'f12953a9-21e2-47d4-b7b7-f699bd9a5550';
 
 /**
  * Defines the configuration for a webhook records controller.

@@ -1808,6 +1808,45 @@ export class RecordsServer {
                     .http('DELETE', '/api/v2/records/notification')
             ),
 
+            registerPushSubscription: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/register')
+                .inputs(
+                    z.object({
+                        pushSubscription: PUSH_SUBSCRIPTION_SCHEMA,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ pushSubscription, instances }, context) => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        validation.success === false &&
+                        validation.errorCode !== 'no_session_key'
+                    ) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._notificationsController.registerPushSubscription(
+                            {
+                                userId: validation.userId,
+                                pushSubscription,
+                                instances,
+                            }
+                        );
+
+                    return result;
+                }),
+
             subscribeToNotification: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/records/notification/subscribe')

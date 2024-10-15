@@ -1594,6 +1594,47 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/records/notification/register",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "pushSubscription": Object {
+            "schema": Object {
+              "endpoint": Object {
+                "type": "string",
+              },
+              "expirationTime": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "keys": Object {
+                "type": "record",
+                "valueSchema": Object {
+                  "type": "string",
+                },
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "registerPushSubscription",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/notification/subscribe",
       },
       "inputs": Object {
@@ -5344,6 +5385,47 @@ Object {
         "type": "object",
       },
       "name": "eraseNotification",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/notification/register",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "pushSubscription": Object {
+            "schema": Object {
+              "endpoint": Object {
+                "type": "string",
+              },
+              "expirationTime": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "number",
+              },
+              "keys": Object {
+                "type": "record",
+                "valueSchema": Object {
+                  "type": "string",
+                },
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "registerPushSubscription",
       "origins": "api",
     },
     Object {

@@ -161,11 +161,11 @@ import {
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
 import { tryParseJson } from './Utils';
+import { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import {
-    NotificationRecordsController,
     SUBSCRIPTION_ID_NAMESPACE,
-} from './notifications/NotificationRecordsController';
-import { WebPushInterface } from './notifications/WebPushInterface';
+    WebPushInterface,
+} from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 
 jest.mock('@simplewebauthn/server');
@@ -11337,6 +11337,125 @@ describe('RecordsServer', () => {
                 JSON.stringify({
                     recordName,
                     address: 'testAddress',
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/notification/register', () => {
+        beforeEach(async () => {
+            // await notificationStore.createItem(recordName, {
+            //     address: 'testAddress',
+            //     description: 'my notification',
+            //     markers: [PRIVATE_MARKER],
+            // });
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification/register`,
+                    JSON.stringify({
+                        pushSubscription: {
+                            endpoint: 'https://example.com',
+                            keys: {
+                                p256dh: 'p256dh',
+                                auth: 'auth',
+                            },
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(notificationStore.pushSubscriptions).toEqual([]);
+        });
+
+        it('should support registering a push subscription', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/notification/register`,
+                    JSON.stringify({
+                        pushSubscription: {
+                            endpoint: 'https://example.com',
+                            keys: {
+                                p256dh: 'p256dh',
+                                auth: 'auth',
+                            },
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(notificationStore.pushSubscriptions).toEqual([
+                {
+                    id: expect.any(String),
+                    endpoint: 'https://example.com',
+                    keys: {
+                        p256dh: 'p256dh',
+                        auth: 'auth',
+                    },
+                    active: true,
+                },
+            ]);
+
+            expect(notificationStore.pushSubscriptionUsers).toEqual([
+                {
+                    pushSubscriptionId: expect.any(String),
+                    userId,
+                },
+            ]);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/notification/register',
+            () =>
+                JSON.stringify({
+                    pushSubscription: {
+                        endpoint: 'https://example.com',
+                        keys: {
+                            p256dh: 'p256dh',
+                            auth: 'auth',
+                        },
+                    },
                 }),
             () => apiHeaders
         );
