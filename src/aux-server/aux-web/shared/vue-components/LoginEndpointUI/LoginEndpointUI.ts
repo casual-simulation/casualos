@@ -9,7 +9,7 @@ import EnterAddressDialog from '../EnterAddressDialog/EnterAddressDialog';
 import HasAccountDialog from '../HasAccountDialog/HasAccountDialog';
 import UpdatePasswordLinkDialog from '../UpdatePasswordLinkDialog/UpdatePasswordLinkDialog';
 import EnterAccountInfoDialog from '../EnterAccountInfoDialog/EnterAccountInfoDialog';
-import RegisterWebAuthnDialog from '../RegisterWebAuthnDialog/RegisterWebAuthnDialog';
+import HandleLoginMetadata from '../HandleLoginMetadata/HandleLoginMetadata';
 
 @Component({
     components: {
@@ -18,7 +18,7 @@ import RegisterWebAuthnDialog from '../RegisterWebAuthnDialog/RegisterWebAuthnDi
         'has-account-dialog': HasAccountDialog,
         'enter-account-info-dialog': EnterAccountInfoDialog,
         'update-password-link-dialog': UpdatePasswordLinkDialog,
-        'register-webauthn-dialog': RegisterWebAuthnDialog,
+        'handle-login-metadata': HandleLoginMetadata,
     },
 })
 export default class LoginEndpointUI extends Vue {

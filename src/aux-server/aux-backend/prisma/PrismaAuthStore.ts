@@ -16,6 +16,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserLoginMetadata,
     UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import {
@@ -1216,6 +1217,38 @@ export class PrismaAuthStore implements AuthStore {
                 },
             });
         }
+    }
+
+    async findUserLoginMetadata(
+        userId: string
+    ): Promise<UserLoginMetadata | null> {
+        const [credentialIds, pushSubscriptionIds] = await Promise.all([
+            this._client.userAuthenticator.findMany({
+                where: {
+                    userId: userId,
+                },
+                select: {
+                    id: true,
+                },
+            }),
+            this._client.pushSubscriptionUser.findMany({
+                where: {
+                    userId: userId,
+                },
+                select: {
+                    pushSubscriptionId: true,
+                },
+            }),
+        ]);
+
+        return {
+            hasUserAuthenticator: credentialIds.length > 0,
+            userAuthenticatorCredentialIds: credentialIds.map((c) => c.id),
+            hasPushSubscription: pushSubscriptionIds.length > 0,
+            pushSubscriptionIds: pushSubscriptionIds.map(
+                (p) => p.pushSubscriptionId
+            ),
+        };
     }
 
     private _convertToAuthUser(user: User | null): AuthUser | null {

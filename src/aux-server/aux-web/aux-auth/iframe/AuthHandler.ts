@@ -883,14 +883,20 @@ export class AuthHandler implements AuxAuth {
         await authManager.loadUserInfo();
         await this._loadUserInfo();
 
-        if (!cancelSignal.canceled && browserSupportsWebAuthn()) {
-            // show prompt to add a key
+        let showingInterstital = false;
+
+        if (!cancelSignal.canceled && login.metadata) {
+            showingInterstital = true;
             this._loginUIStatus.next({
-                page: 'show_register_webauthn',
+                page: 'handle_login_metadata',
+                metadata: login.metadata,
+                method: 'code',
                 apiEndpoint: authManager.apiEndpoint,
                 authenticationHeaders: authManager.getAuthenticationHeaders(),
             });
-        } else {
+        }
+
+        if (!showingInterstital) {
             this._loginUIStatus.next({
                 page: false,
             });
