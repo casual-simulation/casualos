@@ -2188,6 +2188,7 @@ describe('RecordsServer', () => {
                     expireTimeMs: null,
                     connectionKey: expect.any(String),
                     sessionKey: expect.any(String),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -2206,6 +2207,7 @@ describe('RecordsServer', () => {
                     expireTimeMs: null,
                     connectionKey: expect.any(String),
                     sessionKey: expect.any(String),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -2360,6 +2362,7 @@ describe('RecordsServer', () => {
                 sessionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
                 connectionKey: expect.any(String),
+                metadata: expect.any(Object),
             });
 
             const parsed = parseSessionKey(data.sessionKey);
@@ -2401,6 +2404,7 @@ describe('RecordsServer', () => {
                 sessionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
                 connectionKey: expect.any(String),
+                metadata: expect.any(Object),
             });
 
             const parsed = parseSessionKey(data.sessionKey);
@@ -2615,6 +2619,7 @@ describe('RecordsServer', () => {
                     sessionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
                     connectionKey: expect.any(String),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -2700,6 +2705,7 @@ describe('RecordsServer', () => {
                     sessionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
                     connectionKey: expect.any(String),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -3248,6 +3254,7 @@ describe('RecordsServer', () => {
                     sessionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
                     connectionKey: expect.any(String),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -3319,6 +3326,7 @@ describe('RecordsServer', () => {
                     sessionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
                     connectionKey: expect.any(String),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -3411,6 +3419,7 @@ describe('RecordsServer', () => {
                     connectionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
                     updatePasswordUrl: 'link',
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -3607,6 +3616,7 @@ describe('RecordsServer', () => {
                     connectionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
                     updatePasswordUrl: 'link',
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -4192,6 +4202,7 @@ describe('RecordsServer', () => {
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });
@@ -4258,6 +4269,7 @@ describe('RecordsServer', () => {
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     expireTimeMs: expect.any(Number),
+                    metadata: expect.any(Object),
                 },
                 headers: accountCorsHeaders,
             });

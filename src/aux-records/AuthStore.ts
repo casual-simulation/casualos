@@ -329,6 +329,13 @@ export interface AuthStore {
     ): Promise<AuthUserAuthenticatorWithUser | null>;
 
     /**
+     * Finds the metadata for the given user ID.
+     * If the user does not exist, then null is returned.
+     * @param userId The ID of the user.
+     */
+    findUserLoginMetadata(userId: string): Promise<UserLoginMetadata | null>;
+
+    /**
      * Saves the given authenticator.
      * @param authenticator The authenticator that should be saved.
      */
@@ -1144,4 +1151,39 @@ export interface UpdateSubscriptionPeriodRequest {
      * The invoice that should be created.
      */
     invoice: Omit<AuthInvoice, 'id' | 'subscriptionId' | 'periodId'>;
+}
+
+/**
+ * Defines metadata that is included after a user successfully logs in.
+ */
+export interface UserLoginMetadata {
+    /**
+     * Whether the user has a registered user authenticator (passkey).
+     * Should be used as a hint to the client to prompt the user to register a passkey.
+     * If null or undefined, then the user does not have a passkey.
+     */
+    hasUserAuthenticator: boolean;
+
+    /**
+     * The list of active user authenticator credential IDs that the user has registered.
+     * Can be used by the client to determine if this device has already registered a user authenticator.
+     * If empty, then the user does not have any user authenticators.
+     */
+    userAuthenticatorCredentialIds: string[];
+
+    /**
+     * Whether the user has a registered push subscription.
+     * Should be used as a hint to the client to prompt the user to register a push subscription for their device.
+     * If null or undefined, then the user does not have a push subscription.
+     */
+    hasPushSubscription: boolean;
+
+    /**
+     * The list of active push subscription IDs that the user has registered.
+     * Can be used by the client to determine if this device has already registered a push subscription.
+     * Each ID is a UUIDv5 of the endpoint of the push subscription and the subscription ID namespace.
+     * If the user has a push subscription, but the list doesn't contain the current push subscription, then the device should re-register the push subscription.
+     * If empty, then the user does not have any push subscriptions.
+     */
+    pushSubscriptionIds: string[];
 }
