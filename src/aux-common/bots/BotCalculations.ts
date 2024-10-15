@@ -1905,6 +1905,7 @@ export function getBotSubShape(
     const shape: BotSubShape = calculateBotValue(calc, bot, 'auxFormSubtype');
     if (
         shape === 'gltf' ||
+        shape === 'jsonObject' ||
         shape === 'html' ||
         shape === 'src' ||
         shape === 'pointLight' ||
