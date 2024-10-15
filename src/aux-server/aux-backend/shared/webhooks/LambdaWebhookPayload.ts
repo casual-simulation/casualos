@@ -15,7 +15,9 @@ export const HANDLE_WEBHOOK_PAYLOAD_SCHEMA = z.object({
         body: z.string().nullable(),
         ipAddress: z.string(),
     }),
+    requestUserId: z.string().optional().nullable(),
     state: WEBHOOK_STATE_SCHEMA,
+    sessionUserId: z.string().optional().nullable(),
     sessionKey: z.string().optional().nullable(),
     connectionKey: z.string().optional().nullable(),
     options: z

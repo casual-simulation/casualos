@@ -792,6 +792,30 @@ export class RecordsServer {
                     }
                 ),
 
+            requestPrivacyFeaturesChange: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/privacyFeatures/change')
+                .inputs(
+                    z.object({
+                        userId: z.string(),
+                    })
+                )
+                .handler(async ({ userId }, context) => {
+                    const sessionKey = context.sessionKey;
+
+                    if (!sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const result =
+                        await this._auth.requestPrivacyFeaturesChange({
+                            userId,
+                            sessionKey,
+                        });
+
+                    return result;
+                }),
+
             getWebAuthnRegistrationOptions: procedure()
                 .origins(true)
                 .http('GET', '/api/v2/webauthn/register/options')

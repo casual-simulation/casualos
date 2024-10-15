@@ -38,6 +38,7 @@ import {
     AmbientLight,
     Light,
     Material,
+    ObjectLoader,
 } from '@casual-simulation/three';
 import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { sortBy } from 'lodash';
@@ -114,6 +115,7 @@ interface CancellationToken {
 }
 
 let ldrawLoader: LDrawLoader = null;
+let jsonObjectLoader: ObjectLoader = null;
 
 export class BotShapeDecorator
     extends AuxBot3DDecoratorBase
@@ -965,6 +967,8 @@ export class BotShapeDecorator
                 (this._subShape === 'ldraw' || this._subShape === 'ldrawText')
             ) {
                 this._createLDraw();
+            } else if (this._subShape === 'jsonObject' && this._address) {
+                this._createJsonObject();
             } else {
                 this._createCube();
             }
@@ -1284,6 +1288,149 @@ export class BotShapeDecorator
     private _setLDraw(ldraw: Group) {
         const group = new Group();
         group.add(ldraw);
+
+        // Positioning
+        group.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
+        let box = new Box3();
+        box.setFromObject(group);
+        let size = new Vector3();
+        box.getSize(size);
+        let center = new Vector3();
+        box.getCenter(center);
+        const maxScale = Math.max(size.x, size.y, size.z);
+
+        if (this._scaleMode !== 'absolute') {
+            size.divideScalar(maxScale);
+            center.divideScalar(maxScale);
+            group.scale.divideScalar(maxScale);
+        }
+
+        let bottomCenter = new Vector3(-center.x, -center.y, -center.z);
+
+        // Group
+        group.position.copy(bottomCenter);
+        this.scene = group;
+        this.container.add(this.scene);
+
+        this.mesh = findFirstMesh(this.scene);
+
+        // Collider
+        const collider = (this.collider = createCube(1));
+        this.collider.scale.copy(size);
+        setColor(collider, 'clear');
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+
+        this.scene.traverse((obj) => {
+            if (obj instanceof Mesh) {
+                const material = obj.material;
+                if (material) {
+                    registerMaterial(material);
+
+                    if (material.color) {
+                        material[DEFAULT_COLOR] = material.color;
+                    }
+
+                    if (
+                        typeof material.opacity === 'number' &&
+                        !Number.isNaN(material.opacity)
+                    ) {
+                        material[DEFAULT_OPACITY] = material.opacity;
+                    }
+
+                    if (typeof material.transparent === 'boolean') {
+                        material[DEFAULT_TRANSPARENT] = material.transparent;
+                    }
+                }
+            }
+        });
+
+        this._updateColor(null);
+        this._updateOpacity(null);
+        this._updateRenderOrder(null);
+        this._updateBuildStep(null);
+        this.bot3D.updateMatrixWorld(true);
+    }
+
+    private async _createJsonObject() {
+        this.stroke = null;
+        this._canHaveStroke = false;
+        let token: CancellationToken = {
+            isCanceled: false,
+        };
+        this._meshCancellationToken = token;
+
+        await this._loadJsonObject(this._address, token);
+        // if (this._subShape === 'ldraw') {
+        // } else {
+        //     await this._parseLDraw(this._address, token);
+        // }
+    }
+
+    private async _loadJsonObject(
+        url: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!jsonObjectLoader) {
+                jsonObjectLoader = new ObjectLoader();
+            }
+            const obj = await jsonObjectLoader.loadAsync(url);
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setJsonObject(obj);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to load jsonObject:',
+                url,
+                err
+            );
+
+            return false;
+        }
+    }
+
+    // private async _parseJsonObject(
+    //     text: string,
+    //     cancellationToken: CancellationToken
+    // ) {
+    //     try {
+    //         if (!ldrawLoader) {
+    //             ldrawLoader = new LDrawLoader();
+    //         }
+    //         (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
+    //         const ldraw = await new Promise<Group>((resolve, reject) => {
+    //             try {
+    //                 (ldrawLoader.parse as any)(text, (group: Group) =>
+    //                     resolve(group)
+    //                 );
+    //             } catch (err) {
+    //                 reject(err);
+    //             }
+    //         });
+    //         if (!this.container || cancellationToken.isCanceled) {
+    //             // The decorator was disposed of by the Bot.
+    //             return false;
+    //         }
+    //         this._setLDraw(ldraw);
+    //         return true;
+    //     } catch (err) {
+    //         console.error(
+    //             '[BotShapeDecorator] Unable to parse LDraw:',
+    //             text,
+    //             err
+    //         );
+
+    //         return false;
+    //     }
+    // }
+
+    private _setJsonObject(obj: Object3D) {
+        const group = new Group();
+        group.add(obj);
 
         // Positioning
         group.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);

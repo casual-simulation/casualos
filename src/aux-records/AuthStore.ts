@@ -441,11 +441,6 @@ export interface AuthUser {
      */
     banReason?: 'terms_of_service_violation' | null | undefined;
 
-    // /**
-    //  * The OpenID login provider that should be required for this user to login with.
-    //  */
-    // oidLoginProvider?: string | null | undefined;
-
     /**
      * The Privo Service ID that this user is associated with.
      */
@@ -455,6 +450,11 @@ export interface AuthUser {
      * The Privo Service ID of the parent of this user.
      */
     privoParentServiceId?: string;
+
+    /**
+     * The URL that the user or user's parent can visit to grant consent for the user to use the system.
+     */
+    privoConsentUrl?: string;
 
     /**
      * The privacy-related features that the user has access to.

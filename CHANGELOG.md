@@ -2,7 +2,7 @@
 
 ## V3.3.11
 
-#### Date: 9/27/2024
+#### Date: 10/15/2024
 
 ### :rocket: Features
 
@@ -36,12 +36,18 @@
         -   Webhooks do not automatically install abCore. They only use the bots that are stored in the target.
         -   Webhooks always act like static insts.
             -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
+-   Added the ability to request consent again so that a parent can adjust the privacy features for their child.
+-   Added the `jsonObject` form subtype.
+    -   Supports loading meshes stored in the [Three.js JSON Object Scene format](https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4).
+    -   Works similarly to `gltf`, but it uses [ObjectLoader](https://threejs.org/docs/?q=loader#api/en/loaders/ObjectLoader) to load meshes from the URL specified in the `formAddress` tag.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.
 -   Fixed an issue where it was impossible to configure a custom AB1 for a comId.
 -   Resolved an issue where the Monaco editor failed to refresh when navigating between the same tag in different spaces. The editor now correctly detects the context change and updates the displayed content accordingly.
+-   Fixed an issue where it was possible for users who are not logged in to access public data on Privo-enabled servers.
+-   Fixed an issue where CasualOS would run into a server error if a user tried to login using a parent account.
 
 ## V3.3.10
 
