@@ -6,6 +6,7 @@ import z, { input } from 'zod';
 import { KnownErrorCodes } from './ErrorCodes';
 import type { Span } from '@opentelemetry/api';
 import type { DenialReason } from '../common/DenialReason';
+import { Result } from './Result';
 
 /**
  * Defines an interface for the context that an RPC call is made with.
@@ -37,27 +38,10 @@ export interface RPCContext {
     span?: Span;
 }
 
-export type ProcedureOutput =
-    | ProcedureOutputSuccess
-    | ProcedureOutputError
-    | ProcedureOutputStream;
-
-export interface ProcedureOutputSuccess {
-    success: true;
-}
-
-export interface ProcedureOutputError {
-    success: false;
-    errorCode: KnownErrorCodes;
-    errorMessage: string;
-    reason?: DenialReason;
-}
+export type ProcedureOutput = Result<any>;
 
 export interface ProcedureOutputStream
-    extends AsyncGenerator<
-        any,
-        ProcedureOutputSuccess | ProcedureOutputError
-    > {}
+    extends AsyncGenerator<any, ProcedureOutput> {}
 
 /**
  * Defines a basic interface for a single RPC call.

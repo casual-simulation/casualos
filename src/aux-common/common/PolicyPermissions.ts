@@ -65,7 +65,7 @@ export const RUN_ACTION = 'run';
 export const SEND_ACTION = 'send';
 export const SUBSCRIBE_ACTION = 'subscribe';
 export const UNSUBSCRIBE_ACTION = 'unsubscribe';
-export const LIST_SUBSCRIBERS_ACTION = 'listSubscribers';
+export const LIST_SUBSCRIPTIONS_ACTION = 'listSubscriptions';
 
 /**
  * The possible types of actions that can be performed on resources.
@@ -93,7 +93,7 @@ export type ActionKinds =
     | 'send'
     | 'subscribe'
     | 'unsubscribe'
-    | 'listSubscribers';
+    | 'listSubscriptions';
 
 /**
  * The possible types of actions that can be performed on data resources.
@@ -208,7 +208,7 @@ export type NotificationActionKinds =
     | 'send'
     | 'subscribe'
     | 'unsubscribe'
-    | 'listSubscribers';
+    | 'listSubscriptions';
 
 /**
  * The possible types of permissions that can be added to policies.
@@ -307,7 +307,7 @@ export const NOTIFICATION_ACTION_KINDS_VALIDATION = z.enum([
     SEND_ACTION,
     SUBSCRIBE_ACTION,
     UNSUBSCRIBE_ACTION,
-    LIST_SUBSCRIBERS_ACTION,
+    LIST_SUBSCRIPTIONS_ACTION,
 ]);
 
 export const RESOURCE_KIND_VALIDATION = z.enum([
@@ -350,7 +350,7 @@ export const ACTION_KINDS_VALIDATION = z.enum([
     SEND_ACTION,
     SUBSCRIBE_ACTION,
     UNSUBSCRIBE_ACTION,
-    LIST_SUBSCRIBERS_ACTION,
+    LIST_SUBSCRIPTIONS_ACTION,
 ]);
 
 /**

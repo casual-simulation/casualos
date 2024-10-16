@@ -1746,4 +1746,212 @@ describe('NotificationRecordsController', () => {
             expect(itemsStore.sentPushNotifications).toEqual([]);
         });
     });
+
+    describe('listSubscriptionsForUser()', () => {
+        beforeEach(async () => {
+            await itemsStore.createItem(recordName, {
+                address: 'public',
+                markers: [PUBLIC_READ_MARKER],
+                description: 'public',
+            });
+
+            await itemsStore.createItem(recordName, {
+                address: 'public2',
+                markers: [PUBLIC_READ_MARKER],
+                description: 'public2',
+            });
+
+            await saveTestSubscription({
+                id: 'sub1',
+                recordName,
+                notificationAddress: 'public',
+                userId: otherUserId,
+                pushSubscription: {
+                    endpoint: 'endpoint1',
+                    keys: {},
+                },
+            });
+
+            await saveTestSubscription({
+                id: 'sub3',
+                recordName,
+                notificationAddress: 'public2',
+                userId: otherUserId,
+                pushSubscription: {
+                    endpoint: 'endpoint1',
+                    keys: {},
+                },
+            });
+
+            await saveTestSubscription({
+                id: 'sub2',
+                recordName,
+                notificationAddress: 'public',
+                userId: userId,
+                pushSubscription: {
+                    endpoint: 'endpoint2',
+                    keys: {},
+                },
+            });
+        });
+
+        it('should return the list of subscriptions for the user', async () => {
+            const result = await manager.listSubscriptionsForUser({
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                subscriptions: [
+                    {
+                        id: 'sub1',
+                        recordName,
+                        notificationAddress: 'public',
+                        userId: otherUserId,
+                        pushSubscriptionId: null,
+                    },
+                    {
+                        id: 'sub3',
+                        recordName,
+                        notificationAddress: 'public2',
+                        userId: otherUserId,
+                        pushSubscriptionId: null,
+                    },
+                ],
+            });
+        });
+
+        it('should return not_logged_in if the user is not logged in', async () => {
+            const result = await manager.listSubscriptionsForUser({
+                userId: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+            });
+        });
+    });
+
+    describe('listSubscriptions()', () => {
+        beforeEach(async () => {
+            await itemsStore.createItem(recordName, {
+                address: 'public',
+                markers: [PUBLIC_READ_MARKER],
+                description: 'public',
+            });
+
+            await itemsStore.createItem(recordName, {
+                address: 'public2',
+                markers: [PUBLIC_READ_MARKER],
+                description: 'public2',
+            });
+
+            await saveTestSubscription({
+                id: 'sub1',
+                recordName,
+                notificationAddress: 'public',
+                userId: otherUserId,
+                pushSubscription: {
+                    endpoint: 'endpoint1',
+                    keys: {},
+                },
+            });
+
+            await saveTestSubscription({
+                id: 'sub3',
+                recordName,
+                notificationAddress: 'public2',
+                userId: otherUserId,
+                pushSubscription: {
+                    endpoint: 'endpoint1',
+                    keys: {},
+                },
+            });
+
+            await saveTestSubscription({
+                id: 'sub2',
+                recordName,
+                notificationAddress: 'public',
+                userId: userId,
+                pushSubscription: {
+                    endpoint: 'endpoint2',
+                    keys: {},
+                },
+            });
+        });
+
+        it('should return the list of subscriptions for the record', async () => {
+            const result = await manager.listSubscriptions({
+                recordName,
+                address: 'public',
+                userId: userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                subscriptions: [
+                    {
+                        id: 'sub1',
+                        recordName,
+                        notificationAddress: 'public',
+                        userId: otherUserId,
+                        pushSubscriptionId: null,
+                    },
+                    {
+                        id: 'sub2',
+                        recordName,
+                        notificationAddress: 'public',
+                        userId: userId,
+                        pushSubscriptionId: null,
+                    },
+                ],
+            });
+        });
+
+        it('should return not_logged_in if the user is not logged in', async () => {
+            const result = await manager.listSubscriptions({
+                recordName,
+                address: 'public',
+                userId: null,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+            });
+        });
+
+        it('should return not_authorized if the user does not have the listSubscriptions permission', async () => {
+            const result = await manager.listSubscriptions({
+                recordName,
+                address: 'public',
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName,
+                    resourceKind: 'notification',
+                    resourceId: 'public',
+                    action: 'listSubscriptions',
+                    subjectType: 'user',
+                    subjectId: otherUserId,
+                },
+            });
+        });
+    });
 });

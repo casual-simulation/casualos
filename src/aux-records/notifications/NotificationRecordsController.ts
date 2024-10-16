@@ -42,6 +42,7 @@ import {
     SUBSCRIPTION_ID_NAMESPACE,
     WebPushInterface,
 } from './WebPushInterface';
+import { Result } from '@casual-simulation/aux-common/rpc/Result';
 
 const TRACE_NAME = 'NotificationRecordsController';
 
@@ -617,6 +618,141 @@ export class NotificationRecordsController extends CrudRecordsController<
         }
     }
 
+    @traced(TRACE_NAME)
+    async listSubscriptionsForUser(
+        request: ListSubscriptionsForUserRequest
+    ): Promise<
+        Result<{
+            subscriptions: NotificationSubscription[];
+        }>
+    > {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            const subscriptions = await this.store.listSubscriptionsForUser(
+                request.userId
+            );
+            return {
+                success: true,
+                subscriptions: subscriptions.map((sub) => ({
+                    id: sub.id,
+                    userId: sub.userId,
+                    recordName: sub.recordName,
+                    notificationAddress: sub.notificationAddress,
+                    pushSubscriptionId: sub.pushSubscriptionId,
+                })),
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[NotificationRecordsController] Error listing subscriptions for user:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    @traced(TRACE_NAME)
+    async listSubscriptions(request: ListSubscriptionsRequest): Promise<
+        Result<{
+            subscriptions: NotificationSubscription[];
+        }>
+    > {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            const context = await this.policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
+            const notification = await this.store.getItemByAddress(
+                recordName,
+                request.address
+            );
+
+            if (!notification) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'Notification not found.',
+                };
+            }
+
+            const authorization = await this.policies.authorizeUserAndInstances(
+                context.context,
+                {
+                    userId: request.userId,
+                    resourceKind: 'notification',
+                    markers: notification.markers,
+                    resourceId: notification.address,
+                    action: 'listSubscriptions',
+                    instances: request.instances,
+                }
+            );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const subscriptions =
+                await this.store.listSubscriptionsForNotification(
+                    recordName,
+                    request.address
+                );
+            return {
+                success: true,
+                subscriptions: subscriptions.map((sub) => ({
+                    id: sub.id,
+                    userId: sub.userId,
+                    recordName: sub.recordName,
+                    notificationAddress: sub.notificationAddress,
+                    pushSubscriptionId: sub.pushSubscriptionId,
+                })),
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(
+                '[NotificationRecordsController] Error listing subscriptions for notification:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
         context: AuthorizationContext,
@@ -887,4 +1023,38 @@ export interface RegisterPushSubscriptionFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
+}
+
+export interface ListSubscriptionsForUserRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The instances that are currently loaded.
+     */
+    instances: string[];
+}
+
+export interface ListSubscriptionsRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The name of the record that the notification is in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the notification.
+     */
+    address: string;
+
+    /**
+     * The instances that are currently loaded.
+     */
+    instances: string[];
 }
