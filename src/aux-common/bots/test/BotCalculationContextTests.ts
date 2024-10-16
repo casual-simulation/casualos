@@ -1033,6 +1033,7 @@ export function botCalculationContextTests(
             ['hemisphereLight'],
             ['ldraw'],
             ['ldrawText'],
+            ['jsonObject'],
         ];
         const tagCases = ['auxFormSubtype', 'formSubtype'];
 

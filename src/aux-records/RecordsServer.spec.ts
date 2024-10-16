@@ -507,6 +507,12 @@ describe('RecordsServer', () => {
             privoClient,
             [relyingParty]
         );
+
+        // manually disable the Privo flag for tests
+        // (it is automatically set to true because a privo client is specified, but most tests
+        // assume privo isn't enabled)
+        authController.privoEnabled = false;
+
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
@@ -2804,6 +2810,8 @@ describe('RecordsServer', () => {
                 redirectUri: 'redirectUri',
                 ageOfConsent: 18,
             };
+
+            authController.privoEnabled = true;
         });
 
         it('should return a login request with the authorization URL', async () => {
@@ -2904,6 +2912,8 @@ describe('RecordsServer', () => {
                 redirectUri: 'redirectUri',
                 ageOfConsent: 18,
             };
+
+            authController.privoEnabled = true;
         });
 
         it('should save the authorization code', async () => {
@@ -3116,7 +3126,7 @@ describe('RecordsServer', () => {
                 idToken: 'idToken',
                 expiresIn: 1000,
                 userInfo: {
-                    roleIdentifier: 'roleIdentifier',
+                    roleIdentifier: 'adultRole',
                     serviceId: 'serviceId',
                     email: 'test@example.com',
                     emailVerified: true,
@@ -3187,7 +3197,7 @@ describe('RecordsServer', () => {
                 idToken: 'idToken',
                 expiresIn: 1000,
                 userInfo: {
-                    roleIdentifier: 'roleIdentifier',
+                    roleIdentifier: 'adultRole',
                     serviceId: 'serviceId',
                     email: 'test@example.com',
                     emailVerified: true,
@@ -3297,6 +3307,8 @@ describe('RecordsServer', () => {
                 redirectUri: 'redirectUri',
                 ageOfConsent: 18,
             };
+
+            authController.privoEnabled = true;
         });
 
         it('should return a 200 status code with the registration results', async () => {
@@ -3601,6 +3613,8 @@ describe('RecordsServer', () => {
             privoClientMock.resendConsentRequest.mockResolvedValue({
                 success: true,
             });
+
+            authController.privoEnabled = true;
         });
 
         it('should return a 200 status code', async () => {
