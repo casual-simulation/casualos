@@ -369,56 +369,6 @@ describe('AIController', () => {
             expect(chatInterface.chat).not.toBeCalled();
         });
 
-        it('should return success when allowedModels includes the model', async () => {
-            chatInterface.chat.mockReturnValueOnce(
-                Promise.resolve({
-                    choices: [
-                        {
-                            role: 'user',
-                            content: 'test',
-                            finishReason: 'stop',
-                        },
-                    ],
-                    totalTokens: 1,
-                })
-            );
-
-            const result = await controller.chat({
-                model: 'test-model1',
-                messages: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                    },
-                ],
-                temperature: 0.5,
-                userId,
-                userSubscriptionTier,
-            });
-
-            expect(result).toEqual({
-                success: true,
-                choices: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                        finishReason: 'stop',
-                    },
-                ],
-            });
-            expect(chatInterface.chat).toBeCalledWith({
-                model: 'test-model1',
-                messages: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                    },
-                ],
-                temperature: 0.5,
-                userId: 'test-user',
-            });
-        });
-
         it('should return not_authorized when allowedModels does not include the model', async () => {
             controller = new AIController({
                 chat: {
@@ -751,6 +701,56 @@ describe('AIController', () => {
                     currentLoginRequestId: null,
                     subscriptionId: 'sub1',
                     subscriptionStatus: 'active',
+                });
+            });
+
+            it('should return success when allowedModels includes the model', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).toBeCalledWith({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: 'test-user',
                 });
             });
 
@@ -1607,56 +1607,6 @@ describe('AIController', () => {
             });
         });
 
-        it('should return success when allowedModels includes the model', async () => {
-            chatInterface.chat.mockReturnValueOnce(
-                Promise.resolve({
-                    choices: [
-                        {
-                            role: 'user',
-                            content: 'test',
-                            finishReason: 'stop',
-                        },
-                    ],
-                    totalTokens: 1,
-                })
-            );
-
-            const result = await controller.chat({
-                model: 'test-model1',
-                messages: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                    },
-                ],
-                temperature: 0.5,
-                userId,
-                userSubscriptionTier,
-            });
-
-            expect(result).toEqual({
-                success: true,
-                choices: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                        finishReason: 'stop',
-                    },
-                ],
-            });
-            expect(chatInterface.chat).toBeCalledWith({
-                model: 'test-model1',
-                messages: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                    },
-                ],
-                temperature: 0.5,
-                userId: 'test-user',
-            });
-        });
-
         it('should return not_authorized error when allowedModels does not include the model', async () => {
             controller = new AIController({
                 chat: {
@@ -1737,6 +1687,56 @@ describe('AIController', () => {
                     currentLoginRequestId: null,
                     subscriptionId: 'sub1',
                     subscriptionStatus: 'active',
+                });
+            });
+
+            it('should return success when allowedModels includes the model', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).toBeCalledWith({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: 'test-user',
                 });
             });
 
