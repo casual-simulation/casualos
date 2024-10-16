@@ -42,7 +42,6 @@ import {
     SUBSCRIPTION_ID_NAMESPACE,
     WebPushInterface,
 } from './WebPushInterface';
-import { Result } from '@casual-simulation/aux-common/rpc/Result';
 
 const TRACE_NAME = 'NotificationRecordsController';
 
@@ -621,11 +620,7 @@ export class NotificationRecordsController extends CrudRecordsController<
     @traced(TRACE_NAME)
     async listSubscriptionsForUser(
         request: ListSubscriptionsForUserRequest
-    ): Promise<
-        Result<{
-            subscriptions: NotificationSubscription[];
-        }>
-    > {
+    ): Promise<ListSubscriptionsResult> {
         try {
             if (!request.userId) {
                 return {
@@ -667,11 +662,9 @@ export class NotificationRecordsController extends CrudRecordsController<
     }
 
     @traced(TRACE_NAME)
-    async listSubscriptions(request: ListSubscriptionsRequest): Promise<
-        Result<{
-            subscriptions: NotificationSubscription[];
-        }>
-    > {
+    async listSubscriptions(
+        request: ListSubscriptionsRequest
+    ): Promise<ListSubscriptionsResult> {
         try {
             if (!request.userId) {
                 return {
@@ -1057,4 +1050,23 @@ export interface ListSubscriptionsRequest {
      * The instances that are currently loaded.
      */
     instances: string[];
+}
+
+export type ListSubscriptionsResult =
+    | ListSubscriptionsSuccess
+    | ListSubscriptionsFailure;
+
+export interface ListSubscriptionsSuccess {
+    success: true;
+
+    /**
+     * The list of subscriptions.
+     */
+    subscriptions: NotificationSubscription[];
+}
+
+export interface ListSubscriptionsFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
 }
