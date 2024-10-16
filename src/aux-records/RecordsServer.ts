@@ -1796,7 +1796,7 @@ export class RecordsServer {
                     .http('GET', '/api/v2/records/notification/list')
             ),
 
-            listSubscriptions: procedure()
+            listNotificationSubscriptions: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/notification/list/subscriptions')
                 .inputs(
@@ -1840,6 +1840,48 @@ export class RecordsServer {
                         return result;
                     }
                 ),
+
+            listUserNotificationSubscriptions: procedure()
+                .origins('api')
+                .http(
+                    'GET',
+                    '/api/v2/records/notification/list/user/subscriptions'
+                )
+                .inputs(
+                    z.object({
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ instances }, context) => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._notificationsController.listSubscriptionsForUser(
+                            {
+                                userId: validation.userId,
+                                instances,
+                            }
+                        );
+
+                    return result;
+                }),
 
             eraseNotification: eraseItemProcedure(
                 this._auth,
