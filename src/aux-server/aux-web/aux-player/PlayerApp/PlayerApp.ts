@@ -1419,6 +1419,12 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            if (event.options?.endpoint !== appManager.config.authOrigin) {
+                sendNotSupported(
+                    'Push notifications are only supported for the default auth server.'
+                );
+                return;
+            }
             if (!('serviceWorker' in navigator)) {
                 sendNotSupported(
                     'Push notifications are not supported on this device.'
