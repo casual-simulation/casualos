@@ -2538,7 +2538,7 @@ describe('PolicyController', () => {
             ['run', 'resourceId'],
             ['send', 'resourceId'],
             ['subscribe', 'resourceId'],
-            ['listSubscribers', 'resourceId'],
+            ['listSubscriptions', 'resourceId'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -3476,7 +3476,7 @@ describe('PolicyController', () => {
                     ['run', 'resourceId'],
                     ['send', 'resourceId'],
                     ['subscribe', 'resourceId'],
-                    ['listSubscribers', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
                 ],
             ],
         ];
@@ -4017,7 +4017,7 @@ describe('PolicyController', () => {
                     ['increment', 'resourceId'],
                     ['send', 'resourceId'],
                     ['subscribe', 'resourceId'],
-                    ['listSubscribers', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
                 ],
             ],
         ];
