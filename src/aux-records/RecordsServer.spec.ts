@@ -11204,6 +11204,150 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/notification/list/subscriptions', () => {
+        beforeEach(async () => {
+            await notificationStore.createItem(recordName, {
+                address: 'testAddress',
+                description: 'my notification',
+                markers: [PRIVATE_MARKER],
+            });
+
+            await saveTestNotificationSubscription({
+                id: 'sub1',
+                recordName,
+                notificationAddress: 'testAddress',
+                userId: 'otherUserId',
+                active: true,
+                pushSubscription: {
+                    endpoint: 'endpoint1',
+                    keys: {},
+                },
+            });
+
+            await saveTestNotificationSubscription({
+                id: 'sub2',
+                recordName,
+                notificationAddress: 'testAddress',
+                userId: userId,
+                active: true,
+                pushSubscription: {
+                    endpoint: 'endpoint2',
+                    keys: {},
+                },
+            });
+        });
+
+        it('should return not_implemented if the server doesnt have a webhooks controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list/subscriptions?recordName=${recordName}&address=${'testAddress'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the list of subscriptions for the notification', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list/subscriptions?recordName=${recordName}&address=${'testAddress'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            recordName,
+                            notificationAddress: 'testAddress',
+                            userId: 'otherUserId',
+                            pushSubscriptionId: null,
+                        },
+                        {
+                            id: 'sub2',
+                            recordName,
+                            notificationAddress: 'testAddress',
+                            userId: userId,
+                            pushSubscriptionId: null,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user doesnt have the listSubscriptions permission', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/notification/list/subscriptions?recordName=${recordName}&address=${'testAddress'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'notification',
+                        resourceId: 'testAddress',
+                        action: 'listSubscriptions',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'GET',
+            `/api/v2/records/notification/list/subscriptions?recordName=${recordName}&address=${'testAddress'}`,
+            undefined,
+            () => apiHeaders
+        );
+    });
+
     describe('DELETE /api/v2/records/notification', () => {
         beforeEach(async () => {
             await notificationStore.createItem(recordName, {
