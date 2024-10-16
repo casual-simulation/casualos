@@ -150,6 +150,9 @@ export interface NotificationRecordsStore
 /**
  * Defines a record that represents a notification.
  * That is, a way for users to be notified of something.
+ *
+ * @dochash types/records/notifications
+ * @docName NotificationRecord
  */
 export interface NotificationRecord extends CrudRecord {
     /**
