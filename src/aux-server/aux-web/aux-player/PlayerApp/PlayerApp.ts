@@ -107,6 +107,7 @@ import {
     recordsCallProcedure,
     SubscribeToNotificationAction,
 } from '@casual-simulation/aux-runtime';
+import type { NotificationRecord } from '@casual-simulation/aux-records';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -320,6 +321,8 @@ export default class PlayerApp extends Vue {
     private _isLoggingIn: boolean = false;
 
     showNotificationPermissionDialog: boolean = false;
+    showNotificationPermissionMessage: string =
+        'Do you want to allow notifications?';
     private _showNotificationPermissionResolve: (result: boolean) => void =
         null;
 
@@ -1419,7 +1422,9 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
-            if (event.options?.endpoint !== appManager.config.authOrigin) {
+            const endpoint =
+                event.options?.endpoint ?? appManager.config.authOrigin;
+            if (endpoint !== appManager.config.authOrigin) {
                 sendNotSupported(
                     'Push notifications are only supported for the default auth server.'
                 );
@@ -1449,24 +1454,26 @@ export default class PlayerApp extends Vue {
                 return;
             }
 
+            const info = await simulation.records.getInfoForEndpoint(
+                event.options?.endpoint,
+                false
+            );
+
+            if (!info) {
+                sendNotSupported('Records are not supported on this inst.');
+                return;
+            }
+
             let sub = await registration.pushManager.getSubscription();
 
             if (!sub) {
-                const granted = await this._requestNotificationPermission();
+                const granted = await this._requestNotificationPermission(
+                    `Do you want to allow notifications?`
+                );
                 if (!granted) {
                     sendNotSupported(
                         'The user denied permission to send notifications.'
                     );
-                    return;
-                }
-
-                const info = await simulation.records.getInfoForEndpoint(
-                    event.options?.endpoint,
-                    false
-                );
-
-                if (!info) {
-                    sendNotSupported('Records are not supported on this inst.');
                     return;
                 }
 
@@ -1492,7 +1499,36 @@ export default class PlayerApp extends Vue {
                 });
             }
 
-            // TODO: Ask the user if they want to subscribe to this specific notification
+            const notification =
+                await simulation.records.client.getNotification(
+                    {
+                        recordName: event.recordName,
+                        address: event.address,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: info.recordsOrigin,
+                    }
+                );
+
+            if (notification.success === false) {
+                if (hasValue(event.taskId)) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, notification)
+                    );
+                }
+                return;
+            }
+
+            const granted = await this._requestNotificationPermission(
+                `Do you want to subscribe to notifications for ${notification.item.address}?`
+            );
+            if (!granted) {
+                sendNotSupported(
+                    'The user denied permission to send notifications.'
+                );
+                return;
+            }
 
             simulation.records.handleEvents([
                 recordsCallProcedure(
@@ -1533,9 +1569,11 @@ export default class PlayerApp extends Vue {
 
     /**
      * Requests that the user grant permission to send notifications.
+     * @param message The message to show the user.
      * @returns A promise that resolves to true if the user granted permission.
      */
-    private async _requestNotificationPermission() {
+    private async _requestNotificationPermission(message: string) {
+        this.showNotificationPermissionMessage = message;
         this.showNotificationPermissionDialog = true;
         return new Promise<boolean>((resolve, reject) => {
             this._showNotificationPermissionResolve = resolve;

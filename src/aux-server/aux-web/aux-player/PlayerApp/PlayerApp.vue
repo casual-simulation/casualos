@@ -146,7 +146,7 @@
                 :md-active.sync="showNotificationPermissionDialog"
                 class="confirm-dialog"
                 md-title="Allow notifications?"
-                md-content="Do you want to allow notifications?"
+                v-bind:md-content="showNotificationPermissionMessage"
                 md-confirm-text="Allow"
                 md-cancel-text="Reject"
                 @md-confirm="onNotificationDialogConfirm()"
