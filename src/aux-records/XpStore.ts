@@ -41,7 +41,7 @@ export type XpStore = {
 
     /**
      * Save an xp account for a user or contract
-     * @param associationId The id of the user or contract to create an account for
+     * @param associationId The id of the xp user or contract to create an account for
      * @param account The account to save
      */
     saveXpAccount<T extends 'user' | 'contract' = 'user'>(
@@ -51,10 +51,10 @@ export type XpStore = {
 
     /**
      * Save an xp user associated with the given auth user
-     * @param authUserId The id of the user to create an account for
-     * @param userMeta The meta data to associate with the user
+     * @param id The id of the xp user to create an account for (uuid) not the auth user id
+     * @param user The meta data to associate with the user
      */
-    saveXpUser: (authUserId: string, user: XpUser) => Promise<ActionResult>;
+    saveXpUser: (id: XpUser['id'], user: XpUser) => Promise<ActionResult>;
 
     /**
      * Performs a transaction consisting of multiple entries
