@@ -240,6 +240,7 @@ export type PropertiesOf<T, K extends keyof T> = {
  * @template P The prefix to apply to each key
  * @template S The suffix to apply to each key
  * @template A A boolean flag to determine whether to apply the prefix/suffix or remove it
+ * @template C A boolean flag to determine whether to capitalize / uncapitalize the key
  * @example
  * type UnionToAlias = 'keyX' | 'keyY' | 'keyZ';
  * type Aliased = AliasUnion<UnionToAlias, 'omit'>; // "omitKeyX" | "omitKeyY" | "omitKeyZ"
@@ -249,13 +250,16 @@ export type AliasUnion<
     T extends string,
     P extends string = '_',
     S extends string = '',
-    A extends boolean = true
+    A extends boolean = true,
+    C extends boolean = true
 > = A extends true
     ? T extends string
         ? `${P}${Capitalize<T>}${S}`
         : never
     : T extends string & `${P}${infer Key}${S}`
-    ? Uncapitalize<Key>
+    ? C extends true
+        ? Uncapitalize<Key>
+        : Key
     : never;
 
 /**
@@ -283,3 +287,163 @@ export type AliasMap<
  * @template T The type to make nullable
  */
 export type Nullable<T> = T | null;
+
+/**
+ * A Generic utility type which flattens arrays into unions containing the array's elements
+ * @template T The type to flatten (can contain non-array types which will be included in the returned union)
+ * @example
+ * type X = FlattenUnion<[1,2,3]>; // 1 | 2 | 3
+ * type Y = FlattenUnion<[1,2,3] | 'a' | 'b'>; // 1 | 2 | 3 | 'a' | 'b'
+ */
+export type FlattenUnion<T> = T extends Array<infer U> ? U : T;
+
+/**
+ * A Generic utility type which forms a union of the values of a given type
+ * * Is not inherently recursive, will only extract the first level of keys
+ * @template T The type to extract values from
+ * @example
+ * type X = { a: 1; b: 2; c: 3 };
+ * type Y = UnionOfTValues<X>; // 1 | 2 | 3
+ */
+export type UnionOfTValues<T, K = keyof T> = K extends keyof T ? T[K] : never;
+
+/** Provides an extensible interface for commonly used Date markers */
+export interface GenericTimeKeys {
+    /** The date at which the entity was created */
+    createdAtMs: DateMS;
+    /** The date at which the entity was last updated */
+    updatedAtMs: DateMS;
+}
+
+/**
+ * A Generic utility type which extracts id's as a union of their keys from a given type T
+ * @template T The type to extract id's from
+ * @template S The suffix to search for in the keys of T, defaults to 'Id'
+ * @template X The keys of T to search for, defaults to all keys of T
+ */
+export type IdStrIn<
+    T,
+    S extends string = 'Id',
+    X extends keyof T = keyof T
+> = X extends `${infer _}${S}` | 'id' ? X : never;
+
+/**
+ * A Generic utility type which extracts id's from a given type T
+ * @template T The type to extract id's from
+ */
+export type IdIn<T> = Pick<T, IdStrIn<T>>;
+
+/** A type alias for a number, that should only represent time in milliseconds */
+export type DateMS = number;
+/** A type alias for a number, that should only represent a quantity of gigs (6 minute intervals of work)  */
+export type GigQty = number;
+
+/**
+ * A Generic utility type which compares a type to "never" providing a boolean representation as to whether or not
+ * the aforementioned type is "never"
+ */
+export type IsNever<T> = [T] extends [never] ? true : false;
+
+/**
+ * A Generic utility type which extracts the property on type T at K when K is a key of T;
+ * but does not constrain K to be a key of T
+ * @template T The type to extract the property from
+ * @template K The key to extract the property at
+ * @example
+ * type X = { a: 1; b: 2; c: 3 };
+ * type Y = KNever<X, 'a'>; // 1
+ * type Z = KNever<X, 'd'>; // never
+ */
+export type KNever<T, K> = K extends keyof T ? T[K] : never;
+
+/**
+ * A Generic utility type which extracts from S keys which are present in P
+ * @template P The type which contains the keys to extract from S if they are present
+ * @template S The type to extract keys from
+ * @example
+ * type P = 'a' | 'b' | 'c';
+ * type S = 'b' | 'c' | 'd';
+ * type X = ExtractKeys<P, S>; // 'b' | 'c'
+ */
+export type OfPUnion<P, S> = S extends P ? S : never;
+
+/**
+ * A Generic utility type which represents either T or a Promise of T
+ * @template T The type to represent as a Promise or an immediate value of
+ */
+export type PromiseOrValue<T> = T | Promise<T>;
+
+/**
+ * A niched utility type which performs the core advertised functionality of ProviderIfInHost, and
+ * converts type E to a type which provides values which are members of Host H
+ * @template E The (entity) type to convert
+ * @template H The (host) type which contains types that should be converted to provider functions
+ */
+export type EntityProvider<E, H, P extends keyof E = keyof E> = {
+    [K in P]: E[K] extends UnionOfTValues<H>
+        ? (...args: any) => PromiseOrValue<ProviderIfInHost<E[K], H>>
+        : E[K] extends UnionOfTValues<H>[]
+        ? ProviderIfInHost<E[K], H>
+        : E[K];
+};
+
+/**
+ * A Generic utility type which converts a type to a type which provides values
+ * which are members of Host H (provider functions).
+ * * Useful for preventing direct recursive access to members which are described by the host
+ * @template T The type to convert
+ * @template H The host type which contains types that should be converted to provider functions
+ */
+export type ProviderIfInHost<T, H> = T extends Array<any>
+    ? (...args: any) => PromiseOrValue<{
+          [K in keyof T]: EntityProvider<T[K], H>;
+      }>
+    : EntityProvider<T, H>;
+
+/**
+ * An abstract type which represents a "model" host, a niched type, grouping types which may reference each other
+ * @template T A type which contains types that may be self-referential (from the host context)
+ * @example
+ * type X = ModelHost<{
+ *   a: { x: 'String literal'; y: number, z: boolean }; // Target within host X
+ *   b: X['a'][]; // Self-referential property of host X
+ * }>;
+ *
+ */
+export type ModelHost<T extends Record<keyof any, unknown>> = T;
+
+/**
+ * A Generic utility type which extracts the keys of a type T which are present in a type H
+ */
+export type StoreOfModel<
+    M extends ModelHost<any>,
+    A extends keyof any
+> = A extends keyof any ? keyof M : never;
+// TODO: Complete the implementation of the StoreOfModel type, should return a record of keys in M which are modified by each union A member
+
+/**
+ * A Generic utility type which allows for extensible Action results to be defined with a success state
+ * @template S The success state of the action
+ * @template T The type of the result to be included in the action result
+ */
+export type ActionResult_T<
+    S extends boolean,
+    T extends Record<keyof any, unknown>
+> = {
+    /** The result success state of the action */
+    success: S;
+} & T;
+
+/**
+ * A Generic utility type which represents a successful action result
+ * @template S The success state of the action
+ */
+export type ActionResult<S extends boolean = true | false> = ActionResult_T<
+    S,
+    S extends true
+        ? {}
+        : {
+              /** The error message */
+              message: string;
+          }
+>;

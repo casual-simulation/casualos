@@ -518,6 +518,61 @@ export function cleanupObject<T extends Object>(obj: T): Partial<T> {
     ) as Partial<T>;
 }
 
+// /**
+//  * Deep clones and concurrently freezes within the same iteration the provided object (record/array).
+//  * @param obj The object to clone and freeze recursively.
+//  */
+// export function deepCloneFreeze<T extends Record<string, any> | Array<any>>(
+//     obj: T
+// ): Readonly<T> {
+//     const returnObj = (Array.isArray(obj) ? [] : {}) as T;
+//     for (const key in obj) {
+//         if (obj.hasOwnProperty(key)) {
+//             const value = obj[key];
+//             if (
+//                 typeof value === 'object' &&
+//                 value !== null &&
+//                 !(value instanceof Date)
+//             ) {
+//                 returnObj[key] = deepCloneFreeze(value) as T[Extract<
+//                     keyof T,
+//                     string
+//                 >];
+//             } else {
+//                 returnObj[key] = value;
+//             }
+//         }
+//     }
+//     return Object.freeze(returnObj);
+// }
+
+// /**
+//  * Provides a function that can be used to build a paginate/effect function for the given array.
+//  * @param arr The array to paginate.
+//  * @param effectEach A function used within map to effect each element.
+//  * @returns
+//  */
+// export function paginationProviderOf<T, E>(
+//     arr: T[],
+//     effectEach?: (item: T) => PromiseOrValue<E>
+// ) {
+//     return async (limit: number, offset: number) => {
+//         const content = arr.slice(offset, offset + limit);
+//         if (!effectEach || content.length < 1) return [];
+//         return await Promise.all(content.map((X) => effectEach(X)));
+//     };
+// }
+
+/**
+ * Clones the given record or returns null if the record is undefined.
+ * @param record The record to clone.
+ */
+export function cloneDeepNull<T extends Record<keyof any, any>>(
+    record: T | undefined
+) {
+    return record ? _.cloneDeep(record) : null;
+}
+
 /**
  * Tries to parse the given JSON string into a JavaScript Value.
  * @param json The JSON to parse.
