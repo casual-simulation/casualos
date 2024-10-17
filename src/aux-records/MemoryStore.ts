@@ -1,5 +1,5 @@
 import { cloneDeep, orderBy, sortBy } from 'lodash';
-import { RegexRule } from './Utils';
+import { cloneDeepNull, RegexRule } from './Utils';
 import {
     AddressType,
     AuthInvoice,
@@ -150,13 +150,12 @@ import { uniq } from 'lodash';
 import {
     XpAccount,
     XpAccountEntry,
-    XpAccountType,
     XpContract,
     XpInvoice,
     XpStore,
     XpUser,
-    XpUserDMC,
 } from './XpStore';
+import { ActionResult } from 'TypeUtils';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -222,11 +221,8 @@ export class MemoryStore
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
-    private _xpUsers: Map<XpUser['userId'], XpUser> = new Map();
-    private _xpAccounts: Map<
-        XpUser['id'] | XpContract['id'],
-        XpAccount<'contract' | 'user'>
-    > = new Map();
+    private _xpUsers: Map<XpUser['id'], XpUser> = new Map();
+    private _xpAccounts: Map<XpAccount['id'], XpAccount> = new Map();
     private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
     private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
     private _xpAccountEntries: Map<XpAccountEntry['id'], XpAccountEntry> =
@@ -370,28 +366,45 @@ export class MemoryStore
         this.roleAssignments = {};
     }
 
-    async saveXpAccount<T extends XpAccountType>(
-        associationId: string,
-        account: XpAccount<T>
-    ): Promise<XpAccount<T>> {
+    async saveXpAccount(
+        associationId: XpUser['id'] | XpContract['id'],
+        account: XpAccount
+    ): Promise<ActionResult> {
         this._xpAccounts.set(associationId, account);
-        return account;
+        return {
+            success: true,
+        };
     }
 
-    async saveXpUser(authUserId: string, user: XpUser): Promise<XpUser> {
-        this._xpUsers.set(authUserId, user);
-        return user;
+    async saveXpUser(id: XpUser['id'], user: XpUser): Promise<ActionResult> {
+        this._xpUsers.set(id, user);
+        return {
+            success: true,
+        };
     }
 
-    async getXpUser(
-        authUserId: string,
-        omit?: XpUserDMC | 'default'
-    ): Promise<XpUser<typeof omit> | null> {
-        const user = this._xpUsers.get(authUserId);
-        if (!user) {
-            return null;
-        }
-        return this._xpUsers.get(authUserId);
+    async getXpUser(id: XpUser['id']): Promise<XpUser> {
+        return cloneDeepNull(this._xpUsers.get(id) ?? undefined);
+    }
+
+    async getXpAccount(
+        associationId: XpUser['id'] | XpContract['id']
+    ): Promise<XpAccount> {
+        return cloneDeepNull(this._xpAccounts.get(associationId) ?? undefined);
+    }
+
+    async getXpAccountEntry(
+        entryId: XpAccountEntry['id']
+    ): Promise<XpAccountEntry> {
+        return cloneDeepNull(this._xpAccountEntries.get(entryId) ?? undefined);
+    }
+
+    async getXpContract(contractId: XpContract['id']): Promise<XpContract> {
+        return cloneDeepNull(this._xpContracts.get(contractId) ?? undefined);
+    }
+
+    async getXpInvoice(invoiceId: XpInvoice['id']): Promise<XpInvoice> {
+        return cloneDeepNull(this._xpInvoices.get(invoiceId) ?? undefined);
     }
 
     init?(): Promise<void>;

@@ -1,31 +1,60 @@
-import { AuthUser } from 'AuthStore';
-import { AliasUnion, ISO4217_Map, Nullable } from 'TypeUtils';
+import {
+    ActionResult,
+    DateMS,
+    GenericTimeKeys,
+    GigQty,
+    ISO4217_Map,
+} from './TypeUtils';
 
 export type XpStore = {
     /**
-     * Save an Xp account for a user or contract
-     * @param associationId The ID of the user or contract to create an account for
+     * Get an xp account by its id
+     * @param accountId The id of the account to get
+     */
+    getXpAccount: (accountId: XpAccount['id']) => Promise<XpAccount>;
+
+    /**
+     * Get an xp account entry by its id
+     * @param entryId The id of the entry to get
+     */
+    getXpAccountEntry: (
+        entryId: XpAccountEntry['id']
+    ) => Promise<XpAccountEntry>;
+
+    /**
+     * Get an xp contract by its id
+     * @param contractId The id of the contract to get
+     */
+    getXpContract: (contractId: XpContract['id']) => Promise<XpContract>;
+
+    /**
+     * Get an xp invoice by its id
+     * @param invoiceId The id of the invoice to get
+     */
+    getXpInvoice: (invoiceId: XpInvoice['id']) => Promise<XpInvoice>;
+
+    /**
+     * Get an xp user by their id
+     * @param contractId The id of the user to get
+     */
+    getXpUser: (id: XpUser['id']) => Promise<XpUser>;
+
+    /**
+     * Save an xp account for a user or contract
+     * @param associationId The id of the user or contract to create an account for
      * @param account The account to save
      */
-    saveXpAccount<T extends XpAccountType>(
-        associationId: string,
-        account: XpAccount<T>
-    ): Promise<XpAccount<T>>;
+    saveXpAccount<T extends 'user' | 'contract' = 'user'>(
+        associationId: T extends 'user' ? XpUser['id'] : XpContract['id'],
+        account: XpAccount
+    ): Promise<ActionResult>;
+
     /**
-     * Save an Xp user associated with the given auth user
-     * @param authUserId The ID of the user to create an account for
+     * Save an xp user associated with the given auth user
+     * @param authUserId The id of the user to create an account for
      * @param userMeta The meta data to associate with the user
      */
-    saveXpUser: (authUserId: string, userMeta: XpUser) => Promise<XpUser>;
-    /**
-     * Get the meta data associated with a user in the Xp system
-     * @param authUserId The ID of the user whos Xp meta to get
-     * @param omit The fields to omit from the Xp user model
-     */
-    getXpUser: (
-        authUserId: string,
-        omit?: XpUserDMC | 'default'
-    ) => Promise<XpUser<typeof omit> | null>;
+    saveXpUser: (authUserId: string, user: XpUser) => Promise<ActionResult>;
 
     /**
      * Performs a transaction consisting of multiple entries
@@ -34,168 +63,122 @@ export type XpStore = {
     // inTransaction: () => Promise<void>; // TODO: Implement this
 };
 
-/** Provides an extensible interface for commonly used Date markers */
-interface GenericTimeKeys {
-    /** The date at which the entity was created */
-    createdAt: Date;
-    /** The date at which the entity was last updated */
-    updatedAt: Date;
+/**
+ * An extensible model for all models in the xp system
+ */
+export interface ModelBase extends GenericTimeKeys {
+    /** The unique id of the model item  */
+    id: string;
 }
 
 /**
- * Represents parts of the user in the Xp system which can be used to
- * craft an efficient, "as needed", queryable, user model
- * See {@link XpUserConfiguration} for more information
+ * Data to be returned within get invocation results on each model
  */
-type XpUserOmitEnabled = {
-    /** The "AuthUser" object associated with the user */
-    authUser: AuthUser;
-    /** The "Xp" account associated with the user */
-    account?: XpAccount<'user'>;
-    /** Contracts issued by the user (acting as issuer of) */
-    issuedContracts: XpContract[];
-    /** Contracts held by the user (acting as recipient of) */
-    heldContracts: XpContract[];
-};
-
-/**
- * Represents the configuration for the Xp user model
- *
- * ? What is DMC?
- * * An acronym for "Data Model Configuration"
- */
-export type XpUserDMC = AliasUnion<keyof XpUserOmitEnabled, 'omit'>;
-
-/**
- * Represents a user in the Xp system
- * @template C The configuration for the given user model
- *
- * ? Will default override other configurations?
- * * Yes, only use default if you want to include all fields (default behavior)
- */
-export type XpUser<C extends XpUserDMC | 'default' = 'default'> = {
-    /** The users unique ID from within the Xp system */
-    id: string;
-    /** The users unique ID from the Auth system */
-    userId: string;
+export interface XpUser extends ModelBase {
     /** The id of the associated account (null if not yet set up) */
-    accountId?: string;
+    accountId: XpAccount['id'] | null;
     /** The rate at which the user is requesting payment (null if not yet specified) */
-    requestedRate?: number;
-} & GenericTimeKeys &
-    ('default' extends C
-        ? XpUserOmitEnabled
-        : Omit<XpUserOmitEnabled, AliasUnion<C, 'omit', '', false>>);
+    requestedRate: number | null;
+    /** The users unique id from the Auth system */
+    userId: string;
+}
 
 /**
- * Represents a contract's status in the Xp system
- * * 'open'— The contract is open; and can be interacted with
- * * 'closed'— The contract is closed; and can no longer be interacted with
+ * An account in the xp system
+ * * Ties the— and enables tracking of— the flow of money between entities
+ * * Hosts entries that represent the addition or withdrawal of money
  */
-export type XpContractStatus = 'open' | 'closed';
+export interface XpAccount extends ModelBase {
+    /** The time at which (if) the account was closed */
+    closedTimeMs: DateMS | null;
+    /** The currency of the account */
+    currency: keyof ISO4217_Map;
+}
 
 /**
- * Mimics a "Smart Contract" (crypto/blockchain) data model for the Xp system
+ * Mimics a "Smart Contract" (crypto/blockchain) data model for the xp system
  */
-export type XpContract = {
-    /** The unique identifier for the contract */
-    id: string;
-    /** The "AuthUser" ID associated with the issuer of the contract */
-    issuerUserId: string;
-    /** The "AuthUser" ID associated with the recipient of the contract */
-    holdingUserId: string;
-    /**
-     * The amount of money the contract is worth (in the currency of the tied account)
-     * * Synonymous with the worth of the entire contract
-     * * Rate per containing contract
-     */
-    rate: number;
+export interface XpContract extends ModelBase {
+    /** The id of the account associated with the contract */
+    accountId: XpAccount['id'];
+    /** The id of the creation event related to the contract */
+    creationEventId: XpSystemEvent['id'];
     /** A description of the contract, may contain useful query meta */
-    description?: string;
+    description: string | null;
+    /** The id of the user holding the contract */
+    holdingUserId: XpUser['id'];
+    /** The id of the user issuing the contract */
+    issuerUserId: XpUser['id'];
+    /** The rate at which the contract is worth */
+    rate: number;
     /** The status of the contract */
-    status: XpContractStatus;
-    /** The ID of the "XpAccount" associated with the contract */
-    accountId: string;
-    /** Invoices performed on this contract */
-    invoices: XpInvoice[];
-} & GenericTimeKeys;
+    status: 'open' | 'closed';
+}
 
 /**
- * Represents the status of an invoice in the Xp system
- * * 'open'— The invoice is open; and is awaiting payment or voiding
- * * 'paid'— The invoice has been paid; and is no longer open for payment
- * * 'void'— The invoice has been voided; and is no longer open for payment
+ * Represents an entry in an xp account
+ * * Used to track the flow of money in the xp system (ledger)
  */
-export type XpInvoiceStatus = 'open' | 'paid' | 'void';
+export interface XpAccountEntry extends ModelBase {
+    /** The id of the account associated with the account entry */
+    accountId: XpAccount['id'];
+    /** The amount of money to be contributed to the account, negative for withdrawals */
+    amount: number;
+    /** The new balance of the account after the entry was made */
+    balance: number;
+    /** A note for the entry */
+    note: string | null;
+    /** The id of the system event associated with the account entry */
+    systemEventId: XpSystemEvent['id'];
+    /** The time at which the entry was made in the real world */
+    timeMs: DateMS;
+    /** An id of a transaction, used to group entries together */
+    transactionId: string;
+}
+
+/**
+ * Represents an adjustment event in the xp system (audit tool)
+ */
+export interface XpSystemEventAdjustment extends ModelBase {}
+
+/**
+ * Represents an event in the xp system (audit tool)
+ */
+export interface XpSystemEvent extends ModelBase {
+    /** The XpSystemEventAdjustment id of the adjusting adjustment event */
+    adjustingEventId: XpSystemEventAdjustment['id'] | null;
+    /** The XpSystemEventAdjustment id of the adjusted adjustment event */
+    adjusterEventId: XpSystemEventAdjustment['id'] | null;
+    /** JSON data related to the event, which can be of any return type */
+    data: unknown;
+    /** The time the event occurred in the real world */
+    timeMs: DateMS;
+    /** The string literal representation of a type of system event */
+    type:
+        | 'adjustment'
+        | 'create_invoice'
+        | 'create_contract'
+        | 'create_account_entry';
+    /** The id of the user who performed the event (null if system caused) */
+    xpUserId: XpUser['id'] | null;
+}
 
 /**
  * Represents an invoice for a contract
  */
-export type XpInvoice = {
-    id: string;
-    contractId: string;
-    amount: number;
-    status: XpInvoiceStatus;
-    voidReason?: 'rejected' | 'cancelled';
+export interface XpInvoice extends ModelBase {
+    /** The id of the contract the invoice is made for */
+    contractId: XpContract['id'];
+    /** The id of the creation event related to the invoice */
+    creationEventId: XpSystemEvent['id'];
+    /** The quantity of gigs being invoiced for */
+    amount: GigQty;
+    /** The status of the invoice */
+    status: 'open' | 'paid' | 'void';
+    /** The reason (if any) the invoice was made void */
+    voidReason: 'rejected' | 'cancelled' | null;
+    /** An id of a transaction associated with the invoice(s) */
     transactionId: string;
-    note?: string;
-} & GenericTimeKeys;
-
-/**
- * Represents the type of an Xp account
- * * 'user'— An account associated with a user
- * * 'contract'— An account associated with a contract
- */
-export type XpAccountType = 'user' | 'contract';
-
-/**
- * Represents an account in the Xp system
- * * Ties the— and enables tracking of— the flow of money between entities
- * * Hosts entries that represent the addition or withdrawal of money
- */
-export type XpAccount<T extends XpAccountType = 'user'> = {
-    /** Unique identifier for the account */
-    id: string;
-    /** The entries at which this account hosts */
-    entries: XpAccountEntry[];
-    /**
-     * An user associated with the account
-     * * Mutually exclusive with the contract field
-     */
-    user?: T extends 'user' ? XpUser : null;
-    /**
-     * A contract associated with the account
-     * * Mutually exclusive with the user field
-     */
-    contract?: T extends 'contract' ? XpContract : null;
-    currency: keyof ISO4217_Map;
-    closedTime: Date;
-} & GenericTimeKeys;
-
-/**
- * Represents an entry in an Xp account
- * * Used to track the flow of money in the Xp system (ledger)
- */
-export type XpAccountEntry = {
-    /** Unique identifier for the entry */
-    id: string;
-    /** The account for which the entry was made. */
-    account: XpAccount;
-    /**
-     * The amount of money added to the account.
-     * * Positive for incoming money (deposits).
-     * * Negative for outgoing money (withdrawals).
-     */
-    amount: number;
-    /** The new balance of the account after the entry was made. */
-    balance: number;
-    /** The time that the entry was created. */
-    time: Date;
-    /**
-     * A transaction ID that groups entries together.
-     * * Entries with the same transaction ID are part of the same transaction.
-     */
-    transactionId: string;
-    /** A note for the entry. */
-    note?: string;
-} & GenericTimeKeys;
+    /** A note for the invoice */
+    note: string | null;
+}
