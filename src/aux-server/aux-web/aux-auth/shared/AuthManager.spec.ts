@@ -150,6 +150,12 @@ describe('AuthManager', () => {
                         expireTimeMs: 1234,
                         sessionKey: 'sessionKey',
                         connectionKey: 'connectionKey',
+                        metadata: {
+                            hasUserAuthenticator: false,
+                            userAuthenticatorCredentialIds: [],
+                            hasPushSubscription: false,
+                            pushSubscriptionIds: [],
+                        },
                     } as CompleteLoginSuccess),
             });
 
@@ -166,6 +172,12 @@ describe('AuthManager', () => {
                 expireTimeMs: 1234,
                 sessionKey: 'sessionKey',
                 connectionKey: 'connectionKey',
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
             expect(fetch).toHaveBeenCalledWith(
                 'http://myendpoint.localhost/api/v3/callProcedure',

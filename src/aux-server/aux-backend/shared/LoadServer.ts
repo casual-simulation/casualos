@@ -200,7 +200,7 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
     }
 
     if (config.notifications) {
-        builder.useNotifications();
+        builder.useSystemNotifications();
     }
 
     if (config.webauthn) {
@@ -219,6 +219,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         } else {
             builder.useWebhooks();
         }
+    }
+
+    if (config.webPush) {
+        builder.useWebPushNotifications();
     }
 
     builder.useAutomaticPlugins();

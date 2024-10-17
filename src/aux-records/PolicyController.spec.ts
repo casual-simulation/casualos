@@ -2536,6 +2536,9 @@ describe('PolicyController', () => {
             ['grant', 'resourceId'],
             ['revoke', 'resourceId'],
             ['run', 'resourceId'],
+            ['send', 'resourceId'],
+            ['subscribe', 'resourceId'],
+            ['listSubscriptions', 'resourceId'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -2549,6 +2552,7 @@ describe('PolicyController', () => {
             ['ai.sloyd'],
             ['ai.hume'],
             ['webhook'],
+            ['notification'],
         ];
 
         // Admins can perform all actions on all resources
@@ -3453,6 +3457,28 @@ describe('PolicyController', () => {
                     ['run', 'resourceId'],
                 ],
             ],
+            [
+                'notification',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -3971,6 +3997,29 @@ describe('PolicyController', () => {
             ],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -4038,6 +4087,14 @@ describe('PolicyController', () => {
             ['event', [['count', 'resourceId']]],
             ['inst', [['read', 'resourceId']]],
             ['webhook', [['run', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['read', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -4149,6 +4206,14 @@ describe('PolicyController', () => {
                 ],
             ],
             ['webhook', [['run', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['read', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicWriteSubjectTypeCases: [

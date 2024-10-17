@@ -310,6 +310,18 @@ import {
     eraseWebhook as calcEraseWebhook,
     runWebhook as calcRunWebhook,
     ListWebhooksOptions,
+    ListNotificationsOptions,
+    recordNotification as calcRecordNotification,
+    getNotification as calcGetNotification,
+    listNotifications as calcListNotifications,
+    listNotificationsByMarker as calcListNotificationsByMarker,
+    eraseNotification as calcEraseNotification,
+    subscribeToNotification as calcSubscribeToNotification,
+    unsubscribeFromNotification as calcUnsubscribeFromNotification,
+    sendNotification as calcSendNotification,
+    SendNotificationOptions,
+    listNotificationSubscriptions as calcListNotificationSubscriptions,
+    listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -411,8 +423,15 @@ import type {
     AIChatMessage,
     GrantResourcePermissionResult,
     ListStudiosResult,
+    ListSubscriptionsResult,
+    NotificationRecord,
+    PushNotificationPayload,
+    PushSubscriptionType,
     ReportInstResult,
     RevokePermissionResult,
+    SendNotificationResult,
+    SubscribeToNotificationResult,
+    UnsubscribeToNotificationResult,
     WebhookRecord,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
@@ -3278,6 +3297,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseWebhook,
                 listWebhooks,
                 listWebhooksByMarker,
+
+                recordNotification,
+                getNotification,
+                eraseNotification,
+                listNotifications,
+                listNotificationsByMarker,
+                subscribeToNotification,
+                unsubscribeFromNotification,
+                sendNotification,
+                listNotificationSubscriptions,
+                listUserNotificationSubscriptions,
 
                 recordFile,
                 getFile,
@@ -9480,6 +9510,324 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             recordName,
             marker,
             startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Creates or updates a [notification](glossary:notification-record) in the given record using the given options.
+     *
+     * Returns a promise that resolves with an object that contains whether the operation succeeded.
+     *
+     * @param recordName the name of the record.
+     * @param notification the notification that should be created or updated.
+     * @param options the options that should be used.
+     *
+     * @example Create a notification that anyone can subscribe to.
+     * await os.recordNotification('myRecord', {
+     *   address: 'notificationAddress',
+     *   description: 'my notification',
+     *   markers: ['publicRead']
+     * });
+     *
+     * @example Create a private notification.
+     * await os.recordNotification('myRecord', {
+     *   address: 'notificationAddress',
+     *   description: 'my notification',
+     *   markers: ['private']
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.recordNotification
+     */
+    function recordNotification(
+        recordName: string,
+        notification: NotificationRecord,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = calcRecordNotification(
+            recordName,
+            notification,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the [notification](glossary:notification-record) from the given record.
+     *
+     * Returns a promise that resolves with the notification data.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.getWebhook
+     */
+    function getNotification(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudGetItemResult<NotificationRecord>> {
+        const task = context.createTask();
+        const event = calcGetNotification(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Deletes the [notification](glossary:notification-record) from the given record.
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.eraseNotification
+     */
+    function eraseNotification(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcEraseNotification(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the notifications that are in the given record.
+     * @param recordName the name of the record.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotifications
+     */
+    function listNotifications(
+        recordName: string,
+        startingAddress: string = null,
+        options?: ListNotificationsOptions
+    ): Promise<CrudListItemsResult<NotificationRecord>> {
+        const task = context.createTask();
+        const event = calcListNotifications(
+            recordName,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the webhooks that are in the given record.
+     * @param recordName the name of the record.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotificationsByMarker
+     */
+    function listNotificationsByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress: string = null,
+        options?: ListNotificationsOptions
+    ): Promise<CrudListItemsResult<NotificationRecord>> {
+        const task = context.createTask();
+        const event = calcListNotificationsByMarker(
+            recordName,
+            marker,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Subscribes to the given notification in the given record.
+     *
+     * Returns a promise that resolves when the operation is complete.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification that should be subscribed to.
+     * @param options the options to use.
+     *
+     * @example Subscribe to a notification.
+     * await os.subscribeToNotification('myRecord', 'myNotificationAddress');
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.subscribeToNotification
+     */
+    function subscribeToNotification(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<SubscribeToNotificationResult> {
+        const task = context.createTask();
+        const event = calcSubscribeToNotification(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Unsubscribes from the given notification subscription.
+     *
+     * Returns a promise that resolves when the operation is complete.
+     *
+     * @param subscriptionId the ID of the subscription.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.unsubscribeFromNotification
+     */
+    function unsubscribeFromNotification(
+        subscriptionId: string,
+        options?: RecordActionOptions
+    ): Promise<UnsubscribeToNotificationResult> {
+        const task = context.createTask();
+        const event = calcUnsubscribeFromNotification(
+            subscriptionId,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Sends a notification to all subscribers of the given notification in the given record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param payload the payload to send.
+     * @param options the options to use.
+     *
+     * @example Send a notification.
+     * await os.sendNotification('myRecord', 'myNotificationAddress', {
+     *     title: 'Hello',
+     *     body: 'This is your first notification!',
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.sendNotification
+     */
+    function sendNotification(
+        recordName: string,
+        address: string,
+        payload: PushNotificationPayload,
+        options?: SendNotificationOptions
+    ): Promise<SendNotificationResult> {
+        const task = context.createTask();
+        const event = calcSendNotification(
+            recordName,
+            address,
+            payload,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the list of subscriptions for the given notification in the given record.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     *
+     * @example List notification subscriptions.
+     * const result = await os.listNotificationSubscriptions('myRecord', 'myNotificationAddress');
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotificationSubscriptions
+     */
+    function listNotificationSubscriptions(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult> {
+        const task = context.createTask();
+        const event = calcListNotificationSubscriptions(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the list of notification subscriptions for the current user.
+     *
+     * @param options the options to use.
+     *
+     * @example List the current user's notification subscriptions.
+     * const result = await os.listUserNotificationSubscriptions();
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listUserNotificationSubscriptions
+     */
+    function listUserNotificationSubscriptions(
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult> {
+        const task = context.createTask();
+        const event = calcListUserNotificationSubscriptions(
             options ?? {},
             task.taskId
         );
