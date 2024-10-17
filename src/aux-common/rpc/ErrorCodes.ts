@@ -73,8 +73,7 @@ export type KnownErrorCodes =
     | 'session_is_not_revokable'
     | 'hume_api_error'
     | 'invalid_webhook_target'
-    | 'took_too_long'
-    | 'subscription_already_exists';
+    | 'took_too_long';
 
 /**
  * Gets the status code that should be used for the given response.
