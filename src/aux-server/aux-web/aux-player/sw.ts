@@ -74,12 +74,15 @@ globalThis.addEventListener('push', (event: any) => {
 globalThis.addEventListener('notificationclick', (event: any) => {
     console.log('Clicked notification!', event);
 
-    const notification = event.notification;
+    const eventAction =
+        event.action ??
+        event.notification.action ??
+        event.notification.data.action;
     let action: PushNotificationPayload['action'];
-    if (notification.action) {
-        action = JSON.parse(notification.action);
+    if (typeof eventAction === 'string') {
+        action = JSON.parse(eventAction);
     } else {
-        action = notification.data.action;
+        action = eventAction;
     }
 
     let promise: Promise<any> | null = null;
