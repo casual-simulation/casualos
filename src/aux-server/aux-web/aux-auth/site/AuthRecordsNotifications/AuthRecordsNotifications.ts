@@ -60,16 +60,6 @@ export default class AuthRecordsNotifications extends Vue {
         this._reset();
     }
 
-    // getWebhookUrl(webhook: NotificationRecord) {
-    //     const url = new URL(
-    //         '/api/v2/records/webhook/run',
-    //         authManager.client.endpoint
-    //     );
-    //     url.searchParams.set('recordName', this.recordName);
-    //     url.searchParams.set('address', webhook.address);
-    //     return url.href;
-    // }
-
     private _reset() {
         this.selectedItem = null;
         this._helper = new LoadingHelper(async (lastItem) => {

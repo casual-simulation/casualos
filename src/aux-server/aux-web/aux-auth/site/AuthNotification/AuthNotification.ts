@@ -6,6 +6,7 @@ import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import type {
     NotificationRecord,
+    NotificationSubscription,
     WebhookRunInfo,
 } from '@casual-simulation/aux-records';
 import { LoadingHelper } from '../LoadingHelper';
@@ -25,7 +26,7 @@ const PAGE_SIZE = 10;
     },
 })
 export default class AuthNotification extends Vue {
-    // private _helper: LoadingHelper<WebhookRunInfo>;
+    private _subscriptionsHelper: LoadingHelper<NotificationSubscription>;
 
     @Prop({ required: true })
     recordName: string;
@@ -34,21 +35,21 @@ export default class AuthNotification extends Vue {
     notification: NotificationRecord;
 
     loading: boolean = false;
-    // items: {
-    //     mdCount: number;
-    //     mdPage: number;
-    //     startIndex: number;
-    //     endIndex: number;
-    //     mdData: WebhookRunInfo[];
-    // } = {
-    //     mdCount: 0,
-    //     mdPage: 0,
-    //     mdData: [],
-    //     startIndex: 0,
-    //     endIndex: 0,
-    // };
+    subscriptions: {
+        mdCount: number;
+        mdPage: number;
+        startIndex: number;
+        endIndex: number;
+        mdData: NotificationSubscription[];
+    } = {
+        mdCount: 0,
+        mdPage: 0,
+        mdData: [],
+        startIndex: 0,
+        endIndex: 0,
+    };
 
-    // selectedItem: WebhookRunInfo = null;
+    selectedSubscription: NotificationSubscription = null;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -68,60 +69,46 @@ export default class AuthNotification extends Vue {
         this._reset();
     }
 
-    // getWebhookUrl(webhook: NotificationRecord) {
-    //     const url = new URL(
-    //         '/api/v2/records/webhook/run',
-    //         authManager.client.endpoint
-    //     );
-    //     url.searchParams.set('recordName', this.recordName);
-    //     url.searchParams.set('address', webhook.address);
-    //     return url.href;
-    // }
-
     private _reset() {
-        // this._helper = new LoadingHelper(async (lastItem) => {
-        //     const result = await authManager.client.listWebhookRuns({
-        //         recordName: this.recordName,
-        //         address: this.webhook.address,
-        //         requestTimeMs: lastItem?.requestTimeMs,
-        //     });
+        this._subscriptionsHelper = new LoadingHelper(async (lastItem) => {
+            const result =
+                await authManager.client.listNotificationSubscriptions({
+                    recordName: this.recordName,
+                    address: this.notification.address,
+                });
 
-        //     if (result.success === true) {
-        //         return {
-        //             items: result.items,
-        //             totalCount: result.totalCount,
-        //         };
-        //     } else {
-        //         return {
-        //             items: [],
-        //             totalCount: 0,
-        //         };
-        //     }
-        // });
-        // this.items = {
-        //     mdCount: 0,
-        //     mdPage: 0,
-        //     mdData: [],
-        //     startIndex: 0,
-        //     endIndex: 0,
-        // };
+            if (result.success === true) {
+                return {
+                    items: result.subscriptions,
+                    totalCount: result.subscriptions.length,
+                };
+            } else {
+                return {
+                    items: [],
+                    totalCount: 0,
+                };
+            }
+        });
+        this.subscriptions = {
+            mdCount: 0,
+            mdPage: 0,
+            mdData: [],
+            startIndex: 0,
+            endIndex: 0,
+        };
         this.loading = false;
-        // this.updatePagination(1, PAGE_SIZE);
+        this.updatePagination(1, PAGE_SIZE);
     }
 
-    // changePage(change: number) {
-    //     this.updatePagination(this.items.mdPage + change, PAGE_SIZE);
-    // }
+    onSelectSubscription(item: NotificationSubscription) {
+        this.selectedSubscription = item;
+    }
 
-    // onSelectItem(item: WebhookRunInfo) {
-    //     this.selectedItem = item;
-    // }
-
-    // async updatePagination(page: number, pageSize: number) {
-    //     let nextPage = await this._helper.loadPage(page, pageSize);
-    //     if (nextPage) {
-    //         this.items = nextPage;
-    //     }
-    //     return true;
-    // }
+    async updatePagination(page: number, pageSize: number) {
+        let nextPage = await this._subscriptionsHelper.loadPage(page, pageSize);
+        if (nextPage) {
+            this.subscriptions = nextPage;
+        }
+        return true;
+    }
 }
