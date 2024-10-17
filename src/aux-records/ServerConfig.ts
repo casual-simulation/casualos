@@ -602,6 +602,12 @@ const aiSchema = z.object({
                 .describe(
                     'The subscription tiers that are allowed to use Chat AI. If true, then all tiers are allowed.'
                 ),
+            tokenModifierRatio: z
+                .record(z.string(), z.number().positive())
+                .describe(
+                    'Custom token modifier ratio per model. The key is the model name and the value is the cost multiplier.'
+                )
+                .optional(),
         })
         .describe('Options for Chat AI. If omitted, then chat AI is disabled.')
         .optional(),
@@ -695,6 +701,12 @@ const aiSchema = z.object({
                 .describe(
                     'The subscription tiers that are allowed to use Image AI. If true, then all tiers are allowed.'
                 ),
+            tokenModifierRatio: z
+                .record(z.string(), z.number().positive())
+                .describe(
+                    'Custom token modifier ratio per model. The key is the model name and the value is the cost multiplier.'
+                )
+                .optional(),
         })
         .describe(
             'Options for Image AI. If omitted, then Image AI is disabled.'

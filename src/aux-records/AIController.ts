@@ -48,12 +48,6 @@ import { DenialReason } from '@casual-simulation/aux-common';
 import { HumeConfig, RecordsStore } from './RecordsStore';
 
 const TRACE_NAME = 'AIController';
-const TOKEN_RATIOS: { [model: string]: number } = {
-    // Define model token ratios here
-    'gpt-3.5-turbo': 1,
-    'gpt-4': 1.5,
-    // Add other models as needed
-};
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
@@ -657,15 +651,12 @@ export class AIController {
                 maxTokens,
             });
 
-            const tokenRatio = TOKEN_RATIOS[model] ?? 1;
-
             for await (let chunk of result) {
                 if (chunk.totalTokens > 0) {
-                    const adjestedTokens = chunk.totalTokens * tokenRatio;
                     await this._metrics.recordChatMetrics({
                         userId: request.userId,
                         createdAtMs: Date.now(),
-                        tokens: adjestedTokens,
+                        tokens: chunk.totalTokens,
                     });
                 }
 
