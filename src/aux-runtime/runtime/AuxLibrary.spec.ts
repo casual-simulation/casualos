@@ -197,6 +197,8 @@ import {
     subscribeToNotification,
     unsubscribeFromNotification,
     sendNotification,
+    listNotificationSubscriptions,
+    listUserNotificationSubscriptions,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -7786,6 +7788,37 @@ describe('AuxLibrary', () => {
                     {
                         title: 'title',
                     },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotificationSubscriptions()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.listNotificationSubscriptions(
+                        'recordName',
+                        'notification'
+                    );
+                const expected = listNotificationSubscriptions(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listUserNotificationSubscriptions()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.listUserNotificationSubscriptions();
+                const expected = listUserNotificationSubscriptions(
                     {},
                     context.tasks.size
                 );

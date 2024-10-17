@@ -320,6 +320,8 @@ import {
     unsubscribeFromNotification as calcUnsubscribeFromNotification,
     sendNotification as calcSendNotification,
     SendNotificationOptions,
+    listNotificationSubscriptions as calcListNotificationSubscriptions,
+    listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -421,6 +423,7 @@ import type {
     AIChatMessage,
     GrantResourcePermissionResult,
     ListStudiosResult,
+    ListSubscriptionsResult,
     NotificationRecord,
     PushNotificationPayload,
     PushSubscriptionType,
@@ -3303,6 +3306,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 subscribeToNotification,
                 unsubscribeFromNotification,
                 sendNotification,
+                listNotificationSubscriptions,
+                listUserNotificationSubscriptions,
 
                 recordFile,
                 getFile,
@@ -9767,6 +9772,62 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             recordName,
             address,
             payload,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the list of subscriptions for the given notification in the given record.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     *
+     * @example List notification subscriptions.
+     * const result = await os.listNotificationSubscriptions('myRecord', 'myNotificationAddress');
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotificationSubscriptions
+     */
+    function listNotificationSubscriptions(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult> {
+        const task = context.createTask();
+        const event = calcListNotificationSubscriptions(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the list of notification subscriptions for the current user.
+     *
+     * @param options the options to use.
+     *
+     * @example List the current user's notification subscriptions.
+     * const result = await os.listUserNotificationSubscriptions();
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listUserNotificationSubscriptions
+     */
+    function listUserNotificationSubscriptions(
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult> {
+        const task = context.createTask();
+        const event = calcListUserNotificationSubscriptions(
             options ?? {},
             task.taskId
         );

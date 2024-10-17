@@ -204,6 +204,8 @@ export class RecordsManager {
         'subscribeToNotification',
         'unsubscribeFromNotification',
         'sendNotification',
+        'listNotificationSubscriptions',
+        'listUserNotificationSubscriptions',
     ]);
 
     /**

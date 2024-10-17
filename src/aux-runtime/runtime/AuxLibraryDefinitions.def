@@ -10842,6 +10842,58 @@ export interface SendNotificationFailure {
     errorMessage: string;
 }
 
+/**
+ * Defines an active subscription to a notification.
+ */
+export interface NotificationSubscription {
+    /**
+     * The ID of the subscription.
+     */
+    id: string;
+
+    /**
+     * The name of the record that the subscription is for.
+     */
+    recordName: string;
+
+    /**
+     * The address of the notification in the record.
+     */
+    notificationAddress: string;
+
+    /**
+     * The ID of the user that is subscribed.
+     * If null, then notifications should only be sent to the specified push subscription.
+     */
+    userId: string | null;
+
+    /**
+     * The push subscription that the notification should be sent to.
+     * If null, then notifications should be sent to all push subscriptions for the user.
+     */
+    pushSubscriptionId: string | null;
+}
+
+export type ListSubscriptionsResult =
+    | ListSubscriptionsSuccess
+    | ListSubscriptionsFailure;
+
+export interface ListSubscriptionsSuccess {
+    success: true;
+
+    /**
+     * The list of subscriptions.
+     */
+    subscriptions: NotificationSubscription[];
+}
+
+export interface ListSubscriptionsFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+
 export interface PushNotificationPayload {
     /**
      * The title of the push notification.
@@ -13191,6 +13243,42 @@ interface Os {
         payload: PushNotificationPayload,
         options?: SendNotificationOptions
     ): Promise<SendNotificationResult>;
+
+    /**
+     * Gets the list of subscriptions for the given notification in the given record.
+     * 
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     * 
+     * @example List notification subscriptions.
+     * const result = await os.listNotificationSubscriptions('myRecord', 'myNotificationAddress');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotificationSubscriptions
+     */
+    listNotificationSubscriptions(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult>;
+
+    /**
+     * Gets the list of notification subscriptions for the current user.
+     * 
+     * @param options the options to use.
+     * 
+     * @example List the current user's notification subscriptions.
+     * const result = await os.listUserNotificationSubscriptions();
+     * 
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listUserNotificationSubscriptions
+     */
+    listUserNotificationSubscriptions(
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult>;
 
     /**
      * Records the given data as a file.

@@ -6628,6 +6628,33 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'listNotificationSubscriptions',
+                    recordsCallProcedure(
+                        {
+                            listNotificationSubscriptions: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listUserNotificationSubscriptions',
+                    recordsCallProcedure(
+                        {
+                            listUserNotificationSubscriptions: {
+                                input: {},
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

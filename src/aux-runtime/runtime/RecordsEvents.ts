@@ -2122,6 +2122,54 @@ export function sendNotification(
 }
 
 /**
+ * Creates an action that can be used to list the notification subscriptions for a record.
+ * @param recordName The name of the record.
+ * @param address The address of the notification.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function listNotificationSubscriptions(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listNotificationSubscriptions: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that can be used to list the notification subscriptions a user.
+ * @param userId The ID of the user.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function listUserNotificationSubscriptions(
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listUserNotificationSubscriptions: {
+                input: {},
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
  * Creates a RecordFileAction.
  * @param recordKey The key that should be used to access the record.
  * @param data The data to store.
