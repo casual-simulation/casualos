@@ -1,3 +1,4 @@
+import { AuthUser } from 'AuthStore';
 import {
     ActionResult,
     DateMS,
@@ -34,10 +35,26 @@ export type XpStore = {
     getXpInvoice: (invoiceId: XpInvoice['id']) => Promise<XpInvoice>;
 
     /**
-     * Get an xp user by their id
-     * @param contractId The id of the user to get
+     * Get an xp user by their xp or auth id
+     * @param id The id of the user to get
      */
-    getXpUser: (id: XpUser['id']) => Promise<XpUser>;
+    getXpUser: (
+        id:
+            | {
+                  /**
+                   * The auth id of the xp user to get
+                   */
+                  id: AuthUser['id'];
+                  type: 'auth';
+              }
+            | {
+                  /**
+                   * The xp id of the xp user to get
+                   */
+                  id: XpUser['id'];
+                  type: 'xp';
+              }
+    ) => Promise<XpUser>;
 
     /**
      * Save an xp account for a user or contract

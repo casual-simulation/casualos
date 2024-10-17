@@ -155,7 +155,7 @@ import {
     XpStore,
     XpUser,
 } from './XpStore';
-import { ActionResult } from 'TypeUtils';
+import { ActionResult } from './TypeUtils';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -383,8 +383,18 @@ export class MemoryStore
         };
     }
 
-    async getXpUser(id: XpUser['id']): Promise<XpUser> {
-        return cloneDeepNull(this._xpUsers.get(id) ?? undefined);
+    async getXpUser(
+        ...args: Parameters<XpStore['getXpUser']>
+    ): Promise<XpUser> {
+        /** The id containing object */
+        const idKey = args[0];
+        const user =
+            idKey.type === 'auth'
+                ? Array.from(this._xpUsers.values()).find(
+                      (u: XpUser) => u.userId === idKey.id
+                  )
+                : this._xpUsers.get(idKey.id);
+        return cloneDeepNull(user ?? undefined);
     }
 
     async getXpAccount(
