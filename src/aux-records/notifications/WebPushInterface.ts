@@ -50,12 +50,12 @@ export const PUSH_NOTIFICATION_PAYLOAD_ACTION = z.discriminatedUnion('type', [
 ]);
 
 export const PUSH_NOTIFICATION_PAYLOAD = z.object({
-    title: z.string(),
-    body: z.string().optional().nullable(),
-    icon: z.string().optional().nullable(),
-    badge: z.string().optional().nullable(),
+    title: z.string().min(1),
+    body: z.string().min(2),
+    icon: z.string().min(1).optional().nullable(),
+    badge: z.string().min(1).optional().nullable(),
     silent: z.boolean().optional().nullable(),
-    tag: z.string().optional().nullable(),
+    tag: z.string().min(1).optional().nullable(),
     timestamp: z.number().optional().nullable(),
 
     action: PUSH_NOTIFICATION_PAYLOAD_ACTION.optional().nullable(),
@@ -63,8 +63,8 @@ export const PUSH_NOTIFICATION_PAYLOAD = z.object({
     actions: z
         .array(
             z.object({
-                title: z.string(),
-                icon: z.string().optional().nullable(),
+                title: z.string().min(1),
+                icon: z.string().min(1).optional().nullable(),
                 action: PUSH_NOTIFICATION_PAYLOAD_ACTION,
             })
         )
