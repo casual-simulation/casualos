@@ -75,8 +75,8 @@ globalThis.addEventListener('notificationclick', (event: any) => {
     console.log('Clicked notification!', event);
 
     const eventAction =
-        event.action ??
-        event.notification.action ??
+        event.action ||
+        event.notification.action ||
         event.notification.data.action;
     let action: PushNotificationPayload['action'];
     if (typeof eventAction === 'string') {
