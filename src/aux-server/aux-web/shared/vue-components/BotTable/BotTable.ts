@@ -36,6 +36,7 @@ import {
     DNA_TAG_PREFIX,
     SHEET_PORTAL,
     formatValue,
+    hasTagOrMask,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -228,10 +229,6 @@ export default class BotTable extends Vue {
 
     private _getSimulation(simId: string): BrowserSimulation {
         return appManager.simulationManager.simulations.get(simId);
-    }
-
-    private _getPrimarySim() {
-        return appManager.simulationManager.primary;
     }
 
     getTagPrefix(tag: string, space: string) {
@@ -432,14 +429,29 @@ export default class BotTable extends Vue {
     }
 
     async createBot() {
-        const manager = this._getPrimarySim();
-        const dimension = this.dimension;
-        let tags: BotTags;
-        if (this.dimension) {
-            const calc = manager.helper.createContext();
-            tags = addToDimensionDiff(calc, dimension);
+        // Find which simulation should be used for new bots
+        let simToUse: Simulation;
+        const primary = appManager.simulationManager.primary;
+        if (hasTagOrMask(primary.helper.configBot, SHEET_PORTAL)) {
+            simToUse = primary;
+        } else {
+            for (let sim of appManager.simulationManager.simulations.values()) {
+                if (hasTagOrMask(sim.helper.configBot, SHEET_PORTAL)) {
+                    simToUse = sim;
+                    break;
+                }
+            }
         }
-        const id = await manager.helper.createBot(undefined, tags);
+
+        if (simToUse) {
+            const dimension = this.dimension;
+            let tags: BotTags;
+            if (this.dimension) {
+                const calc = simToUse.helper.createContext();
+                tags = addToDimensionDiff(calc, dimension);
+            }
+            const id = await simToUse.helper.createBot(undefined, tags);
+        }
     }
 
     selectNewTag() {
