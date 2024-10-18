@@ -197,6 +197,15 @@ export class RecordsManager {
         'listWebhooks',
         'eraseWebhook',
         'runWebhook',
+        'recordNotification',
+        'getNotification',
+        'listNotifications',
+        'eraseNotification',
+        'subscribeToNotification',
+        'unsubscribeFromNotification',
+        'sendNotification',
+        'listNotificationSubscriptions',
+        'listUserNotificationSubscriptions',
     ]);
 
     /**
@@ -225,6 +234,13 @@ export class RecordsManager {
      */
     get onGetRoomOptions(): Observable<GetRoomOptions> {
         return this._onGetRoomOptions;
+    }
+
+    /**
+     * Gets a records client that can be used to make records requests.
+     */
+    get client(): ReturnType<typeof createRecordsClient> {
+        return this._client;
     }
 
     /**
@@ -2402,14 +2418,16 @@ export class RecordsManager {
         return info;
     }
 
-    private _getInfoFromEvent(
-        event: {
-            endpoint?: string;
-        },
+    /**
+     * Gets the information needed to call an API on the given endpoint.
+     * Returns a promise that resolves with the information. Resolves with null if there is no configured endpoint and one is not provided.
+     * @param endpoint The endpoint. If not specifed, then the default one will be used.
+     * @param authenticateIfNotLoggedIn Whether to authenticate the user if not logged in.
+     */
+    getInfoForEndpoint(
+        endpoint: string | null,
         authenticateIfNotLoggedIn: boolean
     ): Promise<RecordsEndpointInfo | null> {
-        let endpoint: string = event.endpoint;
-
         if (!endpoint) {
             endpoint = this._config.authOrigin;
             if (!endpoint) {
@@ -2418,6 +2436,16 @@ export class RecordsManager {
         }
 
         return this._getEndpointInfo(endpoint, authenticateIfNotLoggedIn);
+    }
+
+    private _getInfoFromEvent(
+        event: {
+            endpoint?: string;
+        },
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<RecordsEndpointInfo | null> {
+        let endpoint: string = event.endpoint;
+        return this.getInfoForEndpoint(endpoint, authenticateIfNotLoggedIn);
     }
 
     private async _publishUrl(

@@ -7,6 +7,7 @@ import {
     NetworkFirst,
 } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import type { PushNotificationPayload } from '@casual-simulation/aux-records';
 import '../shared/service-worker';
 
 declare let self: ServiceWorkerGlobalScope;
@@ -31,6 +32,73 @@ self.addEventListener('activate', (event) => {
     if (!GIT_TAG.startsWith('v2.0.14')) {
         console.log('[sw.ts] Claim Clients');
         clientsClaim();
+    }
+});
+
+globalThis.addEventListener('push', (event: any) => {
+    if (
+        !(
+            globalThis.Notification &&
+            globalThis.Notification.permission === 'granted'
+        )
+    ) {
+        return;
+    }
+
+    console.log('Got notification!', event);
+    const data: PushNotificationPayload = event.data?.json();
+
+    if (data) {
+        const notificationPromise = globalThis.registration.showNotification(
+            data.title,
+            {
+                body: data.body ?? undefined,
+                icon: data.icon ?? undefined,
+                badge: data.badge ?? undefined,
+                silent: data.silent ?? undefined,
+                tag: data.tag ?? undefined,
+                timestamp: data.timestamp ?? undefined,
+                actions: data.actions?.map((a) => ({
+                    title: a.title,
+                    action: JSON.stringify(a.action),
+                    icon: a.icon ?? undefined,
+                })),
+                data: data,
+            }
+        );
+
+        event.waitUntil(notificationPromise);
+    }
+});
+
+globalThis.addEventListener('notificationclick', (event: any) => {
+    console.log('Clicked notification!', event);
+
+    const eventAction =
+        event.action ??
+        event.notification.action ??
+        event.notification.data.action;
+    let action: PushNotificationPayload['action'];
+    if (typeof eventAction === 'string') {
+        action = JSON.parse(eventAction);
+    } else {
+        action = eventAction;
+    }
+
+    let promise: Promise<any> | null = null;
+    if (action) {
+        if (action.type === 'open_url') {
+            promise = globalThis.clients.openWindow(action.url);
+        } else {
+            promise = globalThis.fetch(action.url, {
+                method: action.method,
+                headers: action.headers as any,
+            });
+        }
+    }
+
+    if (promise) {
+        event.waitUntil(promise);
     }
 });
 

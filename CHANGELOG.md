@@ -18,6 +18,13 @@
     -   Webhooks are secured by markers, just like regular records.
         -   `publicRead`: The `publicRead` marker can be used to allow anyone to execute the webhook.
         -   `private`: The `private` marker can be used to only allow the record members to execute the webhook.
+        -   The following actions are allowed for webhooks:
+            -   `create`
+            -   `read`
+            -   `update`
+            -   `delete`
+            -   `list`
+            -   `run`
     -   Webhooks have their own user ID.
         -   By default, webhooks don't have access to anything except public records.
         -   To allow webhooks to access other records, they need to be granted access to those resources.
@@ -36,6 +43,37 @@
         -   Webhooks do not automatically install abCore. They only use the bots that are stored in the target.
         -   Webhooks always act like static insts.
             -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
+-   Added notification records.
+    -   When enabled, notification records make it easy to send push notifications to users.
+    -   They work based on a subscription model:
+        1.  Notifier creates a notification record.
+        2.  User subscribes to a notification with `os.subscribeToNotification(recordName, address)`.
+        3.  Notifier can send notifications to all subscriptions using `os.sendNotification()`.
+    -   Notifications are secured by markers, just like regular records.
+        -   `publicRead`: The `publicRead` marker can be used to allow anyone to read and subscribe to a notification.
+        -   The following actions are allowed for notifications:
+            -   `create`
+            -   `read`
+            -   `update`
+            -   `delete`
+            -   `list`
+            -   `subscribe`
+            -   `unsubscribe`
+            -   `listSubscriptions`
+            -   `send`
+    -   After login, if a user is subscribed to a notification but their current device is not registered for notifications, then they will be prompted to register the device for notifications.
+    -   Additionally, device registrations are stored separately from subscriptions so registering a device for an account will cause the device to receive notifications for all subscriptions the user has.
+    -   Finally, the following functions have been added:
+        -   `os.recordNotification(recordName, notification)`
+        -   `os.getNotification(recordName, address)`
+        -   `os.eraseNotification(recordName, address)`
+        -   `os.listNotifications(recordName, address?)`
+        -   `os.listNotificationsByMarker(recordName, marker, address?)`
+        -   `os.subscribeToNotification(recordName, address)`
+        -   `os.unsubscribeFromNotification(recordName, address)`
+        -   `os.sendNotification(recordName, address, payload)`
+        -   `os.listNotificationSubscriptions(recordName, address)`
+        -   `os.listUserNotificationSubscriptions()`
 -   Added the ability to request consent again so that a parent can adjust the privacy features for their child.
 -   Added the `jsonObject` form subtype.
     -   Supports loading meshes stored in the [Three.js JSON Object Scene format](https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4).

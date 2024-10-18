@@ -15,6 +15,7 @@ describe('getPublicReadPermission()', () => {
         ['file', ['read']] as const,
         ['event', ['count']] as const,
         ['inst', ['read']] as const,
+        ['notification', ['read', 'list', 'subscribe']] as const,
     ];
 
     describe.each(allowedResourceKinds)(

@@ -8,6 +8,7 @@ import {
     AuthUser,
     AuthUserAuthenticator,
     SaveNewUserFailure,
+    UserLoginMetadata,
     UserRole,
 } from './AuthStore';
 import {
@@ -275,6 +276,12 @@ export class AuthController {
                     sessionKey: null,
                     connectionKey: null,
                     expireTimeMs: null,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 };
             }
         } catch (err) {
@@ -3128,6 +3135,8 @@ export class AuthController {
             await this._store.saveSession(newSession);
         }
 
+        const metadata = await this._store.findUserLoginMetadata(userId);
+
         const info: AuthSessionInfo = {
             userId,
             sessionKey: formatV1SessionKey(
@@ -3143,6 +3152,13 @@ export class AuthController {
                 newSession.expireTimeMs
             ),
             expireTimeMs: newSession.expireTimeMs,
+            metadata: {
+                hasUserAuthenticator: metadata?.hasUserAuthenticator ?? false,
+                userAuthenticatorCredentialIds:
+                    metadata?.userAuthenticatorCredentialIds ?? [],
+                hasPushSubscription: metadata?.hasPushSubscription ?? false,
+                pushSubscriptionIds: metadata?.pushSubscriptionIds ?? [],
+            },
         };
 
         return {
@@ -3279,6 +3295,11 @@ export interface AuthSessionInfo {
      * If null, then the session will not expire.
      */
     expireTimeMs: number | null;
+
+    /**
+     * Extra metadata for the user.
+     */
+    metadata: UserLoginMetadata;
 }
 
 export interface NoSessionKeyResult {

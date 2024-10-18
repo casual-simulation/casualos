@@ -1,5 +1,5 @@
 import {
-    NotificationMessenger,
+    SystemNotificationMessenger,
     SlackOptions,
     UserInstReportNotification,
     formatNotificationAsString,
@@ -20,7 +20,7 @@ const SPAN_OPTIONS: SpanOptions = {
 /**
  * Defines a class that implements a notification messenger that sends notifications to Slack.
  */
-export class SlackNotificationMessenger implements NotificationMessenger {
+export class SlackNotificationMessenger implements SystemNotificationMessenger {
     private _options: SlackOptions;
 
     constructor(options: SlackOptions) {

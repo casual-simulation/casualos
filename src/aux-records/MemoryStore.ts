@@ -17,6 +17,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserLoginMetadata,
 } from './AuthStore';
 import {
     ListStudioAssignmentFilters,
@@ -142,9 +143,9 @@ import {
     UserInstReport,
 } from './ModerationStore';
 import {
-    NotificationMessenger,
+    SystemNotificationMessenger,
     RecordsNotification,
-} from './NotificationMessenger';
+} from './SystemNotificationMessenger';
 import { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
 
@@ -166,7 +167,7 @@ export class MemoryStore
         ConfigurationStore,
         InstRecordsStore,
         ModerationStore,
-        NotificationMessenger
+        SystemNotificationMessenger
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -1353,6 +1354,20 @@ export class MemoryStore
         }
         const user = await this.findUser(authenticator.userId);
         return { authenticator, user };
+    }
+
+    async findUserLoginMetadata(
+        userId: string
+    ): Promise<UserLoginMetadata | null> {
+        let authenticatorIds = this._userAuthenticators
+            .filter((a) => a.userId === userId)
+            .map((a) => a.id);
+        return {
+            hasUserAuthenticator: authenticatorIds.length > 0,
+            userAuthenticatorCredentialIds: authenticatorIds,
+            hasPushSubscription: false,
+            pushSubscriptionIds: [],
+        };
     }
 
     async saveUserAuthenticatorCounter(

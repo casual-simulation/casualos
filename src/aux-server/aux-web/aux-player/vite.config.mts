@@ -138,6 +138,10 @@ export default defineConfig(({ command, mode }) => ({
                               '**/*.md',
                           ],
                       },
+                      devOptions: {
+                          enabled: true,
+                          type: 'module',
+                      },
                   }),
                   writeFilesPlugin({
                       files: {

@@ -34,13 +34,13 @@
             @close="closeDialog()"
         >
         </update-password-link-dialog>
-        <register-webauthn-dialog
-            v-else-if="page === 'show_register_webauthn'"
+        <handle-login-metadata
+            v-else-if="page === 'handle_login_metadata'"
             :endpoint="endpoint"
             :status="loginUIStatus"
             @close="closeDialog()"
         >
-        </register-webauthn-dialog>
+        </handle-login-metadata>
     </div>
 </template>
 <script src="./LoginEndpointUI.ts"></script>
