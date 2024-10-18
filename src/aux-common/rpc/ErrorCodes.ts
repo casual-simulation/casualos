@@ -44,6 +44,7 @@ export type KnownErrorCodes =
     | 'unacceptable_studio_id'
     | 'email_already_exists'
     | 'parent_email_already_exists'
+    | 'child_email_already_exists'
     | 'parent_email_required'
     | 'invalid_room_name'
     | 'invalid_username'
