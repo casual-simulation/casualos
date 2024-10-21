@@ -17,6 +17,15 @@
             <md-tab md-label="Roles" :to="{ name: 'records-roles', params: { recordName } }">
                 <records-roles :recordName="recordName"></records-roles>
             </md-tab>
+            <md-tab md-label="Webhooks" :to="{ name: 'records-webhooks', params: { recordName } }">
+                <records-webhooks :recordName="recordName"></records-webhooks>
+            </md-tab>
+            <md-tab
+                md-label="Notifications"
+                :to="{ name: 'records-notifications', params: { recordName } }"
+            >
+                <records-notifications :recordName="recordName"></records-notifications>
+            </md-tab>
         </md-tabs>
     </div>
 </template>

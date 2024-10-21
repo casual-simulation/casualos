@@ -200,7 +200,7 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
     }
 
     if (config.notifications) {
-        builder.useNotifications();
+        builder.useSystemNotifications();
     }
 
     if (config.webauthn) {
@@ -209,6 +209,20 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
 
     if (config.rekognition?.moderation && config.s3) {
         builder.useRekognitionModeration();
+    }
+
+    if (config.webhooks) {
+        if (config.privo) {
+            console.log(
+                '[LoadServer] Skipping webhooks because Privo is enabled.'
+            );
+        } else {
+            builder.useWebhooks();
+        }
+    }
+
+    if (config.webPush) {
+        builder.useWebPushNotifications();
     }
 
     builder.useAutomaticPlugins();

@@ -4,6 +4,7 @@ import {
     botAdded,
     createBot,
     hasValue,
+    InstUpdate,
     isBot,
     ON_WEBHOOK_ACTION_NAME,
     StoredAux,
@@ -47,6 +48,7 @@ import {
     InstRecordsStore,
     InstWithSubscriptionInfo,
     SaveInstFailure,
+    StoredUpdates,
 } from './InstRecordsStore';
 import {
     BranchName,
@@ -1370,12 +1372,21 @@ export class WebsocketController {
         });
     }
 
+    /**
+     * Gets the data from the given branch in the given inst.
+     * @param userId The ID of the user that is currently logged in.
+     * @param recordName The name of the record that the inst is in. Null if accessing a public inst.
+     * @param inst The name of the inst.
+     * @param branch The name of the branch in the inst.
+     * @param auxVersion The AUX version to return.
+     */
     @traced(TRACE_NAME)
     async getBranchData(
         userId: string | null,
         recordName: string | null,
         inst: string,
-        branch: string
+        branch: string,
+        auxVersion: 1 | 2 = 1
     ): Promise<GetBranchDataResult> {
         console.log(
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}] Get Data`
@@ -1409,20 +1420,40 @@ export class WebsocketController {
             timestamps: [],
             instSizeInBytes: 0,
         };
-        const partition = new YjsPartitionImpl({ type: 'yjs' });
 
-        for (let updateBase64 of updates.updates) {
-            const update = toByteArray(updateBase64);
-            applyUpdate(partition.doc, update);
+        if (auxVersion === 1) {
+            const partition = new YjsPartitionImpl({ type: 'yjs' });
+
+            for (let updateBase64 of updates.updates) {
+                const update = toByteArray(updateBase64);
+                applyUpdate(partition.doc, update);
+            }
+
+            return {
+                success: true,
+                data: {
+                    version: 1,
+                    state: partition.state,
+                },
+            };
+        } else {
+            let stored: InstUpdate[] = [];
+            for (let i = 0; i < updates.updates.length; i++) {
+                stored.push({
+                    id: i,
+                    update: updates.updates[i],
+                    timestamp: updates.timestamps[i],
+                });
+            }
+
+            return {
+                success: true,
+                data: {
+                    version: 2,
+                    updates: stored,
+                },
+            };
         }
-
-        return {
-            success: true,
-            data: {
-                version: 1,
-                state: partition.state,
-            },
-        };
     }
 
     @traced(TRACE_NAME)

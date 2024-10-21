@@ -44,6 +44,8 @@ import {
     ResourcePermissionAssignment,
 } from './PolicyStore';
 import { formatInstId } from './websockets';
+import { AuthController } from './AuthController';
+import { PrivoClientInterface } from './PrivoClient';
 
 console.log = jest.fn();
 
@@ -2533,6 +2535,10 @@ describe('PolicyController', () => {
             ['revokePermission', 'resourceId'],
             ['grant', 'resourceId'],
             ['revoke', 'resourceId'],
+            ['run', 'resourceId'],
+            ['send', 'resourceId'],
+            ['subscribe', 'resourceId'],
+            ['listSubscriptions', 'resourceId'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -2545,6 +2551,8 @@ describe('PolicyController', () => {
             ['loom'],
             ['ai.sloyd'],
             ['ai.hume'],
+            ['webhook'],
+            ['notification'],
         ];
 
         // Admins can perform all actions on all resources
@@ -3038,7 +3046,7 @@ describe('PolicyController', () => {
                         });
                     });
 
-                    it('should deny the action if given a null user ID', async () => {
+                    it('should return not_logged_in if given a null user ID', async () => {
                         const context =
                             await controller.constructAuthorizationContext({
                                 recordKeyOrRecordName: recordName,
@@ -3062,6 +3070,43 @@ describe('PolicyController', () => {
                             errorCode: 'not_logged_in',
                             errorMessage:
                                 'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                        });
+                    });
+
+                    it('should return not_authorized if given a null user ID and configured to do so', async () => {
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                                sendNotLoggedIn: false,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: null,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                            reason: {
+                                type: 'missing_permission',
+                                recordName: recordName,
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                subjectType: 'user',
+                                subjectId: null,
+                            },
                         });
                     });
 
@@ -3393,6 +3438,47 @@ describe('PolicyController', () => {
             ['loom', [['create', 'resourceId']]],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            [
+                'webhook',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                ],
+            ],
+            [
+                'notification',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -3499,6 +3585,17 @@ describe('PolicyController', () => {
                 [
                     ['assign', PUBLIC_READ_MARKER],
                     ['assign', PRIVATE_MARKER],
+                ],
+            ],
+            [
+                'webhook',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['run', 'resourceId'],
                 ],
             ],
         ];
@@ -3900,6 +3997,29 @@ describe('PolicyController', () => {
             ],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -3966,6 +4086,15 @@ describe('PolicyController', () => {
             ['file', [['read', 'resourceId']]],
             ['event', [['count', 'resourceId']]],
             ['inst', [['read', 'resourceId']]],
+            ['webhook', [['run', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['read', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -4076,6 +4205,15 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                 ],
             ],
+            ['webhook', [['run', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['read', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicWriteSubjectTypeCases: [
@@ -4147,6 +4285,86 @@ describe('PolicyController', () => {
         );
 
         describe('privacy features', () => {
+            describe('missing', () => {
+                let privoClient: jest.Mocked<PrivoClientInterface>;
+                let auth: AuthController;
+                let records: RecordsController;
+
+                beforeEach(() => {
+                    privoClient = {
+                        createAdultAccount: jest.fn(),
+                        createChildAccount: jest.fn(),
+                        getUserInfo: jest.fn(),
+                        generateAuthorizationUrl: jest.fn(),
+                        processAuthorizationCallback: jest.fn(),
+                        checkEmail: jest.fn(),
+                        checkDisplayName: jest.fn(),
+                        generateLogoutUrl: jest.fn(),
+                        resendConsentRequest: jest.fn(),
+                    };
+                    auth = new AuthController(
+                        store,
+                        services.authMessenger,
+                        store,
+                        true,
+                        privoClient
+                    );
+                    records = new RecordsController({
+                        auth: store,
+                        config: store,
+                        messenger: store,
+                        metrics: store,
+                        store,
+                    });
+
+                    controller = new PolicyController(auth, records, store);
+                });
+
+                it('should default to not allowing any privacy features if privo is enabled and if the user is not logged in', async () => {
+                    const owner = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: null,
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId: null,
+                        });
+
+                    expect(context).toEqual({
+                        success: true,
+                        context: {
+                            recordName,
+                            recordKeyResult: null,
+                            subjectPolicy: 'subjectfull',
+                            recordKeyProvided: false,
+                            recordKeyCreatorId: undefined,
+                            recordOwnerId: ownerId,
+                            recordOwnerPrivacyFeatures: {
+                                allowAI: true,
+                                allowPublicData: true,
+                                allowPublicInsts: true,
+                                publishData: true,
+                            },
+                            recordStudioId: null,
+                            recordStudioMembers: undefined,
+                            userId: null,
+                            userPrivacyFeatures: {
+                                allowAI: false,
+                                allowPublicData: false,
+                                allowPublicInsts: false,
+                                publishData: false,
+                            },
+                            sendNotLoggedIn: true,
+                        },
+                    });
+
+                    expect(auth.privoEnabled).toBe(true);
+                });
+            });
+
             describe('publishData', () => {
                 it('should reject the request if the user is not allowed to publish data', async () => {
                     const owner = await store.findUser(ownerId);

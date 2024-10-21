@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "3.3.9",
+    "version": "3.3.10",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -61,6 +61,7 @@
         "@aws-sdk/lib-dynamodb": "^3.620.1",
         "@aws-sdk/s3-request-presigner": "^3.620.1",
         "@aws-sdk/types": "^3.609.0",
+        "@aws-sdk/client-lambda": "^3.620.1",
         "@casual-simulation/aux-common": "^3.3.8",
         "@casual-simulation/aux-records": "^3.3.9",
         "@casual-simulation/aux-records-aws": "^3.3.9",
@@ -120,7 +121,7 @@
         "comlink": "4.3.1",
         "compression": "1.7.4",
         "cors": "2.8.5",
-        "deno-vm": "^0.8.1",
+        "deno-vm": "^0.12.0",
         "downloadjs": "^1.4.7",
         "esri-loader": "3.7.0",
         "estraverse": "^5.2.0",
@@ -155,7 +156,7 @@
         "troika-three-text": "0.46.4",
         "typescript": "^5.0.2",
         "unique-names-generator": "4.2.0",
-        "uuid": "^8.3.2",
+        "uuid": "10.0.0",
         "vhost": "^3.0.2",
         "vue": "^2.7.15",
         "vue-class-component": "7.2.6",
@@ -166,7 +167,8 @@
         "vue-property-decorator": "9.1.2",
         "vue-router": "3.5.4",
         "ws": "7.4.6",
-        "zod": "3.22.4"
+        "zod": "3.22.4",
+        "web-push": "3.6.7"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.3.9",
@@ -174,6 +176,7 @@
         "@types/aws-lambda": "^8.10.17",
         "@types/jsdom": "21.1.6",
         "@types/pify": "5.0.4",
+        "@types/web-push": "^3.6.3",
         "@types/prompts": "^2.4.9",
         "@vitejs/plugin-basic-ssl": "1.1.0",
         "@vitejs/plugin-vue2": "2.3.1",

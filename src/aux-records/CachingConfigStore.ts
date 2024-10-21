@@ -3,6 +3,9 @@ import { Cache } from './Cache';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ModerationConfiguration } from './ModerationConfiguration';
+import { traced } from './tracing/TracingDecorators';
+
+const TRACE_NAME = 'CachingConfigStore';
 
 /**
  * Defines a config store that uses a cache.
@@ -24,6 +27,7 @@ export class CachingConfigStore implements ConfigurationStore {
         this._cacheSeconds = cacheSeconds;
     }
 
+    @traced(TRACE_NAME)
     async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
         const cached = await this._cache.retrieve<SubscriptionConfiguration>(
             'subscriptions'
@@ -45,6 +49,7 @@ export class CachingConfigStore implements ConfigurationStore {
         return result;
     }
 
+    @traced(TRACE_NAME)
     async getPrivoConfiguration(): Promise<PrivoConfiguration> {
         const cached = await this._cache.retrieve<PrivoConfiguration>('privo');
 
@@ -60,6 +65,7 @@ export class CachingConfigStore implements ConfigurationStore {
         return result;
     }
 
+    @traced(TRACE_NAME)
     async getModerationConfig(): Promise<ModerationConfiguration> {
         const cached = await this._cache.retrieve<ModerationConfiguration>(
             'moderation'

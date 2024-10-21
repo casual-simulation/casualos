@@ -43,12 +43,16 @@ import {
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
+    recordWebhook,
+    recordsCallProcedure,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import {
+    GetEndpointInfoFunction,
     GetRoomOptions,
+    RecordsEndpointInfo,
     RecordsManager,
     RoomJoin,
     RoomLeave,
@@ -97,7 +101,7 @@ describe('RecordsManager', () => {
         createPublicRecordKey: jest.fn(),
         provideSmsNumber: jest.fn(),
     };
-    let authFactory: (endpoint: string) => AuthHelperInterface;
+    let getEndpointInfo: GetEndpointInfoFunction;
     let connectionClientFactory: (
         endpoint: string,
         protocol: RemoteCausalRepoProtocol
@@ -105,6 +109,8 @@ describe('RecordsManager', () => {
     let sub: Subscription;
 
     beforeEach(async () => {
+        require('axios').__reset();
+
         actions = [];
         sub = new Subscription();
         helper = createHelper();
@@ -204,8 +210,46 @@ describe('RecordsManager', () => {
         };
         customAuthMock = customAuth as any;
 
-        authFactory = (endpoint: string) =>
-            endpoint === 'http://localhost:9999' ? customAuth : auth;
+        let authFactory = (endpoint: string) => {
+            if (endpoint === 'http://localhost:9999') {
+                return customAuth;
+            } else {
+                return auth;
+            }
+        };
+
+        let endpointInfoFromAuth = async (
+            auth: AuthHelperInterface,
+            authenticateIfNotLoggedIn: boolean
+        ) => {
+            if (authenticateIfNotLoggedIn) {
+                if (!(await auth.isAuthenticated())) {
+                    await auth.authenticate();
+                }
+            }
+
+            const token = await auth.getAuthToken();
+            let headers: { [key: string]: string } = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            return {
+                error: false,
+                recordsOrigin: await auth.getRecordsOrigin(),
+                websocketOrigin: await auth.getWebsocketOrigin(),
+                websocketProtocol: await auth.getWebsocketProtocol(),
+                token,
+                headers,
+            } as RecordsEndpointInfo;
+        };
+
+        getEndpointInfo = async (
+            endpoint: string,
+            authenticateIfNotLoggedIn: boolean
+        ) => {
+            const auth = authFactory(endpoint);
+            return await endpointInfoFromAuth(auth, authenticateIfNotLoggedIn);
+        };
 
         records = new RecordsManager(
             {
@@ -215,7 +259,7 @@ describe('RecordsManager', () => {
                 authOrigin: 'http://localhost:3002',
             },
             helper,
-            authFactory,
+            getEndpointInfo,
             true
         );
     });
@@ -917,7 +961,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
 
             it('support manual records with subjectless keys', async () => {
@@ -978,7 +1021,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
         });
 
@@ -2525,7 +2567,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
 
             it('should support manual records with subjectless keys', async () => {
@@ -2576,7 +2617,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
             });
         });
 
@@ -3992,8 +4032,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
-                expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
 
             it('should include the inst', async () => {
@@ -4862,8 +4900,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
-                expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
         });
 
@@ -5217,8 +5253,6 @@ describe('RecordsManager', () => {
                 ]);
                 expect(authMock.isAuthenticated).not.toBeCalled();
                 expect(authMock.authenticate).not.toBeCalled();
-                expect(authMock.getAuthToken).not.toBeCalled();
-                expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
         });
 
@@ -6369,6 +6403,481 @@ describe('RecordsManager', () => {
             });
         });
 
+        describe('records_call_procedure', () => {
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    headers?: Headers;
+                    json?: () => Promise<any>;
+                    text?: () => Promise<string>;
+                    body?: ReadableStream;
+                }>
+            >;
+
+            const originalFetch = globalThis.fetch;
+
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+                fetch = globalThis.fetch = jest.fn();
+            });
+
+            afterAll(() => {
+                globalThis.fetch = originalFetch;
+            });
+
+            const allowedProcedures = [
+                [
+                    'recordWebhook',
+                    recordsCallProcedure(
+                        {
+                            recordWebhook: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'test',
+                                        targetResourceKind: 'data',
+                                        targetRecordName: 'testRecord',
+                                        targetAddress: 'address',
+                                        markers: ['marker'],
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getWebhook',
+                    recordsCallProcedure(
+                        {
+                            getWebhook: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listWebhooks',
+                    recordsCallProcedure(
+                        {
+                            listWebhooks: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    sort: 'ascending',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'eraseWebhook',
+                    recordsCallProcedure(
+                        {
+                            eraseWebhook: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'runWebhook',
+                    recordsCallProcedure(
+                        {
+                            runWebhook: {
+                                input: {
+                                    value: 123,
+                                },
+                                query: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'recordNotification',
+                    recordsCallProcedure(
+                        {
+                            recordNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'test',
+                                        description: 'description',
+                                        markers: ['marker'],
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getNotification',
+                    recordsCallProcedure(
+                        {
+                            getNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'eraseNotification',
+                    recordsCallProcedure(
+                        {
+                            eraseNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listNotifications',
+                    recordsCallProcedure(
+                        {
+                            listNotifications: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'subscribeToNotification',
+                    recordsCallProcedure(
+                        {
+                            subscribeToNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    pushSubscription: {
+                                        endpoint: 'endpoint',
+                                        keys: {},
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'unsubscribeFromNotification',
+                    recordsCallProcedure(
+                        {
+                            unsubscribeFromNotification: {
+                                input: {
+                                    subscriptionId: 'subscriptionId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'sendNotification',
+                    recordsCallProcedure(
+                        {
+                            sendNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    payload: {
+                                        title: 'title',
+                                    },
+                                    topic: 'topic',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listNotificationSubscriptions',
+                    recordsCallProcedure(
+                        {
+                            listNotificationSubscriptions: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listUserNotificationSubscriptions',
+                    recordsCallProcedure(
+                        {
+                            listUserNotificationSubscriptions: {
+                                input: {},
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+            ];
+
+            describe.each(allowedProcedures)('%s', (name, event) => {
+                it('should make a POST request to /api/v3/callProcedure', async () => {
+                    fetch.mockResolvedValueOnce({
+                        status: 200,
+                        json: async () => ({
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    });
+
+                    authMock.isAuthenticated.mockResolvedValueOnce(true);
+                    authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    expect(fetch).toHaveBeenCalledWith(
+                        'http://localhost:3002/api/v3/callProcedure',
+                        {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                procedure: name,
+                                input: event.procedure[name]?.input,
+                                query: event.procedure[name]?.query,
+                            }),
+                            headers: expect.objectContaining({
+                                Authorization: 'Bearer authToken',
+                            }),
+                        }
+                    );
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    ]);
+                    expect(authMock.isAuthenticated).toBeCalled();
+                    expect(authMock.authenticate).not.toBeCalled();
+                    expect(authMock.getAuthToken).toBeCalled();
+                });
+
+                it('should include the inst', async () => {
+                    fetch.mockResolvedValueOnce({
+                        status: 200,
+                        json: async () => ({
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    });
+
+                    authMock.isAuthenticated.mockResolvedValueOnce(true);
+                    authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                    vm.origin = {
+                        recordName: null,
+                        inst: 'myInst',
+                    };
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    if (!event.procedure[name]?.query) {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:3002/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: {
+                                        ...event.procedure[name]?.input,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    } else {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:3002/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: event.procedure[name]?.input,
+                                    query: {
+                                        ...event.procedure[name]?.query,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    }
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    ]);
+                    expect(authMock.isAuthenticated).toBeCalled();
+                    expect(authMock.authenticate).not.toBeCalled();
+                    expect(authMock.getAuthToken).toBeCalled();
+                });
+
+                it('should fail if no recordsOrigin is set', async () => {
+                    records = new RecordsManager(
+                        {
+                            version: '1.0.0',
+                            versionHash: '1234567890abcdef',
+                            recordsOrigin: null,
+                        },
+                        helper,
+                        () => null
+                    );
+
+                    records.handleEvents([event]);
+
+                    await waitAsync();
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Records are not supported on this inst.',
+                        }),
+                    ]);
+                });
+
+                it('should support custom endpoints', async () => {
+                    fetch.mockResolvedValueOnce({
+                        status: 200,
+                        json: async () => ({
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    });
+
+                    customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                    customAuthMock.getAuthToken.mockResolvedValueOnce(
+                        'authToken'
+                    );
+
+                    records.handleEvents([
+                        {
+                            ...event,
+                            options: {
+                                ...event.options,
+                                endpoint: 'http://localhost:9999',
+                            },
+                        },
+                    ]);
+
+                    await waitAsync();
+
+                    if (!event.procedure[name]?.query) {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:9999/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: {
+                                        ...event.procedure[name]?.input,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    } else {
+                        expect(fetch).toHaveBeenCalledWith(
+                            'http://localhost:9999/api/v3/callProcedure',
+                            {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    procedure: name,
+                                    input: event.procedure[name]?.input,
+                                    query: {
+                                        ...event.procedure[name]?.query,
+                                        instances: ['/myInst'],
+                                    },
+                                }),
+                                headers: expect.objectContaining({
+                                    Authorization: 'Bearer authToken',
+                                }),
+                            }
+                        );
+                    }
+
+                    await waitAsync();
+
+                    expect(vm.events).toEqual([
+                        asyncResult(1, {
+                            success: true,
+                            recordName: 'testRecord',
+                            address: 'myAddress',
+                        }),
+                    ]);
+                    expect(customAuthMock.isAuthenticated).toBeCalled();
+                    expect(customAuthMock.authenticate).not.toBeCalled();
+                    expect(customAuthMock.getAuthToken).toBeCalled();
+                });
+            });
+        });
+
         describe('ai_chat', () => {
             beforeEach(() => {
                 authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
@@ -6976,7 +7485,7 @@ describe('RecordsManager', () => {
                         authOrigin: 'http://localhost:3002',
                     },
                     helper,
-                    authFactory,
+                    getEndpointInfo,
                     true,
                     connectionClientFactory
                 );
@@ -7946,7 +8455,7 @@ describe('RecordsManager', () => {
                         authOrigin: 'http://localhost:3002',
                     },
                     helper,
-                    authFactory,
+                    getEndpointInfo,
                     true,
                     connectionClientFactory
                 );
@@ -8287,7 +8796,7 @@ describe('RecordsManager', () => {
                         comId: 'comId1',
                     },
                     helper,
-                    authFactory,
+                    getEndpointInfo,
                     true
                 );
 
@@ -8618,7 +9127,10 @@ describe('RecordsManager', () => {
                         }),
                     ]);
 
-                    expect(factory).toBeCalledWith('https://localhost:321');
+                    expect(factory).toBeCalledWith(
+                        'https://localhost:321',
+                        expect.any(Boolean)
+                    );
                 });
 
                 it('should fail if authOrigin is null and no endpoint is provided', async () => {
@@ -8686,7 +9198,10 @@ describe('RecordsManager', () => {
                         }),
                     ]);
 
-                    expect(factory).toBeCalledWith('http://localhost:999');
+                    expect(factory).toBeCalledWith(
+                        'http://localhost:999',
+                        expect.any(Boolean)
+                    );
                 });
             });
         });

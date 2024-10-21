@@ -32,6 +32,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserLoginMetadata,
     UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import { Db, Collection, FilterQuery } from 'mongodb';
@@ -112,6 +113,12 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             db.collection<MongoDBWebAuthnLoginRequest>(
                 WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
             );
+    }
+
+    async findUserLoginMetadata(
+        userId: string
+    ): Promise<UserLoginMetadata | null> {
+        return null;
     }
 
     getStudioHumeConfig(studioId: string): Promise<HumeConfig | null> {

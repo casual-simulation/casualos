@@ -8,7 +8,7 @@ import { ResourceKinds } from '@casual-simulation/aux-common';
 /**
  * Defines an interface for a class that is able to send records notifications.
  */
-export interface NotificationMessenger {
+export interface SystemNotificationMessenger {
     /**
      * Sends a notification to the user.
      * @param notification The notification to send.
@@ -19,8 +19,8 @@ export interface NotificationMessenger {
 /**
  * Defines a class that is able to send notifications to multiple messengers.
  */
-export class MultiNotificationMessenger implements NotificationMessenger {
-    private _messengers: NotificationMessenger[];
+export class MultiNotificationMessenger implements SystemNotificationMessenger {
+    private _messengers: SystemNotificationMessenger[];
     private _options: NotificationOptions;
 
     constructor(options: NotificationOptions) {
@@ -28,7 +28,7 @@ export class MultiNotificationMessenger implements NotificationMessenger {
         this._messengers = [];
     }
 
-    addMessenger(messenger: NotificationMessenger) {
+    addMessenger(messenger: SystemNotificationMessenger) {
         this._messengers.push(messenger);
     }
 

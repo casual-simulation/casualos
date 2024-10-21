@@ -1,5 +1,5 @@
 import { UserInstReport } from './ModerationStore';
-import { formatNotificationAsString } from './NotificationMessenger';
+import { formatNotificationAsString } from './SystemNotificationMessenger';
 import { StudioComIdRequest } from './RecordsStore';
 
 describe('formatNotificationAsString()', () => {

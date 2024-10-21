@@ -54,6 +54,24 @@ describe('formatV1SessionKey()', () => {
         expect(password).toBe(toBase64String('password'));
         expect(expireTime).toBe(toBase64String('123'));
     });
+
+    it('should support sessions that dont expire', () => {
+        const result = formatV1SessionKey(
+            'userId',
+            'sessionId',
+            'password',
+            null
+        );
+
+        const [version, userId, sessionId, password, expireTime] =
+            result.split('.');
+
+        expect(version).toBe('vSK1');
+        expect(userId).toBe(toBase64String('userId'));
+        expect(sessionId).toBe(toBase64String('sessionId'));
+        expect(password).toBe(toBase64String('password'));
+        expect(expireTime).toBe(toBase64String('Infinity'));
+    });
 });
 
 describe('parseSessionKey()', () => {
@@ -123,6 +141,22 @@ describe('parseSessionKey()', () => {
 
             expect(result).toBe(null);
         });
+
+        it('should parse the sessions that dont expire', () => {
+            const key = formatV1SessionKey(
+                'userId',
+                'sessionId',
+                'password',
+                null
+            );
+            const [userId, sessionId, password, expireTime] =
+                parseSessionKey(key);
+
+            expect(userId).toBe('userId');
+            expect(sessionId).toBe('sessionId');
+            expect(password).toBe('password');
+            expect(expireTime).toBe(null);
+        });
     });
 });
 
@@ -173,6 +207,24 @@ describe('formatV1ConnectionKey()', () => {
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(password).toBe(toBase64String('password'));
         expect(expireTime).toBe(toBase64String('123'));
+    });
+
+    it('should support sessions that dont expire', () => {
+        const result = formatV1ConnectionKey(
+            'userId',
+            'sessionId',
+            'password',
+            null
+        );
+
+        const [version, userId, sessionId, password, expireTime] =
+            result.split('.');
+
+        expect(version).toBe('vCK1');
+        expect(userId).toBe(toBase64String('userId'));
+        expect(sessionId).toBe(toBase64String('sessionId'));
+        expect(password).toBe(toBase64String('password'));
+        expect(expireTime).toBe(toBase64String('Infinity'));
     });
 });
 
@@ -244,6 +296,22 @@ describe('parseConnectionKey()', () => {
             const result = parseConnectionKey(null);
 
             expect(result).toBe(null);
+        });
+
+        it('should parse keys that dont expire', () => {
+            const key = formatV1ConnectionKey(
+                'userId',
+                'sessionId',
+                'password',
+                null
+            );
+            const [userId, sessionId, password, expireTime] =
+                parseConnectionKey(key);
+
+            expect(userId).toBe('userId');
+            expect(sessionId).toBe('sessionId');
+            expect(password).toBe('password');
+            expect(expireTime).toBe(null);
         });
     });
 });

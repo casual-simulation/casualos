@@ -67,7 +67,7 @@ axios.delete = (url, data, config) => {
     return returnResponse();
 };
 axios.mockImplementation((options) => {
-    return returnResponse();
+    return axios.request(options);
 });
 
 axios.__setResponse = (resp) => {

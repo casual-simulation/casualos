@@ -90,6 +90,8 @@ import PrivoRegistrationCard from './PrivoRegistrationCard/PrivoRegistrationCard
 import AuthChildrenPrivacyPolicy from './AuthChildrenPrivacyPolicy/AuthChildrenPrivacyPolicy';
 import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
+import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
+import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -216,6 +218,16 @@ const routes: RouteConfig[] = [
                 path: 'roles',
                 name: 'records-roles',
                 component: AuthRecordsRoles,
+            },
+            {
+                path: 'webhooks',
+                name: 'records-webhooks',
+                component: AuthRecordsWebhooks,
+            },
+            {
+                path: 'notifications',
+                name: 'records-notifications',
+                component: AuthRecordsNotifications,
             },
         ],
     },

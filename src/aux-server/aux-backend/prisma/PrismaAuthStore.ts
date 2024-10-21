@@ -16,6 +16,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserLoginMetadata,
     UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import {
@@ -190,6 +191,7 @@ export class PrismaAuthStore implements AuthStore {
             banReason: user.banReason as string,
             privoServiceId: user.privoServiceId as string,
             privoParentServiceId: user.privoParentServiceId as string,
+            privoConsentUrl: user.privoConsentUrl,
             allowPublishData: user.privacyFeatures?.publishData ?? true,
             allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
             allowAI: user.privacyFeatures?.allowAI ?? true,
@@ -232,6 +234,7 @@ export class PrismaAuthStore implements AuthStore {
                 banReason: user.banReason as string,
                 privoServiceId: user.privoServiceId as string,
                 privoParentServiceId: user.privoParentServiceId as string,
+                privoConsentUrl: user.privoConsentUrl,
                 allowPublishData: user.privacyFeatures?.publishData ?? true,
                 allowPublicData: user.privacyFeatures?.allowPublicData ?? true,
                 allowAI: user.privacyFeatures?.allowAI ?? true,
@@ -1216,6 +1219,38 @@ export class PrismaAuthStore implements AuthStore {
         }
     }
 
+    async findUserLoginMetadata(
+        userId: string
+    ): Promise<UserLoginMetadata | null> {
+        const [credentialIds, pushSubscriptionIds] = await Promise.all([
+            this._client.userAuthenticator.findMany({
+                where: {
+                    userId: userId,
+                },
+                select: {
+                    id: true,
+                },
+            }),
+            this._client.pushSubscriptionUser.findMany({
+                where: {
+                    userId: userId,
+                },
+                select: {
+                    pushSubscriptionId: true,
+                },
+            }),
+        ]);
+
+        return {
+            hasUserAuthenticator: credentialIds.length > 0,
+            userAuthenticatorCredentialIds: credentialIds.map((c) => c.id),
+            hasPushSubscription: pushSubscriptionIds.length > 0,
+            pushSubscriptionIds: pushSubscriptionIds.map(
+                (p) => p.pushSubscriptionId
+            ),
+        };
+    }
+
     private _convertToAuthUser(user: User | null): AuthUser | null {
         if (user) {
             return {
@@ -1239,6 +1274,7 @@ export class PrismaAuthStore implements AuthStore {
                 privoParentServiceId: user.privoParentServiceId as
                     | string
                     | undefined,
+                privoConsentUrl: user.privoConsentUrl,
                 privacyFeatures: {
                     publishData: user.allowPublishData ?? true,
                     allowPublicData: user.allowPublicData ?? true,

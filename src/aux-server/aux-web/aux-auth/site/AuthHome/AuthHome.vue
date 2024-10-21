@@ -47,8 +47,13 @@
                 <div v-if="showPrivacyFeatures">
                     <h2 class="md-title">Privacy</h2>
                     <md-card class="privacy-card">
-                        <md-card-header>
-                            <h3 class="md-title">Features</h3>
+                        <md-card-header class="privacy-card-title">
+                            <span class="md-title">Features</span>
+                            <span class="spacer"></span>
+                            <md-button class="md-icon-button" @click="showPrivacyFeaturesOptions()">
+                                <md-icon>settings</md-icon>
+                                <md-tooltip md-direction="bottom">Settings</md-tooltip>
+                            </md-button>
                         </md-card-header>
                         <md-card-content>
                             <ul class="privacy-list">
@@ -71,6 +76,41 @@
 
                 <subscription />
                 <security />
+
+                <md-dialog :md-active.sync="showPrivacyFeaturesModal">
+                    <md-dialog-title>Privacy Features Options</md-dialog-title>
+                    <md-dialog-content>
+                        <ul class="privacy-list">
+                            <privacy-item :value="privacyFeatures.publishData"
+                                >Build Private Eggs</privacy-item
+                            >
+                            <privacy-item :value="privacyFeatures.allowPublicData"
+                                >Publish Public Eggs</privacy-item
+                            >
+                            <privacy-item :value="privacyFeatures.allowPublicInsts"
+                                >Join & Collaborate</privacy-item
+                            >
+                            <privacy-item :value="privacyFeatures.allowAI"
+                                >Build AI Eggs</privacy-item
+                            >
+                        </ul>
+
+                        <div class="privacy-features-request-status">
+                            <md-progress-spinner
+                                v-if="processingPrivacyFeaturesRequest"
+                                md-mode="indeterminate"
+                                :md-diameter="20"
+                                :md-stroke="2"
+                            ></md-progress-spinner>
+                            {{ requestPrivacyFeaturesMessage }}
+                        </div>
+                    </md-dialog-content>
+                    <md-dialog-actions>
+                        <md-button class="md-primary" @click="requestPrivacyFeatureChanges()"
+                            >Request Changes</md-button
+                        >
+                    </md-dialog-actions>
+                </md-dialog>
             </div>
         </div>
     </div>

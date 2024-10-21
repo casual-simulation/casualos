@@ -42,6 +42,10 @@ export async function uploadMessage(
     return tracer.startActiveSpan('uploadMessage', async (span) => {
         try {
             const key = uuid();
+            if (span) {
+                span.setAttribute('bucket', bucket);
+                span.setAttribute('key', key);
+            }
             const response = await client.putObject({
                 Bucket: bucket,
                 Key: key,
@@ -102,7 +106,16 @@ export async function downloadObject(
                 Bucket: bucket,
                 Key: parsed.pathname.slice(1),
             };
+            if (span) {
+                span.setAttribute('bucket', bucket);
+                span.setAttribute('key', params.Key);
+            }
+
             const response = await client.getObject(params);
+            if (span) {
+                span.setAttribute('contentLength', response.ContentLength);
+            }
+
             return response.Body.transformToString('utf8');
         } catch (err) {
             span.recordException(err);

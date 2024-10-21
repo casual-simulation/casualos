@@ -25,7 +25,6 @@ import {
     PLAYER_OWNER,
     PUBLIC_OWNER,
     appManager,
-    getSimulationId,
 } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
 import { Dictionary } from 'vue-router/types/router';
@@ -48,6 +47,7 @@ import { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
 import { sortInsts } from '../PlayerUtils';
+import { getSimulationId } from '../../../shared/SimulationHelpers';
 
 Vue.use(MdField);
 

@@ -183,6 +183,22 @@ import {
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
+    recordWebhook,
+    getWebhook,
+    eraseWebhook,
+    listWebhooks,
+    listWebhooksByMarker,
+    runWebhook,
+    recordNotification,
+    eraseNotification,
+    getNotification,
+    listNotifications,
+    listNotificationsByMarker,
+    subscribeToNotification,
+    unsubscribeFromNotification,
+    sendNotification,
+    listNotificationSubscriptions,
+    listUserNotificationSubscriptions,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -7511,6 +7527,303 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.eraseManualApprovalData('key', {} as string);
                 }).toThrow('address must be a string.');
+            });
+        });
+
+        describe('os.recordWebhook()', () => {
+            it('should emit a RecordWebhookAction', async () => {
+                const action: any = library.api.os.recordWebhook('recordName', {
+                    address: 'webhook',
+                    targetResourceKind: 'data',
+                    targetRecordName: 'targetRecord',
+                    targetAddress: 'targetAddress',
+                    markers: ['private'],
+                });
+                const expected = recordWebhook(
+                    'recordName',
+                    {
+                        address: 'webhook',
+                        targetResourceKind: 'data',
+                        targetRecordName: 'targetRecord',
+                        targetAddress: 'targetAddress',
+                        markers: ['private'],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.runWebhook()', () => {
+            it('should emit a RunWebhookAction', async () => {
+                const action: any = library.api.os.runWebhook(
+                    'recordName',
+                    'webhook',
+                    {
+                        data: true,
+                    }
+                );
+                const expected = runWebhook(
+                    'recordName',
+                    'webhook',
+                    { data: true },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getWebhook()', () => {
+            it('should emit a GetWebhookAction', async () => {
+                const action: any = library.api.os.getWebhook(
+                    'recordName',
+                    'webhook'
+                );
+                const expected = getWebhook(
+                    'recordName',
+                    'webhook',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseWebhook()', () => {
+            it('should emit a EraseWebhookAction', async () => {
+                const action: any = library.api.os.eraseWebhook(
+                    'recordName',
+                    'webhook'
+                );
+                const expected = eraseWebhook(
+                    'recordName',
+                    'webhook',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listWebhooks()', () => {
+            it('should emit a ListWebhooksAction', async () => {
+                const action: any = library.api.os.listWebhooks(
+                    'recordName',
+                    'webhook'
+                );
+                const expected = listWebhooks(
+                    'recordName',
+                    'webhook',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listWebhooksByMarker()', () => {
+            it('should emit a ListWebhooksAction', async () => {
+                const action: any = library.api.os.listWebhooksByMarker(
+                    'recordName',
+                    'marker',
+                    'webhook'
+                );
+                const expected = listWebhooksByMarker(
+                    'recordName',
+                    'marker',
+                    'webhook',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.recordNotification(
+                    'recordName',
+                    {
+                        address: 'notification',
+                        description: 'description',
+                        markers: ['private'],
+                    }
+                );
+                const expected = recordNotification(
+                    'recordName',
+                    {
+                        address: 'notification',
+                        description: 'description',
+                        markers: ['private'],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.eraseNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = eraseNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.getNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = getNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotifications()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.listNotifications(
+                    'recordName',
+                    'notification'
+                );
+                const expected = listNotifications(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotificationsByMarker()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.listNotificationsByMarker(
+                    'recordName',
+                    'marker',
+                    'notification'
+                );
+                const expected = listNotificationsByMarker(
+                    'recordName',
+                    'marker',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.subscribeToNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.subscribeToNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = subscribeToNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.unsubscribeFromNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.unsubscribeFromNotification('subId');
+                const expected = unsubscribeFromNotification(
+                    'subId',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.sendNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.sendNotification(
+                    'recordName',
+                    'notification',
+                    {
+                        title: 'title',
+                    }
+                );
+                const expected = sendNotification(
+                    'recordName',
+                    'notification',
+                    {
+                        title: 'title',
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotificationSubscriptions()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.listNotificationSubscriptions(
+                        'recordName',
+                        'notification'
+                    );
+                const expected = listNotificationSubscriptions(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listUserNotificationSubscriptions()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.listUserNotificationSubscriptions();
+                const expected = listUserNotificationSubscriptions(
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

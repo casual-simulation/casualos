@@ -8,9 +8,13 @@ ENV PATH "/root/.deno/bin:/home/node/.npm-global/bin:${PATH}"
 
 ENV NODE_ENV production
 ENV PRODUCTION 1
+ENV PRISMA_QUERY_ENGINE_BINARY="/usr/src/app/aux-backend/prisma/generated/libquery_engine-linux-arm64-openssl-3.0.x.so.node"
 
 # Specify no sandbox since Deno doesn't support Arm64
 ENV SANDBOX_TYPE "none"
+
+RUN npm install -g prisma@^5.7.0
+RUN npm install --no-package-lock --no-save deno-vm@^0.12.0
 
 COPY ./src/aux-server/package*.json ./
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
