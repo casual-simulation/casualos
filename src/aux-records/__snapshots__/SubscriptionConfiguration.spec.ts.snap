@@ -31,6 +31,9 @@ Object {
   "insts": Object {
     "allowed": true,
   },
+  "notifications": Object {
+    "allowed": true,
+  },
   "records": Object {
     "allowed": true,
   },

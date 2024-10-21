@@ -1,5 +1,93 @@
 # CasualOS Changelog
 
+## V3.3.11
+
+#### Date: 10/21/2024
+
+### :rocket: Features
+
+-   Added webhook records.
+    -   When enabled, webhook records make it possible to run AUX code inside a server.
+    -   Webhook records work using a request/response model.
+        -   When a request is made to execute the webhook, it grabs the configured target AUX file from another record and then executes it.
+    -   A webhook gets its state from one of 3 different targets:
+        -   `data`: The webhook will use the bots from a data record.
+        -   `file`: The webhook will use the bots from a file record.
+        -   `inst`: The webhook will use the bots from an inst record.
+            -   Only supports reading from insts for now.
+    -   Webhooks are secured by markers, just like regular records.
+        -   `publicRead`: The `publicRead` marker can be used to allow anyone to execute the webhook.
+        -   `private`: The `private` marker can be used to only allow the record members to execute the webhook.
+        -   The following actions are allowed for webhooks:
+            -   `create`
+            -   `read`
+            -   `update`
+            -   `delete`
+            -   `list`
+            -   `run`
+    -   Webhooks have their own user ID.
+        -   By default, webhooks don't have access to anything except public records.
+        -   To allow webhooks to access other records, they need to be granted access to those resources.
+        -   You can find a webhook's user ID by calling `os.getWebhook()` or by inspecting the webhook through the admin panel.
+    -   Additionally, the following functions have been added:
+        -   `os.recordWebhook(recordName, webhook)`
+        -   `os.getWebhook(recordName, address)`
+        -   `os.runWebhook(recordName, address, input)`
+        -   `os.listWebhooks(recordName, address?)`
+        -   `os.listWebhooksByMarker(recordName, marker, address?)`
+        -   `os.eraseWebhook(recordName, address)`
+    -   Webhooks have the following limitations:
+        -   15 seconds maximum runtime (including lambda cold start and initialization).
+        -   Most OS functions do nothing. (`os.toast()`, `os.showInput()`, etc.)
+            -   The most notable exception to this are records-related actions (`os.recordData()`).
+        -   Webhooks do not automatically install abCore. They only use the bots that are stored in the target.
+        -   Webhooks always act like static insts.
+            -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
+-   Added notification records.
+    -   When enabled, notification records make it easy to send push notifications to users.
+    -   They work based on a subscription model:
+        1.  Notifier creates a notification record.
+        2.  User subscribes to a notification with `os.subscribeToNotification(recordName, address)`.
+        3.  Notifier can send notifications to all subscriptions using `os.sendNotification()`.
+    -   Notifications are secured by markers, just like regular records.
+        -   `publicRead`: The `publicRead` marker can be used to allow anyone to read and subscribe to a notification.
+        -   The following actions are allowed for notifications:
+            -   `create`
+            -   `read`
+            -   `update`
+            -   `delete`
+            -   `list`
+            -   `subscribe`
+            -   `unsubscribe`
+            -   `listSubscriptions`
+            -   `send`
+    -   After login, if a user is subscribed to a notification but their current device is not registered for notifications, then they will be prompted to register the device for notifications.
+    -   Additionally, device registrations are stored separately from subscriptions so registering a device for an account will cause the device to receive notifications for all subscriptions the user has.
+    -   Finally, the following functions have been added:
+        -   `os.recordNotification(recordName, notification)`
+        -   `os.getNotification(recordName, address)`
+        -   `os.eraseNotification(recordName, address)`
+        -   `os.listNotifications(recordName, address?)`
+        -   `os.listNotificationsByMarker(recordName, marker, address?)`
+        -   `os.subscribeToNotification(recordName, address)`
+        -   `os.unsubscribeFromNotification(recordName, address)`
+        -   `os.sendNotification(recordName, address, payload)`
+        -   `os.listNotificationSubscriptions(recordName, address)`
+        -   `os.listUserNotificationSubscriptions()`
+-   Added the ability to request consent again so that a parent can adjust the privacy features for their child.
+-   Added the `jsonObject` form subtype.
+    -   Supports loading meshes stored in the [Three.js JSON Object Scene format](https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4).
+    -   Works similarly to `gltf`, but it uses [ObjectLoader](https://threejs.org/docs/?q=loader#api/en/loaders/ObjectLoader) to load meshes from the URL specified in the `formAddress` tag.
+-   Improved the sheetPortal to only create bots in insts that are showing the sheetPortal.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would run into an error when creating a bot with an object tag that includes an array copied from another tag.
+-   Fixed an issue where it was impossible to configure a custom AB1 for a comId.
+-   Resolved an issue where the Monaco editor failed to refresh when navigating between the same tag in different spaces. The editor now correctly detects the context change and updates the displayed content accordingly.
+-   Fixed an issue where it was possible for users who are not logged in to access public data on Privo-enabled servers.
+-   Fixed an issue where CasualOS would run into a server error if a user tried to login using a parent account.
+
 ## V3.3.10
 
 #### Date: 9/3/2024
@@ -52,6 +140,8 @@
         -   `.jpeg`
         -   `.gif`
     -   Additionally, it is possible to manually trigger moderation for a file as a `superUser` by using the `scanFileForModeration` procedure.
+    -   Added `os.getScriptIssues` function.
+        -   This function will get a list of issues that have been raised for the script stored in the given tag
 
 ### :bug: Bug Fixes
 

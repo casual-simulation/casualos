@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
-import { max } from 'lodash';
 
 export const subscriptionFeaturesSchema = z.object({
     records: z
@@ -278,6 +277,155 @@ export const subscriptionFeaturesSchema = z.object({
         })
         .describe(
             'The configuration for loom features for studios. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
+
+    webhooks: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether webhook features are granted for the subscription.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of webhook items that are allowed for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .optional(),
+
+            tokenLifetimeMs: z
+                .number()
+                .describe(
+                    'The lifetime of session tokens that are issued to the webhook in miliseconds. Defaults to 5 minutes.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5 * 60 * 1000),
+
+            initTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the webhook has to initialize. Defaults to 5000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            requestTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the webhook has to respond to a request after being initialized. Defaults to 5000ms'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            fetchTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook. Defaults to 5000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(5000),
+
+            addStateTimeoutMs: z
+                .number()
+                .describe(
+                    'The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation. Defaults to 1000ms.'
+                )
+                .int()
+                .positive()
+                .optional()
+                .nullable()
+                .default(1000),
+
+            maxRunsPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of webhook runs allowed per subscription period. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxRunsPerHour: z
+                .number()
+                .describe(
+                    'The maximum number of webhook runs allowed per hour for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for webhook features. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
+
+    notifications: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether notifications are allowed for the subscription.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of notification items that are allowed for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxSubscribersPerItem: z
+                .number()
+                .describe(
+                    'The maximum number of subscribers that a notification can have in the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxSentNotificationsPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of notifications that can be sent per subscription period. This tracks the number of times the "sendNotification" operation was called. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxSentPushNotificationsPerPeriod: z
+                .number()
+                .describe(
+                    'The maximum number of push notifications that can be sent per subscription period. This tracks the actual number of push notifications that were sent to users. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for notification features. Defaults to not allowed.'
         )
         .optional()
         .default({
@@ -654,22 +802,24 @@ export interface DefaultFeaturesConfiguration {
     /**
      * The configuration for temporary insts.
      */
-    publicInsts?: {
-        /**
-         * Whether they are allowed to be created.
-         */
-        allowed: boolean;
+    publicInsts?: PublicInstsConfiguration;
+}
 
-        /**
-         * The maximum number of bytes that each inst can store.
-         */
-        maxBytesPerInst?: number;
+export interface PublicInstsConfiguration {
+    /**
+     * Whether they are allowed to be created.
+     */
+    allowed: boolean;
 
-        /**
-         * The maximum number of active connections that each inst can have.
-         */
-        maxActiveConnectionsPerInst?: number;
-    };
+    /**
+     * The maximum number of bytes that each inst can store.
+     */
+    maxBytesPerInst?: number;
+
+    /**
+     * The maximum number of active connections that each inst can have.
+     */
+    maxActiveConnectionsPerInst?: number;
 }
 
 /**
@@ -713,10 +863,15 @@ export interface FeaturesConfiguration {
      */
     loom?: StudioLoomFeaturesConfiguration;
 
-    // /**
-    //  * The configuration for studio hume features.
-    //  */
-    // hume?: StudioHumeFeaturesConfiguration;
+    /**
+     * The configuration for webhook features.
+     */
+    webhooks?: WebhooksFeaturesConfiguration;
+
+    /**
+     * The configuration for notification features.
+     */
+    notifications?: NotificationFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -944,6 +1099,14 @@ export type StudioLoomFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['loom'];
 
+export type WebhooksFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['webhooks'];
+
+export type NotificationFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['notifications'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -978,7 +1141,106 @@ export function allowAllFeatures(): FeaturesConfiguration {
         insts: {
             allowed: true,
         },
+        notifications: {
+            allowed: true,
+        },
     };
+}
+
+export function denyAllFeatures(): FeaturesConfiguration {
+    return {
+        records: {
+            allowed: false,
+        },
+        ai: {
+            chat: {
+                allowed: false,
+            },
+            images: {
+                allowed: false,
+            },
+            skyboxes: {
+                allowed: false,
+            },
+            hume: {
+                allowed: false,
+            },
+            sloyd: {
+                allowed: false,
+            },
+        },
+        data: {
+            allowed: false,
+        },
+        events: {
+            allowed: false,
+        },
+        files: {
+            allowed: false,
+        },
+        insts: {
+            allowed: false,
+        },
+        notifications: {
+            allowed: false,
+        },
+    };
+}
+
+/**
+ * Gets the notification features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getNotificationFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): NotificationFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.notifications ?? { allowed: false };
+}
+
+/**
+ * Gets the webhook features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getWebhookFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): WebhooksFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.webhooks ?? { allowed: false };
 }
 
 /**
@@ -990,13 +1252,19 @@ export function allowAllFeatures(): FeaturesConfiguration {
 export function getComIdFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
-    subscriptionId: string
+    subscriptionId: string,
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
 ): StudioComIdFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,
         subscriptionId,
-        'studio'
+        'studio',
+        periodStartMs,
+        periodEndMs,
+        nowMs
     );
     return (
         features.comId ?? {
@@ -1015,13 +1283,19 @@ export function getComIdFeatures(
 export function getLoomFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
-    subscriptionId: string
+    subscriptionId: string,
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
 ): StudioLoomFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,
         subscriptionId,
-        'studio'
+        'studio',
+        periodStartMs,
+        periodEndMs,
+        nowMs
     );
     return features.loom ?? { allowed: false };
 }
@@ -1038,13 +1312,19 @@ export function getHumeAiFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
     subscriptionId: string,
-    type: 'user' | 'studio'
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
 ): AIHumeFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,
         subscriptionId,
-        type
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
     );
     return features.ai.hume ?? { allowed: false };
 }
@@ -1061,13 +1341,19 @@ export function getSloydAiFeatures(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
     subscriptionId: string,
-    type: 'user' | 'studio'
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
 ): AISloydFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,
         subscriptionId,
-        type
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
     );
     return features.ai.sloyd ?? { allowed: false };
 }

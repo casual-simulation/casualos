@@ -13,6 +13,7 @@ import { readFileSync } from 'fs';
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');
+const auxServerNodeModules = path.resolve(auxServer, 'node_modules');
 const auxBackend = path.resolve(auxServer, 'aux-backend');
 const server = path.resolve(auxBackend, 'server');
 const serverDist = path.resolve(server, 'dist');
@@ -30,8 +31,12 @@ const denoEntry = path.resolve(auxVmDeno, 'vm', 'DenoAuxChannel.worker.js');
 
 const serverless = path.resolve(auxBackend, 'serverless');
 const serverlessDist = path.resolve(serverless, 'aws', 'dist');
+const serverlessBin = path.resolve(serverless, 'aws', 'bin');
 const serverlessSrc = path.resolve(serverless, 'aws', 'src');
 const serverlessHandlers = path.resolve(serverlessSrc, 'handlers');
+
+const denoVm = path.resolve(auxServerNodeModules, 'deno-vm');
+const denoBootstrapScripts = path.resolve(denoVm, 'deno');
 
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
 const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
@@ -86,6 +91,7 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
+                external: ['deno-vm'],
                 minify: !dev,
                 plugins: [replaceThreePlugin(), ImportGlobPlugin()],
             },
@@ -148,10 +154,57 @@ export function createConfigs(dev, version) {
             },
         ],
         [
+            'Serverless Webhooks',
+            {
+                entryPoints: [path.resolve(serverlessHandlers, 'webhooks')],
+                outdir: path.resolve(serverlessDist, 'webhooks'),
+                platform: 'node',
+                target: ['node14.16'],
+                define: {
+                    ...versionVariables,
+                    ...developmentVariables,
+                    ...configVariables,
+                    ...extraVariables,
+                },
+                minify: !dev,
+                plugins: [ImportGlobPlugin()],
+            },
+        ],
+        [
             'Deno',
             {
                 entryPoints: [denoEntry],
                 outfile: path.resolve(auxWebDist, 'deno.js'),
+                platform: 'browser',
+                define: {
+                    ...versionVariables,
+                    ...developmentVariables,
+                },
+                minify: !dev,
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceEsbuildPlugin(),
+                    copy({
+                        src: path.resolve(auxWebDist, 'deno.js'),
+                        dest: path.resolve(
+                            serverlessDist,
+                            'webhooks',
+                            'deno.js'
+                        ),
+                        force: true,
+                    }),
+                ],
+            },
+        ],
+        [
+            'Deno VM',
+            {
+                entryPoints: [path.resolve(denoBootstrapScripts, 'index.ts')],
+                outfile: path.resolve(
+                    serverlessDist,
+                    'webhooks',
+                    'deno-bootstrap.js'
+                ),
                 platform: 'browser',
                 define: {
                     ...versionVariables,

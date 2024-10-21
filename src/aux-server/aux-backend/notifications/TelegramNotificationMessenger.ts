@@ -1,5 +1,5 @@
 import {
-    NotificationMessenger,
+    SystemNotificationMessenger,
     SlackOptions,
     TelegramOptions,
     UserInstReportNotification,
@@ -21,7 +21,9 @@ const SPAN_OPTIONS: SpanOptions = {
 /**
  * Defines a class that implements a notification messenger that sends notifications to Telegram.
  */
-export class TelegramNotificationMessenger implements NotificationMessenger {
+export class TelegramNotificationMessenger
+    implements SystemNotificationMessenger
+{
     private _options: TelegramOptions;
 
     constructor(options: TelegramOptions) {

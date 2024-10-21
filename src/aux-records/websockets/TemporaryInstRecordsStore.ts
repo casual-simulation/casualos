@@ -3,6 +3,7 @@ import {
     BranchRecordWithInst,
     CurrentUpdates,
 } from './InstRecordsStore';
+import { LockStore } from '../LockStore';
 
 /**
  * Defines an interface for a store that keeps track of temporary inst records.
@@ -10,7 +11,7 @@ import {
  * A key feature of temporary records stores is that they act like a cache.
  * As a result, it may evict data based on configuration or other factors (like memory pressure).
  */
-export interface TemporaryInstRecordsStore {
+export interface TemporaryInstRecordsStore extends LockStore {
     /**
      * Gets info for the given branch.
      * @param branchKey The key for the branch.
@@ -210,18 +211,6 @@ export interface TemporaryInstRecordsStore {
      * Gets the current generation that dirty branches should be recorded in.
      */
     getDirtyBranchGeneration(): Promise<string>;
-
-    /**
-     * Aquires a lock with the given ID.
-     * If successful, returns a function that will release the lock when called.
-     * If unsuccessful, returns null.
-     * @param id The id of the lock.
-     * @param timeout The timeout for the lock in miliseconds. If the lock isn't released in this time, it will be automatically released.
-     */
-    aquireLock(
-        id: string,
-        timeout: number
-    ): Promise<(() => Promise<boolean>) | null>;
 
     /**
      * Marks the given branch as dirty in the current generation.

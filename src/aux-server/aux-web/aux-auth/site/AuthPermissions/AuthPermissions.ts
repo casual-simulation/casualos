@@ -104,6 +104,8 @@ export default class AuthPermissions extends Vue {
                     ['file', ['read']],
                     ['event', ['count']],
                     ['inst', ['read']],
+                    ['webhook', ['run']],
+                    ['notification', ['read', 'list', 'subscribe']],
                 ];
 
                 for (let [resourceKind, actions] of publicPermissions) {
@@ -139,6 +141,8 @@ export default class AuthPermissions extends Vue {
                             'create',
                         ],
                     ],
+                    ['webhook', ['run']],
+                    ['notification', ['read', 'list', 'subscribe']],
                 ];
 
                 for (let [resourceKind, actions] of publicPermissions) {

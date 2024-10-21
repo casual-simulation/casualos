@@ -8,11 +8,9 @@ import {
     UpdateEventRecordFailure,
     UpdateEventRecordSuccess,
 } from './EventRecordsController';
-import { EventRecordsStore } from './EventRecordsStore';
 import {
     createTestControllers,
     createTestRecordKey,
-    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import { PolicyController } from './PolicyController';
@@ -21,13 +19,8 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { merge } from 'lodash';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();
 
@@ -160,6 +153,46 @@ describe('EventRecordsController', () => {
             });
         });
 
+        it('should support custom markers with paths', async () => {
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'increment',
+                {},
+                null
+            );
+
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.updateEvent(recordName, 'address', {
+                markers: ['secret:custom'],
+            });
+
+            const result = (await manager.addCount(
+                recordName,
+                'address',
+                5,
+                userId
+            )) as AddCountSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.eventName).toBe('address');
+
+            await expect(
+                store.getEventCount('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 5,
+                markers: ['secret:custom'],
+            });
+        });
+
         it('should deny the request if the user does not have permissions', async () => {
             const result = (await manager.addCount(
                 recordName,
@@ -228,28 +261,16 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if event records are not allowed', async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                events: {
-                                    allowed: false,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withEvents({
+                                allowed: false,
+                            })
+                    )
             );
 
             store.roles[recordName] = {
@@ -533,6 +554,74 @@ describe('EventRecordsController', () => {
             });
         });
 
+        it('should support custom markers with paths', async () => {
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'update',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'event',
+                'secret',
+                'update',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'assign',
+                {},
+                null
+            );
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'role',
+                'developer',
+                'marker',
+                ACCOUNT_MARKER,
+                'unassign',
+                {},
+                null
+            );
+
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: recordName,
+                eventName: 'address',
+                userId,
+                markers: ['secret:custom'],
+            })) as UpdateEventRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 10,
+                markers: ['secret:custom'],
+            });
+        });
+
         it('should be able to use a record key', async () => {
             await store.updateEvent(recordName, 'address', {
                 count: 10,
@@ -644,28 +733,16 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if event records are not allowed', async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                events: {
-                                    allowed: false,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withEvents({
+                                allowed: false,
+                            })
+                    )
             );
 
             store.roles[recordName] = {

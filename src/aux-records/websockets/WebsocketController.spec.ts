@@ -33,11 +33,7 @@ import {
     RequestMissingPermissionResponseSuccessMessage,
     WebsocketEventTypes,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import {
-    createTestControllers,
-    createTestSubConfiguration,
-    createTestUser,
-} from '../TestUtils';
+import { createTestControllers, createTestUser } from '../TestUtils';
 import { generateV1ConnectionToken } from '../AuthUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
@@ -58,6 +54,7 @@ import {
     SubscriptionConfiguration,
     allowAllFeatures,
 } from '../SubscriptionConfiguration';
+import { buildSubscriptionConfig } from '../SubscriptionConfigBuilder';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -472,15 +469,11 @@ describe('WebsocketController', () => {
                 });
 
                 it('should return a not_authorized error if recordless insts are not allowed', async () => {
-                    store.subscriptionConfiguration = merge(
-                        createTestSubConfiguration(),
-                        {
-                            defaultFeatures: {
-                                publicInsts: {
-                                    allowed: false,
-                                },
-                            },
-                        } as Partial<SubscriptionConfiguration>
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withPublicInsts({
+                                allowed: false,
+                            })
                     );
 
                     await connectionStore.saveConnection(device1Info);
@@ -648,16 +641,12 @@ describe('WebsocketController', () => {
                 });
 
                 it('should return a not_authorized error if the maximum number of connections for recordless insts is reached', async () => {
-                    store.subscriptionConfiguration = merge(
-                        createTestSubConfiguration(),
-                        {
-                            defaultFeatures: {
-                                publicInsts: {
-                                    allowed: true,
-                                    maxActiveConnectionsPerInst: 1,
-                                },
-                            },
-                        } as Partial<SubscriptionConfiguration>
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withPublicInsts({
+                                allowed: true,
+                                maxActiveConnectionsPerInst: 1,
+                            })
                     );
 
                     await connectionStore.saveConnection(device1Info);
@@ -1225,32 +1214,17 @@ describe('WebsocketController', () => {
                             });
 
                             it('should return a not_authorized error if insts are not allowed', async () => {
-                                store.subscriptionConfiguration = merge(
-                                    createTestSubConfiguration(),
-                                    {
-                                        subscriptions: [
-                                            {
-                                                id: 'sub1',
-                                                eligibleProducts: [],
-                                                product: '',
-                                                featureList: [],
-                                                tier: 'tier1',
-                                            },
-                                        ],
-                                        tiers: {
-                                            tier1: {
-                                                features: merge(
-                                                    allowAllFeatures(),
-                                                    {
-                                                        insts: {
-                                                            allowed: false,
-                                                        },
-                                                    } as Partial<FeaturesConfiguration>
-                                                ),
-                                            },
-                                        },
-                                    } as Partial<SubscriptionConfiguration>
-                                );
+                                store.subscriptionConfiguration =
+                                    buildSubscriptionConfig((config) =>
+                                        config.addSubscription('sub1', (sub) =>
+                                            sub
+                                                .withTier('tier1')
+                                                .withAllDefaultFeatures()
+                                                .withInsts({
+                                                    allowed: false,
+                                                })
+                                        )
+                                    );
 
                                 await store.saveUser({
                                     id: userId,
@@ -1297,33 +1271,16 @@ describe('WebsocketController', () => {
                             });
 
                             it('should return a subscription_limit_reached error the subscription has reached the maximum number of insts', async () => {
-                                store.subscriptionConfiguration = merge(
-                                    createTestSubConfiguration(),
-                                    {
-                                        subscriptions: [
-                                            {
-                                                id: 'sub1',
-                                                eligibleProducts: [],
-                                                product: '',
-                                                featureList: [],
-                                                tier: 'tier1',
-                                            },
-                                        ],
-                                        tiers: {
-                                            tier1: {
-                                                features: merge(
-                                                    allowAllFeatures(),
-                                                    {
-                                                        insts: {
-                                                            allowed: true,
-                                                            maxInsts: 1,
-                                                        },
-                                                    } as Partial<FeaturesConfiguration>
-                                                ),
-                                            },
-                                        },
-                                    } as Partial<SubscriptionConfiguration>
-                                );
+                                store.subscriptionConfiguration =
+                                    buildSubscriptionConfig((config) =>
+                                        config.addSubscription('sub1', (sub) =>
+                                            sub
+                                                .withTier('tier1')
+                                                .withAllDefaultFeatures()
+                                                .withInsts()
+                                                .withMaxInsts(1)
+                                        )
+                                    );
 
                                 await store.saveUser({
                                     id: userId,
@@ -1577,32 +1534,17 @@ describe('WebsocketController', () => {
                             });
 
                             it('should return a not_authorized error if insts are not allowed', async () => {
-                                store.subscriptionConfiguration = merge(
-                                    createTestSubConfiguration(),
-                                    {
-                                        subscriptions: [
-                                            {
-                                                id: 'sub1',
-                                                eligibleProducts: [],
-                                                product: '',
-                                                featureList: [],
-                                                tier: 'tier1',
-                                            },
-                                        ],
-                                        tiers: {
-                                            tier1: {
-                                                features: merge(
-                                                    allowAllFeatures(),
-                                                    {
-                                                        insts: {
-                                                            allowed: false,
-                                                        },
-                                                    } as Partial<FeaturesConfiguration>
-                                                ),
-                                            },
-                                        },
-                                    } as Partial<SubscriptionConfiguration>
-                                );
+                                store.subscriptionConfiguration =
+                                    buildSubscriptionConfig((config) =>
+                                        config.addSubscription('sub1', (sub) =>
+                                            sub
+                                                .withTier('tier1')
+                                                .withAllDefaultFeatures()
+                                                .withInsts({
+                                                    allowed: false,
+                                                })
+                                        )
+                                    );
 
                                 await store.saveUser({
                                     id: userId,
@@ -1649,33 +1591,18 @@ describe('WebsocketController', () => {
                             });
 
                             it('should return a subscription_limit_reached error the subscription has reached the maximum connections to a branch', async () => {
-                                store.subscriptionConfiguration = merge(
-                                    createTestSubConfiguration(),
-                                    {
-                                        subscriptions: [
-                                            {
-                                                id: 'sub1',
-                                                eligibleProducts: [],
-                                                product: '',
-                                                featureList: [],
-                                                tier: 'tier1',
-                                            },
-                                        ],
-                                        tiers: {
-                                            tier1: {
-                                                features: merge(
-                                                    allowAllFeatures(),
-                                                    {
-                                                        insts: {
-                                                            allowed: true,
-                                                            maxActiveConnectionsPerInst: 1,
-                                                        },
-                                                    } as Partial<FeaturesConfiguration>
-                                                ),
-                                            },
-                                        },
-                                    } as Partial<SubscriptionConfiguration>
-                                );
+                                store.subscriptionConfiguration =
+                                    buildSubscriptionConfig((config) =>
+                                        config.addSubscription('sub1', (sub) =>
+                                            sub
+                                                .withTier('tier1')
+                                                .withAllDefaultFeatures()
+                                                .withInsts()
+                                                .withMaxActiveConnectionsPerInst(
+                                                    1
+                                                )
+                                        )
+                                    );
 
                                 await store.saveUser({
                                     id: userId,
@@ -2317,32 +2244,17 @@ describe('WebsocketController', () => {
                         });
 
                         it('should return a not_authorized error if insts are not allowed', async () => {
-                            store.subscriptionConfiguration = merge(
-                                createTestSubConfiguration(),
-                                {
-                                    subscriptions: [
-                                        {
-                                            id: 'sub1',
-                                            eligibleProducts: [],
-                                            product: '',
-                                            featureList: [],
-                                            tier: 'tier1',
-                                        },
-                                    ],
-                                    tiers: {
-                                        tier1: {
-                                            features: merge(
-                                                allowAllFeatures(),
-                                                {
-                                                    insts: {
-                                                        allowed: false,
-                                                    },
-                                                } as Partial<FeaturesConfiguration>
-                                            ),
-                                        },
-                                    },
-                                } as Partial<SubscriptionConfiguration>
-                            );
+                            store.subscriptionConfiguration =
+                                buildSubscriptionConfig((config) =>
+                                    config.addSubscription('sub1', (sub) =>
+                                        sub
+                                            .withTier('tier1')
+                                            .withAllDefaultFeatures()
+                                            .withInsts({
+                                                allowed: false,
+                                            })
+                                    )
+                                );
 
                             await store.saveUser({
                                 id: userId,
@@ -2783,15 +2695,11 @@ describe('WebsocketController', () => {
                 });
 
                 it('should return a not_authorized error if recordless insts are not allowed', async () => {
-                    store.subscriptionConfiguration = merge(
-                        createTestSubConfiguration(),
-                        {
-                            defaultFeatures: {
-                                publicInsts: {
-                                    allowed: false,
-                                },
-                            },
-                        } as Partial<SubscriptionConfiguration>
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withPublicInsts({
+                                allowed: false,
+                            })
                     );
 
                     await connectionStore.saveConnection(device1Info);
@@ -2837,16 +2745,12 @@ describe('WebsocketController', () => {
                 });
 
                 it('should return a max_size_reached error if it would exceed the maximum inst size for recordless insts', async () => {
-                    store.subscriptionConfiguration = merge(
-                        createTestSubConfiguration(),
-                        {
-                            defaultFeatures: {
-                                publicInsts: {
-                                    allowed: true,
-                                    maxBytesPerInst: 1,
-                                },
-                            },
-                        } as Partial<SubscriptionConfiguration>
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withPublicInsts({
+                                allowed: true,
+                                maxBytesPerInst: 1,
+                            })
                     );
 
                     await connectionStore.saveConnection(device1Info);
@@ -3453,29 +3357,17 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return a not_authorized error if insts are not allowed', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: false,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts({
+                                            allowed: false,
+                                        })
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -3524,30 +3416,16 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return a subscription_limit_reached error if creating the inst would exceed the allowed max insts', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: true,
-                                                maxInsts: 1,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxInsts(1)
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -3602,30 +3480,16 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return a max_size_reached error if adding the updates to a new inst would exceed the allowed inst size', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: true,
-                                                maxBytesPerInst: 1,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxBytesPerInst(1)
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -3668,30 +3532,16 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return a subscription_limit_reached error if adding the updates to an existing inst would exceed the allowed inst size', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: true,
-                                                maxBytesPerInst: 100,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxBytesPerInst(100)
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -4309,29 +4159,17 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return not_authorized if insts are not allowed', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: false,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts({
+                                            allowed: false,
+                                        })
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -4425,30 +4263,16 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return subscription_limit_reached if creating the inst would exceed the allowed max insts', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: true,
-                                                maxInsts: 1,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxInsts(1)
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -5709,29 +5533,17 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return a not_authorized error if insts are not allowed', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: false,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts({
+                                            allowed: false,
+                                        })
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -6034,29 +5846,17 @@ describe('WebsocketController', () => {
                     });
 
                     it('should return a not_authorized error if insts are not allowed', async () => {
-                        store.subscriptionConfiguration = merge(
-                            createTestSubConfiguration(),
-                            {
-                                subscriptions: [
-                                    {
-                                        id: 'sub1',
-                                        eligibleProducts: [],
-                                        product: '',
-                                        featureList: [],
-                                        tier: 'tier1',
-                                    },
-                                ],
-                                tiers: {
-                                    tier1: {
-                                        features: merge(allowAllFeatures(), {
-                                            insts: {
-                                                allowed: false,
-                                            },
-                                        } as Partial<FeaturesConfiguration>),
-                                    },
-                                },
-                            } as Partial<SubscriptionConfiguration>
-                        );
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts({
+                                            allowed: false,
+                                        })
+                                )
+                            );
 
                         await store.saveUser({
                             id: userId,
@@ -7752,6 +7552,56 @@ describe('WebsocketController', () => {
                         },
                     });
                 });
+
+                it('should return the updates for the given branch if version 2 is requested', async () => {
+                    const partition = createYjsPartition({
+                        type: 'yjs',
+                    });
+
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                                ghi: 123,
+                            })
+                        ),
+                    ]);
+
+                    const updateBytes = encodeStateAsUpdate(
+                        (partition as YjsPartitionImpl).doc
+                    );
+                    const updateBase64 = fromByteArray(updateBytes);
+
+                    await instStore.addUpdates(
+                        null,
+                        inst,
+                        'testBranch',
+                        [updateBase64],
+                        updateBase64.length
+                    );
+
+                    const data = await server.getBranchData(
+                        null,
+                        null,
+                        inst,
+                        'testBranch',
+                        2
+                    );
+
+                    expect(data).toEqual({
+                        success: true,
+                        data: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    update: updateBase64,
+                                    timestamp: expect.any(Number),
+                                },
+                            ],
+                        },
+                    });
+                });
             });
 
             describe('records', () => {
@@ -7885,6 +7735,62 @@ describe('WebsocketController', () => {
                     });
                 });
 
+                it('should return the updates if aux version 2 is requested', async () => {
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    const partition = createYjsPartition({
+                        type: 'yjs',
+                    });
+
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                                ghi: 123,
+                            })
+                        ),
+                    ]);
+
+                    const updateBytes = encodeStateAsUpdate(
+                        (partition as YjsPartitionImpl).doc
+                    );
+                    const updateBase64 = fromByteArray(updateBytes);
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        'testBranch',
+                        [updateBase64],
+                        updateBase64.length
+                    );
+
+                    const data = await server.getBranchData(
+                        userId,
+                        recordName,
+                        inst,
+                        'testBranch',
+                        2
+                    );
+
+                    expect(data).toEqual({
+                        success: true,
+                        data: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    update: updateBase64,
+                                    timestamp: expect.any(Number),
+                                },
+                            ],
+                        },
+                    });
+                });
+
                 it('should return the data if the user has the inst.read permission', async () => {
                     await instStore.saveInst({
                         recordName,
@@ -7961,28 +7867,16 @@ describe('WebsocketController', () => {
                         markers: [PRIVATE_MARKER],
                     });
 
-                    store.subscriptionConfiguration = merge(
-                        createTestSubConfiguration(),
-                        {
-                            subscriptions: [
-                                {
-                                    id: 'sub1',
-                                    eligibleProducts: [],
-                                    product: '',
-                                    featureList: [],
-                                    tier: 'tier1',
-                                },
-                            ],
-                            tiers: {
-                                tier1: {
-                                    features: merge(allowAllFeatures(), {
-                                        insts: {
-                                            allowed: false,
-                                        },
-                                    } as Partial<FeaturesConfiguration>),
-                                },
-                            },
-                        } as Partial<SubscriptionConfiguration>
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.addSubscription('sub1', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withAllDefaultFeatures()
+                                    .withInsts({
+                                        allowed: false,
+                                    })
+                            )
                     );
 
                     await store.saveUser({
@@ -8162,28 +8056,16 @@ describe('WebsocketController', () => {
             });
 
             it('should return not_authorized when insts are disabled', async () => {
-                store.subscriptionConfiguration = merge(
-                    createTestSubConfiguration(),
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub1',
-                                eligibleProducts: [],
-                                product: '',
-                                featureList: [],
-                                tier: 'tier1',
-                            },
-                        ],
-                        tiers: {
-                            tier1: {
-                                features: merge(allowAllFeatures(), {
-                                    insts: {
-                                        allowed: false,
-                                    },
-                                } as Partial<FeaturesConfiguration>),
-                            },
-                        },
-                    } as Partial<SubscriptionConfiguration>
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withInsts({
+                                    allowed: false,
+                                })
+                        )
                 );
 
                 await store.saveUser({
@@ -8994,7 +8876,7 @@ describe('WebsocketController', () => {
                 ).toEqual([]);
             });
 
-            it('should aquire a lock before trying to save branch data', async () => {
+            it('should acquire a lock before trying to save branch data', async () => {
                 const generation =
                     await instStore.temp.getDirtyBranchGeneration();
                 const beforeSaveUpdates = await instStore.getCurrentUpdates(
@@ -9010,7 +8892,7 @@ describe('WebsocketController', () => {
                         update1Base64.length + update2Base64.length,
                 });
 
-                const lock = await instStore.temp.aquireLock(
+                const lock = await instStore.temp.acquireLock(
                     SAVE_PERMANENT_BRANCHES_LOCK,
                     100_000
                 );

@@ -44,6 +44,7 @@ import {
     RecordLoomAction,
     WatchLoomAction,
     GetLoomMetadataAction,
+    GetScriptIssuesAction,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -102,6 +103,11 @@ import {
     SDKResult as LoomSDKResult,
 } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
+import {
+    recordsCallProcedure,
+    SubscribeToNotificationAction,
+} from '@casual-simulation/aux-runtime';
+import type { NotificationRecord } from '@casual-simulation/aux-records';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -313,6 +319,12 @@ export default class PlayerApp extends Vue {
     private _notAuthorizedSimulationId: string;
     showChangeLogin: boolean = false;
     private _isLoggingIn: boolean = false;
+
+    showNotificationPermissionDialog: boolean = false;
+    showNotificationPermissionMessage: string =
+        'Do you want to allow notifications?';
+    private _showNotificationPermissionResolve: (result: boolean) => void =
+        null;
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -639,7 +651,7 @@ export default class PlayerApp extends Vue {
         return this.barcodeFormat || '';
     }
 
-    onQRStreamAquired(stream: MediaStream) {
+    onQRStreamAcquired(stream: MediaStream) {
         this._currentQRMediaStream = stream;
     }
 
@@ -1247,6 +1259,10 @@ export default class PlayerApp extends Vue {
                     this._watchLoom(e, simulation);
                 } else if (e.type === 'get_loom_metadata') {
                     this._getLoomMetadata(e, simulation);
+                } else if (e.type === 'get_script_issues') {
+                    this._getScriptIssues(e, simulation);
+                } else if (e.type === 'subscribe_to_notification') {
+                    this._subscribeToNotification(e, simulation);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1399,6 +1415,193 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this.setTitleToID();
+    }
+
+    private async _subscribeToNotification(
+        event: SubscribeToNotificationAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            const endpoint =
+                event.options?.endpoint ?? appManager.config.authOrigin;
+            if (endpoint !== appManager.config.authOrigin) {
+                sendNotSupported(
+                    'Push notifications are only supported for the default auth server.'
+                );
+                return;
+            }
+            if (!('serviceWorker' in navigator)) {
+                sendNotSupported(
+                    'Push notifications are not supported on this device.'
+                );
+                return;
+            }
+            appManager.updateServiceWorker();
+
+            const registration = (await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Service worker not ready.'));
+                    }, 15000);
+                }),
+            ])) as ServiceWorkerRegistration;
+
+            if (!registration.pushManager) {
+                sendNotSupported(
+                    'Push notifications are not supported on this device.'
+                );
+                return;
+            }
+
+            const info = await simulation.records.getInfoForEndpoint(
+                event.options?.endpoint,
+                false
+            );
+
+            if (!info) {
+                sendNotSupported('Records are not supported on this inst.');
+                return;
+            }
+
+            let sub = await registration.pushManager.getSubscription();
+
+            if (!sub) {
+                const granted = await this._requestNotificationPermission(
+                    `Do you want to allow notifications?`
+                );
+                if (!granted) {
+                    sendNotSupported(
+                        'The user denied permission to send notifications.'
+                    );
+                    return;
+                }
+
+                const key =
+                    await simulation.records.client.getNotificationsApplicationServerKey(
+                        undefined,
+                        {
+                            sessionKey: info.token,
+                            endpoint: info.recordsOrigin,
+                        }
+                    );
+
+                if (key.success === false) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, key)
+                    );
+                    return;
+                }
+
+                sub = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: key.key,
+                });
+            }
+
+            const notification =
+                await simulation.records.client.getNotification(
+                    {
+                        recordName: event.recordName,
+                        address: event.address,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: info.recordsOrigin,
+                    }
+                );
+
+            if (notification.success === false) {
+                if (hasValue(event.taskId)) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, notification)
+                    );
+                }
+                return;
+            }
+
+            const granted = await this._requestNotificationPermission(
+                `Do you want to subscribe to notifications for ${notification.item.address}?`
+            );
+            if (!granted) {
+                sendNotSupported(
+                    'The user denied permission to send notifications.'
+                );
+                return;
+            }
+
+            simulation.records.handleEvents([
+                recordsCallProcedure(
+                    {
+                        subscribeToNotification: {
+                            input: {
+                                recordName: event.recordName,
+                                address: event.address,
+                                pushSubscription: sub.toJSON(),
+                            },
+                        },
+                    },
+                    event.options,
+                    event.taskId
+                ),
+            ]);
+
+            function sendNotSupported(message: string) {
+                if (hasValue(event.taskId)) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: message,
+                        })
+                    );
+                }
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(event.taskId, err.toString())
+                );
+            }
+            console.error('Error subscribing to notification:', err);
+        }
+    }
+
+    /**
+     * Requests that the user grant permission to send notifications.
+     * @param message The message to show the user.
+     * @returns A promise that resolves to true if the user granted permission.
+     */
+    private async _requestNotificationPermission(message: string) {
+        this.showNotificationPermissionMessage = message;
+        this.showNotificationPermissionDialog = true;
+        return new Promise<boolean>((resolve, reject) => {
+            this._showNotificationPermissionResolve = resolve;
+        });
+    }
+
+    private async _getScriptIssues(
+        e: GetScriptIssuesAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            const helpers = await import('../../shared/MonacoHelpers');
+            const bot = simulation.helper.botsState[e.botId];
+            const issues = await helpers.getScriptIssues(
+                simulation,
+                bot,
+                e.tag
+            );
+
+            simulation.helper.transaction(asyncResult(e.taskId, issues));
+        } catch (ex) {
+            if (hasValue(e.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(e.taskId, ex.toString())
+                );
+            }
+            console.log('Error fetching issues:', ex);
+        }
     }
 
     private async _getLoomMetadata(
@@ -1731,6 +1934,20 @@ export default class PlayerApp extends Vue {
 
         console.log('[PlayerApp] handleShowNavigation: ' + show);
         this.showNavigation = show;
+    }
+
+    async onNotificationDialogConfirm() {
+        let resolve = this._showNotificationPermissionResolve;
+        if (resolve) {
+            const result = await Notification.requestPermission();
+            resolve(result === 'granted');
+        }
+    }
+
+    onNotificationDialogCancel() {
+        if (this._showNotificationPermissionResolve) {
+            this._showNotificationPermissionResolve(false);
+        }
     }
 
     private onShowConfirmDialog(options: ConfirmDialogOptions) {

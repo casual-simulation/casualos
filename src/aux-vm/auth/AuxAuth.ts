@@ -16,7 +16,10 @@ import {
     PublicRecordKeyPolicy,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
-import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import type {
+    AddressType,
+    UserLoginMetadata,
+} from '@casual-simulation/aux-records/AuthStore';
 
 /**
  * Defines an interface that represents the login state of the user.
@@ -46,7 +49,7 @@ export type LoginUIStatus =
     | LoginUIHasAccount
     | LoginUIPrivoSignUp
     | LoginUIUpdatePasswordLink
-    | LoginUIRegisterWebAuthn;
+    | LoginUIHandleLoginMetadata;
 
 export interface LoginUINoStatus {
     page: false;
@@ -191,10 +194,36 @@ export interface LoginUIUpdatePasswordLink {
     providedParentEmail: boolean;
 }
 
-export interface LoginUIRegisterWebAuthn {
-    page: 'show_register_webauthn';
+// export interface LoginUIRegisterWebAuthn {
+//     page: 'show_register_webauthn';
+//     apiEndpoint: string;
+//     authenticationHeaders: Record<string, string>;
+// }
+
+/**
+ * Defines an interface that gives the UI an opportunity to respond to the login metadata.
+ */
+export interface LoginUIHandleLoginMetadata {
+    page: 'handle_login_metadata';
+    /**
+     * The endpoint that this metadata is for,
+     */
     apiEndpoint: string;
+
+    /**
+     * The authentication headers that should be used for future requests.
+     */
     authenticationHeaders: Record<string, string>;
+
+    /**
+     * The metadata that was returned from the login process.
+     */
+    metadata: UserLoginMetadata;
+
+    /**
+     * The method that was used to login.
+     */
+    method: 'code' | 'webauthn' | 'openid';
 }
 
 export interface PrivoSignUpInfo {

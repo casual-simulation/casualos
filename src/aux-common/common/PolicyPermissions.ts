@@ -24,6 +24,8 @@ export const INST_RESOURCE_KIND = 'inst';
 export const LOOM_RESOURCE_KIND = 'loom';
 export const SLOYD_RESOURCE_KIND = 'ai.sloyd';
 export const HUME_RESOURCE_KIND = 'ai.hume';
+export const WEBHOOK_RESOURCE_KIND = 'webhook';
+export const NOTIFICATION_RESOURCE_KIND = 'notification';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -38,6 +40,8 @@ export type ResourceKinds =
     | 'marker'
     | 'role'
     | 'inst'
+    | 'webhook'
+    | 'notification'
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume';
@@ -57,6 +61,11 @@ export const GRANT_ACTION = 'grant';
 export const REVOKE_ACTION = 'revoke';
 export const SEND_ACTION_ACTION = 'sendAction';
 export const UPDATE_DATA_ACTION = 'updateData';
+export const RUN_ACTION = 'run';
+export const SEND_ACTION = 'send';
+export const SUBSCRIBE_ACTION = 'subscribe';
+export const UNSUBSCRIBE_ACTION = 'unsubscribe';
+export const LIST_SUBSCRIPTIONS_ACTION = 'listSubscriptions';
 
 /**
  * The possible types of actions that can be performed on resources.
@@ -79,7 +88,12 @@ export type ActionKinds =
     | 'grant'
     | 'revoke'
     | 'sendAction'
-    | 'updateData';
+    | 'updateData'
+    | 'run'
+    | 'send'
+    | 'subscribe'
+    | 'unsubscribe'
+    | 'listSubscriptions';
 
 /**
  * The possible types of actions that can be performed on data resources.
@@ -166,6 +180,37 @@ export type SloydActionKinds = 'create';
 export type HumeActionKinds = 'create';
 
 /**
+ * The possible types of actions that can be performed on webhook resources.
+ *
+ * @dochash types/permissions
+ * @docname WebhookActionKinds
+ */
+export type WebhookActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'run';
+
+/**
+ * The possible types of actions that can be performed on notification resources.
+ *
+ * @dochash types/permissions
+ * @docname NotificationActionKinds
+ */
+export type NotificationActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'send'
+    | 'subscribe'
+    | 'unsubscribe'
+    | 'listSubscriptions';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -183,7 +228,9 @@ export type AvailablePermissions =
     | InstPermission
     | LoomPermission
     | SloydPermission
-    | HumePermission;
+    | HumePermission
+    | WebhookPermission
+    | NotificationPermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -242,6 +289,27 @@ export const SLOYD_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
 export const HUME_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
+export const WEBHOOK_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    RUN_ACTION,
+]);
+
+export const NOTIFICATION_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    SEND_ACTION,
+    SUBSCRIBE_ACTION,
+    UNSUBSCRIBE_ACTION,
+    LIST_SUBSCRIPTIONS_ACTION,
+]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -252,6 +320,8 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     LOOM_RESOURCE_KIND,
     SLOYD_RESOURCE_KIND,
     HUME_RESOURCE_KIND,
+    WEBHOOK_RESOURCE_KIND,
+    NOTIFICATION_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -274,6 +344,13 @@ export const ACTION_KINDS_VALIDATION = z.enum([
 
     GRANT_PERMISSION_ACTION,
     REVOKE_PERMISSION_ACTION,
+
+    RUN_ACTION,
+
+    SEND_ACTION,
+    SUBSCRIBE_ACTION,
+    UNSUBSCRIBE_ACTION,
+    LIST_SUBSCRIPTIONS_ACTION,
 ]);
 
 /**
@@ -648,6 +725,64 @@ export const HUME_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
 type ZodHumePermission = z.infer<typeof HUME_PERMISSION_VALIDATION>;
 type ZodHumePermissionAssertion = HasType<ZodHumePermission, HumePermission>;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect webhook resources.
+ *
+ * @dochash types/permissions
+ * @docname WebhookPermission
+ */
+export interface WebhookPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'webhook';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: WebhookActionKinds | null;
+}
+export const WEBHOOK_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(WEBHOOK_RESOURCE_KIND),
+    action: WEBHOOK_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodWebhookPermission = z.infer<typeof WEBHOOK_PERMISSION_VALIDATION>;
+type ZodWebhookPermissionAssertion = HasType<
+    ZodWebhookPermission,
+    WebhookPermission
+>;
+
+/**
+ * Defines an interface that describes common options for all permissions that affect notification resources.
+ *
+ * @dochash types/permissions
+ * @docname NotificationPermission
+ */
+export interface NotificationPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'notification';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: NotificationActionKinds | null;
+}
+export const NOTIFICATION_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(NOTIFICATION_RESOURCE_KIND),
+    action: NOTIFICATION_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodNotificationPermission = z.infer<
+    typeof NOTIFICATION_PERMISSION_VALIDATION
+>;
+type ZodNotificationPermissionAssertion = HasType<
+    ZodNotificationPermission,
+    NotificationPermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -660,6 +795,8 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         LOOM_PERMISSION_VALIDATION,
         SLOYD_PERMISSION_VALIDATION,
         HUME_PERMISSION_VALIDATION,
+        WEBHOOK_PERMISSION_VALIDATION,
+        NOTIFICATION_PERMISSION_VALIDATION,
     ]
 );
 

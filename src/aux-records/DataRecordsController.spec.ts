@@ -15,7 +15,6 @@ import { PolicyController } from './PolicyController';
 import {
     createTestControllers,
     createTestRecordKey,
-    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import {
@@ -23,13 +22,8 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { merge } from 'lodash';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();
 
@@ -711,28 +705,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the maximum number of items has been hit for the users subscription', async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                data: {
-                                    maxItems: 1,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withData()
+                            .withDataMaxItems(1)
+                    )
             );
 
             await store.setData(
@@ -780,28 +761,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the item is over the maximum size', async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                data: {
-                                    maxItemSizeInBytes: 5,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withData()
+                            .withDataMaxItemSizeInBytes(5)
+                    )
             );
 
             const user = await store.findUser(userId);
@@ -849,28 +817,16 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if data features are disabled', async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                data: {
-                                    allowed: false,
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withData({
+                                allowed: false,
+                            })
+                    )
             );
 
             await store.setData(

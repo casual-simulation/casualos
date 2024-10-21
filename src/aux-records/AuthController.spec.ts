@@ -57,6 +57,7 @@ import {
     PublicKeyCredentialCreationOptionsJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
+import { UserLoginMetadata } from './AuthStore';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -152,6 +153,9 @@ describe('AuthController', () => {
         generateLogoutUrl: jest.Mock<
             ReturnType<PrivoClientInterface['generateLogoutUrl']>
         >;
+        resendConsentRequest: jest.Mock<
+            ReturnType<PrivoClientInterface['resendConsentRequest']>
+        >;
     };
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
@@ -200,6 +204,7 @@ describe('AuthController', () => {
             checkEmail: jest.fn(),
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
+            resendConsentRequest: jest.fn(),
         };
 
         relyingParty = {
@@ -275,6 +280,7 @@ describe('AuthController', () => {
                     Infinity
                 ),
                 expireTimeMs: null,
+                metadata: expect.any(Object),
             });
 
             const user = await store.findUser('uuid1');
@@ -337,6 +343,144 @@ describe('AuthController', () => {
             const user = await store.findUser('uuid1');
             expect(user).toBeFalsy();
         });
+
+        it('should be able to create an account without creating a session key', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const result = await controller.createAccount({
+                userRole: 'superUser',
+                ipAddress: null,
+                createSession: false,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: 'uuid1',
+                sessionKey: null,
+                connectionKey: null,
+                expireTimeMs: null,
+                metadata: expect.any(Object),
+            });
+
+            const user = await store.findUser('uuid1');
+
+            expect(user).toEqual({
+                id: 'uuid1',
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const session = await store.findSession(
+                'uuid1',
+                fromByteArray(sessionId)
+            );
+
+            expect(session).toBeFalsy();
+        });
+    });
+
+    describe('issueSession()', () => {
+        const userId = 'myid';
+        beforeEach(async () => {
+            await store.saveUser({
+                id: userId,
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+        });
+
+        it('should issue a new session for the user for the system role', async () => {
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([11, 12, 13]);
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            const response = await controller.issueSession({
+                userId,
+                requestingUserId: null,
+                requestingUserRole: 'system',
+                ipAddress: null,
+            });
+
+            expect(response).toEqual({
+                success: true,
+                userId,
+                sessionKey: formatV1SessionKey(
+                    userId,
+                    fromByteArray(sessionId),
+                    fromByteArray(sessionSecret),
+                    150 + SESSION_LIFETIME_MS
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    fromByteArray(sessionId),
+                    fromByteArray(connectionSecret),
+                    150 + SESSION_LIFETIME_MS
+                ),
+                expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
+            });
+        });
+
+        const notAuthorizedCases = [
+            ['superUser'] as const,
+            ['none'] as const,
+        ] as const;
+
+        it.each(notAuthorizedCases)(
+            'should return not_authorized if the requesting user role is %s',
+            async (role) => {
+                const sessionId = new Uint8Array([7, 8, 9]);
+                const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
+
+                nowMock.mockReturnValue(150);
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
+                uuidMock.mockReturnValueOnce('uuid1');
+
+                const response = await controller.issueSession({
+                    userId,
+                    requestingUserId: null,
+                    requestingUserRole: role,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+        );
     });
 
     describe('requestLogin()', () => {
@@ -1010,6 +1154,12 @@ describe('AuthController', () => {
                         150 + SESSION_LIFETIME_MS
                     ),
                     expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 });
 
                 expect(randomBytesMock).toHaveBeenCalledTimes(3);
@@ -1369,6 +1519,132 @@ describe('AuthController', () => {
                     errorMessage: 'The login request is invalid.',
                 });
             });
+
+            it('should include metadata after login is completed', async () => {
+                const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+                const sessionId = new Uint8Array([7, 8, 9]);
+                const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
+
+                await store.saveUser({
+                    id: 'myid',
+                    email: type === 'email' ? address : null,
+                    phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
+                });
+
+                const findUserLoginMeta = (store.findUserLoginMetadata =
+                    jest.fn<Promise<UserLoginMetadata>, [string]>());
+                findUserLoginMeta.mockResolvedValueOnce({
+                    hasUserAuthenticator: true,
+                    userAuthenticatorCredentialIds: ['authenticatorId'],
+                    hasPushSubscription: true,
+                    pushSubscriptionIds: ['id1', 'id2'],
+                });
+
+                await store.saveLoginRequest({
+                    userId: 'myid',
+                    requestId: requestId,
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
+                    expireTimeMs: 200,
+                    requestTimeMs: 100,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address,
+                    addressType: type,
+                    ipAddress: '127.0.0.1',
+                });
+
+                nowMock.mockReturnValue(150);
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
+
+                const response = await controller.completeLogin({
+                    userId: 'myid',
+                    requestId: requestId,
+                    code: code,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: true,
+                    userId: 'myid',
+                    sessionKey: formatV1SessionKey(
+                        'myid',
+                        fromByteArray(sessionId),
+                        fromByteArray(sessionSecret),
+                        150 + SESSION_LIFETIME_MS
+                    ),
+                    connectionKey: formatV1ConnectionKey(
+                        'myid',
+                        fromByteArray(sessionId),
+                        fromByteArray(connectionSecret),
+                        150 + SESSION_LIFETIME_MS
+                    ),
+                    expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: true,
+                        userAuthenticatorCredentialIds: ['authenticatorId'],
+                        hasPushSubscription: true,
+                        pushSubscriptionIds: ['id1', 'id2'],
+                    },
+                });
+
+                expect(randomBytesMock).toHaveBeenCalledTimes(3);
+                expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
+                expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+                expect(randomBytesMock).toHaveBeenNthCalledWith(3, 16); // Should request 16 bytes (128 bits) for the connection secret
+
+                expect(store.sessions).toEqual([
+                    {
+                        userId: 'myid',
+                        sessionId: fromByteArray(sessionId),
+
+                        // It should treat session secrets as high-entropy
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            fromByteArray(sessionSecret),
+                            fromByteArray(sessionId)
+                        ),
+                        connectionSecret: fromByteArray(connectionSecret),
+                        grantedTimeMs: 150,
+                        expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: requestId,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+                expect(store.loginRequests).toEqual([
+                    {
+                        userId: 'myid',
+                        requestId: requestId,
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            requestId
+                        ),
+                        expireTimeMs: 200,
+                        requestTimeMs: 100,
+                        completedTimeMs: 150,
+                        attemptCount: 0,
+                        address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+                expect(store.users).toEqual([
+                    {
+                        id: 'myid',
+                        email: type === 'email' ? address : null,
+                        phoneNumber: type === 'phone' ? address : null,
+                        currentLoginRequestId: requestId,
+                    },
+                ]);
+            });
         });
 
         describe('data validation', () => {
@@ -1564,6 +1840,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1582,6 +1859,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
@@ -1607,6 +1885,7 @@ describe('AuthController', () => {
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -1671,6 +1950,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1689,6 +1969,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
@@ -1714,6 +1995,7 @@ describe('AuthController', () => {
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -1770,6 +2052,7 @@ describe('AuthController', () => {
                     },
                 ],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1788,6 +2071,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
@@ -1813,6 +2097,7 @@ describe('AuthController', () => {
                 phoneNumber: null,
                 privoServiceId: 'childServiceId',
                 privoParentServiceId: 'parentServiceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -1852,6 +2137,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1882,6 +2168,7 @@ describe('AuthController', () => {
                 childServiceId: 'childServiceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1911,6 +2198,7 @@ describe('AuthController', () => {
                 adultServiceId: 'serviceId',
                 features: [],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -1929,6 +2217,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
@@ -1952,6 +2241,7 @@ describe('AuthController', () => {
                 email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -2007,6 +2297,7 @@ describe('AuthController', () => {
                     },
                 ],
                 updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
             });
 
             const result = await controller.requestPrivoSignUp({
@@ -2025,6 +2316,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
@@ -2048,6 +2340,7 @@ describe('AuthController', () => {
                 email: null,
                 phoneNumber: null,
                 privoServiceId: 'serviceId',
+                privoConsentUrl: 'consentUrl',
                 currentLoginRequestId: null,
                 allSessionRevokeTimeMs: null,
                 privacyFeatures: {
@@ -2833,6 +3126,12 @@ describe('AuthController', () => {
                     400 + SESSION_LIFETIME_MS
                 ),
                 expireTimeMs: 400 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: true,
+                    userAuthenticatorCredentialIds: ['authenticatorId'],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             expect(randomBytesMock).toHaveBeenCalledTimes(3);
@@ -2981,6 +3280,12 @@ describe('AuthController', () => {
                     400 + SESSION_LIFETIME_MS
                 ),
                 expireTimeMs: 400 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: true,
+                    userAuthenticatorCredentialIds: ['authenticatorId'],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             expect(randomBytesMock).toHaveBeenCalledTimes(3);
@@ -3610,7 +3915,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -3658,6 +3963,12 @@ describe('AuthController', () => {
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 });
 
                 expect(await store.findOpenIDLoginRequest('requestId')).toEqual(
@@ -3745,7 +4056,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -3822,6 +4133,135 @@ describe('AuthController', () => {
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
+                });
+
+                expect(await store.findUser('userId')).toEqual({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+
+                    // Should save the privacy features
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                });
+
+                expect(
+                    privoClientMock.processAuthorizationCallback
+                ).toHaveBeenCalledWith({
+                    code: 'code',
+                    state: 'state',
+                    codeVerifier: 'verifier',
+                    redirectUrl: 'https://redirect_url',
+                });
+            });
+
+            it('should support adult roles', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'adultRole',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'joinAndCollaborate',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'publish',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'dev',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                                {
+                                    on: true,
+                                    consentDateSeconds: 1234567890,
+                                    featureId: 'buildaieggs',
+                                    active: true,
+                                    category: 'Standard',
+                                },
+                            ],
+                            displayName: 'displayName',
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: 'userId',
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 });
 
                 expect(await store.findUser('userId')).toEqual({
@@ -3862,7 +4302,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -3924,7 +4364,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -3984,7 +4424,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4046,7 +4486,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4108,7 +4548,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4170,7 +4610,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4224,7 +4664,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'DIFFERENT',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4287,7 +4727,7 @@ describe('AuthController', () => {
                         expiresIn: 1000,
 
                         userInfo: {
-                            roleIdentifier: 'roleIdentifier',
+                            roleIdentifier: 'childRole',
                             serviceId: 'serviceId',
                             email: 'test@example.com',
                             emailVerified: true,
@@ -4317,6 +4757,130 @@ describe('AuthController', () => {
                     success: false,
                     errorCode: 'invalid_request',
                     errorMessage: 'The login request is invalid.',
+                });
+            });
+
+            it('should return invalid_request if the user has a parent role', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'parentRole',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                            displayName: 'displayName',
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
+                });
+            });
+
+            it('should return invalid_request if the user has an unknown role', async () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                privoClientMock.processAuthorizationCallback.mockResolvedValueOnce(
+                    {
+                        accessToken: 'accessToken',
+                        refreshToken: 'refreshToken',
+                        tokenType: 'Bearer',
+                        idToken: 'idToken',
+                        expiresIn: 1000,
+
+                        userInfo: {
+                            roleIdentifier: 'unknownRole',
+                            serviceId: 'serviceId',
+                            email: 'test@example.com',
+                            emailVerified: true,
+                            givenName: 'name',
+                            locale: 'en-US',
+                            permissions: [],
+                            displayName: 'displayName',
+                        },
+                    }
+                );
+
+                await store.saveNewUser({
+                    id: 'userId',
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'serviceId',
+                });
+
+                await store.saveOpenIDLoginRequest({
+                    requestId: 'requestId',
+                    state: 'state',
+                    authorizationUrl: 'https://mock_authorization_url',
+                    redirectUrl: 'https://redirect_url',
+                    codeVerifier: 'verifier',
+                    codeMethod: 'method',
+                    requestTimeMs: Date.now() - 100,
+                    expireTimeMs: Date.now() + 100,
+                    authorizationCode: 'code',
+                    authorizationTimeMs: Date.now(),
+                    completedTimeMs: null,
+                    ipAddress: '127.0.0.1',
+                    provider: PRIVO_OPEN_ID_PROVIDER,
+                    scope: 'scope1 scope2',
+                });
+
+                const result = await controller.completeOpenIDLogin({
+                    ipAddress: '127.0.0.1',
+                    requestId: 'requestId',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        "The login request is invalid. You attempted to sign into an account that is associated with a parent email address. This is not allowed because we don't ask consent for parent accounts, but all accounts must have consent. Please sign up with a new account instead.",
                 });
             });
         });
@@ -5151,6 +5715,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const validateResponse = await controller.validateSessionKey(
@@ -5219,6 +5789,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const validateResponse = await controller.validateSessionKey(
@@ -5943,6 +6519,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const token = generateV1ConnectionToken(
@@ -6021,6 +6603,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const token = generateV1ConnectionToken(
@@ -6786,6 +7374,12 @@ describe('AuthController', () => {
                     150 + SESSION_LIFETIME_MS
                 ),
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             expect(await store.findSession(userId, sessionId)).toEqual({
@@ -8348,6 +8942,185 @@ describe('AuthController', () => {
                 success: true,
                 user: null,
             });
+        });
+    });
+
+    describe('requestPrivacyFeaturesChange()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            store.privoConfiguration = {
+                gatewayEndpoint: 'endpoint',
+                featureIds: {
+                    adultPrivoSSO: 'adultAccount',
+                    childPrivoSSO: 'childAccount',
+                    joinAndCollaborate: 'joinAndCollaborate',
+                    publishProjects: 'publish',
+                    projectDevelopment: 'dev',
+                    buildAIEggs: 'buildaieggs',
+                },
+                clientId: 'clientId',
+                clientSecret: 'clientSecret',
+                publicEndpoint: 'publicEndpoint',
+                roleIds: {
+                    child: 'childRole',
+                    adult: 'adultRole',
+                    parent: 'parentRole',
+                },
+                clientTokenScopes: 'scope1 scope2',
+                userTokenScopes: 'scope1 scope2',
+                // verificationIntegration: 'verificationIntegration',
+                // verificationServiceId: 'verificationServiceId',
+                // verificationSiteId: 'verificationSiteId',
+                redirectUri: 'redirectUri',
+                ageOfConsent: 18,
+            };
+
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                privoServiceId: 'serviceId',
+            });
+
+            await store.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashLowEntropyPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 999,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+
+            privoClientMock.resendConsentRequest.mockResolvedValue({
+                success: true,
+            });
+        });
+
+        it('should resend the consent request to the user', async () => {
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(privoClientMock.resendConsentRequest).toHaveBeenCalledWith(
+                'serviceId',
+                'serviceId'
+            );
+        });
+
+        it('should resend the consent request to the parent', async () => {
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                privoServiceId: 'serviceId',
+                privoParentServiceId: 'parentServiceId',
+            });
+
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(privoClientMock.resendConsentRequest).toHaveBeenCalledWith(
+                'serviceId',
+                'parentServiceId'
+            );
+        });
+
+        it('should return not_authorized if trying to send a request for another user', async () => {
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId: 'otherUserId',
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: 'The session key is invalid.',
+            });
+
+            expect(privoClientMock.resendConsentRequest).not.toHaveBeenCalled();
+        });
+
+        it('super users should be able to send requests for other users', async () => {
+            const superUserRequestId = 'superUserRequestId';
+            const superUserSessionId = toBase64String('superUserSessionId');
+            const superUserId = 'superUserId';
+            const superUserSessionKey = formatV1SessionKey(
+                superUserId,
+                superUserSessionId,
+                code,
+                200
+            );
+            await store.saveUser({
+                id: superUserId,
+                email: null,
+                phoneNumber: null,
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                role: 'superUser',
+            });
+
+            await store.saveSession({
+                requestId: superUserRequestId,
+                sessionId: superUserSessionId,
+                secretHash: hashLowEntropyPasswordWithSalt(
+                    code,
+                    superUserSessionId
+                ),
+                connectionSecret: code,
+                expireTimeMs: 1000,
+                grantedTimeMs: 999,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId: superUserId,
+                ipAddress: '127.0.0.1',
+            });
+
+            const result = await controller.requestPrivacyFeaturesChange({
+                userId,
+                sessionKey: superUserSessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(privoClientMock.resendConsentRequest).toHaveBeenCalledWith(
+                'serviceId',
+                'serviceId'
+            );
         });
     });
 

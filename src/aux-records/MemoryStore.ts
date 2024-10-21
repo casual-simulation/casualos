@@ -17,6 +17,7 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserLoginMetadata,
 } from './AuthStore';
 import {
     ListStudioAssignmentFilters,
@@ -142,9 +143,9 @@ import {
     UserInstReport,
 } from './ModerationStore';
 import {
-    NotificationMessenger,
+    SystemNotificationMessenger,
     RecordsNotification,
-} from './NotificationMessenger';
+} from './SystemNotificationMessenger';
 import { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
 
@@ -166,7 +167,7 @@ export class MemoryStore
         ConfigurationStore,
         InstRecordsStore,
         ModerationStore,
-        NotificationMessenger
+        SystemNotificationMessenger
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -1355,6 +1356,20 @@ export class MemoryStore
         return { authenticator, user };
     }
 
+    async findUserLoginMetadata(
+        userId: string
+    ): Promise<UserLoginMetadata | null> {
+        let authenticatorIds = this._userAuthenticators
+            .filter((a) => a.userId === userId)
+            .map((a) => a.id);
+        return {
+            hasUserAuthenticator: authenticatorIds.length > 0,
+            userAuthenticatorCredentialIds: authenticatorIds,
+            hasPushSubscription: false,
+            pushSubscriptionIds: [],
+        };
+    }
+
     async saveUserAuthenticatorCounter(
         id: string,
         newCounter: number
@@ -2256,118 +2271,6 @@ export class MemoryStore
         return record;
     }
 
-    // async listUserPolicies(
-    //     recordName: string,
-    //     startingMarker: string
-    // ): Promise<ListUserPoliciesStoreResult> {
-    //     const recordPolicies = this.policies[recordName] ?? {};
-
-    //     const keys = sortBy(Object.keys(recordPolicies));
-
-    //     let results: ListedUserPolicy[] = [];
-    //     let start = !startingMarker;
-    //     for (let key of keys) {
-    //         if (start) {
-    //             results.push({
-    //                 marker: key,
-    //                 document: recordPolicies[key].document,
-    //                 markers: recordPolicies[key].markers,
-    //             });
-    //         } else if (key === startingMarker || key > startingMarker) {
-    //             start = true;
-    //         }
-    //     }
-
-    //     return {
-    //         success: true,
-    //         policies: results,
-    //         totalCount: results.length,
-    //     };
-    // }
-
-    // async getUserPolicy(
-    //     recordName: string,
-    //     marker: string
-    // ): Promise<GetUserPolicyResult> {
-    //     const policy = this.policies[recordName]?.[marker];
-
-    //     if (!policy) {
-    //         return {
-    //             success: false,
-    //             errorCode: 'policy_not_found',
-    //             errorMessage: 'The policy was not found.',
-    //         };
-    //     }
-
-    //     return {
-    //         success: true,
-    //         document: policy.document,
-    //         markers: policy.markers,
-    //     };
-    // }
-
-    // async updateUserPolicy(
-    //     recordName: string,
-    //     marker: string,
-    //     policy: UserPolicyRecord
-    // ): Promise<UpdateUserPolicyResult> {
-    //     if (!this.policies[recordName]) {
-    //         this.policies[recordName] = {};
-    //     }
-
-    //     this.policies[recordName][marker] = {
-    //         document: policy.document,
-    //         markers: policy.markers,
-    //     };
-
-    //     return {
-    //         success: true,
-    //     };
-    // }
-
-    // async listPoliciesForMarkerAndUser(
-    //     recordName: string,
-    //     userId: string,
-    //     marker: string
-    // ): Promise<ListMarkerPoliciesResult> {
-    //     const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
-    //     if (marker === PUBLIC_READ_MARKER) {
-    //         policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
-    //     } else if (marker === PUBLIC_WRITE_MARKER) {
-    //         policies.push(DEFAULT_PUBLIC_WRITE_POLICY_DOCUMENT);
-    //     }
-    //     const policy = this.policies[recordName]?.[marker];
-    //     if (policy) {
-    //         policies.push(policy.document);
-    //     }
-
-    //     return {
-    //         policies,
-    //         recordOwnerPrivacyFeatures:
-    //             await this._getRecordOwnerPrivacyFeatures(recordName),
-    //         userPrivacyFeatures: await this._getUserPrivacyFeatures(userId),
-    //     };
-    // }
-
-    private async _getRecordOwnerPrivacyFeatures(
-        recordName: string
-    ): Promise<PrivacyFeatures> {
-        let record = await this.getRecordByName(recordName);
-
-        if (record?.ownerId) {
-            const owner = await this.findUser(record.ownerId);
-            if (owner?.privacyFeatures) {
-                return owner.privacyFeatures;
-            }
-        }
-        return {
-            publishData: true,
-            allowPublicData: true,
-            allowAI: true,
-            allowPublicInsts: true,
-        };
-    }
-
     private async _getUserPrivacyFeatures(
         userId: string
     ): Promise<PrivacyFeatures> {
@@ -2543,51 +2446,6 @@ export class MemoryStore
             success: true,
         };
     }
-
-    // async updateUserRoles(
-    //     recordName: string,
-    //     userId: string,
-    //     update: UpdateRolesUpdate
-    // ): Promise<UpdateUserRolesResult> {
-    //     if (!this.roleAssignments[recordName]) {
-    //         this.roleAssignments[recordName] = {};
-    //     }
-
-    //     const assignments = update.roles
-    //         .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-    //         .map((r) => ({
-    //             ...r,
-    //             expireTimeMs:
-    //                 r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-    //         }));
-    //     this.roleAssignments[recordName][userId] = assignments;
-
-    //     return {
-    //         success: true,
-    //     };
-    // }
-
-    // async updateInstRoles(
-    //     recordName: string,
-    //     inst: string,
-    //     update: UpdateRolesUpdate
-    // ): Promise<UpdateUserRolesResult> {
-    //     if (!this.roleAssignments[recordName]) {
-    //         this.roleAssignments[recordName] = {};
-    //     }
-    //     const assignments = update.roles
-    //         .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-    //         .map((r) => ({
-    //             ...r,
-    //             expireTimeMs:
-    //                 r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-    //         }));
-    //     this.roleAssignments[recordName][inst] = assignments;
-
-    //     return {
-    //         success: true,
-    //     };
-    // }
 
     private _getRolesForEntity(recordName: string, id: string): AssignedRole[] {
         const roles = this.roles[recordName]?.[id] ?? new Set<string>();
@@ -2769,6 +2627,14 @@ export class MemoryStore
             ...info,
             totalInsts,
         };
+    }
+
+    async getSubscriptionInfoForRecord(recordName: string) {
+        return await this._getSubscriptionInfo(recordName);
+    }
+
+    async listRecordsForSubscriptionByRecordName(recordName: string) {
+        return await this._listRecordsForSubscription(recordName);
     }
 
     async getSubscriptionAiSloydMetrics(

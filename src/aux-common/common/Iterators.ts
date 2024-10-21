@@ -3,7 +3,7 @@
  * returns undefined if the iterator contains no values.
  * @param iterator The iterator.
  */
-export function first<T>(iterator: IterableIterator<T>) {
+export function first<T>(iterator: Iterable<T>) {
     for (let node of iterator) {
         return node;
     }
@@ -15,7 +15,7 @@ export function first<T>(iterator: IterableIterator<T>) {
  * Returns undefined if the iterator contains no values.
  * @param iterator The iterator.
  */
-export function last<T>(iterator: IterableIterator<T>) {
+export function last<T>(iterator: Iterable<T>) {
     let last: T = undefined;
     for (let node of iterator) {
         last = node;
@@ -28,7 +28,7 @@ export function last<T>(iterator: IterableIterator<T>) {
  * @param iterator The iterator.
  * @param item The index of the item to get.
  */
-export function nth<T>(iterator: IterableIterator<T>, item: number) {
+export function nth<T>(iterator: Iterable<T>, item: number) {
     let count = 0;
     for (let node of iterator) {
         if (count === item) {

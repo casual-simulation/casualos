@@ -30,8 +30,7 @@ model User {
 
     privoServiceId String? @unique
     privoParentServiceId String?
-
-    // oidLoginProvider String?
+    privoConsentUrl String?
 
     subscriptionInfoId String? @unique @db.Uuid
     subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
@@ -78,6 +77,11 @@ model User {
     instReports UserInstReport[]
     comIdRequests StudioComIdRequest[]
     authenticators UserAuthenticator[]
+
+    webhookRecords WebhookRecord[]
+    pushSubscriptions PushSubscriptionUser[]
+    notificationSubscriptions NotificationSubscription[]
+    sentNotifications SentPushNotification[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -173,7 +177,7 @@ model AuthSession {
     nextSession AuthSession? @relation("NextSession", fields: [nextSessionId], references: [sessionId])
     nextSession1 AuthSession? @relation("NextSession")
 
-    ipAddress String
+    ipAddress String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -323,6 +327,13 @@ model Record {
     instRecords InstRecord[]
     instBranches InstBranch[]
     branchUpdates BranchUpdate[]
+    webhookRecords WebhookRecord[] @relation("WebhookRecord")
+    targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
+    webhookRuns WebhookRun[]
+
+    notificationRecords NotificationRecord[]
+    notificationSubscriptions NotificationSubscription[]
+    sentNotifications SentNotification[]
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
@@ -565,6 +576,8 @@ model DataRecord {
 
     markers String[]
 
+    targetWebhookRecords WebhookRecord[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -618,6 +631,10 @@ model FileRecord {
 
     markers String[]
 
+    targetWebhookRecords WebhookRecord[]
+
+    webhookRuns WebhookRun[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -649,6 +666,7 @@ model InstRecord {
     branches InstBranch[]
     updates BranchUpdate[]
     userInstReports UserInstReport[]
+    webhookRecords WebhookRecord[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -691,6 +709,188 @@ model BranchUpdate {
     updated DateTime @updatedAt
 
     @@index([recordName, instName, branchName, id])
+}
+
+model WebhookRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation("WebhookRecord", fields: [recordName], references: [name], onDelete: Cascade, map: "WebhookRecord_recordName_fkey1")
+
+    address String @db.String(512)
+
+    markers String[]
+
+    targetRecordName String? @db.String(128)
+    targetRecord Record? @relation("TargetWebookRecord", fields: [targetRecordName], references: [name], onDelete: SetNull, map: "WebhookRecord_targetRecordName_fkey1")
+
+    targetDataRecordAddress String? @db.String(512)
+    targetDataRecord DataRecord? @relation(fields: [targetRecordName, targetDataRecordAddress], references: [recordName, address], onDelete: SetNull, map: "WebhookRecord_targetDataRecordAddress_fkey1")
+
+    targetFileRecordFileName String? @db.String(512)
+    targetFileRecord FileRecord? @relation(fields: [targetRecordName, targetFileRecordFileName], references: [recordName, fileName], onDelete: SetNull, map: "WebhookRecord_targetFileRecordFileName_fkey1")
+
+    targetInstRecordName String? @db.String(128)
+    targetInstRecord InstRecord? @relation(fields: [targetRecordName, targetInstRecordName], references: [recordName, name], onDelete: SetNull, map: "WebhookRecord_targetInstRecordName_fkey1")
+
+    targetPublicInstRecordName String? @db.String(128)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    runs WebhookRun[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model WebhookRun {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "WebhookRun_recordName_fkey1")
+
+    webhookAddress String @db.String(512)
+    webhook WebhookRecord @relation(fields: [recordName, webhookAddress], references: [recordName, address], onDelete: Cascade, map: "WebhookRun_webhookAddress_fkey1")
+
+    statusCode Int?
+    stateSha256 String @db.String(64)
+
+    requestTime DateTime
+    responseTime DateTime
+
+    errorResult Json?
+
+    infoFileRecordName String? @db.String(128)
+    infoFileName String? @db.String(512)
+    infoFile FileRecord? @relation(fields: [infoFileRecordName, infoFileName], references: [recordName, fileName], onDelete: SetNull, map: "WebhookRun_infoFile_fkey1")
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model NotificationRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "NotificationRecord_recordName_fkey1")
+
+    address String @db.String(512)
+
+    description String? @db.String(2048)
+
+    markers String[]
+
+    subscriptions NotificationSubscription[]
+    sentNotifications SentNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PushSubscription {
+    id String @id @db.Uuid
+
+    endpoint String @db.String(1024)
+    keys Json
+
+    active Boolean
+
+    users PushSubscriptionUser[]
+    sentNotifications SentPushNotification[]
+    subscriptions NotificationSubscription[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([active])
+}
+
+model PushSubscriptionUser {
+    @@id([pushSubscriptionId, userId])
+
+    pushSubscriptionId String @db.Uuid
+    pushSubscription PushSubscription @relation(fields: [pushSubscriptionId], references: [id], onDelete: Cascade, map: "PushSubscriptionUser_pushSubscriptionId_fkey1")
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "PushSubscriptionUser_userId_fkey1")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model NotificationSubscription {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "NotificationSubscription_recordName_fkey1")
+
+    notificationAddress String @db.String(512)
+    notification NotificationRecord @relation(fields: [recordName, notificationAddress], references: [recordName, address], onDelete: Cascade, map: "NotificationSubscription_notificationAddress_fkey1")
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    pushSubscriptionId String? @db.Uuid
+    pushSubscription PushSubscription? @relation(fields: [pushSubscriptionId], references: [id])
+
+    sentNotifications SentPushNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([recordName, notificationAddress, userId])
+    @@unique([recordName, notificationAddress, pushSubscriptionId])
+}
+
+model SentNotification {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "SentNotification_recordName_fkey1")
+
+    notificationAddress String @db.String(512)
+    notification NotificationRecord @relation(fields: [recordName, notificationAddress], references: [recordName, address], onDelete: Cascade, map: "SentNotification_notificationAddress_fkey1")
+
+    title String @db.String(128)
+    body String @db.String(512)
+    icon String? @db.String(1024)
+    badge String? @db.String(1024)
+    silent Boolean?
+
+    tag String? @db.String(128)
+    topic String? @db.String(128)
+
+    defaultAction Json
+    actions Json
+    sentTime DateTime
+
+    sentToDevices SentPushNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SentPushNotification {
+    id String @id @db.Uuid
+
+    sentNotificationId String @db.Uuid
+    sentNotification SentNotification @relation(fields: [sentNotificationId], references: [id], onDelete: Cascade, map: "SentNotificationUser_sentNotificationId_fkey1")
+
+    subscriptionId String? @db.Uuid
+    subscription NotificationSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull, map: "SentNotificationUser_subscriptionId_fkey1")
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "SentNotificationUser_userId_fkey1")
+
+    pushSubscriptionId String? @db.Uuid
+    pushSubscription PushSubscription? @relation(fields: [pushSubscriptionId], references: [id], onDelete: SetNull, map: "SentNotificationUser_pushSubscriptionId_fkey1")
+
+    success Boolean
+    errorCode String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Configuration {

@@ -317,28 +317,56 @@ async function askForDiscriminatedUnionInputs(
     name: string,
     repl: repl.REPLServer
 ): Promise<any> {
+    let choices = inputs.options.map((option) => {
+        const prop = option.schema[inputs.discriminator];
+        if (prop.type === 'enum') {
+            return {
+                title: prop.values.join(', '),
+                description: option.description,
+                value: option,
+            };
+        } else if (prop.type !== 'literal') {
+            return {
+                title: option.type,
+                description: option.description,
+                value: option,
+            };
+        }
+
+        return {
+            title: prop.value,
+            description: option.description,
+            value: option,
+        };
+    });
+
+    if (inputs.nullable) {
+        choices.unshift({
+            title: '(null)',
+            description: 'A null value.',
+            value: null,
+        });
+    }
+
+    if (inputs.optional) {
+        choices.unshift({
+            title: '(undefined)',
+            description: 'An undefined value.',
+            value: undefined,
+        });
+    }
+
     const kind = await prompts({
         type: 'select',
         name: 'kind',
         message: `Select a ${inputs.discriminator} for ${name}.`,
-        choices: inputs.options.map((option) => {
-            const prop = option.schema[inputs.discriminator];
-            if (prop.type !== 'literal') {
-                return {
-                    title: option.type,
-                    description: option.description,
-                    value: option,
-                };
-            }
-
-            return {
-                title: prop.value,
-                description: option.description,
-                value: option,
-            };
-        }),
+        choices: choices,
         onState,
     });
+
+    if (kind.kind === null || kind.kind === undefined) {
+        return kind.kind;
+    }
 
     return await askForInputs(kind.kind, name, repl);
 }

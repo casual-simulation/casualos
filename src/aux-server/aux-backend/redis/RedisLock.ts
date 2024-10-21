@@ -11,18 +11,18 @@ const releaseLock = defineScript({
 });
 
 /**
- * Attempts to aquire a lock on the given key.
+ * Attempts to acquire a lock on the given key.
  * Returns a function that will release the lock when called.
- * If the lock could not be aquired, returns null.
+ * If the lock could not be acquired, returns null.
  *
  * Follows the simple implementation pattern described here:
  * https://redis.io/docs/latest/develop/use/patterns/distributed-locks/#correct-implementation-with-a-single-instance
  *
  * @param redis The redis client.
- * @param key The key that should be aquired.
+ * @param key The key that should be acquired.
  * @param timeout The timeout for the lock in miliseconds. If the lock isn't released in this time, it will be automatically released.
  */
-export async function tryAquireLock(
+export async function tryAcquireLock(
     redis: RedisClientType,
     key: string,
     timeout: number

@@ -44,7 +44,7 @@ import {
 } from './SubscriptionConfiguration';
 import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
-import { NotificationMessenger } from './NotificationMessenger';
+import { SystemNotificationMessenger } from './SystemNotificationMessenger';
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
@@ -56,7 +56,7 @@ export interface RecordsControllerConfig {
     auth: AuthStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
-    messenger: NotificationMessenger | null;
+    messenger: SystemNotificationMessenger | null;
 }
 
 /**
@@ -67,7 +67,7 @@ export class RecordsController {
     private _auth: AuthStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
-    private _messenger: NotificationMessenger | null;
+    private _messenger: SystemNotificationMessenger | null;
 
     constructor(config: RecordsControllerConfig) {
         this._store = config.store;

@@ -10,22 +10,27 @@ import {
 import { MemoryStore } from './MemoryStore';
 import { parseSessionKey } from './AuthUtils';
 import { PrivoConfiguration } from './PrivoConfiguration';
+import {
+    buildSubscriptionConfig,
+    SubscriptionConfigBuilder,
+} from './SubscriptionConfigBuilder';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
-export function createTestSubConfiguration(): SubscriptionConfiguration {
-    return {
-        cancelUrl: 'cancel-url',
-        returnUrl: 'return-url',
-        successUrl: 'success-url',
-        webhookSecret: 'webhook-secret',
-        subscriptions: [],
-        tiers: {},
-        defaultFeatures: {
-            studio: allowAllFeatures(),
-            user: allowAllFeatures(),
-        },
-    };
+export function createTestSubConfiguration(
+    build: (config: SubscriptionConfigBuilder) => SubscriptionConfigBuilder = (
+        config
+    ) => config
+): SubscriptionConfiguration {
+    return buildSubscriptionConfig((config) =>
+        build(
+            config
+                .withCancelUrl('http://cancel-url')
+                .withReturnUrl('http://return-url')
+                .withSuccessUrl('http://success-url')
+                .withWebhookSecret('webhook-secret')
+        )
+    );
 }
 
 export function createTestPrivoConfiguration(): PrivoConfiguration {

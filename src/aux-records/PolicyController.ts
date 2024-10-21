@@ -81,6 +81,7 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
         ],
     ],
     ['loom', ['create']],
+    ['webhook', ['read', 'create', 'delete', 'update', 'list', 'run']],
 ];
 
 function constructAllowedResourcesLookup(
@@ -269,12 +270,23 @@ export class PolicyController {
         }
 
         if (!recordOwnerPrivacyFeatures) {
-            recordOwnerPrivacyFeatures = {
-                allowAI: true,
-                allowPublicData: true,
-                allowPublicInsts: true,
-                publishData: true,
-            };
+            // The record owner will most likely have privacy features,
+            // but this is just a sanity check in case they dont.
+            if (this._auth.privoEnabled) {
+                recordOwnerPrivacyFeatures = {
+                    allowAI: false,
+                    allowPublicData: false,
+                    allowPublicInsts: false,
+                    publishData: false,
+                };
+            } else {
+                recordOwnerPrivacyFeatures = {
+                    allowAI: true,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                };
+            }
         }
 
         if (request.userId) {
@@ -284,12 +296,21 @@ export class PolicyController {
         }
 
         if (!userPrivacyFeatures) {
-            userPrivacyFeatures = {
-                allowAI: true,
-                allowPublicData: true,
-                allowPublicInsts: true,
-                publishData: true,
-            };
+            if (this._auth.privoEnabled) {
+                userPrivacyFeatures = {
+                    allowAI: false,
+                    allowPublicData: false,
+                    allowPublicInsts: false,
+                    publishData: false,
+                };
+            } else {
+                userPrivacyFeatures = {
+                    allowAI: true,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                };
+            }
         }
 
         const context: AuthorizationContext = {
@@ -304,6 +325,7 @@ export class PolicyController {
             recordStudioMembers: studioMembers,
             userId: request.userId,
             userPrivacyFeatures,
+            sendNotLoggedIn: request.sendNotLoggedIn ?? true,
         };
 
         return {
@@ -1194,6 +1216,7 @@ export class PolicyController {
             }
 
             if (
+                context.sendNotLoggedIn &&
                 !subjectId &&
                 (!context.recordKeyProvided ||
                     !isAllowedRecordKeyResource(
@@ -2513,13 +2536,13 @@ export interface AuthorizationContext {
      * The ID of the user that owns the record.
      * Null if the record is owned by a studio.
      */
-    recordOwnerId: string;
+    recordOwnerId: string | null;
 
     /**
      * The ID of the studio that owns the record.
      * Null if the record is owned by a user.
      */
-    recordStudioId: string;
+    recordStudioId: string | null;
 
     /**
      * The list of members that are assigned to the studio.
@@ -2551,6 +2574,11 @@ export interface AuthorizationContext {
      * The ID of the user that is currently logged in.
      */
     userId: string;
+
+    /**
+     * Whether to send not_logged_in results when the user has not provided any authentication mechanism, but needs to.
+     */
+    sendNotLoggedIn: boolean;
 }
 
 export interface ConstructAuthorizationContextRequest {
@@ -2563,6 +2591,11 @@ export interface ConstructAuthorizationContextRequest {
      * The ID of the user that is currently logged in.
      */
     userId?: string | null;
+
+    /**
+     * Whether to return not_logged_in results when the user has not provided any authentication mechanism, but needs to.
+     */
+    sendNotLoggedIn?: boolean;
 }
 
 export interface GrantMarkerPermissionRequest {

@@ -52,6 +52,7 @@ import {
     tryParseJson,
 } from '@casual-simulation/aux-records';
 import { AuxDevice } from '@casual-simulation/aux-runtime';
+import { getSimulationId } from '../../shared/SimulationHelpers';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -701,6 +702,10 @@ export class AppManager {
                     ...this._config,
                     ...config.playerConfig,
                 };
+
+                if (hasValue(this._config.ab1BootstrapURL)) {
+                    this._ab1BootstrapUrl = this._config.ab1BootstrapURL;
+                }
             }
         }
     }
@@ -712,6 +717,7 @@ export class AppManager {
         if ('serviceWorker' in navigator && !this._updateServiceWorker) {
             console.log('[AppManager] Registering Service Worker');
             this._updateServiceWorker = registerSW({
+                immediate: true,
                 onNeedRefresh: () => {
                     console.log('[ServiceWorker]: Updated.');
                     this._updateAvailable.next(true);
@@ -1068,24 +1074,6 @@ export class AppManager {
             console.error('Unable to fetch config from storage', err);
             return null;
         }
-    }
-}
-
-/**
- * Gets the ID for a simulation with the given origin.
- * @param recordName The name of the record for the simulation.
- * @param inst The name of the inst for the simulation.
- * @param isStatic whether the simulation is static.
- */
-export function getSimulationId(
-    recordName: string | null,
-    inst: string,
-    isStatic: boolean
-): string {
-    if (!isStatic) {
-        return `${recordName ?? 'null'}/${inst}`;
-    } else {
-        return inst;
     }
 }
 

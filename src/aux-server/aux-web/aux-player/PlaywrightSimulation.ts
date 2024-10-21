@@ -23,6 +23,7 @@ import {
     BotAction,
     ConnectionIndicator,
     getConnectionId,
+    hasValue,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -49,6 +50,7 @@ import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import {
     AuthHelperInterface,
+    RecordsEndpointInfo,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
 
@@ -255,7 +257,11 @@ export class PlaywrightSimulation
         this._recordsManager = new RecordsManager(
             this._config,
             this._helper,
-            (endpoint) => this._getAuthEndpointHelper(endpoint)
+            (endpoint, authenticateIfNotLoggedIn) =>
+                this._getRecordsEndpointInfo(
+                    endpoint,
+                    authenticateIfNotLoggedIn
+                )
         );
         this._livekitManager = new LivekitManager(this._helper);
 
@@ -312,11 +318,52 @@ export class PlaywrightSimulation
         return sim;
     }
 
+    private async _getRecordsEndpointInfo(
+        endpoint: string,
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<RecordsEndpointInfo | null> {
+        const auth = this._getAuthEndpointHelper(endpoint);
+
+        if (!auth) {
+            return null;
+        }
+
+        let headers: { [key: string]: string } = {};
+        const token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
+        if (hasValue(token)) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return {
+            error: false,
+            recordsOrigin: await auth.getRecordsOrigin(),
+            websocketOrigin: await auth.getWebsocketOrigin(),
+            websocketProtocol: await auth.getWebsocketProtocol(),
+            headers,
+            token,
+        };
+    }
+
+    private async _getAuthToken(
+        auth: AuthHelperInterface,
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<string> {
+        if (!auth) {
+            return null;
+        }
+        if (authenticateIfNotLoggedIn) {
+            if (!(await auth.isAuthenticated())) {
+                await auth.authenticate();
+            }
+        }
+        return auth.getAuthToken();
+    }
+
     private _getAuthEndpointHelper(endpoint: string): AuthHelperInterface {
         if (!endpoint) {
             return null;
         }
-        if (endpoint === this._config.authOrigin) {
+        if (endpoint === this._authHelper.primaryAuthOrigin) {
             return this._authHelper.primary;
         } else {
             const helper = this._authHelper.getOrCreateEndpoint(endpoint);

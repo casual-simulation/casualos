@@ -151,11 +151,18 @@ export class ApiGatewayWebsocketMessenger implements WebsocketMessenger {
         message: WebsocketMessage,
         excludeConnection?: string
     ) {
+        const span = trace.getActiveSpan();
         const data = JSON.stringify(message);
 
         // TODO: Calculate the real message size instead of just assuming that
         // each character is 1 byte
-        if (data.length > MAX_MESSAGE_SIZE) {
+        const sizeInBytes = data.length;
+
+        if (span) {
+            span.setAttribute('messageSize', sizeInBytes);
+        }
+
+        if (sizeInBytes > MAX_MESSAGE_SIZE) {
             const url = await uploadMessage(this._s3, this._bucket, data);
 
             // Request download

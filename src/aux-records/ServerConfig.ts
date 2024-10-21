@@ -1,5 +1,5 @@
 import { moderationSchema } from './ModerationConfiguration';
-import { notificationsSchema } from './NotificationMessenger';
+import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
 import { subscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
@@ -510,7 +510,7 @@ const prismaSchema = z.object({
         .positive()
         .nullable()
         .optional()
-        .default(60),
+        .default(60 * 60 * 24), // 24 hours in seconds,
 });
 
 const openAiSchema = z.object({
@@ -899,6 +899,40 @@ const rekognitionSchema = z.object({
     }),
 });
 
+const webhooksSchema = z.object({
+    environment: z.discriminatedUnion('type', [
+        z.object({
+            type: z.literal('deno'),
+            scriptPath: z
+                .string()
+                .describe('The path to the Deno script that should be run.')
+                .min(1),
+            denoPath: z
+                .string()
+                .describe(
+                    'The path to the Deno executable that should be used.'
+                )
+                .min(1)
+                .optional()
+                .nullable(),
+        }),
+        z.object({
+            type: z.literal('node'),
+        }),
+        z.object({
+            type: z.literal('lambda'),
+            functionName: z
+                .string()
+                .describe(
+                    'The name or ARN of the lambda function that should be called to process a webhook. If omitted, then the lambda function name will be taken from the WEBHOOK_LAMBDA_FUNCTION_NAME envrionment variable.'
+                )
+                .min(1)
+                .optional()
+                .nullable(),
+        }),
+    ]),
+});
+
 export const serverConfigSchema = z.object({
     s3: s3Schema
         .describe(
@@ -1029,11 +1063,6 @@ export const serverConfigSchema = z.object({
         )
         .optional(),
 
-    // auth: authSchema
-    //     .describe('Authentication configuration options.')
-    //     .optional()
-    //     .default({}),
-
     subscriptions: subscriptionConfigSchema
         .describe(
             'The default subscription configuration. If omitted, then subscription features will be disabled.'
@@ -1046,12 +1075,69 @@ export const serverConfigSchema = z.object({
         .optional(),
     notifications: notificationsSchema
         .describe(
-            'Notification configuration options. If omitted, then server notifications will be disabled.'
+            'System notification configuration options. Used to send messages for various events like user inst reports and com ID requests. If omitted, then server notifications will be disabled.'
         )
         .optional(),
     moderation: moderationSchema
         .describe(
             'Moderation configuration options. If omitted, then moderation features will be disabled unless overridden in the database.'
+        )
+        .optional(),
+
+    webhooks: webhooksSchema
+        .describe(
+            'Webhook configuration options. If omitted, then webhook features will be disabled.'
+        )
+        .optional(),
+
+    webPush: z
+        .object({
+            vapidSubject: z
+                .string()
+                .describe(
+                    'The subject that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+            vapidPublicKey: z
+                .string()
+                .describe(
+                    'The public key that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+            vapidPrivateKey: z
+                .string()
+                .describe(
+                    'The private key that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+        })
+        .describe(
+            'Web Push configuration options. If omitted, then web push notifications will be disabled.'
+        )
+        .optional(),
+
+    meta: z
+        .object({
+            apiOrigin: z
+                .string()
+                .describe('The HTTP origin that the API is available at.'),
+            websocketOrigin: z
+                .string()
+                .describe(
+                    'The HTTP origin that the Websocket API is available at.'
+                )
+                .optional()
+                .nullable(),
+            websocketProtocol: z
+                .enum(['websocket', 'apiary-aws'])
+                .describe(
+                    'The protocol that should be used to connect to the websocket origin.'
+                )
+                .optional()
+                .nullable(),
+        })
+        .describe(
+            'The metadata about the server deployment. If omitted, then the server will not be able to provide information about itself. This would result in records features not being supported in webhook handlers.'
         )
         .optional(),
 });
