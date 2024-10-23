@@ -78,6 +78,7 @@
 -   Added the `jsonObject` form subtype.
     -   Supports loading meshes stored in the [Three.js JSON Object Scene format](https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4).
     -   Works similarly to `gltf`, but it uses [ObjectLoader](https://threejs.org/docs/?q=loader#api/en/loaders/ObjectLoader) to load meshes from the URL specified in the `formAddress` tag.
+-   Improved the sheetPortal to only create bots in insts that are showing the sheetPortal.
 
 ### :bug: Bug Fixes
 
