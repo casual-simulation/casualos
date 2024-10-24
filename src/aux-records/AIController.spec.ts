@@ -369,61 +369,6 @@ describe('AIController', () => {
             expect(chatInterface.chat).not.toBeCalled();
         });
 
-        it('should return not_authorized when allowedModels does not include the model', async () => {
-            controller = new AIController({
-                chat: {
-                    interfaces: {
-                        provider1: chatInterface,
-                    },
-                    options: {
-                        defaultModel: 'default-model',
-                        defaultModelProvider: 'provider1',
-                        allowedChatModels: [
-                            {
-                                provider: 'provider1',
-                                model: 'modelA',
-                            },
-                            {
-                                provider: 'provider1',
-                                model: 'modelB',
-                            },
-                        ],
-                        allowedChatSubscriptionTiers: ['test-tier'],
-                    },
-                },
-                generateSkybox: null,
-                images: null,
-                metrics: store,
-                config: store,
-                hume: null,
-                sloyd: null,
-                policies: null,
-                policyController: policies,
-                records: store,
-            });
-
-            const result = await controller.chat({
-                model: 'modelC',
-                messages: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                    },
-                ],
-                temperature: 0.5,
-                userId,
-                userSubscriptionTier,
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage:
-                    'The subscription does not permit the given model for AI Chat features.',
-            });
-            expect(chatInterface.chat).not.toBeCalled();
-        });
-
         it('should return an not_logged_in result if the given a null userId', async () => {
             const result = await controller.chat({
                 model: 'test-model1',
@@ -704,7 +649,7 @@ describe('AIController', () => {
                 });
             });
 
-            it('should return success when allowedModels includes the model', async () => {
+            it('should return success when allowedModels is not specified', async () => {
                 chatInterface.chat.mockReturnValueOnce(
                     Promise.resolve({
                         choices: [
@@ -741,7 +686,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).toBeCalledWith({
+                expect(chatInterface.chat).not.toBeCalledWith({
                     model: 'test-model1',
                     messages: [
                         {
@@ -752,6 +697,123 @@ describe('AIController', () => {
                     temperature: 0.5,
                     userId: 'test-user',
                 });
+            });
+
+            it('should return not_authorized when allowedModels does not include the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model3',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the given model for AI Chat features.',
+                });
+                expect(chatInterface.chat).not.toBeCalled();
+            });
+
+            it('should return success when allowedModels includes the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).not.toBeCalledWith();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
@@ -1607,61 +1669,6 @@ describe('AIController', () => {
             });
         });
 
-        it('should return not_authorized error when allowedModels does not include the model', async () => {
-            controller = new AIController({
-                chat: {
-                    interfaces: {
-                        provider1: chatInterface,
-                    },
-                    options: {
-                        defaultModel: 'default-model',
-                        defaultModelProvider: 'provider1',
-                        allowedChatModels: [
-                            {
-                                provider: 'provider1',
-                                model: 'modelA',
-                            },
-                            {
-                                provider: 'provider1',
-                                model: 'modelB',
-                            },
-                        ],
-                        allowedChatSubscriptionTiers: ['test-tier'],
-                    },
-                },
-                generateSkybox: null,
-                images: null,
-                metrics: store,
-                config: store,
-                hume: null,
-                sloyd: null,
-                policies: null,
-                policyController: policies,
-                records: store,
-            });
-
-            const result = await controller.chat({
-                model: 'modelC',
-                messages: [
-                    {
-                        role: 'user',
-                        content: 'test',
-                    },
-                ],
-                temperature: 0.5,
-                userId,
-                userSubscriptionTier,
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage:
-                    'The subscription does not permit the given model for AI Chat features.',
-            });
-            expect(chatInterface.chat).not.toBeCalled();
-        });
-
         describe('subscriptions', () => {
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
@@ -1690,7 +1697,86 @@ describe('AIController', () => {
                 });
             });
 
+            it('should return not_authorized error when allowedModels does not include the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                chatInterface2.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model3',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the given model for AI Chat features.',
+                });
+                expect(chatInterface.chat).not.toBeCalled();
+            });
+
             it('should return success when allowedModels includes the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+
                 chatInterface.chat.mockReturnValueOnce(
                     Promise.resolve({
                         choices: [
@@ -1703,6 +1789,16 @@ describe('AIController', () => {
                         totalTokens: 1,
                     })
                 );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
 
                 const result = await controller.chat({
                     model: 'test-model1',
@@ -1727,17 +1823,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).toBeCalledWith({
-                    model: 'test-model1',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: 'test',
-                        },
-                    ],
-                    temperature: 0.5,
-                    userId: 'test-user',
-                });
+                expect(chatInterface.chat).not.toBeCalledWith();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
