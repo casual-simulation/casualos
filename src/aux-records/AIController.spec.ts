@@ -813,7 +813,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).not.toBeCalledWith();
+                expect(chatInterface.chat).toBeCalled();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
@@ -1823,7 +1823,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).not.toBeCalledWith();
+                expect(chatInterface.chat).toBeCalled();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
