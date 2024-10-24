@@ -1891,8 +1891,6 @@ Object {
                 "type": "string",
               },
               "body": Object {
-                "nullable": true,
-                "optional": true,
                 "type": "string",
               },
               "icon": Object {
@@ -5737,8 +5735,6 @@ Object {
                 "type": "string",
               },
               "body": Object {
-                "nullable": true,
-                "optional": true,
                 "type": "string",
               },
               "icon": Object {
