@@ -1141,6 +1141,21 @@ export class AuthController {
                 };
             }
 
+            if (
+                request.email &&
+                request.parentEmail &&
+                request.parentEmail.localeCompare(request.email, undefined, {
+                    sensitivity: 'base',
+                }) === 0
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The parent email must be different from the child email.',
+                };
+            }
+
             const now = new Date(Date.now());
             const years = Math.floor(
                 -DateTime.fromJSDate(request.dateOfBirth)
@@ -3462,6 +3477,7 @@ export interface PrivoSignUpRequestFailure {
         | 'unacceptable_request'
         | 'email_already_exists'
         | 'parent_email_already_exists'
+        | 'child_email_already_exists'
         | 'parent_email_required'
         | 'invalid_display_name'
         | NotSupportedError

@@ -328,6 +328,14 @@ export class PrivoClient implements PrivoClientInterface {
                 result.data
             );
 
+            if (result.status === 412) {
+                return {
+                    success: false,
+                    errorCode: 'child_email_already_exists',
+                    errorMessage: 'The child email already exists.',
+                };
+            }
+
             return {
                 success: false,
                 errorCode: 'unacceptable_request',
@@ -430,6 +438,14 @@ export class PrivoClient implements PrivoClientInterface {
                 `[PrivoClient] [createAdultAccount] Error creating adult account: ${result.status} ${result.statusText}`,
                 result.data
             );
+
+            if (result.status === 412) {
+                return {
+                    success: false,
+                    errorCode: 'email_already_exists',
+                    errorMessage: 'The email already exists.',
+                };
+            }
 
             return {
                 success: false,
@@ -823,7 +839,10 @@ export interface CreateChildAccountSuccess {
 
 export interface CreateChildAccountFailure {
     success: false;
-    errorCode: ServerError | 'unacceptable_request';
+    errorCode:
+        | ServerError
+        | 'unacceptable_request'
+        | 'child_email_already_exists';
     errorMessage: string;
 }
 
@@ -896,7 +915,7 @@ export interface CreateAdultAccountSuccess {
 
 export interface CreateAdultAccountFailure {
     success: false;
-    errorCode: ServerError | 'unacceptable_request';
+    errorCode: ServerError | 'unacceptable_request' | 'email_already_exists';
     errorMessage: string;
 }
 
