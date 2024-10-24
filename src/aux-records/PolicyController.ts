@@ -35,12 +35,14 @@ import {
     ResourcePermissionAssignment,
     RoleAssignment,
     UpdateUserRolesFailure,
+    UserPrivacyFeatures,
 } from './PolicyStore';
 import { sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import { normalizeInstId, parseInstId } from './websockets';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { UserRole } from './AuthStore';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -220,6 +222,7 @@ export class PolicyController {
         let recordKeyCreatorId: string;
         let ownerId: string;
         let studioId: string;
+        // let userRole: UserRole = 'none';
         let studioMembers: ListedStudioAssignment[] = undefined;
         const recordKeyProvided = isRecordKey(request.recordKeyOrRecordName);
         if (recordKeyProvided) {
@@ -263,7 +266,7 @@ export class PolicyController {
                 : 'subjectfull';
 
         let recordOwnerPrivacyFeatures: PrivacyFeatures = null;
-        let userPrivacyFeatures: PrivacyFeatures = null;
+        let userPrivacyFeatures: UserPrivacyFeatures = null;
         if (ownerId) {
             recordOwnerPrivacyFeatures =
                 await this._policies.getUserPrivacyFeatures(ownerId);
@@ -324,6 +327,7 @@ export class PolicyController {
             recordStudioId: studioId,
             recordStudioMembers: studioMembers,
             userId: request.userId,
+            userRole: userPrivacyFeatures.userRole ?? 'none',
             userPrivacyFeatures,
             sendNotLoggedIn: request.sendNotLoggedIn ?? true,
         };
@@ -728,6 +732,32 @@ export class PolicyController {
                 };
             }
 
+            const recordName = context.recordName;
+            if (context.userRole === 'superUser') {
+                return {
+                    success: true,
+                    recordName: recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+
+                        // Record owners are treated as if they are admins in the record
+                        subjectType: 'role',
+                        subjectId: ADMIN_ROLE_NAME,
+
+                        // Admins get all access to all resources in a record
+                        resourceKind: null,
+                        action: null,
+
+                        marker: markers[0],
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation: `User is a superUser.`,
+                };
+            }
+
             if (!context.userPrivacyFeatures.publishData) {
                 return {
                     success: false,
@@ -747,7 +777,6 @@ export class PolicyController {
                 };
             }
 
-            const recordName = context.recordName;
             const subjectType = request.subjectType;
             let subjectId = request.subjectId;
 
@@ -2574,6 +2603,11 @@ export interface AuthorizationContext {
      * The ID of the user that is currently logged in.
      */
     userId: string;
+
+    /**
+     * The role of the user.
+     */
+    userRole: UserRole;
 
     /**
      * Whether to send not_logged_in results when the user has not provided any authentication mechanism, but needs to.

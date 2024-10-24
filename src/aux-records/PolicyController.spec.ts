@@ -2799,6 +2799,56 @@ describe('PolicyController', () => {
                         });
                     });
 
+                    it('should allow the action if the user is a superUser', async () => {
+                        const user = await store.findUser(userId);
+                        await store.saveUser({
+                            ...user,
+                            role: 'superUser',
+                        });
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+
+                                // The role that record owners recieve
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // resourceKind and action are null because this permission
+                                // applies to all resources and actions.
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is a superUser.',
+                        });
+                    });
+
                     if (resourceId) {
                         it('should allow the action if the user was granted access to the resource', async () => {
                             const permission =
@@ -4358,6 +4408,7 @@ describe('PolicyController', () => {
                                 publishData: false,
                             },
                             sendNotLoggedIn: true,
+                            userRole: 'none',
                         },
                     });
 
