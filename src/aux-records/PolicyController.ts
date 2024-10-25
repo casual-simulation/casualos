@@ -241,7 +241,6 @@ export class PolicyController {
         let recordKeyCreatorId: string;
         let ownerId: string;
         let studioId: string;
-        // let userRole: UserRole = 'none';
         let studioMembers: ListedStudioAssignment[] = undefined;
         const recordKeyProvided = isRecordKey(request.recordKeyOrRecordName);
         if (recordKeyProvided) {
