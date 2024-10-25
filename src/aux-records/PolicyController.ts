@@ -732,6 +732,25 @@ export class PolicyController {
                 };
             }
 
+            if (!context.userPrivacyFeatures.publishData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'disabled_privacy_feature',
+                        recordName: context.recordName,
+                        subjectType: 'user',
+                        subjectId: context.userId,
+                        resourceKind: request.resourceKind,
+                        action: request.action,
+                        resourceId: request.resourceId,
+                        privacyFeature: 'publishData',
+                    },
+                };
+            }
+
             const recordName = context.recordName;
             if (context.userRole === 'superUser') {
                 return {
@@ -755,25 +774,6 @@ export class PolicyController {
                         expireTimeMs: null,
                     },
                     explanation: `User is a superUser.`,
-                };
-            }
-
-            if (!context.userPrivacyFeatures.publishData) {
-                return {
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
-                    reason: {
-                        type: 'disabled_privacy_feature',
-                        recordName: context.recordName,
-                        subjectType: 'user',
-                        subjectId: context.userId,
-                        resourceKind: request.resourceKind,
-                        action: request.action,
-                        resourceId: request.resourceId,
-                        privacyFeature: 'publishData',
-                    },
                 };
             }
 
