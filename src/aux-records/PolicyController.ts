@@ -86,6 +86,13 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
     ['webhook', ['read', 'create', 'delete', 'update', 'list', 'run']],
 ];
 
+const ALLOWED_MODERATOR_ACTIONS = new Set<string>([
+    'read',
+    'list',
+    'listSubscriptions',
+    'count',
+] as ActionKinds[]);
+
 function constructAllowedResourcesLookup(
     allowedResources: [ResourceKinds, ActionKinds[]][]
 ): Set<string> {
@@ -129,6 +136,18 @@ function isAllowedStudioMemberResource(
     return ALLOWED_STUDIO_MEMBER_RESOURCES_LOOKUP.has(
         `${resourceKind}.${action}`
     );
+}
+
+/**
+ * Determines if the given resource kind and action are allowed to be accessed by a moderator.
+ * @param resourceKind The kind of the resource kind.
+ * @param action The action.
+ */
+function isAllowedModeratorResource(
+    resourceKind: string,
+    action: string
+): boolean {
+    return ALLOWED_MODERATOR_ACTIONS.has(action);
 }
 
 /**
@@ -775,6 +794,36 @@ export class PolicyController {
                     },
                     explanation: `User is a superUser.`,
                 };
+            } else if (context.userRole === 'moderator') {
+                if (
+                    isAllowedModeratorResource(
+                        request.resourceKind,
+                        request.action
+                    )
+                ) {
+                    return {
+                        success: true,
+                        recordName: recordName,
+                        permission: {
+                            id: null,
+                            recordName: recordName,
+                            userId: null,
+
+                            // Record owners are treated as if they are admins in the record
+                            subjectType: 'role',
+                            subjectId: ADMIN_ROLE_NAME,
+
+                            // Admins get all access to all resources in a record
+                            resourceKind: null,
+                            action: request.action,
+
+                            marker: markers[0],
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        explanation: `User is a moderator.`,
+                    };
+                }
             }
 
             const subjectType = request.subjectType;
