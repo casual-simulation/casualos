@@ -150,8 +150,8 @@ importers:
         specifier: ^2.4.3
         version: 2.4.8
       '@types/ws':
-        specifier: ^8.2.0
-        version: 8.5.10
+        specifier: ^8.5.12
+        version: 8.5.12
       browserslist:
         specifier: '>=4.16.5'
         version: 4.22.2
@@ -655,8 +655,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       ws:
-        specifier: 7.4.6
-        version: 7.4.6
+        specifier: 8.18.0
+        version: 8.18.0
 
   src/aux-records:
     dependencies:
@@ -1253,8 +1253,8 @@ importers:
         specifier: 3.6.7
         version: 3.6.7
       ws:
-        specifier: 7.4.6
-        version: 7.4.6
+        specifier: 8.18.0
+        version: 8.18.0
       zod:
         specifier: 3.22.4
         version: 3.22.4
@@ -1783,8 +1783,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       ws:
-        specifier: 7.4.6
-        version: 7.4.6
+        specifier: 8.18.0
+        version: 8.18.0
 
   src/undom: {}
 
@@ -11924,8 +11924,8 @@ packages:
     resolution: {integrity: sha512-LKVgNmBxN0BbljJrVUwkxwRYqzsAEPcZOe6S2T6ZaBDIrFp0qu4FNlpc5sM1tGbXUYFgdVQIoeLk1Y1UoblyEg==}
     dev: false
 
-  /@types/ws@8.5.10:
-    resolution: {integrity: sha512-vmQSUcfalpIq0R9q7uTo2lXs6eGIpt9wtnLdMv9LVpIjCA/+ufZRozlVoVelIYixx1ugCBKDhn89vnsEGOCx9A==}
+  /@types/ws@8.5.12:
+    resolution: {integrity: sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==}
     dependencies:
       '@types/node': 18.19.3
 
@@ -15083,7 +15083,7 @@ packages:
     engines: {node: '>= 12'}
     dependencies:
       base64-js: 1.5.1
-      ws: 7.5.9
+      ws: 7.5.10
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -19052,7 +19052,7 @@ packages:
       whatwg-encoding: 2.0.0
       whatwg-mimetype: 3.0.0
       whatwg-url: 11.0.0
-      ws: 8.17.0
+      ws: 8.18.0
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -19088,7 +19088,7 @@ packages:
       whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.0.0
-      ws: 8.17.0
+      ws: 8.18.0
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -26839,7 +26839,7 @@ packages:
       opener: 1.5.2
       picocolors: 1.1.1
       sirv: 2.0.3
-      ws: 7.4.6
+      ws: 7.5.10
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -26878,7 +26878,7 @@ packages:
       '@types/serve-index': 1.9.4
       '@types/serve-static': 1.15.5
       '@types/sockjs': 0.3.36
-      '@types/ws': 8.5.10
+      '@types/ws': 8.5.12
       ansi-html-community: 0.0.8
       bonjour-service: 1.1.1
       chokidar: 3.5.3
@@ -26902,7 +26902,7 @@ packages:
       spdy: 4.0.2
       webpack: 5.89.0(esbuild@0.19.8)
       webpack-dev-middleware: 5.3.3(webpack@5.89.0)
-      ws: 8.17.0
+      ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -27367,8 +27367,8 @@ packages:
       write-json-file: 3.2.0
     dev: true
 
-  /ws@7.4.6:
-    resolution: {integrity: sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==}
+  /ws@7.5.10:
+    resolution: {integrity: sha512-+dbF1tHwZpXcbOJdVOkzLDxZP1ailvSxM6ZweXTegylPny803bFhA+vqBYw4s31NSAk4S2Qz+AKXK9a4wkdjcQ==}
     engines: {node: '>=8.3.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -27380,21 +27380,8 @@ packages:
         optional: true
     dev: false
 
-  /ws@7.5.9:
-    resolution: {integrity: sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==}
-    engines: {node: '>=8.3.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: ^5.0.2
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-    dev: false
-
-  /ws@8.17.0:
-    resolution: {integrity: sha512-uJq6108EgZMAl20KagGkzCKfMEjxmKvZHG7Tlq0Z6nOky7YF7aq4mOx6xK8TJ/i1LeK4Qus7INktacctDgY8Ow==}
+  /ws@8.18.0:
+    resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1

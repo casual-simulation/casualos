@@ -167,7 +167,7 @@
         "vue-property-decorator": "9.1.2",
         "vue-router": "3.5.4",
         "web-push": "3.6.7",
-        "ws": "7.4.6",
+        "ws": "8.18.0",
         "zod": "3.22.4"
     },
     "devDependencies": {
