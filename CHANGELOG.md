@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the `moderator` user role.
+    -   This will make it much easier for us to moderate content and help ensure that we're creating safe platforms.
+
 ### :bug: Bug Fixes
 
 -   Better handle scenarios when an email address is already taken on Privo's side.

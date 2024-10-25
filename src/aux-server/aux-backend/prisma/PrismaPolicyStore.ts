@@ -12,6 +12,8 @@ import {
     ResourcePermissionAssignment,
     RoleAssignment,
     UpdateUserRolesResult,
+    UserPrivacyFeatures,
+    UserRole,
     getExpireTime,
 } from '@casual-simulation/aux-records';
 import { Prisma, PrismaClient } from './generated';
@@ -41,7 +43,7 @@ export class PrismaPolicyStore implements PolicyStore {
     }
 
     @traced(TRACE_NAME)
-    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+    async getUserPrivacyFeatures(userId: string): Promise<UserPrivacyFeatures> {
         const user = await this._client.user.findUnique({
             where: {
                 id: userId,
@@ -51,6 +53,7 @@ export class PrismaPolicyStore implements PolicyStore {
                 allowPublicData: true,
                 allowPublicInsts: true,
                 allowPublishData: true,
+                role: true,
             },
         });
 
@@ -60,6 +63,7 @@ export class PrismaPolicyStore implements PolicyStore {
                 allowPublicData: user.allowPublicData ?? true,
                 allowAI: user.allowAI ?? true,
                 allowPublicInsts: user.allowPublicInsts ?? true,
+                userRole: user.role as UserRole,
             };
         }
 
