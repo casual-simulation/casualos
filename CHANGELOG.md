@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.12
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Better handle scenarios when an email address is already taken on Privo's side.
+
 ## V3.3.11
 
 #### Date: 10/21/2024

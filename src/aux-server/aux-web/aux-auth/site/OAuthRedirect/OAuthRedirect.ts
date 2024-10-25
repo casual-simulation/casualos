@@ -1,4 +1,3 @@
-import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
@@ -9,7 +8,10 @@ import { OAUTH_LOGIN_CHANNEL_NAME } from '../../shared/AuthManager';
     components: {},
 })
 export default class OAuthRedirect extends Vue {
+    errorMessage: string = null;
+
     async mounted() {
+        this.errorMessage = null;
         const channel = new BroadcastChannel(OAUTH_LOGIN_CHANNEL_NAME);
 
         const url = new URL(window.location.href);
@@ -24,12 +26,23 @@ export default class OAuthRedirect extends Vue {
             if (result.success === true) {
                 console.log('[OAuthRedirect] Login successful');
                 channel.postMessage('login');
-            }
 
-            // TODO: handle errors
-            setTimeout(() => {
-                window.close();
-            }, 0);
+                setTimeout(() => {
+                    window.close();
+                }, 0);
+            } else {
+                console.error('[OAuthRedirect] Login failed', result);
+                if (
+                    result.errorCode === 'server_error' ||
+                    result.errorCode === 'invalid_request'
+                ) {
+                    this.errorMessage = `${result.errorMessage} If the problem persists, please contact support.`;
+                } else if (result.errorCode === 'not_supported') {
+                    this.errorMessage = result.errorMessage;
+                } else {
+                    this.errorMessage = result.errorMessage;
+                }
+            }
         } else if (params.error) {
             // TODO: handle errors
         }

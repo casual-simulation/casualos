@@ -264,6 +264,33 @@ export default class PrivoRegistrationCard extends Vue {
                 });
             }
 
+            if (this.displayName && this.name) {
+                const validDisplayName =
+                    await authManager.client.isDisplayNameValid({
+                        displayName: this.displayName,
+                        name: this.name,
+                    });
+                if (validDisplayName.success === false) {
+                    this.errors.push(...getFormErrors(validDisplayName));
+                } else if (!validDisplayName.allowed) {
+                    if (validDisplayName.containsName) {
+                        this.errors.push({
+                            for: DISPLAY_NAME_FIELD,
+                            errorCode: 'invalid_display_name',
+                            errorMessage:
+                                'The display name cannot contain your name.',
+                        });
+                    } else {
+                        this.errors.push({
+                            for: DISPLAY_NAME_FIELD,
+                            errorCode: 'invalid_display_name',
+                            errorMessage:
+                                'This display name is either not allowed or already taken.',
+                        });
+                    }
+                }
+            }
+
             if (this.requireEmail && !this.email) {
                 this.errors.push({
                     for: EMAIL_FIELD,
@@ -278,6 +305,29 @@ export default class PrivoRegistrationCard extends Vue {
                     errorCode: 'invalid_parent_email',
                     errorMessage: 'Please enter a parent email.',
                 });
+            }
+
+            if (this.requireEmail && this.email) {
+                if (!(await authManager.validateEmail(this.email))) {
+                    this.errors.push({
+                        for: EMAIL_FIELD,
+                        errorCode: 'invalid_email',
+                        errorMessage: 'This email is already taken.',
+                    });
+                }
+            }
+
+            if (this.requireParentEmail && this.parentEmail) {
+                if (
+                    !(await authManager.validateEmail(this.parentEmail, true))
+                ) {
+                    this.errors.push({
+                        for: PARENT_EMAIL_FIELD,
+                        errorCode: 'invalid_parent_email',
+                        errorMessage:
+                            'The provided email must be a valid email address.',
+                    });
+                }
             }
 
             if (this.errors.length > 0) {
