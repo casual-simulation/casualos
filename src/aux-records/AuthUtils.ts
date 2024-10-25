@@ -9,7 +9,9 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import type { UserRole } from './AuthStore';
 
 /**
+ * The default lifetime at which a session key should be refreshed.
  */
+export const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
 /**
  * Formats the given user ID, session ID, session secret, and expiration time into a key that is used to authenticate a user to a particular session.
@@ -373,4 +375,93 @@ export function verifyConnectionToken(
  */
 export function isSuperUserRole(role: UserRole): boolean {
     return role === 'superUser';
+}
+
+/**
+ * Determines whether the given time has expired.
+ * Can be used to determine wether a session keys, connection keys, etc. has expired.
+ *
+ * If the given time is null, then the key is considered to never expire.
+ *
+ * @param expirationMs The time that the key expires in miliseconds at since 1 January 1970 (Unix Epoch).
+ * @param nowMs The current time in milliseconds since 1 January 1970 (Unix Epoch).
+ */
+export function isExpired(
+    expirationMs: number | null,
+    nowMs: number = Date.now()
+): boolean {
+    return nowMs >= (expirationMs ?? Infinity);
+}
+
+/**
+ * Determines wether the given key will expire within the next REFRESH_LIFETIME_MS.
+ *
+ * Returns true if the key has expired or will expire within the next REFRESH_LIFETIME_MS.
+ * Returns false if the key will not expire within the next REFRESH_LIFETIME_MS.
+ * @param expirationMs The time that the key expires in miliseconds at since 1 January 1970 (Unix Epoch).
+ * @param nowMs The current time in milliseconds since 1 January 1970 (Unix Epoch).
+ */
+export function willExpire(
+    expirationMs: number | null,
+    nowMs: number = Date.now()
+) {
+    return isExpired(expirationMs, nowMs + REFRESH_LIFETIME_MS);
+}
+
+/**
+ * Determines if a key with the given expiration time can expire.
+ * @param expirationMs The time that the key expires at in miliseconds since 1 January 1970 (Unix Epoch).
+ */
+export function canExpire(expirationMs: number | null) {
+    return expirationMs !== null && isFinite(expirationMs) && expirationMs >= 0;
+}
+
+/**
+ * Gets the amount of time in miliseconds until a token with the given expiration time should be refreshed.
+ *
+ * Returns 0 or a negative number if the key has expired or will expire within the next week (REFRESH_LIFETIME_MS).
+ * Returns a positive number if the key will not expire within the next week (REFRESH_LIFETIME_MS).
+ * Returns infinity if the key will never expire.
+ *
+ * @param expirationMs The time that the token expires in miliseconds since the Unix Epoch (1 January 1970).
+ * @param nowMs The current time in miliseconds since the Unix Epoch (1 January 1970).
+ */
+export function timeUntilRefresh(
+    expirationMs: number | null,
+    nowMs: number = Date.now()
+) {
+    return timeUntilExpiration(expirationMs, nowMs + REFRESH_LIFETIME_MS);
+}
+
+/**
+ * Gets the amount of time until a token with the given expiration time expires.
+ *
+ * Returns 0 or a negative number if the key has expired.
+ * Returns infinity if the key will never expire.
+ * Returns some other positive number if the key will expire in the future.
+ *
+ * @param expirationMs The time that the token expires in miliseconds since the Unix Epoch (1 January 1970).
+ * @param nowMs The current time in miliseconds since the Unix Epoch (1 January 1970).
+ */
+export function timeUntilExpiration(
+    expirationMs: number | null,
+    nowMs: number = Date.now()
+) {
+    return (expirationMs ?? Infinity) - nowMs;
+}
+
+/**
+ * Gets the expiration time of the given session key.
+ * @param key The session key.
+ * @returns Returns the expiration time in miliseconds since the Unix Epoch (1 January 1970). Returns -1 if the key is invalid.
+ */
+export function getSessionKeyExpiration(key: string): number {
+    const parsed = parseSessionKey(key);
+
+    if (!parsed) {
+        return -1;
+    }
+
+    const expireTimeMs = parsed[3];
+    return expireTimeMs ?? Infinity;
 }
