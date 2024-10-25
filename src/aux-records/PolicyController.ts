@@ -345,7 +345,7 @@ export class PolicyController {
             recordStudioId: studioId,
             recordStudioMembers: studioMembers,
             userId: request.userId,
-            userRole: userPrivacyFeatures.userRole ?? 'none',
+            userRole: userPrivacyFeatures?.userRole ?? 'none',
             userPrivacyFeatures,
             sendNotLoggedIn: request.sendNotLoggedIn ?? true,
         };
