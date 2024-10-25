@@ -38,9 +38,9 @@ import {
     formatV1SessionKey,
     isSuperUserRole,
     parseSessionKey,
-    randomCode,
     verifyConnectionToken,
 } from './AuthUtils';
+import { randomCode } from './CryptoUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
@@ -1138,6 +1138,21 @@ export class AuthController {
                     success: false,
                     errorCode: 'invalid_display_name',
                     errorMessage: 'The display name cannot contain your name.',
+                };
+            }
+
+            if (
+                request.email &&
+                request.parentEmail &&
+                request.parentEmail.localeCompare(request.email, undefined, {
+                    sensitivity: 'base',
+                }) === 0
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The parent email must be different from the child email.',
                 };
             }
 
@@ -3462,6 +3477,7 @@ export interface PrivoSignUpRequestFailure {
         | 'unacceptable_request'
         | 'email_already_exists'
         | 'parent_email_already_exists'
+        | 'child_email_already_exists'
         | 'parent_email_required'
         | 'invalid_display_name'
         | NotSupportedError

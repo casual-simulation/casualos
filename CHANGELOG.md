@@ -1,5 +1,19 @@
 # CasualOS Changelog
 
+## V3.3.12
+
+#### Date: 10/25/2024
+
+### :rocket: Features
+
+-   Added the `moderator` user role.
+    -   This will make it much easier for us to moderate content and help ensure that we're creating safe platforms.
+
+### :bug: Bug Fixes
+
+-   Better handle scenarios when an email address is already taken on Privo's side.
+-   Fixed an issue where manually setting a `sessionKey` and `connectionKey` in the URL might not actually log the user in.
+
 ## V3.3.11
 
 #### Date: 10/21/2024
