@@ -50,7 +50,7 @@
         "@casual-simulation/crypto": "^3.3.8",
         "@casual-simulation/crypto-browser": "^3.3.8",
         "@casual-simulation/websocket": "^3.3.4",
-        "axios": "1.6.2",
+        "axios": "1.7.7",
         "bowser": "^2.4.0",
         "comlink": "4.3.1",
         "livekit-client": "2.1.3",

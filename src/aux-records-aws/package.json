@@ -46,7 +46,7 @@
         "@aws-sdk/types": "^3.609.0",
         "@casual-simulation/aux-common": "^3.3.12",
         "@casual-simulation/aux-records": "^3.3.12",
-        "axios": "1.6.2",
+        "axios": "1.7.7",
         "uuid": "10.0.0"
     }
 }

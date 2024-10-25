@@ -52,7 +52,7 @@
         "@webxr-input-profiles/assets": "1.0.14",
         "@webxr-input-profiles/motion-controllers": "1.0.0",
         "astring": "1.7.5",
-        "axios": "1.6.2",
+        "axios": "1.7.7",
         "bcryptjs": "2.4.3",
         "cassandra-driver": "4.5.1",
         "compression": "1.7.4",
