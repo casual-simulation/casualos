@@ -38,9 +38,9 @@ import {
     formatV1SessionKey,
     isSuperUserRole,
     parseSessionKey,
-    randomCode,
     verifyConnectionToken,
 } from './AuthUtils';
+import { randomCode } from './CryptoUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
 import {

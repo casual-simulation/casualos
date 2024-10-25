@@ -12,6 +12,7 @@
 ### :bug: Bug Fixes
 
 -   Better handle scenarios when an email address is already taken on Privo's side.
+-   Fixed an issue where manually setting a `sessionKey` and `connectionKey` in the URL might not actually log the user in.
 
 ## V3.3.11
 
