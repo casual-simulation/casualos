@@ -1,3 +1,4 @@
+import { Action, CurrentVersion, StatusUpdate } from '../common';
 import { Observable, SubscriptionLike } from 'rxjs';
 
 /**
@@ -24,6 +25,26 @@ export interface SharedDocument extends SubscriptionLike {
      * The ID of the remote client that the document is associated with.
      */
     clientId: number;
+
+    /**
+     * Gets an observable list that resolves whenever the partition state version is updated.
+     */
+    onVersionUpdated: Observable<CurrentVersion>;
+
+    /**
+     * Gets an observable list of errors from the partition.
+     */
+    onError: Observable<any>;
+
+    /**
+     * Gets the observable list of remote events from the partition.
+     */
+    onEvents: Observable<Action[]>;
+
+    /**
+     * Gets the observable list of status updates from the partition.
+     */
+    onStatusUpdated: Observable<StatusUpdate>;
 
     /**
      * Tells the document to connect to its backing store.

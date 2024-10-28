@@ -1,3 +1,5 @@
+import { RemoteCausalRepoProtocol } from '../partitions/AuxPartitionConfig';
+
 /**
  * Defines a config for a shared document.
  */
@@ -9,9 +11,9 @@ export interface SharedDocumentConfig {
     recordName: string | null;
 
     /**
-     * The address of the document.
+     * The inst that the document is stored in.
      */
-    address: string;
+    inst: string;
 
     /**
      * The branch of the document to load.
@@ -24,10 +26,31 @@ export interface SharedDocumentConfig {
     host: string;
 
     /**
+     * Whether the doc should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
+
+    /**
+     * Whether the doc should be loaded without realtime updates and in a read-only mode.
+     * Basically this means that all you get is the initial state.
+     */
+    static?: boolean;
+
+    /**
+     * Whether the doc should skip the initial load until the doc is upgraded to a realtime connection.
+     */
+    skipInitialLoad?: boolean;
+
+    /**
+     * Whether the doc should be temporary.
+     */
+    temporary?: boolean;
+
+    /**
      * The protocol to use for the document.
      * Currently, only "updates" is supported.
      */
-    protocol?: 'updates';
+    connectionProtocol?: RemoteCausalRepoProtocol;
 
     /**
      * The options for local persistence of the document.
