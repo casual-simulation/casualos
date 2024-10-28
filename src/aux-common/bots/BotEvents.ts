@@ -1806,6 +1806,13 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
 }
 
 /**
+ * Defines an event that is used to load a shared document.
+ */
+export interface LoadSharedDocumentAction extends AsyncAction {
+    type: 'load_shared_document';
+}
+
+/**
  * An event that is used to enable collaboration features.
  *
  * @dochash types/os/spaces
