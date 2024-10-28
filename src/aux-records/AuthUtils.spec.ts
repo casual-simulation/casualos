@@ -4,13 +4,18 @@ import {
     isOpenAiKey,
     parseOpenAiKey,
     parseSessionKey,
-    randomCode,
-    RANDOM_CODE_LENGTH,
     formatV1ConnectionKey,
     parseConnectionKey,
     generateV1ConnectionToken,
     verifyConnectionToken,
     isSuperUserRole,
+    isExpired,
+    REFRESH_LIFETIME_MS,
+    willExpire,
+    getSessionKeyExpiration,
+    canExpire,
+    timeUntilExpiration,
+    timeUntilRefresh,
 } from './AuthUtils';
 import {
     toBase64String,
@@ -18,23 +23,11 @@ import {
     parseConnectionToken,
 } from '@casual-simulation/aux-common';
 
-describe('randomCode()', () => {
-    it('should generate a random number code with 6 characters', () => {
-        const numbers = new Set<string>();
-        let numDuplicates = 0;
-        for (let i = 0; i < 100; i++) {
-            const code = randomCode();
-            expect(code).toHaveLength(RANDOM_CODE_LENGTH);
-            expect(code).not.toBe('000000');
-            if (numbers.has(code)) {
-                numDuplicates++;
-            }
-            numbers.add(code);
-        }
-        // There might be a duplicate or two every so often, but it should be rare.
-        expect(numDuplicates).toBeLessThan(3);
-    });
-});
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+const WEEK = 7 * DAY;
 
 describe('formatV1SessionKey()', () => {
     it('should combine the given user id, session id, and password', () => {
@@ -71,6 +64,50 @@ describe('formatV1SessionKey()', () => {
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(password).toBe(toBase64String('password'));
         expect(expireTime).toBe(toBase64String('Infinity'));
+    });
+});
+
+describe('isExpired()', () => {
+    it('should return true when the time is equal to now', () => {
+        expect(isExpired(123, 123)).toBe(true);
+    });
+
+    it('should return true when the time is 0', () => {
+        expect(isExpired(0)).toBe(true);
+    });
+
+    it('should return false when the time is greater than now', () => {
+        expect(isExpired(123, 122)).toBe(false);
+    });
+
+    it('should return false when the time is null', () => {
+        expect(isExpired(null, 122)).toBe(false);
+    });
+
+    it('should return false when the time is Infinity', () => {
+        expect(isExpired(Infinity, 122)).toBe(false);
+    });
+});
+
+describe('willExpire()', () => {
+    it('should return true when the key is expired', () => {
+        expect(willExpire(123, 123)).toBe(true);
+    });
+
+    it('should return true when the key will expire 1 week from now', () => {
+        expect(willExpire(3 * DAY + WEEK, 3 * DAY)).toBe(true);
+    });
+
+    it('should return false when the key will expire 1 week + 1ms from now', () => {
+        expect(isExpired(3 * DAY + WEEK + 1, 3 * DAY)).toBe(false);
+    });
+
+    it('should return false when the time is null', () => {
+        expect(isExpired(null, 122)).toBe(false);
+    });
+
+    it('should return false when the time is Infinity', () => {
+        expect(isExpired(Infinity, 122)).toBe(false);
     });
 });
 
@@ -157,6 +194,87 @@ describe('parseSessionKey()', () => {
             expect(password).toBe('password');
             expect(expireTime).toBe(null);
         });
+    });
+});
+
+describe('canExpire()', () => {
+    it('should return true if the given time is finite', () => {
+        expect(canExpire(123)).toBe(true);
+    });
+
+    it('should return false if the time is null', () => {
+        expect(canExpire(null)).toBe(false);
+    });
+
+    it('should return false if the time is Infinite', () => {
+        expect(canExpire(Infinity)).toBe(false);
+    });
+
+    it('should return false if the time is less than 0', () => {
+        expect(canExpire(-1)).toBe(false);
+    });
+});
+
+describe('timeUntilExpiration()', () => {
+    it('should return 0 if the key just expired', () => {
+        expect(timeUntilExpiration(123, 123)).toBe(0);
+    });
+
+    it('should return the amount of time since the key expired', () => {
+        expect(timeUntilExpiration(123, 124)).toBe(-1);
+    });
+
+    it('should return the amount of time until the key expires', () => {
+        expect(timeUntilExpiration(500, 100)).toBe(400);
+    });
+
+    it('should return Infinity if the expiration time is null', () => {
+        expect(timeUntilExpiration(null, 500)).toBe(Infinity);
+    });
+
+    it('should return Infinity if the expiration time is Infinity', () => {
+        expect(timeUntilExpiration(Infinity, 500)).toBe(Infinity);
+    });
+});
+
+describe('timeUntilRefresh()', () => {
+    it('should return -WEEK if the key just expired', () => {
+        expect(timeUntilRefresh(123, 123)).toBe(-WEEK);
+    });
+
+    it('should return the amount of time since the ideal refresh time', () => {
+        expect(timeUntilRefresh(123, 124)).toBe(-1 - WEEK);
+    });
+
+    it('should return the amount of time until the ideal refresh time', () => {
+        expect(timeUntilRefresh(3 * DAY + WEEK, DAY)).toBe(2 * DAY);
+    });
+
+    it('should return Infinity if the expiration time is null', () => {
+        expect(timeUntilRefresh(null, 500)).toBe(Infinity);
+    });
+
+    it('should return Infinity if the expiration time is Infinity', () => {
+        expect(timeUntilRefresh(Infinity, 500)).toBe(Infinity);
+    });
+});
+
+describe('getSessionKeyExpiration()', () => {
+    it('should return the expiration time of the given session key', () => {
+        const key = formatV1SessionKey('userId', 'sessionId', 'password', 123);
+        const result = getSessionKeyExpiration(key);
+        expect(result).toBe(123);
+    });
+
+    it('should return infinity if the session key has no expiration', () => {
+        const key = formatV1SessionKey('userId', 'sessionId', 'password', null);
+        const result = getSessionKeyExpiration(key);
+        expect(result).toBe(Infinity);
+    });
+
+    it('should return -1 if the key is invalid', () => {
+        const result = getSessionKeyExpiration('invalid');
+        expect(result).toBe(-1);
     });
 });
 

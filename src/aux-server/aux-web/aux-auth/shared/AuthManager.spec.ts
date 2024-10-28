@@ -4,13 +4,16 @@ import {
     CompleteLoginSuccess,
     LoginRequestSuccess,
 } from '@casual-simulation/aux-records/AuthController';
-import { formatV1SessionKey } from '@casual-simulation/aux-records/AuthUtils';
-import { resourceUsage } from 'process';
+import {
+    formatV1ConnectionKey,
+    formatV1SessionKey,
+} from '@casual-simulation/aux-records/AuthUtils';
 import { AuthManager } from './AuthManager';
 
 jest.mock('axios');
 
 const originalFetch = globalThis.fetch;
+const originalNow = Date.now;
 
 describe('AuthManager', () => {
     let manager: AuthManager;
@@ -20,10 +23,12 @@ describe('AuthManager', () => {
             json: () => Promise<any>;
         }>
     >;
+    let nowMock: jest.Mock<number>;
 
     beforeEach(() => {
         mockLocalStorage();
         globalThis.fetch = fetch = jest.fn();
+        Date.now = nowMock = jest.fn(() => 1);
         manager = new AuthManager(
             'http://myendpoint.localhost',
             'http://myendpoint.localhost',
@@ -38,6 +43,7 @@ describe('AuthManager', () => {
 
     afterAll(() => {
         globalThis.fetch = originalFetch;
+        Date.now = originalNow;
     });
 
     function setResponse(response: any) {
@@ -276,6 +282,92 @@ describe('AuthManager', () => {
                     validateStatus: expect.any(Function),
                 },
             ]);
+        });
+    });
+
+    describe('isLoggedIn()', () => {
+        it('should return true if is has a saved session key', () => {
+            manager.savedSessionKey = formatV1SessionKey(
+                'userId',
+                'sessionId',
+                'sessionSecret',
+                123
+            );
+
+            expect(manager.isLoggedIn()).toBe(true);
+        });
+
+        it('should return false if the saved session key is expired', () => {
+            nowMock.mockReturnValueOnce(123);
+            manager.savedSessionKey = formatV1SessionKey(
+                'userId',
+                'sessionId',
+                'sessionSecret',
+                123
+            );
+
+            expect(manager.isLoggedIn()).toBe(false);
+        });
+
+        it('should return true if the saved session key has no expiration date', () => {
+            nowMock.mockReturnValueOnce(123);
+            manager.savedSessionKey = formatV1SessionKey(
+                'userId',
+                'sessionId',
+                'sessionSecret',
+                null
+            );
+
+            expect(manager.isLoggedIn()).toBe(true);
+        });
+
+        it('should return true if there is a temporary session key', () => {
+            manager.useTemporaryKeys(
+                formatV1SessionKey('userId', 'sessionId', 'sessionSecret', 123),
+                formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    'connectionSecret',
+                    123
+                )
+            );
+
+            expect(manager.isLoggedIn()).toBe(true);
+        });
+
+        it('should return false if the temporary session key is expired', () => {
+            nowMock.mockReturnValueOnce(123);
+            manager.useTemporaryKeys(
+                formatV1SessionKey('userId', 'sessionId', 'sessionSecret', 123),
+                formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    'connectionSecret',
+                    123
+                )
+            );
+
+            expect(manager.isLoggedIn()).toBe(false);
+        });
+
+        it('should return true if the temporary session key has no expiration date', () => {
+            nowMock.mockReturnValueOnce(123);
+            manager.useTemporaryKeys(
+                formatV1SessionKey(
+                    'userId',
+                    'sessionId',
+                    'sessionSecret',
+                    null
+                ),
+                formatV1ConnectionKey(
+                    'userId',
+                    'sessionId',
+                    'connectionSecret',
+                    123
+                )
+            );
+
+            expect(manager.isLoggedIn()).toBe(true);
         });
     });
 });

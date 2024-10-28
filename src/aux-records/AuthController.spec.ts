@@ -2159,6 +2159,38 @@ describe('AuthController', () => {
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
         });
 
+        it('should return a unacceptable_request error code when given a child email that matches the parent email', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: true,
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'test@example.com',
+                name: 'test name',
+                displayName: 'displayName',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The parent email must be different from the child email.',
+            });
+
+            expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+        });
+
         it('should return a invalid_display_name error code when the display name contains the users name', async () => {
             uuidMock.mockReturnValueOnce('userId');
 

@@ -36,7 +36,10 @@ import type {
     GrantResourcePermissionResult,
     AuthListedUserAuthenticator,
 } from '@casual-simulation/aux-records';
-import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import {
+    isExpired,
+    parseSessionKey,
+} from '@casual-simulation/aux-records/AuthUtils';
 import type {
     CompleteLoginResult,
     LoginRequestResult,
@@ -296,7 +299,7 @@ export class AuthManager {
         }
 
         const [userId, sessionId, sessionSecret, expireTimeMs] = parsed;
-        if (Date.now() >= expireTimeMs) {
+        if (isExpired(expireTimeMs)) {
             return false;
         }
 
