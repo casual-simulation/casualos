@@ -1,5 +1,7 @@
+import { ClientError } from '../websockets';
 import { Action, CurrentVersion, StatusUpdate } from '../common';
 import { Observable, SubscriptionLike } from 'rxjs';
+import { InstUpdate } from '../bots';
 
 /**
  * Defines an interface for objects that are able to synchronize data between multiple clients.
@@ -33,6 +35,7 @@ export interface SharedDocument extends SubscriptionLike {
 
     /**
      * Gets an observable list of errors from the partition.
+     * That is, errors that the client cannot handle.
      */
     onError: Observable<any>;
 
@@ -45,6 +48,12 @@ export interface SharedDocument extends SubscriptionLike {
      * Gets the observable list of status updates from the partition.
      */
     onStatusUpdated: Observable<StatusUpdate>;
+
+    /**
+     * Gets the observable list of client errors from the document.
+     * That is, errors that were caused by the client's behavior.
+     */
+    onClientError: Observable<ClientError>;
 
     /**
      * Tells the document to connect to its backing store.
@@ -78,6 +87,24 @@ export interface SharedDocument extends SubscriptionLike {
      * Creates a new array that can be shared between multiple clients.
      */
     createArray<T = any>(): SharedArray<T>;
+
+    /**
+     * Batches changes that occur within the given callback function into a single transaction.
+     * This makes multiple updates more efficient.
+     * @param callback The function to execute.
+     */
+    transact(callback: () => void): void;
+
+    /**
+     * Gets the update that represents the current state of the document.
+     */
+    getStateUpdate(): InstUpdate;
+
+    /**
+     * Applies the given updates to the document.
+     * @param updates The updates to apply.
+     */
+    applyStateUpdates(updates: InstUpdate[]): void;
 }
 
 export type SharedType = SharedMap | SharedArray | SharedText;
@@ -223,13 +250,23 @@ export interface SharedArray<T = any> extends SharedTypeBase {
      * Append items to the end of the array.
      * @param items The items to add.
      */
-    push(items: T[]): void;
+    push(...items: T[]): void;
+
+    /**
+     * Removes the last item from the array and returns it.
+     */
+    pop(): T | undefined;
 
     /**
      * Prepend items to the beginning of the array.
      * @param items The items to add.
      */
-    unshift(items: T[]): void;
+    unshift(...items: T[]): void;
+
+    /**
+     * Removes the first item from the array and returns it.
+     */
+    shift(): T | undefined;
 
     /**
      * Gets the item at the given index.
@@ -244,6 +281,15 @@ export interface SharedArray<T = any> extends SharedTypeBase {
      * @param end The index of the last item to retrieve.
      */
     slice(start?: number, end?: number): T[];
+
+    /**
+     * Changes the contents of the array by removing or replacing existing elements and/or adding new elements.
+     * Returns a JavaScript array containing the removed elements.
+     * @param start The index at which to start changing the array.
+     * @param deleteCount The number of elements in the array to remove from start.
+     * @param items The elements to add to the array.
+     */
+    splice(start: number, deleteCount: number, ...items: T[]): T[];
 
     /**
      * Creates a new JavaScript array that is a clone of this array.

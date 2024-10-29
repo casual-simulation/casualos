@@ -68,6 +68,7 @@ import {
 } from '../partitions/PartitionAuthSource';
 import { RemoteYjsSharedDocument } from './RemoteYjsSharedDocument';
 import { SharedDocumentConfig } from './SharedDocumentConfig';
+import { testDocumentImplementation } from './test/DocumentTests';
 
 console.log = jest.fn();
 
@@ -75,6 +76,17 @@ describe('RemoteYjsSharedDocument', () => {
     const recordNameCases = [[null as any] as const, ['testRecord'] as const];
 
     describe.each(recordNameCases)('record name: %s', (recordName) => {
+        testDocumentImplementation(async () => {
+            const connection = new MemoryConnectionClient();
+            const client = new InstRecordsClient(connection);
+            connection.connect();
+            const authSource = new PartitionAuthSource();
+            return new RemoteYjsSharedDocument(client, authSource, {
+                recordName: recordName,
+                inst: 'inst',
+                branch: 'testBranch',
+            });
+        });
         // testPartitionImplementation(
         //     async () => {
         //         let update: Uint8Array | null = null;
@@ -160,7 +172,6 @@ describe('RemoteYjsSharedDocument', () => {
                     recordName: recordName,
                     inst: 'inst',
                     branch: 'testBranch',
-                    host: 'testHost',
                 });
             });
 
@@ -173,7 +184,6 @@ describe('RemoteYjsSharedDocument', () => {
                     recordName: recordName,
                     inst: 'inst',
                     branch: 'testBranch',
-                    host: 'testHost',
                 });
 
                 document.connect();
@@ -1037,7 +1047,6 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
-                        host: 'testHost',
                         readOnly: true,
                     });
 
@@ -1058,7 +1067,6 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
-                        host: 'testHost',
                         static: true,
                     });
 
@@ -1078,7 +1086,6 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
-                        host: 'testHost',
                         static: true,
                     });
 
@@ -1101,7 +1108,6 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
-                        host: 'testHost',
                     });
 
                     document.connect();
@@ -1110,13 +1116,6 @@ describe('RemoteYjsSharedDocument', () => {
                         const test = document.doc.getMap('test');
                         test.set('abc', 123);
                     });
-                    // await document.applyEvents([
-                    //     botAdded(
-                    //         createBot('test1', {
-                    //             abc: 123,
-                    //         })
-                    //     ),
-                    // ]);
                     await waitAsync();
 
                     expect(connection.sentMessages.slice(1).length).toBe(1);
@@ -1142,7 +1141,6 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
-                        host: 'testHost',
                     });
 
                     document.connect();
@@ -1207,6 +1205,9 @@ describe('RemoteYjsSharedDocument', () => {
                                 abc: 'def',
                             },
                             array: [123, true],
+                            empty: '',
+                            null: null,
+                            undefined: undefined,
                         },
                         bot2: {
                             string: 'abc',
@@ -1216,6 +1217,9 @@ describe('RemoteYjsSharedDocument', () => {
                                 abc: 'def',
                             },
                             array: [123, true],
+                            empty: '',
+                            null: null,
+                            undefined: undefined,
                         },
                     });
                 });
@@ -1225,7 +1229,6 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
-                        host: 'testHost',
                     });
 
                     document.connect();
@@ -1289,394 +1292,379 @@ describe('RemoteYjsSharedDocument', () => {
                 // });
             });
 
-            // describe('errors', () => {
-            //     describe('max_size_reached', () => {
-            //         it('should emit a onSpaceMaxSizeReached shout', async () => {
-            //             let events = [] as Action[];
-            //             document.onEvents.subscribe((e) => events.push(...e));
-            //             // document.space = 'shared';
+            describe('errors', () => {
+                describe('max_size_reached', () => {
+                    // it('should emit a onSpaceMaxSizeReached shout', async () => {
+                    //     let events = [] as Action[];
+                    //     document.onEvents.subscribe((e) => events.push(...e));
+                    //     // document.space = 'shared';
+                    //     document.connect();
+                    //     updatesReceived.next({
+                    //         type: 'repo/updates_received',
+                    //         recordName: recordName,
+                    //         inst: 'inst',
+                    //         branch: 'testBranch',
+                    //         updateId: 1,
+                    //         errorCode: 'max_size_reached',
+                    //         maxBranchSizeInBytes: 10,
+                    //         neededBranchSizeInBytes: 11,
+                    //     });
+                    //     await waitAsync();
+                    //     expect(events).toEqual([
+                    //         action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
+                    //             space: 'shared',
+                    //             maxSizeInBytes: 10,
+                    //             neededSizeInBytes: 11,
+                    //         }),
+                    //     ]);
+                    // });
+                    // it('should only emit the onSpaceMaxSizeReached shout once', async () => {
+                    //     let events = [] as Action[];
+                    //     document.onEvents.subscribe((e) => events.push(...e));
+                    //     // document.space = 'shared';
+                    //     document.connect();
+                    //     updatesReceived.next({
+                    //         type: 'repo/updates_received',
+                    //         recordName: recordName,
+                    //         inst: 'inst',
+                    //         branch: 'testBranch',
+                    //         updateId: 1,
+                    //         errorCode: 'max_size_reached',
+                    //         maxBranchSizeInBytes: 10,
+                    //         neededBranchSizeInBytes: 11,
+                    //     });
+                    //     await waitAsync();
+                    //     updatesReceived.next({
+                    //         type: 'repo/updates_received',
+                    //         recordName: recordName,
+                    //         inst: 'inst',
+                    //         branch: 'testBranch',
+                    //         updateId: 2,
+                    //         errorCode: 'max_size_reached',
+                    //         maxBranchSizeInBytes: 25,
+                    //         neededBranchSizeInBytes: 99,
+                    //     });
+                    //     await waitAsync();
+                    //     expect(events).toEqual([
+                    //         action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
+                    //             space: 'shared',
+                    //             maxSizeInBytes: 10,
+                    //             neededSizeInBytes: 11,
+                    //         }),
+                    //     ]);
+                    // });
+                });
 
-            //             document.connect();
+                const errorCodeCases = [
+                    ['not_authorized'] as const,
+                    ['subscription_limit_reached'] as const,
+                    ['inst_not_found'] as const,
+                    ['record_not_found'] as const,
+                    ['invalid_record_key'] as const,
+                    ['invalid_token'] as const,
+                    ['unacceptable_connection_id'] as const,
+                    ['unacceptable_connection_token'] as const,
+                    ['user_is_banned'] as const,
+                    ['not_logged_in'] as const,
+                    ['session_expired'] as const,
+                ];
+                describe.each(errorCodeCases)('%s', (errorCode) => {
+                    describe('error', () => {
+                        it('should issue a authorization false shout when the error is unauthorized', async () => {
+                            let events = [] as Action[];
+                            document.onEvents.subscribe((e) =>
+                                events.push(...e)
+                            );
+                            // document.space = 'shared';
 
-            //             updatesReceived.next({
-            //                 type: 'repo/updates_received',
-            //                 recordName: recordName,
-            //                 inst: 'inst',
-            //                 branch: 'testBranch',
-            //                 updateId: 1,
-            //                 errorCode: 'max_size_reached',
-            //                 maxBranchSizeInBytes: 10,
-            //                 neededBranchSizeInBytes: 11,
-            //             });
-            //             await waitAsync();
+                            let statuses: StatusUpdate[] = [];
+                            document.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
 
-            //             expect(events).toEqual([
-            //                 action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
-            //                     space: 'shared',
-            //                     maxSizeInBytes: 10,
-            //                     neededSizeInBytes: 11,
-            //                 }),
-            //             ]);
-            //         });
+                            document.connect();
 
-            //         it('should only emit the onSpaceMaxSizeReached shout once', async () => {
-            //             let events = [] as Action[];
-            //             document.onEvents.subscribe((e) => events.push(...e));
-            //             // document.space = 'shared';
+                            connection.onError.next({
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                            });
+                            await waitAsync();
 
-            //             document.connect();
+                            expect(statuses).toEqual([
+                                {
+                                    type: 'connection',
+                                    connected: true,
+                                },
+                                {
+                                    type: 'authentication',
+                                    authenticated: true,
+                                },
+                                {
+                                    type: 'authorization',
+                                    authorized: false,
+                                    error: {
+                                        success: false,
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                        branch: 'testBranch',
+                                        errorCode: errorCode,
+                                        errorMessage: 'Not authorized',
+                                    },
+                                },
+                            ]);
+                        });
 
-            //             updatesReceived.next({
-            //                 type: 'repo/updates_received',
-            //                 recordName: recordName,
-            //                 inst: 'inst',
-            //                 branch: 'testBranch',
-            //                 updateId: 1,
-            //                 errorCode: 'max_size_reached',
-            //                 maxBranchSizeInBytes: 10,
-            //                 neededBranchSizeInBytes: 11,
-            //             });
-            //             await waitAsync();
+                        it('should issue a authorization request when the error is unauthorized', async () => {
+                            let authRequests = [] as PartitionAuthRequest[];
+                            authSource.onAuthRequest.subscribe((e) =>
+                                authRequests.push(e)
+                            );
+                            // document.space = 'shared';
 
-            //             updatesReceived.next({
-            //                 type: 'repo/updates_received',
-            //                 recordName: recordName,
-            //                 inst: 'inst',
-            //                 branch: 'testBranch',
-            //                 updateId: 2,
-            //                 errorCode: 'max_size_reached',
-            //                 maxBranchSizeInBytes: 25,
-            //                 neededBranchSizeInBytes: 99,
-            //             });
+                            let statuses: StatusUpdate[] = [];
+                            document.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
 
-            //             await waitAsync();
+                            document.connect();
 
-            //             expect(events).toEqual([
-            //                 action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
-            //                     space: 'shared',
-            //                     maxSizeInBytes: 10,
-            //                     neededSizeInBytes: 11,
-            //                 }),
-            //             ]);
-            //         });
-            //     });
+                            connection.onError.next({
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: 'inst',
+                                    action: 'read',
+                                    subjectType: 'user',
+                                    subjectId: 'testId',
+                                },
+                            });
+                            await waitAsync();
 
-            //     const errorCodeCases = [
-            //         ['not_authorized'] as const,
-            //         ['subscription_limit_reached'] as const,
-            //         ['inst_not_found'] as const,
-            //         ['record_not_found'] as const,
-            //         ['invalid_record_key'] as const,
-            //         ['invalid_token'] as const,
-            //         ['unacceptable_connection_id'] as const,
-            //         ['unacceptable_connection_token'] as const,
-            //         ['user_is_banned'] as const,
-            //         ['not_logged_in'] as const,
-            //         ['session_expired'] as const,
-            //     ];
-            //     describe.each(errorCodeCases)('%s', (errorCode) => {
-            //         describe('error', () => {
-            //             it('should issue a authorization false shout when the error is unauthorized', async () => {
-            //                 let events = [] as Action[];
-            //                 document.onEvents.subscribe((e) =>
-            //                     events.push(...e)
-            //                 );
-            //                 document.space = 'shared';
+                            expect(authRequests).toEqual([
+                                {
+                                    type: 'request',
+                                    origin: connection.origin,
+                                    kind: 'not_authorized',
+                                    errorCode: errorCode,
+                                    errorMessage: 'Not authorized',
+                                    resource: {
+                                        type: 'inst',
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                    },
+                                    reason: {
+                                        type: 'missing_permission',
+                                        recordName,
+                                        resourceKind: 'inst',
+                                        resourceId: 'inst',
+                                        action: 'read',
+                                        subjectType: 'user',
+                                        subjectId: 'testId',
+                                    },
+                                },
+                            ]);
+                        });
+                    });
 
-            //                 let statuses: StatusUpdate[] = [];
-            //                 document.onStatusUpdated.subscribe((s) =>
-            //                     statuses.push(s)
-            //                 );
+                    describe('repo/watch_branch_result', () => {
+                        it('should issue a authorization false shout when the error is unauthorized', async () => {
+                            let events = [] as Action[];
+                            document.onEvents.subscribe((e) =>
+                                events.push(...e)
+                            );
+                            // document.space = 'shared';
 
-            //                 document.connect();
+                            let statuses: StatusUpdate[] = [];
+                            document.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
 
-            //                 connection.onError.next({
-            //                     success: false,
-            //                     recordName: recordName,
-            //                     inst: 'inst',
-            //                     branch: 'testBranch',
-            //                     errorCode: errorCode,
-            //                     errorMessage: 'Not authorized',
-            //                 });
-            //                 await waitAsync();
+                            document.connect();
 
-            //                 expect(statuses).toEqual([
-            //                     {
-            //                         type: 'connection',
-            //                         connected: true,
-            //                     },
-            //                     {
-            //                         type: 'authentication',
-            //                         authenticated: true,
-            //                     },
-            //                     {
-            //                         type: 'authorization',
-            //                         authorized: false,
-            //                         error: {
-            //                             success: false,
-            //                             recordName: recordName,
-            //                             inst: 'inst',
-            //                             branch: 'testBranch',
-            //                             errorCode: errorCode,
-            //                             errorMessage: 'Not authorized',
-            //                         },
-            //                     },
-            //                 ]);
-            //             });
+                            watchBranchResult.next({
+                                type: 'repo/watch_branch_result',
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                            });
+                            await waitAsync();
 
-            //             it('should issue a authorization request when the error is unauthorized', async () => {
-            //                 let authRequests = [] as PartitionAuthRequest[];
-            //                 authSource.onAuthRequest.subscribe((e) =>
-            //                     authRequests.push(e)
-            //                 );
-            //                 document.space = 'shared';
+                            expect(statuses).toEqual([
+                                {
+                                    type: 'connection',
+                                    connected: true,
+                                },
+                                {
+                                    type: 'authentication',
+                                    authenticated: true,
+                                },
+                                {
+                                    type: 'authorization',
+                                    authorized: false,
+                                    error: {
+                                        success: false,
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                        branch: 'testBranch',
+                                        errorCode: errorCode,
+                                        errorMessage: 'Not authorized',
+                                    },
+                                },
+                            ]);
+                        });
 
-            //                 let statuses: StatusUpdate[] = [];
-            //                 document.onStatusUpdated.subscribe((s) =>
-            //                     statuses.push(s)
-            //                 );
+                        it('should issue a authorization request when the error is unauthorized', async () => {
+                            let authRequests = [] as PartitionAuthRequest[];
+                            authSource.onAuthRequest.subscribe((e) =>
+                                authRequests.push(e)
+                            );
+                            // document.space = 'shared';
 
-            //                 document.connect();
+                            let statuses: StatusUpdate[] = [];
+                            document.onStatusUpdated.subscribe((s) =>
+                                statuses.push(s)
+                            );
 
-            //                 connection.onError.next({
-            //                     success: false,
-            //                     recordName: recordName,
-            //                     inst: 'inst',
-            //                     branch: 'testBranch',
-            //                     errorCode: errorCode,
-            //                     errorMessage: 'Not authorized',
-            //                     reason: {
-            //                         type: 'missing_permission',
-            //                         recordName,
-            //                         resourceKind: 'inst',
-            //                         resourceId: 'inst',
-            //                         action: 'read',
-            //                         subjectType: 'user',
-            //                         subjectId: 'testId',
-            //                     },
-            //                 });
-            //                 await waitAsync();
+                            document.connect();
 
-            //                 expect(authRequests).toEqual([
-            //                     {
-            //                         type: 'request',
-            //                         origin: connection.origin,
-            //                         kind: 'not_authorized',
-            //                         errorCode: errorCode,
-            //                         errorMessage: 'Not authorized',
-            //                         resource: {
-            //                             type: 'inst',
-            //                             recordName: recordName,
-            //                             inst: 'inst',
-            //                         },
-            //                         reason: {
-            //                             type: 'missing_permission',
-            //                             recordName,
-            //                             resourceKind: 'inst',
-            //                             resourceId: 'inst',
-            //                             action: 'read',
-            //                             subjectType: 'user',
-            //                             subjectId: 'testId',
-            //                         },
-            //                     },
-            //                 ]);
-            //             });
-            //         });
+                            watchBranchResult.next({
+                                type: 'repo/watch_branch_result',
+                                success: false,
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                errorCode: errorCode,
+                                errorMessage: 'Not authorized',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: 'inst',
+                                    action: 'read',
+                                    subjectType: 'user',
+                                    subjectId: 'testId',
+                                },
+                            });
+                            await waitAsync();
 
-            //         describe('repo/watch_branch_result', () => {
-            //             it('should issue a authorization false shout when the error is unauthorized', async () => {
-            //                 let events = [] as Action[];
-            //                 document.onEvents.subscribe((e) =>
-            //                     events.push(...e)
-            //                 );
-            //                 document.space = 'shared';
+                            expect(authRequests).toEqual([
+                                {
+                                    type: 'request',
+                                    origin: connection.origin,
+                                    kind: 'not_authorized',
+                                    errorCode: errorCode,
+                                    errorMessage: 'Not authorized',
+                                    resource: {
+                                        type: 'inst',
+                                        recordName: recordName,
+                                        inst: 'inst',
+                                    },
+                                    reason: {
+                                        type: 'missing_permission',
+                                        recordName,
+                                        resourceKind: 'inst',
+                                        resourceId: 'inst',
+                                        action: 'read',
+                                        subjectType: 'user',
+                                        subjectId: 'testId',
+                                    },
+                                },
+                            ]);
+                        });
+                    });
+                });
+            });
 
-            //                 let statuses: StatusUpdate[] = [];
-            //                 document.onStatusUpdated.subscribe((s) =>
-            //                     statuses.push(s)
-            //                 );
+            describe('static mode', () => {
+                it('should send a GET_UPDATES event when in static mode', async () => {
+                    setupPartition({
+                        recordName: recordName,
+                        inst: 'inst',
+                        branch: 'testBranch',
+                        static: true,
+                    });
 
-            //                 document.connect();
+                    expect(connection.sentMessages).toEqual([]);
+                    document.connect();
 
-            //                 watchBranchResult.next({
-            //                     type: 'repo/watch_branch_result',
-            //                     success: false,
-            //                     recordName: recordName,
-            //                     inst: 'inst',
-            //                     branch: 'testBranch',
-            //                     errorCode: errorCode,
-            //                     errorMessage: 'Not authorized',
-            //                 });
-            //                 await waitAsync();
+                    await waitAsync();
 
-            //                 expect(statuses).toEqual([
-            //                     {
-            //                         type: 'connection',
-            //                         connected: true,
-            //                     },
-            //                     {
-            //                         type: 'authentication',
-            //                         authenticated: true,
-            //                     },
-            //                     {
-            //                         type: 'authorization',
-            //                         authorized: false,
-            //                         error: {
-            //                             success: false,
-            //                             recordName: recordName,
-            //                             inst: 'inst',
-            //                             branch: 'testBranch',
-            //                             errorCode: errorCode,
-            //                             errorMessage: 'Not authorized',
-            //                         },
-            //                     },
-            //                 ]);
-            //             });
+                    expect(connection.sentMessages).toEqual([
+                        {
+                            type: 'repo/get_updates',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                        },
+                    ]);
+                });
 
-            //             it('should issue a authorization request when the error is unauthorized', async () => {
-            //                 let authRequests = [] as PartitionAuthRequest[];
-            //                 authSource.onAuthRequest.subscribe((e) =>
-            //                     authRequests.push(e)
-            //                 );
-            //                 document.space = 'shared';
+                // it('should not apply updates to the causal tree', async () => {
+                //     setupPartition({
+                //         recordName: recordName,
+                //         inst: 'inst',
+                //         branch: 'testBranch',
+                //         static: true,
+                //     });
 
-            //                 let statuses: StatusUpdate[] = [];
-            //                 document.onStatusUpdated.subscribe((s) =>
-            //                     statuses.push(s)
-            //                 );
+                //     expect(connection.sentMessages).toEqual([]);
+                //     document.connect();
 
-            //                 document.connect();
+                //     const ret = await document.applyEvents([
+                //         botAdded(
+                //             createBot('test', {
+                //                 abc: 'def',
+                //             })
+                //         ),
+                //     ]);
 
-            //                 watchBranchResult.next({
-            //                     type: 'repo/watch_branch_result',
-            //                     success: false,
-            //                     recordName: recordName,
-            //                     inst: 'inst',
-            //                     branch: 'testBranch',
-            //                     errorCode: errorCode,
-            //                     errorMessage: 'Not authorized',
-            //                     reason: {
-            //                         type: 'missing_permission',
-            //                         recordName,
-            //                         resourceKind: 'inst',
-            //                         resourceId: 'inst',
-            //                         action: 'read',
-            //                         subjectType: 'user',
-            //                         subjectId: 'testId',
-            //                     },
-            //                 });
-            //                 await waitAsync();
+                //     expect(ret).toEqual([]);
+                //     expect(document.state).toEqual({});
+                // });
 
-            //                 expect(authRequests).toEqual([
-            //                     {
-            //                         type: 'request',
-            //                         origin: connection.origin,
-            //                         kind: 'not_authorized',
-            //                         errorCode: errorCode,
-            //                         errorMessage: 'Not authorized',
-            //                         resource: {
-            //                             type: 'inst',
-            //                             recordName: recordName,
-            //                             inst: 'inst',
-            //                         },
-            //                         reason: {
-            //                             type: 'missing_permission',
-            //                             recordName,
-            //                             resourceKind: 'inst',
-            //                             resourceId: 'inst',
-            //                             action: 'read',
-            //                             subjectType: 'user',
-            //                             subjectId: 'testId',
-            //                         },
-            //                     },
-            //                 ]);
-            //             });
-            //         });
-            //     });
-            // });
+                // it('should load the initial state properly', async () => {
+                //     setupPartition({
+                //         recordName: recordName,
+                //         inst: 'inst',
+                //         branch: 'testBranch',
+                //         static: true,
+                //     });
 
-            // describe('static mode', () => {
-            //     it('should send a GET_UPDATES event when in static mode', async () => {
-            //         setupPartition({
-            //             type: 'remote_yjs',
-            //             recordName: recordName,
-            //             inst: 'inst',
-            //             branch: 'testBranch',
-            //             host: 'testHost',
-            //             static: true,
-            //         });
+                //     const updates = getUpdates((doc, bots) => {
+                //         bots.set('bot1', new YMap([['tag1', 'abc']]));
+                //     });
 
-            //         expect(connection.sentMessages).toEqual([]);
-            //         document.connect();
+                //     document.connect();
 
-            //         await waitAsync();
+                //     addAtoms.next({
+                //         type: 'repo/add_updates',
+                //         recordName: recordName,
+                //         inst: 'inst',
+                //         branch: 'testBranch',
+                //         updates,
+                //     });
 
-            //         expect(connection.sentMessages).toEqual([
-            //             {
-            //                 type: 'repo/get_updates',
-            //                 recordName: recordName,
-            //                 inst: 'inst',
-            //                 branch: 'testBranch',
-            //             },
-            //         ]);
-            //     });
-
-            //     it('should not apply updates to the causal tree', async () => {
-            //         setupPartition({
-            //             type: 'remote_yjs',
-            //             recordName: recordName,
-            //             inst: 'inst',
-            //             branch: 'testBranch',
-            //             host: 'testHost',
-            //             static: true,
-            //         });
-
-            //         expect(connection.sentMessages).toEqual([]);
-            //         document.connect();
-
-            //         const ret = await document.applyEvents([
-            //             botAdded(
-            //                 createBot('test', {
-            //                     abc: 'def',
-            //                 })
-            //             ),
-            //         ]);
-
-            //         expect(ret).toEqual([]);
-            //         expect(document.state).toEqual({});
-            //     });
-
-            //     it('should load the initial state properly', async () => {
-            //         setupPartition({
-            //             type: 'remote_yjs',
-            //             recordName: recordName,
-            //             inst: 'inst',
-            //             branch: 'testBranch',
-            //             host: 'testHost',
-            //             static: true,
-            //         });
-
-            //         const updates = getUpdates((doc, bots) => {
-            //             bots.set('bot1', new YMap([['tag1', 'abc']]));
-            //         });
-
-            //         document.connect();
-
-            //         addAtoms.next({
-            //             type: 'repo/add_updates',
-            //             recordName: recordName,
-            //             inst: 'inst',
-            //             branch: 'testBranch',
-            //             updates,
-            //         });
-
-            //         expect(document.state).toEqual({
-            //             bot1: createBot('bot1', {
-            //                 tag1: 'abc',
-            //             }),
-            //         });
-            //     });
-            // });
+                //     expect(document.state).toEqual({
+                //         bot1: createBot('bot1', {
+                //             tag1: 'abc',
+                //         }),
+                //     });
+                // });
+            });
 
             // describe('skip initial load', () => {
             //     it('should not send a GET_UPDATES event', async () => {

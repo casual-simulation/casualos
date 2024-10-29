@@ -21,11 +21,6 @@ export interface SharedDocumentConfig {
     branch: string;
 
     /**
-     * The host of the document.
-     */
-    host: string;
-
-    /**
      * Whether the doc should be loaded in read-only mode.
      */
     readOnly?: boolean;
@@ -65,6 +60,6 @@ export interface SharedDocumentConfig {
         /**
          * The key to use for encryption.
          */
-        encryptionKey?: boolean;
+        encryptionKey?: string;
     };
 }

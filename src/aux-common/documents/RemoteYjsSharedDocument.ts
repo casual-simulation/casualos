@@ -1,5 +1,7 @@
 import {
     BehaviorSubject,
+    filter,
+    firstValueFrom,
     Observable,
     startWith,
     Subject,
@@ -35,7 +37,13 @@ import {
     Transaction,
     applyUpdate,
 } from 'yjs';
-import { InstRecordsClient } from '../websockets';
+import {
+    ClientError,
+    ClientEvent,
+    InstRecordsClient,
+    MaxInstSizeReachedClientError,
+    RateLimitExceededMessage,
+} from '../websockets';
 import { SharedDocumentConfig } from './SharedDocumentConfig';
 import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
@@ -46,43 +54,48 @@ import {
     getConnectionId,
     StatusUpdate,
 } from '../common';
+import { InstUpdate } from '../bots';
 
-const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
+export const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN =
+    '__apply_updates_to_inst';
 
 export class RemoteYjsSharedDocument implements SharedDocument {
     protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
-    private _onUpdates: Subject<string[]>;
+    protected _onUpdates: Subject<string[]> = new Subject<string[]>();
 
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<Action[]>();
     protected _onStatusUpdated = new Subject<StatusUpdate>();
+
+    protected _onClientError = new Subject<ClientError>();
     protected _hasRegisteredSubs = false;
-    private _sub = new Subscription();
+    protected _sub = new Subscription();
 
-    private _emittedMaxSizeReached: boolean = false;
-    private _localId: number;
-    private _remoteId: number;
-    private _doc: Doc = new Doc();
-    private _client: InstRecordsClient;
-    private _currentVersion: CurrentVersion;
+    protected _localId: number;
+    protected _remoteId: number;
+    protected _doc: Doc = new Doc();
+    protected _client: InstRecordsClient;
+    protected _currentVersion: CurrentVersion;
 
-    private _isLocalTransaction: boolean = true;
-    private _isRemoteUpdate: boolean = false;
-    private _static: boolean;
-    private _skipInitialLoad: boolean;
-    private _sendInitialUpdates: boolean = false;
-    private _watchingBranch: any;
-    private _synced: boolean;
-    private _authorized: boolean;
-    private _recordName: string | null;
-    private _inst: string;
-    private _branch: string;
-    private _temporary: boolean;
-    private _readOnly: boolean;
-    private _remoteEvents: boolean;
-    private _authSource: PartitionAuthSource;
-    private _indexeddb: YjsIndexedDBPersistence;
-    private _persistence: SharedDocumentConfig['localPersistence'];
+    protected _isLocalTransaction: boolean = true;
+    protected _isRemoteUpdate: boolean = false;
+    protected _static: boolean;
+    protected _skipInitialLoad: boolean;
+    protected _sendInitialUpdates: boolean = false;
+    protected _watchingBranch: any;
+    protected _synced: boolean;
+    protected _authorized: boolean;
+    protected _recordName: string | null;
+    protected _inst: string;
+    protected _branch: string;
+    protected _temporary: boolean;
+    protected _readOnly: boolean;
+    protected _authSource: PartitionAuthSource;
+    protected _indexeddb: YjsIndexedDBPersistence;
+    protected _persistence: SharedDocumentConfig['localPersistence'];
+    private _maps: Map<string, YjsSharedMap<any>> = new Map();
+    private _arrays: Map<string, YjsSharedArray<any>> = new Map();
+    private _texts: Map<string, YjsSharedText> = new Map();
 
     get recordName(): string {
         return this._recordName;
@@ -116,6 +129,10 @@ export class RemoteYjsSharedDocument implements SharedDocument {
         return this._onEvents;
     }
 
+    get onClientError(): Observable<ClientError> {
+        return this._onClientError;
+    }
+
     get onStatusUpdated(): Observable<StatusUpdate> {
         return this._onStatusUpdated;
     }
@@ -134,11 +151,11 @@ export class RemoteYjsSharedDocument implements SharedDocument {
         return this._doc;
     }
 
-    private get _remoteSite() {
+    protected get _remoteSite() {
         return this._remoteId.toString();
     }
 
-    private get _currentSite() {
+    protected get _currentSite() {
         return this._localId.toString();
     }
 
@@ -156,11 +173,9 @@ export class RemoteYjsSharedDocument implements SharedDocument {
             enumerable: false,
             writable: false,
         });
-        // this.private = config.private || false;
         this._client = client;
         this._static = config.static;
         this._skipInitialLoad = config.skipInitialLoad;
-        this._remoteEvents = true; // 'remoteEvents' in config ? config.remoteEvents : true;
         this._recordName = config.recordName;
         this._inst = config.inst;
         this._branch = config.branch;
@@ -187,15 +202,30 @@ export class RemoteYjsSharedDocument implements SharedDocument {
     }
 
     getMap<T = any>(name: string): SharedMap<T> {
-        return new YjsSharedMap(this._doc.getMap(name));
+        let map = this._maps.get(name);
+        if (!map) {
+            map = new YjsSharedMap(this._doc.getMap(name));
+            this._maps.set(name, map);
+        }
+        return map;
     }
 
     getArray<T = any>(name: string): SharedArray<T> {
-        return new YjsSharedArray(this._doc.getArray(name));
+        let array = this._arrays.get(name);
+        if (!array) {
+            array = new YjsSharedArray(this._doc.getArray(name));
+            this._arrays.set(name, array);
+        }
+        return array;
     }
 
     getText(name: string): SharedText {
-        return new YjsSharedText(this._doc.getText(name));
+        let text = this._texts.get(name);
+        if (!text) {
+            text = new YjsSharedText(this._doc.getText(name));
+            this._texts.set(name, text);
+        }
+        return text;
     }
 
     createMap<T = any>(): SharedMap<T> {
@@ -224,6 +254,26 @@ export class RemoteYjsSharedDocument implements SharedDocument {
         } else {
             this._watchBranch();
         }
+    }
+
+    transact(callback: () => void): void {
+        return this._doc.transact(callback);
+    }
+
+    getStateUpdate(): InstUpdate {
+        const update: InstUpdate = {
+            id: 0,
+            timestamp: Date.now(),
+            update: fromByteArray(encodeStateAsUpdate(this._doc)),
+        };
+        return update;
+    }
+
+    applyStateUpdates(updates: InstUpdate[]): void {
+        this._applyUpdates(
+            updates.map((u) => u.update),
+            APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN
+        );
     }
 
     // TODO: Possibly support remote events
@@ -385,19 +435,19 @@ export class RemoteYjsSharedDocument implements SharedDocument {
     //     }
     // }
 
-    // async enableCollaboration() {
-    //     this._static = false;
-    //     this._skipInitialLoad = false;
-    //     this._sendInitialUpdates = true;
-    //     this._synced = false;
-    //     const promise = firstValueFrom(
-    //         this._onStatusUpdated.pipe(
-    //             filter((u) => u.type === 'sync' && u.synced)
-    //         )
-    //     );
-    //     this._watchBranch();
-    //     await promise;
-    // }
+    async enableCollaboration() {
+        this._static = false;
+        this._skipInitialLoad = false;
+        this._sendInitialUpdates = true;
+        this._synced = false;
+        const promise = firstValueFrom(
+            this._onStatusUpdated.pipe(
+                filter((u) => u.type === 'sync' && u.synced)
+            )
+        );
+        this._watchBranch();
+        await promise;
+    }
 
     private async _initializePartitionWithoutLoading() {
         this._onStatusUpdated.next({
@@ -503,70 +553,9 @@ export class RemoteYjsSharedDocument implements SharedDocument {
                         if (event.type === 'updates') {
                             this._applyUpdates(event.updates);
                         } else if (event.type === 'event') {
-                            this._onEvents.next([event.action]);
+                            this._handleClientEvent(event);
                         } else if (event.type === 'error') {
-                            if (event.kind === 'max_size_reached') {
-                                if (!this._emittedMaxSizeReached) {
-                                    console.log(
-                                        '[RemoteYjsSharedDocument] Max size reached!',
-                                        this.recordName,
-                                        this.address
-                                    );
-                                    this._emittedMaxSizeReached = true;
-                                    // TODO: Emit max size reached
-                                    // this._onEvents.next([
-                                    //     action(
-                                    //         ON_SPACE_MAX_SIZE_REACHED,
-                                    //         null,
-                                    //         null,
-                                    //         {
-                                    //             space: this.space,
-                                    //             maxSizeInBytes:
-                                    //                 event.maxBranchSizeInBytes,
-                                    //             neededSizeInBytes:
-                                    //                 event.neededBranchSizeInBytes,
-                                    //         }
-                                    //     ),
-                                    // ]);
-                                }
-                            } else if (event.kind === 'error') {
-                                const errorCode = event.info.errorCode;
-                                if (
-                                    errorCode === 'not_authorized' ||
-                                    errorCode ===
-                                        'subscription_limit_reached' ||
-                                    errorCode === 'inst_not_found' ||
-                                    errorCode === 'record_not_found' ||
-                                    errorCode === 'invalid_record_key' ||
-                                    errorCode === 'invalid_token' ||
-                                    errorCode ===
-                                        'unacceptable_connection_id' ||
-                                    errorCode ===
-                                        'unacceptable_connection_token' ||
-                                    errorCode === 'user_is_banned' ||
-                                    errorCode === 'not_logged_in' ||
-                                    errorCode === 'session_expired'
-                                ) {
-                                    this._onStatusUpdated.next({
-                                        type: 'authorization',
-                                        authorized: false,
-                                        error: event.info,
-                                    });
-                                    this._authSource.sendAuthRequest({
-                                        type: 'request',
-                                        kind: 'not_authorized',
-                                        errorCode: event.info.errorCode,
-                                        errorMessage: event.info.errorMessage,
-                                        origin: this._client.connection.origin,
-                                        reason: event.info.reason,
-                                        resource: {
-                                            type: 'inst',
-                                            recordName: this._recordName,
-                                            inst: this._inst,
-                                        },
-                                    });
-                                }
-                            }
+                            this._handleClientError(event);
                         } else if (event.type === 'repo/watch_branch_result') {
                             if (event.success === false) {
                                 const errorCode = event.errorCode;
@@ -614,21 +603,7 @@ export class RemoteYjsSharedDocument implements SharedDocument {
         );
         this._sub.add(
             this._client.watchRateLimitExceeded().subscribe((event) => {
-                console.error(
-                    '[RemoteYjsSharedDocument] Rate limit exceeded!',
-                    event
-                );
-                //TODO: Emit rate limit exceeded
-                // this._onEvents.next([
-                //     action(
-                //         ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
-                //         null,
-                //         null,
-                //         {
-                //             space: this.space,
-                //         }
-                //     ),
-                // ]);
+                this._onRateLimitExceeded(event);
             })
         );
 
@@ -665,6 +640,74 @@ export class RemoteYjsSharedDocument implements SharedDocument {
         );
     }
 
+    /**
+     * Handles a client error that was received from the server.
+     * @param event The event.
+     */
+    private _handleClientError(event: ClientError) {
+        if (event.kind === 'max_size_reached') {
+            this._onMaxSizeReached(event);
+        } else if (event.kind === 'error') {
+            const errorCode = event.info.errorCode;
+            if (
+                errorCode === 'not_authorized' ||
+                errorCode === 'subscription_limit_reached' ||
+                errorCode === 'inst_not_found' ||
+                errorCode === 'record_not_found' ||
+                errorCode === 'invalid_record_key' ||
+                errorCode === 'invalid_token' ||
+                errorCode === 'unacceptable_connection_id' ||
+                errorCode === 'unacceptable_connection_token' ||
+                errorCode === 'user_is_banned' ||
+                errorCode === 'not_logged_in' ||
+                errorCode === 'session_expired'
+            ) {
+                this._onStatusUpdated.next({
+                    type: 'authorization',
+                    authorized: false,
+                    error: event.info,
+                });
+                this._authSource.sendAuthRequest({
+                    type: 'request',
+                    kind: 'not_authorized',
+                    errorCode: event.info.errorCode,
+                    errorMessage: event.info.errorMessage,
+                    origin: this._client.connection.origin,
+                    reason: event.info.reason,
+                    resource: {
+                        type: 'inst',
+                        recordName: this._recordName,
+                        inst: this._inst,
+                    },
+                });
+            }
+        }
+    }
+
+    /**
+     * Handles a client event that was received from the server.
+     * @param event The event that was received.
+     */
+    protected _handleClientEvent(event: ClientEvent) {
+        this._onEvents.next([event.action]);
+    }
+
+    /**
+     * Called when the server sends a rate limit exceeded message.
+     * @param event The event that was sent.
+     */
+    protected _onRateLimitExceeded(event: RateLimitExceededMessage) {
+        console.error('[RemoteYjsSharedDocument] Rate limit exceeded!', event);
+    }
+
+    /**
+     * Called when the server sends a max size reached message.
+     * @param event The event that was sent.
+     */
+    protected _onMaxSizeReached(event: MaxInstSizeReachedClientError) {
+        this._onClientError.next(event);
+    }
+
     private _updateSynced(synced: boolean) {
         if (synced && !this._authorized) {
             this._authorized = true;
@@ -680,7 +723,12 @@ export class RemoteYjsSharedDocument implements SharedDocument {
         });
     }
 
-    private _applyUpdates(updates: string[], transactionOrigin?: string) {
+    /**
+     * Applies the given updates to the YJS document.
+     * @param updates The updates to apply.
+     * @param transactionOrigin The origin of the transaction.
+     */
+    protected _applyUpdates(updates: string[], transactionOrigin?: string) {
         try {
             this._isRemoteUpdate = true;
             for (let updateBase64 of updates) {
@@ -795,20 +843,27 @@ function deepChangesObservable(
     });
 }
 
-export class YjsSharedMap<T> implements SharedMap<T> {
-    private _map: YMap<T>;
-    private _changes: Observable<SharedMapChanges<T>>;
+export class YjsSharedType<
+    TType extends YType<any>,
+    TChanges extends SharedTypeChanges
+> {
+    private _type: TType;
+    private _changes: Observable<TChanges>;
     private _deepChanges: Observable<SharedTypeChanges[]>;
 
+    get type() {
+        return this._type;
+    }
+
     get doc(): SharedDocument {
-        return (this._map.doc as any)?.__sharedDoc as SharedDocument;
+        return (this._type.doc as any)?.__sharedDoc as SharedDocument;
     }
 
     get parent(): SharedType {
-        return (this._map.parent as any)?.__sharedType as SharedType;
+        return (this._type.parent as any)?.__sharedType as SharedType;
     }
 
-    get changes(): Observable<SharedMapChanges<T>> {
+    get changes(): Observable<TChanges> {
         return this._changes;
     }
 
@@ -816,130 +871,124 @@ export class YjsSharedMap<T> implements SharedMap<T> {
         return this._deepChanges;
     }
 
-    constructor(map: YMap<T>);
-    constructor(map: Map<string, T>);
-    constructor(map: YMap<T> | Map<string, T>) {
-        if (map instanceof YMap) {
-            this._map = map;
-        } else {
-            this._map = new YMap(map);
-        }
-        Object.defineProperty(this._map, '__sharedType', {
+    constructor(type: TType) {
+        this._type = type;
+        Object.defineProperty(this._type, '__sharedType', {
             value: this,
             enumerable: false,
             writable: false,
         });
-        this._changes = changesObservable(this._map) as Observable<
-            SharedMapChanges<T>
-        >;
-        this._deepChanges = deepChangesObservable(this._map);
+        this._changes = changesObservable(this._type) as Observable<TChanges>;
+        this._deepChanges = deepChangesObservable(this._type);
+    }
+}
+
+export class YjsSharedMap<T>
+    extends YjsSharedType<YMap<T>, SharedMapChanges<T>>
+    implements SharedMap<T>
+{
+    constructor(map: YMap<T>);
+    constructor(map: Map<string, T>);
+    constructor(map: YMap<T> | Map<string, T>) {
+        let ymap: YMap<T>;
+        if (map instanceof YMap) {
+            ymap = map;
+        } else {
+            ymap = new YMap(map);
+        }
+        super(ymap);
     }
 
     get size(): number {
-        return this._map.size;
+        return this.type.size;
     }
 
     set(key: string, value: T): void {
-        this._map.set(key, value);
+        if (value instanceof YjsSharedType) {
+            if (value.doc) {
+                throw new Error(
+                    'Cannot set a top-level map inside another map.'
+                );
+            }
+            value = value.type;
+        }
+        this.type.set(key, value);
     }
 
     get(key: string): T {
-        return this._map.get(key);
+        const val = this.type.get(key);
+        return valueOrSharedType(val);
     }
 
     delete(key: string): void {
-        this._map.delete(key);
+        this.type.delete(key);
     }
 
     has(key: string): boolean {
-        return this._map.has(key);
+        return this.type.has(key);
     }
 
     clear(): void {
-        this._map.clear();
+        this.type.clear();
     }
 
     clone(): SharedMap<T> {
-        return new YjsSharedMap(this._map.clone());
+        return new YjsSharedMap(this.type.clone());
     }
 
     toJSON(): { [key: string]: T } {
-        return this._map.toJSON();
+        return this.type.toJSON();
     }
 
     forEach(
         callback: (value: T, key: string, map: SharedMap<T>) => void
     ): void {
-        return this._map.forEach((value, key) => callback(value, key, this));
+        return this.type.forEach((value, key) => callback(value, key, this));
     }
 
     entries(): IterableIterator<[string, T]> {
-        return this._map.entries();
+        return this.type.entries();
     }
     keys(): IterableIterator<string> {
-        return this._map.keys();
+        return this.type.keys();
     }
     values(): IterableIterator<T> {
-        return this._map.values();
+        return this.type.values();
     }
     [Symbol.iterator](): IterableIterator<[string, T]> {
-        return this._map[Symbol.iterator]();
+        return this.type[Symbol.iterator]();
     }
 }
 
-export class YjsSharedArray<T> implements SharedArray<T> {
-    private _arr: YArray<T>;
-    private _changes: Observable<SharedArrayChanges<T>>;
-    private _deepChanges: Observable<SharedTypeChanges[]>;
-
-    get doc(): SharedDocument {
-        return (this._arr.doc as any)?.__sharedDoc as SharedDocument;
-    }
-
-    get parent(): SharedType {
-        return (this._arr.parent as any)?.__sharedType as SharedType;
-    }
-
+export class YjsSharedArray<T>
+    extends YjsSharedType<YArray<T>, SharedArrayChanges<T>>
+    implements SharedArray<T>
+{
     get length(): number {
-        return this._arr.length;
+        return this.type.length;
     }
 
     get size(): number {
-        return this._arr.length;
-    }
-
-    get changes(): Observable<SharedArrayChanges<T>> {
-        return this._changes;
-    }
-
-    get deepChanges(): Observable<SharedTypeChanges[]> {
-        return this._deepChanges;
+        return this.type.length;
     }
 
     constructor(arr: YArray<T>);
     constructor(arr: Array<T>);
     constructor(arr: YArray<T> | Array<T>) {
+        let yarray: YArray<T>;
         if (arr instanceof YArray) {
-            this._arr = arr;
+            yarray = arr;
         } else {
-            this._arr = YArray.from(arr);
+            yarray = YArray.from(arr);
         }
-        Object.defineProperty(this._arr, '__sharedType', {
-            value: this,
-            enumerable: false,
-            writable: false,
-        });
-        this._changes = changesObservable(this._arr) as Observable<
-            SharedArrayChanges<T>
-        >;
-        this._deepChanges = deepChangesObservable(this._arr);
+        super(yarray);
     }
 
     insert(index: number, items: T[]): void {
-        this._arr.insert(index, items);
+        this.type.insert(index, this._mapItems(items));
     }
     delete(index: number, count: number): void {
-        this._arr.delete(index, count);
+        this.type.delete(index, count);
     }
     applyDelta(delta: SharedArrayDelta<T>): void {
         let index = 0;
@@ -947,50 +996,108 @@ export class YjsSharedArray<T> implements SharedArray<T> {
             if (op.type === 'preserve') {
                 index += op.count;
             } else if (op.type === 'insert') {
-                this._arr.insert(index, op.values);
+                this.type.insert(index, op.values);
                 index += op.values.length;
             } else if (op.type === 'delete') {
-                this._arr.delete(index, op.count);
+                this.type.delete(index, op.count);
             }
         }
     }
-    push(items: T[]): void {
-        this._arr.push(items);
+    push(...items: T[]): void {
+        this.type.push(this._mapItems(items));
     }
-    unshift(items: T[]): void {
-        this._arr.unshift(items);
+    pop(): T | undefined {
+        let lastIndex = this.type.length - 1;
+        if (lastIndex < 0) {
+            return undefined;
+        } else {
+            const lastItem = this.type.get(lastIndex);
+            this.type.delete(lastIndex, 1);
+            return lastItem;
+        }
+    }
+    unshift(...items: T[]): void {
+        this.type.unshift(this._mapItems(items));
+    }
+    shift(): T | undefined {
+        if (this.type.length <= 0) {
+            return undefined;
+        } else {
+            const firstItem = this.type.get(0);
+            this.type.delete(0, 1);
+            return firstItem;
+        }
     }
     get(index: number): T {
-        return this._arr.get(index);
+        return valueOrSharedType(this.type.get(index));
     }
     slice(start?: number, end?: number): T[] {
-        return this._arr.slice(start, end);
+        return this.type.slice(start, end);
+    }
+    splice(start: number, deleteCount?: number, ...items: T[]): T[] {
+        if (this.type.length <= 0) {
+            if (items.length > 0) {
+                this.push(...items);
+            }
+            return [];
+        }
+
+        const len = this.type.length;
+        if (start < -len) {
+            start = 0;
+        } else if (-len <= start && start < 0) {
+            start = len + start;
+        } else if (start >= len) {
+            start = len;
+        }
+
+        if (start >= len) {
+            deleteCount = 0;
+        } else if (typeof deleteCount === 'undefined') {
+            deleteCount = 0;
+        } else if (deleteCount >= len - start) {
+            deleteCount = len - start;
+        } else if (deleteCount < 0) {
+            deleteCount = 0;
+        }
+
+        let deleted: T[] = [];
+        if (deleteCount > 0) {
+            deleted = this.type.slice(start, start + deleteCount);
+            this.delete(start, deleteCount);
+        }
+
+        if (items.length > 0) {
+            this.insert(start, items);
+        }
+
+        return deleted;
     }
 
     toArray(): T[] {
-        return this._arr.toArray();
+        return this.type.toArray();
     }
 
     toJSON(): T[] {
-        return this._arr.toJSON();
+        return this.type.toJSON();
     }
 
     forEach(
         callback: (value: T, index: number, array: SharedArray<T>) => void
     ): void {
-        this._arr.forEach((value, index) => callback(value, index, this));
+        this.type.forEach((value, index) => callback(value, index, this));
     }
 
     map(callback: (value: T, index: number, array: SharedArray<T>) => T): T[] {
-        return this._arr.map((value, index) => callback(value, index, this));
+        return this.type.map((value, index) => callback(value, index, this));
     }
 
     filter(
         predicate: (value: T, index: number, array: SharedArray<T>) => boolean
     ): T[] {
         let arr: T[] = [];
-        for (let i = 0; i < this._arr.length; i++) {
-            const val = this._arr.get(i);
+        for (let i = 0; i < this.type.length; i++) {
+            const val = this.type.get(i);
             if (predicate(val, i, this)) {
                 arr.push(val);
             }
@@ -999,11 +1106,31 @@ export class YjsSharedArray<T> implements SharedArray<T> {
     }
 
     clone(): SharedArray<T> {
-        return new YjsSharedArray(this._arr.clone());
+        return new YjsSharedArray(this.type.clone());
     }
 
     [Symbol.iterator](): IterableIterator<T> {
-        return this._arr[Symbol.iterator]();
+        return this.type[Symbol.iterator]();
+    }
+
+    private _mapItems(items: T[]): T[] {
+        let containsSharedType = false;
+        for (let i of items) {
+            if (i instanceof YjsSharedType) {
+                if (i.doc) {
+                    throw new Error(
+                        'Cannot push a top-level array inside another array.'
+                    );
+                }
+                containsSharedType = true;
+                break;
+            }
+        }
+
+        if (containsSharedType) {
+            items = items.map((i) => (i instanceof YjsSharedType ? i.type : i));
+        }
+        return items;
     }
 }
 
@@ -1110,4 +1237,11 @@ export class YjsSharedText implements SharedText {
     clone(): SharedText {
         return new YjsSharedText(this._text.clone());
     }
+}
+
+function valueOrSharedType(val: any) {
+    if (val instanceof YType) {
+        return (val as any).__sharedType;
+    }
+    return val;
 }
