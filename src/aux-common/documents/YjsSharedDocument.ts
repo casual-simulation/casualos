@@ -205,7 +205,7 @@ export class YjsSharedDocument implements SharedDocument {
     async init(): Promise<void> {}
 
     connect(): void {
-        if (this._persistence?.saveToIndexedDb) {
+        if (this._persistence?.saveToIndexedDb && this._branch) {
             console.log('[YjsPartition] Using IndexedDB persistence');
             this._indexeddb = new YjsIndexedDBPersistence(
                 this._branch,

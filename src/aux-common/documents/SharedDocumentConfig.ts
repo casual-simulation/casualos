@@ -6,8 +6,9 @@ import { RemoteCausalRepoProtocol } from '../partitions/AuxPartitionConfig';
 export interface SharedDocumentConfig {
     /**
      * The branch of the document to load.
+     * If omitted, then local persistence will not be supported.
      */
-    branch: string;
+    branch?: string;
 
     /**
      * The options for local persistence of the document.

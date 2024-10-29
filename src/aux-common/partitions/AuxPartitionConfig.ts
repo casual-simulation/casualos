@@ -237,6 +237,12 @@ export interface YjsPartitionConfig extends PartitionConfigBase {
     type: 'yjs';
 
     /**
+     * The branch to load.
+     * If omitted, then local persistence will not be supported.
+     */
+    branch?: string;
+
+    /**
      * The options for local persistence for the partition.
      */
     localPersistence?: {
@@ -244,11 +250,6 @@ export interface YjsPartitionConfig extends PartitionConfigBase {
          * Whether to save partition updates to indexed db.
          */
         saveToIndexedDb: boolean;
-
-        /**
-         * The database that updates should be saved under.
-         */
-        database: string;
 
         /**
          * The encryption key that should be used.
