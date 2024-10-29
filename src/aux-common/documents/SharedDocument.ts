@@ -9,14 +9,15 @@ import { InstUpdate } from '../bots';
 export interface SharedDocument extends SubscriptionLike {
     /**
      * The name of the record that the document is stored under.
-     * If null, then the document is stored locally.
+     * If null, then the document is public.
      */
     recordName: string | null;
 
     /**
      * The address of the document.
+     * If null, then the document is stored locally.
      */
-    address: string;
+    address: string | null;
 
     /**
      * The branch that was loaded for the document.

@@ -98,10 +98,7 @@ import {
     RateLimitExceededMessage,
 } from '../websockets';
 import { PartitionAuthSource } from './PartitionAuthSource';
-import {
-    APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN,
-    RemoteYjsSharedDocument,
-} from '../documents/RemoteYjsSharedDocument';
+import { RemoteYjsSharedDocument } from '../documents/RemoteYjsSharedDocument';
 
 /**
  * Attempts to create a YjsPartition from the given config.

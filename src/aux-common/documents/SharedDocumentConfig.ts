@@ -5,6 +5,29 @@ import { RemoteCausalRepoProtocol } from '../partitions/AuxPartitionConfig';
  */
 export interface SharedDocumentConfig {
     /**
+     * The branch of the document to load.
+     */
+    branch: string;
+
+    /**
+     * The options for local persistence of the document.
+     * If not provided, then the document will not be persisted locally.
+     */
+    localPersistence?: {
+        /**
+         * Whether to save the document to indexed db.
+         */
+        saveToIndexedDb?: boolean;
+
+        /**
+         * The key to use for encryption.
+         */
+        encryptionKey?: string;
+    };
+}
+
+export interface RemoteSharedDocumentConfig extends SharedDocumentConfig {
+    /**
      * The name of the record that the document is stored under.
      * If null, then the document is stored locally.
      */
@@ -14,11 +37,6 @@ export interface SharedDocumentConfig {
      * The inst that the document is stored in.
      */
     inst: string;
-
-    /**
-     * The branch of the document to load.
-     */
-    branch: string;
 
     /**
      * Whether the doc should be loaded in read-only mode.
@@ -46,20 +64,4 @@ export interface SharedDocumentConfig {
      * Currently, only "updates" is supported.
      */
     connectionProtocol?: RemoteCausalRepoProtocol;
-
-    /**
-     * The options for local persistence of the document.
-     * If not provided, then the document will not be persisted locally.
-     */
-    localPersistence?: {
-        /**
-         * Whether to save the document to indexed db.
-         */
-        saveToIndexedDb?: boolean;
-
-        /**
-         * The key to use for encryption.
-         */
-        encryptionKey?: string;
-    };
 }

@@ -1,73 +1,22 @@
-import {
-    BehaviorSubject,
-    Subject,
-    Subscription,
-    bufferCount,
-    firstValueFrom,
-    takeWhile,
-} from 'rxjs';
-import {
-    applyUpdate,
-    Doc,
-    encodeStateAsUpdate,
-    Map as YMap,
-    Text as YText,
-} from 'yjs';
-import { fromByteArray, toByteArray } from 'base64-js';
-import {
-    action,
-    applyUpdatesToInst,
-    AsyncAction,
-    asyncError,
-    asyncResult,
-    Bot,
-    botAdded,
-    botUpdated,
-    createBot,
-    createInitializationUpdate,
-    getInstStateFromUpdates,
-    InstUpdate,
-    listInstUpdates,
-    ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
-    ON_REMOTE_DATA_ACTION_NAME,
-    ON_REMOTE_WHISPER_ACTION_NAME,
-    ON_SPACE_MAX_SIZE_REACHED,
-    stateUpdatedEvent,
-    StateUpdatedEvent,
-    UpdatedBot,
-    getCurrentInstUpdate,
-    getRemoteCount,
-} from '../bots';
-import { wait, waitAsync } from '../test/TestHelpers';
-import { del, edit, insert, preserve } from '../bots';
+import { Subject, Subscription } from 'rxjs';
+import { Map as YMap } from 'yjs';
+import { waitAsync } from '../test/TestHelpers';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
-import { flatMap } from 'lodash';
 import {
     AddUpdatesMessage,
-    ConnectionCountMessage,
-    DEFAULT_BRANCH_NAME,
     InstRecordsClient,
     MemoryConnectionClient,
-    RateLimitExceededMessage,
     ReceiveDeviceActionMessage,
     UpdatesReceivedMessage,
     WatchBranchResultMessage,
 } from '../websockets';
-import {
-    Action,
-    CurrentVersion,
-    StatusUpdate,
-    connectionInfo,
-    device,
-    remote,
-} from '../common';
-import { getStateFromUpdates } from '../partitions/PartitionUtils';
+import { Action, CurrentVersion, StatusUpdate } from '../common';
 import {
     PartitionAuthRequest,
     PartitionAuthSource,
 } from '../partitions/PartitionAuthSource';
 import { RemoteYjsSharedDocument } from './RemoteYjsSharedDocument';
-import { SharedDocumentConfig } from './SharedDocumentConfig';
+import { RemoteSharedDocumentConfig } from './SharedDocumentConfig';
 import { testDocumentImplementation } from './test/DocumentTests';
 
 console.log = jest.fn();
@@ -1978,7 +1927,7 @@ describe('RemoteYjsSharedDocument', () => {
             //     });
             // });
 
-            function setupPartition(config: SharedDocumentConfig) {
+            function setupPartition(config: RemoteSharedDocumentConfig) {
                 document = new RemoteYjsSharedDocument(
                     client,
                     authSource,
