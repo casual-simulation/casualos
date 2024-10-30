@@ -1368,6 +1368,7 @@ export class ServerBuilder implements SubscriptionLike {
                     ),
                     allowedChatSubscriptionTiers:
                         options.ai.chat.allowedSubscriptionTiers,
+                    tokenModifierRatio: options.ai.chat.tokenModifierRatio,
                 },
             };
         }

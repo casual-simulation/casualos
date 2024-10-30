@@ -90,6 +90,13 @@ export interface AIChatOptions {
      * - An array of strings indicates that only users with the given subscription tiers are allowed.
      */
     allowedChatSubscriptionTiers: true | string[];
+
+    /**
+     * A mapping of token modifiers and their respective numerical ratios.
+     *
+     * - The keys represent different token modifier names, while the values are the numeric ratios associated with each modifier.
+     */
+    tokenModifierRatio: Record<string, number>;
 }
 
 export interface AllowedAIChatModel {
