@@ -283,11 +283,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             partitions.shared = {
                 type: 'yjs',
                 remoteEvents: true,
+                branch: `${origin.recordName ?? ''}/${
+                    origin.inst
+                }/${DEFAULT_BRANCH_NAME}`,
                 localPersistence: {
                     saveToIndexedDb: true,
-                    database: `${origin.recordName ?? ''}/${
-                        origin.inst
-                    }/${DEFAULT_BRANCH_NAME}`,
                 },
                 connectionId: configBotId,
             };
