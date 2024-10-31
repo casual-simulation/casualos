@@ -37,7 +37,9 @@ services:
             - '6379:6379'
         networks:
             - enable_ipv6
-        command: ['redis-server', '--bind', '0.0.0.0', '::']
+        volumes:
+            - ./conf/redis.conf:/etc/redis.conf
+        command: ['redis-server', '/etc/redis.conf']
     livekit:
         image: livekit/livekit-server:v1.6.1
         restart: always
