@@ -147,6 +147,7 @@ import {
     recordLoom,
     watchLoom,
     getLoomMetadata,
+    loadSharedDocument,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -9026,6 +9027,79 @@ describe('AuxLibrary', () => {
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.getSharedDocument()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        record: 'record',
+                        inst: 'inst',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should emit a LoadSharedDocumentAction', () => {
+                const promise: any = library.api.os.getSharedDocument('docId');
+                const expected = loadSharedDocument(
+                    'record',
+                    'inst',
+                    'docId',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document from a different inst', () => {
+                const promise: any = library.api.os.getSharedDocument(
+                    'record2',
+                    'inst2',
+                    'docId'
+                );
+                const expected = loadSharedDocument(
+                    'record2',
+                    'inst2',
+                    'docId',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getLocalDocument()', () => {
+            it('should emit a LoadSharedDocumentAction', () => {
+                const promise: any = library.api.os.getLocalDocument('docId');
+                const expected = loadSharedDocument(
+                    null,
+                    null,
+                    'docId',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getMemoryDocument()', () => {
+            it('should emit a LoadSharedDocumentAction', () => {
+                const promise: any = library.api.os.getMemoryDocument();
+                const expected = loadSharedDocument(
+                    null,
+                    null,
+                    null,
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

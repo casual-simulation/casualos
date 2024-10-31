@@ -254,6 +254,8 @@ import {
     watchLoom,
     LoomVideoEmbedMetadata,
     getLoomMetadata,
+    loadSharedDocument,
+    LoadSharedDocumentAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     AIChatOptions,
@@ -477,6 +479,7 @@ import type {
     CrudRecordItemResult,
 } from '@casual-simulation/aux-records/crud/CrudRecordsController';
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
+import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3349,6 +3352,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 mergeInstUpdates,
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
+
+                getSharedDocument,
+                getLocalDocument,
+                getMemoryDocument,
 
                 beginAudioRecording,
                 endAudioRecording,
@@ -11123,6 +11130,79 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             undefined,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a shared document record from this inst by its name.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     *
+     * @param name The name of the shared document.
+     *
+     * @example Get a shared document from the current inst by name.
+     * const sharedDocument = await os.getSharedDocument('myDocument');
+     */
+    function getSharedDocument(name: string): Promise<SharedDocument>;
+
+    /**
+     * Gets a shared document record from the given inst by its name.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param recordName The name of the record. If null, then a public inst will be used.
+     * @param inst The name of the inst that the shared document is in.
+     * @param branch The name of the branch that the shared document is in.
+     */
+    function getSharedDocument(
+        recordName: string | null,
+        inst: string,
+        name: string
+    ): Promise<SharedDocument>;
+
+    function getSharedDocument(
+        recordOrName: string,
+        inst?: string,
+        name?: string
+    ): Promise<SharedDocument> {
+        const task = context.createTask();
+
+        let event: LoadSharedDocumentAction;
+        if (!inst && !name) {
+            inst = getCurrentServer();
+            const recordName = getCurrentInstRecord();
+            event = loadSharedDocument(
+                recordName,
+                inst,
+                recordOrName,
+                task.taskId
+            );
+        } else {
+            event = loadSharedDocument(recordOrName, inst, name, task.taskId);
+        }
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a shared document that is only stored locally on this device.
+     * @param name The name of the document.
+     */
+    function getLocalDocument(name: string): Promise<SharedDocument> {
+        const task = context.createTask();
+        const event = loadSharedDocument(null, null, name, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a document that is not shared or saved to the device.
+     */
+    function getMemoryDocument(): Promise<SharedDocument> {
+        const task = context.createTask();
+        const event = loadSharedDocument(null, null, null, task.taskId);
         return addAsyncAction(task, event);
     }
 
