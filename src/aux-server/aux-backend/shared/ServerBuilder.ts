@@ -50,6 +50,8 @@ import {
     NotificationRecordsController,
     NotificationRecordsStore,
     WebPushInterface,
+    XpStore,
+    XpController,
 } from '@casual-simulation/aux-records';
 import {
     RekognitionModerationJobProvider,
@@ -191,6 +193,7 @@ import {
 import { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { PrismaXpStore } from 'aux-backend/prisma/PrismaXpStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -289,6 +292,9 @@ export class ServerBuilder implements SubscriptionLike {
     private _notificationsStore: NotificationRecordsStore;
     private _pushInterface: WebPushInterface;
     private _notificationsController: NotificationRecordsController;
+
+    private _xpStore: XpStore;
+    private _xpController: XpController;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -681,6 +687,7 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             metricsStore
         );
+        this._xpStore = new PrismaXpStore(prismaClient);
 
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         return {
@@ -1582,6 +1589,10 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
+        if (!this._xpStore) {
+            throw new Error('An xp store must be configured!');
+        }
+
         if (!this._rateLimitController) {
             console.log('[ServerBuilder] Not using rate limiting.');
         }
@@ -1713,6 +1724,14 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._xpStore) {
+            this._xpController = new XpController({
+                xpStore: this._xpStore,
+                authController: this._authController,
+                authStore: this._authStore,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1733,6 +1752,7 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             webhooksController: this._webhooksController,
             notificationsController: this._notificationsController,
+            xpController: this._xpController,
         });
 
         const buildReturn: BuildReturn = {
