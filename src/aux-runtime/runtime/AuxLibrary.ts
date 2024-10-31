@@ -3213,6 +3213,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCurrentDimension,
                 getCurrentServer,
                 getCurrentInst: getCurrentServer,
+                getCurrentInstRecord,
                 getMenuDimension,
                 getMiniPortalDimension,
                 getPortalDimension,
@@ -7240,6 +7241,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return undefined;
         }
         return undefined;
+    }
+
+    /**
+     * Gets the record that the inst was loaded from.
+     * Null if the inst is local or public.
+     *
+     * @dochash actions/os/portals
+     * @docname os.getCurrentInstRecord
+     * @docgroup 10-config-values
+     */
+    function getCurrentInstRecord(): string | null {
+        const user = context.playerBot;
+        if (user) {
+            return getTag(user, 'record') ?? null;
+        }
+
+        return null;
     }
 
     /**

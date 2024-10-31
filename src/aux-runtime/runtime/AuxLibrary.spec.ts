@@ -5390,6 +5390,27 @@ describe('AuxLibrary', () => {
             );
         });
 
+        describe('os.getCurrentInstRecord()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return record', () => {
+                player.tags.record = 'record';
+                const result = library.api.os.getCurrentInstRecord();
+                expect(result).toEqual('record');
+            });
+
+            it('should return null if record is not set', () => {
+                const result = library.api.os.getCurrentInstRecord();
+                expect(result).toBe(null);
+            });
+        });
+
         describe('os.getMiniPortalDimension()', () => {
             let player: RuntimeBot;
 
