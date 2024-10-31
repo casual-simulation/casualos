@@ -44,10 +44,7 @@ import {
     MaxInstSizeReachedClientError,
     RateLimitExceededMessage,
 } from '../websockets';
-import {
-    RemoteSharedDocumentConfig,
-    SharedDocumentConfig,
-} from './SharedDocumentConfig';
+import { SharedDocumentConfig } from './SharedDocumentConfig';
 import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
 import { fromByteArray, toByteArray } from 'base64-js';
@@ -57,11 +54,22 @@ import {
     getConnectionId,
     StatusUpdate,
 } from '../common';
-import { InstUpdate } from '../bots';
 import {
     YjsSharedDocument,
     APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN,
 } from './YjsSharedDocument';
+import { SharedDocumentServices } from './SharedDocumentFactories';
+
+export function createRemoteClientYjsSharedDocument(
+    config: SharedDocumentConfig,
+    services: SharedDocumentServices,
+    client: InstRecordsClient
+) {
+    if (!config.inst) {
+        return null;
+    }
+    return new RemoteYjsSharedDocument(client, services.authSource, config);
+}
 
 /**
  * Defines a shared document that is able to use YJS and a InstRecordsClient to synchronize over the network.
@@ -87,7 +95,7 @@ export class RemoteYjsSharedDocument
     constructor(
         client: InstRecordsClient,
         authSource: PartitionAuthSource,
-        config: RemoteSharedDocumentConfig
+        config: SharedDocumentConfig
     ) {
         super(config);
         this._recordName = config.recordName;

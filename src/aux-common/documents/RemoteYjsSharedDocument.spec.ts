@@ -16,7 +16,7 @@ import {
     PartitionAuthSource,
 } from '../partitions/PartitionAuthSource';
 import { RemoteYjsSharedDocument } from './RemoteYjsSharedDocument';
-import { RemoteSharedDocumentConfig } from './SharedDocumentConfig';
+import { SharedDocumentConfig } from './SharedDocumentConfig';
 import { testDocumentImplementation } from './test/DocumentTests';
 
 console.log = jest.fn();
@@ -1927,7 +1927,7 @@ describe('RemoteYjsSharedDocument', () => {
             //     });
             // });
 
-            function setupPartition(config: RemoteSharedDocumentConfig) {
+            function setupPartition(config: SharedDocumentConfig) {
                 document = new RemoteYjsSharedDocument(
                     client,
                     authSource,

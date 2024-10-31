@@ -48,6 +48,16 @@ export const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN =
     '__apply_updates_to_inst';
 
 /**
+ * Creates a new YJS shared document.
+ * @param config The config for the document.
+ */
+export function createYjsSharedDocument(
+    config: SharedDocumentConfig
+): YjsSharedDocument {
+    return new YjsSharedDocument(config);
+}
+
+/**
  * Defines a shared document that is backed by a YJS document.
  */
 export class YjsSharedDocument implements SharedDocument {
