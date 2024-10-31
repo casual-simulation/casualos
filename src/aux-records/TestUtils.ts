@@ -14,6 +14,7 @@ import {
     buildSubscriptionConfig,
     SubscriptionConfigBuilder,
 } from './SubscriptionConfigBuilder';
+import { XpController } from 'XpController';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -81,6 +82,11 @@ export function createTestControllers(
         messenger: store,
     });
     const policies = new PolicyController(auth, records, store);
+    const xpController = new XpController({
+        authController: auth,
+        authStore: store,
+        xpStore: store,
+    });
 
     return {
         store,
@@ -92,6 +98,7 @@ export function createTestControllers(
         policyStore: store,
         policies,
         configStore: store,
+        xpController,
     };
 }
 
@@ -139,6 +146,18 @@ export async function createTestUser(
         connectionKey,
         sessionId,
     };
+}
+
+export async function createTestXpUser(
+    xpController: XpController,
+    ...createTestUserParams: Parameters<typeof createTestUser>
+) {
+    const authUser = await createTestUser(...createTestUserParams);
+    const xpUser = await xpController.getXpUser({ userId: authUser.userId });
+    if (!xpUser.success) {
+        throw new Error('Unable to create xp user!');
+    }
+    return xpUser.user;
 }
 
 export async function createTestRecordKey(
