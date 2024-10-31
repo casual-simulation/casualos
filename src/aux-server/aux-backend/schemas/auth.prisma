@@ -1157,8 +1157,8 @@ model XpUser {
     userId String @unique
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
 
-    accountId String? @db.Uuid @unique
-    account XpAccount? @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpUser_accountId_fkey1")
+    accountId String @db.Uuid @unique
+    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpUser_accountId_fkey1")
 
     // The rate at which the user is requested to be paid per gig.
     // Should have the same currency as the account.
@@ -1185,7 +1185,7 @@ model XpSystemEvent {
 
     // The ID of the XpUser that sent the event
     // Null if the event is not associated with a user
-    xpUserId String?
+    xpUserId String? @db.Uuid
     xpUser XpUser? @relation(fields: [xpUserId], references: [id], onDelete: SetNull, map: "XpEvent_xpUserId_fkey1")
 
     // The data of the event
