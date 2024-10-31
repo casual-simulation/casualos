@@ -85,6 +85,7 @@ import {
     ResourcePermissionAssignment,
     RoleAssignment,
     UpdateUserRolesResult,
+    UserPrivacyFeatures,
     getExpireTime,
     getSubjectUserId,
 } from './PolicyStore';
@@ -876,7 +877,7 @@ export class MemoryStore
         this._studioHumeConfigs.set(studioId, config);
     }
 
-    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+    async getUserPrivacyFeatures(userId: string): Promise<UserPrivacyFeatures> {
         return await this._getUserPrivacyFeatures(userId);
     }
 
@@ -2343,10 +2344,13 @@ export class MemoryStore
 
     private async _getUserPrivacyFeatures(
         userId: string
-    ): Promise<PrivacyFeatures> {
+    ): Promise<UserPrivacyFeatures> {
         const user = await this.findUser(userId);
         if (user?.privacyFeatures) {
-            return user.privacyFeatures;
+            return {
+                ...user.privacyFeatures,
+                userRole: user?.role,
+            };
         }
 
         return {
@@ -2354,6 +2358,7 @@ export class MemoryStore
             allowPublicData: true,
             allowAI: true,
             allowPublicInsts: true,
+            userRole: user?.role,
         };
     }
 

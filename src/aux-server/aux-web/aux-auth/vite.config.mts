@@ -193,7 +193,7 @@ export default defineConfig(({ command, mode }) => {
             alias: {},
         },
         server: {
-            host: '0.0.0.0',
+            host: '::',
             port: 3002,
             watch: {
                 ignored: [
