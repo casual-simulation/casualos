@@ -53,6 +53,7 @@ export interface AuxConfigParameters {
 
     /**
      * The URL that causal repo partitions should connect to.
+     * If omitted, then the URL origin will be used.
      */
     causalRepoConnectionUrl?: string;
 

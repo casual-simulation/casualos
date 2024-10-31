@@ -198,13 +198,7 @@ export class AppManager {
                       config,
                       initialState
                   )
-                : BotManager.createPartitions(
-                      id,
-                      configBotId,
-                      origin,
-                      config,
-                      this._config.causalRepoConnectionUrl
-                  );
+                : BotManager.createPartitions(id, configBotId, origin, config);
 
             const storedInst = this._db
                 ? await getItem<StoredInst>(
@@ -292,7 +286,8 @@ export class AppManager {
             forceSignedScripts: options.forceSignedScripts,
             causalRepoConnectionProtocol:
                 this._config.causalRepoConnectionProtocol,
-            causalRepoConnectionUrl: this._config.causalRepoConnectionUrl,
+            causalRepoConnectionUrl:
+                this._config.causalRepoConnectionUrl ?? location.origin,
             collaborativeRepLocalPersistence:
                 this._config.collaborativeRepoLocalPersistence,
             staticRepoLocalPersistence: this._config.staticRepoLocalPersistence,

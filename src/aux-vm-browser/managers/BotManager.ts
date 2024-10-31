@@ -180,10 +180,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         id: string,
         configBotId: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config'],
-        defaultHost: string = location.origin
+        config: AuxConfig['config']
     ): AuxPartitionConfig {
-        const host = origin.host ?? defaultHost;
+        const host = origin.host ?? config.causalRepoConnectionUrl;
+
+        if (!host) {
+            throw new Error('[BotManager] Host is required.');
+        }
+
         const protocol = config.causalRepoConnectionProtocol;
         const versions = config.sharedPartitionsVersion;
         const localPersistence =
