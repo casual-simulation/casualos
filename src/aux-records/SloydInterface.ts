@@ -8,7 +8,7 @@ import {
     SloydModelMimeTypes,
 } from './AISloydInterface';
 import axios from 'axios';
-import { handleAxiosErrors } from 'Utils';
+import { handleAxiosErrors } from './Utils';
 
 export interface SloydOptions {
     clientId: string;
