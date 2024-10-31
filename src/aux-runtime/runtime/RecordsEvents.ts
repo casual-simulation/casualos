@@ -5,6 +5,7 @@ import type {
     WebhookRecord,
     NotificationRecord,
     PushNotificationPayload,
+    XpController,
 } from '@casual-simulation/aux-records';
 import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
 import {
@@ -2162,6 +2163,29 @@ export function listUserNotificationSubscriptions(
         {
             listUserNotificationSubscriptions: {
                 input: {},
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that can be used to provide meta data on an auth users Xp (user) identity.
+ */
+export function getXpUserMeta(
+    by: { userId?: string; xpId?: string } | string | undefined,
+    options: RecordActionOptions,
+    taskId: string | number
+) {
+    if (typeof by === 'string') by = { userId: by };
+    if (!by) by = {};
+    return recordsCallProcedure(
+        {
+            getXpUserMeta: {
+                input: {
+                    ...by,
+                },
             },
         },
         options,

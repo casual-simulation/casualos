@@ -322,6 +322,7 @@ import {
     SendNotificationOptions,
     listNotificationSubscriptions as calcListNotificationSubscriptions,
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
+    getXpUserMeta,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3483,6 +3484,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 get: makeMockableFunction(webGet, 'web.get'),
                 post: makeMockableFunction(webPost, 'web.post'),
                 hook: makeMockableFunction(webhook, 'web.hook'),
+            },
+
+            xp: {
+                getUserMeta: async function (
+                    by?: {} | string,
+                    options: RecordActionOptions = {}
+                ) {
+                    const task = context.createTask();
+                    const action = getXpUserMeta(by, options, task.taskId);
+                    return await addAsyncResultAction(task, action);
+                },
             },
 
             analytics: {
