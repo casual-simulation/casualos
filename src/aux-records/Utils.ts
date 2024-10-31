@@ -563,6 +563,52 @@ export function cleanupObject<T extends Object>(obj: T): Partial<T> {
 //     };
 // }
 
+// ! Implementation is WIP
+// /**
+//  * Generates a custom asymmetric matcher used by jest.
+//  * * (Similar to expect.any)
+//  * @param asymmetricMatcher The function to run on the value to indicate whether or not its as expected
+//  * @param toString The string provider of the expected values state/type
+//  * @param getExpectedType The string provider of the expected values type(s)
+//  */
+// export function jestCustomAsymmetricMatcher(
+//     asymmetricMatcher: (value: any) => boolean,
+//     toAsymmetricMatcher: () => string,
+//     toString?: () => string,
+//     getExpectedType?: () => string
+// ) {
+//     return {
+//         $$typeof: Symbol.for('jest.asymmetricMatcher'),
+//         asymmetricMatcher,
+//         toAsymmetricMatcher,
+//         toString,
+//         getExpectedType,
+//     };
+// }
+
+/**
+ * A function which returns true if param val is found to be type / instance of any specified in param constructorArray
+ * @param val The value whose type / instance to check the presence of in constructorArray
+ * @param constructorArray The array which contains the allowed types / instances for parameter val
+ */
+export function isOfXType<T>(
+    val: T,
+    constructorArray: Array<Function | undefined | null>
+): boolean {
+    return constructorArray.some((constructor) => {
+        return constructor === String ||
+            constructor === Number ||
+            constructor === Boolean ||
+            constructor === Symbol ||
+            constructor === BigInt ||
+            constructor === undefined
+            ? typeof val === (constructor?.name?.toLowerCase() ?? 'undefined')
+            : constructor === null
+            ? val === null
+            : val instanceof constructor;
+    });
+}
+
 /**
  * Clones the given record or returns null if the record is undefined.
  * @param record The record to clone.
@@ -588,6 +634,36 @@ export function tryParseJson(json: string): JsonParseResult {
             success: false,
             error: err,
         };
+    }
+}
+
+/**
+ * Attempts to run the given function and logs an error if it fails with a standard error format which includes the scope and message.
+ * @param fn The function to run.
+ * @param errConfig The configuration for proper logging and return value if an error occurs.
+ */
+export async function tryScope<T, E>(
+    fn: () => T,
+    errConfig: {
+        /** The scope of the function. E.g. [ClassName, FunctionName] */
+        scope: Array<string> | string;
+        /** The message to log if an error occurs. */
+        errMsg: string;
+        /** The value to return if an error occurs. */
+        returnOnError?: E;
+    }
+): Promise<T | E> {
+    try {
+        return await fn();
+    } catch (err) {
+        console.error(
+            Array.isArray(errConfig.scope)
+                ? errConfig.scope.map((s) => `[${s}]`).join(' ')
+                : `[${errConfig.scope}]`,
+            errConfig.errMsg,
+            err
+        );
+        return errConfig.returnOnError;
     }
 }
 
