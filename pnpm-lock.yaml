@@ -1804,8 +1804,6 @@ importers:
         specifier: 8.0.0-alpha.14
         version: 8.0.0-alpha.14
 
-  src/xp-api: {}
-
 packages:
 
   /0x@5.7.0:
