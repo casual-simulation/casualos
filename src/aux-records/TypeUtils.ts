@@ -426,24 +426,30 @@ export type StoreOfModel<
  * @template S The success state of the action
  * @template T The type of the result to be included in the action result
  */
-export type ActionResult_T<
-    S extends boolean,
-    T extends Record<keyof any, unknown>
-> = {
+export type ActionResult_T<S extends boolean, T extends object> = {
     /** The result success state of the action */
     success: S;
 } & T;
 
 /**
- * A Generic utility type which represents a successful action result
+ * A Generic utility type which represents an action result with a success state and a result
  * @template S The success state of the action
+ * @template T The type of the result to be included in the action result
  */
-export type ActionResult<S extends boolean = true | false> = ActionResult_T<
-    S,
-    S extends true
+export type SuccessResult<
+    S extends boolean = true | false,
+    T extends object = S extends true
         ? {}
         : {
+              /** The error code */
+              errorCode: string;
               /** The error message */
-              message: string;
+              errorMessage?: string;
           }
->;
+> = ActionResult_T<S, T>;
+
+/**
+ * A Generic Promise utility type which extracts the type of a promise's resolved value
+ * @template T The type of the promise to extract the resolved value from
+ */
+export type PromiseT<T> = T extends Promise<infer U> ? U : T;

@@ -156,7 +156,7 @@ import {
     XpStore,
     XpUser,
 } from './XpStore';
-import { ActionResult } from './TypeUtils';
+import { SuccessResult } from './TypeUtils';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -370,32 +370,34 @@ export class MemoryStore
     async saveXpAccount(
         associationId: XpUser['id'] | XpContract['id'],
         account: XpAccount
-    ): Promise<ActionResult> {
+    ): Promise<SuccessResult> {
         this._xpAccounts.set(associationId, account);
         return {
             success: true,
         };
     }
 
-    async saveXpUser(id: XpUser['id'], user: XpUser): Promise<ActionResult> {
+    async createXpUserWithAccount(user: XpUser, account: XpAccount) {
+        this._xpUsers.set(user.id, user);
+        this._xpAccounts.set(account.id, account);
+    }
+
+    async saveXpUser(id: XpUser['id'], user: XpUser): Promise<SuccessResult> {
         this._xpUsers.set(id, user);
         return {
             success: true,
         };
     }
 
-    async getXpUser(
-        ...args: Parameters<XpStore['getXpUser']>
-    ): Promise<XpUser> {
-        /** The id containing object */
-        const idKey = args[0];
-        const user =
-            idKey.type === 'auth'
-                ? Array.from(this._xpUsers.values()).find(
-                      (u: XpUser) => u.userId === idKey.id
-                  )
-                : this._xpUsers.get(idKey.id);
+    async getXpUserByAuthId(id: AuthUser['id']): Promise<XpUser> {
+        const user = Array.from(this._xpUsers.values()).find(
+            (u: XpUser) => u.userId === id
+        );
         return cloneDeepNull(user ?? undefined);
+    }
+
+    async getXpUserById(id: XpUser['id']): Promise<XpUser> {
+        return cloneDeep(this._xpUsers.get(id) ?? undefined);
     }
 
     async getXpAccount(
