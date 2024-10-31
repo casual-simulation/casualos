@@ -129,6 +129,7 @@ import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
+import { XpController } from 'XpController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -365,6 +366,12 @@ export interface RecordsServerOptions {
      * If null, then notifications are not supported.
      */
     notificationsController?: NotificationRecordsController | null;
+
+    /**
+     * The controller that should be used for handling XP requests.
+     * If null, then XP is not supported.
+     */
+    xpController?: XpController | null; // TODO: Determine whether or not this should be optional
 }
 
 /**
@@ -385,6 +392,7 @@ export class RecordsServer {
     private _loomController: LoomController | null;
     private _webhooksController: WebhookRecordsController | null;
     private _notificationsController: NotificationRecordsController | null;
+    private _xpController: XpController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -452,6 +460,7 @@ export class RecordsServer {
         loomController,
         webhooksController,
         notificationsController,
+        xpController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -473,6 +482,7 @@ export class RecordsServer {
         this._loomController = loomController;
         this._webhooksController = webhooksController;
         this._notificationsController = notificationsController;
+        this._xpController = xpController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -2088,6 +2098,49 @@ export class RecordsServer {
                         await this._notificationsController.getApplicationServerKey();
 
                     return result;
+                }),
+
+            getXpUserMeta: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/xp/user')
+                .inputs(
+                    z.object({
+                        userId: z.string().optional().nullable(),
+                        xpId: z.string().optional().nullable(),
+                    })
+                )
+                .handler(async (input, context) => {
+                    const authUser = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (!authUser.success) {
+                        return authUser;
+                    }
+                    if (!input.userId && !input.xpId && !authUser.userId) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'One of properties userId or xpId must be provided.',
+                        };
+                    }
+                    if (input.userId && input.xpId) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'You cannot provide both userId and xpId.\nProperties are mutually exclusive.',
+                        };
+                    }
+                    //* An empty string for any of the query types will be treated as the current logged in user
+                    const user = await this._xpController.getXpUser(
+                        input.xpId
+                            ? { xpId: input.xpId }
+                            : input.userId
+                            ? { userId: input.userId }
+                            : { userId: authUser.userId }
+                    );
+                    return user;
                 }),
 
             listRecords: procedure()

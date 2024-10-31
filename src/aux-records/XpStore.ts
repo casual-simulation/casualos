@@ -1,6 +1,6 @@
 import { AuthUser } from 'AuthStore';
 import {
-    ActionResult,
+    SuccessResult,
     DateMS,
     GenericTimeKeys,
     GigQty,
@@ -8,6 +8,16 @@ import {
 } from './TypeUtils';
 
 export type XpStore = {
+    /**
+     * Create an xp user with an associated account
+     * @param user The user to create
+     * @param account The account to create
+     */
+    createXpUserWithAccount: (
+        user: XpUser,
+        account: XpAccount
+    ) => Promise<void>;
+
     /**
      * Get an xp account by its id
      * @param accountId The id of the account to get
@@ -35,26 +45,16 @@ export type XpStore = {
     getXpInvoice: (invoiceId: XpInvoice['id']) => Promise<XpInvoice>;
 
     /**
-     * Get an xp user by their xp or auth id
-     * @param id The id of the user to get
+     * Get an xp user by their auth id
+     * @param id The auth user id of the user to get
      */
-    getXpUser: (
-        id:
-            | {
-                  /**
-                   * The auth id of the xp user to get
-                   */
-                  id: AuthUser['id'];
-                  type: 'auth';
-              }
-            | {
-                  /**
-                   * The xp id of the xp user to get
-                   */
-                  id: XpUser['id'];
-                  type: 'xp';
-              }
-    ) => Promise<XpUser>;
+    getXpUserByAuthId: (id: AuthUser['id']) => Promise<XpUser>;
+
+    /**
+     * Get an xp user by their xp id
+     * @param id The xp user id of the xp user to get
+     */
+    getXpUserById: (id: XpUser['id']) => Promise<XpUser>;
 
     /**
      * Save an xp account for a user or contract
@@ -64,14 +64,14 @@ export type XpStore = {
     saveXpAccount<T extends 'user' | 'contract' = 'user'>(
         associationId: T extends 'user' ? XpUser['id'] : XpContract['id'],
         account: XpAccount
-    ): Promise<ActionResult>;
+    ): Promise<SuccessResult>;
 
     /**
      * Save an xp user associated with the given auth user
      * @param id The id of the xp user to create an account for (uuid) not the auth user id
      * @param user The meta data to associate with the user
      */
-    saveXpUser: (id: XpUser['id'], user: XpUser) => Promise<ActionResult>;
+    saveXpUser: (id: XpUser['id'], user: XpUser) => Promise<SuccessResult>;
 
     /**
      * Performs a transaction consisting of multiple entries
@@ -92,8 +92,8 @@ export interface ModelBase extends GenericTimeKeys {
  * Data to be returned within get invocation results on each model
  */
 export interface XpUser extends ModelBase {
-    /** The id of the associated account (null if not yet set up) */
-    accountId: XpAccount['id'] | null;
+    /** The id of the associated account */
+    accountId: XpAccount['id'];
     /** The rate at which the user is requesting payment (null if not yet specified) */
     requestedRate: number | null;
     /** The users unique id from the Auth system */

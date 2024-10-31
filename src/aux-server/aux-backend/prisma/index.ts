@@ -5,3 +5,4 @@ export * from './PrismaFileRecordsLookup';
 export * from './PrismaPolicyStore';
 export * from './PrismaRecordsStore';
 export * from './PrismaConfigurationStore';
+export * from './PrismaXpStore';
