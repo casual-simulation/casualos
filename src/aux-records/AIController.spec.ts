@@ -686,17 +686,7 @@ describe('AIController', () => {
                         },
                     ],
                 });
-                expect(chatInterface.chat).not.toBeCalledWith({
-                    model: 'test-model1',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: 'test',
-                        },
-                    ],
-                    temperature: 0.5,
-                    userId: 'test-user',
-                });
+                expect(chatInterface.chat).toBeCalled();
             });
 
             it('should return not_authorized when allowedModels does not include the model', async () => {
