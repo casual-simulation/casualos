@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V3.3.13
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added shared documents.
+    -   Shared documents utilize insts to be able to share data without using bots and tags.
+    -   Additionally, shared documents can be loaded and unloaded at will.
+    -   The following functions have been added:
+        -   `os.getSharedDocument(name)` - Gets a document that is stored in the current inst.
+        -   `os.getSharedDocument(recordName, inst, name)` - Gets a document that is stored in the specified inst.
+        -   `os.getLocalDocument(name)` - Gets a document that is stored on this device.
+        -   `os.getMemoryDocument()` - Gets a document that is stored in memory and cleared upon refresh.
+
 ## V3.3.12
 
 #### Date: 10/25/2024
