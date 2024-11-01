@@ -612,15 +612,6 @@ export class AIController {
 
             if (allowedFeatures.ai.chat.allowedModels) {
                 const allowedModels = allowedFeatures.ai.chat.allowedModels;
-                if (
-                    !allowedModels ||
-                    allowedModels.length === 0 ||
-                    allowedModels.includes(model)
-                ) {
-                    return {
-                        success: true,
-                    };
-                }
                 return {
                     success: false,
                     errorCode: 'not_authorized',
