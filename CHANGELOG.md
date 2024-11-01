@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.3.13
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added `ai.chat.allowedModels` feature to enforce model usage limits, restricting access to specific models based on configuration.
+
 ## V3.3.12
 
 #### Date: 10/25/2024
@@ -93,7 +101,6 @@
     -   Supports loading meshes stored in the [Three.js JSON Object Scene format](https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4).
     -   Works similarly to `gltf`, but it uses [ObjectLoader](https://threejs.org/docs/?q=loader#api/en/loaders/ObjectLoader) to load meshes from the URL specified in the `formAddress` tag.
 -   Improved the sheetPortal to only create bots in insts that are showing the sheetPortal.
--   Added `ai.chat.allowedModels` feature to enforce model usage limits, restricting access to specific models based on configuration.
 
 ### :bug: Bug Fixes
 
