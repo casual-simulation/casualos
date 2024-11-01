@@ -2536,6 +2536,16 @@ describe('PolicyController', () => {
             ['grant', 'resourceId'],
             ['revoke', 'resourceId'],
             ['run', 'resourceId'],
+            ['send', 'resourceId'],
+            ['subscribe', 'resourceId'],
+            ['listSubscriptions', 'resourceId'],
+        ];
+
+        const moderatorActionCases: [ActionKinds][] = [
+            ['read'],
+            ['list'],
+            ['count'],
+            ['listSubscriptions'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -2549,6 +2559,7 @@ describe('PolicyController', () => {
             ['ai.sloyd'],
             ['ai.hume'],
             ['webhook'],
+            ['notification'],
         ];
 
         // Admins can perform all actions on all resources
@@ -2792,6 +2803,56 @@ describe('PolicyController', () => {
                                 expireTimeMs: null,
                             },
                             explanation: 'Role is "admin".',
+                        });
+                    });
+
+                    it('should allow the action if the user is a superUser', async () => {
+                        const user = await store.findUser(userId);
+                        await store.saveUser({
+                            ...user,
+                            role: 'superUser',
+                        });
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: userId,
+                                subjectType: 'user',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+
+                                // The role that record owners recieve
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // resourceKind and action are null because this permission
+                                // applies to all resources and actions.
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'User is a superUser.',
                         });
                     });
 
@@ -3141,6 +3202,100 @@ describe('PolicyController', () => {
                             },
                         });
                     });
+
+                    if (moderatorActionCases.some(([a]) => action === a)) {
+                        it('should allow the action if the user is a moderator', async () => {
+                            const user = await store.findUser(userId);
+                            await store.saveUser({
+                                ...user,
+                                role: 'moderator',
+                            });
+
+                            const context =
+                                await controller.constructAuthorizationContext({
+                                    recordKeyOrRecordName: recordName,
+                                    userId: userId,
+                                });
+
+                            const result = await controller.authorizeSubject(
+                                context,
+                                {
+                                    subjectId: userId,
+                                    subjectType: 'user',
+                                    resourceKind: resourceKind,
+                                    action: action,
+                                    resourceId: resourceId,
+                                    markers: [marker],
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName,
+                                    userId: null,
+
+                                    // The role that record owners recieve
+                                    subjectType: 'role',
+                                    subjectId: ADMIN_ROLE_NAME,
+
+                                    // resourceKind and action are null because this permission
+                                    // applies to all resources and actions.
+                                    resourceKind: null,
+                                    action: action,
+
+                                    marker: marker,
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: 'User is a moderator.',
+                            });
+                        });
+                    } else {
+                        it('should deny the action even if the user is a moderator', async () => {
+                            const user = await store.findUser(userId);
+                            await store.saveUser({
+                                ...user,
+                                role: 'moderator',
+                            });
+
+                            const context =
+                                await controller.constructAuthorizationContext({
+                                    recordKeyOrRecordName: recordName,
+                                    userId: userId,
+                                });
+
+                            const result = await controller.authorizeSubject(
+                                context,
+                                {
+                                    subjectId: userId,
+                                    subjectType: 'user',
+                                    resourceKind: resourceKind,
+                                    action: action,
+                                    resourceId: resourceId,
+                                    markers: [marker],
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName: recordName,
+                                    subjectType: 'user',
+                                    subjectId: userId,
+                                    resourceKind: resourceKind,
+                                    action: action,
+                                    resourceId: resourceId,
+                                },
+                            });
+                        });
+                    }
                 }
             );
         });
@@ -3451,6 +3606,28 @@ describe('PolicyController', () => {
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
                     ['run', 'resourceId'],
+                ],
+            ],
+            [
+                'notification',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
                 ],
             ],
         ];
@@ -3971,6 +4148,29 @@ describe('PolicyController', () => {
             ],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -4038,6 +4238,14 @@ describe('PolicyController', () => {
             ['event', [['count', 'resourceId']]],
             ['inst', [['read', 'resourceId']]],
             ['webhook', [['run', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['read', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -4149,6 +4357,14 @@ describe('PolicyController', () => {
                 ],
             ],
             ['webhook', [['run', 'resourceId']]],
+            [
+                'notification',
+                [
+                    ['read', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicWriteSubjectTypeCases: [
@@ -4235,6 +4451,7 @@ describe('PolicyController', () => {
                         checkEmail: jest.fn(),
                         checkDisplayName: jest.fn(),
                         generateLogoutUrl: jest.fn(),
+                        resendConsentRequest: jest.fn(),
                     };
                     auth = new AuthController(
                         store,
@@ -4292,6 +4509,7 @@ describe('PolicyController', () => {
                                 publishData: false,
                             },
                             sendNotLoggedIn: true,
+                            userRole: 'none',
                         },
                     });
 

@@ -43,7 +43,14 @@ import {
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
-import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import {
+    canExpire,
+    getSessionKeyExpiration,
+    isExpired,
+    parseSessionKey,
+    timeUntilRefresh,
+    willExpire,
+} from '@casual-simulation/aux-records/AuthUtils';
 import {
     BehaviorSubject,
     Subject,
@@ -70,8 +77,6 @@ import {
 } from '@simplewebauthn/browser';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
-
-const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
 const CURRENT_PROTOCOL_VERSION = 11;
 
@@ -170,11 +175,8 @@ export class AuthHandler implements AuxAuth {
     async isLoggedIn(): Promise<boolean> {
         await this._init();
         if (this._loggedIn) {
-            const expiry = this._getTokenExpirationTime(this._token);
-            if (expiry < 0 || !isFinite(expiry)) {
-                return true; // Token does not expire.
-            }
-            if (Date.now() < expiry) {
+            const expiry = getSessionKeyExpiration(this._token);
+            if (!isExpired(expiry)) {
                 return true;
             }
         }
@@ -655,14 +657,6 @@ export class AuthHandler implements AuxAuth {
         });
     }
 
-    private _getTokenExpirationTime(token: string): number {
-        const parsed = parseSessionKey(token);
-        if (!parsed) {
-            return -1;
-        }
-        return parsed[3];
-    }
-
     private async _checkLoginStatus() {
         console.log('[AuthHandler] Checking login status...');
         const loggedIn = authManager.isLoggedIn();
@@ -883,14 +877,20 @@ export class AuthHandler implements AuxAuth {
         await authManager.loadUserInfo();
         await this._loadUserInfo();
 
-        if (!cancelSignal.canceled && browserSupportsWebAuthn()) {
-            // show prompt to add a key
+        let showingInterstital = false;
+
+        if (!cancelSignal.canceled && login.metadata) {
+            showingInterstital = true;
             this._loginUIStatus.next({
-                page: 'show_register_webauthn',
+                page: 'handle_login_metadata',
+                metadata: login.metadata,
+                method: 'code',
                 apiEndpoint: authManager.apiEndpoint,
                 authenticationHeaders: authManager.getAuthenticationHeaders(),
             });
-        } else {
+        }
+
+        if (!showingInterstital) {
             this._loginUIStatus.next({
                 page: false,
             });
@@ -1106,24 +1106,28 @@ export class AuthHandler implements AuxAuth {
         if (this._refreshTimeout) {
             clearTimeout(this._refreshTimeout);
         }
-        const expiry = this._getTokenExpirationTime(token);
+        const expiry = getSessionKeyExpiration(token);
 
-        if (expiry < 0 || !isFinite(expiry)) {
+        if (!canExpire(expiry)) {
             console.log('[AuthHandler] Token does not expire.');
             return;
         }
 
-        const now = Date.now();
-        const lifetimeMs = expiry - now;
-        const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
-        console.log(
-            '[AuthHandler] Refreshing token in',
-            refreshTimeMs / 1000,
-            'seconds'
-        );
-        this._refreshTimeout = setTimeout(() => {
+        const refreshTimeMs = timeUntilRefresh(expiry);
+        if (refreshTimeMs <= 0) {
+            // refresh now
             this._refreshToken();
-        }, refreshTimeMs);
+        } else {
+            // refresh in the future
+            console.log(
+                '[AuthHandler] Refreshing token in',
+                refreshTimeMs / 1000,
+                'seconds'
+            );
+            this._refreshTimeout = setTimeout(() => {
+                this._refreshToken();
+            }, refreshTimeMs);
+        }
     }
 
     private async _refreshToken() {

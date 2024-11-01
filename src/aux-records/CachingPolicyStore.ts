@@ -18,6 +18,7 @@ import {
     PolicyStore,
     ResourcePermissionAssignment,
     UpdateUserRolesResult,
+    UserPrivacyFeatures,
     getExpireTime,
 } from './PolicyStore';
 import { Cache } from './Cache';
@@ -43,7 +44,7 @@ export class CachingPolicyStore implements PolicyStore {
     }
 
     // TODO: Add caching for these methods when needed.
-    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+    async getUserPrivacyFeatures(userId: string): Promise<UserPrivacyFeatures> {
         return await this._store.getUserPrivacyFeatures(userId);
     }
 

@@ -32,7 +32,7 @@ import {
     CachingPolicyStore,
     CachingConfigStore,
     notificationsSchema,
-    NotificationMessenger,
+    SystemNotificationMessenger,
     MultiNotificationMessenger,
     ModerationController,
     ModerationStore,
@@ -47,6 +47,9 @@ import {
     WebhookRecordsStore,
     WebhookEnvironment,
     cleanupObject,
+    NotificationRecordsController,
+    NotificationRecordsStore,
+    WebPushInterface,
 } from '@casual-simulation/aux-records';
 import {
     RekognitionModerationJobProvider,
@@ -186,6 +189,8 @@ import {
     RemoteSimulationImpl,
 } from '@casual-simulation/aux-vm-client';
 import { AuxConfigParameters } from '@casual-simulation/aux-vm';
+import { WebPushImpl } from '../notifications/WebPushImpl';
+import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -280,6 +285,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _webhooksStore: WebhookRecordsStore;
     private _webhookEnvironment: WebhookEnvironment;
     private _webhooksController: WebhookRecordsController;
+
+    private _notificationsStore: NotificationRecordsStore;
+    private _pushInterface: WebPushInterface;
+    private _notificationsController: NotificationRecordsController;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -665,6 +674,10 @@ export class ServerBuilder implements SubscriptionLike {
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
         this._webhooksStore = new PrismaWebhookRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._notificationsStore = new PrismaNotificationRecordsStore(
             prismaClient,
             metricsStore
         );
@@ -1161,12 +1174,12 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useNotifications(
+    useSystemNotifications(
         options: Pick<ServerConfig, 'notifications'> = this._options
     ): this {
-        console.log('[ServerBuilder] Using notifications.');
+        console.log('[ServerBuilder] Using system notifications.');
         if (!options.notifications) {
-            throw new Error('Notifications options must be provided.');
+            throw new Error('System notifications options must be provided.');
         }
 
         const notifications = options.notifications;
@@ -1175,18 +1188,36 @@ export class ServerBuilder implements SubscriptionLike {
         );
 
         if (notifications.slack) {
-            console.log('[ServerBuilder] Using Slack notifications.');
+            console.log('[ServerBuilder] Using Slack system notifications.');
             this._notificationMessenger.addMessenger(
                 new SlackNotificationMessenger(notifications.slack)
             );
         }
 
         if (notifications.telegram) {
-            console.log('[ServerBuilder] Using Telegram notifications.');
+            console.log('[ServerBuilder] Using Telegram system notifications.');
             this._notificationMessenger.addMessenger(
                 new TelegramNotificationMessenger(notifications.telegram)
             );
         }
+
+        return this;
+    }
+
+    useWebPushNotifications(
+        options: Pick<ServerConfig, 'webPush'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Web Push notifications.');
+
+        if (!options.webPush) {
+            throw new Error('Web Push options must be provided.');
+        }
+
+        this._pushInterface = new WebPushImpl({
+            vapidSubject: options.webPush.vapidSubject,
+            vapidPublicKey: options.webPush.vapidPublicKey,
+            vapidPrivateKey: options.webPush.vapidPrivateKey,
+        });
 
         return this;
     }
@@ -1673,6 +1704,15 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._notificationsStore && this._pushInterface) {
+            this._notificationsController = new NotificationRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._notificationsStore,
+                pushInterface: this._pushInterface,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1692,6 +1732,7 @@ export class ServerBuilder implements SubscriptionLike {
             loomController: this._loomController,
             websocketRateLimitController: this._websocketRateLimitController,
             webhooksController: this._webhooksController,
+            notificationsController: this._notificationsController,
         });
 
         const buildReturn: BuildReturn = {

@@ -138,6 +138,10 @@ export default defineConfig(({ command, mode }) => ({
                               '**/*.md',
                           ],
                       },
+                      devOptions: {
+                          enabled: true,
+                          type: 'module',
+                      },
                   }),
                   writeFilesPlugin({
                       files: {
@@ -269,7 +273,7 @@ export default defineConfig(({ command, mode }) => ({
     },
     server: {
         port: 3000,
-        host: '0.0.0.0',
+        host: '::',
         watch: {
             ignored: [
                 ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),

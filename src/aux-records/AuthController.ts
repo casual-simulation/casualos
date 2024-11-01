@@ -8,6 +8,7 @@ import {
     AuthUser,
     AuthUserAuthenticator,
     SaveNewUserFailure,
+    UserLoginMetadata,
     UserRole,
 } from './AuthStore';
 import {
@@ -37,9 +38,9 @@ import {
     formatV1SessionKey,
     isSuperUserRole,
     parseSessionKey,
-    randomCode,
     verifyConnectionToken,
 } from './AuthUtils';
+import { randomCode } from './CryptoUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
 import {
@@ -187,6 +188,7 @@ export class AuthController {
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
     private _webAuthNRelyingParties: RelyingParty[];
+    private _privoEnabled: boolean;
 
     get relyingParties() {
         return this._webAuthNRelyingParties;
@@ -210,13 +212,21 @@ export class AuthController {
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
         this._webAuthNRelyingParties = relyingParties;
+        this._privoEnabled = this._privoClient !== null;
     }
 
     /**
      * Gets whether Privo-features are enabled.
      */
     get privoEnabled() {
-        return this._privoClient !== null;
+        return this._privoEnabled;
+    }
+
+    /**
+     * Sets whether Privo-features are enabled.
+     */
+    set privoEnabled(value: boolean) {
+        this._privoEnabled = value;
     }
 
     @traced(TRACE_NAME)
@@ -266,6 +276,12 @@ export class AuthController {
                     sessionKey: null,
                     connectionKey: null,
                     expireTimeMs: null,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 };
             }
         } catch (err) {
@@ -1122,6 +1138,21 @@ export class AuthController {
                     success: false,
                     errorCode: 'invalid_display_name',
                     errorMessage: 'The display name cannot contain your name.',
+                };
+            }
+
+            if (
+                request.email &&
+                request.parentEmail &&
+                request.parentEmail.localeCompare(request.email, undefined, {
+                    sensitivity: 'base',
+                }) === 0
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The parent email must be different from the child email.',
                 };
             }
 
@@ -3119,6 +3150,8 @@ export class AuthController {
             await this._store.saveSession(newSession);
         }
 
+        const metadata = await this._store.findUserLoginMetadata(userId);
+
         const info: AuthSessionInfo = {
             userId,
             sessionKey: formatV1SessionKey(
@@ -3134,6 +3167,13 @@ export class AuthController {
                 newSession.expireTimeMs
             ),
             expireTimeMs: newSession.expireTimeMs,
+            metadata: {
+                hasUserAuthenticator: metadata?.hasUserAuthenticator ?? false,
+                userAuthenticatorCredentialIds:
+                    metadata?.userAuthenticatorCredentialIds ?? [],
+                hasPushSubscription: metadata?.hasPushSubscription ?? false,
+                pushSubscriptionIds: metadata?.pushSubscriptionIds ?? [],
+            },
         };
 
         return {
@@ -3270,6 +3310,11 @@ export interface AuthSessionInfo {
      * If null, then the session will not expire.
      */
     expireTimeMs: number | null;
+
+    /**
+     * Extra metadata for the user.
+     */
+    metadata: UserLoginMetadata;
 }
 
 export interface NoSessionKeyResult {
@@ -3432,6 +3477,7 @@ export interface PrivoSignUpRequestFailure {
         | 'unacceptable_request'
         | 'email_already_exists'
         | 'parent_email_already_exists'
+        | 'child_email_already_exists'
         | 'parent_email_required'
         | 'invalid_display_name'
         | NotSupportedError

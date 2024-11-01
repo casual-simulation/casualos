@@ -142,6 +142,17 @@
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
 
+            <md-dialog-confirm
+                :md-active.sync="showNotificationPermissionDialog"
+                class="confirm-dialog"
+                md-title="Allow notifications?"
+                v-bind:md-content="showNotificationPermissionMessage"
+                md-confirm-text="Allow"
+                md-cancel-text="Reject"
+                @md-confirm="onNotificationDialogConfirm()"
+                @md-cancel="onNotificationDialogCancel()"
+            />
+
             <!-- <md-dialog
                 :md-active.sync="showNotAuthorized"
                 class="not-authorized-dialog"

@@ -8,6 +8,7 @@ import {
     SubjectType,
     PrivacyFeatures,
 } from '@casual-simulation/aux-common';
+import { UserRole } from './AuthStore';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.
@@ -99,7 +100,7 @@ export interface PolicyStore {
      * Returns null if the given user does not exist.
      * @param userId The ID of the user.
      */
-    getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures>;
+    getUserPrivacyFeatures(userId: string): Promise<UserPrivacyFeatures>;
 
     /**
      * Gets the privacy features for the owner of the given record.
@@ -780,6 +781,13 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if (resourceKind === 'notification') {
+        if (action === 'read' || action === 'list' || action === 'subscribe') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     }
 
     // All other actions are not allowed.
@@ -846,6 +854,13 @@ export function getPublicWritePermission(
                 action,
             };
         }
+    } else if (resourceKind === 'notification') {
+        if (action === 'read' || action === 'list' || action === 'subscribe') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     }
 
     return null;
@@ -890,4 +905,12 @@ export function getSubjectUserId(
         return subjectId;
     }
     return null;
+}
+
+export interface UserPrivacyFeatures extends PrivacyFeatures {
+    /**
+     * The role of the user.
+     * Null or undefined if the user doesn't have a role.
+     */
+    userRole?: UserRole | null;
 }

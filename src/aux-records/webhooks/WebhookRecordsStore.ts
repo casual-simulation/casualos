@@ -51,6 +51,12 @@ export interface WebhookRecordsStore extends CrudRecordsStore<WebhookRecord> {
     getWebhookRunInfo(runId: string): Promise<WebhookRunInfoWithWebhook | null>;
 }
 
+/**
+ * Defines a record that represents a webhook.
+ *
+ * @dochash types/records/webhooks
+ * @docName WebhookRecord
+ */
 export interface WebhookRecord extends CrudRecord {
     /**
      * The resource kind of the webhook target.

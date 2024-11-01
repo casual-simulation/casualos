@@ -14,6 +14,7 @@ import {
     FeaturesConfiguration,
     FileFeaturesConfiguration,
     InstsFeaturesConfiguration,
+    NotificationFeaturesConfiguration,
     PublicInstsConfiguration,
     RecordFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
@@ -208,6 +209,33 @@ export class FeaturesBuilder {
 
     withWebhookMaxRunsPerHour(maxRuns: number): this {
         this._features.webhooks.maxRunsPerHour = maxRuns;
+        return this;
+    }
+
+    withNotifications(features?: NotificationFeaturesConfiguration): this {
+        this._features.notifications = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withNotificationsMaxItems(maxItems: number): this {
+        this._features.notifications.maxItems = maxItems;
+        return this;
+    }
+
+    withNotificationsMaxSubscribersPerItem(maxSubscribers: number): this {
+        this._features.notifications.maxSubscribersPerItem = maxSubscribers;
+        return this;
+    }
+
+    withNotificationsMaxSentNotificationsPerPeriod(max: number): this {
+        this._features.notifications.maxSentNotificationsPerPeriod = max;
+        return this;
+    }
+
+    withNotificationsMaxSentPushNotificationsPerPeriod(max: number): this {
+        this._features.notifications.maxSentPushNotificationsPerPeriod = max;
         return this;
     }
 
