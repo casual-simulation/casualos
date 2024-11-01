@@ -28,6 +28,10 @@ import Tooltip from 'rc-tooltip';
 
 import 'rc-tooltip/assets/bootstrap.css';
 
+function relativeLink(path) {
+    return new URL(path, import.meta.url).href;
+}
+
 export const Glossary = [
     { id: 'aux', title: 'AUX', content: () => <AUX/> },
     { id: 'abCore', title: 'abCore', content: () => <AB1/> },
@@ -67,7 +71,7 @@ export const GlossaryRef = ({term, children}) => {
     }
     return (
         <Tooltip placement="top" overlay={<GlossaryWindow item={item}/>}>
-            <a href={useBaseUrl('glossary') + `#${item.id.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}`}>{children}</a>
+            <a href={relativeLink('glossary') + `#${item.id.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}`}>{children}</a>
         </Tooltip>
     )
 };
