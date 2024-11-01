@@ -7,6 +7,7 @@
 ### :rocket: Features
 
 -   Added shared documents.
+
     -   Shared documents utilize insts to be able to share data without using bots and tags.
     -   Additionally, shared documents can be loaded and unloaded at will.
     -   The following functions have been added:
@@ -14,6 +15,32 @@
         -   `os.getSharedDocument(recordName, inst, name)` - Gets a document that is stored in the specified inst.
         -   `os.getLocalDocument(name)` - Gets a document that is stored on this device.
         -   `os.getMemoryDocument()` - Gets a document that is stored in memory and cleared upon refresh.
+    -   Usage:
+
+        ```typescript
+        // Get a document stored in this inst named "test"
+        const doc = await os.getSharedDocument('test');
+
+        // maps work like the Map type (see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
+        const inventory = doc.getMap<number>('inventory');
+
+        inventory.set('spoons', 2);
+        inventory.set('forks', 3);
+        os.log('Number of spoons: ' + inventory.get('spoons'));
+
+        // arrays work like regular JavaScript arrays:
+        const shoppingList = doc.getArray<string>('shoppingList');
+        shoppingList.push('cereal', 'milk', 'eggs');
+
+        os.log('Shopping list:', inventory.toArray());
+
+        // Text is a special type that makes it easy to work with long strings
+        const blogPost = doc.getText('blogPost');
+
+        blogPost.insert(0, 'Hello, world!');
+
+        os.log('Blog Post:\n', blogPost.toString());
+        ```
 
 ## V3.3.12
 
