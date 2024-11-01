@@ -9051,7 +9051,7 @@ describe('AuxLibrary', () => {
                 const expected = loadSharedDocument(
                     'record',
                     'inst',
-                    'docId',
+                    'doc/docId',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
@@ -9067,7 +9067,7 @@ describe('AuxLibrary', () => {
                 const expected = loadSharedDocument(
                     'record2',
                     'inst2',
-                    'docId',
+                    'doc/docId',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
@@ -9081,7 +9081,7 @@ describe('AuxLibrary', () => {
                 const expected = loadSharedDocument(
                     null,
                     null,
-                    'docId',
+                    'doc/docId',
                     context.tasks.size
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);

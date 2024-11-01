@@ -1,4 +1,3 @@
-import { InstRecordsClient } from 'websockets';
 import { RemoteCausalRepoProtocol } from '../partitions/AuxPartitionConfig';
 
 /**
