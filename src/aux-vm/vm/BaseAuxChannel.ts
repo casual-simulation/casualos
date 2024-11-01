@@ -999,7 +999,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         const id = this._getSharedDocId(event);
         if (id) {
             const doc = this._documents.get(id);
-            if (doc) {
+            if (doc && !doc.closed) {
                 if (hasValue(event.taskId)) {
                     this.sendEvents([
                         asyncResult(event.taskId, doc, false, true),

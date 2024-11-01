@@ -1034,6 +1034,67 @@ describe('BaseAuxChannel', () => {
                 expect(result1.result === result2.result).toBe(true);
             });
 
+            it('should not reuse a document that has been disposed', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await waitAsync();
+
+                let results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(1);
+
+                const result1 = results[0];
+                expect(result1.taskId).toBe('task1');
+                expect(result1.uncopiable).toBe(true);
+                expect(result1.result).toBeInstanceOf(YjsSharedDocument);
+
+                result1.result.unsubscribe();
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task2',
+                    },
+                ]);
+
+                await waitAsync();
+
+                results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(2);
+
+                const result2 = results[1];
+                expect(result2.taskId).toBe('task2');
+                expect(result2.uncopiable).toBe(true);
+                expect(result2.result).toBeInstanceOf(YjsSharedDocument);
+
+                expect(result1.result === result2.result).toBe(false);
+                expect(result2.result.closed).toBe(false);
+            });
+
             it('should not reuse documents when it doesnt have a location', async () => {
                 await channel.initAndWait();
 
