@@ -1017,6 +1017,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             connectionProtocol:
                 this._config.config.causalRepoConnectionProtocol,
         };
+
+        if (!hasValue(event.inst) && hasValue(event.branch)) {
+            config.localPersistence = {
+                saveToIndexedDb: true,
+            };
+        }
+
         let doc = await this._createSharedDocument(config, this._services);
         if (!doc) {
             return;

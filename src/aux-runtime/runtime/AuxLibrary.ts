@@ -11169,20 +11169,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name?: string
     ): Promise<SharedDocument> {
         const task = context.createTask();
+        let recordName: string;
+        let instName: string;
+        let branchName: string;
 
-        let event: LoadSharedDocumentAction;
         if (!inst && !name) {
-            inst = getCurrentServer();
-            const recordName = getCurrentInstRecord();
-            event = loadSharedDocument(
-                recordName,
-                inst,
-                recordOrName,
-                task.taskId
-            );
+            instName = getCurrentServer();
+            recordName = getCurrentInstRecord();
+            branchName = recordOrName;
         } else {
-            event = loadSharedDocument(recordOrName, inst, name, task.taskId);
+            recordName = recordOrName;
+            instName = inst;
+            branchName = name;
         }
+
+        const event = loadSharedDocument(
+            recordName,
+            instName,
+            `doc/${branchName}`,
+            task.taskId
+        );
 
         return addAsyncAction(task, event);
     }
@@ -11193,7 +11199,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getLocalDocument(name: string): Promise<SharedDocument> {
         const task = context.createTask();
-        const event = loadSharedDocument(null, null, name, task.taskId);
+        const event = loadSharedDocument(
+            null,
+            null,
+            `doc/${name}`,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

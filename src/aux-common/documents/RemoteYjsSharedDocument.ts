@@ -43,6 +43,7 @@ import {
     InstRecordsClient,
     MaxInstSizeReachedClientError,
     RateLimitExceededMessage,
+    WebsocketErrorInfo,
 } from '../websockets';
 import { SharedDocumentConfig } from './SharedDocumentConfig';
 import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
@@ -59,6 +60,7 @@ import {
     APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN,
 } from './YjsSharedDocument';
 import { SharedDocumentServices } from './SharedDocumentFactories';
+import { KnownErrorCodes } from '../rpc/ErrorCodes';
 
 export function createRemoteClientYjsSharedDocument(
     config: SharedDocumentConfig,
@@ -116,8 +118,10 @@ export class RemoteYjsSharedDocument
 
     connect(): void {
         if (!this._temporary && this._persistence?.saveToIndexedDb) {
-            console.log('[RemoteYjsPartition] Using IndexedDB persistence');
-            const name = `docs/${this._recordName ?? ''}/${this._inst}/${
+            console.log(
+                '[RemoteYjsSharedDocument] Using IndexedDB persistence'
+            );
+            const name = `${this._recordName ?? ''}/${this._inst}/${
                 this._branch
             }`;
             this._indexeddb = new YjsIndexedDBPersistence(name, this._doc);
@@ -256,41 +260,9 @@ export class RemoteYjsSharedDocument
                         } else if (event.type === 'repo/watch_branch_result') {
                             if (event.success === false) {
                                 const errorCode = event.errorCode;
-                                if (
-                                    errorCode === 'not_authorized' ||
-                                    errorCode ===
-                                        'subscription_limit_reached' ||
-                                    errorCode === 'inst_not_found' ||
-                                    errorCode === 'record_not_found' ||
-                                    errorCode === 'invalid_record_key' ||
-                                    errorCode === 'invalid_token' ||
-                                    errorCode ===
-                                        'unacceptable_connection_id' ||
-                                    errorCode ===
-                                        'unacceptable_connection_token' ||
-                                    errorCode === 'user_is_banned' ||
-                                    errorCode === 'not_logged_in' ||
-                                    errorCode === 'session_expired'
-                                ) {
+                                if (this._isNotAuthorizedErrorCode(errorCode)) {
                                     const { type, ...error } = event;
-                                    this._onStatusUpdated.next({
-                                        type: 'authorization',
-                                        authorized: false,
-                                        error: error,
-                                    });
-                                    this._authSource.sendAuthRequest({
-                                        type: 'request',
-                                        kind: 'not_authorized',
-                                        errorCode: event.errorCode,
-                                        errorMessage: event.errorMessage,
-                                        origin: this._client.connection.origin,
-                                        reason: event.reason,
-                                        resource: {
-                                            type: 'inst',
-                                            recordName: this._recordName,
-                                            inst: this._inst,
-                                        },
-                                    });
+                                    this._handleNotAuthorized(error);
                                 }
                             }
                         }
@@ -345,40 +317,48 @@ export class RemoteYjsSharedDocument
         if (event.kind === 'max_size_reached') {
             this._onMaxSizeReached(event);
         } else if (event.kind === 'error') {
-            const errorCode = event.info.errorCode;
-            if (
-                errorCode === 'not_authorized' ||
-                errorCode === 'subscription_limit_reached' ||
-                errorCode === 'inst_not_found' ||
-                errorCode === 'record_not_found' ||
-                errorCode === 'invalid_record_key' ||
-                errorCode === 'invalid_token' ||
-                errorCode === 'unacceptable_connection_id' ||
-                errorCode === 'unacceptable_connection_token' ||
-                errorCode === 'user_is_banned' ||
-                errorCode === 'not_logged_in' ||
-                errorCode === 'session_expired'
-            ) {
-                this._onStatusUpdated.next({
-                    type: 'authorization',
-                    authorized: false,
-                    error: event.info,
-                });
-                this._authSource.sendAuthRequest({
-                    type: 'request',
-                    kind: 'not_authorized',
-                    errorCode: event.info.errorCode,
-                    errorMessage: event.info.errorMessage,
-                    origin: this._client.connection.origin,
-                    reason: event.info.reason,
-                    resource: {
-                        type: 'inst',
-                        recordName: this._recordName,
-                        inst: this._inst,
-                    },
-                });
+            const error = event.info;
+            if (this._isNotAuthorizedErrorCode(error.errorCode)) {
+                this._handleNotAuthorized(error);
             }
         }
+    }
+
+    private _isNotAuthorizedErrorCode(errorCode: KnownErrorCodes): boolean {
+        return (
+            errorCode === 'not_authorized' ||
+            errorCode === 'subscription_limit_reached' ||
+            errorCode === 'inst_not_found' ||
+            errorCode === 'record_not_found' ||
+            errorCode === 'invalid_record_key' ||
+            errorCode === 'invalid_token' ||
+            errorCode === 'unacceptable_connection_id' ||
+            errorCode === 'unacceptable_connection_token' ||
+            errorCode === 'user_is_banned' ||
+            errorCode === 'not_logged_in' ||
+            errorCode === 'session_expired'
+        );
+    }
+
+    private _handleNotAuthorized(error: WebsocketErrorInfo) {
+        this._onStatusUpdated.next({
+            type: 'authorization',
+            authorized: false,
+            error: error,
+        });
+        this._authSource.sendAuthRequest({
+            type: 'request',
+            kind: 'not_authorized',
+            errorCode: error.errorCode,
+            errorMessage: error.errorMessage,
+            origin: this._client.connection.origin,
+            reason: error.reason,
+            resource: {
+                type: 'inst',
+                recordName: this._recordName,
+                inst: this._inst,
+            },
+        });
     }
 
     /**
