@@ -366,6 +366,9 @@ export class WebsocketController {
                     recordName: event.recordName,
                     inst: event.inst,
                     branch: event.branch,
+                    reason: {
+                        type: 'invalid_token',
+                    },
                 });
                 return;
             }
@@ -674,6 +677,9 @@ export class WebsocketController {
                     recordName: event.recordName,
                     inst: event.inst,
                     branch: event.branch,
+                    reason: {
+                        type: 'invalid_token',
+                    },
                 });
                 return;
             }
@@ -1110,6 +1116,12 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
+                    recordName: event.recordName,
+                    inst: event.inst,
+                    branch: event.branch,
+                    reason: {
+                        type: 'invalid_token',
+                    },
                 });
                 return;
             }
@@ -1232,6 +1244,12 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
+                    recordName,
+                    inst,
+                    branch,
+                    reason: {
+                        type: 'invalid_token',
+                    },
                 });
                 return;
             }
@@ -1336,6 +1354,12 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
+                    recordName,
+                    inst,
+                    branch,
+                    reason: {
+                        type: 'invalid_token',
+                    },
                 });
                 return;
             }
@@ -1590,6 +1614,9 @@ export class WebsocketController {
                     recordName,
                     inst,
                     branch,
+                    reason: {
+                        type: 'invalid_token',
+                    },
                 });
                 return;
             }
