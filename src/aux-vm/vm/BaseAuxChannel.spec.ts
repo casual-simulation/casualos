@@ -46,6 +46,7 @@ import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
 import {
+    AsyncResultAction,
     ON_COLLABORATION_ENABLED,
     TEMPORARY_BOT_PARTITION_ID,
     edit,
@@ -54,6 +55,13 @@ import {
     preserve,
 } from '@casual-simulation/aux-common/bots';
 import { AuxSubChannel } from './AuxChannel';
+import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import { createSharedDocument } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import {
+    createYjsSharedDocument,
+    YjsSharedDocument,
+} from '@casual-simulation/aux-common/documents/YjsSharedDocument';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -926,6 +934,215 @@ describe('BaseAuxChannel', () => {
                 await waitAsync();
 
                 expect(resolved).toBe(true);
+            });
+        });
+
+        describe('load_shared_document', () => {
+            let events: RuntimeActions[];
+            let sub: Subscription;
+
+            beforeEach(() => {
+                events = [];
+
+                sub = new Subscription();
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should handle load_shared_document events', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: null,
+                        inst: null,
+                        branch: null,
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await waitAsync();
+
+                const results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(1);
+
+                const result = results[0];
+                expect(result.taskId).toBe('task1');
+                expect(result.uncopiable).toBe(true);
+                expect(result.result).toBeInstanceOf(YjsSharedDocument);
+            });
+
+            it('should reuse documents when they target the same location', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task2',
+                    },
+                ]);
+
+                await waitAsync();
+
+                const results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(2);
+
+                const result1 = results[0];
+                expect(result1.taskId).toBe('task1');
+                expect(result1.uncopiable).toBe(true);
+                expect(result1.result).toBeInstanceOf(YjsSharedDocument);
+
+                const result2 = results[1];
+                expect(result2.taskId).toBe('task2');
+                expect(result2.uncopiable).toBe(true);
+                expect(result2.result).toBeInstanceOf(YjsSharedDocument);
+
+                expect(result1.result === result2.result).toBe(true);
+            });
+
+            it('should not reuse a document that has been disposed', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await waitAsync();
+
+                let results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(1);
+
+                const result1 = results[0];
+                expect(result1.taskId).toBe('task1');
+                expect(result1.uncopiable).toBe(true);
+                expect(result1.result).toBeInstanceOf(YjsSharedDocument);
+
+                result1.result.unsubscribe();
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task2',
+                    },
+                ]);
+
+                await waitAsync();
+
+                results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(2);
+
+                const result2 = results[1];
+                expect(result2.taskId).toBe('task2');
+                expect(result2.uncopiable).toBe(true);
+                expect(result2.result).toBeInstanceOf(YjsSharedDocument);
+
+                expect(result1.result === result2.result).toBe(false);
+                expect(result2.result.closed).toBe(false);
+            });
+
+            it('should not reuse documents when it doesnt have a location', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: null,
+                        inst: null,
+                        branch: null,
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: null,
+                        inst: null,
+                        branch: null,
+                        taskId: 'task2',
+                    },
+                ]);
+
+                await waitAsync();
+
+                const results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(2);
+
+                const result1 = results[0];
+                expect(result1.taskId).toBe('task1');
+                expect(result1.uncopiable).toBe(true);
+                expect(result1.result).toBeInstanceOf(YjsSharedDocument);
+
+                const result2 = results[1];
+                expect(result2.taskId).toBe('task2');
+                expect(result2.uncopiable).toBe(true);
+                expect(result2.result).toBeInstanceOf(YjsSharedDocument);
+
+                expect(result1.result === result2.result).toBe(false);
             });
         });
 
@@ -2139,6 +2356,13 @@ class AuxChannelImpl extends BaseAuxChannel {
             (cfg) => createMemoryPartition(cfg),
             (config) => createTestPartition(config)
         );
+    }
+
+    protected _createSharedDocument(
+        config: SharedDocumentConfig,
+        services: AuxPartitionServices
+    ): Promise<SharedDocument> {
+        return createSharedDocument(config, services, createYjsSharedDocument);
     }
 
     protected _createTimeSyncController() {

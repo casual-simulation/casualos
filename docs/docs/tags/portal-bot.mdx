@@ -209,7 +209,7 @@ Whether the player will be able to pan the camera inside the portal.
 
 The minimum values that the camera can pan to in the portal.
 
-See the documentation on [Vectors](#vector-tags) for more info.
+See the documentation on [Vectors](../tags.mdx#vector-tags) for more info.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -226,7 +226,7 @@ See the documentation on [Vectors](#vector-tags) for more info.
 
 The maximum X and Y values that the camera can pan to in the portal.
 
-See the documentation on [Vectors](#vector-tags) for more info.
+See the documentation on [Vectors](../tags.mdx#vector-tags) for more info.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -271,7 +271,7 @@ For usability reasons, CasualOS limits this value to between 0 and 58 degrees (`
 
 The Y angle (theta) is used to rotate the camera left and right. Mathematically, a value of 0 means the camera is facing the front face of bots and a value of `π / 2` means the camera is facing the left face of the bots.
 
-See the documentation on [Vectors](#vector-tags) for more info.
+See the documentation on [Vectors](../tags.mdx#vector-tags) for more info.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -468,12 +468,12 @@ The "type" of a camera determines how objects are visualized and how they appear
 Whether to disable transparency on the [canvas element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas) that the 3D content is displayed on.
 
 Set this tag to `true` on the grid portal to fix rendering issues with 3D models that use alpha cutoff.
-Note that when this value is `true`, [iframe forms](#iframe-form) will cease to function properly.
+Note that when this value is `true`, [iframe forms](./visualization.mdx#iframe-form) will cease to function properly.
 
 #### Possible values are:
 <PossibleValuesTable>
   <PossibleValueCode value='false'>
-    The canvas element is transparent to support <a href='#iframe-form'>iframe forms</a>. (Default)
+    The canvas element is transparent to support <a href='./visualization.mdx#iframe-form'>iframe forms</a>. (Default)
   </PossibleValueCode>
   <PossibleValueCode value='true'>
     The canvas element is not transparent 3D models that use alpha cutoff.
@@ -1216,7 +1216,7 @@ Larger Y values are closer to the bottom of the screen and lower values are clos
 
 The 3D position of the player's camera in the grid portal.
 
-See the documentation on [Vectors](#vector-tags) for more info.
+See the documentation on [Vectors](../tags.mdx#vector-tags) for more info.
 
 ### `cameraPositionOffset`
 
@@ -1229,7 +1229,7 @@ The offset that should be applied to the 3D position of the player's camera in t
 
 Useful for moving the player around in VR.
 
-See the documentation on [Vectors](#vector-tags) for more info.
+See the documentation on [Vectors](../tags.mdx#vector-tags) for more info.
 
 ### `cameraRotation`
 
@@ -1243,7 +1243,7 @@ The 3D rotation of the player's camera in the grid portal.
 
 Units are in radians.
 
-See the documentation on [Rotations](#rotation-tags) for more info.
+See the documentation on [Rotations](../tags.mdx#rotation-tags) for more info.
 
 ### `cameraRotationOffset`
 <Badges>
@@ -1255,7 +1255,7 @@ The offset that should be applied to the 3D rotation of the player's camera in t
 
 Units are in radians.
 
-See the documentation on [Rotations](#rotation-tags) for more info.
+See the documentation on [Rotations](../tags.mdx#rotation-tags) for more info.
 
 ### `cameraZoom`
 
@@ -1290,7 +1290,7 @@ Larger values indicate that the camera is zoomed in more (objects appear bigger)
 
 The 3D position of the focus point for the player's camera in the grid portal.
 
-See the documentation on [Vectors](#vector-tags) for more info.
+See the documentation on [Vectors](../tags.mdx#vector-tags) for more info.
 
 ### `imuSupported`
 
@@ -1310,4 +1310,4 @@ Whether IMU data is supported on this device.
 
 The 3D rotation of the device as determined by the IMU.
 
-See the documentation on [Rotations](#rotation-tags) for more info.
+See the documentation on [Rotations](../tags.mdx#rotation-tags) for more info.

@@ -15,7 +15,20 @@ import {
 import { AuxConfig, BaseAuxChannel } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import { AuxRuntime } from '@casual-simulation/aux-runtime';
-import { createRemoteYjsPartition } from '@casual-simulation/aux-vm-client';
+import {
+    createRemoteYjsPartition,
+    createRemoteYjsSharedDocument,
+} from '@casual-simulation/aux-vm-client';
+import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import {
+    RemoteSharedDocumentConfig,
+    SharedDocumentConfig,
+} from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import {
+    createSharedDocument,
+    SharedDocumentServices,
+} from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import { createYjsSharedDocument } from '@casual-simulation/aux-common/documents/YjsSharedDocument';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _remoteEvents: Subject<RemoteAction[]>;
@@ -41,6 +54,19 @@ export class NodeAuxChannel extends BaseAuxChannel {
             (config) => createRemoteYjsPartition(config, services.authSource),
             (config) =>
                 createRemoteClientYjsPartition(config, services.authSource)
+        );
+    }
+
+    protected async _createSharedDocument(
+        config: RemoteSharedDocumentConfig,
+        services: SharedDocumentServices
+    ): Promise<SharedDocument> {
+        return await createSharedDocument(
+            config,
+            services,
+            (config, services) =>
+                createRemoteYjsSharedDocument(config, services.authSource),
+            createYjsSharedDocument
         );
     }
 
