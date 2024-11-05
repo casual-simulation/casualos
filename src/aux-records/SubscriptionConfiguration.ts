@@ -431,6 +431,48 @@ export const subscriptionFeaturesSchema = z.object({
         .default({
             allowed: false,
         }),
+
+    documents: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether document features are allowed for the subscription.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of document items that are allowed for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxBytesPerItem: z
+                .number()
+                .describe(
+                    'The maximum number of bytes that can be stored in a document. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+            maxActiveConnectionsPerItem: z
+                .number()
+                .describe(
+                    'The maximum number of active websocket connections that a document can have. If omitted, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for document features. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -872,6 +914,11 @@ export interface FeaturesConfiguration {
      * The configuration for notification features.
      */
     notifications?: NotificationFeaturesConfiguration;
+
+    /**
+     * The configuration for document features.
+     */
+    documents?: DocumentFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1107,6 +1154,10 @@ export type NotificationFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['notifications'];
 
+export type DocumentFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['documents'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -1182,6 +1233,9 @@ export function denyAllFeatures(): FeaturesConfiguration {
             allowed: false,
         },
         notifications: {
+            allowed: false,
+        },
+        documents: {
             allowed: false,
         },
     };

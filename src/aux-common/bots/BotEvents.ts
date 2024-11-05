@@ -187,7 +187,8 @@ export type AsyncActions =
     | RecordLoomAction
     | WatchLoomAction
     | GetLoomMetadataAction
-    | GetScriptIssuesAction;
+    | GetScriptIssuesAction
+    | LoadSharedDocumentAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -1803,6 +1804,31 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
      * The config that should be used to load the space.
      */
     config: any;
+}
+
+/**
+ * Defines an event that is used to load a shared document.
+ */
+export interface LoadSharedDocumentAction extends AsyncAction {
+    type: 'load_shared_document';
+
+    /**
+     * The name of the record that the document should be loaded from.
+     * If null, then the document will be loaded either from a public inst or indexeddb.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that should be loaded.
+     * If null, then the document will be loaded from indexeddb.
+     */
+    inst: string | null;
+
+    /**
+     * The branch that should be loaded.
+     * If null, then the document will not be stored in indexeddb.
+     */
+    branch: string | null;
 }
 
 /**
@@ -4725,6 +4751,28 @@ export function loadSpace(
         type: 'load_space',
         space,
         config,
+        taskId,
+    };
+}
+
+/**
+ * Loads a shared document.
+ * @param recordName The name of the record.
+ * @param inst The instance to load the document into.
+ * @param branch The branch to load the document from.
+ * @param taskId The ID of the async task.
+ */
+export function loadSharedDocument(
+    recordName: string | null,
+    inst: string | null,
+    branch: string,
+    taskId?: number | string
+): LoadSharedDocumentAction {
+    return {
+        type: 'load_shared_document',
+        recordName,
+        inst,
+        branch,
         taskId,
     };
 }
