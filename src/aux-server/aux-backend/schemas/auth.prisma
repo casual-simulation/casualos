@@ -331,6 +331,9 @@ model Record {
     targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
     webhookRuns WebhookRun[]
 
+    packageRecords PackageRecord[]
+    packageRecordVersions PackageRecordVersion[]
+
     notificationRecords NotificationRecord[]
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentNotification[]
@@ -888,6 +891,62 @@ model SentPushNotification {
 
     success Boolean
     errorCode String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PackageRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "PackageRecord_recordName_fkey1")
+
+    address String @db.String(128)
+
+    markers String[]
+
+    versions PackageRecordVersion[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PackageRecordVersion {
+    @@id([recordName, address, major, minor, patch, tag])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "PackageRecordVersion_recordName_fkey1")
+
+    address String @db.String(128)
+    package PackageRecord @relation(fields: [recordName, address], references: [recordName, address], onDelete: Cascade, map: "PackageRecordVersion_address_fkey1")
+
+    // The major version of the package
+    major Int
+
+    // The minor version of the package
+    minor Int
+
+    // The patch version of the package
+    patch Int
+
+    // The tag of the package
+    tag String @db.String(16)
+
+    // The SHA256 hash of the package
+    sha256 String @db.String(64)
+
+    // The aux data of the package
+    aux Json
+
+    // The SHA256 hash of the package aux data
+    auxSha256 String @db.String(64)
+
+    // The SHA256 hash of the package scripts
+    scriptSha256 String @db.String(64)
+
+    // The list of entitlements that this package version requires
+    entitlements String[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
