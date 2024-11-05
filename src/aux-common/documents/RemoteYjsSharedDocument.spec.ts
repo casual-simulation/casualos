@@ -1411,6 +1411,7 @@ describe('RemoteYjsSharedDocument', () => {
                                         type: 'inst',
                                         recordName: recordName,
                                         inst: 'inst',
+                                        branch: 'testBranch',
                                     },
                                     reason: {
                                         type: 'missing_permission',
@@ -1521,6 +1522,7 @@ describe('RemoteYjsSharedDocument', () => {
                                         type: 'inst',
                                         recordName: recordName,
                                         inst: 'inst',
+                                        branch: 'testBranch',
                                     },
                                     reason: {
                                         type: 'missing_permission',

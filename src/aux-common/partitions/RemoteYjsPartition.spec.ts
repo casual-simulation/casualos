@@ -1763,6 +1763,7 @@ describe('RemoteYjsPartition', () => {
                                         type: 'inst',
                                         recordName: recordName,
                                         inst: 'inst',
+                                        branch: 'testBranch',
                                     },
                                     reason: {
                                         type: 'missing_permission',
@@ -1873,6 +1874,7 @@ describe('RemoteYjsPartition', () => {
                                         type: 'inst',
                                         recordName: recordName,
                                         inst: 'inst',
+                                        branch: 'testBranch',
                                     },
                                     reason: {
                                         type: 'missing_permission',
