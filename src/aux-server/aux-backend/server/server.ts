@@ -16,7 +16,7 @@ import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import compression from 'compression';
 import { ServerBuilder } from '../shared/ServerBuilder';
 import { getStatusCode } from '@casual-simulation/aux-common';
-import { Server as WebsocketServer } from 'ws';
+import { WebSocketServer } from 'ws';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { concatMap, interval } from 'rxjs';
 import { constructServerBuilder } from 'aux-backend/shared/LoadServer';
@@ -29,7 +29,7 @@ export class Server {
     private _backendApp: express.Express;
     private _frontendHttp: Http.Server;
     private _backendHttp: Http.Server;
-    private _wsServer: WebsocketServer;
+    private _wsServer: WebSocketServer;
     private _config: Config;
 
     constructor(config: Config) {
@@ -55,7 +55,7 @@ export class Server {
             this._frontendHttp = new Http.Server(this._frontendApp);
             this._backendHttp = new Http.Server(this._backendApp);
         }
-        this._wsServer = new WebsocketServer({ noServer: true });
+        this._wsServer = new WebSocketServer({ noServer: true });
         this._config = config;
     }
 

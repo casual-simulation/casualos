@@ -39,12 +39,12 @@
     },
     "dependencies": {
         "@casual-simulation/tunnel": "^3.3.11",
-        "body-parser": "1.20.2",
-        "express": "^4.16.4",
+        "body-parser": "1.20.3",
+        "express": "^4.21.1",
         "http-proxy": "1.18.1",
         "jsonwebtoken": "9.0.2",
         "sshpk": "1.16.1",
         "uuid": "10.0.0",
-        "ws": "7.4.6"
+        "ws": "8.18.0"
     }
 }

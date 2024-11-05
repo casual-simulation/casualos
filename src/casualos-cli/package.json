@@ -40,7 +40,7 @@
         "@octokit/app": "^15.1.0",
         "@octokit/auth-oauth-device": "^7.1.1",
         "@octokit/core": "^6.1.2",
-        "axios": "1.6.2",
+        "axios": "1.7.7",
         "commander": "12.0.0",
         "conf": "12.0.0",
         "octokit": "^4.0.2",

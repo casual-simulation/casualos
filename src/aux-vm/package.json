@@ -46,7 +46,7 @@
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "@casual-simulation/timesync": "^3.3.4",
         "@casual-simulation/undom": "^3.2.18",
-        "axios": "1.6.2",
+        "axios": "1.7.7",
         "comlink": "4.3.1",
         "hash.js": "1.1.7",
         "htm": "3.1.0",

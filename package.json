@@ -102,7 +102,7 @@
         "@types/three": "^0.140.0",
         "@types/uuid": "10.0.0",
         "@types/vue-color": "^2.4.3",
-        "@types/ws": "^8.2.0",
+        "@types/ws": "^8.5.12",
         "browserslist": ">=4.16.5",
         "chai": "^4.2.0",
         "chalk": "4.1.2",
