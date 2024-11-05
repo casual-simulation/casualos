@@ -437,6 +437,56 @@ export const subscriptionFeaturesSchema = z.object({
         .default({
             allowed: false,
         }),
+
+    packages: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe('Whether packages are allowed for the subscription.'),
+
+            maxPackages: z
+                .number()
+                .describe(
+                    'The maximum number of packages that are allowed for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxPackageVersions: z
+                .number()
+                .describe(
+                    'The maximum number of package versions that are allowed for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxPackageVersionSizeInBytes: z
+                .number()
+                .describe(
+                    'The maximum number of bytes that a single package version can be. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxPackageBytesTotal: z
+                .number()
+                .describe(
+                    'The maximum number of bytes that all package versions in the subscription can be. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for package features. Defaults to allowed.'
+        )
+        .optional()
+        .default({
+            allowed: true,
+        }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -878,6 +928,11 @@ export interface FeaturesConfiguration {
      * The configuration for notification features.
      */
     notifications?: NotificationFeaturesConfiguration;
+
+    /**
+     * The configuration for package features.
+     */
+    packages?: PackageFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1119,6 +1174,10 @@ export type NotificationFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['notifications'];
 
+export type PackageFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['packages'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -1154,6 +1213,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         notifications: {
+            allowed: true,
+        },
+        packages: {
             allowed: true,
         },
     };
@@ -1196,7 +1258,38 @@ export function denyAllFeatures(): FeaturesConfiguration {
         notifications: {
             allowed: false,
         },
+        packages: {
+            allowed: false,
+        },
     };
+}
+
+/**
+ * Gets the package features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getPackageFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): PackageFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.packages ?? { allowed: true };
 }
 
 /**

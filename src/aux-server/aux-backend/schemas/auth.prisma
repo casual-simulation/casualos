@@ -948,6 +948,12 @@ model PackageRecordVersion {
     // The list of entitlements that this package version requires
     entitlements String[]
 
+    // The README of the package
+    readme String
+
+    // The size of the package version in bytes
+    sizeInBytes Int
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
