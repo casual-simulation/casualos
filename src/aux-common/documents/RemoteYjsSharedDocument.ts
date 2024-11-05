@@ -357,6 +357,7 @@ export class RemoteYjsSharedDocument
                 type: 'inst',
                 recordName: this._recordName,
                 inst: this._inst,
+                branch: this._branch,
             },
         });
     }

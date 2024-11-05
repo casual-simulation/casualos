@@ -528,8 +528,72 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
             await this._handleNotLoggedIn(sim, request);
         } else if (request.reason?.type === 'missing_permission') {
             await this._handleMissingPermission(sim, request, request.reason);
+        } else if (request.reason?.type === 'invalid_token') {
+            // Trying to watch a branch that the current connection token doesn't support
+            await this._handleInvalidToken(sim, request);
         } else {
             await this._handleNotAuthorizedError(sim, request);
+        }
+    }
+
+    private async _handleInvalidToken(
+        sim: TSim,
+        request: PartitionAuthRequest
+    ) {
+        const recordName = request.resource?.recordName;
+        const inst = request.resource?.inst;
+        const branch = request.resource?.branch;
+
+        if (!recordName || !inst || !branch) {
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Invalid token request missing recordName, inst, or branch`
+            );
+            return;
+        }
+
+        // Only allow automatically loading branches that start with 'doc/'
+        // This is a temporary solution to prevent loading actual existing inst data and instead only allow loading
+        // shared documents from other records
+        if (!branch.startsWith('doc/')) {
+            console.error(
+                `[AuthCoordinator] [${sim.id}] Invalid token request branch does not start with 'doc/'`
+            );
+            return;
+        }
+
+        console.log(`[AuthCoordinator] [${sim.id}] Needs new indicator`);
+        const endpoint = sim.auth.primary;
+        const key = await endpoint.getConnectionKey();
+
+        if (!key) {
+            console.log(`[AuthCoordinator] [${sim.id}] Sending connectionId.`);
+            sim.sendAuthMessage({
+                type: 'response',
+                success: true,
+                origin: request.origin,
+                indicator: {
+                    connectionId: sim.configBotId,
+                },
+            });
+        } else {
+            const connectionId = sim.configBotId;
+            const token = generateV1ConnectionToken(
+                key,
+                connectionId,
+                recordName,
+                inst
+            );
+            console.log(
+                `[AuthCoordinator] [${sim.id}] Sending connectionToken.`
+            );
+            sim.sendAuthMessage({
+                type: 'response',
+                success: true,
+                origin: request.origin,
+                indicator: {
+                    connectionToken: token,
+                },
+            });
         }
     }
 
