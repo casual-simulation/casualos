@@ -26,6 +26,7 @@ export const SLOYD_RESOURCE_KIND = 'ai.sloyd';
 export const HUME_RESOURCE_KIND = 'ai.hume';
 export const WEBHOOK_RESOURCE_KIND = 'webhook';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
+export const PACKAGE_RESOURCE_KIND = 'package';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -42,6 +43,7 @@ export type ResourceKinds =
     | 'inst'
     | 'webhook'
     | 'notification'
+    | 'package'
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume';
@@ -211,6 +213,19 @@ export type NotificationActionKinds =
     | 'listSubscriptions';
 
 /**
+ * The possible types of actions that can be performed on package resources.
+ *
+ * @dochash types/permissions
+ * @docname PackageActionKinds
+ */
+export type PackageActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -230,7 +245,8 @@ export type AvailablePermissions =
     | SloydPermission
     | HumePermission
     | WebhookPermission
-    | NotificationPermission;
+    | NotificationPermission
+    | PackagePermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -310,6 +326,14 @@ export const NOTIFICATION_ACTION_KINDS_VALIDATION = z.enum([
     LIST_SUBSCRIPTIONS_ACTION,
 ]);
 
+export const PACKAGE_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -322,6 +346,7 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     HUME_RESOURCE_KIND,
     WEBHOOK_RESOURCE_KIND,
     NOTIFICATION_RESOURCE_KIND,
+    PACKAGE_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -783,6 +808,34 @@ type ZodNotificationPermissionAssertion = HasType<
     NotificationPermission
 >;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect package resources.
+ *
+ * @dochash types/permissions
+ * @docname PackagePermission
+ */
+export interface PackagePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'package';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: PackageActionKinds | null;
+}
+export const PACKAGE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(PACKAGE_RESOURCE_KIND),
+    action: PACKAGE_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodPackagePermission = z.infer<typeof PACKAGE_PERMISSION_VALIDATION>;
+type ZodPackagePermissionAssertion = HasType<
+    ZodPackagePermission,
+    PackagePermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -797,6 +850,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         HUME_PERMISSION_VALIDATION,
         WEBHOOK_PERMISSION_VALIDATION,
         NOTIFICATION_PERMISSION_VALIDATION,
+        PACKAGE_PERMISSION_VALIDATION,
     ]
 );
 

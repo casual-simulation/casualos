@@ -2560,6 +2560,7 @@ describe('PolicyController', () => {
             ['ai.hume'],
             ['webhook'],
             ['notification'],
+            ['package'],
         ];
 
         // Admins can perform all actions on all resources
@@ -3630,6 +3631,28 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
+            [
+                'package',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -3747,6 +3770,16 @@ describe('PolicyController', () => {
                     ['read', 'resourceId'],
                     ['list', null],
                     ['run', 'resourceId'],
+                ],
+            ],
+            [
+                'package',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
                 ],
             ],
         ];
@@ -4246,6 +4279,13 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
+            [
+                'package',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -4362,6 +4402,13 @@ describe('PolicyController', () => {
                 [
                     ['read', 'resourceId'],
                     ['subscribe', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'package',
+                [
+                    ['read', 'resourceId'],
                     ['list', null],
                 ],
             ],
