@@ -6,6 +6,7 @@
 
 ### :rocket: Features
 
+-   Added `ai.chat.allowedModels` feature to enforce model usage limits, restricting access to specific models based on configuration.
 -   Added shared documents.
 
     -   Shared documents utilize insts to be able to share data without using bots and tags.

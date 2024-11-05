@@ -141,6 +141,12 @@ export const subscriptionFeaturesSchema = z.object({
                 .int()
                 .positive()
                 .optional(),
+            allowedModels: z
+                .array(z.string())
+                .describe(
+                    'The list of model IDs that are allowed for the subscription. If omitted, then all models are allowed.'
+                )
+                .optional(),
         }),
         images: z.object({
             allowed: z
@@ -1042,6 +1048,12 @@ export interface AIChatFeaturesConfiguration {
      * If not specified, then there is no limit.
      */
     maxTokensPerPeriod?: number;
+
+    /**
+     * The list of model IDs that are allowed for the subscription.
+     * If omitted, then all models are allowed.
+     */
+    allowedModels?: string[];
 }
 
 export interface AIImageFeaturesConfiguration {
