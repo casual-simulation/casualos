@@ -444,7 +444,7 @@ export const subscriptionFeaturesSchema = z.object({
                 .boolean()
                 .describe('Whether packages are allowed for the subscription.'),
 
-            maxPackages: z
+            maxItems: z
                 .number()
                 .describe(
                     'The maximum number of packages that are allowed for the subscription. If not specified, then there is no limit.'

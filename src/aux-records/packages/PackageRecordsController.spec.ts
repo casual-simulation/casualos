@@ -3,15 +3,7 @@ import {
     TestControllers,
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
-import { MemoryNotificationRecordsStore } from './MemoryNotificationRecordsStore';
-import {
-    NotificationRecord,
-    NotificationRecordsStore,
-} from './NotificationRecordsStore';
-import {
-    NotificationRecordsController,
-    SubscribeToNotificationSuccess,
-} from './NotificationRecordsController';
+import { PackageRecordsController } from './PackageRecordsController';
 import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
@@ -24,31 +16,25 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import {
-    SUBSCRIPTION_ID_NAMESPACE,
-    WebPushInterface,
-} from './WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
+import { PackageRecord, PackageRecordsStore } from './PackageRecordsStore';
+import { MemoryPackageRecordsStore } from './MemoryPackageRecordsStore';
 
 console.log = jest.fn();
 console.error = jest.fn();
 
-describe('NotificationRecordsController', () => {
+describe('PackageRecordsController', () => {
     testCrudRecordsController<
-        NotificationRecord,
-        NotificationRecordsStore,
-        NotificationRecordsController
+        PackageRecord,
+        PackageRecordsStore,
+        PackageRecordsController
     >(
         false,
         'notification',
-        (services) => new MemoryNotificationRecordsStore(services.store),
+        (services) => new MemoryPackageRecordsStore(services.store),
         (config, services) =>
-            new NotificationRecordsController({
+            new PackageRecordsController({
                 ...config,
-                pushInterface: {
-                    getServerApplicationKey: jest.fn(),
-                    sendNotification: jest.fn(),
-                },
             }),
         (item) => ({
             address: item.address,
@@ -66,16 +52,15 @@ describe('NotificationRecordsController', () => {
     );
 
     let store: MemoryStore;
-    let itemsStore: MemoryNotificationRecordsStore;
+    let itemsStore: MemoryPackageRecordsStore;
     let records: RecordsController;
     let policies: PolicyController;
-    let manager: NotificationRecordsController;
+    let manager: PackageRecordsController;
     let key: string;
     let subjectlessKey: string;
     let realDateNow: any;
     let dateNowMock: jest.Mock<number>;
     let services: TestControllers;
-    let pushInterface: jest.Mocked<WebPushInterface>;
 
     let userId: string;
     let sessionKey: string;
@@ -95,26 +80,21 @@ describe('NotificationRecordsController', () => {
         // };
 
         const context = await setupTestContext<
-            NotificationRecord,
-            NotificationRecordsStore,
-            NotificationRecordsController
+            PackageRecord,
+            PackageRecordsStore,
+            PackageRecordsController
         >(
-            (services) => new MemoryNotificationRecordsStore(services.store),
+            (services) => new MemoryPackageRecordsStore(services.store),
             (config, services) => {
-                pushInterface = {
-                    getServerApplicationKey: jest.fn(),
-                    sendNotification: jest.fn(),
-                };
-                return new NotificationRecordsController({
+                return new PackageRecordsController({
                     ...config,
-                    pushInterface,
                 });
             }
         );
 
         services = context.services;
         store = context.store;
-        itemsStore = context.itemsStore as MemoryNotificationRecordsStore;
+        itemsStore = context.itemsStore as MemoryPackageRecordsStore;
         records = context.services.records;
         policies = context.services.policies;
         manager = context.manager;
@@ -201,15 +181,15 @@ describe('NotificationRecordsController', () => {
 
     describe('recordItem()', () => {
         describe('create', () => {
-            it('should return subscription_limit_reached when the user has reached limit of notifications', async () => {
+            it('should return subscription_limit_reached when the user has reached limit of packages', async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
                         config.addSubscription('sub1', (sub) =>
                             sub
                                 .withTier('tier1')
                                 .withAllDefaultFeatures()
-                                .withNotifications()
-                                .withNotificationsMaxItems(1)
+                                .withPackages()
+                                .withPackagesMaxItems(1)
                         )
                 );
 

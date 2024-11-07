@@ -18,23 +18,17 @@ import {
     CheckSubscriptionMetricsSuccess,
 } from '../crud';
 import {
-    NotificationAction,
-    NotificationActionUI,
-    NotificationRecord,
     PackageRecordsStore,
-    NotificationSubscription,
-    NotificationSubscriptionMetrics,
-    SentPushNotification,
-    UserPushSubscription,
+    PackageRecord,
+    PackageSubscriptionMetrics,
 } from './PackageRecordsStore';
 import {
     getNotificationFeatures,
+    getPackageFeatures,
     NotificationFeaturesConfiguration,
+    PackageFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
-import { traced } from '../tracing/TracingDecorators';
-import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { v7 as uuidv7, v5 as uuidv5 } from 'uuid';
 
 const TRACE_NAME = 'PackageRecordsController';
 
@@ -43,7 +37,7 @@ const TRACE_NAME = 'PackageRecordsController';
  */
 export interface PackageRecordsConfiguration
     extends Omit<
-        CrudRecordsConfiguration<NotificationRecord, PackageRecordsStore>,
+        CrudRecordsConfiguration<PackageRecord, PackageRecordsStore>,
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {}
 
@@ -51,7 +45,7 @@ export interface PackageRecordsConfiguration
  * Defines a controller that can be used to interact with NotificationRecords.
  */
 export class PackageRecordsController extends CrudRecordsController<
-    NotificationRecord,
+    PackageRecord,
     PackageRecordsStore
 > {
     constructor(config: PackageRecordsConfiguration) {
@@ -68,15 +62,15 @@ export class PackageRecordsController extends CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: NotificationRecord
-    ): Promise<CheckSubscriptionMetricsResult> {
+        item?: PackageRecord
+    ): Promise<PackageRecordsSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({
             ownerId: context.recordOwnerId,
             studioId: context.recordStudioId,
         });
 
-        const features = getNotificationFeatures(
+        const features = getPackageFeatures(
             config,
             metrics.subscriptionStatus,
             metrics.subscriptionId,
@@ -89,8 +83,7 @@ export class PackageRecordsController extends CrudRecordsController<
             return {
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage:
-                    'Notifications are not allowed for this subscription.',
+                errorMessage: 'Packages are not allowed for this subscription.',
             };
         }
 
@@ -100,41 +93,7 @@ export class PackageRecordsController extends CrudRecordsController<
                     success: false,
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
-                        'The maximum number of notification items has been reached for your subscription.',
-                };
-            }
-        }
-
-        if (
-            action === 'subscribe' &&
-            typeof features.maxSubscribersPerItem === 'number'
-        ) {
-            const totalSubscriptions =
-                await this.store.countSubscriptionsForNotification(
-                    context.recordName,
-                    item.address
-                );
-            if (totalSubscriptions >= features.maxSubscribersPerItem) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage:
-                        'The maximum number of subscriptions has been reached for this notification.',
-                };
-            }
-        }
-
-        if (action === 'send') {
-            if (
-                typeof features.maxSentNotificationsPerPeriod === 'number' &&
-                metrics.totalSentNotificationsInPeriod >=
-                    features.maxSentNotificationsPerPeriod
-            ) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage:
-                        'The maximum number of sent notifications has been reached for this period.',
+                        'The maximum number of package items has been reached for your subscription.',
                 };
             }
         }
@@ -146,4 +105,15 @@ export class PackageRecordsController extends CrudRecordsController<
             features,
         };
     }
+}
+
+export type PackageRecordsSubscriptionMetricsResult =
+    | PackageRecordsSubscriptionMetricsSuccess
+    | CheckSubscriptionMetricsFailure;
+
+export interface PackageRecordsSubscriptionMetricsSuccess
+    extends CheckSubscriptionMetricsSuccess {
+    config: SubscriptionConfiguration;
+    metrics: PackageSubscriptionMetrics;
+    features: PackageFeaturesConfiguration;
 }

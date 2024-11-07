@@ -97,6 +97,11 @@ export interface PackageRecordVersion {
     readme: string;
 
     /**
+     * The size of the package version in bytes.
+     */
+    sizeInBytes: number;
+
+    /**
      * The unix time in miliseconds that this package version was created at.
      */
     createdAtMs: number;
@@ -139,6 +144,11 @@ export interface ListedPackageVersion {
     entitlements: string[];
 
     /**
+     * The size of the version in bytes.
+     */
+    sizeInBytes: number;
+
+    /**
      * The unix time in miliseconds that this version was created at.
      */
     createdAtMs: number;
@@ -171,7 +181,7 @@ export interface PackageSubscriptionMetrics extends CrudSubscriptionMetrics {
     /**
      * The total number of packages stored in the subscription.
      */
-    totalPackages: number;
+    totalItems: number;
 
     /**
      * The total number of package versions stored in the subscription.
