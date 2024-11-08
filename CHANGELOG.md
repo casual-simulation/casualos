@@ -43,6 +43,10 @@
         os.log('Blog Post:\n', blogPost.toString());
         ```
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would prompt for login when trying to join a room using `os.joinRoom()`.
+
 ## V3.3.12
 
 #### Date: 10/25/2024
