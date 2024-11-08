@@ -39,7 +39,7 @@ services:
             - enable_ipv6
         command: ['redis-server', '--bind', '0.0.0.0', '::']
     livekit:
-        image: livekit/livekit-server:v1.6.1
+        image: livekit/livekit-server:v1.8.0
         restart: always
         depends_on:
             - redis
