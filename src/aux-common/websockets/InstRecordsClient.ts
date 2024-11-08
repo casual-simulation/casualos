@@ -675,6 +675,7 @@ export class InstRecordsClient {
         let count = this._timeSyncCounter + 1;
         this._timeSyncCounter = count;
         const observable = this._whenConnected().pipe(
+            first((c) => c),
             tap((connected) => {
                 this._client.send({
                     type: 'sync/time',

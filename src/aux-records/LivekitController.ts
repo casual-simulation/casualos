@@ -70,7 +70,7 @@ export class LivekitController {
                 canSubscribe: true,
             });
 
-            const jwt = token.toJwt();
+            const jwt = await token.toJwt();
 
             return {
                 success: true,

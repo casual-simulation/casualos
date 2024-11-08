@@ -51,6 +51,7 @@ import {
     ON_COLLABORATION_ENABLED,
     ON_ALLOW_COLLABORATION_UPGRADE,
     ON_DISALLOW_COLLABORATION_UPGRADE,
+    LoadSharedDocumentAction,
 } from '@casual-simulation/aux-common';
 import {
     realtimeStrategyToRealtimeEditMode,
@@ -79,6 +80,9 @@ import {
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import { TimeSyncController } from '@casual-simulation/timesync';
+import { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 
 export interface AuxChannelOptions {}
 
@@ -91,6 +95,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _deviceInfo: ConnectionInfo;
     protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
+    protected _documents: Map<string, SharedDocument> = new Map();
     protected _portalHelper: CustomAppHelper;
     private _services: AuxPartitionServices;
     private _statusHelper: StatusHelper;
@@ -479,6 +484,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         ];
     }
 
+    protected _getCleanupSubscriptionsForSharedDocument(
+        doc: SharedDocument
+    ): SubscriptionLike[] {
+        return [doc, doc.onError.subscribe((err) => this._handleError(err))];
+    }
+
     /**
      * Creates a partition for the given config.
      * @param config The config.
@@ -488,6 +499,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         config: PartitionConfig,
         services: AuxPartitionServices
     ): Promise<AuxPartition>;
+
+    /**
+     * Creates a shared document for the given config.
+     * @param config The config.
+     * @param services The services that should be used by the document.
+     */
+    protected abstract _createSharedDocument(
+        config: RemoteSharedDocumentConfig,
+        services: SharedDocumentServices
+    ): Promise<SharedDocument>;
 
     async sendEvents(events: RuntimeActions[]): Promise<void> {
         if (this._hasInitialState) {
@@ -846,6 +867,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._detachRuntime(event.runtime, event);
             } else if (event.type === 'enable_collaboration') {
                 this._enableCollaboration(event);
+            } else if (event.type === 'load_shared_document') {
+                this._loadSharedDocument(event);
             }
         }
         this._portalHelper.handleEvents(e);
@@ -955,6 +978,80 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._runtime
             );
         }
+    }
+
+    /**
+     * Gets the ID of the shared document that should be loaded.
+     * Returns a string that represents the ID of the document that should be reused if possible.
+     * If the document should not be reused, returns null.
+     * @param event The event that was received.
+     */
+    protected _getSharedDocId(event: LoadSharedDocumentAction): string | null {
+        if (event.branch) {
+            return `${event.recordName ?? ''}/${event.inst ?? ''}/${
+                event.branch
+            }`;
+        }
+        return null;
+    }
+
+    protected async _loadSharedDocument(event: LoadSharedDocumentAction) {
+        const id = this._getSharedDocId(event);
+        if (id) {
+            const doc = this._documents.get(id);
+            if (doc && !doc.closed) {
+                if (hasValue(event.taskId)) {
+                    this.sendEvents([
+                        asyncResult(event.taskId, doc, false, true),
+                    ]);
+                }
+                return;
+            }
+        }
+
+        const config: RemoteSharedDocumentConfig = {
+            recordName: event.recordName,
+            inst: event.inst,
+            branch: event.branch,
+            host: this._config.config.causalRepoConnectionUrl,
+            connectionProtocol:
+                this._config.config.causalRepoConnectionProtocol,
+        };
+
+        if (!hasValue(event.inst) && hasValue(event.branch)) {
+            config.localPersistence = {
+                saveToIndexedDb: true,
+            };
+        }
+
+        let doc = await this._createSharedDocument(config, this._services);
+        if (!doc) {
+            return;
+        }
+
+        if (id) {
+            this._documents.set(id, doc);
+        }
+
+        this._subs.push(...this._getCleanupSubscriptionsForSharedDocument(doc));
+
+        if (hasValue(event.taskId)) {
+            // Wait for initial connection
+            doc.onStatusUpdated
+                .pipe(
+                    first(
+                        (status) =>
+                            status.type === 'sync' && status.synced === true
+                    )
+                )
+                .subscribe(() => {
+                    this.sendEvents([
+                        asyncResult(event.taskId, doc, false, true),
+                    ]);
+                });
+        }
+
+        doc.connect();
     }
 
     /**

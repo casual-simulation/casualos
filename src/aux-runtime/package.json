@@ -50,7 +50,7 @@
         "acorn-jsx": "5.3.2",
         "acorn-typescript": "1.4.13",
         "astring": "1.7.5",
-        "axios": "1.6.2",
+        "axios": "1.7.7",
         "base64-js": "^1.5.1",
         "estraverse": "5.3.0",
         "expect": "27.3.1",
