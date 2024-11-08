@@ -1150,7 +1150,7 @@ export class RecordsManager {
 
     private async _joinRoom(event: JoinRoomAction) {
         try {
-            const info = await this._resolveInfoForEvent(event);
+            const info = await this._resolveInfoForEvent(event, false);
 
             if (info.error) {
                 // if (hasValue(event.taskId)) {
