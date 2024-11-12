@@ -869,7 +869,7 @@ export function getPublicWritePermission(
             };
         }
     } else if (resourceKind === 'package') {
-        if (action === 'read' || action === 'list') {
+        if (action === 'read' || action === 'list' || action === 'run') {
             return {
                 resourceKind,
                 action,

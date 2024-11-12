@@ -3779,6 +3779,7 @@ describe('PolicyController', () => {
                     ['delete', 'resourceId'],
                     ['update', 'resourceId'],
                     ['read', 'resourceId'],
+                    ['run', 'resourceId'],
                     ['list', null],
                 ],
             ],
@@ -4409,6 +4410,7 @@ describe('PolicyController', () => {
                 'package',
                 [
                     ['read', 'resourceId'],
+                    ['run', 'resourceId'],
                     ['list', null],
                 ],
             ],

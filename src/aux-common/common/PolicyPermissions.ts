@@ -223,7 +223,8 @@ export type PackageActionKinds =
     | 'read'
     | 'update'
     | 'delete'
-    | 'list';
+    | 'list'
+    | 'run';
 
 /**
  * The possible types of permissions that can be added to policies.
@@ -332,6 +333,7 @@ export const PACKAGE_ACTION_KINDS_VALIDATION = z.enum([
     UPDATE_ACTION,
     DELETE_ACTION,
     LIST_ACTION,
+    RUN_ACTION,
 ]);
 
 export const RESOURCE_KIND_VALIDATION = z.enum([
