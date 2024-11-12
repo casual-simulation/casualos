@@ -534,6 +534,51 @@ export function isScript(value: unknown): value is string {
 }
 
 /**
+ * Returns a string with all content inside of curly brackets removed.
+ * @param value The string.
+ */
+function extractTopLevelCode(value: string): string {
+    let topLevelCode = '';
+    let bracketStack = [];
+    let skip = false;
+
+    for (let i = 0; i < value.length; i++) {
+        const char = value[i];
+        if (char === '{') {
+            if (bracketStack.length === 0) {
+                skip = true;
+                topLevelCode += '{';
+            }
+            bracketStack.push('{');
+        } else if (char === '}') {
+            if (bracketStack.length > 0) {
+                bracketStack.pop();
+                if (bracketStack.length === 0) {
+                    skip = false;
+                    topLevelCode += '}';
+                }
+            }
+        } else if (!skip) {
+            topLevelCode += char;
+        }
+    }
+
+    return topLevelCode;
+}
+
+/**
+ * Determines if the given value represents an async script.
+ * @param value The value.
+ */
+export function isAsyncScript(value: unknown): value is string {
+    if (!isScript(value)) {
+        return false;
+    }
+    const topLevelCode = extractTopLevelCode(value);
+    return topLevelCode.indexOf('await ') >= 0;
+}
+
+/**
  * Determines if the given value represents a script.
  * @param value The value.
  */
