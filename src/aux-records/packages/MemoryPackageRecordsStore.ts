@@ -61,7 +61,7 @@ export class MemoryPackageRecordsStore
     ): Promise<PackageSubscriptionMetrics> {
         const info = await super.getSubscriptionMetrics(filter);
 
-        let totalPackages = 0;
+        let totalItems = 0;
         let totalPackageVersions = 0;
         let totalPackageVersionBytes = 0;
 
@@ -69,7 +69,7 @@ export class MemoryPackageRecordsStore
             ? await this.store.listRecordsByOwnerId(filter.ownerId)
             : await this.store.listRecordsByStudioId(filter.studioId);
         for (let record of records) {
-            totalPackages += this.getItemRecord(record.name).size;
+            totalItems += this.getItemRecord(record.name).size;
 
             for (let version of this._packageVersions) {
                 if (version.recordName !== record.name) {
@@ -83,7 +83,7 @@ export class MemoryPackageRecordsStore
 
         return {
             ...info,
-            totalPackages,
+            totalItems,
             totalPackageVersions,
             totalPackageVersionBytes,
         };
