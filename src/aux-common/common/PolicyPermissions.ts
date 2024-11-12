@@ -27,6 +27,7 @@ export const HUME_RESOURCE_KIND = 'ai.hume';
 export const WEBHOOK_RESOURCE_KIND = 'webhook';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
 export const PACKAGE_RESOURCE_KIND = 'package';
+export const PACKAGE_VERSION_RESOURCE_KIND = 'package.version';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -44,6 +45,7 @@ export type ResourceKinds =
     | 'webhook'
     | 'notification'
     | 'package'
+    | 'package.version'
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume';
@@ -227,6 +229,20 @@ export type PackageActionKinds =
     | 'run';
 
 /**
+ * The possible types of actions that can be performed on package.version resources.
+ *
+ * @dochash types/permissions
+ * @docname PackageVersionActionKinds
+ */
+export type PackageVersionActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'run';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -247,7 +263,8 @@ export type AvailablePermissions =
     | HumePermission
     | WebhookPermission
     | NotificationPermission
-    | PackagePermission;
+    | PackagePermission
+    | PackageVersionPermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -328,6 +345,15 @@ export const NOTIFICATION_ACTION_KINDS_VALIDATION = z.enum([
 ]);
 
 export const PACKAGE_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    RUN_ACTION,
+]);
+
+export const PACKAGE_VERSION_ACTION_KINDS_VALIDATION = z.enum([
     CREATE_ACTION,
     READ_ACTION,
     UPDATE_ACTION,
@@ -838,6 +864,37 @@ type ZodPackagePermissionAssertion = HasType<
     PackagePermission
 >;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect package.version resources.
+ *
+ * @dochash types/permissions
+ * @docname PackageVersionPermission
+ */
+export interface PackageVersionPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'package.version';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: PackageVersionActionKinds | null;
+}
+export const PACKAGE_VERSION_PERMISSION_VALIDATION =
+    PERMISSION_VALIDATION.extend({
+        resourceKind: z.literal(PACKAGE_VERSION_RESOURCE_KIND),
+        action: PACKAGE_VERSION_ACTION_KINDS_VALIDATION.nullable(),
+    });
+type ZodPackageVersionPermission = z.infer<
+    typeof PACKAGE_VERSION_PERMISSION_VALIDATION
+>;
+type ZodPackageVersionPermissionAssertion = HasType<
+    ZodPackageVersionPermission,
+    PackageVersionPermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -853,6 +910,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         WEBHOOK_PERMISSION_VALIDATION,
         NOTIFICATION_PERMISSION_VALIDATION,
         PACKAGE_PERMISSION_VALIDATION,
+        PACKAGE_VERSION_PERMISSION_VALIDATION,
     ]
 );
 
