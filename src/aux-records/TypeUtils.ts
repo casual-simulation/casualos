@@ -337,6 +337,8 @@ export type IdIn<T> = Pick<T, IdStrIn<T>>;
 export type DateMS = number;
 /** A type alias for a number, that should only represent a quantity of gigs (6 minute intervals of work)  */
 export type GigQty = number;
+/** A type alias for a number, that should only represent a quantity of a currency in its smallest fractional unit (E.G. cents in USD) */
+export type CurrencySFU = number;
 
 /**
  * A Generic utility type which compares a type to "never" providing a boolean representation as to whether or not

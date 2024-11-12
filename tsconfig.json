@@ -45,7 +45,6 @@
         { "path": "./src/rate-limit-redis" },
         { "path": "./src/aux-websocket" },
         { "path": "./src/aux-websocket-aws" },
-        { "path": "./xpexchange/xp-api" },
         { "path": "./extensions/casualos-casualware/casualware-api" },
         { "path": "./src/casualos-cli" },
         { "path": "./src/casualos-infra" }

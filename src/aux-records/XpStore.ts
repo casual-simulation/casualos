@@ -1,10 +1,11 @@
-import { AuthUser } from 'AuthStore';
+import { AuthUser } from './AuthStore';
 import {
     SuccessResult,
     DateMS,
     GenericTimeKeys,
     GigQty,
     ISO4217_Map,
+    CurrencySFU,
 } from './TypeUtils';
 
 export type XpStore = {
@@ -67,6 +68,16 @@ export type XpStore = {
     ): Promise<SuccessResult>;
 
     /**
+     * Save an xp contract with an associated account
+     * @param contract The contract to save
+     * @param account The account to save
+     */
+    createXpContract: (
+        contract: XpContract,
+        account: XpAccount
+    ) => Promise<void>;
+
+    /**
      * Save an xp user associated with the given auth user
      * @param id The id of the xp user to create an account for (uuid) not the auth user id
      * @param user The meta data to associate with the user
@@ -95,7 +106,7 @@ export interface XpUser extends ModelBase {
     /** The id of the associated account */
     accountId: XpAccount['id'];
     /** The rate at which the user is requesting payment (null if not yet specified) */
-    requestedRate: number | null;
+    requestedRate: CurrencySFU | null;
     /** The users unique id from the Auth system */
     userId: string;
 }
@@ -118,18 +129,18 @@ export interface XpAccount extends ModelBase {
 export interface XpContract extends ModelBase {
     /** The id of the account associated with the contract */
     accountId: XpAccount['id'];
-    /** The id of the creation event related to the contract */
-    creationEventId: XpSystemEvent['id'];
     /** A description of the contract, may contain useful query meta */
     description: string | null;
     /** The id of the user holding the contract */
-    holdingUserId: XpUser['id'];
+    holdingUserId: XpUser['id'] | null;
     /** The id of the user issuing the contract */
     issuerUserId: XpUser['id'];
-    /** The rate at which the contract is worth */
-    rate: number;
+    /** The rate at which the entirety of the contract is worth */
+    rate: CurrencySFU;
+    /** An amount of money associated with a contract offer (would be the amount in the contract account if accepted) */
+    offeredWorth: CurrencySFU;
     /** The status of the contract */
-    status: 'open' | 'closed';
+    status: 'open' | 'draft' | 'closed';
 }
 
 /**
@@ -167,7 +178,7 @@ export interface XpSystemEvent extends ModelBase {
     /** The XpSystemEventAdjustment id of the adjusted adjustment event */
     adjusterEventId: XpSystemEventAdjustment['id'] | null;
     /** JSON data related to the event, which can be of any return type */
-    data: unknown;
+    data: any;
     /** The time the event occurred in the real world */
     timeMs: DateMS;
     /** The string literal representation of a type of system event */
@@ -186,8 +197,6 @@ export interface XpSystemEvent extends ModelBase {
 export interface XpInvoice extends ModelBase {
     /** The id of the contract the invoice is made for */
     contractId: XpContract['id'];
-    /** The id of the creation event related to the invoice */
-    creationEventId: XpSystemEvent['id'];
     /** The quantity of gigs being invoiced for */
     amount: GigQty;
     /** The status of the invoice */

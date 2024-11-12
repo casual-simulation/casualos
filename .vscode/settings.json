@@ -57,6 +57,7 @@
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
+    "javascript.preferences.importModuleSpecifier": "relative",
     "javascript.preferences.quoteStyle": "single",
     "typescript.preferences.quoteStyle": "single",
     "workbench.colorCustomizations": {},

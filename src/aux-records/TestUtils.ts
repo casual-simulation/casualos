@@ -14,7 +14,7 @@ import {
     buildSubscriptionConfig,
     SubscriptionConfigBuilder,
 } from './SubscriptionConfigBuilder';
-import { XpController } from 'XpController';
+import { XpController } from './XpController';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
