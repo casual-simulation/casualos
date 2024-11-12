@@ -19,11 +19,18 @@ import {
 import {
     createOtherPlayersRepoPartition,
     createRemoteYjsPartition,
+    createRemoteYjsSharedDocument,
     createTimeSyncController,
 } from '../partitions';
 import { TimeSyncController } from '@casual-simulation/timesync';
-import { AuxSubChannel } from '@casual-simulation/aux-vm/vm';
 import { AuxRuntime } from '@casual-simulation/aux-runtime';
+import { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import {
+    createSharedDocument,
+    SharedDocumentServices,
+} from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import { createYjsSharedDocument } from '@casual-simulation/aux-common/documents/YjsSharedDocument';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 
@@ -48,6 +55,19 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             (config) => createRemoteYjsPartition(config, services.authSource),
             (config) =>
                 createRemoteClientYjsPartition(config, services.authSource)
+        );
+    }
+
+    protected async _createSharedDocument(
+        config: RemoteSharedDocumentConfig,
+        services: SharedDocumentServices
+    ): Promise<SharedDocument> {
+        return await createSharedDocument(
+            config,
+            services,
+            (config, services) =>
+                createRemoteYjsSharedDocument(config, services.authSource),
+            createYjsSharedDocument
         );
     }
 

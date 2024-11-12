@@ -1474,6 +1474,9 @@ describe('WebsocketController', () => {
                                         recordName,
                                         inst: 'otherInst',
                                         branch: 'testBranch',
+                                        reason: {
+                                            type: 'invalid_token',
+                                        },
                                     },
                                 ]);
 
@@ -2159,6 +2162,9 @@ describe('WebsocketController', () => {
                                         recordName,
                                         inst: 'otherInst',
                                         branch: 'test',
+                                        reason: {
+                                            type: 'invalid_token',
+                                        },
                                     },
                                 ],
                             ]);
@@ -5055,6 +5061,12 @@ describe('WebsocketController', () => {
                                 errorCode: 'not_authorized',
                                 errorMessage:
                                     'You are not authorized to access this inst.',
+                                recordName: 'otherRecord',
+                                inst,
+                                branch: 'testBranch',
+                                reason: {
+                                    type: 'invalid_token',
+                                },
                             },
                         ],
                     ]);
@@ -5093,6 +5105,12 @@ describe('WebsocketController', () => {
                                 errorCode: 'not_authorized',
                                 errorMessage:
                                     'You are not authorized to access this inst.',
+                                recordName,
+                                inst: 'otherInst',
+                                branch: 'testBranch',
+                                reason: {
+                                    type: 'invalid_token',
+                                },
                             },
                         ],
                     ]);
@@ -6508,6 +6526,12 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to access this inst.',
+                                        recordName: 'wrong',
+                                        inst,
+                                        branch: 'testBranch',
+                                        reason: {
+                                            type: 'invalid_token',
+                                        },
                                     },
                                 ],
                             ]
@@ -6538,6 +6562,12 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to access this inst.',
+                                        recordName,
+                                        inst: 'wrong',
+                                        branch: 'testBranch',
+                                        reason: {
+                                            type: 'invalid_token',
+                                        },
                                     },
                                 ],
                             ]
@@ -6916,6 +6946,12 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to access this inst.',
+                                        recordName: 'wrong',
+                                        inst,
+                                        branch: 'testBranch',
+                                        reason: {
+                                            type: 'invalid_token',
+                                        },
                                     },
                                 ],
                             ]
@@ -6972,6 +7008,12 @@ describe('WebsocketController', () => {
                                         errorCode: 'not_authorized',
                                         errorMessage:
                                             'You are not authorized to access this inst.',
+                                        recordName,
+                                        inst: 'wrong',
+                                        branch: 'testBranch',
+                                        reason: {
+                                            type: 'invalid_token',
+                                        },
                                     },
                                 ],
                             ]

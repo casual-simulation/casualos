@@ -96,7 +96,7 @@ export const DataTagLink = ({tag}) => {
         throw new Error(`No tag map for tag ${tag}`);
     }
     return (
-        <a href={useBaseUrl(tagMap[tag]) + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
+        <a href={relativeLink(tagMap[tag]) + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
             <NormalCode>#{tag}</NormalCode>
         </a>
     );
@@ -339,8 +339,12 @@ export const tagMap = {
     privacyFeatures: 'tags/auth-bot',
 };
 
+function relativeLink(path) {
+    return new URL(path, import.meta.url).href;
+}
+
 export const ListenTagLink = ({tag}) => (
-  <a href={useBaseUrl('tags/listen') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
+  <a href={relativeLink('tags/listen') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
     <NormalCode>{tag}</NormalCode>
   </a>
 );
@@ -352,7 +356,7 @@ export const TypeLink = ({type, children}) => {
         console.warn('No hash for type', action);
         return c;
     }
-    const url = useBaseUrl(hash) + '#' + type;
+    const url = relativeLink(hash) + '#' + type;
     return <a href={url}>{c}</a>;
 }
 
@@ -371,7 +375,7 @@ export const ActionLink = ({action, children}) => {
         console.warn('No hash for action', action);
         return c;
     }
-    const url = useBaseUrl(hash) + '#' + id;
+    const url = relativeLink(hash) + '#' + id;
     return <a href={url}>{c}</a>;
 }
 
@@ -422,7 +426,7 @@ export const Badges = ({children}) => (
 
 
 export const VariableLink = ({name, children, ...attrs}) => (
-    <a href={useBaseUrl('variables') + '#' + name.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()} {...attrs}>
+    <a href={relativeLink('variables') + '#' + name.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()} {...attrs}>
         {children ? children : (<NormalCode>{name}</NormalCode>)}
     </a>
 );

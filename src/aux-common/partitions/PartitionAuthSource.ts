@@ -273,6 +273,11 @@ export interface PartitionInstResource {
      * The name of the inst.
      */
     inst: string;
+
+    /**
+     * The branch that is being loaded.
+     */
+    branch: string;
 }
 
 export type PartitionAuthResponse =

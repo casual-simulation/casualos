@@ -22,6 +22,11 @@ import {
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
 import { TimeSyncController } from '@casual-simulation/timesync';
+import {
+    RemoteSharedDocumentConfig,
+    SharedDocumentConfig,
+} from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import { RemoteYjsSharedDocument } from '@casual-simulation/aux-common/documents/RemoteYjsSharedDocument';
 
 const DEFAULT_RESEND_UPDATES_INTERVAL_MS = 1000;
 const DEFAULT_RETRY_UPDATES_AFTER_MS = 5000;
@@ -148,6 +153,32 @@ export async function createRemoteYjsPartition(
             config.connectionProtocol
         );
         const partition = new RemoteYjsPartitionImpl(
+            client,
+            authSource,
+            config
+        );
+        await partition.init();
+        return partition;
+    }
+    return undefined;
+}
+
+/**
+ * Attempts to create a RemoteYjsSharedDocument from the given config.
+ * @param config The config.
+ * @param authSource The auth source.
+ */
+export async function createRemoteYjsSharedDocument(
+    config: RemoteSharedDocumentConfig,
+    authSource: PartitionAuthSource
+): Promise<RemoteYjsSharedDocument> {
+    if (config.inst) {
+        const client = getClientForHostAndProtocol(
+            config.host,
+            authSource,
+            config.connectionProtocol
+        );
+        const partition = new RemoteYjsSharedDocument(
             client,
             authSource,
             config

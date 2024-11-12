@@ -1,4 +1,4 @@
-import WebSocket, { Server } from 'ws';
+import { Server } from 'ws';
 import {
     TunnelServer,
     TunnelRequestMapper,
