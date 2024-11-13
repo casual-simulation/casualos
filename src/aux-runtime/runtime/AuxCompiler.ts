@@ -14,7 +14,6 @@ import {
     ExportFunc,
     isModule,
     parseModule,
-    isAsyncScript,
 } from '@casual-simulation/aux-common/bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
@@ -848,7 +847,7 @@ export class AuxCompiler {
         if (transpiled.metadata.isModule) {
             // All modules are async
             async = true;
-        } else if (isAsyncScript(script)) {
+        } else if (transpiled.metadata.isAsync) {
             async = true;
         }
         if (options.forceSync) {

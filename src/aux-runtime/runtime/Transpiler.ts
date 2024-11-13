@@ -302,6 +302,21 @@ export class Transpiler {
     }
 
     /**
+     * Determines if the given node contains any await expressions.
+     * @param node The node.
+     */
+    private _isAsyncNode(node: any): boolean {
+        for (const child of node.body) {
+            if (child.type === 'ExpressionStatement') {
+                if (child.expression.type === 'AwaitExpression') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Transpiles the given code into ES6 JavaScript Code.
      */
     private _transpile(code: string): TranspilerResult {
@@ -311,6 +326,7 @@ export class Transpiler {
         }
         const macroed = replaceMacros(code);
         const node = this._parse(macroed);
+        const isAsync = this._isAsyncNode(node);
 
         // we create a YJS document to track
         // text changes. This lets us use a separate client ID for each change
@@ -326,6 +342,7 @@ export class Transpiler {
         let metadata: TranspilerResult['metadata'] = {
             doc,
             text,
+            isAsync,
             isModule: false,
         };
 
@@ -2138,6 +2155,11 @@ export interface TranspilerResult {
          * Whether the code is a module (contains import or export statements).
          */
         isModule: boolean;
+
+        /**
+         * Whether the code is async (contains await expressions).
+         */
+        isAsync: boolean;
     };
 }
 
