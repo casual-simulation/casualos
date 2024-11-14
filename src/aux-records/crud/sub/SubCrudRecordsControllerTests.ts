@@ -260,7 +260,10 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByKey(recordName, 'address', createKey(0))
-                ).resolves.toMatchObject(item);
+                ).resolves.toMatchObject({
+                    item,
+                    markers: [PUBLIC_READ_MARKER],
+                });
             });
 
             it('should reject the request if given an invalid key', async () => {
@@ -282,7 +285,10 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByKey(recordName, 'address', createKey(0))
-                ).resolves.toBeFalsy();
+                ).resolves.toMatchObject({
+                    item: null,
+                    markers: [],
+                });
             });
 
             if (allowRecordKeys) {
@@ -310,8 +316,11 @@ export function testCrudRecordsController<
                             createKey(0)
                         )
                     ).resolves.toEqual({
-                        address: 'address',
-                        key: createKey(0),
+                        item: {
+                            address: 'address',
+                            key: createKey(0),
+                        },
+                        markers: [PUBLIC_READ_MARKER],
                     });
                 });
 
@@ -339,8 +348,11 @@ export function testCrudRecordsController<
                             createKey(0)
                         )
                     ).resolves.toEqual({
-                        address: 'address',
-                        key: createKey(0),
+                        item: {
+                            address: 'address',
+                            key: createKey(0),
+                        },
+                        markers: [PUBLIC_READ_MARKER],
                     });
                 });
             } else {
@@ -376,7 +388,10 @@ export function testCrudRecordsController<
                             'address',
                             createKey(0)
                         )
-                    ).resolves.toBeFalsy();
+                    ).resolves.toMatchObject({
+                        item: null,
+                        markers: [],
+                    });
                 });
 
                 it('should reject the request if subjectless keys are not allowed', async () => {
@@ -411,13 +426,23 @@ export function testCrudRecordsController<
                             'address',
                             createKey(0)
                         )
-                    ).resolves.toBeFalsy();
+                    ).resolves.toMatchObject({
+                        item: null,
+                        markers: [],
+                    });
                 });
             }
         });
 
         describe('update', () => {
             beforeEach(async () => {
+                await recordItemsStore.createItem(
+                    recordName,
+                    createRecordItem({
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    })
+                );
                 await itemsStore.createItem(
                     recordName,
                     createTestItem({
@@ -447,7 +472,10 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByKey(recordName, 'address', createKey(0))
-                ).resolves.toMatchObject(item);
+                ).resolves.toMatchObject({
+                    item,
+                    markers: [PUBLIC_READ_MARKER],
+                });
             });
 
             it('should reject the request if given an invalid key', async () => {
@@ -470,7 +498,10 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByKey(recordName, 'address', createKey(0))
-                ).resolves.toMatchObject(item);
+                ).resolves.toMatchObject({
+                    item,
+                    markers: [PUBLIC_READ_MARKER],
+                });
             });
 
             if (allowRecordKeys) {
@@ -498,7 +529,10 @@ export function testCrudRecordsController<
                             'address',
                             createKey(0)
                         )
-                    ).resolves.toMatchObject(item);
+                    ).resolves.toMatchObject({
+                        item,
+                        markers: [PUBLIC_READ_MARKER],
+                    });
                 });
 
                 it('should be able to use subjectless keys', async () => {
@@ -525,7 +559,10 @@ export function testCrudRecordsController<
                             'address',
                             createKey(0)
                         )
-                    ).resolves.toMatchObject(item);
+                    ).resolves.toMatchObject({
+                        item,
+                        markers: [PUBLIC_READ_MARKER],
+                    });
                 });
             } else {
                 it('should reject the request if record keys are not allowed', async () => {
@@ -561,12 +598,13 @@ export function testCrudRecordsController<
                             'address',
                             createKey(0)
                         )
-                    ).resolves.toMatchObject(
-                        createTestItem({
+                    ).resolves.toMatchObject({
+                        item: createTestItem({
                             address: 'address',
                             key: createKey(0),
-                        })
-                    );
+                        }),
+                        markers: [PUBLIC_READ_MARKER],
+                    });
                 });
 
                 it('should reject the request if subjectless keys are not allowed', async () => {
@@ -602,12 +640,13 @@ export function testCrudRecordsController<
                             'address',
                             createKey(0)
                         )
-                    ).resolves.toMatchObject(
-                        createTestItem({
+                    ).resolves.toMatchObject({
+                        item: createTestItem({
                             address: 'address',
                             key: createKey(0),
-                        })
-                    );
+                        }),
+                        markers: [PUBLIC_READ_MARKER],
+                    });
                 });
             }
         });
@@ -799,7 +838,10 @@ export function testCrudRecordsController<
 
             await expect(
                 itemsStore.getItemByKey(recordName, 'address2', createKey(2))
-            ).resolves.toBeFalsy();
+            ).resolves.toMatchObject({
+                item: null,
+                markers: [],
+            });
         });
 
         it('should return data_not_found if the record item doesnt exist', async () => {
@@ -854,7 +896,10 @@ export function testCrudRecordsController<
                         'address2',
                         createKey(2)
                     )
-                ).resolves.toBeFalsy();
+                ).resolves.toMatchObject({
+                    item: null,
+                    markers: [],
+                });
             });
         } else {
             it('should return not_authorized if the controller doesnt allow record keys', async () => {
@@ -916,10 +961,16 @@ export function testCrudRecordsController<
         let items: TItem[];
         beforeEach(async () => {
             items = [];
+
+            createRecordItem({
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
             for (let i = 0; i < 20; i++) {
                 const item = createTestItem({
-                    address: 'address' + i,
-                    markers: [PRIVATE_MARKER],
+                    address: 'address',
+                    key: createKey(i),
                 });
                 await itemsStore.createItem(recordName, item);
                 items.push(item);
@@ -930,14 +981,14 @@ export function testCrudRecordsController<
             const result = await manager.listItems({
                 recordName: recordName,
                 userId,
-                startingAddress: null,
+                address: 'address',
                 instances: [],
             });
 
             expect(result).toEqual({
                 success: true,
                 recordName: recordName,
-                items: items.slice(0, 10),
+                items: items,
                 totalCount: 20,
             });
         });
@@ -947,14 +998,14 @@ export function testCrudRecordsController<
                 const result = await manager.listItems({
                     recordName: key,
                     userId: otherUserId,
-                    startingAddress: null,
+                    address: 'address',
                     instances: [],
                 });
 
                 expect(result).toEqual({
                     success: true,
                     recordName: recordName,
-                    items: items.slice(0, 10),
+                    items: items,
                     totalCount: 20,
                 });
             });
@@ -963,7 +1014,7 @@ export function testCrudRecordsController<
                 const result = await manager.listItems({
                     recordName: key,
                     userId: otherUserId,
-                    startingAddress: null,
+                    address: 'address',
                     instances: [],
                 });
 
@@ -983,152 +1034,27 @@ export function testCrudRecordsController<
             });
         }
 
-        it('should return items after the given starting address', async () => {
-            const result = await manager.listItems({
-                recordName: recordName,
-                userId,
-                startingAddress: 'address3',
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: true,
-                recordName: recordName,
-                items: items.slice(4, 10),
-                totalCount: 20,
-            });
-        });
-
-        it('should return not_authorized if the user does not have access to the account marker', async () => {
-            const result = await manager.listItems({
-                recordName: recordName,
-                userId: otherUserId,
-                startingAddress: 'address3',
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage: expect.any(String),
-                reason: {
-                    action: 'list',
-                    recordName: recordName,
-                    resourceId: undefined,
-                    resourceKind: resourceKind,
-                    subjectId: otherUserId,
-                    subjectType: 'user',
-                    type: 'missing_permission',
-                },
-            });
-        });
-    });
-
-    describe('listItemsByMarker()', () => {
-        let items: TItem[];
-        beforeEach(async () => {
+        it('should return not_authorized if the user does not have access to the record item marker', async () => {
             items = [];
-            for (let i = 0; i < 40; i++) {
+
+            createRecordItem({
+                address: 'address2',
+                markers: [PRIVATE_MARKER],
+            });
+
+            for (let i = 0; i < 20; i++) {
                 const item = createTestItem({
-                    address: 'address' + i,
-                    markers: [
-                        i % 2 === 0 ? PRIVATE_MARKER : PUBLIC_READ_MARKER,
-                    ],
+                    address: 'address',
+                    key: createKey(i),
                 });
                 await itemsStore.createItem(recordName, item);
                 items.push(item);
             }
-        });
 
-        it('should return a list of items that have the given marker', async () => {
-            const result = await manager.listItemsByMarker({
-                recordName: recordName,
-                userId,
-                marker: PRIVATE_MARKER,
-                startingAddress: null,
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: true,
-                recordName: recordName,
-                items: items
-                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                    .slice(0, 10),
-                totalCount: 20,
-            });
-        });
-
-        it('should return a list of items that are after the starting address', async () => {
-            const result = await manager.listItemsByMarker({
-                recordName: recordName,
-                userId,
-                marker: PRIVATE_MARKER,
-                startingAddress: 'address1',
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: true,
-                recordName: recordName,
-                items: items
-                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                    .slice(1, 11),
-                totalCount: 20,
-            });
-        });
-
-        if (allowRecordKeys) {
-            it('should be able to use a record key', async () => {
-                const result = await manager.listItemsByMarker({
-                    recordName: key,
-                    userId: otherUserId,
-                    marker: PRIVATE_MARKER,
-                    startingAddress: null,
-                    instances: [],
-                });
-
-                expect(result).toEqual({
-                    success: true,
-                    recordName: recordName,
-                    items: items
-                        .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                        .slice(0, 10),
-                    totalCount: 20,
-                });
-            });
-        } else {
-            it('should return not_authorized if record keys are not allowed', async () => {
-                const result = await manager.listItemsByMarker({
-                    recordName: key,
-                    userId: otherUserId,
-                    marker: PRIVATE_MARKER,
-                    startingAddress: null,
-                    instances: [],
-                });
-
-                expect(result).toEqual({
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage: expect.any(String),
-                    reason: {
-                        type: 'missing_permission',
-                        recordName,
-                        action: 'list',
-                        resourceKind,
-                        subjectType: 'user',
-                        subjectId: otherUserId,
-                    },
-                });
-            });
-        }
-
-        it('should return not_authorized if the user does not have access to the marker', async () => {
-            const result = await manager.listItemsByMarker({
+            const result = await manager.listItems({
                 recordName: recordName,
                 userId: otherUserId,
-                marker: PRIVATE_MARKER,
-                startingAddress: null,
+                address: 'address2',
                 instances: [],
             });
 

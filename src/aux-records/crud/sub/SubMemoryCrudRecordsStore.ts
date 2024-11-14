@@ -13,7 +13,7 @@ import {
     CrudSubscriptionMetrics,
 } from '../CrudRecordsStore';
 
-export abstract class MemorySubCrudRecordsStore<
+export class MemorySubCrudRecordsStore<
     TKey,
     T extends SubCrudRecord<TKey>,
     TMetrics extends CrudSubscriptionMetrics = CrudSubscriptionMetrics
@@ -77,6 +77,14 @@ export abstract class MemorySubCrudRecordsStore<
         }
 
         const item = arr.find((i) => isEqual(this.getKey(i), key)) ?? null;
+
+        if (!item) {
+            return {
+                item: null,
+                markers: [],
+            };
+        }
+
         const recordItem = await this._itemStore.getItemByAddress(
             recordName,
             address
@@ -84,7 +92,7 @@ export abstract class MemorySubCrudRecordsStore<
 
         return {
             item,
-            markers: recordItem?.markers,
+            markers: recordItem?.markers ?? [],
         };
     }
 

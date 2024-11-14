@@ -30,44 +30,67 @@ import {
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
 import { testCrudRecordsController } from './SubCrudRecordsControllerTests';
+import { SubCrudRecord, SubCrudRecordsStore } from './SubCrudRecordsStore';
+import {
+    SubCrudRecordsConfiguration,
+    SubCrudRecordsController,
+} from './SubCrudRecordsController';
 
 console.log = jest.fn();
 
 describe('SubCrudRecordsController', () => {
     describe('allows record key access', () => {
         testCrudRecordsController<
-            TestItem,
+            TestSubItemKey,
+            TestSubItem,
+            SubCrudRecordsStore<TestSubItemKey, TestSubItem>,
             CrudRecordsStore<TestItem>,
             TestController
         >(
             true,
             'data',
-            (services) => new MemorySubCrudRecordsStore(services.store),
+            (services) => new MemoryCrudRecordsStore(services.store),
+            (services, recordItemStore) =>
+                new MemorySubCrudRecordsStore(services.store, recordItemStore),
             (config, services) =>
                 new TestController({
                     ...config,
                     resourceKind: 'data',
                     name: 'testItem',
                 }),
+            (item) => ({
+                key1: item,
+                key2: `key${item}`,
+            }),
+            (item) => item,
             (item) => item
         );
     });
 
     describe('denies record key access', () => {
         testCrudRecordsController<
-            TestItem,
+            TestSubItemKey,
+            TestSubItem,
+            SubCrudRecordsStore<TestSubItemKey, TestSubItem>,
             CrudRecordsStore<TestItem>,
             TestController
         >(
             false,
             'marker',
             (services) => new MemoryCrudRecordsStore(services.store),
+            (services, recordItemStore) =>
+                new MemorySubCrudRecordsStore(services.store, recordItemStore),
             (config, services) =>
                 new TestController({
                     ...config,
                     resourceKind: 'marker',
                     name: 'testItem',
                 }),
+            (item) => ({
+                key1: item,
+                key2: `key${item}`,
+            }),
+            (item) => item,
             (item) => item
         );
     });
@@ -75,29 +98,39 @@ describe('SubCrudRecordsController', () => {
 
 export interface TestItem extends CrudRecord {}
 
-export class TestController extends CrudRecordsController<TestItem> {
+export interface TestSubItemKey {
+    key1: number;
+    key2: string;
+}
+
+export interface TestSubItem extends SubCrudRecord<TestSubItemKey> {}
+
+export class TestController extends SubCrudRecordsController<
+    TestSubItemKey,
+    TestSubItem
+> {
     private __checkSubscriptionMetrics: (
         action: ActionKinds,
         authorization: AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: TestItem
+        item?: TestSubItem
     ) => Promise<CheckSubscriptionMetricsResult>;
 
     set checkSubscriptionMetrics(
         value: (
             action: ActionKinds,
             authorization: AuthorizeUserAndInstancesForResourcesSuccess,
-            item?: TestItem
+            item?: TestSubItem
         ) => Promise<CheckSubscriptionMetricsResult>
     ) {
         this.__checkSubscriptionMetrics = value;
     }
 
     constructor(
-        config: CrudRecordsConfiguration<TestItem>,
+        config: SubCrudRecordsConfiguration<TestSubItemKey, TestSubItem>,
         checkSubscriptionMetrics?: (
             action: ActionKinds,
             authorization: AuthorizeUserAndInstancesForResourcesSuccess,
-            item?: TestItem
+            item?: TestSubItem
         ) => Promise<CheckSubscriptionMetricsResult>
     ) {
         super(config);
@@ -108,7 +141,7 @@ export class TestController extends CrudRecordsController<TestItem> {
         action: ActionKinds,
         context: AuthorizationContext,
         authorization: AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: TestItem
+        item?: TestSubItem
     ): Promise<CheckSubscriptionMetricsResult> {
         if (this.__checkSubscriptionMetrics) {
             return await this.__checkSubscriptionMetrics(

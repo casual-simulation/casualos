@@ -350,7 +350,7 @@ export abstract class SubCrudRecordsController<
                 request.key
             );
 
-            if (!result) {
+            if (!result.item) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',
