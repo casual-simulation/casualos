@@ -150,8 +150,13 @@ describe('AIController', () => {
                             provider: 'provider2',
                             model: 'test-model3',
                         },
+                        {
+                            provider: 'provider1',
+                            model: 'test-model-token-ratio',
+                        },
                     ],
                     allowedChatSubscriptionTiers: ['test-tier'],
+                    tokenModifierRatio: { 'test-model-token-ratio': 2.0 },
                 },
             },
             generateSkybox: {
@@ -474,6 +479,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: true,
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: null,
@@ -618,6 +624,70 @@ describe('AIController', () => {
                 currentPeriodStartMs: null,
                 currentPeriodEndMs: null,
                 totalTokensInCurrentPeriod: 123,
+            });
+        });
+
+        it('should use configure token ratio', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 123,
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model-token-ratio',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                        finishReason: 'stop',
+                    },
+                ],
+            });
+            expect(chatInterface.chat).toBeCalledWith({
+                model: 'test-model-token-ratio',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+
+            const metrics = await store.getSubscriptionAiChatMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                subscriptionType: 'user',
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalTokensInCurrentPeriod: 246,
             });
         });
 
@@ -1068,6 +1138,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: {
@@ -1489,6 +1560,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: true,
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: null,
@@ -1656,6 +1728,80 @@ describe('AIController', () => {
                 currentPeriodStartMs: null,
                 currentPeriodEndMs: null,
                 totalTokensInCurrentPeriod: 123,
+            });
+        });
+
+        it('should use configure token ratio', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 123,
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model-token-ratio',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface.chatStream).toBeCalledWith({
+                model: 'test-model-token-ratio',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+
+            const metrics = await store.getSubscriptionAiChatMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                subscriptionType: 'user',
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalTokensInCurrentPeriod: 246,
             });
         });
 
@@ -2112,6 +2258,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: {
