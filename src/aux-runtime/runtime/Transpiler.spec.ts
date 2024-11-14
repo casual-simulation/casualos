@@ -657,6 +657,52 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(`await test();`);
             });
+
+            it('should identify code with a top-level await expression as async', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`await test();`);
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify code with await inside brackets as async', () => {
+                const result = transpiler.transpileWithMetadata(`{
+                    await test();
+                }`);
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify variables that await their definitions as async', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `let abc = await test();`
+                );
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify await statements in function arguments as async', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`abc( await test() );`);
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify code with await inside a function as synchronous', () => {
+                const result = transpiler.transpileWithMetadata(
+                    'async function abc() { await test(); }'
+                );
+
+                expect(result.metadata.isAsync).toBe(false);
+            });
+
+            it('should identify code with await inside a lambda function as synchronous', () => {
+                const result = transpiler.transpileWithMetadata(
+                    'const abc = async () => await test();'
+                );
+
+                expect(result.metadata.isAsync).toBe(false);
+            });
         });
 
         describe('force sync', () => {
