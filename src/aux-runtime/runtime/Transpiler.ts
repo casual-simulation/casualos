@@ -359,8 +359,6 @@ export class Transpiler {
         const macroed = replaceMacros(code);
         const node = this._parse(macroed);
         const isAsync = this._isAsyncNode(node);
-        console.log('macroed:', macroed);
-        console.log('isAsync', isAsync);
 
         // we create a YJS document to track
         // text changes. This lets us use a separate client ID for each change
