@@ -187,6 +187,20 @@ const MACROS: TranspilerMacro[] = [
 ];
 
 /**
+ * The list of node types that have their own async scopes. To be ignored in _isAsyncNode.
+ */
+const asyncBoundaryNodes = new Set([
+    'FunctionDeclaration',
+    'FunctionExpression',
+    'ArrowFunctionExpression',
+    'MethodDefinition',
+    'ClassDeclaration',
+    'ClassExpression',
+    'ObjectMethod',
+    'ClassMethod',
+]);
+
+/**
  * Replaces macros in the given text.
  * @param text The text that the macros should be replaced in.
  */
@@ -306,13 +320,31 @@ export class Transpiler {
      * @param node The node.
      */
     private _isAsyncNode(node: any): boolean {
-        for (const child of node.body) {
-            if (child.type === 'ExpressionStatement') {
-                if (child.expression.type === 'AwaitExpression') {
-                    return true;
+        if (!node || asyncBoundaryNodes.has(node.type)) {
+            return false;
+        }
+
+        if (node.type === 'AwaitExpression') {
+            return true;
+        }
+
+        for (const key in node) {
+            const child = node[key];
+            if (!child || typeof child !== 'object' || key === 'parent') {
+                continue;
+            }
+
+            if (Array.isArray(child)) {
+                for (const item of child) {
+                    if (this._isAsyncNode(item)) {
+                        return true;
+                    }
                 }
+            } else if (this._isAsyncNode(child)) {
+                return true;
             }
         }
+
         return false;
     }
 
@@ -327,6 +359,8 @@ export class Transpiler {
         const macroed = replaceMacros(code);
         const node = this._parse(macroed);
         const isAsync = this._isAsyncNode(node);
+        console.log('macroed:', macroed);
+        console.log('isAsync', isAsync);
 
         // we create a YJS document to track
         // text changes. This lets us use a separate client ID for each change
