@@ -1,3 +1,5 @@
+import { KnownErrorCodes } from '@casual-simulation/aux-common';
+
 /**
  * Defines an interface for a store that can be used to create, read, update, and delete sub-items in a record.
  * That is, items which are related to a parent resource kind. (subscription to notification, package version to package, etc.)
@@ -11,7 +13,7 @@ export interface SubCrudRecordsStore<TKey, T extends SubCrudRecord<TKey>> {
      * @param recordName The name of the record.
      * @param item The item to create.
      */
-    createItem(recordName: string, item: T): Promise<void>;
+    createItem(recordName: string, item: T): Promise<CrudResult>;
 
     /**
      * Reads the item with the given address. Always returns an object with the item and any markers that are related to the item.
@@ -31,7 +33,7 @@ export interface SubCrudRecordsStore<TKey, T extends SubCrudRecord<TKey>> {
      * @param recordName The name of the record that the item lives in.
      * @param record The record to update.
      */
-    updateItem(recordName: string, item: Partial<T>): Promise<void>;
+    updateItem(recordName: string, item: Partial<T>): Promise<CrudResult>;
 
     /**
      * Creates or updates the record with the given ID.
@@ -39,7 +41,7 @@ export interface SubCrudRecordsStore<TKey, T extends SubCrudRecord<TKey>> {
      * @param recordName The name of the record that the item lives in.
      * @param item The item to create or update.
      */
-    putItem(recordName: string, item: Partial<T>): Promise<void>;
+    putItem(recordName: string, item: Partial<T>): Promise<CrudResult>;
 
     /**
      * Deletes the item with the given key.
@@ -47,7 +49,11 @@ export interface SubCrudRecordsStore<TKey, T extends SubCrudRecord<TKey>> {
      * @param address The address of the record item that the item resides in.
      * @param key The key of the item to delete.
      */
-    deleteItem(recordName: string, address: string, key: TKey): Promise<void>;
+    deleteItem(
+        recordName: string,
+        address: string,
+        key: TKey
+    ): Promise<CrudResult>;
 
     /**
      * Gets a list of the items for the given record and address.
@@ -84,6 +90,7 @@ export interface GetSubCrudItemResult<T> {
 
     /**
      * The markers that are related to the item.
+     * Null if the parent record item doesn't exist.
      */
     markers: string[];
 }
@@ -99,4 +106,16 @@ export interface ListSubCrudStoreSuccess<T> {
      * The total number of items in the record.
      */
     totalCount: number;
+}
+
+export type CrudResult = CrudSuccess | CrudFailure;
+
+export interface CrudSuccess {
+    success: true;
+}
+
+export interface CrudFailure {
+    success: false;
+    errorCode: 'item_not_found' | 'parent_not_found';
+    errorMessage: string;
 }

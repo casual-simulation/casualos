@@ -23,7 +23,7 @@ import {
     CrudRecordsConfiguration,
     CrudRecordsController,
 } from '../CrudRecordsController';
-import { MemorySubCrudRecordsStore } from './SubMemoryCrudRecordsStore';
+import { MemorySubCrudRecordsStore } from './MemorySubCrudRecordsStore';
 import {
     ActionKinds,
     PRIVATE_MARKER,

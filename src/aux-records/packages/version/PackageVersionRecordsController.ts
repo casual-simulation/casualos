@@ -19,6 +19,7 @@ import {
 } from '../../crud';
 import {
     PackageRecordVersion,
+    PackageRecordVersionKey,
     PackageVersionRecordsStore,
     PackageVersionSubscriptionMetrics,
 } from './PackageVersionRecordsStore';
@@ -29,6 +30,11 @@ import {
     PackageFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../../SubscriptionConfiguration';
+import {
+    SubCrudRecordsConfiguration,
+    SubCrudRecordsController,
+} from '../../crud/sub/SubCrudRecordsController';
+import { PackageRecordsStore } from '../PackageRecordsStore';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 
@@ -37,9 +43,11 @@ const TRACE_NAME = 'PackageVersionRecordsController';
  */
 export interface PackageVersionRecordsConfiguration
     extends Omit<
-        CrudRecordsConfiguration<
+        SubCrudRecordsConfiguration<
+            PackageRecordVersionKey,
             PackageRecordVersion,
-            PackageVersionRecordsStore
+            PackageVersionRecordsStore,
+            PackageRecordsStore
         >,
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {}
@@ -47,9 +55,11 @@ export interface PackageVersionRecordsConfiguration
 /**
  * Defines a controller that can be used to interact with NotificationRecords.
  */
-export class PackageVersionRecordsController extends CrudRecordsController<
+export class PackageVersionRecordsController extends SubCrudRecordsController<
+    PackageRecordVersionKey,
     PackageRecordVersion,
-    PackageVersionRecordsStore
+    PackageVersionRecordsStore,
+    PackageRecordsStore
 > {
     constructor(config: PackageVersionRecordsConfiguration) {
         super({
@@ -90,14 +100,45 @@ export class PackageVersionRecordsController extends CrudRecordsController<
             };
         }
 
-        if (action === 'create' && typeof features.maxItems === 'number') {
-            if (metrics.totalItems >= features.maxItems) {
+        if (
+            action === 'create' &&
+            typeof features.maxPackageVersions === 'number'
+        ) {
+            if (metrics.totalItems >= features.maxPackageVersions) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
-                        'The maximum number of package items has been reached for your subscription.',
+                        'The maximum number of package versions has been reached for your subscription.',
                 };
+            }
+        }
+
+        if (item && typeof features.maxPackageVersionSizeInBytes === 'number') {
+            if (item.sizeInBytes >= features.maxPackageVersionSizeInBytes) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The package version is too large for your subscription.',
+                };
+            }
+
+            if (
+                action === 'create' &&
+                typeof features.maxPackageBytesTotal === 'number'
+            ) {
+                if (
+                    metrics.totalPackageVersionBytes + item.sizeInBytes >=
+                    features.maxPackageBytesTotal
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The maximum size of package versions has been reached for your subscription.',
+                    };
+                }
             }
         }
 

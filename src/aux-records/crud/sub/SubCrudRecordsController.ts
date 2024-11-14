@@ -162,6 +162,15 @@ export abstract class SubCrudRecordsController<
                 request.item.address,
                 request.item.key
             );
+
+            if (!existingItem.markers) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The parent item was not found.',
+                };
+            }
+
             const resourceMarkers = existingItem.markers;
 
             let action = existingItem.item

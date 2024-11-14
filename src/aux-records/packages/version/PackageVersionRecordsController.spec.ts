@@ -2,7 +2,7 @@ import {
     setupTestContext,
     TestControllers,
     testCrudRecordsController,
-} from '../../crud/CrudRecordsControllerTests';
+} from '../../crud/sub/SubCrudRecordsControllerTests';
 import { PackageVersionRecordsController } from './PackageVersionRecordsController';
 import {
     buildSubscriptionConfig,
@@ -19,35 +19,42 @@ import {
 import { v5 as uuidv5 } from 'uuid';
 import {
     PackageRecordVersion,
+    PackageRecordVersionKey,
     PackageVersionRecordsStore,
 } from './PackageVersionRecordsStore';
 import { MemoryPackageVersionRecordsStore } from './MemoryPackageVersionRecordsStore';
+import { MemoryPackageRecordsStore } from '../MemoryPackageRecordsStore';
+import { PackageRecordsStore } from '../PackageRecordsStore';
 
 console.log = jest.fn();
 console.error = jest.fn();
 
 describe('PackageVersionRecordsController', () => {
     testCrudRecordsController<
+        PackageRecordVersionKey,
         PackageRecordVersion,
         PackageVersionRecordsStore,
+        PackageRecordsStore,
         PackageVersionRecordsController
     >(
         false,
-        'package',
-        (services) => new MemoryPackageVersionRecordsStore(services.store),
+        'package.version',
+        (services) => new MemoryPackageRecordsStore(services.store),
+        (services, packageStore) =>
+            new MemoryPackageVersionRecordsStore(services.store, packageStore),
         (config, services) =>
             new PackageVersionRecordsController({
                 ...config,
             }),
+        (id) => ({
+            major: id,
+            minor: 0,
+            patch: 0,
+            tag: '',
+        }),
         (item) => ({
+            key: item.key,
             address: item.address,
-            markers: item.markers,
-            version: {
-                major: 1,
-                minor: 0,
-                patch: 0,
-                tag: '',
-            },
             aux: {
                 version: 1,
                 state: {},
@@ -59,6 +66,10 @@ describe('PackageVersionRecordsController', () => {
             scriptSha256: '',
             sha256: '',
             sizeInBytes: 0,
+        }),
+        (item) => ({
+            address: item.address,
+            markers: item.markers,
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -95,11 +106,18 @@ describe('PackageVersionRecordsController', () => {
         dateNowMock.mockReturnValue(999);
 
         const context = await setupTestContext<
+            PackageRecordVersionKey,
             PackageRecordVersion,
             PackageVersionRecordsStore,
+            PackageRecordsStore,
             PackageVersionRecordsController
         >(
-            (services) => new MemoryPackageVersionRecordsStore(services.store),
+            (services) => new MemoryPackageRecordsStore(services.store),
+            (services, packageStore) =>
+                new MemoryPackageVersionRecordsStore(
+                    services.store,
+                    packageStore
+                ),
             (config, services) => {
                 return new PackageVersionRecordsController({
                     ...config,

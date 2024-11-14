@@ -1,10 +1,11 @@
-import { MemoryCrudRecordsStore } from '../../crud/MemoryCrudRecordsStore';
+import { MemorySubCrudRecordsStore } from '../../crud/sub/MemorySubCrudRecordsStore';
 import {
     PackageVersion,
     PackageRecordVersion,
     ListedPackageVersion,
     PackageVersionRecordsStore,
     PackageVersionSubscriptionMetrics,
+    PackageRecordVersionKey,
 } from './PackageVersionRecordsStore';
 import { SubscriptionFilter } from '../../MetricsStore';
 
@@ -12,7 +13,10 @@ import { SubscriptionFilter } from '../../MetricsStore';
  * A Memory-based implementation of the PackageRecordsStore.
  */
 export class MemoryPackageVersionRecordsStore
-    extends MemoryCrudRecordsStore<PackageRecordVersion>
+    extends MemorySubCrudRecordsStore<
+        PackageRecordVersionKey,
+        PackageRecordVersion
+    >
     implements PackageVersionRecordsStore
 {
     async getSubscriptionMetrics(
@@ -30,8 +34,10 @@ export class MemoryPackageVersionRecordsStore
             const items = this.getItemRecord(record.name);
             totalItems += items.size;
 
-            for (let item of items.values()) {
-                totalPackageVersionBytes += item.sizeInBytes;
+            for (let versions of items.values()) {
+                for (let version of versions) {
+                    totalPackageVersionBytes += version.sizeInBytes;
+                }
             }
         }
 

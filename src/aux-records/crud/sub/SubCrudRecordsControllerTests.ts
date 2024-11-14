@@ -266,6 +266,32 @@ export function testCrudRecordsController<
                 });
             });
 
+            it('should return data_not_found if the record item doesnt exist', async () => {
+                const item = createTestItem({
+                    address: 'missing',
+                    key: createKey(0),
+                });
+                const result = (await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    item,
+                    instances: [],
+                })) as CrudRecordItemSuccess;
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: expect.any(String),
+                });
+
+                await expect(
+                    itemsStore.getItemByKey(recordName, 'missing', createKey(0))
+                ).resolves.toMatchObject({
+                    item: null,
+                    markers: null,
+                });
+            });
+
             it('should reject the request if given an invalid key', async () => {
                 const result = (await manager.recordItem({
                     recordKeyOrRecordName: 'not_a_key',
@@ -287,7 +313,7 @@ export function testCrudRecordsController<
                     itemsStore.getItemByKey(recordName, 'address', createKey(0))
                 ).resolves.toMatchObject({
                     item: null,
-                    markers: [],
+                    markers: [PUBLIC_READ_MARKER],
                 });
             });
 
@@ -390,7 +416,7 @@ export function testCrudRecordsController<
                         )
                     ).resolves.toMatchObject({
                         item: null,
-                        markers: [],
+                        markers: [PUBLIC_READ_MARKER],
                     });
                 });
 
@@ -428,7 +454,7 @@ export function testCrudRecordsController<
                         )
                     ).resolves.toMatchObject({
                         item: null,
-                        markers: [],
+                        markers: [PUBLIC_READ_MARKER],
                     });
                 });
             }
@@ -840,7 +866,7 @@ export function testCrudRecordsController<
                 itemsStore.getItemByKey(recordName, 'address2', createKey(2))
             ).resolves.toMatchObject({
                 item: null,
-                markers: [],
+                markers: [PRIVATE_MARKER],
             });
         });
 
@@ -898,7 +924,7 @@ export function testCrudRecordsController<
                     )
                 ).resolves.toMatchObject({
                     item: null,
-                    markers: [],
+                    markers: [PRIVATE_MARKER],
                 });
             });
         } else {

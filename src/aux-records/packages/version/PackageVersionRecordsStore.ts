@@ -9,12 +9,16 @@ import {
     CrudSubscriptionMetrics,
 } from '../../crud';
 import { SubscriptionFilter } from '../../MetricsStore';
+import {
+    SubCrudRecord,
+    SubCrudRecordsStore,
+} from '../../crud/sub/SubCrudRecordsStore';
 
 /**
  * Defines a store that contains notification records.
  */
 export interface PackageVersionRecordsStore
-    extends CrudRecordsStore<PackageRecordVersion> {
+    extends SubCrudRecordsStore<PackageRecordVersionKey, PackageRecordVersion> {
     /**
      * Gets the item metrics for the subscription of the given user or studio.
      * @param filter The filter to use.
@@ -24,12 +28,10 @@ export interface PackageVersionRecordsStore
     ): Promise<PackageVersionSubscriptionMetrics>;
 }
 
-export interface PackageRecordVersion extends CrudRecord {
-    /**
-     * The version of the package.
-     */
-    version: PackageVersion;
+export interface PackageRecordVersionKey extends PackageVersion {}
 
+export interface PackageRecordVersion
+    extends SubCrudRecord<PackageRecordVersionKey> {
     /**
      * The aux that is recorded in the version.
      */

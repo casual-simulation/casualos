@@ -1,6 +1,7 @@
 import { SubscriptionFilter } from '../../MetricsStore';
 import { MemoryStore } from '../../MemoryStore';
 import {
+    CrudResult,
     GetSubCrudItemResult,
     ListSubCrudStoreSuccess,
     SubCrudRecord,
@@ -36,7 +37,20 @@ export class MemorySubCrudRecordsStore<
         return item.key;
     }
 
-    async createItem(recordName: string, item: T): Promise<void> {
+    async createItem(recordName: string, item: T): Promise<CrudResult> {
+        const recordItem = this._itemStore.getItemByAddress(
+            recordName,
+            item.address
+        );
+
+        if (!recordItem) {
+            return {
+                success: false,
+                errorCode: 'parent_not_found',
+                errorMessage: 'The parent item was not found.',
+            };
+        }
+
         let bucket = this._itemBuckets.get(recordName);
         if (!bucket) {
             bucket = new Map();
@@ -53,6 +67,10 @@ export class MemorySubCrudRecordsStore<
         if (index < 0) {
             arr.push(item);
         }
+
+        return {
+            success: true,
+        };
     }
 
     async getItemByKey(
@@ -61,30 +79,8 @@ export class MemorySubCrudRecordsStore<
         key: TKey
     ): Promise<GetSubCrudItemResult<T>> {
         const bucket = this._itemBuckets.get(recordName);
-        if (!bucket) {
-            return {
-                item: null,
-                markers: [],
-            };
-        }
-
-        const arr = bucket.get(address);
-        if (!arr) {
-            return {
-                item: null,
-                markers: [],
-            };
-        }
-
-        const item = arr.find((i) => isEqual(this.getKey(i), key)) ?? null;
-
-        if (!item) {
-            return {
-                item: null,
-                markers: [],
-            };
-        }
-
+        const arr = bucket?.get(address);
+        const item = arr?.find((i) => isEqual(this.getKey(i), key)) ?? null;
         const recordItem = await this._itemStore.getItemByAddress(
             recordName,
             address
@@ -92,18 +88,25 @@ export class MemorySubCrudRecordsStore<
 
         return {
             item,
-            markers: recordItem?.markers ?? [],
+            markers: recordItem?.markers ?? null,
         };
     }
 
-    async updateItem(recordName: string, item: Partial<T>): Promise<void> {
+    async updateItem(
+        recordName: string,
+        item: Partial<T>
+    ): Promise<CrudResult> {
         const existing = await this.getItemByKey(
             recordName,
             item.address,
             item as unknown as TKey
         );
         if (!existing.item) {
-            return;
+            return {
+                success: false,
+                errorCode: 'item_not_found',
+                errorMessage: 'Item not found',
+            };
         }
 
         const updated = {
@@ -124,9 +127,13 @@ export class MemorySubCrudRecordsStore<
         } else {
             // Do nothing if the item does not exist.
         }
+
+        return {
+            success: true,
+        };
     }
 
-    async putItem(recordName: string, item: Partial<T>): Promise<void> {
+    async putItem(recordName: string, item: Partial<T>): Promise<CrudResult> {
         const existing = await this.getItemByKey(
             recordName,
             item.address,
@@ -138,13 +145,17 @@ export class MemorySubCrudRecordsStore<
         }
 
         await this.updateItem(recordName, item);
+
+        return {
+            success: true,
+        };
     }
 
     async deleteItem(
         recordName: string,
         address: string,
         key: TKey
-    ): Promise<void> {
+    ): Promise<CrudResult> {
         const bucket = this._itemBuckets.get(recordName);
         if (!bucket) {
             return;
@@ -159,6 +170,10 @@ export class MemorySubCrudRecordsStore<
         if (index >= 0) {
             arr.splice(index, 1);
         }
+
+        return {
+            success: true,
+        };
     }
 
     async listItems(
