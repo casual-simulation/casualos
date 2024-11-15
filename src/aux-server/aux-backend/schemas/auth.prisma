@@ -83,6 +83,8 @@ model User {
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentPushNotification[]
 
+    packageReviews PackageRecordVersionReview[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -333,6 +335,7 @@ model Record {
 
     packageRecords PackageRecord[]
     packageRecordVersions PackageRecordVersion[]
+    packageReviews PackageRecordVersionReview[]
 
     notificationRecords NotificationRecord[]
     notificationSubscriptions NotificationSubscription[]
@@ -907,6 +910,7 @@ model PackageRecord {
     markers String[]
 
     versions PackageRecordVersion[]
+    reviews PackageRecordVersionReview[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -953,6 +957,42 @@ model PackageRecordVersion {
 
     // The size of the package version in bytes
     sizeInBytes Int
+
+    // The list of reviews for the package version
+    reviews PackageRecordVersionReview[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PackageRecordVersionReview {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "PackageRecordVersionReview_recordName_fkey1")
+
+    address String @db.String(128)
+    package PackageRecord @relation(fields: [recordName, address], references: [recordName, address], onDelete: Cascade, map: "PackageRecordVersionReview_address_fkey1")
+
+    major Int
+    minor Int
+    patch Int
+    tag String @db.String(16)
+    version PackageRecordVersion @relation(fields: [recordName, address, major, minor, patch, tag], references: [recordName, address, major, minor, patch, tag], onDelete: Cascade, map: "PackageRecordVersionReview_version_fkey1")
+
+    // Whether the package version was approved for use
+    approved Boolean
+
+    // The status of the review
+    // can be "pending", "approved", "rejected"
+    reviewStatus String
+
+    // Any additional comments by the reviewer
+    reviewComments String
+
+    // The ID of the user that reviewed the package version
+    reviewingUserId String @db.String(128)
+    reviewingUser User @relation(fields: [reviewingUserId], references: [id], onDelete: Cascade, map: "PackageRecordVersionReview_reviewingUserId_fkey1")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
