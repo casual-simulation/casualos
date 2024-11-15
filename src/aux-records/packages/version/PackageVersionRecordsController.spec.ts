@@ -78,7 +78,8 @@ describe('PackageVersionRecordsController', () => {
             );
 
             context.store.subscriptionConfiguration = builder.config;
-        }
+        },
+        ['create', 'read', 'delete', 'list']
     );
 
     let store: MemoryStore;

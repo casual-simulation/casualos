@@ -100,22 +100,22 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
             };
         }
 
-        if (
-            action === 'create' &&
-            typeof features.maxPackageVersions === 'number'
-        ) {
-            if (metrics.totalItems >= features.maxPackageVersions) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage:
-                        'The maximum number of package versions has been reached for your subscription.',
-                };
+        if (action === 'create') {
+            if (typeof features.maxPackageVersions === 'number') {
+                if (metrics.totalItems >= features.maxPackageVersions) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The maximum number of package versions has been reached for your subscription.',
+                    };
+                }
             }
-        }
 
-        if (item && typeof features.maxPackageVersionSizeInBytes === 'number') {
-            if (item.sizeInBytes >= features.maxPackageVersionSizeInBytes) {
+            if (
+                typeof features.maxPackageVersionSizeInBytes === 'number' &&
+                item.sizeInBytes >= features.maxPackageVersionSizeInBytes
+            ) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
@@ -140,6 +140,12 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
                     };
                 }
             }
+        } else if (action === 'update') {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Updating package versions is not supported.',
+            };
         }
 
         return {
