@@ -84,6 +84,7 @@ describe('PackageVersionRecordsController', () => {
 
     let store: MemoryStore;
     let itemsStore: MemoryPackageVersionRecordsStore;
+    let recordItemsStore: MemoryPackageRecordsStore;
     let records: RecordsController;
     let policies: PolicyController;
     let manager: PackageVersionRecordsController;
@@ -129,6 +130,8 @@ describe('PackageVersionRecordsController', () => {
         services = context.services;
         store = context.store;
         itemsStore = context.itemsStore as MemoryPackageVersionRecordsStore;
+        recordItemsStore =
+            context.recordItemsStore as MemoryPackageRecordsStore;
         records = context.services.records;
         policies = context.services.policies;
         manager = context.manager;
@@ -213,49 +216,142 @@ describe('PackageVersionRecordsController', () => {
     //     });
     // }
 
-    // describe('recordItem()', () => {
-    //     describe('create', () => {
-    //         it('should return subscription_limit_reached when the user has reached limit of packages', async () => {
-    //             store.subscriptionConfiguration = buildSubscriptionConfig(
-    //                 (config) =>
-    //                     config.addSubscription('sub1', (sub) =>
-    //                         sub
-    //                             .withTier('tier1')
-    //                             .withAllDefaultFeatures()
-    //                             .withPackages()
-    //                             .withPackagesMaxItems(1)
-    //                     )
-    //             );
+    describe('recordItem()', () => {
+        // describe('create', () => {
+        //     it('should return subscription_limit_reached when the user has reached limit of packages', async () => {
+        //         store.subscriptionConfiguration = buildSubscriptionConfig(
+        //             (config) =>
+        //                 config.addSubscription('sub1', (sub) =>
+        //                     sub
+        //                         .withTier('tier1')
+        //                         .withAllDefaultFeatures()
+        //                         .withPackages()
+        //                         .withPackagesMaxItems(1)
+        //                 )
+        //         );
 
-    //             const user = await store.findUser(userId);
-    //             await store.saveUser({
-    //                 ...user,
-    //                 subscriptionId: 'sub1',
-    //                 subscriptionStatus: 'active',
-    //             });
+        //         const user = await store.findUser(userId);
+        //         await store.saveUser({
+        //             ...user,
+        //             subscriptionId: 'sub1',
+        //             subscriptionStatus: 'active',
+        //         });
 
-    //             await itemsStore.createItem(recordName, {
-    //                 address: 'item1',
-    //                 markers: [PUBLIC_READ_MARKER],
-    //             });
+        //         await itemsStore.createItem(recordName, {
+        //             address: 'item1',
+        //             markers: [PUBLIC_READ_MARKER],
+        //         });
 
-    //             const result = await manager.recordItem({
-    //                 recordKeyOrRecordName: recordName,
-    //                 item: {
-    //                     address: 'item2',
-    //                     markers: [PUBLIC_READ_MARKER],
-    //                 },
-    //                 userId,
-    //                 instances: [],
-    //             });
+        //         const result = await manager.recordItem({
+        //             recordKeyOrRecordName: recordName,
+        //             item: {
+        //                 address: 'item2',
+        //                 markers: [PUBLIC_READ_MARKER],
+        //             },
+        //             userId,
+        //             instances: [],
+        //         });
 
-    //             expect(result).toEqual({
-    //                 success: false,
-    //                 errorCode: 'subscription_limit_reached',
-    //                 errorMessage:
-    //                     'The maximum number of package items has been reached for your subscription.',
-    //             });
-    //         });
-    //     });
-    // });
+        //         expect(result).toEqual({
+        //             success: false,
+        //             errorCode: 'subscription_limit_reached',
+        //             errorMessage:
+        //                 'The maximum number of package items has been reached for your subscription.',
+        //         });
+        //     });
+        // });
+
+        describe('update()', () => {
+            beforeEach(async () => {
+                await recordItemsStore.createItem(recordName, {
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                });
+                await itemsStore.createItem(recordName, {
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    aux: {
+                        version: 1,
+                        state: {},
+                    },
+                    auxSha256: '',
+                    createdAtMs: 0,
+                    entitlements: [],
+                    readme: '',
+                    scriptSha256: '',
+                    sha256: '',
+                    sizeInBytes: 0,
+                });
+            });
+
+            it('should return not_supported when trying to update a package version', async () => {
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        aux: {
+                            version: 1,
+                            state: {},
+                        },
+                        auxSha256: 'abc',
+                        createdAtMs: 123,
+                        entitlements: [],
+                        readme: 'def',
+                        scriptSha256: '',
+                        sha256: '',
+                        sizeInBytes: 0,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Updating package versions is not supported.',
+                });
+                expect(
+                    await itemsStore.getItemByKey(recordName, 'address', {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    })
+                ).toMatchObject({
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        aux: {
+                            version: 1,
+                            state: {},
+                        },
+                        auxSha256: '',
+                        createdAtMs: 0,
+                        entitlements: [],
+                        readme: '',
+                        scriptSha256: '',
+                        sha256: '',
+                        sizeInBytes: 0,
+                    },
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            });
+        });
+    });
 });
