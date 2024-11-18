@@ -55,7 +55,8 @@ describe('PackageVersionRecordsController', () => {
                 ...config,
             }),
         (id) => ({
-            major: id,
+            // Lower IDs map to higher versions (up to 100)
+            major: Math.abs(id - 100),
             minor: 0,
             patch: 0,
             tag: '',

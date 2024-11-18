@@ -8,6 +8,8 @@ import {
     PackageRecordVersionKey,
 } from './PackageVersionRecordsStore';
 import { SubscriptionFilter } from '../../MetricsStore';
+import { ListSubCrudStoreSuccess } from '../../crud/sub';
+import { orderBy, sortBy } from 'lodash';
 
 /**
  * A Memory-based implementation of the PackageRecordsStore.
@@ -45,6 +47,28 @@ export class MemoryPackageVersionRecordsStore
             ...info,
             totalItems,
             totalPackageVersionBytes,
+        };
+    }
+
+    async listItems(
+        recordName: string,
+        address: string
+    ): Promise<ListSubCrudStoreSuccess<PackageRecordVersion>> {
+        const items = await super.listItems(recordName, address);
+
+        return {
+            success: true,
+            items: orderBy(
+                items.items,
+                [
+                    (i) => i.key.major,
+                    (i) => i.key.minor,
+                    (i) => i.key.patch,
+                    (i) => i.key.tag,
+                ],
+                ['desc', 'desc', 'desc', 'asc']
+            ),
+            totalCount: items.totalCount,
         };
     }
 }
