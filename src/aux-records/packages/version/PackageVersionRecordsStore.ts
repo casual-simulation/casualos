@@ -68,6 +68,14 @@ export interface PackageRecordVersion
     createdAtMs: number;
 }
 
+export interface PackageRecordVersionWithMetadata extends PackageRecordVersion {
+    /**
+     * Whether the package version has been approved.
+     * If true, then the package either has been manually approved or does not require approval.
+     */
+    approved: boolean;
+}
+
 export interface ListedPackageVersion {
     /**
      * The name of the record that the package versions are stored in.

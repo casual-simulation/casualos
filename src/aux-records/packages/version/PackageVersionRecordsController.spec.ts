@@ -497,6 +497,8 @@ describe('PackageVersionRecordsController', () => {
             });
         });
     });
+
+    describe('getItem()', () => {});
 });
 
 function getSizeInBytes(item: any): number {

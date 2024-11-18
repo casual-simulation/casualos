@@ -408,6 +408,44 @@ export const ACTION_KINDS_VALIDATION = z.enum([
 ]);
 
 /**
+ * Defines an interface that represents an entitlement.
+ * That is, a feature that can be granted to a package but still requires user approval.
+ *
+ * In essence, this allows a package to ask the user for permission for a category of permissions.
+ */
+export interface Entitlement {
+    /**
+     * The feature category that the entitlement is for.
+     * Generally, features align with resource kinds, but don't have to.
+     */
+    feature:
+        | 'data'
+        | 'file'
+        | 'event'
+        | 'inst'
+        | 'notification'
+        | 'package'
+        | 'permissions'
+        | 'webhooks';
+
+    /**
+     * The scope of the entitlement.
+     * This can be used to limit the entitlement to a category of resources.
+     * For example, the "personal" scope would limit the entitlement to requesting access to the user's personal resources.
+     *
+     * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in a record that the user owns.
+     * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
+     * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
+     */
+    scope: 'personal' | 'shared' | 'designated';
+
+    /**
+     * The list of records that the entitlement is for.
+     */
+    designatedRecords?: string[];
+}
+
+/**
  * Defines an interface that describes common options for all permissions.
  */
 export interface Permission {

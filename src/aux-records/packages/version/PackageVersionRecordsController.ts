@@ -20,6 +20,7 @@ import {
 import {
     PackageRecordVersion,
     PackageRecordVersionKey,
+    PackageRecordVersionWithMetadata,
     PackageVersionRecordsStore,
     PackageVersionSubscriptionMetrics,
 } from './PackageVersionRecordsStore';
@@ -62,7 +63,7 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
     PackageRecordVersionInput,
     PackageVersionRecordsStore,
     PackageRecordsStore,
-    PackageRecordVersion
+    PackageRecordVersionWithMetadata
 > {
     constructor(config: PackageVersionRecordsConfiguration) {
         super({
@@ -78,7 +79,7 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: PackageRecordVersion
+        item?: PackageRecordVersionWithMetadata
     ): Promise<PackageRecordsSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({
@@ -168,6 +169,10 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
                 errorCode: 'not_supported',
                 errorMessage: 'Updating package versions is not supported.',
             };
+        }
+
+        if (item) {
+            item.approved = true;
         }
 
         return {
