@@ -84,7 +84,8 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
     ],
     ['loom', ['create']],
     ['webhook', ['read', 'create', 'delete', 'update', 'list', 'run']],
-    ['package', ['read', 'create', 'delete', 'update', 'list', 'run']],
+    ['package', ['read', 'create', 'delete', 'update', 'list']],
+    ['package.version', ['read', 'create', 'delete', 'update', 'list', 'run']],
 ];
 
 const ALLOWED_MODERATOR_ACTIONS = new Set<string>([

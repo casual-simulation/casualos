@@ -2561,6 +2561,7 @@ describe('PolicyController', () => {
             ['webhook'],
             ['notification'],
             ['package'],
+            ['package.version'],
         ];
 
         // Admins can perform all actions on all resources
@@ -3653,6 +3654,28 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
+            [
+                'package.version',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -3774,6 +3797,16 @@ describe('PolicyController', () => {
             ],
             [
                 'package',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'package.version',
                 [
                     ['create', 'resourceId'],
                     ['delete', 'resourceId'],
@@ -4287,6 +4320,13 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
+            [
+                'package.version',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -4408,6 +4448,13 @@ describe('PolicyController', () => {
             ],
             [
                 'package',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'package.version',
                 [
                     ['read', 'resourceId'],
                     ['run', 'resourceId'],
