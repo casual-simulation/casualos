@@ -129,6 +129,8 @@ import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
+import { PackageRecordsController } from './packages/PackageRecordsController';
+import { PackageVersionRecordsController } from './packages/version/PackageVersionRecordsController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -365,6 +367,18 @@ export interface RecordsServerOptions {
      * If null, then notifications are not supported.
      */
     notificationsController?: NotificationRecordsController | null;
+
+    /**
+     * The controller that should be used for handling packages.
+     * If null, then packages are not supported.
+     */
+    packagesController?: PackageRecordsController | null;
+
+    /**
+     * The controller that should be used for handling package versions.
+     * If null, then package versions are not supported.
+     */
+    packageVersionController?: PackageVersionRecordsController | null;
 }
 
 /**
@@ -385,6 +399,7 @@ export class RecordsServer {
     private _loomController: LoomController | null;
     private _webhooksController: WebhookRecordsController | null;
     private _notificationsController: NotificationRecordsController | null;
+    private _packagesController: PackageRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -452,6 +467,7 @@ export class RecordsServer {
         loomController,
         webhooksController,
         notificationsController,
+        packagesController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -473,6 +489,7 @@ export class RecordsServer {
         this._loomController = loomController;
         this._webhooksController = webhooksController;
         this._notificationsController = notificationsController;
+        this._packagesController = packagesController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -2089,6 +2106,14 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            getPackage: getItemProcedure(
+                this._auth,
+                this._packagesController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/package')
+            ),
 
             listRecords: procedure()
                 .origins('api')

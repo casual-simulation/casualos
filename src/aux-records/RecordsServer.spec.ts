@@ -51,6 +51,10 @@ import {
     allowAllFeatures,
 } from './SubscriptionConfiguration';
 import { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
+import { MemoryPackageRecordsStore } from './packages/MemoryPackageRecordsStore';
+import { MemoryPackageVersionRecordsStore } from './packages/version/MemoryPackageVersionRecordsStore';
+import { PackageRecordsController } from './packages/PackageRecordsController';
+import { PackageVersionRecordsController } from './packages/version/PackageVersionRecordsController';
 import { PolicyController } from './PolicyController';
 import {
     ACCOUNT_MARKER,
@@ -337,6 +341,11 @@ describe('RecordsServer', () => {
     let notificationStore: MemoryNotificationRecordsStore;
     let notificationController: NotificationRecordsController;
     let webPushInterface: jest.Mocked<WebPushInterface>;
+
+    let packageStore: MemoryPackageRecordsStore;
+    let packageController: PackageRecordsController;
+    let packageVersionsStore: MemoryPackageVersionRecordsStore;
+    let packageVersionController: PackageVersionRecordsController;
 
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
@@ -627,6 +636,24 @@ describe('RecordsServer', () => {
             pushInterface: webPushInterface,
         });
 
+        packageStore = new MemoryPackageRecordsStore(store);
+        packageController = new PackageRecordsController({
+            config: store,
+            policies: policyController,
+            store: packageStore,
+        });
+
+        packageVersionsStore = new MemoryPackageVersionRecordsStore(
+            store,
+            packageStore
+        );
+        packageVersionController = new PackageVersionRecordsController({
+            config: store,
+            policies: policyController,
+            recordItemStore: packageStore,
+            store: packageVersionsStore,
+        });
+
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
             getProductAndPriceInfo: jest.fn(),
@@ -781,6 +808,8 @@ describe('RecordsServer', () => {
             websocketRateLimitController: rateLimitController,
             webhooksController: webhookController,
             notificationsController: notificationController,
+            packagesController: packageController,
+            packageVersionController: packageVersionController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -12513,6 +12542,36 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                     key: 'testKey',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+    });
+
+    describe.only('GET /api/v2/records/package', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should return the given package', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
                 },
                 headers: apiCorsHeaders,
             });
