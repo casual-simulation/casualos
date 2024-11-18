@@ -35,6 +35,8 @@ import {
     SubCrudRecordsController,
 } from '../../crud/sub/SubCrudRecordsController';
 import { PackageRecordsStore } from '../PackageRecordsStore';
+import { getHash } from '@casual-simulation/crypto';
+import { sha256 } from 'hash.js';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 
@@ -57,9 +59,10 @@ export interface PackageVersionRecordsConfiguration
  */
 export class PackageVersionRecordsController extends SubCrudRecordsController<
     PackageRecordVersionKey,
-    PackageRecordVersion,
+    PackageRecordVersionInput,
     PackageVersionRecordsStore,
-    PackageRecordsStore
+    PackageRecordsStore,
+    PackageRecordVersion
 > {
     constructor(config: PackageVersionRecordsConfiguration) {
         super({
@@ -101,6 +104,25 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
         }
 
         if (action === 'create') {
+            const auxHash = getHash(item.aux);
+
+            if (item.auxSha256 !== auxHash) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The aux hash does not match the aux.',
+                };
+            }
+
+            item.createdAtMs = Date.now();
+            item.sha256 = getHash({
+                auxSha256: item.auxSha256,
+                createdAtMs: item.createdAtMs,
+                entitlements: item.entitlements,
+                readme: item.readme,
+                sizeInBytes: item.sizeInBytes,
+            });
+
             if (typeof features.maxPackageVersions === 'number') {
                 if (metrics.totalItems >= features.maxPackageVersions) {
                     return {
@@ -156,6 +178,11 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
         };
     }
 }
+
+export type PackageRecordVersionInput = Omit<
+    PackageRecordVersion,
+    'createdAtMs' | 'sha256' | 'sizeInBytes'
+>;
 
 export type PackageRecordsSubscriptionMetricsResult =
     | PackageRecordsSubscriptionMetricsSuccess

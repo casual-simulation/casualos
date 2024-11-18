@@ -48,11 +48,6 @@ export interface PackageRecordVersion
     auxSha256: string;
 
     /**
-     * The SHA-256 of the scripts that are stored in the aux.
-     */
-    scriptSha256: string;
-
-    /**
      * The list of entitlements that the package requires.
      */
     entitlements: string[];
