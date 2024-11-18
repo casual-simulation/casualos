@@ -129,7 +129,7 @@ import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
-import { XpController } from 'XpController';
+import { XpController } from './XpController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;

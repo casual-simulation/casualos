@@ -3492,8 +3492,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     options: RecordActionOptions = {}
                 ) {
                     const task = context.createTask();
-                    const action = getXpUserMeta(by, options, task.taskId);
-                    return await addAsyncResultAction(task, action);
+                    return await addAsyncResultAction(
+                        task,
+                        getXpUserMeta(by, options, task.taskId)
+                    );
                 },
             },
 

@@ -14109,7 +14109,7 @@ interface Xp {
     /**
      * Gets the user meta for the given user.
      * * Defaults to the current logged in user if no user is specified.
-     * @param {getUserMetaBy} [useId] Search criteria for getting the associated xp user.
+     * @param useId Search criteria for getting the associated xp user.
      */
     getUserMeta(useId?: {
         /**
@@ -14125,7 +14125,8 @@ interface Xp {
     }): Promise<XpUser>;
     /**
      * Gets the user meta for the given user.
-     * @param userId
+     * * Defaults to the current logged in user if no user is specified.
+     * @param userId The id of the auth user to get the xp meta for.
      */
     getUserMeta(userId?: string): Promise<XpUser>;
 }

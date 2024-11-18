@@ -288,6 +288,10 @@ export type AliasMap<
  */
 export type Nullable<T> = T | null;
 
+export type NotNullOrOptional<T> = {
+    [K in keyof T]-?: Exclude<T[K], null>;
+};
+
 /**
  * A Generic utility type which flattens arrays into unions containing the array's elements
  * @template T The type to flatten (can contain non-array types which will be included in the returned union)

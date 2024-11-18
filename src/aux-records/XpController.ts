@@ -2,10 +2,10 @@ import { XpAccount, XpStore, XpUser } from './XpStore';
 import { AuthController } from './AuthController';
 import { AuthStore, AuthUser } from './AuthStore';
 import { v4 as uuid } from 'uuid';
-import { SuccessResult } from './TypeUtils';
+import { ISO4217_Map, SuccessResult } from './TypeUtils';
 import { KnownErrorCodes } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
-import { tryScope } from './Utils';
+import { iSO4217_AlphaArray, tryScope } from './Utils';
 
 interface XpConfig {
     xpStore: XpStore;
@@ -30,6 +30,20 @@ export class XpController {
     }
 
     /**
+     * Generate an account (user or contract) configured for the given currency
+     * @param currency The currency to configure the account for (default: USD)
+     */
+    private _generateAccount(currency: keyof ISO4217_Map = 'USD'): XpAccount {
+        return {
+            id: uuid(),
+            currency,
+            createdAtMs: Date.now(),
+            updatedAtMs: Date.now(),
+            closedTimeMs: null,
+        };
+    }
+
+    /**
      * Create an XP user for the given auth user
      * @param authUserId The ID of the auth user to create an XP user for
      */
@@ -49,18 +63,11 @@ export class XpController {
                 }
 
                 const xpId = uuid();
-                const accountId = uuid();
-                const account: XpAccount = {
-                    id: accountId,
-                    currency: 'USD',
-                    createdAtMs: Date.now(),
-                    updatedAtMs: Date.now(),
-                    closedTimeMs: null,
-                };
+                const account: XpAccount = this._generateAccount();
                 const user: XpUser = {
                     id: xpId,
                     userId: authUserId,
-                    accountId,
+                    accountId: account.id,
                     requestedRate: null,
                     createdAtMs: Date.now(),
                     updatedAtMs: Date.now(),
@@ -69,7 +76,7 @@ export class XpController {
                 return { success: true, user };
             },
             {
-                scope: [TRACE_NAME, '_createXpUser'],
+                scope: [TRACE_NAME, this._createXpUser.name],
                 errMsg: 'An error occurred while creating the user or associated account.',
                 returnOnError: {
                     success: false,
@@ -85,10 +92,7 @@ export class XpController {
      * Get an Xp user's meta data (Xp meta associated with an auth user)
      * Creates an Xp user for the auth user if one does not exist
      */
-    async getXpUser(id: {
-        userId?: AuthUser['id'];
-        xpId?: XpUser['id'];
-    }): Promise<GetXpUserResult> {
+    async getXpUser(id: GetXpUserById): Promise<GetXpUserResult> {
         return await tryScope(
             async () => {
                 let user =
@@ -117,7 +121,7 @@ export class XpController {
                       };
             },
             {
-                scope: [TRACE_NAME, 'getXpUser'],
+                scope: [TRACE_NAME, this.getXpUser.name],
                 errMsg: 'An error occurred while getting the user.',
                 returnOnError: {
                     success: false,
@@ -127,25 +131,27 @@ export class XpController {
             }
         );
     }
+export interface GetXpUserById {
+    /** The auth Id of the xp user to get (mutually exclusive with xpId) */
+    userId?: AuthUser['id'];
+    /** The xp Id of the xp user to get (mutually exclusive with userId) */
+    xpId?: XpUser['id'];
 }
 
-export type CreateXpUserResultSuccess = SuccessResult<true, { user: XpUser }>;
-
-export type CreateXpUserResultFailure = SuccessResult<
+export type FailedResult = SuccessResult<
     false,
-    {
-        errorCode: KnownErrorCodes;
-        errorMessage: string;
-    }
+    { errorCode: KnownErrorCodes; errorMessage: string }
 >;
 
+export type CreateXpUserResultSuccess = SuccessResult<true, { user: XpUser }>;
+export type CreateXpUserResultFailure = FailedResult;
 export type CreateXpUserResult =
     | CreateXpUserResultSuccess
     | CreateXpUserResultFailure;
 
 export type GetXpUserResultSuccess = SuccessResult<true, { user: XpUser }>;
-export type GetXpUserResultFailure = SuccessResult<
-    false,
+export type GetXpUserResultFailure = FailedResult;
+export type GetXpUserResult = GetXpUserResultSuccess | GetXpUserResultFailure;
     {
         errorCode: KnownErrorCodes;
         errorMessage: string;

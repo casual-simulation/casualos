@@ -290,6 +290,189 @@ function getAmzDateString(date: Date): string {
     );
 }
 
+export const iSO4217_AlphaArray: (keyof ISO4217_Map)[] = [
+    'AED',
+    'AFN',
+    'ALL',
+    'AMD',
+    'ANG',
+    'AOA',
+    'ARS',
+    'AUD',
+    'AWG',
+    'AZN',
+    'BAM',
+    'BBD',
+    'BDT',
+    'BGN',
+    'BHD',
+    'BIF',
+    'BMD',
+    'BND',
+    'BOB',
+    'BOV',
+    'BRL',
+    'BSD',
+    'BTN',
+    'BWP',
+    'BYN',
+    'BZD',
+    'CAD',
+    'CDF',
+    'CHE',
+    'CHF',
+    'CHW',
+    'CLF',
+    'CLP',
+    'CNY',
+    'COP',
+    'COU',
+    'CRC',
+    'CUC',
+    'CUP',
+    'CVE',
+    'CZK',
+    'DJF',
+    'DKK',
+    'DOP',
+    'DZD',
+    'EGP',
+    'ERN',
+    'ETB',
+    'EUR',
+    'FJD',
+    'FKP',
+    'GBP',
+    'GEL',
+    'GHS',
+    'GIP',
+    'GMD',
+    'GNF',
+    'GTQ',
+    'GYD',
+    'HKD',
+    'HNL',
+    'HTG',
+    'HUF',
+    'IDR',
+    'ILS',
+    'INR',
+    'IQD',
+    'IRR',
+    'ISK',
+    'JMD',
+    'JOD',
+    'JPY',
+    'KES',
+    'KGS',
+    'KHR',
+    'KMF',
+    'KPW',
+    'KRW',
+    'KWD',
+    'KYD',
+    'KZT',
+    'LAK',
+    'LBP',
+    'LKR',
+    'LRD',
+    'LSL',
+    'LYD',
+    'MAD',
+    'MDL',
+    'MGA',
+    'MKD',
+    'MMK',
+    'MNT',
+    'MOP',
+    'MRU',
+    'MUR',
+    'MVR',
+    'MWK',
+    'MXN',
+    'MXV',
+    'MYR',
+    'MZN',
+    'NAD',
+    'NGN',
+    'NIO',
+    'NOK',
+    'NPR',
+    'NZD',
+    'OMR',
+    'PAB',
+    'PEN',
+    'PGK',
+    'PHP',
+    'PKR',
+    'PLN',
+    'PYG',
+    'QAR',
+    'RON',
+    'RSD',
+    'RUB',
+    'RWF',
+    'SAR',
+    'SBD',
+    'SCR',
+    'SDG',
+    'SEK',
+    'SGD',
+    'SHP',
+    'SLE',
+    'SOS',
+    'SRD',
+    'SSP',
+    'STN',
+    'SVC',
+    'SYP',
+    'SZL',
+    'THB',
+    'TJS',
+    'TMT',
+    'TND',
+    'TOP',
+    'TRY',
+    'TTD',
+    'TWD',
+    'TZS',
+    'UAH',
+    'UGX',
+    'USD',
+    'USN',
+    'UYI',
+    'UYU',
+    'UYW',
+    'UZS',
+    'VED',
+    'VES',
+    'VND',
+    'VUV',
+    'WST',
+    'XAF',
+    'XAG',
+    'XAU',
+    'XBA',
+    'XBB',
+    'XBC',
+    'XBD',
+    'XCD',
+    'XDR',
+    'XOF',
+    'XPD',
+    'XPF',
+    'XPT',
+    'XSU',
+    'XTS',
+    'XUA',
+    'XXX',
+    'YER',
+    'ZAR',
+    'ZMW',
+    'ZWG',
+    'ZWL',
+];
+
 const ISO4217_Map: ArrayOfKASP<ISO4217_Map, ['n', 'mU']> = [
     ['AED', 784, 2],
     ['AFN', 971, 2],
@@ -637,6 +820,28 @@ export function tryParseJson(json: string): JsonParseResult {
     }
 }
 
+interface ScopedErrorConfig {
+    /** The scope of the function. E.g. [ClassName, FunctionName] */
+    scope: Array<string> | string;
+    /** The message to log if an error occurs. */
+    errMsg: string;
+}
+
+export function scopedError(errConfig: ScopedErrorConfig, err: string) {
+    console.error(
+        Array.isArray(errConfig.scope)
+            ? errConfig.scope.map((s) => `[${s}]`).join(' ')
+            : `[${errConfig.scope}]`,
+        errConfig.errMsg,
+        err
+    );
+}
+
+interface ScopedTryConfig<E> extends ScopedErrorConfig {
+    /** The value to return if an error occurs. */
+    returnOnError?: E;
+}
+
 /**
  * Attempts to run the given function and logs an error if it fails with a standard error format which includes the scope and message.
  * @param fn The function to run.
@@ -644,25 +849,12 @@ export function tryParseJson(json: string): JsonParseResult {
  */
 export async function tryScope<T, E>(
     fn: () => T,
-    errConfig: {
-        /** The scope of the function. E.g. [ClassName, FunctionName] */
-        scope: Array<string> | string;
-        /** The message to log if an error occurs. */
-        errMsg: string;
-        /** The value to return if an error occurs. */
-        returnOnError?: E;
-    }
+    errConfig: ScopedTryConfig<E>
 ): Promise<T | E> {
     try {
         return await fn();
     } catch (err) {
-        console.error(
-            Array.isArray(errConfig.scope)
-                ? errConfig.scope.map((s) => `[${s}]`).join(' ')
-                : `[${errConfig.scope}]`,
-            errConfig.errMsg,
-            err
-        );
+        scopedError(errConfig, err);
         return errConfig.returnOnError;
     }
 }

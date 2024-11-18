@@ -2170,11 +2170,19 @@ export function listUserNotificationSubscriptions(
     );
 }
 
+export interface xpUserIdQuery {
+    /** The auth user Id of the xp user. */
+    userId?: string;
+    /** The xp user Id of the xp user. */
+    xpId?: string;
+}
+
+
 /**
  * Creates an action that can be used to provide meta data on an auth users Xp (user) identity.
  */
 export function getXpUserMeta(
-    by: { userId?: string; xpId?: string } | string | undefined,
+    by: xpUserIdQuery | string | undefined,
     options: RecordActionOptions,
     taskId: string | number
 ) {
