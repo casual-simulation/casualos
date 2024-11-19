@@ -1195,8 +1195,6 @@ model XpSystemEvent {
     time DateTime
 
     accountEntries XpAccountEntry[]
-    contracts XpContract[]
-    invoices XpInvoice[]
 
     // The adjustment that tracks the adjusting and adjusted events for this event
     adjustment XpSystemEventAdjustment? @relation()
@@ -1323,31 +1321,33 @@ model XpContract {
     issuerUserId String
     issuer XpUser @relation(fields: [issuerUserId], references: [userId], onDelete: Restrict, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
 
-    // The user that is holding the contract
+    // The user that is holding the contract (if the contract is not a draft)
     // That is, the user who is doing the work and getting paid
-    holdingUserId String
-    holdingUser XpUser @relation(fields: [holdingUserId], references: [userId], onDelete: Restrict, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
+    holdingUserId String?
+    holdingUser XpUser? @relation(fields: [holdingUserId], references: [userId], onDelete: Restrict, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
 
-    // The rate at which the contract is paid
-    // This determines the number of gigs that can be paid for the contract
+    // The rate at which gigs are paid in the contract
+    // The rate is in the smallest unit of the currency (e.g. cents for USD)
     // The currency should always be the same as the account
     rate Int
+
+    // The worth of the contract in the smallest unit of the currency (all gigs) if the contract is a draft
+    // This is what would appear in the contract's account if the contract was opened
+    offeredWorth Int?
 
     // The description of the contract
     description String?
 
     // The status of the contract
     // "open" - the contract is open and can be invoiced
+    // "draft" - the contract is a draft and has not been dedicated to a user (holdingUser)
     // "closed" - the contract is closed and cannot be invoiced
     status String
 
     // The account that holds the money allocated to the contract
-    accountId String @db.Uuid @unique
-    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpContract_accountId_fkey1")
-
-    // The event that caused this contract to be created
-    creationEventId String @db.Uuid
-    creationEvent XpSystemEvent @relation(fields: [creationEventId], references: [id], onDelete: Restrict, map: "XpInvoice_creationEventId_fkey1")
+    // The account will be instantiated when the contract is opened and a holdingUser is present
+    accountId String? @db.Uuid @unique
+    account XpAccount? @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpContract_accountId_fkey1")
 
     invoices XpInvoice[]
 
@@ -1362,9 +1362,7 @@ model XpInvoice {
     contractId String @db.Uuid
     contract XpContract @relation(fields: [contractId], references: [id], onDelete: Restrict, map: "XpInvoice_contractId_fkey1")
 
-    // The amount (quantity of gigs) being invoiced for
-    //! Important: A gig is 6 minutes of work, the rate defines the worth of a gig
-    // The currency this gig is associated with, is the same as the contract account currency
+    // The amount charged in the invoice, in the smallest unit of the currency used in the contracts account
     amount Int
 
     // The status of the invoice
@@ -1384,12 +1382,6 @@ model XpInvoice {
     // Additional information about the invoice
     note String?
 
-    // The event that caused this invoice to be created
-    creationEventId String @db.Uuid
-    creationEvent XpSystemEvent @relation(fields: [creationEventId], references: [id], onDelete: Restrict, map: "XpInvoice_creationEventId_fkey1")
-
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
-
-// gigs * rate = amount
