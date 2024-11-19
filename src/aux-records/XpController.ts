@@ -1,4 +1,4 @@
-import { XpAccount, XpStore, XpUser } from './XpStore';
+import { XpAccount, XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
 import { AuthController } from './AuthController';
 import { AuthStore, AuthUser } from './AuthStore';
 import { v4 as uuid } from 'uuid';
@@ -131,6 +131,7 @@ export class XpController {
             }
         );
     }
+}
 export interface GetXpUserById {
     /** The auth Id of the xp user to get (mutually exclusive with xpId) */
     userId?: AuthUser['id'];
@@ -152,9 +153,24 @@ export type CreateXpUserResult =
 export type GetXpUserResultSuccess = SuccessResult<true, { user: XpUser }>;
 export type GetXpUserResultFailure = FailedResult;
 export type GetXpUserResult = GetXpUserResultSuccess | GetXpUserResultFailure;
+
+export type CreateContractResultSuccess = SuccessResult<
+    true,
     {
-        errorCode: KnownErrorCodes;
-        errorMessage: string;
+        contract: XpContract;
+        account: XpAccount;
     }
 >;
-export type GetXpUserResult = GetXpUserResultSuccess | GetXpUserResultFailure;
+export type CreateContractResultFailure = FailedResult;
+export type CreateContractResult =
+    | CreateContractResultSuccess
+    | CreateContractResultFailure;
+
+export type GetContractResultSuccess = SuccessResult<
+    true,
+    { contract: XpContract }
+>;
+export type GetContractResultFailure = FailedResult;
+export type GetContractResult =
+    | GetContractResultSuccess
+    | GetContractResultFailure;
