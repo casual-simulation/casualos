@@ -1943,6 +1943,143 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/xp/user",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "xpId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getXpUserMeta",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/xp/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contract": Object {
+            "schema": Object {
+              "accountCurrency": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "contractedUserId": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "userId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "xpId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "description": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "gigRate": Object {
+                "type": "number",
+              },
+              "gigs": Object {
+                "type": "number",
+              },
+              "status": Object {
+                "options": Array [
+                  Object {
+                    "type": "literal",
+                    "value": "open",
+                  },
+                  Object {
+                    "type": "literal",
+                    "value": "draft",
+                  },
+                ],
+                "type": "union",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createXpContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "PUT",
+        "path": "/api/v2/xp/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "type": "string",
+          },
+          "newDescription": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "newStatus": Object {
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "open",
+              },
+              Object {
+                "type": "literal",
+                "value": "draft",
+              },
+              Object {
+                "type": "literal",
+                "value": "closed",
+              },
+            ],
+            "type": "union",
+          },
+          "receivingUserId": Object {
+            "schema": Object {
+              "userId": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "xpId": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateXpContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/records/list",
       },
       "inputs": Object {
@@ -5782,6 +5919,143 @@ Object {
         "path": "/api/v2/records/notification/applicationServerKey",
       },
       "name": "getNotificationsApplicationServerKey",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/xp/user",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "userId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "xpId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getXpUserMeta",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/xp/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contract": Object {
+            "schema": Object {
+              "accountCurrency": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "contractedUserId": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "userId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "xpId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "description": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "gigRate": Object {
+                "type": "number",
+              },
+              "gigs": Object {
+                "type": "number",
+              },
+              "status": Object {
+                "options": Array [
+                  Object {
+                    "type": "literal",
+                    "value": "open",
+                  },
+                  Object {
+                    "type": "literal",
+                    "value": "draft",
+                  },
+                ],
+                "type": "union",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createXpContract",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "PUT",
+        "path": "/api/v2/xp/contract",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "type": "string",
+          },
+          "newDescription": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "newStatus": Object {
+            "options": Array [
+              Object {
+                "type": "literal",
+                "value": "open",
+              },
+              Object {
+                "type": "literal",
+                "value": "draft",
+              },
+              Object {
+                "type": "literal",
+                "value": "closed",
+              },
+            ],
+            "type": "union",
+          },
+          "receivingUserId": Object {
+            "schema": Object {
+              "userId": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "xpId": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "updateXpContract",
       "origins": "api",
     },
     Object {
