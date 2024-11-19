@@ -85,6 +85,45 @@ export class PrismaXpStore implements XpStore {
         throw new Error('Method not implemented.');
     }
 
+    async saveXpContract(contract: XpContract, account: XpAccount | null) {
+        await this._client.xpContract.create({
+            data: {
+                id: contract.id,
+                rate: contract.rate,
+                offeredWorth: contract.offeredWorth,
+                ...(account !== null
+                    ? {
+                          account: {
+                              create: {
+                                  id: account.id,
+                                  currency: account.currency,
+                                  createdAt: new Date(account.createdAtMs),
+                                  updatedAt: new Date(account.updatedAtMs),
+                              },
+                          },
+                      }
+                    : {}),
+                issuer: {
+                    connect: {
+                        id: contract.issuerUserId,
+                    },
+                },
+                ...(contract.holdingUserId !== null
+                    ? {
+                          holdingUser: {
+                              connect: {
+                                  id: contract.holdingUserId,
+                              },
+                          },
+                      }
+                    : {}),
+                status: contract.status,
+                createdAt: new Date(contract.createdAtMs),
+                updatedAt: new Date(contract.updatedAtMs),
+            },
+        });
+    }
+
     async createXpUserWithAccount(user: XpUser, account: XpAccount) {
         await this._client.xpUser.create({
             data: {

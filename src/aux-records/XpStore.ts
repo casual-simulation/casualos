@@ -72,9 +72,9 @@ export type XpStore = {
      * @param contract The contract to save
      * @param account The account to save
      */
-    createXpContract: (
+    saveXpContract: (
         contract: XpContract,
-        account: XpAccount
+        account: XpAccount | null
     ) => Promise<void>;
 
     /**

@@ -390,6 +390,16 @@ export class MemoryStore
         };
     }
 
+    async saveXpContract(
+        contract: XpContract,
+        account: XpAccount | null
+    ): Promise<void> {
+        this._xpContracts.set(contract.id, contract);
+        if (account !== null) {
+            this._xpAccounts.set(account.id, account);
+        }
+    }
+
     async getXpUserByAuthId(id: AuthUser['id']): Promise<XpUser> {
         const user = Array.from(this._xpUsers.values()).find(
             (u: XpUser) => u.userId === id
