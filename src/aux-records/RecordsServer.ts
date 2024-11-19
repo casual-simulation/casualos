@@ -375,6 +375,46 @@ export interface RecordsServerOptions {
 }
 
 /**
+ * A schema that represents a request to get an XP user by one of it's IDs.
+ */
+const GetXpUserById = z
+    .object({
+        userId: z.string().optional().nullable(),
+        xpId: z.string().optional().nullable(),
+    })
+    .refine(
+        (contractedUser) => {
+            if (!contractedUser) return true;
+            if (
+                contractedUser.userId ??
+                (undefined === undefined && contractedUser.xpId) ??
+                undefined === undefined
+            )
+                return false;
+            return true;
+        },
+        {
+            message: 'One of properties "userId", "xpId" are required',
+            path: ['userId', 'xpId'],
+        }
+    )
+    .refine(
+        (contractedUser) => {
+            if (!contractedUser) return true;
+            if (
+                typeof contractedUser.userId === 'string' &&
+                typeof contractedUser.xpId === 'string'
+            )
+                return false;
+            return true;
+        },
+        {
+            message: 'Properties userId and xpId are mutually exclusive.',
+            path: ['userId', 'xpId'],
+        }
+    );
+
+/**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
 export class RecordsServer {
@@ -2103,12 +2143,7 @@ export class RecordsServer {
             getXpUserMeta: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/xp/user')
-                .inputs(
-                    z.object({
-                        userId: z.string().optional().nullable(),
-                        xpId: z.string().optional().nullable(),
-                    })
-                )
+                .inputs(GetXpUserById)
                 .handler(async (input, context) => {
                     const authUser = await this._validateSessionKey(
                         context.sessionKey
