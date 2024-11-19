@@ -2178,6 +2178,140 @@ export class RecordsServer {
                     return user;
                 }),
 
+            createXpContract: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/xp/contract')
+                .inputs(
+                    z.object({
+                        contract: z
+                            .object({
+                                description: z.string().optional(),
+                                accountCurrency: z.string().optional(),
+                                gigRate: z.number().int().positive(),
+                                gigs: z.number().int().positive(),
+                                status: z.union([
+                                    z.literal('open'),
+                                    z.literal('draft'),
+                                ]),
+                                contractedUserId:
+                                    GetXpUserById.optional().nullable(),
+                            })
+                            .refine(
+                                (contract) => {
+                                    if (contract.status === 'open') {
+                                        //* Open contracts must have a contracted user
+                                        return (
+                                            contract.contractedUserId ??
+                                            undefined !== undefined
+                                        );
+                                    } else if (contract.status === 'draft') {
+                                        /**
+                                         * * Draft contracts from the database's perspective should not be expecting a contracted user yet.
+                                         * * This is because the contracted user is only set when the contract is opened.
+                                         */
+                                        return (
+                                            contract.contractedUserId ??
+                                            undefined === undefined
+                                        );
+                                    }
+                                },
+                                {
+                                    message:
+                                        'Contract must contain contractedUserId (only when status is "open").',
+                                    path: ['contractedUserId'],
+                                }
+                            )
+                            .refine(
+                                (contract) => {
+                                    if (contract.status === 'open') {
+                                        return (
+                                            contract.accountCurrency ??
+                                            undefined !== undefined
+                                        );
+                                    } else if (contract.status === 'draft') {
+                                        return (
+                                            contract.accountCurrency ??
+                                            undefined === undefined
+                                        );
+                                    }
+                                },
+                                {
+                                    message:
+                                        'Contract must contain accountCurrency (only when status is "open").',
+                                    path: ['accountCurrency'],
+                                }
+                            ),
+                    })
+                )
+                .handler(async ({ contract }, context) => {
+                    const authUser = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (!authUser.success) {
+                        return authUser;
+                    }
+                    // const result = await this._xpController.createContract({
+                    //     description: contract.description ?? null,
+                    //     accountCurrency: contract.accountCurrency,
+                    //     rate: contract.gigRate,
+                    //     offeredWorth: contract.gigs
+                    //         ? (contract.gigRate ?? 0) * contract.gigs
+                    //         : 0,
+                    //     status: contract.status,
+                    //     issuerUserId: { userId: authUser.userId },
+                    //     holdingUserId: contract.contractedUserId,
+                    //     creationRequestReceivedAt: Date.now(),
+                    // });
+                    // return result;
+                    return {
+                        success: true,
+                        message: 'Not implemented',
+                    };
+                }),
+
+            updateXpContract: procedure()
+                .origins('api')
+                .http('PUT', '/api/v2/xp/contract')
+                .inputs(
+                    z.object({
+                        contractId: z.string().min(1),
+                        newStatus: z.union([
+                            z.literal('open'),
+                            z.literal('draft'),
+                            z.literal('closed'),
+                        ]),
+                        //* Note this is the change of the description which can only be done when the contract is in draft status
+                        newDescription: z.string().optional(),
+                        receivingUserId: GetXpUserById,
+                    })
+                )
+                .handler(
+                    async (
+                        { contractId, newStatus, newDescription },
+                        context
+                    ) => {
+                        const authUser = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (!authUser.success) {
+                            return authUser;
+                        }
+                        // const result = await this._xpController.updateContract({
+                        //     contractId,
+                        //     newStatus,
+                        //     newDescription,
+                        //     userId: authUser.userId,
+                        // });
+                        // throw new Error('Not implemented');
+                        //return result;
+                        // TODO: Implement.
+                        return {
+                            success: true,
+                            message: 'Not implemented',
+                        };
+                    }
+                ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')

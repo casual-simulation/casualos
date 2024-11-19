@@ -207,6 +207,8 @@ export class RecordsManager {
         'listNotificationSubscriptions',
         'listUserNotificationSubscriptions',
         'getXpUserMeta',
+        'createXpContract',
+        'updateXpContract',
     ]);
 
     /**
