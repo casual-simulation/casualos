@@ -1,7 +1,7 @@
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: './jest/test_environment.js',
-    moduleFileExtensions: ['ts', 'tsx', 'js'],
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
     testPathIgnorePatterns: [
         '/node_modules/',
         '/temp/',
@@ -26,6 +26,9 @@ module.exports = {
     modulePathIgnorePatterns: ['/node_modules/', '/docker/services/'],
     setupFiles: ['fake-indexeddb/auto'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
+    transformIgnorePatterns: [
+        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru).+\\.js$',
+    ],
     moduleNameMapper: {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',
         '^@casual-simulation/three/examples/js/renderers/CSS3DRenderer$':
@@ -45,6 +48,7 @@ module.exports = {
                 tsconfig: 'tsconfig.test.json',
             },
         ],
+        '^.+\\.(js|jsx)$': 'babel-jest',
     },
     snapshotFormat: {
         escapeString: true,
