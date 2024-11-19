@@ -1,4 +1,5 @@
 import {
+    Entitlement,
     GenericHttpRequest,
     ServerError,
     StoredAux,
@@ -50,7 +51,7 @@ export interface PackageRecordVersion
     /**
      * The list of entitlements that the package requires.
      */
-    entitlements: string[];
+    entitlements: Entitlement[];
 
     /**
      * The readme of the package.

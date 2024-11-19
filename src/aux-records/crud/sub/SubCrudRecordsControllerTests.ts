@@ -713,6 +713,30 @@ export function testCrudRecordsController<
     if (allowedActions.includes('read')) {
         describe('getItem()', () => {
             beforeEach(async () => {
+                await recordItemsStore.createItem(
+                    recordName,
+                    createRecordItem({
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    })
+                );
+
+                await recordItemsStore.createItem(
+                    recordName,
+                    createRecordItem({
+                        address: 'address2',
+                        markers: [PRIVATE_MARKER],
+                    })
+                );
+
+                await recordItemsStore.createItem(
+                    recordName,
+                    createRecordItem({
+                        address: 'address3',
+                        markers: [PRIVATE_MARKER],
+                    })
+                );
+
                 await itemsStore.createItem(
                     recordName,
                     createTestItem({
@@ -747,7 +771,7 @@ export function testCrudRecordsController<
                     instances: [],
                 });
 
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                     success: true,
                     item: createTestItem({
                         address: 'address2',

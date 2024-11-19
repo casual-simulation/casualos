@@ -433,17 +433,37 @@ export interface Entitlement {
      * This can be used to limit the entitlement to a category of resources.
      * For example, the "personal" scope would limit the entitlement to requesting access to the user's personal resources.
      *
-     * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in a record that the user owns.
+     *
+     * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in the user's player record.
+     * - "owned" - The entitlement is for user (user-owned) records. This would allow the package to request access to resources in a record that the user owns.
+     * - "studio" - The entitlement is for studio records. This would allow the package to request access to resources in studios in which the user is an admin or member of.
      * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
      * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
      */
-    scope: 'personal' | 'shared' | 'designated';
+    scope: 'personal' | 'owned' | 'studio' | 'shared' | 'designated';
 
     /**
      * The list of records that the entitlement is for.
      */
     designatedRecords?: string[];
 }
+
+export const ENTITLEMENT_VALIDATION = z.object({
+    feature: z.enum([
+        'data',
+        'file',
+        'event',
+        'inst',
+        'notification',
+        'package',
+        'permissions',
+        'webhooks',
+    ]),
+    scope: z.enum(['personal', 'owned', 'studio', 'shared', 'designated']),
+    designatedRecords: z.array(z.string()).optional(),
+});
+type ZodEntitlement = z.infer<typeof ENTITLEMENT_VALIDATION>;
+type ZodEntitlementAssertion = HasType<ZodEntitlement, Entitlement>;
 
 /**
  * Defines an interface that describes common options for all permissions.

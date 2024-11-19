@@ -63,7 +63,9 @@ export class MemorySubCrudRecordsStore<
 
         let arr = bucket.get(item.address);
 
-        const index = arr.findIndex((i) => isEqual(i, this.getKey(item)));
+        const index = arr.findIndex((i) =>
+            isEqual(this.getKey(i), this.getKey(item))
+        );
         if (index < 0) {
             arr.push(item);
         }
@@ -99,7 +101,7 @@ export class MemorySubCrudRecordsStore<
         const existing = await this.getItemByKey(
             recordName,
             item.address,
-            item as unknown as TKey
+            item.key
         );
         if (!existing.item) {
             return {
@@ -121,7 +123,9 @@ export class MemorySubCrudRecordsStore<
         }
 
         const arr = bucket.get(updated.address);
-        const index = arr.findIndex((i) => isEqual(i, this.getKey(updated)));
+        const index = arr.findIndex((i) =>
+            isEqual(this.getKey(i), this.getKey(updated))
+        );
         if (index >= 0) {
             arr[index] = updated as T;
         } else {
@@ -137,7 +141,7 @@ export class MemorySubCrudRecordsStore<
         const existing = await this.getItemByKey(
             recordName,
             item.address,
-            item as unknown as TKey
+            item.key
         );
         if (!existing.item) {
             await this.createItem(recordName, item as T);

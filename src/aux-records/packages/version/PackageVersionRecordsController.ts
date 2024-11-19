@@ -1,5 +1,6 @@
 import {
     ActionKinds,
+    Entitlement,
     KnownErrorCodes,
     PRIVATE_MARKER,
     ServerError,
@@ -16,6 +17,7 @@ import {
     CrudRecordsController,
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsSuccess,
+    CrudGetItemResult,
 } from '../../crud';
 import {
     PackageRecordVersion,
@@ -32,6 +34,7 @@ import {
     SubscriptionConfiguration,
 } from '../../SubscriptionConfiguration';
 import {
+    SubCrudGetItemRequest,
     SubCrudRecordsConfiguration,
     SubCrudRecordsController,
 } from '../../crud/sub/SubCrudRecordsController';
@@ -71,6 +74,24 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
             name: 'PackageVersionRecordsController',
             resourceKind: 'package.version',
         });
+    }
+
+    async getItem(
+        request: SubCrudGetItemRequest<PackageRecordVersionKey>
+    ): Promise<CrudGetItemResult<PackageRecordVersionWithMetadata>> {
+        const result = await super.getItem(request);
+
+        if (result.success === true) {
+            const item = result.item;
+
+            if (item.entitlements.some((e) => entitlementRequiresApproval(e))) {
+                item.approved = false;
+            } else {
+                item.approved = true;
+            }
+        }
+
+        return result;
     }
 
     protected async _checkSubscriptionMetrics(
@@ -171,10 +192,6 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
             };
         }
 
-        if (item) {
-            item.approved = true;
-        }
-
         return {
             success: true,
             config,
@@ -182,6 +199,14 @@ export class PackageVersionRecordsController extends SubCrudRecordsController<
             features,
         };
     }
+}
+
+/**
+ * Determines whether the given entitlement requires approval.
+ * @param entitlement The entitlement to test.
+ */
+export function entitlementRequiresApproval(entitlement: Entitlement): boolean {
+    return entitlement.scope === 'shared' || entitlement.scope === 'designated';
 }
 
 export type PackageRecordVersionInput = Omit<

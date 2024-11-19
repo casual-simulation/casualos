@@ -4,6 +4,7 @@ import {
     testCrudRecordsController,
 } from '../../crud/sub/SubCrudRecordsControllerTests';
 import {
+    entitlementRequiresApproval,
     PackageRecordVersionInput,
     PackageVersionRecordsController,
 } from './PackageVersionRecordsController';
@@ -18,6 +19,7 @@ import {
     action,
     BotsState,
     createBot,
+    Entitlement,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     StoredAux,
@@ -498,7 +500,173 @@ describe('PackageVersionRecordsController', () => {
         });
     });
 
-    describe('getItem()', () => {});
+    describe('getItem()', () => {
+        beforeEach(async () => {
+            await recordItemsStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+            await itemsStore.createItem(recordName, {
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                aux: {
+                    version: 1,
+                    state: {},
+                },
+                auxSha256: '',
+                createdAtMs: 0,
+                entitlements: [],
+                readme: '',
+                sha256: '',
+                sizeInBytes: 0,
+            });
+        });
+
+        it('should mark the item as approved if it has no entitlements', async () => {
+            const result = await manager.getItem({
+                recordName,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    aux: {
+                        version: 1,
+                        state: {},
+                    },
+                    auxSha256: '',
+                    createdAtMs: 0,
+                    entitlements: [],
+                    readme: '',
+                    sha256: '',
+                    sizeInBytes: 0,
+                    approved: true,
+                },
+            });
+        });
+
+        it('should mark the item as not approved if it has a shared entitlement', async () => {
+            await itemsStore.putItem(recordName, {
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                aux: {
+                    version: 1,
+                    state: {},
+                },
+                auxSha256: '',
+                createdAtMs: 0,
+                entitlements: [
+                    {
+                        feature: 'data',
+                        scope: 'shared',
+                    },
+                ],
+                readme: '',
+                sha256: '',
+                sizeInBytes: 0,
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    aux: {
+                        version: 1,
+                        state: {},
+                    },
+                    auxSha256: '',
+                    createdAtMs: 0,
+                    entitlements: [
+                        {
+                            feature: 'data',
+                            scope: 'shared',
+                        },
+                    ],
+                    readme: '',
+                    sha256: '',
+                    sizeInBytes: 0,
+                    approved: false,
+                },
+            });
+        });
+    });
+});
+
+describe('entitlementRequiresApproval()', () => {
+    const cases: [boolean, Entitlement['scope']][] = [
+        [false, 'personal'],
+        [false, 'owned'],
+        [false, 'studio'],
+        [true, 'designated'],
+        [true, 'shared'],
+    ];
+
+    const features: [Entitlement['feature']][] = [
+        ['data'],
+        ['event'],
+        ['file'],
+        ['inst'],
+        ['notification'],
+        ['package'],
+        ['permissions'],
+        ['webhooks'],
+    ];
+
+    describe.each(features)('%s', (feature) => {
+        it.each(cases)('should return %s when given %s', (expected, scope) => {
+            expect(
+                entitlementRequiresApproval({
+                    feature,
+                    scope,
+                })
+            ).toBe;
+        });
+    });
 });
 
 function getSizeInBytes(item: any): number {
