@@ -106,7 +106,7 @@ export class MemorySubCrudRecordsStore<
         if (!existing.item) {
             return {
                 success: false,
-                errorCode: 'item_not_found',
+                errorCode: 'data_not_found',
                 errorMessage: 'Item not found',
             };
         }
@@ -144,15 +144,10 @@ export class MemorySubCrudRecordsStore<
             item.key
         );
         if (!existing.item) {
-            await this.createItem(recordName, item as T);
-            return;
+            return await this.createItem(recordName, item as T);
         }
 
-        await this.updateItem(recordName, item);
-
-        return {
-            success: true,
-        };
+        return await this.updateItem(recordName, item);
     }
 
     async deleteItem(
@@ -162,12 +157,16 @@ export class MemorySubCrudRecordsStore<
     ): Promise<CrudResult> {
         const bucket = this._itemBuckets.get(recordName);
         if (!bucket) {
-            return;
+            return {
+                success: true,
+            };
         }
 
         const arr = bucket.get(address);
         if (!arr) {
-            return;
+            return {
+                success: true,
+            };
         }
 
         const index = arr.findIndex((i) => isEqual(this.getKey(i), key));

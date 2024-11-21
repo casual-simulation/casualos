@@ -295,6 +295,7 @@ export class FileRecordsController {
                                 'The file has already been uploaded to ' +
                                 fileResult.url,
                             existingFileUrl: fileResult.url,
+                            existingFileName: fileResult.fileName,
                         };
                     }
                 }
@@ -913,6 +914,11 @@ export interface RecordFileFailure {
      * The URL that the file is available at if it has already been uploaded.
      */
     existingFileUrl?: string;
+
+    /**
+     * The name of the file that was attempted to be recorded.
+     */
+    existingFileName?: string;
 }
 
 /**

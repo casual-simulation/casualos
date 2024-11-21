@@ -6,9 +6,10 @@ import {
     PackageVersionRecordsStore,
     PackageVersionSubscriptionMetrics,
     PackageRecordVersionKey,
+    PackageVersionReview,
 } from './PackageVersionRecordsStore';
 import { SubscriptionFilter } from '../../MetricsStore';
-import { ListSubCrudStoreSuccess } from '../../crud/sub';
+import { CrudResult, ListSubCrudStoreSuccess } from '../../crud/sub';
 import { orderBy, sortBy } from 'lodash';
 
 /**
@@ -21,6 +22,78 @@ export class MemoryPackageVersionRecordsStore
     >
     implements PackageVersionRecordsStore
 {
+    private _reviews: PackageVersionReview[] = [];
+
+    async listReviewsForVersion(
+        recordName: string,
+        address: string,
+        version: PackageRecordVersionKey
+    ): Promise<PackageVersionReview[]> {
+        const reviews = this._reviews.filter(
+            (r) =>
+                r.recordName === recordName &&
+                r.address === address &&
+                r.key.major === version.major &&
+                r.key.minor === version.minor &&
+                r.key.patch === version.patch &&
+                r.key.tag === version.tag
+        );
+        return orderBy(reviews, (r) => r.createdAtMs, 'desc');
+    }
+
+    async putReviewForVersion(
+        review: PackageVersionReview
+    ): Promise<CrudResult> {
+        this._reviews = this._reviews.filter((r) => r.id !== review.id);
+        this._reviews.push(review);
+        return { success: true };
+    }
+
+    async updatePackageVersionReviewStatus(
+        id: string,
+        reviewStatus: PackageVersionReview['reviewStatus'],
+        comments: string
+    ): Promise<CrudResult> {
+        const index = this._reviews.findIndex((r) => r.id === id);
+        if (index < 0) {
+            return {
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The review does not exist.',
+            };
+        }
+
+        const review = this._reviews[index];
+        this._reviews[index] = {
+            ...review,
+            reviewStatus,
+            reviewComments: comments,
+        };
+        return { success: true };
+    }
+
+    async getPackageVersionReviewById(
+        id: string
+    ): Promise<PackageVersionReview | null> {
+        return this._reviews.find((r) => r.id === id) || null;
+    }
+
+    async getMostRecentPackageVersionReview(
+        recordName: string,
+        address: string,
+        version: PackageRecordVersionKey
+    ): Promise<PackageVersionReview | null> {
+        const reviews = await this.listReviewsForVersion(
+            recordName,
+            address,
+            version
+        );
+        if (reviews.length === 0) {
+            return null;
+        }
+        return reviews[0];
+    }
+
     async getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<PackageVersionSubscriptionMetrics> {

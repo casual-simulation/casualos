@@ -24,7 +24,11 @@ import {
 import { ZodIssue } from 'zod';
 import { traced } from '../../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { SubCrudRecord, SubCrudRecordsStore } from './SubCrudRecordsStore';
+import {
+    CrudResult,
+    SubCrudRecord,
+    SubCrudRecordsStore,
+} from './SubCrudRecordsStore';
 import { CrudRecord, CrudRecordsStore } from '../CrudRecordsStore';
 import {
     CheckSubscriptionMetricsResult,
@@ -242,12 +246,15 @@ export abstract class SubCrudRecordsController<
                 return subscriptionResult;
             }
 
-            await this._store.putItem(recordName, item);
-            return {
-                success: true,
+            const result = await this._putItem(
+                action,
                 recordName,
-                address: item.address,
-            };
+                item,
+                contextResult.context,
+                authorization,
+                request
+            );
+            return result;
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
@@ -260,6 +267,36 @@ export abstract class SubCrudRecordsController<
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    /**
+     * Updates or creates the item in the given record.
+     * @param action The action that is being performed.
+     * @param recordName The name of the record.
+     * @param item The item that should be updated or created.
+     * @param context The authorization context.
+     * @param authorization The authorization for the user and instances.
+     * @param request The request.
+     */
+    protected async _putItem(
+        action: 'update' | 'create',
+        recordName: string,
+        item: T,
+        context: AuthorizationContext,
+        authorization: AuthorizeUserAndInstancesForResourcesSuccess,
+        request: CrudRecordItemRequest<T>
+    ): Promise<CrudRecordItemResult> {
+        const crudResult = await this._store.putItem(recordName, item);
+
+        if (crudResult.success === false) {
+            return crudResult;
+        }
+
+        return {
+            success: true,
+            recordName,
+            address: item.address,
+        };
     }
 
     /**
@@ -317,9 +354,21 @@ export abstract class SubCrudRecordsController<
                 return authorization;
             }
 
+            const item = result.item;
+            const metricsResult = await this._checkSubscriptionMetrics(
+                'read',
+                context.context,
+                authorization,
+                item
+            );
+
+            if (metricsResult.success === false) {
+                return metricsResult;
+            }
+
             return {
                 success: true,
-                item: this._convertItemToResult(result.item, context.context),
+                item: this._convertItemToResult(item, context.context),
             };
         } catch (err) {
             const span = trace.getActiveSpan();

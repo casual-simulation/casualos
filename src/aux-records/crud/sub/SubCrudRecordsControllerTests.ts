@@ -236,339 +236,30 @@ export function testCrudRecordsController<
         }
     });
 
-    describe('recordItem()', () => {
-        if (allowedActions.includes('create')) {
-            describe('create', () => {
-                beforeEach(async () => {
-                    await recordItemsStore.createItem(
-                        recordName,
-                        createRecordItem({
-                            address: 'address',
-                            markers: [PUBLIC_READ_MARKER],
-                        })
-                    );
-                });
-
-                it('should store the item in the store', async () => {
-                    const item = createTestItem({
-                        address: 'address',
-                        key: createKey(0),
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: recordName,
-                        userId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: true,
-                        recordName: recordName,
-                        address: 'address',
-                    });
-
-                    await expect(
-                        itemsStore.getItemByKey(
+    if (
+        allowedActions.includes('create') ||
+        allowedActions.includes('update')
+    ) {
+        describe('recordItem()', () => {
+            if (allowedActions.includes('create')) {
+                describe('create', () => {
+                    beforeEach(async () => {
+                        await recordItemsStore.createItem(
                             recordName,
-                            'address',
-                            createKey(0)
-                        )
-                    ).resolves.toMatchObject({
-                        item,
-                        markers: [PUBLIC_READ_MARKER],
-                    });
-                });
-
-                it('should return data_not_found if the record item doesnt exist', async () => {
-                    const item = createTestItem({
-                        address: 'missing',
-                        key: createKey(0),
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: recordName,
-                        userId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'data_not_found',
-                        errorMessage: expect.any(String),
-                    });
-
-                    await expect(
-                        itemsStore.getItemByKey(
-                            recordName,
-                            'missing',
-                            createKey(0)
-                        )
-                    ).resolves.toMatchObject({
-                        item: null,
-                        markers: null,
-                    });
-                });
-
-                it('should reject the request if given an invalid key', async () => {
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: 'not_a_key',
-                        userId,
-                        item: createTestItem({
-                            address: 'address',
-                            key: createKey(0),
-                        }),
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'record_not_found',
-                        errorMessage: expect.any(String),
-                    });
-
-                    await expect(
-                        itemsStore.getItemByKey(
-                            recordName,
-                            'address',
-                            createKey(0)
-                        )
-                    ).resolves.toMatchObject({
-                        item: null,
-                        markers: [PUBLIC_READ_MARKER],
-                    });
-                });
-
-                if (allowRecordKeys) {
-                    it('should support using a record key', async () => {
-                        const result = (await manager.recordItem({
-                            recordKeyOrRecordName: key,
-                            userId: otherUserId,
-                            item: createTestItem({
+                            createRecordItem({
                                 address: 'address',
-                                key: createKey(0),
-                            }),
-                            instances: [],
-                        })) as CrudRecordItemSuccess;
-
-                        expect(result).toEqual({
-                            success: true,
-                            recordName: recordName,
-                            address: 'address',
-                        });
-
-                        await expect(
-                            itemsStore.getItemByKey(
-                                recordName,
-                                'address',
-                                createKey(0)
-                            )
-                        ).resolves.toEqual({
-                            item: {
-                                address: 'address',
-                                key: createKey(0),
-                            },
-                            markers: [PUBLIC_READ_MARKER],
-                        });
+                                markers: [PUBLIC_READ_MARKER],
+                            })
+                        );
                     });
 
-                    it('should be able to use subjectless keys', async () => {
-                        const result = (await manager.recordItem({
-                            recordKeyOrRecordName: subjectlessKey,
-                            userId: otherUserId,
-                            item: createTestItem({
-                                address: 'address',
-                                key: createKey(0),
-                            }),
-                            instances: [],
-                        })) as CrudRecordItemSuccess;
-
-                        expect(result).toEqual({
-                            success: true,
-                            recordName: recordName,
-                            address: 'address',
-                        });
-
-                        await expect(
-                            itemsStore.getItemByKey(
-                                recordName,
-                                'address',
-                                createKey(0)
-                            )
-                        ).resolves.toEqual({
-                            item: {
-                                address: 'address',
-                                key: createKey(0),
-                            },
-                            markers: [PUBLIC_READ_MARKER],
-                        });
-                    });
-                } else {
-                    it('should reject the request if record keys are not allowed', async () => {
-                        const result = (await manager.recordItem({
-                            recordKeyOrRecordName: key,
-                            userId: otherUserId,
-                            item: createTestItem({
-                                address: 'address',
-                                key: createKey(0),
-                            }),
-                            instances: [],
-                        })) as CrudRecordItemSuccess;
-
-                        expect(result).toEqual({
-                            success: false,
-                            errorCode: 'not_authorized',
-                            errorMessage: expect.any(String),
-                            reason: {
-                                type: 'missing_permission',
-                                recordName,
-                                action: 'create',
-                                resourceKind,
-                                resourceId: 'address',
-                                subjectType: 'user',
-                                subjectId: otherUserId,
-                            },
-                        });
-
-                        await expect(
-                            itemsStore.getItemByKey(
-                                recordName,
-                                'address',
-                                createKey(0)
-                            )
-                        ).resolves.toMatchObject({
-                            item: null,
-                            markers: [PUBLIC_READ_MARKER],
-                        });
-                    });
-
-                    it('should reject the request if subjectless keys are not allowed', async () => {
-                        const result = (await manager.recordItem({
-                            recordKeyOrRecordName: subjectlessKey,
-                            userId: otherUserId,
-                            item: createTestItem({
-                                address: 'address',
-                                key: createKey(0),
-                            }),
-                            instances: [],
-                        })) as CrudRecordItemSuccess;
-
-                        expect(result).toEqual({
-                            success: false,
-                            errorCode: 'not_authorized',
-                            errorMessage: expect.any(String),
-                            reason: {
-                                type: 'missing_permission',
-                                recordName,
-                                action: 'create',
-                                resourceKind,
-                                resourceId: 'address',
-                                subjectType: 'user',
-                                subjectId: otherUserId,
-                            },
-                        });
-
-                        await expect(
-                            itemsStore.getItemByKey(
-                                recordName,
-                                'address',
-                                createKey(0)
-                            )
-                        ).resolves.toMatchObject({
-                            item: null,
-                            markers: [PUBLIC_READ_MARKER],
-                        });
-                    });
-                }
-            });
-        }
-
-        if (allowedActions.includes('update')) {
-            describe('update', () => {
-                beforeEach(async () => {
-                    await recordItemsStore.createItem(
-                        recordName,
-                        createRecordItem({
-                            address: 'address',
-                            markers: [PUBLIC_READ_MARKER],
-                        })
-                    );
-                    await itemsStore.createItem(
-                        recordName,
-                        createTestItem({
-                            address: 'address',
-                            key: createKey(0),
-                        })
-                    );
-                });
-
-                it('should update the markers in the store', async () => {
-                    const item = createTestItem({
-                        address: 'address',
-                        key: createKey(0),
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: recordName,
-                        userId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: true,
-                        recordName: recordName,
-                        address: 'address',
-                    });
-
-                    await expect(
-                        itemsStore.getItemByKey(
-                            recordName,
-                            'address',
-                            createKey(0)
-                        )
-                    ).resolves.toMatchObject({
-                        item,
-                        markers: [PUBLIC_READ_MARKER],
-                    });
-                });
-
-                it('should reject the request if given an invalid key', async () => {
-                    const item = createTestItem({
-                        address: 'address',
-                        key: createKey(0),
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: 'not_a_key',
-                        userId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'record_not_found',
-                        errorMessage: expect.any(String),
-                    });
-
-                    await expect(
-                        itemsStore.getItemByKey(
-                            recordName,
-                            'address',
-                            createKey(0)
-                        )
-                    ).resolves.toMatchObject({
-                        item,
-                        markers: [PUBLIC_READ_MARKER],
-                    });
-                });
-
-                if (allowRecordKeys) {
-                    it('should support using a record key', async () => {
+                    it('should store the item in the store', async () => {
                         const item = createTestItem({
                             address: 'address',
                             key: createKey(0),
                         });
                         const result = (await manager.recordItem({
-                            recordKeyOrRecordName: key,
+                            recordKeyOrRecordName: recordName,
                             userId,
                             item,
                             instances: [],
@@ -592,13 +283,235 @@ export function testCrudRecordsController<
                         });
                     });
 
-                    it('should be able to use subjectless keys', async () => {
+                    it('should return data_not_found if the record item doesnt exist', async () => {
+                        const item = createTestItem({
+                            address: 'missing',
+                            key: createKey(0),
+                        });
+                        const result = (await manager.recordItem({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                            item,
+                            instances: [],
+                        })) as CrudRecordItemSuccess;
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'data_not_found',
+                            errorMessage: expect.any(String),
+                        });
+
+                        await expect(
+                            itemsStore.getItemByKey(
+                                recordName,
+                                'missing',
+                                createKey(0)
+                            )
+                        ).resolves.toMatchObject({
+                            item: null,
+                            markers: null,
+                        });
+                    });
+
+                    it('should reject the request if given an invalid key', async () => {
+                        const result = (await manager.recordItem({
+                            recordKeyOrRecordName: 'not_a_key',
+                            userId,
+                            item: createTestItem({
+                                address: 'address',
+                                key: createKey(0),
+                            }),
+                            instances: [],
+                        })) as CrudRecordItemSuccess;
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'record_not_found',
+                            errorMessage: expect.any(String),
+                        });
+
+                        await expect(
+                            itemsStore.getItemByKey(
+                                recordName,
+                                'address',
+                                createKey(0)
+                            )
+                        ).resolves.toMatchObject({
+                            item: null,
+                            markers: [PUBLIC_READ_MARKER],
+                        });
+                    });
+
+                    if (allowRecordKeys) {
+                        it('should support using a record key', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId: otherUserId,
+                                item: createTestItem({
+                                    address: 'address',
+                                    key: createKey(0),
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toEqual({
+                                item: {
+                                    address: 'address',
+                                    key: createKey(0),
+                                },
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+
+                        it('should be able to use subjectless keys', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId: otherUserId,
+                                item: createTestItem({
+                                    address: 'address',
+                                    key: createKey(0),
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toEqual({
+                                item: {
+                                    address: 'address',
+                                    key: createKey(0),
+                                },
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+                    } else {
+                        it('should reject the request if record keys are not allowed', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId: otherUserId,
+                                item: createTestItem({
+                                    address: 'address',
+                                    key: createKey(0),
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'create',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toMatchObject({
+                                item: null,
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+
+                        it('should reject the request if subjectless keys are not allowed', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId: otherUserId,
+                                item: createTestItem({
+                                    address: 'address',
+                                    key: createKey(0),
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'create',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toMatchObject({
+                                item: null,
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+                    }
+                });
+            }
+
+            if (allowedActions.includes('update')) {
+                describe('update', () => {
+                    beforeEach(async () => {
+                        await recordItemsStore.createItem(
+                            recordName,
+                            createRecordItem({
+                                address: 'address',
+                                markers: [PUBLIC_READ_MARKER],
+                            })
+                        );
+                        await itemsStore.createItem(
+                            recordName,
+                            createTestItem({
+                                address: 'address',
+                                key: createKey(0),
+                            })
+                        );
+                    });
+
+                    it('should update the markers in the store', async () => {
                         const item = createTestItem({
                             address: 'address',
                             key: createKey(0),
                         });
                         const result = (await manager.recordItem({
-                            recordKeyOrRecordName: subjectlessKey,
+                            recordKeyOrRecordName: recordName,
                             userId,
                             item,
                             instances: [],
@@ -621,32 +534,23 @@ export function testCrudRecordsController<
                             markers: [PUBLIC_READ_MARKER],
                         });
                     });
-                } else {
-                    it('should reject the request if record keys are not allowed', async () => {
+
+                    it('should reject the request if given an invalid key', async () => {
                         const item = createTestItem({
                             address: 'address',
                             key: createKey(0),
                         });
                         const result = (await manager.recordItem({
-                            recordKeyOrRecordName: key,
-                            userId: otherUserId,
+                            recordKeyOrRecordName: 'not_a_key',
+                            userId,
                             item,
                             instances: [],
                         })) as CrudRecordItemSuccess;
 
                         expect(result).toEqual({
                             success: false,
-                            errorCode: 'not_authorized',
+                            errorCode: 'record_not_found',
                             errorMessage: expect.any(String),
-                            reason: {
-                                type: 'missing_permission',
-                                recordName,
-                                action: 'update',
-                                resourceKind,
-                                resourceId: 'address',
-                                subjectType: 'user',
-                                subjectId: otherUserId,
-                            },
                         });
 
                         await expect(
@@ -656,59 +560,160 @@ export function testCrudRecordsController<
                                 createKey(0)
                             )
                         ).resolves.toMatchObject({
-                            item: createTestItem({
-                                address: 'address',
-                                key: createKey(0),
-                            }),
-                            markers: [PUBLIC_READ_MARKER],
-                        });
-                    });
-
-                    it('should reject the request if subjectless keys are not allowed', async () => {
-                        const item = createTestItem({
-                            address: 'address',
-                            key: createKey(0),
-                        });
-                        const result = (await manager.recordItem({
-                            recordKeyOrRecordName: subjectlessKey,
-                            userId: otherUserId,
                             item,
-                            instances: [],
-                        })) as CrudRecordItemSuccess;
-
-                        expect(result).toEqual({
-                            success: false,
-                            errorCode: 'not_authorized',
-                            errorMessage: expect.any(String),
-                            reason: {
-                                type: 'missing_permission',
-                                recordName,
-                                action: 'update',
-                                resourceKind,
-                                resourceId: 'address',
-                                subjectType: 'user',
-                                subjectId: otherUserId,
-                            },
-                        });
-
-                        await expect(
-                            itemsStore.getItemByKey(
-                                recordName,
-                                'address',
-                                createKey(0)
-                            )
-                        ).resolves.toMatchObject({
-                            item: createTestItem({
-                                address: 'address',
-                                key: createKey(0),
-                            }),
                             markers: [PUBLIC_READ_MARKER],
                         });
                     });
-                }
-            });
-        }
-    });
+
+                    if (allowRecordKeys) {
+                        it('should support using a record key', async () => {
+                            const item = createTestItem({
+                                address: 'address',
+                                key: createKey(0),
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toMatchObject({
+                                item,
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+
+                        it('should be able to use subjectless keys', async () => {
+                            const item = createTestItem({
+                                address: 'address',
+                                key: createKey(0),
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toMatchObject({
+                                item,
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+                    } else {
+                        it('should reject the request if record keys are not allowed', async () => {
+                            const item = createTestItem({
+                                address: 'address',
+                                key: createKey(0),
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId: otherUserId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'update',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toMatchObject({
+                                item: createTestItem({
+                                    address: 'address',
+                                    key: createKey(0),
+                                }),
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+
+                        it('should reject the request if subjectless keys are not allowed', async () => {
+                            const item = createTestItem({
+                                address: 'address',
+                                key: createKey(0),
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId: otherUserId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'update',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByKey(
+                                    recordName,
+                                    'address',
+                                    createKey(0)
+                                )
+                            ).resolves.toMatchObject({
+                                item: createTestItem({
+                                    address: 'address',
+                                    key: createKey(0),
+                                }),
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+                    }
+                });
+            }
+        });
+    }
 
     if (allowedActions.includes('read')) {
         describe('getItem()', () => {

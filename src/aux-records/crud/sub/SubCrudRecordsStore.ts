@@ -116,6 +116,6 @@ export interface CrudSuccess {
 
 export interface CrudFailure {
     success: false;
-    errorCode: 'item_not_found' | 'parent_not_found';
+    errorCode: 'data_not_found' | 'parent_not_found';
     errorMessage: string;
 }

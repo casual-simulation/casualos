@@ -35,6 +35,7 @@ import { MemoryPackageRecordsStore } from '../MemoryPackageRecordsStore';
 import { PackageRecordsStore } from '../PackageRecordsStore';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { getHash } from '@casual-simulation/crypto/HashHelpers';
+import { FileRecordsController } from '../../FileRecordsController';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -42,10 +43,10 @@ console.error = jest.fn();
 describe('PackageVersionRecordsController', () => {
     testCrudRecordsController<
         PackageRecordVersionKey,
-        PackageRecordVersionInput,
+        PackageRecordVersion,
         PackageVersionRecordsStore,
         PackageRecordsStore,
-        PackageVersionRecordsController
+        any
     >(
         false,
         'package.version',
@@ -55,6 +56,12 @@ describe('PackageVersionRecordsController', () => {
         (config, services) =>
             new PackageVersionRecordsController({
                 ...config,
+                files: new FileRecordsController({
+                    config: services.configStore,
+                    metrics: services.store,
+                    policies: services.policies,
+                    store: services.store,
+                }),
             }),
         (id) => ({
             // Lower IDs map to higher versions (up to 100)
@@ -66,10 +73,8 @@ describe('PackageVersionRecordsController', () => {
         (item) => ({
             key: item.key,
             address: item.address,
-            aux: {
-                version: 1,
-                state: {},
-            },
+            auxFileName: 'aux.json',
+            sha256: '',
             auxSha256: getHash({
                 version: 1,
                 state: {},
@@ -91,7 +96,7 @@ describe('PackageVersionRecordsController', () => {
 
             context.store.subscriptionConfiguration = builder.config;
         },
-        ['create', 'read', 'delete', 'list']
+        ['read', 'delete', 'list']
     );
 
     let store: MemoryStore;
@@ -121,10 +126,10 @@ describe('PackageVersionRecordsController', () => {
 
         const context = await setupTestContext<
             PackageRecordVersionKey,
-            PackageRecordVersionInput,
+            PackageRecordVersion,
             PackageVersionRecordsStore,
             PackageRecordsStore,
-            PackageVersionRecordsController
+            any
         >(
             (services) => new MemoryPackageRecordsStore(services.store),
             (services, packageStore) =>
@@ -135,6 +140,12 @@ describe('PackageVersionRecordsController', () => {
             (config, services) => {
                 return new PackageVersionRecordsController({
                     ...config,
+                    files: new FileRecordsController({
+                        config: services.configStore,
+                        metrics: services.store,
+                        policies: services.policies,
+                        store: services.store,
+                    }),
                 });
             }
         );
@@ -252,8 +263,13 @@ describe('PackageVersionRecordsController', () => {
                             patch: 0,
                             tag: '',
                         },
-                        aux,
-                        auxSha256: getHash(aux),
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
                         entitlements: [],
                         readme: 'def',
                     },
@@ -265,6 +281,17 @@ describe('PackageVersionRecordsController', () => {
                     success: true,
                     recordName,
                     address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PUBLIC_READ_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
                 });
 
                 const item = await itemsStore.getItemByKey(
@@ -280,15 +307,14 @@ describe('PackageVersionRecordsController', () => {
 
                 expect(!!item.item).toBe(true);
 
-                const {
-                    sha256,
-                    aux: a2,
-                    address,
-                    key,
-                    ...hashedProperties
-                } = item.item as PackageRecordVersion;
+                const { sha256, address, key, ...hashedProperties } =
+                    item.item as PackageRecordVersion;
                 expect(hashedProperties.createdAtMs).toBe(123);
-                expect(getHash(hashedProperties)).toBe(sha256);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
             });
 
             it('should return subscription_limit_reached when the user has reached limit of package versions', async () => {
@@ -322,10 +348,7 @@ describe('PackageVersionRecordsController', () => {
                         patch: 0,
                         tag: '',
                     },
-                    aux: {
-                        version: 1,
-                        state: {},
-                    },
+                    auxFileName: 'aux.json',
                     auxSha256: '',
                     createdAtMs: 0,
                     entitlements: [],
@@ -349,8 +372,13 @@ describe('PackageVersionRecordsController', () => {
                             patch: 0,
                             tag: '',
                         },
-                        aux,
-                        auxSha256: getHash(aux),
+                        auxFileRequest: {
+                            fileByteLength: 123,
+                            fileSha256Hex: getHash(aux),
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
                         entitlements: [],
                         readme: 'def',
                     },
@@ -363,51 +391,6 @@ describe('PackageVersionRecordsController', () => {
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
                         'The maximum number of package versions has been reached for your subscription.',
-                });
-            });
-
-            it('should return invalid_request when the aux hash doesnt match the state', async () => {
-                dateNowMock.mockReturnValue(123);
-
-                await recordItemsStore.createItem(recordName, {
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
-
-                let aux: StoredAux = {
-                    version: 1,
-                    state: {
-                        test: createBot('test', {
-                            test: true,
-                        }),
-                    },
-                };
-
-                let data: PackageRecordVersionInput = {
-                    address: 'address',
-                    key: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
-                    aux,
-                    auxSha256: 'wrong',
-                    entitlements: [],
-                    readme: '',
-                };
-
-                const result = await manager.recordItem({
-                    recordKeyOrRecordName: recordName,
-                    item: data,
-                    userId,
-                    instances: [],
-                });
-
-                expect(result).toEqual({
-                    success: false,
-                    errorCode: 'invalid_request',
-                    errorMessage: 'The aux hash does not match the aux.',
                 });
             });
         });
@@ -426,10 +409,7 @@ describe('PackageVersionRecordsController', () => {
                         patch: 0,
                         tag: '',
                     },
-                    aux: {
-                        version: 1,
-                        state: {},
-                    },
+                    auxFileName: 'aux.json',
                     auxSha256: '',
                     createdAtMs: 0,
                     entitlements: [],
@@ -450,11 +430,13 @@ describe('PackageVersionRecordsController', () => {
                             patch: 0,
                             tag: '',
                         },
-                        aux: {
-                            version: 1,
-                            state: {},
+                        auxFileRequest: {
+                            fileByteLength: 123,
+                            fileSha256Hex: getHash(''),
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
                         },
-                        auxSha256: 'abc',
                         entitlements: [],
                         readme: 'def',
                     },
@@ -483,10 +465,7 @@ describe('PackageVersionRecordsController', () => {
                             patch: 0,
                             tag: '',
                         },
-                        aux: {
-                            version: 1,
-                            state: {},
-                        },
+                        auxFileName: 'aux.json',
                         auxSha256: '',
                         createdAtMs: 0,
                         entitlements: [],
@@ -514,10 +493,7 @@ describe('PackageVersionRecordsController', () => {
                     patch: 0,
                     tag: '',
                 },
-                aux: {
-                    version: 1,
-                    state: {},
-                },
+                auxFileName: 'aux.json',
                 auxSha256: '',
                 createdAtMs: 0,
                 entitlements: [],
@@ -551,10 +527,7 @@ describe('PackageVersionRecordsController', () => {
                         patch: 0,
                         tag: '',
                     },
-                    aux: {
-                        version: 1,
-                        state: {},
-                    },
+                    auxFileName: 'aux.json',
                     auxSha256: '',
                     createdAtMs: 0,
                     entitlements: [],
@@ -575,10 +548,7 @@ describe('PackageVersionRecordsController', () => {
                     patch: 0,
                     tag: '',
                 },
-                aux: {
-                    version: 1,
-                    state: {},
-                },
+                auxFileName: 'aux.json',
                 auxSha256: '',
                 createdAtMs: 0,
                 entitlements: [
@@ -615,10 +585,7 @@ describe('PackageVersionRecordsController', () => {
                         patch: 0,
                         tag: '',
                     },
-                    aux: {
-                        version: 1,
-                        state: {},
-                    },
+                    auxFileName: 'aux.json',
                     auxSha256: '',
                     createdAtMs: 0,
                     entitlements: [
@@ -631,6 +598,87 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 0,
                     approved: false,
+                },
+            });
+        });
+
+        it('should mark the item as approved if it has an approved review', async () => {
+            await itemsStore.putItem(recordName, {
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'aux.json',
+                auxSha256: '',
+                createdAtMs: 0,
+                entitlements: [
+                    {
+                        feature: 'data',
+                        scope: 'shared',
+                    },
+                ],
+                readme: '',
+                sha256: '',
+                sizeInBytes: 0,
+            });
+
+            await itemsStore.putReviewForVersion({
+                id: 'reviewId',
+                recordName,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                approved: true,
+                reviewComments: '',
+                reviewStatus: 'approved',
+                reviewingUserId: otherUserId,
+                updatedAtMs: 0,
+                createdAtMs: 0,
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    auxFileName: 'aux.json',
+                    auxSha256: '',
+                    createdAtMs: 0,
+                    entitlements: [
+                        {
+                            feature: 'data',
+                            scope: 'shared',
+                        },
+                    ],
+                    readme: '',
+                    sha256: '',
+                    sizeInBytes: 0,
+                    approved: true,
                 },
             });
         });
