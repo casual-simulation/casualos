@@ -241,17 +241,19 @@ describe('PackageVersionRecordsController', () => {
 
     describe('recordItem()', () => {
         describe('create', () => {
+            beforeEach(async () => {
+                await recordItemsStore.createItem(recordName, {
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            });
+
             it('should record the current time, and sha256 hash for the package', async () => {
                 dateNowMock.mockReturnValue(123);
                 let aux: StoredAux = {
                     version: 1,
                     state: {},
                 };
-
-                await recordItemsStore.createItem(recordName, {
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
 
                 const result = await manager.recordItem({
                     recordKeyOrRecordName: recordName,
@@ -317,6 +319,208 @@ describe('PackageVersionRecordsController', () => {
                 ).toBe(sha256);
             });
 
+            it('should return data_not_found if the record item doesnt exist', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    item: {
+                        address: 'missing',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: expect.any(String),
+                });
+            });
+
+            it('should reject the request if given an invalid key', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: 'not_a_key',
+                    userId,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: expect.any(String),
+                });
+
+                await expect(
+                    itemsStore.getItemByKey(recordName, 'address', {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    })
+                ).resolves.toMatchObject({
+                    item: null,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            });
+
+            it('should reject the request if record keys are not allowed', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: key,
+                    userId: otherUserId,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: expect.any(String),
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'create',
+                        resourceKind: 'package.version',
+                        resourceId: 'address',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                });
+
+                await expect(
+                    itemsStore.getItemByKey(recordName, 'address', {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    })
+                ).resolves.toMatchObject({
+                    item: null,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            });
+
+            it('should reject the request if subjectless keys are not allowed', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: subjectlessKey,
+                    userId: otherUserId,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: expect.any(String),
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'create',
+                        resourceKind: 'package.version',
+                        resourceId: 'address',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                });
+
+                await expect(
+                    itemsStore.getItemByKey(recordName, 'address', {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    })
+                ).resolves.toMatchObject({
+                    item: null,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            });
+
             it('should return subscription_limit_reached when the user has reached limit of package versions', async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
@@ -336,10 +540,6 @@ describe('PackageVersionRecordsController', () => {
                     subscriptionStatus: 'active',
                 });
 
-                await recordItemsStore.createItem(recordName, {
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
                 await itemsStore.createItem(recordName, {
                     address: 'address',
                     key: {
