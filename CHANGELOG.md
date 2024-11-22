@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.3.14
+
+#### Date: TBA
+
+### :rocket: Features
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots were not removed from the sheetPortal when an inst was unloaded.
+
 ## V3.3.13
 
 #### Date: 11/8/2024
