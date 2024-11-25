@@ -347,7 +347,10 @@ export class PolicyController {
             recordStudioId: studioId,
             recordStudioMembers: studioMembers,
             userId: request.userId,
-            userRole: userPrivacyFeatures?.userRole ?? 'none',
+            userRole:
+                (request.userId
+                    ? userPrivacyFeatures?.userRole
+                    : request.userRole) ?? 'none',
             userPrivacyFeatures,
             sendNotLoggedIn: request.sendNotLoggedIn ?? true,
         };
@@ -794,6 +797,29 @@ export class PolicyController {
                         expireTimeMs: null,
                     },
                     explanation: `User is a superUser.`,
+                };
+            } else if (context.userRole === 'system') {
+                return {
+                    success: true,
+                    recordName: recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+
+                        // Record owners are treated as if they are admins in the record
+                        subjectType: 'role',
+                        subjectId: ADMIN_ROLE_NAME,
+
+                        // Admins get all access to all resources in a record
+                        resourceKind: null,
+                        action: null,
+
+                        marker: markers[0],
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation: `The system is requesting the action.`,
                 };
             } else if (context.userRole === 'moderator') {
                 if (
@@ -2673,8 +2699,16 @@ export interface ConstructAuthorizationContextRequest {
 
     /**
      * The ID of the user that is currently logged in.
+     * Null or undefined if the user is not logged in.
      */
     userId?: string | null;
+
+    /**
+     * The role of the user.
+     * Null if the user is not logged in.
+     * Null or undefined if the user is not logged in.
+     */
+    userRole?: UserRole | null;
 
     /**
      * Whether to return not_logged_in results when the user has not provided any authentication mechanism, but needs to.
