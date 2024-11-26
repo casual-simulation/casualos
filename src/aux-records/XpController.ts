@@ -62,17 +62,16 @@ export class XpController {
                     };
                 }
 
-                const xpId = uuid();
                 const account: XpAccount = this._generateAccount();
                 const user: XpUser = {
-                    id: xpId,
+                    id: uuid(),
                     userId: authUserId,
                     accountId: account.id,
                     requestedRate: null,
                     createdAtMs: Date.now(),
                     updatedAtMs: Date.now(),
                 };
-                await this._xpStore.createXpUserWithAccount(user, account);
+                await this._xpStore.saveXpUserWithAccount(user, account);
                 return { success: true, user };
             },
             {

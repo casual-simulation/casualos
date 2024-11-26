@@ -378,7 +378,7 @@ export class MemoryStore
         };
     }
 
-    async createXpUserWithAccount(user: XpUser, account: XpAccount) {
+    async saveXpUserWithAccount(user: XpUser, account: XpAccount) {
         this._xpUsers.set(user.id, user);
         this._xpAccounts.set(account.id, account);
     }

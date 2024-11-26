@@ -124,7 +124,7 @@ export class PrismaXpStore implements XpStore {
         });
     }
 
-    async createXpUserWithAccount(user: XpUser, account: XpAccount) {
+    async saveXpUserWithAccount(user: XpUser, account: XpAccount) {
         await this._client.xpUser.create({
             data: {
                 id: user.id,

@@ -2185,7 +2185,7 @@ export function getXpUserMeta(
     by: xpUserIdQuery | string | undefined,
     options: RecordActionOptions,
     taskId: string | number
-) {
+): RecordsCallProcedureAction {
     if (typeof by === 'string') by = { userId: by };
     if (!by) by = {};
     return recordsCallProcedure(

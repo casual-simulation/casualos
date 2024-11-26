@@ -10,11 +10,11 @@ import {
 
 export type XpStore = {
     /**
-     * Create an xp user with an associated account
+     * Save an xp user with an associated account
      * @param user The user to create
      * @param account The account to create
      */
-    createXpUserWithAccount: (
+    saveXpUserWithAccount: (
         user: XpUser,
         account: XpAccount
     ) => Promise<void>;
