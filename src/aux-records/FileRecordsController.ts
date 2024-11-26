@@ -36,6 +36,7 @@ import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { UserRole } from './AuthStore';
 
 const TRACE_NAME = 'FileRecordsController';
 
@@ -67,12 +68,13 @@ export class FileRecordsController {
      * @param recordNameOrKey The name of the record or the record key of the record.
      * @param userId The ID of the user that is logged in. Should be null if the user is not logged in.
      * @param request The request.
+     * @param userRole the role of the user that is requesting the file.
      * @returns
      */
     @traced(TRACE_NAME)
     async recordFile(
         recordKeyOrRecordName: string,
-        userId: string,
+        userId: string | null,
         request: RecordFileRequest
     ): Promise<RecordFileResult> {
         try {
@@ -83,6 +85,7 @@ export class FileRecordsController {
                 await this._policies.constructAuthorizationContext({
                     recordKeyOrRecordName,
                     userId,
+                    userRole: request.userRole,
                 });
 
             if (contextResult.success === false) {
@@ -160,8 +163,9 @@ export class FileRecordsController {
 
             const policy = contextResult.context.subjectPolicy;
             userId = contextResult.context.userId;
+            const userRole = contextResult.context.userRole;
 
-            if (!userId && policy !== 'subjectless') {
+            if (!userId && userRole === 'none' && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -845,6 +849,11 @@ export interface RecordFileRequest {
      * The instances that are currently loaded.
      */
     instances?: string[];
+
+    /**
+     * The role of the user that is making the request.
+     */
+    userRole?: UserRole | null;
 }
 
 /**

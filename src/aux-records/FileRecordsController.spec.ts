@@ -309,6 +309,7 @@ describe('FileRecordsController', () => {
                     'The file has already been uploaded to ' +
                     (result as any).existingFileUrl,
                 existingFileUrl: expect.any(String),
+                existingFileName: 'testSha256.txt',
             });
         });
 
@@ -760,6 +761,116 @@ describe('FileRecordsController', () => {
                 success: false,
                 errorCode: 'file_not_found',
                 errorMessage: 'The file was not found in the store.',
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            // store.roles[recordName] = {
+            //     [userId]: new Set([ADMIN_ROLE_NAME]),
+            // };
+
+            const result = (await manager.recordFile(recordName, userId, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+                markers: ['secret'],
+                instances: ['inst'],
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceId: 'testSha256.txt',
+                    resourceKind: 'file',
+                    action: 'create',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+            expect(presignUrlMock).not.toHaveBeenCalled();
+
+            await expect(
+                store.getFileRecord(recordName, 'testSha256.txt')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            });
+        });
+
+        it('should allow the request if the user is not logged in but the system user role was provided', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            // store.roles[recordName] = {
+            //     [userId]: new Set([ADMIN_ROLE_NAME]),
+            // };
+
+            const result = (await manager.recordFile(recordName, null, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+                markers: ['secret'],
+                instances: ['inst'],
+                userRole: 'system',
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+                markers: ['secret'],
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {},
+                markers: ['secret'],
+            });
+
+            await expect(
+                store.getFileRecord(recordName, 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: recordName,
+                publisherId: ownerId,
+                subjectId: null,
+                sizeInBytes: 100,
+                markers: ['secret'],
+                uploaded: false,
+                url: expect.any(String),
             });
         });
 

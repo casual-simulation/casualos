@@ -28,6 +28,8 @@ import {
     CrudRecordItemFailure,
     CrudEraseItemResult,
     CrudListItemsResult,
+    CrudGetItemFailure,
+    CrudGetItemSuccess,
 } from '../../crud';
 import {
     PackageRecordVersion,
@@ -54,6 +56,8 @@ import { PackageRecordsStore } from '../PackageRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import {
     FileRecordsController,
+    ReadFileResult,
+    ReadFileSuccess,
     RecordFileRequest,
     RecordFileResult,
     RecordFileSuccess,
@@ -264,6 +268,7 @@ export class PackageVersionRecordsController {
                 sha256,
                 sizeInBytes,
                 createdAtMs,
+                createdFile: recordFileResult.success,
             };
 
             const crudResult = await this._store.putItem(recordName, item);
@@ -299,7 +304,7 @@ export class PackageVersionRecordsController {
     @traced(TRACE_NAME)
     async getItem(
         request: SubCrudGetItemRequest<PackageRecordVersionKey>
-    ): Promise<CrudGetItemResult<PackageRecordVersionWithMetadata>> {
+    ): Promise<GetPackageVersionResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName: request.recordName,
@@ -362,9 +367,16 @@ export class PackageVersionRecordsController {
                 item.approved = review?.approved ?? false;
             }
 
+            const auxFile = await this.files.readFile(
+                context.context.recordName,
+                item.auxFileName,
+                context.context.userId
+            );
+
             return {
                 success: true,
                 item: item,
+                auxFile,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -633,7 +645,12 @@ export function entitlementRequiresApproval(entitlement: Entitlement): boolean {
 
 export type PackageRecordVersionInput = Omit<
     PackageRecordVersion,
-    'createdAtMs' | 'sha256' | 'sizeInBytes' | 'auxFileName' | 'auxSha256'
+    | 'createdAtMs'
+    | 'sha256'
+    | 'sizeInBytes'
+    | 'auxFileName'
+    | 'auxSha256'
+    | 'createdFile'
 > & {
     auxFileRequest: Omit<RecordFileRequest, 'markers' | 'instances'>;
 };
@@ -658,4 +675,19 @@ export interface PackageRecordsSubscriptionMetricsSuccess
     config: SubscriptionConfiguration;
     metrics: PackageVersionSubscriptionMetrics;
     features: PackageFeaturesConfiguration;
+}
+
+export type GetPackageVersionResult =
+    | GetPackageVersionSuccess
+    | CrudGetItemFailure;
+
+export interface GetPackageVersionSuccess
+    extends CrudGetItemSuccess<PackageRecordVersionWithMetadata> {
+    /**
+     * The result of reading the aux file.
+     *
+     * If successful, then the user is authorized to read the file.
+     * If unsuccessful, then the user is not authorized to read the file.
+     */
+    auxFile: ReadFileResult;
 }

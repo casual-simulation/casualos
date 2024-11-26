@@ -94,6 +94,11 @@ export interface PackageRecordVersion
     auxFileName: string;
 
     /**
+     * Whether the aux file was created for this version.
+     */
+    createdFile: boolean;
+
+    /**
      * The SHA-256 hash of the package version.
      */
     sha256: string;

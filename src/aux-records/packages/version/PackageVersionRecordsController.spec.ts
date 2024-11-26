@@ -83,6 +83,7 @@ describe('PackageVersionRecordsController', () => {
             entitlements: [],
             readme: '',
             sizeInBytes: 0,
+            createdFile: true,
         }),
         (item) => ({
             address: item.address,
@@ -90,11 +91,21 @@ describe('PackageVersionRecordsController', () => {
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
-                (features) =>
-                    features.withAllDefaultFeatures().withNotifications()
+                (features) => features.withAllDefaultFeatures().withPackages()
             );
 
             context.store.subscriptionConfiguration = builder.config;
+
+            await context.store.addFileRecord(
+                recordName,
+                'aux.json',
+                null,
+                null,
+                123,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await context.store.setFileRecordAsUploaded(recordName, 'aux.json');
         },
         ['read', 'delete', 'list']
     );
@@ -307,6 +318,167 @@ describe('PackageVersionRecordsController', () => {
                     }
                 );
 
+                expect(!!item.item).toBe(true);
+
+                const { sha256, address, key, ...hashedProperties } =
+                    item.item as PackageRecordVersion;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
+
+            it('should store if the package version is uploading a new file', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+                const fileName = `${getHash(aux)}.json`;
+                await store.addFileRecord(
+                    recordName,
+                    fileName,
+                    null,
+                    null,
+                    123,
+                    'description',
+                    [PUBLIC_READ_MARKER]
+                );
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: false,
+                        errorCode: 'file_already_uploaded',
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(item.item!.createdFile).toBe(false);
+                expect(!!item.item).toBe(true);
+
+                const { sha256, address, key, ...hashedProperties } =
+                    item.item as PackageRecordVersion;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
+
+            it('should be able to upload files even if the user doesnt have access to upload files', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'user',
+                    otherUserId,
+                    'package.version',
+                    PUBLIC_READ_MARKER,
+                    'create',
+                    {},
+                    null
+                );
+
+                // const fileName = `${getHash(aux)}.json`;
+                // await store.addFileRecord(recordName, fileName, null, null, 123, 'description', [PUBLIC_READ_MARKER]);
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    userId: otherUserId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PUBLIC_READ_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(item.item!.createdFile).toBe(true);
                 expect(!!item.item).toBe(true);
 
                 const { sha256, address, key, ...hashedProperties } =
@@ -555,6 +727,7 @@ describe('PackageVersionRecordsController', () => {
                     readme: '',
                     sha256: '',
                     sizeInBytes: 0,
+                    createdFile: true,
                 });
 
                 const aux: StoredAux = {
@@ -616,6 +789,7 @@ describe('PackageVersionRecordsController', () => {
                     readme: '',
                     sha256: '',
                     sizeInBytes: 0,
+                    createdFile: true,
                 });
             });
 
@@ -685,6 +859,16 @@ describe('PackageVersionRecordsController', () => {
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
+            await store.addFileRecord(
+                recordName,
+                'aux.json',
+                null,
+                null,
+                123,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.setFileRecordAsUploaded(recordName, 'aux.json');
             await itemsStore.createItem(recordName, {
                 address: 'address',
                 key: {
@@ -699,7 +883,8 @@ describe('PackageVersionRecordsController', () => {
                 entitlements: [],
                 readme: '',
                 sha256: '',
-                sizeInBytes: 0,
+                sizeInBytes: 123,
+                createdFile: true,
             });
         });
 
@@ -733,8 +918,17 @@ describe('PackageVersionRecordsController', () => {
                     entitlements: [],
                     readme: '',
                     sha256: '',
-                    sizeInBytes: 0,
+                    sizeInBytes: 123,
                     approved: true,
+                    createdFile: true,
+                },
+                auxFile: {
+                    success: true,
+                    requestHeaders: {
+                        'record-name': recordName,
+                    },
+                    requestMethod: 'GET',
+                    requestUrl: expect.any(String),
                 },
             });
         });
@@ -798,6 +992,15 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 0,
                     approved: false,
+                    createdFile: true,
+                },
+                auxFile: {
+                    success: true,
+                    requestHeaders: {
+                        'record-name': recordName,
+                    },
+                    requestMethod: 'GET',
+                    requestUrl: expect.any(String),
                 },
             });
         });
@@ -879,9 +1082,22 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 0,
                     approved: true,
+                    createdFile: true,
+                },
+                auxFile: {
+                    success: true,
+                    requestHeaders: {
+                        'record-name': recordName,
+                    },
+                    requestMethod: 'GET',
+                    requestUrl: expect.any(String),
                 },
             });
         });
+
+        // it('should allow the user to read the file if the file was created by the package', async () => {
+
+        // });
     });
 });
 
