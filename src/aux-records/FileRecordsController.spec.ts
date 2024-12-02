@@ -1428,6 +1428,49 @@ describe('FileRecordsController', () => {
             });
         });
 
+        it('should get a URL by record name if the user role is system', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                ['secret']
+            );
+
+            const result = (await manager.readFile(
+                recordName,
+                'testFile.txt',
+                null,
+                undefined,
+                'system'
+            )) as ReadFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+            expect(presignReadMock).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'testFile.txt',
+                headers: {},
+            });
+        });
+
         it('should deny requests if the user doesnt have permissions', async () => {
             presignReadMock.mockResolvedValueOnce({
                 success: true,

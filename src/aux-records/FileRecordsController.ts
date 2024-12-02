@@ -452,19 +452,22 @@ export class FileRecordsController {
      * @param fileName The name of the file.
      * @param subjectId The ID of the user that is making this request. Null if the user is not logged in.
      * @param instances The instances that are loaded.
+     * @param userRole The role of the user that is making the request.
      */
     @traced(TRACE_NAME)
     async readFile(
         recordKeyOrRecordName: string,
         fileName: string,
         subjectId: string,
-        instances?: string[]
+        instances?: string[],
+        userRole?: UserRole
     ): Promise<ReadFileResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName,
                 userId: subjectId,
                 instances,
+                userRole,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -515,7 +518,11 @@ export class FileRecordsController {
             const policy = context.context.subjectPolicy;
             subjectId = result.user.subjectId;
 
-            if (!subjectId && policy !== 'subjectless') {
+            if (
+                !subjectId &&
+                context.context.userRole === 'none' &&
+                policy !== 'subjectless'
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
