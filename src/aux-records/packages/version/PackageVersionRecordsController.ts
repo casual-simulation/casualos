@@ -382,11 +382,19 @@ export class PackageVersionRecordsController {
                 item.approved = review?.approved ?? false;
             }
 
-            const auxFile = await this.files.readFile(
-                context.context.recordName,
-                item.auxFileName,
-                context.context.userId
-            );
+            const auxFile = item.createdFile
+                ? await this.files.readFile(
+                      context.context.recordName,
+                      item.auxFileName,
+                      null,
+                      undefined,
+                      'system'
+                  )
+                : await this.files.readFile(
+                      context.context.recordName,
+                      item.auxFileName,
+                      context.context.userId
+                  );
 
             return {
                 success: true,

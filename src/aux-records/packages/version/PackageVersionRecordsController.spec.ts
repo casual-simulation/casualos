@@ -992,6 +992,158 @@ describe('PackageVersionRecordsController', () => {
             });
         });
 
+        it('should return not_authorized if the file was not created by the package version and the user is not authorized to read the file', async () => {
+            await store.addFileRecord(
+                recordName,
+                'aux2.json',
+                null,
+                null,
+                123,
+                'description',
+                [PRIVATE_MARKER]
+            );
+            await store.setFileRecordAsUploaded(recordName, 'aux2.json');
+            await itemsStore.createItem(recordName, {
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 1,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'aux2.json',
+                auxSha256: '',
+                createdAtMs: 0,
+                entitlements: [],
+                readme: '',
+                sha256: '',
+                sizeInBytes: 123,
+                createdFile: false,
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 1,
+                    patch: 0,
+                    tag: '',
+                },
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 1,
+                        patch: 0,
+                        tag: '',
+                    },
+                    auxFileName: 'aux2.json',
+                    auxSha256: '',
+                    createdAtMs: 0,
+                    entitlements: [],
+                    readme: '',
+                    sha256: '',
+                    sizeInBytes: 123,
+                    approved: true,
+                    createdFile: false,
+                },
+                auxFile: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: expect.any(String),
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'read',
+                        resourceKind: 'file',
+                        resourceId: 'aux2.json',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                },
+            });
+        });
+
+        it('should return a link to the file if it was created by the package version', async () => {
+            await store.addFileRecord(
+                recordName,
+                'aux2.json',
+                null,
+                null,
+                123,
+                'description',
+                [PRIVATE_MARKER]
+            );
+            await store.setFileRecordAsUploaded(recordName, 'aux2.json');
+            await itemsStore.createItem(recordName, {
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 1,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'aux2.json',
+                auxSha256: '',
+                createdAtMs: 0,
+                entitlements: [],
+                readme: '',
+                sha256: '',
+                sizeInBytes: 123,
+                createdFile: true,
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 1,
+                    patch: 0,
+                    tag: '',
+                },
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 1,
+                        patch: 0,
+                        tag: '',
+                    },
+                    auxFileName: 'aux2.json',
+                    auxSha256: '',
+                    createdAtMs: 0,
+                    entitlements: [],
+                    readme: '',
+                    sha256: '',
+                    sizeInBytes: 123,
+                    approved: true,
+                    createdFile: true,
+                },
+                auxFile: {
+                    success: true,
+                    requestHeaders: {
+                        'record-name': recordName,
+                    },
+                    requestMethod: 'GET',
+                    requestUrl: expect.any(String),
+                },
+            });
+        });
+
         it('should mark the item as approved if it has no entitlements', async () => {
             const result = await manager.getItem({
                 recordName,
