@@ -320,8 +320,13 @@ describe('PackageVersionRecordsController', () => {
 
                 expect(!!item.item).toBe(true);
 
-                const { sha256, address, key, ...hashedProperties } =
-                    item.item as PackageRecordVersion;
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersion;
                 expect(hashedProperties.createdAtMs).toBe(123);
                 expect(
                     getHash({
@@ -346,6 +351,8 @@ describe('PackageVersionRecordsController', () => {
                     'description',
                     [PUBLIC_READ_MARKER]
                 );
+
+                await store.setFileRecordAsUploaded(recordName, fileName);
 
                 const result = await manager.recordItem({
                     recordKeyOrRecordName: recordName,
@@ -377,7 +384,10 @@ describe('PackageVersionRecordsController', () => {
                     address: 'address',
                     auxFileResult: {
                         success: false,
-                        errorCode: 'file_already_uploaded',
+                        errorCode: 'file_already_exists',
+                        errorMessage: expect.any(String),
+                        existingFileName: fileName,
+                        existingFileUrl: expect.any(String),
                     },
                 });
 
@@ -395,8 +405,13 @@ describe('PackageVersionRecordsController', () => {
                 expect(item.item!.createdFile).toBe(false);
                 expect(!!item.item).toBe(true);
 
-                const { sha256, address, key, ...hashedProperties } =
-                    item.item as PackageRecordVersion;
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersion;
                 expect(hashedProperties.createdAtMs).toBe(123);
                 expect(
                     getHash({
@@ -481,14 +496,103 @@ describe('PackageVersionRecordsController', () => {
                 expect(item.item!.createdFile).toBe(true);
                 expect(!!item.item).toBe(true);
 
-                const { sha256, address, key, ...hashedProperties } =
-                    item.item as PackageRecordVersion;
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersion;
                 expect(hashedProperties.createdAtMs).toBe(123);
                 expect(
                     getHash({
                         ...hashedProperties,
                     })
                 ).toBe(sha256);
+            });
+
+            it('should reject the request if the file already exists and the user doesnt have the ability to upload it', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'user',
+                    otherUserId,
+                    'package.version',
+                    PUBLIC_READ_MARKER,
+                    'create',
+                    {},
+                    null
+                );
+
+                const fileName = `${getHash(aux)}.json`;
+                await store.addFileRecord(
+                    recordName,
+                    fileName,
+                    userId,
+                    userId,
+                    123,
+                    'description',
+                    [PRIVATE_MARKER]
+                );
+
+                await store.setFileRecordAsUploaded(recordName, fileName);
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    userId: otherUserId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: expect.any(String),
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'create',
+                        resourceKind: 'file',
+                        resourceId: fileName,
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(item.item).toBe(null);
             });
 
             it('should return data_not_found if the record item doesnt exist', async () => {

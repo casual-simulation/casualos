@@ -226,21 +226,36 @@ export class PackageVersionRecordsController {
             }
 
             //record file
-            const recordFileResult = await this.files.recordFile(
+            let recordFileResult = await this.files.recordFile(
                 recordName,
-                contextResult.context.userId,
+                null,
                 {
                     ...request.item.auxFileRequest,
                     markers: resourceMarkers,
                     instances: request.instances,
+                    userRole: 'system',
                 }
             );
 
-            if (
-                recordFileResult.success === false &&
-                recordFileResult.errorCode !== 'file_already_exists'
-            ) {
-                return recordFileResult;
+            if (recordFileResult.success === false) {
+                if (recordFileResult.errorCode === 'file_already_exists') {
+                    recordFileResult = await this.files.recordFile(
+                        recordName,
+                        contextResult.context.userId,
+                        {
+                            ...request.item.auxFileRequest,
+                            markers: resourceMarkers,
+                            instances: request.instances,
+                        }
+                    );
+                }
+
+                if (
+                    recordFileResult.success === false &&
+                    recordFileResult.errorCode !== 'file_already_exists'
+                ) {
+                    return recordFileResult;
+                }
             }
 
             const createdAtMs = Date.now();
@@ -652,7 +667,10 @@ export type PackageRecordVersionInput = Omit<
     | 'auxSha256'
     | 'createdFile'
 > & {
-    auxFileRequest: Omit<RecordFileRequest, 'markers' | 'instances'>;
+    auxFileRequest: Omit<
+        RecordFileRequest,
+        'markers' | 'instances' | 'userRole'
+    >;
 };
 
 export type RecordPackageVersionResult =
