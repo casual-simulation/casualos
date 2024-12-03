@@ -9,6 +9,7 @@ import {
 } from '@casual-simulation/aux-common/Errors';
 import {
     AIChatInterface,
+    AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
     AIChatMessage,
     AIChatStreamMessage,
@@ -90,6 +91,13 @@ export interface AIChatOptions {
      * - An array of strings indicates that only users with the given subscription tiers are allowed.
      */
     allowedChatSubscriptionTiers: true | string[];
+
+    /**
+     * A mapping of token modifiers and their respective numerical ratios.
+     *
+     * - The keys represent different token modifier names, while the values are the numeric ratios associated with each modifier.
+     */
+    tokenModifierRatio: Record<string, number>;
 }
 
 export interface AllowedAIChatModel {
@@ -463,10 +471,12 @@ export class AIController {
             });
 
             if (result.totalTokens > 0) {
+                const adjustedTokens = this._calculateTokenCost(result, model);
+
                 await this._metrics.recordChatMetrics({
                     userId: request.userId,
                     createdAtMs: Date.now(),
-                    tokens: result.totalTokens,
+                    tokens: adjustedTokens,
                 });
             }
 
@@ -486,6 +496,17 @@ export class AIController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    private _calculateTokenCost(
+        result: AIChatInterfaceResponse | AIChatInterfaceStreamResponse,
+        model: string
+    ) {
+        const totalTokens = result.totalTokens;
+        const tokenModifierRatio = this._chatOptions.tokenModifierRatio;
+        const modifier = tokenModifierRatio[model] ?? 1.0;
+        const adjustedTokens = modifier * totalTokens;
+        return adjustedTokens;
     }
 
     @traced(TRACE_NAME)
@@ -677,10 +698,14 @@ export class AIController {
 
             for await (let chunk of result) {
                 if (chunk.totalTokens > 0) {
+                    const adjustedTokens = this._calculateTokenCost(
+                        chunk,
+                        model
+                    );
                     await this._metrics.recordChatMetrics({
                         userId: request.userId,
                         createdAtMs: Date.now(),
-                        tokens: chunk.totalTokens,
+                        tokens: adjustedTokens,
                     });
                 }
 
@@ -1449,6 +1474,11 @@ export interface AIChatRequest {
      * If the AI generates a sequence of tokens that match one of the given words, then it will stop generating tokens.
      */
     stopWords?: string[];
+
+    /**
+     * The maximum number of tokens that should be generated.
+     */
+    totalTokens?: number;
 }
 
 export type AIChatResponse = AIChatSuccess | AIChatFailure;

@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.3.14
+
+#### Date: 12/3/2024
+
+### :rocket: Features
+
+-   Added the ability to manually configure the buffer rate for `os.beginAudioRecording()`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots were not removed from the sheetPortal when an inst was unloaded.
+
 ## V3.3.13
 
 #### Date: 11/8/2024

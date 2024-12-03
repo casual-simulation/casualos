@@ -222,6 +222,10 @@ export default class BotSheet extends Vue {
                 this._updateConfig();
             })
         );
+        sub.add(() => {
+            this._simulationSheetStates.delete(sim);
+            this._updateConfig();
+        });
 
         sub.add(
             sim.localEvents.subscribe((e) => {

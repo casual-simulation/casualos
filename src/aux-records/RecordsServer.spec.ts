@@ -704,6 +704,7 @@ describe('RecordsServer', () => {
                         },
                     ],
                     allowedChatSubscriptionTiers: ['beta'],
+                    tokenModifierRatio: { default: 1.0 },
                 },
             },
             generateSkybox: {

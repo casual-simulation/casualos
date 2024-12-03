@@ -847,7 +847,7 @@ export class AuxCompiler {
         if (transpiled.metadata.isModule) {
             // All modules are async
             async = true;
-        } else if (script.indexOf('await ') >= 0) {
+        } else if (transpiled.metadata.isAsync) {
             async = true;
         }
         if (options.forceSync) {
