@@ -28,6 +28,7 @@ import { v5 as uuidv5 } from 'uuid';
 import {
     PackageRecordVersion,
     PackageRecordVersionKey,
+    PackageRecordVersionWithMetadata,
     PackageVersionRecordsStore,
 } from './PackageVersionRecordsStore';
 import { MemoryPackageVersionRecordsStore } from './MemoryPackageVersionRecordsStore';
@@ -84,6 +85,7 @@ describe('PackageVersionRecordsController', () => {
             readme: '',
             sizeInBytes: 0,
             createdFile: true,
+            requiresReview: false,
         }),
         (item) => ({
             address: item.address,
@@ -325,8 +327,96 @@ describe('PackageVersionRecordsController', () => {
                     address,
                     key,
                     createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
                     ...hashedProperties
-                } = item.item as PackageRecordVersion;
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
+
+            it('should require review on items that have special entitlements', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [
+                            {
+                                feature: 'data',
+                                scope: 'shared',
+                            },
+                        ],
+                        readme: 'def',
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PUBLIC_READ_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(!!item.item).toBe(true);
+                expect(item.item?.requiresReview).toBe(true);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
                 expect(
                     getHash({
@@ -410,8 +500,11 @@ describe('PackageVersionRecordsController', () => {
                     address,
                     key,
                     createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
                     ...hashedProperties
-                } = item.item as PackageRecordVersion;
+                } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
                 expect(
                     getHash({
@@ -501,8 +594,11 @@ describe('PackageVersionRecordsController', () => {
                     address,
                     key,
                     createdFile,
+                    approvalType,
+                    approved,
+                    requiresReview,
                     ...hashedProperties
-                } = item.item as PackageRecordVersion;
+                } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
                 expect(
                     getHash({
@@ -832,6 +928,7 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 0,
                     createdFile: true,
+                    requiresReview: false,
                 });
 
                 const aux: StoredAux = {
@@ -894,6 +991,7 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 0,
                     createdFile: true,
+                    requiresReview: false,
                 });
             });
 
@@ -989,6 +1087,7 @@ describe('PackageVersionRecordsController', () => {
                 sha256: '',
                 sizeInBytes: 123,
                 createdFile: true,
+                requiresReview: false,
             });
         });
 
@@ -1019,6 +1118,7 @@ describe('PackageVersionRecordsController', () => {
                 sha256: '',
                 sizeInBytes: 123,
                 createdFile: false,
+                requiresReview: false,
             });
 
             const result = await manager.getItem({
@@ -1052,7 +1152,9 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 123,
                     approved: true,
+                    approvalType: 'normal',
                     createdFile: false,
+                    requiresReview: false,
                 },
                 auxFile: {
                     success: false,
@@ -1098,6 +1200,7 @@ describe('PackageVersionRecordsController', () => {
                 sha256: '',
                 sizeInBytes: 123,
                 createdFile: true,
+                requiresReview: false,
             });
 
             const result = await manager.getItem({
@@ -1131,7 +1234,9 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 123,
                     approved: true,
+                    approvalType: 'normal',
                     createdFile: true,
+                    requiresReview: false,
                 },
                 auxFile: {
                     success: true,
@@ -1176,7 +1281,9 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 123,
                     approved: true,
+                    approvalType: 'normal',
                     createdFile: true,
+                    requiresReview: false,
                 },
                 auxFile: {
                     success: true,
@@ -1210,6 +1317,7 @@ describe('PackageVersionRecordsController', () => {
                 readme: '',
                 sha256: '',
                 sizeInBytes: 0,
+                requiresReview: true,
             });
 
             const result = await manager.getItem({
@@ -1248,7 +1356,9 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 0,
                     approved: false,
+                    approvalType: null,
                     createdFile: true,
+                    requiresReview: true,
                 },
                 auxFile: {
                     success: true,
@@ -1282,6 +1392,7 @@ describe('PackageVersionRecordsController', () => {
                 readme: '',
                 sha256: '',
                 sizeInBytes: 0,
+                requiresReview: true,
             });
 
             await itemsStore.putReviewForVersion({
@@ -1295,6 +1406,7 @@ describe('PackageVersionRecordsController', () => {
                     tag: '',
                 },
                 approved: true,
+                approvalType: 'normal',
                 reviewComments: '',
                 reviewStatus: 'approved',
                 reviewingUserId: otherUserId,
@@ -1338,7 +1450,9 @@ describe('PackageVersionRecordsController', () => {
                     sha256: '',
                     sizeInBytes: 0,
                     approved: true,
+                    approvalType: 'normal',
                     createdFile: true,
+                    requiresReview: true,
                 },
                 auxFile: {
                     success: true,
@@ -1350,10 +1464,6 @@ describe('PackageVersionRecordsController', () => {
                 },
             });
         });
-
-        // it('should allow the user to read the file if the file was created by the package', async () => {
-
-        // });
     });
 });
 

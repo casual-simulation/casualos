@@ -114,6 +114,12 @@ export interface PackageRecordVersion
     entitlements: Entitlement[];
 
     /**
+     * Whether the package version requires review.
+     * Packages that do not require review are automatically approved and cannot have entitlements that require review.
+     */
+    requiresReview: boolean;
+
+    /**
      * The readme of the package.
      */
     readme: string;
@@ -135,6 +141,15 @@ export interface PackageRecordVersionWithMetadata extends PackageRecordVersion {
      * If true, then the package either has been manually approved or does not require approval.
      */
     approved: boolean;
+
+    /**
+     * The type of approval that was given to the package.
+     *
+     * - null means that the package has not been approved.
+     * - "normal" means that the package was approved by the reviewer, but that individual permissions still need to be approved by the user.
+     * - "super" means that the package was approved by the reviewer and that individual permissions will not need to be approved by the user.
+     */
+    approvalType: null | 'normal' | 'super';
 }
 
 export interface ListedPackageVersion {
@@ -248,6 +263,15 @@ export interface PackageVersionReview {
      * Whether the package version has been approved.
      */
     approved: boolean;
+
+    /**
+     * The type of approval that was given to the package.
+     *
+     * - null means that the package has not been approved.
+     * - "normal" means that the package was approved by the reviewer, but that individual permissions still need to be approved by the user.
+     * - "super" means that the package was approved by the reviewer and that individual permissions will not need to be approved by the user.
+     */
+    approvalType: null | 'normal' | 'super';
 
     /**
      * The status of the review.

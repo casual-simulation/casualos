@@ -284,6 +284,9 @@ export class PackageVersionRecordsController {
                 sizeInBytes,
                 createdAtMs,
                 createdFile: recordFileResult.success,
+                requiresReview: request.item.entitlements.some((e) =>
+                    entitlementRequiresApproval(e)
+                ),
             };
 
             const crudResult = await this._store.putItem(recordName, item);
@@ -370,9 +373,10 @@ export class PackageVersionRecordsController {
             const item: PackageRecordVersionWithMetadata = {
                 ...result.item,
                 approved: true,
+                approvalType: 'normal',
             };
 
-            if (item.entitlements.some((e) => entitlementRequiresApproval(e))) {
+            if (item.requiresReview) {
                 let review = await this.store.getMostRecentPackageVersionReview(
                     context.context.recordName,
                     item.address,
@@ -380,6 +384,7 @@ export class PackageVersionRecordsController {
                 );
 
                 item.approved = review?.approved ?? false;
+                item.approvalType = review?.approvalType ?? null;
             }
 
             const auxFile = item.createdFile
@@ -674,6 +679,7 @@ export type PackageRecordVersionInput = Omit<
     | 'auxFileName'
     | 'auxSha256'
     | 'createdFile'
+    | 'requiresReview'
 > & {
     auxFileRequest: Omit<
         RecordFileRequest,
