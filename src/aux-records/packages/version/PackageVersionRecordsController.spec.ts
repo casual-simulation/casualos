@@ -37,6 +37,8 @@ import { PackageRecordsStore } from '../PackageRecordsStore';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { getHash } from '@casual-simulation/crypto/HashHelpers';
 import { FileRecordsController } from '../../FileRecordsController';
+import { v4 as uuid } from 'uuid';
+import { UserRole } from '../../AuthStore';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -1573,6 +1575,77 @@ describe('PackageVersionRecordsController', () => {
                 },
             });
         });
+    });
+
+    describe('reviewItem()', () => {
+        const roleCases: [UserRole][] = [
+            ['moderator'],
+            ['superUser'],
+            ['system'],
+        ];
+
+        it.each(roleCases)(
+            'should save the given review if the user is a %s',
+            async (role) => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    role,
+                });
+
+                const result = await manager.reviewItem({
+                    recordName,
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    review: {
+                        approved: true,
+                        approvalType: 'normal',
+                        reviewComments: 'good',
+                        reviewStatus: 'approved',
+                    },
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(
+                    await itemsStore.getMostRecentPackageVersionReview(
+                        recordName,
+                        'address',
+                        {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        }
+                    )
+                ).toEqual({
+                    id: expect.any(String),
+                    recordName,
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    approved: true,
+                    approvalType: 'normal',
+                    reviewComments: 'good',
+                    reviewStatus: 'approved',
+                    reviewingUserId: userId,
+                    createdAtMs: 999,
+                    updatedAtMs: 999,
+                });
+            }
+        );
     });
 });
 

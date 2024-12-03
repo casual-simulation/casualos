@@ -14,6 +14,7 @@ import {
     AuthorizeSubjectFailure,
     PolicyController,
     AuthorizeUserAndInstancesForResourcesResult,
+    ConstructAuthorizationContextRequest,
 } from '../../PolicyController';
 import {
     CheckSubscriptionMetricsResult,
@@ -36,6 +37,7 @@ import {
     PackageRecordVersionKey,
     PackageRecordVersionWithMetadata,
     PackageVersionRecordsStore,
+    PackageVersionReview,
     PackageVersionSubscriptionMetrics,
 } from './PackageVersionRecordsStore';
 import {
@@ -66,6 +68,9 @@ import { ConfigurationStore } from '../../ConfigurationStore';
 import { traced } from '../../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
+import { UserRole } from '../../AuthStore';
+import { isPackageReviewerRole, isSuperUserRole } from '../../AuthUtils';
+import { v4 as uuid } from 'uuid';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 
@@ -588,6 +593,70 @@ export class PackageVersionRecordsController {
         }
     }
 
+    @traced(TRACE_NAME)
+    async reviewItem(
+        request: ReviewPackageVersionRequest
+    ): Promise<ReviewPackageVersionResult> {
+        try {
+            const baseRequest: ConstructAuthorizationContextRequest = {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+                userRole: request.userRole,
+                sendNotLoggedIn: true,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            if (!isPackageReviewerRole(context.context.userRole)) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to submit reviews for package versions.',
+                };
+            }
+
+            const now = Date.now();
+            const result = await this.store.putReviewForVersion({
+                id: uuid(),
+                recordName: context.context.recordName,
+                address: request.address,
+                key: request.key,
+                approved: request.review.approved,
+                approvalType: request.review.approvalType,
+                reviewComments: request.review.reviewComments,
+                reviewingUserId: context.context.userId,
+                reviewStatus: request.review.reviewStatus,
+                createdAtMs: now,
+                updatedAtMs: now,
+            });
+
+            if (result.success === false) {
+                return result;
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error(`[${this._name}] Error reviewing item:`, err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
         context: AuthorizationContext,
@@ -742,4 +811,62 @@ export interface GetPackageVersionSuccess
      * If unsuccessful, then the user is not authorized to read the file.
      */
     auxFile: ReadFileResult;
+}
+
+export type PackageVersionReviewInput = Omit<
+    PackageVersionReview,
+    | 'id'
+    | 'reviewingUserId'
+    | 'recordName'
+    | 'address'
+    | 'key'
+    | 'createdAtMs'
+    | 'updatedAtMs'
+>;
+
+export interface ReviewPackageVersionRequest {
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address of the package.
+     */
+    address: string;
+
+    /**
+     * The version of the package.
+     */
+    key: PackageRecordVersionKey;
+
+    /**
+     * The review that should be stored for the package version.
+     */
+    review: PackageVersionReviewInput;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the user that is currently logged in.
+     * If userId is provided, then this should be null or undefined.
+     */
+    userRole?: UserRole;
+}
+
+export type ReviewPackageVersionResult =
+    | ReviewPackageVersionSuccess
+    | ReviewPackageVersionFailure;
+
+export interface ReviewPackageVersionSuccess {
+    success: true;
+}
+
+export interface ReviewPackageVersionFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
 }
