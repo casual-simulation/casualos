@@ -6,6 +6,8 @@
 
 ### :rocket: Features
 
+-   Added the ability to manually configure the buffer rate for `os.beginAudioRecording()`.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where bots were not removed from the sheetPortal when an inst was unloaded.
