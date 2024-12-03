@@ -2693,6 +2693,13 @@ export interface BeginAudioRecordingAction extends AsyncAction {
      * Defaults to 44100 if not specified.
      */
     sampleRate?: number;
+
+    /**
+     * The buffer rate in milliseconds that audio recordings should use.
+     * When set, the audio will be buffered and sent in chunks at the specified rate.
+     * Defaults to 500ms.
+     */
+    bufferRateMilliseconds?: number;
 }
 
 /**
