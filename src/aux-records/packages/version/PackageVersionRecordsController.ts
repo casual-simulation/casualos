@@ -65,6 +65,7 @@ import {
 import { ConfigurationStore } from '../../ConfigurationStore';
 import { traced } from '../../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 
@@ -81,7 +82,15 @@ export interface PackageVersionRecordsConfiguration
         >,
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {
+    /**
+     * The controller that should be used for file records.
+     */
     files: FileRecordsController;
+
+    /**
+     * The controller that should be used for sending system notifications.
+     */
+    systemNotifications: SystemNotificationMessenger;
 }
 
 /**
@@ -94,6 +103,7 @@ export class PackageVersionRecordsController {
     private _config: ConfigurationStore;
     private _resourceKind: ResourceKinds;
     private _files: FileRecordsController;
+    private _systemNotifications: SystemNotificationMessenger;
     private _name: string = 'PackageVersionRecordsController';
 
     get store() {
@@ -118,6 +128,7 @@ export class PackageVersionRecordsController {
         this._policies = config.policies;
         this._config = config.config;
         this._files = config.files;
+        this._systemNotifications = config.systemNotifications;
         this._resourceKind = 'package.version';
     }
 
@@ -294,6 +305,15 @@ export class PackageVersionRecordsController {
             if (crudResult.success === false) {
                 return crudResult;
             }
+
+            await this._systemNotifications.sendRecordNotification({
+                resource: 'package_version_publish',
+                action: 'created',
+                recordName: recordName,
+                resourceId: item.address,
+                timeMs: createdAtMs,
+                package: item,
+            });
 
             return {
                 success: true,

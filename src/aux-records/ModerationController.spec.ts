@@ -783,7 +783,8 @@ describe('ModerationController', () => {
 
             expect(store.recordsNotifications).toEqual([
                 {
-                    resource: 'file',
+                    resource: 'moderation_scan',
+                    resourceKind: 'file',
                     action: 'scanned',
                     recordName: recordName,
                     resourceId: 'file1.png',
@@ -907,7 +908,8 @@ describe('ModerationController', () => {
 
             expect(store.recordsNotifications).toEqual([
                 {
-                    resource: 'file',
+                    resource: 'moderation_scan',
+                    resourceKind: 'file',
                     action: 'scanned',
                     recordName: recordName,
                     resourceId: 'file1.png',

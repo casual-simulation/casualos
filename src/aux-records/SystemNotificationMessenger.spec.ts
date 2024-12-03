@@ -1,5 +1,8 @@
 import { UserInstReport } from './ModerationStore';
-import { formatNotificationAsString } from './SystemNotificationMessenger';
+import {
+    formatNotificationAsString,
+    formatPackageVersionPublishNotification,
+} from './SystemNotificationMessenger';
 import { StudioComIdRequest } from './RecordsStore';
 
 describe('formatNotificationAsString()', () => {
@@ -52,7 +55,8 @@ describe('formatNotificationAsString()', () => {
 
     it('should consistently format file scan notifications', () => {
         const result = formatNotificationAsString({
-            resource: 'file',
+            resource: 'moderation_scan',
+            resourceKind: 'file',
             action: 'scanned',
             resourceId: 'fileName.txt',
             recordName: 'test_record',
@@ -85,5 +89,72 @@ describe('formatNotificationAsString()', () => {
             timeMs: 123,
         } as any);
         expect(result).toMatchSnapshot();
+    });
+
+    it('should consistently format package version publish notifications', () => {
+        const result = formatPackageVersionPublishNotification({
+            resource: 'package_version_publish',
+            action: 'created',
+            recordName: 'test_record',
+            resourceId: 'test_id',
+            timeMs: 123,
+            package: {
+                address: 'test_id',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'test',
+                createdAtMs: 123,
+                createdFile: true,
+                entitlements: [],
+                requiresReview: false,
+                readme: 'abc',
+                sha256: 'test',
+                sizeInBytes: 123,
+            },
+        });
+
+        expect(result).toMatchSnapshot();
+
+        const result2 = formatPackageVersionPublishNotification({
+            resource: 'package_version_publish',
+            action: 'created',
+            recordName: 'test_record',
+            resourceId: 'test_id',
+            timeMs: 123,
+            package: {
+                address: 'test_id',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: 'tag',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'test',
+                createdAtMs: 123,
+                createdFile: true,
+                entitlements: [
+                    {
+                        feature: 'data',
+                        scope: 'shared',
+                    },
+                    {
+                        feature: 'file',
+                        scope: 'owned',
+                    },
+                ],
+                requiresReview: true,
+                readme: 'abc',
+                sha256: 'test',
+                sizeInBytes: 123,
+            },
+        });
+
+        expect(result2).toMatchSnapshot();
     });
 });

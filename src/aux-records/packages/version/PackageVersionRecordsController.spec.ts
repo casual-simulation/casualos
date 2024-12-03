@@ -63,6 +63,7 @@ describe('PackageVersionRecordsController', () => {
                     policies: services.policies,
                     store: services.store,
                 }),
+                systemNotifications: services.store,
             }),
         (id) => ({
             // Lower IDs map to higher versions (up to 100)
@@ -159,6 +160,7 @@ describe('PackageVersionRecordsController', () => {
                         policies: services.policies,
                         store: services.store,
                     }),
+                    systemNotifications: services.store,
                 });
             }
         );
@@ -966,6 +968,113 @@ describe('PackageVersionRecordsController', () => {
                     errorMessage:
                         'The maximum number of package versions has been reached for your subscription.',
                 });
+            });
+
+            it('should send a system notification when a record version is published', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PUBLIC_READ_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(!!item.item).toBe(true);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+
+                expect(store.recordsNotifications).toEqual([
+                    {
+                        resource: 'package_version_publish',
+                        action: 'created',
+                        recordName,
+                        resourceId: 'address',
+                        timeMs: 123,
+                        package: {
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            entitlements: [],
+                            readme: 'def',
+                            requiresReview: false,
+                            sha256: expect.any(String),
+                            auxFileName: expect.any(String),
+                            auxSha256: expect.any(String),
+                            createdAtMs: 123,
+                            createdFile: true,
+                            sizeInBytes: 123,
+                        },
+                    },
+                ]);
             });
         });
 
