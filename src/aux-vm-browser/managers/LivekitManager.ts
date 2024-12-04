@@ -98,9 +98,24 @@ export class LivekitManager implements SubscriptionLike {
         this._addressToTrack = null;
         this._trackToAddress = null;
     }
+    private async _requestMediaPermissions(): Promise<void> {
+        // Request audio and video permission (required)
+        try {
+            await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true,
+            });
+            console.log('[LivekitManager] Media permissions granted.');
+        } catch (error) {
+            console.error('[LivekitManager] Media permissions denied:', error);
+            throw new Error('Media permissions are required to join the room.');
+        }
+    }
 
     async joinRoom(join: RoomJoin): Promise<void> {
         try {
+            await this._requestMediaPermissions();
+
             this._livekit = await import('livekit-client');
             const room = new this._livekit.Room({
                 adaptiveStream: false,
