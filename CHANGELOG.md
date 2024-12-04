@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.3.15
+
+#### Date TBD
+
+### :rocket: Features
+
+### :bug: Bug Fixes
+
+-   Fixed an issue in `LivekitManager` where media permissions for the camera and microphone were not requested before joining a room. Resulting in silent fails for Google Chrome users. The `joinRoom` method now includes a preliminary step to check and request these permissions, ensuring a smoother user experience.
+
 ## V3.3.14
 
 #### Date: 12/3/2024
