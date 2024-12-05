@@ -1578,19 +1578,82 @@ describe('PackageVersionRecordsController', () => {
     });
 
     describe('reviewItem()', () => {
-        const roleCases: [UserRole][] = [
-            ['moderator'],
-            ['superUser'],
-            ['system'],
-        ];
+        describe('create', () => {
+            const roleCases: [UserRole][] = [
+                ['moderator'],
+                ['superUser'],
+                ['system'],
+            ];
 
-        it.each(roleCases)(
-            'should save the given review if the user is a %s',
-            async (role) => {
+            it.each(roleCases)(
+                'should save the given review if the user is a %s',
+                async (role) => {
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        role,
+                    });
+
+                    const result = await manager.reviewItem({
+                        recordName,
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        review: {
+                            approved: true,
+                            approvalType: 'normal',
+                            reviewComments: 'good',
+                            reviewStatus: 'approved',
+                        },
+                        userId,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        reviewId: expect.any(String),
+                    });
+
+                    expect(
+                        await itemsStore.getMostRecentPackageVersionReview(
+                            recordName,
+                            'address',
+                            {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            }
+                        )
+                    ).toEqual({
+                        id: expect.any(String),
+                        recordName,
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        approved: true,
+                        approvalType: 'normal',
+                        reviewComments: 'good',
+                        reviewStatus: 'approved',
+                        reviewingUserId: userId,
+                        createdAtMs: 999,
+                        updatedAtMs: 999,
+                    });
+                }
+            );
+
+            it('should return not_authorized when the user is a regular user', async () => {
                 const user = await store.findUser(userId);
                 await store.saveUser({
                     ...user,
-                    role,
+                    role: 'none',
                 });
 
                 const result = await manager.reviewItem({
@@ -1612,7 +1675,149 @@ describe('PackageVersionRecordsController', () => {
                 });
 
                 expect(result).toEqual({
-                    success: true,
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: expect.any(String),
+                });
+
+                expect(
+                    await itemsStore.getMostRecentPackageVersionReview(
+                        recordName,
+                        'address',
+                        {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        }
+                    )
+                ).toEqual(null);
+            });
+        });
+
+        describe('update', () => {
+            beforeEach(async () => {
+                await itemsStore.putReviewForVersion({
+                    id: 'reviewId',
+                    recordName,
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    approved: false,
+                    approvalType: 'normal',
+                    reviewStatus: 'pending',
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    reviewComments: 'bad',
+                    reviewingUserId: otherUserId,
+                });
+            });
+
+            const roleCases: [UserRole][] = [
+                ['moderator'],
+                ['superUser'],
+                ['system'],
+            ];
+
+            it.each(roleCases)(
+                'should save the given review if the user is a %s',
+                async (role) => {
+                    const user = await store.findUser(userId);
+                    await store.saveUser({
+                        ...user,
+                        role,
+                    });
+
+                    const result = await manager.reviewItem({
+                        recordName,
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        review: {
+                            id: 'reviewId',
+                            approved: true,
+                            approvalType: 'normal',
+                            reviewComments: 'good',
+                            reviewStatus: 'approved',
+                        },
+                        userId,
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                        reviewId: 'reviewId',
+                    });
+
+                    expect(
+                        await itemsStore.getMostRecentPackageVersionReview(
+                            recordName,
+                            'address',
+                            {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            }
+                        )
+                    ).toEqual({
+                        id: 'reviewId',
+                        recordName,
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        approved: true,
+                        approvalType: 'normal',
+                        reviewComments: 'good',
+                        reviewStatus: 'approved',
+                        reviewingUserId: userId,
+                        createdAtMs: 999,
+                        updatedAtMs: 999,
+                    });
+                }
+            );
+
+            it('should return not_authorized when the user is a regular user', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    role: 'none',
+                });
+
+                const result = await manager.reviewItem({
+                    recordName,
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    review: {
+                        id: 'reviewId',
+                        approved: true,
+                        approvalType: 'normal',
+                        reviewComments: 'good',
+                        reviewStatus: 'approved',
+                    },
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: expect.any(String),
                 });
 
                 expect(
@@ -1627,7 +1832,7 @@ describe('PackageVersionRecordsController', () => {
                         }
                     )
                 ).toEqual({
-                    id: expect.any(String),
+                    id: 'reviewId',
                     recordName,
                     address: 'address',
                     key: {
@@ -1636,16 +1841,16 @@ describe('PackageVersionRecordsController', () => {
                         patch: 0,
                         tag: '',
                     },
-                    approved: true,
+                    approved: false,
                     approvalType: 'normal',
-                    reviewComments: 'good',
-                    reviewStatus: 'approved',
-                    reviewingUserId: userId,
-                    createdAtMs: 999,
-                    updatedAtMs: 999,
+                    reviewStatus: 'pending',
+                    createdAtMs: 123,
+                    updatedAtMs: 123,
+                    reviewComments: 'bad',
+                    reviewingUserId: otherUserId,
                 });
-            }
-        );
+            });
+        });
     });
 });
 

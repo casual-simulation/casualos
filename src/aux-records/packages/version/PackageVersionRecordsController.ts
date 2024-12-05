@@ -622,8 +622,9 @@ export class PackageVersionRecordsController {
             }
 
             const now = Date.now();
+            const reviewId = request.review.id ?? uuid();
             const result = await this.store.putReviewForVersion({
-                id: uuid(),
+                id: reviewId,
                 recordName: context.context.recordName,
                 address: request.address,
                 key: request.key,
@@ -642,6 +643,7 @@ export class PackageVersionRecordsController {
 
             return {
                 success: true,
+                reviewId: reviewId,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -822,7 +824,13 @@ export type PackageVersionReviewInput = Omit<
     | 'key'
     | 'createdAtMs'
     | 'updatedAtMs'
->;
+> & {
+    /**
+     * The ID of the review.
+     * If omitted, then a new review will be created.
+     */
+    id?: string;
+};
 
 export interface ReviewPackageVersionRequest {
     /**
@@ -863,6 +871,11 @@ export type ReviewPackageVersionResult =
 
 export interface ReviewPackageVersionSuccess {
     success: true;
+
+    /**
+     * The ID of the review that was created or updated.
+     */
+    reviewId: string;
 }
 
 export interface ReviewPackageVersionFailure {
