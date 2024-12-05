@@ -652,6 +652,8 @@ describe('RecordsServer', () => {
             policies: policyController,
             recordItemStore: packageStore,
             store: packageVersionsStore,
+            files: filesController,
+            systemNotifications: store,
         });
 
         stripe = stripeMock = {
@@ -12548,7 +12550,7 @@ describe('RecordsServer', () => {
         });
     });
 
-    describe.only('GET /api/v2/records/package', () => {
+    describe('GET /api/v2/records/package', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
                 address: 'address',
@@ -12576,6 +12578,249 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
         });
+    });
+
+    describe('GET /api/v2/records/package', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should return the given package', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package?recordName=${recordName}&address=address`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package?recordName=${recordName}&address=address`
+        );
+    });
+
+    describe('POST /api/v2/records/package', () => {
+        beforeEach(async () => {
+            // await packageStore.createItem(recordName, {
+            //     address: 'address',
+            //     markers: [PUBLIC_READ_MARKER],
+            // });
+        });
+
+        it('should store the given package', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'test',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        subjectType: 'user',
+                        subjectId: userId,
+                        action: 'create',
+                        resourceKind: 'package',
+                        resourceId: 'test',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/package',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'test',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('DELETE /api/v2/records/package', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should delete the given package', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/package`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                await packageStore.getItemByAddress(recordName, 'address')
+            ).toBe(null);
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/package',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address',
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/package/list', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageStore.createItem(recordName, {
+                address: 'address2',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageStore.createItem(recordName, {
+                address: 'address3',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageStore.createItem(recordName, {
+                address: 'address4',
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should return the list of packages', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'address2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'address3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`
+        );
     });
 
     describe('POST /api/v2/records/key', () => {

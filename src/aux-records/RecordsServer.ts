@@ -2115,6 +2115,34 @@ export class RecordsServer {
                     .http('GET', '/api/v2/records/package')
             ),
 
+            recordPackage: recordItemProcedure(
+                this._auth,
+                this._packagesController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    markers: MARKERS_VALIDATION,
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/package')
+            ),
+
+            erasePackage: eraseItemProcedure(
+                this._auth,
+                this._packagesController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/package')
+            ),
+
+            listPackages: listItemsProcedure(
+                this._auth,
+                this._packagesController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/package/list')
+            ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
