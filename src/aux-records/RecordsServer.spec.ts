@@ -12823,6 +12823,131 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/package/version', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'test.aux',
+                userId,
+                userId,
+                123,
+                '',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.setFileRecordAsUploaded(recordName, 'test.aux');
+
+            await packageVersionsStore.createItem(recordName, {
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'sha256',
+            });
+        });
+
+        it('should get the package version', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        readme: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the package version by key', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&key=v1.0.0`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        readme: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(

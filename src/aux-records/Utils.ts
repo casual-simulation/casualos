@@ -1,6 +1,6 @@
 import _, { omitBy, padStart, sortBy } from 'lodash';
 import { sha256, hmac } from 'hash.js';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { hasValue, PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import axios from 'axios';
 
 /**
@@ -511,4 +511,41 @@ export function byteLengthOfString(str: string): number {
         return Buffer.byteLength(str, 'utf8');
     }
     return new Blob([str], { type: 'text/plain' }).size;
+}
+
+/**
+ * Parses the given version number.
+ * @param version The version number.
+ */
+export function parseVersionNumber(version: string | null | undefined) {
+    if (!version) {
+        return {
+            version: null,
+            major: null,
+            minor: null,
+            patch: null,
+            alpha: null,
+            tag: null,
+        };
+    }
+    const versionRegex = /^v(\d+)\.(\d+)\.(\d+)((\:|-)\w+\.?\d*)*$/i;
+    const [str, major, minor, patch, prerelease] = versionRegex.exec(version);
+
+    let alpha: boolean | number = false;
+    if (hasValue(prerelease)) {
+        alpha = true;
+        const [first, number] = prerelease.split('.');
+        if (hasValue(number)) {
+            alpha = parseInt(number);
+        }
+    }
+
+    return {
+        version: str,
+        major: parseInt(major),
+        minor: parseInt(minor),
+        patch: parseInt(patch),
+        alpha,
+        tag: prerelease?.substring(1) ?? null,
+    };
 }

@@ -1,4 +1,8 @@
-import { tryDecodeUriComponent, tryParseJson } from './Utils';
+import {
+    parseVersionNumber,
+    tryDecodeUriComponent,
+    tryParseJson,
+} from './Utils';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
@@ -400,6 +404,7 @@ export class RecordsServer {
     private _webhooksController: WebhookRecordsController | null;
     private _notificationsController: NotificationRecordsController | null;
     private _packagesController: PackageRecordsController | null;
+    private _packageVersionController: PackageVersionRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -468,6 +473,7 @@ export class RecordsServer {
         webhooksController,
         notificationsController,
         packagesController,
+        packageVersionController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -490,6 +496,7 @@ export class RecordsServer {
         this._webhooksController = webhooksController;
         this._notificationsController = notificationsController;
         this._packagesController = packagesController;
+        this._packageVersionController = packageVersionController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -2142,6 +2149,97 @@ export class RecordsServer {
                     .origins('api')
                     .http('GET', '/api/v2/records/package/list')
             ),
+
+            getPackageVersion: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/package/version')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        major: z.coerce.number().int().optional(),
+                        minor: z.coerce.number().int().optional().default(0),
+                        patch: z.coerce.number().int().optional().default(0),
+                        tag: z.string().optional().default(''),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        key: z.string().min(1).optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            address,
+                            major,
+                            minor,
+                            patch,
+                            tag,
+                            key,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._packageVersionController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        if (key && major) {
+                            return {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'You cannot provide both key and major version number.',
+                            };
+                        } else if (key) {
+                            const parsed = parseVersionNumber(key);
+                            if (typeof parsed.major === 'number') {
+                                major = parsed.major;
+                                minor = parsed.minor;
+                                patch = parsed.patch;
+                                tag = parsed.tag ?? '';
+                            }
+                        }
+
+                        if (typeof major !== 'number') {
+                            return {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'major version is required and must be a number.',
+                            };
+                        }
+
+                        const result =
+                            await this._packageVersionController.getItem({
+                                recordName,
+                                address,
+                                userId: validation.userId,
+                                key: {
+                                    major,
+                                    minor,
+                                    patch,
+                                    tag,
+                                },
+                                instances,
+                            });
+
+                        return result;
+                    }
+                ),
 
             listRecords: procedure()
                 .origins('api')
