@@ -1095,14 +1095,97 @@ describe('PackageVersionRecordsController', () => {
                         tag: '',
                     },
                     auxFileName: 'aux.json',
-                    auxSha256: '',
+                    auxSha256: getHash('aux'),
                     createdAtMs: 0,
                     entitlements: [],
                     readme: '',
                     sha256: '',
-                    sizeInBytes: 0,
+                    sizeInBytes: 123,
                     createdFile: true,
                     requiresReview: false,
+                });
+            });
+
+            it('should return a successful result with another upload result if the file has not been uploaded and if the aux file matches the saved file', async () => {
+                await recordItemsStore.createItem(recordName, {
+                    address: 'address2',
+                    markers: [PUBLIC_READ_MARKER],
+                });
+                const result1 = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    item: {
+                        address: 'address2',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileByteLength: 123,
+                            fileDescription: 'description',
+                            fileMimeType: 'application/json',
+                            fileSha256Hex: getHash('aux'),
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: '',
+                    },
+                    instances: [],
+                });
+
+                expect(result1.success).toBe(true);
+
+                // await store.addFileRecord(
+                //     recordName,
+                //     'aux.json',
+                //     null,
+                //     null,
+                //     123,
+                //     'description',
+                //     [PUBLIC_READ_MARKER]
+                // );
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId: userId,
+                    item: {
+                        address: 'address2',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileByteLength: 123,
+                            fileDescription: 'description',
+                            fileMimeType: 'application/json',
+                            fileSha256Hex: getHash('aux'),
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: '',
+                    },
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address2',
+                    auxFileResult: {
+                        success: true,
+                        fileName: expect.any(String),
+                        markers: [PUBLIC_READ_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
                 });
             });
 
@@ -1119,7 +1202,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         auxFileRequest: {
                             fileByteLength: 123,
-                            fileSha256Hex: getHash(''),
+                            fileSha256Hex: getHash('aux'),
                             fileDescription: 'aux.json',
                             fileMimeType: 'application/json',
                             headers: {},
@@ -1153,12 +1236,12 @@ describe('PackageVersionRecordsController', () => {
                             tag: '',
                         },
                         auxFileName: 'aux.json',
-                        auxSha256: '',
+                        auxSha256: getHash('aux'),
                         createdAtMs: 0,
                         entitlements: [],
                         readme: '',
                         sha256: '',
-                        sizeInBytes: 0,
+                        sizeInBytes: 123,
                     },
                     markers: [PUBLIC_READ_MARKER],
                 });

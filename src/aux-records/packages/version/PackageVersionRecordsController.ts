@@ -241,6 +241,27 @@ export class PackageVersionRecordsController {
                 return subscriptionResult;
             }
 
+            if (action === 'update') {
+                const sizeInBytes = request.item.auxFileRequest.fileByteLength;
+                const fileName = existingItem.item.auxFileName;
+                const sha256 = getHash({
+                    auxFileName: fileName,
+                    auxSha256: request.item.auxFileRequest.fileSha256Hex,
+                    createdAtMs: existingItem.item.createdAtMs,
+                    entitlements: request.item.entitlements,
+                    readme: request.item.readme,
+                    sizeInBytes: sizeInBytes,
+                });
+                if (sha256 !== existingItem.item.sha256) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Updating package versions is not supported.',
+                    };
+                }
+            }
+
             //record file
             let recordFileResult = await this.files.recordFile(
                 recordName,
@@ -274,51 +295,57 @@ export class PackageVersionRecordsController {
                 }
             }
 
-            const createdAtMs = Date.now();
-            const sizeInBytes = request.item.auxFileRequest.fileByteLength;
-            const fileName =
-                recordFileResult.success === true
-                    ? recordFileResult.fileName
-                    : recordFileResult.existingFileName;
-            const sha256 = getHash({
-                auxFileName: fileName,
-                auxSha256: request.item.auxFileRequest.fileSha256Hex,
-                createdAtMs: createdAtMs,
-                entitlements: request.item.entitlements,
-                readme: request.item.readme,
-                sizeInBytes: sizeInBytes,
-            });
+            const address = request.item.address;
+            let item: PackageRecordVersion;
 
-            const item: PackageRecordVersion = {
-                address: request.item.address,
-                entitlements: request.item.entitlements,
-                key: request.item.key,
-                readme: request.item.readme,
-                auxFileName: fileName,
-                auxSha256: request.item.auxFileRequest.fileSha256Hex,
-                sha256,
-                sizeInBytes,
-                createdAtMs,
-                createdFile: recordFileResult.success,
-                requiresReview: request.item.entitlements.some((e) =>
-                    entitlementRequiresApproval(e)
-                ),
-            };
+            if (action === 'create') {
+                const createdAtMs = Date.now();
+                const sizeInBytes = request.item.auxFileRequest.fileByteLength;
+                const fileName =
+                    recordFileResult.success === true
+                        ? recordFileResult.fileName
+                        : recordFileResult.existingFileName;
+                const sha256 = getHash({
+                    auxFileName: fileName,
+                    auxSha256: request.item.auxFileRequest.fileSha256Hex,
+                    createdAtMs: createdAtMs,
+                    entitlements: request.item.entitlements,
+                    readme: request.item.readme,
+                    sizeInBytes: sizeInBytes,
+                });
+                item = {
+                    address: address,
+                    entitlements: request.item.entitlements,
+                    key: request.item.key,
+                    readme: request.item.readme,
+                    auxFileName: fileName,
+                    auxSha256: request.item.auxFileRequest.fileSha256Hex,
+                    sha256,
+                    sizeInBytes,
+                    createdAtMs,
+                    createdFile: recordFileResult.success,
+                    requiresReview: request.item.entitlements.some((e) =>
+                        entitlementRequiresApproval(e)
+                    ),
+                };
 
-            const crudResult = await this._store.putItem(recordName, item);
+                const crudResult = await this._store.putItem(recordName, item);
 
-            if (crudResult.success === false) {
-                return crudResult;
+                if (crudResult.success === false) {
+                    return crudResult;
+                }
+
+                await this._systemNotifications.sendRecordNotification({
+                    resource: 'package_version_publish',
+                    action: 'created',
+                    recordName: recordName,
+                    resourceId: address,
+                    timeMs: createdAtMs,
+                    package: item,
+                });
+            } else {
+                item = existingItem.item;
             }
-
-            await this._systemNotifications.sendRecordNotification({
-                resource: 'package_version_publish',
-                action: 'created',
-                recordName: recordName,
-                resourceId: item.address,
-                timeMs: createdAtMs,
-                package: item,
-            });
 
             return {
                 success: true,
@@ -732,18 +759,7 @@ export class PackageVersionRecordsController {
                     };
                 }
             }
-        } else if (action === 'update') {
-            return {
-                success: false,
-                errorCode: 'not_supported',
-                errorMessage: 'Updating package versions is not supported.',
-            };
         }
-        // else if (action === 'read') {
-        //     if (item) {
-        //
-        //     }
-        // }
 
         return {
             success: true,
