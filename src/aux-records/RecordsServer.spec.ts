@@ -12946,7 +12946,22 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
         });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`
+        );
     });
+
+    // describe('POST /api/v2/records/package/version', () => {
+    //     it('should save the given package version and return a file upload result', async () => {
+
+    //     });
+    // });
 
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {

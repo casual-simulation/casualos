@@ -17,6 +17,7 @@ import {
     getRootMarker,
     getPathMarker,
     parseVersionNumber,
+    getPackageVersionKey,
 } from './Utils';
 
 describe('signRequest()', () => {
@@ -654,6 +655,28 @@ describe('parseVersionNumber()', () => {
             'v1.0.0',
             {
                 version: 'v1.0.0',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                alpha: false,
+                tag: null as any,
+            },
+        ] as const,
+        [
+            '1.0.0',
+            {
+                version: '1.0.0',
+                major: 1,
+                minor: 0,
+                patch: 0,
+                alpha: false,
+                tag: null as any,
+            },
+        ] as const,
+        [
+            'V1.0.0',
+            {
+                version: 'V1.0.0',
                 major: 1,
                 minor: 0,
                 patch: 0,

@@ -1,7 +1,12 @@
 import _, { omitBy, padStart, sortBy } from 'lodash';
 import { sha256, hmac } from 'hash.js';
-import { hasValue, PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    hasValue,
+    KnownErrorCodes,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
 import axios from 'axios';
+import { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
 
 /**
  * Signs the given request and adds the related headers to it.

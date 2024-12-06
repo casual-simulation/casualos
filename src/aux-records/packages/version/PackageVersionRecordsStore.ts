@@ -1,6 +1,7 @@
 import {
     Entitlement,
     GenericHttpRequest,
+    KnownErrorCodes,
     ServerError,
     StoredAux,
 } from '@casual-simulation/aux-common';
@@ -15,6 +16,7 @@ import {
     SubCrudRecord,
     SubCrudRecordsStore,
 } from '../../crud/sub/SubCrudRecordsStore';
+import { parseVersionNumber } from '../../Utils';
 
 /**
  * Defines a store that contains notification records.
@@ -301,4 +303,62 @@ export interface PackageVersionReview {
      * The unix time in miliseconds that the review was updated.
      */
     updatedAtMs: number;
+}
+
+export function getPackageVersionKey(
+    key: string,
+    major: number | null,
+    minor: number,
+    patch: number,
+    tag: string
+): GetPackageVersionKeyResult {
+    if (key && major) {
+        return {
+            success: false,
+            errorCode: 'unacceptable_request',
+            errorMessage:
+                'You cannot provide both key and major version number.',
+        };
+    } else if (key) {
+        const parsed = parseVersionNumber(key);
+        if (typeof parsed.major === 'number') {
+            major = parsed.major;
+            minor = parsed.minor;
+            patch = parsed.patch;
+            tag = parsed.tag ?? '';
+        }
+    }
+
+    if (typeof major !== 'number') {
+        return {
+            success: false,
+            errorCode: 'unacceptable_request',
+            errorMessage: 'major version is required and must be a number.',
+        };
+    }
+
+    return {
+        success: true,
+        key: {
+            major,
+            minor,
+            patch,
+            tag,
+        },
+    };
+}
+
+export type GetPackageVersionKeyResult =
+    | GetPackageRecordKeySuccess
+    | GetPackageRecordKeyFailure;
+
+export interface GetPackageRecordKeySuccess {
+    success: true;
+    key: PackageRecordVersionKey;
+}
+
+export interface GetPackageRecordKeyFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
 }

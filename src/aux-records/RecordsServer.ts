@@ -135,6 +135,7 @@ import {
 } from './notifications';
 import { PackageRecordsController } from './packages/PackageRecordsController';
 import { PackageVersionRecordsController } from './packages/version/PackageVersionRecordsController';
+import { getPackageVersionKey } from './packages/version/PackageVersionRecordsStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -2197,30 +2198,16 @@ export class RecordsServer {
                             return validation;
                         }
 
-                        if (key && major) {
-                            return {
-                                success: false,
-                                errorCode: 'unacceptable_request',
-                                errorMessage:
-                                    'You cannot provide both key and major version number.',
-                            };
-                        } else if (key) {
-                            const parsed = parseVersionNumber(key);
-                            if (typeof parsed.major === 'number') {
-                                major = parsed.major;
-                                minor = parsed.minor;
-                                patch = parsed.patch;
-                                tag = parsed.tag ?? '';
-                            }
-                        }
+                        const keyResult = getPackageVersionKey(
+                            key,
+                            major,
+                            minor,
+                            patch,
+                            tag
+                        );
 
-                        if (typeof major !== 'number') {
-                            return {
-                                success: false,
-                                errorCode: 'unacceptable_request',
-                                errorMessage:
-                                    'major version is required and must be a number.',
-                            };
+                        if (keyResult.success === false) {
+                            return keyResult;
                         }
 
                         const result =
@@ -2228,12 +2215,7 @@ export class RecordsServer {
                                 recordName,
                                 address,
                                 userId: validation.userId,
-                                key: {
-                                    major,
-                                    minor,
-                                    patch,
-                                    tag,
-                                },
+                                key: keyResult.key,
                                 instances,
                             });
 
