@@ -35,6 +35,8 @@ import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
     DenialReason,
+    ENTITLEMENT_VALIDATION,
+    Entitlement,
     PRIVATE_MARKER,
     Procedure,
     ProcedureOutput,
@@ -134,8 +136,14 @@ import {
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
 import { PackageRecordsController } from './packages/PackageRecordsController';
-import { PackageVersionRecordsController } from './packages/version/PackageVersionRecordsController';
-import { getPackageVersionKey } from './packages/version/PackageVersionRecordsStore';
+import {
+    PackageRecordVersionInput,
+    PackageVersionRecordsController,
+} from './packages/version/PackageVersionRecordsController';
+import {
+    getPackageVersionKey,
+    PackageRecordVersionKey,
+} from './packages/version/PackageVersionRecordsStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -2222,6 +2230,74 @@ export class RecordsServer {
                         return result;
                     }
                 ),
+
+            recordPackageVersion: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/package/version')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        item: z.object({
+                            address: ADDRESS_VALIDATION,
+                            key: z.object({
+                                major: z.number().int(),
+                                minor: z.number().int(),
+                                patch: z.number().int(),
+                                tag: z.string().max(16),
+                            }),
+                            auxFileRequest: z.object({
+                                fileSha256Hex: z.string().min(1).max(123),
+                                fileByteLength: z.number().positive().int(),
+                                fileMimeType: z.string().min(1).max(128),
+                                fileDescription: z
+                                    .string()
+                                    .min(1)
+                                    .max(128)
+                                    .optional(),
+                            }),
+                            entitlements: z.array(ENTITLEMENT_VALIDATION),
+                            readme: z.string(),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName, item, instances }, context) => {
+                    if (!this._packageVersionController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._packageVersionController.recordItem({
+                            recordKeyOrRecordName: recordName,
+                            userId: validation.userId,
+                            item: {
+                                address: item.address,
+                                key: item.key as PackageRecordVersionKey,
+                                auxFileRequest:
+                                    item.auxFileRequest as PackageRecordVersionInput['auxFileRequest'],
+                                entitlements:
+                                    item.entitlements as Entitlement[],
+                                readme: item.readme,
+                            },
+                            instances,
+                        });
+
+                    return result;
+                }),
 
             listRecords: procedure()
                 .origins('api')

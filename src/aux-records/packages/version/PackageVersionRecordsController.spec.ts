@@ -1137,16 +1137,6 @@ describe('PackageVersionRecordsController', () => {
 
                 expect(result1.success).toBe(true);
 
-                // await store.addFileRecord(
-                //     recordName,
-                //     'aux.json',
-                //     null,
-                //     null,
-                //     123,
-                //     'description',
-                //     [PUBLIC_READ_MARKER]
-                // );
-
                 const result = await manager.recordItem({
                     recordKeyOrRecordName: recordName,
                     userId: userId,

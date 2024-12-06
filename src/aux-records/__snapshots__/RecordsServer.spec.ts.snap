@@ -2135,6 +2135,115 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "auxFileRequest": Object {
+                "schema": Object {
+                  "fileByteLength": Object {
+                    "type": "number",
+                  },
+                  "fileDescription": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "fileMimeType": Object {
+                    "type": "string",
+                  },
+                  "fileSha256Hex": Object {
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "entitlements": Object {
+                "schema": Object {
+                  "schema": Object {
+                    "designatedRecords": Object {
+                      "optional": true,
+                      "schema": Object {
+                        "type": "string",
+                      },
+                      "type": "array",
+                    },
+                    "feature": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "data",
+                        "file",
+                        "event",
+                        "inst",
+                        "notification",
+                        "package",
+                        "permissions",
+                        "webhooks",
+                      ],
+                    },
+                    "scope": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "personal",
+                        "owned",
+                        "studio",
+                        "shared",
+                        "designated",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "key": Object {
+                "schema": Object {
+                  "major": Object {
+                    "type": "number",
+                  },
+                  "minor": Object {
+                    "type": "number",
+                  },
+                  "patch": Object {
+                    "type": "number",
+                  },
+                  "tag": Object {
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "readme": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/list",
       },
@@ -6260,6 +6369,115 @@ Object {
         "type": "object",
       },
       "name": "getPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "auxFileRequest": Object {
+                "schema": Object {
+                  "fileByteLength": Object {
+                    "type": "number",
+                  },
+                  "fileDescription": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "fileMimeType": Object {
+                    "type": "string",
+                  },
+                  "fileSha256Hex": Object {
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "entitlements": Object {
+                "schema": Object {
+                  "schema": Object {
+                    "designatedRecords": Object {
+                      "optional": true,
+                      "schema": Object {
+                        "type": "string",
+                      },
+                      "type": "array",
+                    },
+                    "feature": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "data",
+                        "file",
+                        "event",
+                        "inst",
+                        "notification",
+                        "package",
+                        "permissions",
+                        "webhooks",
+                      ],
+                    },
+                    "scope": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "personal",
+                        "owned",
+                        "studio",
+                        "shared",
+                        "designated",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "key": Object {
+                "schema": Object {
+                  "major": Object {
+                    "type": "number",
+                  },
+                  "minor": Object {
+                    "type": "number",
+                  },
+                  "patch": Object {
+                    "type": "number",
+                  },
+                  "tag": Object {
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "readme": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPackageVersion",
       "origins": "api",
     },
     Object {

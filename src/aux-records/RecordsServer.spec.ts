@@ -12957,11 +12957,69 @@ describe('RecordsServer', () => {
         );
     });
 
-    // describe('POST /api/v2/records/package/version', () => {
-    //     it('should save the given package version and return a file upload result', async () => {
+    describe('POST /api/v2/records/package/version', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
 
-    //     });
-    // });
+        it('should save the given package version and return a file upload result', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package/version`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileByteLength: 123,
+                                fileDescription: 'description',
+                                fileMimeType: 'application/json',
+                                fileSha256Hex: getHash('aux'),
+                                headers: {},
+                            },
+                            entitlements: [],
+                            readme: 'readme',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: expect.any(String),
+                        markers: [PUBLIC_READ_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+    });
 
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
