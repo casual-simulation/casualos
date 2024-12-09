@@ -13057,7 +13057,7 @@ describe('RecordsServer', () => {
             });
 
             for (let i = 1; i <= 3; i++) {
-                packageVersionsStore.createItem(recordName, {
+                await packageVersionsStore.createItem(recordName, {
                     address: 'address',
                     key: {
                         major: i,
@@ -13160,6 +13160,96 @@ describe('RecordsServer', () => {
         testRateLimit(
             'GET',
             `/api/v2/records/package/version/list?recordName=${recordName}&address=${'address'}`
+        );
+    });
+
+    describe('DELETE /api/v2/records/package/version', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            for (let i = 1; i <= 3; i++) {
+                await packageVersionsStore.createItem(recordName, {
+                    address: 'address',
+                    key: {
+                        major: i,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    auxFileName: 'test.aux',
+                    auxSha256: 'auxSha256',
+                    sizeInBytes: 123,
+                    createdAtMs: 999,
+                    createdFile: true,
+                    entitlements: [],
+                    readme: '',
+                    requiresReview: false,
+                    sha256: 'sha256',
+                });
+            }
+        });
+
+        it('should delete the given package version', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/package/version`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                await packageVersionsStore.getItemByKey(recordName, 'address', {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                })
+            ).toEqual({
+                item: null,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/package/version',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                }),
+            () => apiHeaders
         );
     });
 

@@ -2272,6 +2272,51 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "key": Object {
+            "schema": Object {
+              "major": Object {
+                "type": "number",
+              },
+              "minor": Object {
+                "type": "number",
+              },
+              "patch": Object {
+                "type": "number",
+              },
+              "tag": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/list",
       },
@@ -6534,6 +6579,51 @@ Object {
         "type": "object",
       },
       "name": "listPackageVersions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "key": Object {
+            "schema": Object {
+              "major": Object {
+                "type": "number",
+              },
+              "minor": Object {
+                "type": "number",
+              },
+              "patch": Object {
+                "type": "number",
+              },
+              "tag": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePackageVersion",
       "origins": "api",
     },
     Object {

@@ -91,7 +91,9 @@ describe('SubCrudRecordsController', () => {
                 key2: `key${item}`,
             }),
             (item) => item,
-            (item) => item
+            (item) => item,
+            undefined,
+            ['create', 'read', 'update', 'delete']
         );
     });
 });

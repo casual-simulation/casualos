@@ -491,6 +491,20 @@ export abstract class SubCrudRecordsController<
                 return context;
             }
 
+            const recordName = context.context.recordName;
+            const item = await this._recordStore.getItemByAddress(
+                recordName,
+                request.address
+            );
+
+            if (!item) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The parent item was not found.',
+                };
+            }
+
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -499,7 +513,7 @@ export abstract class SubCrudRecordsController<
                         instances: request.instances,
                         resourceKind: this._resourceKind,
                         action: 'list',
-                        markers: [ACCOUNT_MARKER],
+                        markers: item.markers,
                     }
                 );
 

@@ -2341,6 +2341,58 @@ export class RecordsServer {
                     }
                 ),
 
+            erasePackageVersion: procedure()
+                .origins('api')
+                .http('DELETE', '/api/v2/records/package/version')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        key: z.object({
+                            major: z.number().int(),
+                            minor: z.number().int(),
+                            patch: z.number().int(),
+                            tag: z.string().max(16),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, key, instances },
+                        context
+                    ) => {
+                        if (!this._packageVersionController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._packageVersionController.eraseItem({
+                                recordName,
+                                address,
+                                key: key as PackageRecordVersionKey,
+                                userId: validation.userId,
+                                instances: instances ?? [],
+                            });
+
+                        return result;
+                    }
+                ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
