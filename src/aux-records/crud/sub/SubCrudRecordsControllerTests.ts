@@ -1062,10 +1062,13 @@ export function testCrudRecordsController<
             beforeEach(async () => {
                 items = [];
 
-                createRecordItem({
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
+                await recordItemsStore.createItem(
+                    recordName,
+                    createRecordItem({
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    })
+                );
 
                 for (let i = 0; i < 20; i++) {
                     const item = createTestItem({
@@ -1080,7 +1083,7 @@ export function testCrudRecordsController<
             it('should return a list of items', async () => {
                 const result = await manager.listItems({
                     recordName: recordName,
-                    userId,
+                    userId: otherUserId,
                     address: 'address',
                     instances: [],
                 });
@@ -1095,6 +1098,14 @@ export function testCrudRecordsController<
 
             if (allowRecordKeys) {
                 it('should be able to use a record key', async () => {
+                    await recordItemsStore.updateItem(
+                        recordName,
+                        createRecordItem({
+                            address: 'address',
+                            markers: [PRIVATE_MARKER],
+                        })
+                    );
+
                     const result = await manager.listItems({
                         recordName: key,
                         userId: otherUserId,
@@ -1111,6 +1122,14 @@ export function testCrudRecordsController<
                 });
             } else {
                 it('should return not_authorized if record keys are not allowed', async () => {
+                    await recordItemsStore.updateItem(
+                        recordName,
+                        createRecordItem({
+                            address: 'address',
+                            markers: [PRIVATE_MARKER],
+                        })
+                    );
+
                     const result = await manager.listItems({
                         recordName: key,
                         userId: otherUserId,
@@ -1137,14 +1156,17 @@ export function testCrudRecordsController<
             it('should return not_authorized if the user does not have access to the record item marker', async () => {
                 items = [];
 
-                createRecordItem({
-                    address: 'address2',
-                    markers: [PRIVATE_MARKER],
-                });
+                await recordItemsStore.createItem(
+                    recordName,
+                    createRecordItem({
+                        address: 'address2',
+                        markers: [PRIVATE_MARKER],
+                    })
+                );
 
                 for (let i = 0; i < 20; i++) {
                     const item = createTestItem({
-                        address: 'address',
+                        address: 'address2',
                         key: createKey(i),
                     });
                     await itemsStore.createItem(recordName, item);

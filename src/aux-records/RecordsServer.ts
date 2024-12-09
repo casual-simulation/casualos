@@ -2299,6 +2299,48 @@ export class RecordsServer {
                     return result;
                 }),
 
+            listPackageVersions: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/package/version/list')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._packageVersionController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._packageVersionController.listItems({
+                                userId: validation.userId,
+                                recordName: recordName,
+                                address: address,
+                                instances: instances ?? [],
+                            });
+
+                        return result;
+                    }
+                ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')

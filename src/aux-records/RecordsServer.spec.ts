@@ -13019,6 +13019,148 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
         });
+
+        testUrl(
+            'POST',
+            `/api/v2/records/package/version`,
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileByteLength: 123,
+                            fileDescription: 'description',
+                            fileMimeType: 'application/json',
+                            fileSha256Hex: getHash('aux'),
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'readme',
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/package/version/list', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            for (let i = 1; i <= 3; i++) {
+                packageVersionsStore.createItem(recordName, {
+                    address: 'address',
+                    key: {
+                        major: i,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    auxFileName: 'test.aux',
+                    auxSha256: 'auxSha256',
+                    sizeInBytes: 123,
+                    createdAtMs: 999,
+                    createdFile: true,
+                    entitlements: [],
+                    readme: '',
+                    requiresReview: false,
+                    sha256: 'sha256',
+                });
+            }
+        });
+
+        it('should return the list of versions for a package', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version/list?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            address: 'address',
+                            key: {
+                                major: 3,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileName: 'test.aux',
+                            auxSha256: 'auxSha256',
+                            sizeInBytes: 123,
+                            createdAtMs: 999,
+                            createdFile: true,
+                            entitlements: [],
+                            readme: '',
+                            requiresReview: false,
+                            sha256: 'sha256',
+                        },
+                        {
+                            address: 'address',
+                            key: {
+                                major: 2,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileName: 'test.aux',
+                            auxSha256: 'auxSha256',
+                            sizeInBytes: 123,
+                            createdAtMs: 999,
+                            createdFile: true,
+                            entitlements: [],
+                            readme: '',
+                            requiresReview: false,
+                            sha256: 'sha256',
+                        },
+                        {
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileName: 'test.aux',
+                            auxSha256: 'auxSha256',
+                            sizeInBytes: 123,
+                            createdAtMs: 999,
+                            createdFile: true,
+                            entitlements: [],
+                            readme: '',
+                            requiresReview: false,
+                            sha256: 'sha256',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package/version/list?recordName=${recordName}&address=${'address'}`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package/version/list?recordName=${recordName}&address=${'address'}`
+        );
     });
 
     describe('POST /api/v2/records/key', () => {

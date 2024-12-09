@@ -579,6 +579,20 @@ export class PackageVersionRecordsController {
                 return context;
             }
 
+            const recordName = context.context.recordName;
+            const packageRecord = await this._recordStore.getItemByAddress(
+                recordName,
+                request.address
+            );
+
+            if (!packageRecord) {
+                return {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The parent item was not found.',
+                };
+            }
+
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -587,7 +601,7 @@ export class PackageVersionRecordsController {
                         instances: request.instances,
                         resourceKind: this._resourceKind,
                         action: 'list',
-                        markers: [ACCOUNT_MARKER],
+                        markers: packageRecord.markers,
                     }
                 );
 
