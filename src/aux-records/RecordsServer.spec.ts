@@ -27,7 +27,7 @@ import {
     generateV1ConnectionToken,
     parseSessionKey,
 } from './AuthUtils';
-import { AuthSession, AuthUser } from './AuthStore';
+import { AuthSession, AuthUser, UserRole } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import {
     CreateStudioInComIdResult,
@@ -13247,6 +13247,148 @@ describe('RecordsServer', () => {
                         minor: 0,
                         patch: 0,
                         tag: '',
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/package/version/review', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'sha256',
+            });
+        });
+
+        const roleCases: [UserRole][] = [
+            ['superUser'],
+            ['system'],
+            ['moderator'],
+        ];
+
+        it.each(roleCases)(
+            'should allow %s to save a review for the given version',
+            async (role) => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    role,
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/records/package/version/review',
+                        JSON.stringify({
+                            recordName,
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            review: {
+                                approved: true,
+                                approvalType: 'normal',
+                                reviewComments: 'good',
+                                reviewStatus: 'approved',
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        reviewId: expect.any(String),
+                    },
+                    headers: apiCorsHeaders,
+                });
+            }
+        );
+
+        it('should not allow regular users to save a review for the given version', async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'none',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/version/review',
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        review: {
+                            approved: true,
+                            approvalType: 'normal',
+                            reviewComments: 'good',
+                            reviewStatus: 'approved',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to submit reviews for package versions.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/package/version/review',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    review: {
+                        approved: true,
+                        approvalType: 'normal',
+                        reviewComments: 'good',
+                        reviewStatus: 'approved',
                     },
                 }),
             () => apiHeaders

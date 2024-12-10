@@ -988,7 +988,7 @@ model PackageRecordVersionReview {
     reviewStatus String
 
     // Any additional comments by the reviewer
-    reviewComments String
+    reviewComments String @db.String(4096)
 
     // The ID of the user that reviewed the package version
     reviewingUserId String @db.String(128)

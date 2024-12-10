@@ -2317,6 +2317,73 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version/review",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "key": Object {
+            "schema": Object {
+              "major": Object {
+                "type": "number",
+              },
+              "minor": Object {
+                "type": "number",
+              },
+              "patch": Object {
+                "type": "number",
+              },
+              "tag": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "review": Object {
+            "schema": Object {
+              "approvalType": Object {
+                "nullable": true,
+                "type": "enum",
+                "values": Array [
+                  "normal",
+                  "super",
+                ],
+              },
+              "approved": Object {
+                "type": "boolean",
+              },
+              "id": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "reviewComments": Object {
+                "type": "string",
+              },
+              "reviewStatus": Object {
+                "type": "enum",
+                "values": Array [
+                  "pending",
+                  "approved",
+                  "rejected",
+                ],
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "reviewPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/list",
       },
@@ -6624,6 +6691,73 @@ Object {
         "type": "object",
       },
       "name": "erasePackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version/review",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "key": Object {
+            "schema": Object {
+              "major": Object {
+                "type": "number",
+              },
+              "minor": Object {
+                "type": "number",
+              },
+              "patch": Object {
+                "type": "number",
+              },
+              "tag": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "review": Object {
+            "schema": Object {
+              "approvalType": Object {
+                "nullable": true,
+                "type": "enum",
+                "values": Array [
+                  "normal",
+                  "super",
+                ],
+              },
+              "approved": Object {
+                "type": "boolean",
+              },
+              "id": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "reviewComments": Object {
+                "type": "string",
+              },
+              "reviewStatus": Object {
+                "type": "enum",
+                "values": Array [
+                  "pending",
+                  "approved",
+                  "rejected",
+                ],
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "reviewPackageVersion",
       "origins": "api",
     },
     Object {

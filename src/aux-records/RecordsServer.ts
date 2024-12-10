@@ -139,6 +139,7 @@ import { PackageRecordsController } from './packages/PackageRecordsController';
 import {
     PackageRecordVersionInput,
     PackageVersionRecordsController,
+    PackageVersionReviewInput,
 } from './packages/version/PackageVersionRecordsController';
 import {
     getPackageVersionKey,
@@ -2387,6 +2388,67 @@ export class RecordsServer {
                                 key: key as PackageRecordVersionKey,
                                 userId: validation.userId,
                                 instances: instances ?? [],
+                            });
+
+                        return result;
+                    }
+                ),
+
+            reviewPackageVersion: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/package/version/review')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        key: z.object({
+                            major: z.number().int(),
+                            minor: z.number().int(),
+                            patch: z.number().int(),
+                            tag: z.string().max(16),
+                        }),
+                        review: z.object({
+                            id: z.string().min(1).max(32).optional(),
+                            approved: z.boolean(),
+                            approvalType: z
+                                .enum(['normal', 'super'])
+                                .nullable(),
+                            reviewStatus: z.enum([
+                                'pending',
+                                'approved',
+                                'rejected',
+                            ]),
+                            reviewComments: z.string().min(1).max(4096),
+                        }),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, key, review }, context) => {
+                        if (!this._packageVersionController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._packageVersionController.reviewItem({
+                                recordName,
+                                address,
+                                key: key as PackageRecordVersionKey,
+                                userId: validation.userId,
+                                review: review as PackageVersionReviewInput,
                             });
 
                         return result;
