@@ -30,6 +30,7 @@ import {
     SUBJECT_TYPE_VALIDATION,
     SubjectType,
 } from '../common';
+import { KnownErrorCodes } from 'rpc';
 
 /**
  * Defines a websocket event.
@@ -107,6 +108,7 @@ export const websocketUploadResponseEventSchema = z.tuple([
 export type WebsocketErrorCode =
     | ServerError
     | NotSupportedError
+    | KnownErrorCodes
     | 'invalid_record_key'
     | 'unacceptable_connection_token'
     | 'invalid_token'
@@ -229,7 +231,8 @@ export type WebsocketRequestMessage =
     | GetUpdatesMessage
     | WebsocketHttpRequestMessage
     | RequestMissingPermissionMessage
-    | RequestMissingPermissionResponseMessage;
+    | RequestMissingPermissionResponseMessage
+    | LoadPackageRequestMessage;
 
 export type WebsocketMessage =
     | WebsocketRequestMessage
@@ -1094,6 +1097,74 @@ type ZodConnectionCountMessageAssertion = HasType<
     ConnectionCountMessage
 >;
 
+export interface LoadPackageRequestMessage {
+    type: 'repo/load_package';
+
+    /**
+     * The name of the record that the package should be loaded into.
+     */
+    recordName: string;
+
+    /**
+     * The name of the inst that the package should be loaded into.
+     */
+    inst: string;
+
+    /**
+     * The branch that the package should be loaded into.
+     * If omitted, then the default branch will be used.
+     */
+    branch?: string;
+
+    /**
+     * The package that should be loaded.
+     */
+    package: {
+        /**
+         * The name of the record that the package should be loaded from.
+         */
+        recordName: string;
+
+        /**
+         * The address of the package to load.
+         */
+        address: string;
+
+        /**
+         * The version to load.
+         */
+        key: {
+            major: number;
+            minor: number;
+            patch: number;
+            tag: string;
+        };
+    };
+}
+export const loadPackageRequestMessageSchema = z.object({
+    type: z.literal('repo/load_package'),
+    recordName: z.string(),
+    inst: z.string(),
+    branch: z.string().optional(),
+    package: z.object({
+        recordName: z.string(),
+        address: z.string(),
+        key: z.object({
+            major: z.number(),
+            minor: z.number(),
+            patch: z.number(),
+            tag: z.string(),
+        }),
+    }),
+});
+type ZodLoadPackageRequestMessage = z.infer<
+    typeof loadPackageRequestMessageSchema
+>;
+type ZodLoadPackageRequestMessageAssertion = HasType<
+    ZodLoadPackageRequestMessage,
+    LoadPackageRequestMessage
+>;
+
 /**
  * Defines an event which attempts to perform a time sync.
  */
@@ -1281,6 +1352,7 @@ export const websocketRequestMessageSchema = z.discriminatedUnion('type', [
     websocketHttpRequestMessageSchema,
     requestMissingPermissionMessageSchema,
     requestMissingPermissionResponseMessageSchema,
+    loadPackageRequestMessageSchema,
 ]);
 type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
 type ZodWebsocketRequestMessageAssertion = HasType<

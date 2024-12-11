@@ -2,14 +2,19 @@ import {
     action,
     BotAction,
     botAdded,
+    BotsState,
     createBot,
+    createInitializationUpdate,
     hasValue,
     InstUpdate,
     isBot,
     ON_WEBHOOK_ACTION_NAME,
     StoredAux,
 } from '@casual-simulation/aux-common/bots';
-import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
+import {
+    constructInitializationUpdate,
+    YjsPartitionImpl,
+} from '@casual-simulation/aux-common/partitions';
 import { WebsocketMessenger } from './WebsocketMessenger';
 import {
     device,
@@ -28,6 +33,7 @@ import {
 } from './WebsocketConnectionStore';
 import {
     AddUpdatesMessage,
+    LoadPackageRequestMessage,
     LoginMessage,
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
@@ -86,6 +92,9 @@ import { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+import { PackageVersionRecordsController } from 'packages/version';
+import { STORED_AUX_SCHEMA } from 'webhooks';
+import { tryParseJson } from 'Utils';
 
 const TRACE_NAME = 'WebsocketController';
 
@@ -104,6 +113,7 @@ export class WebsocketController {
     private _config: ConfigurationStore;
     private _metrics: MetricsStore;
     private _authStore: AuthStore;
+    private _packageVersions: PackageVersionRecordsController | null;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -125,7 +135,8 @@ export class WebsocketController {
         policies: PolicyController,
         config: ConfigurationStore,
         metrics: MetricsStore,
-        authStore: AuthStore
+        authStore: AuthStore,
+        packageVersions: PackageVersionRecordsController = null
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
@@ -136,6 +147,7 @@ export class WebsocketController {
         this._policies = policies;
         this._config = config;
         this._metrics = metrics;
+        this._packageVersions = packageVersions;
     }
 
     /**
@@ -2001,6 +2013,135 @@ export class WebsocketController {
                 }
             );
         }
+    }
+
+    /**
+     * Attempts to load a package into an inst.
+     * @param connectionId The ID of the connection that is requesting the package.
+     * @param event The load package event.
+     */
+    @traced(TRACE_NAME)
+    async loadPackage(connectionId: string, event: LoadPackageRequestMessage) {
+        if (!this._packageVersions) {
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Package loading is not supported.',
+            });
+            return;
+        }
+        console.log(
+            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}, ${connectionId}] Load Package`
+        );
+
+        const connection = await this._connectionStore.getConnection(
+            connectionId
+        );
+        if (!connection) {
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to load package. Connection not found!`
+            );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_connection_state',
+                errorMessage: `A server error occurred. (connectionId: ${connectionId})`,
+            });
+            await this.messenger.disconnect(connectionId);
+            return;
+        }
+
+        const p = await this._packageVersions.getItem({
+            recordName: event.package.recordName,
+            address: event.package.address,
+            key: event.package.key,
+            userId: connection.userId,
+            instances: [],
+        });
+
+        if (p.success === false) {
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to load package.`,
+                p
+            );
+            await this.sendError(connectionId, -1, p);
+            return;
+        }
+        if (p.auxFile.success === false) {
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to load package file.`,
+                p.auxFile
+            );
+            await this.sendError(connectionId, -1, p.auxFile);
+            return;
+        }
+
+        const fileResponse = await fetch(p.auxFile.requestUrl, {
+            method: p.auxFile.requestMethod,
+            headers: new Headers(),
+        });
+
+        if (fileResponse.status >= 300) {
+            // Failed
+            return;
+        }
+
+        const json = await fileResponse.text();
+
+        const packageData = tryParseJson(json);
+
+        if (packageData.success === false) {
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to parse package file.`,
+                packageData
+            );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The package file could not be parsed.',
+            });
+            return;
+        }
+
+        const parsed = STORED_AUX_SCHEMA.safeParse(packageData);
+        if (parsed.success === false) {
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to parse package file.`,
+                packageData
+            );
+            await this.sendError(connectionId, -1, {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The package file could not be parsed.',
+                issues: parsed.error.issues,
+            });
+            return;
+        }
+
+        const updates =
+            parsed.data.version === 2
+                ? parsed.data.updates.map((u) => u.update)
+                : [
+                      constructInitializationUpdate(
+                          createInitializationUpdate(
+                              Object.values(parsed.data.state as BotsState)
+                          )
+                      ).update,
+                  ];
+        const timestamps =
+            parsed.data.version === 2
+                ? parsed.data.updates.map((u) => u.timestamp)
+                : [0];
+
+        const branch = event.branch ?? DEFAULT_BRANCH_NAME;
+
+        await this.addUpdates(connectionId, {
+            type: 'repo/add_updates',
+            recordName: event.recordName,
+            inst: event.inst,
+            branch,
+            updates: updates,
+            timestamps: timestamps,
+        });
     }
 
     @traced(TRACE_NAME)

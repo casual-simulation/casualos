@@ -12,6 +12,8 @@ import {
     botAdded,
     ON_WEBHOOK_ACTION_NAME,
     botRemoved,
+    StoredAux,
+    getInstStateFromUpdates,
 } from '@casual-simulation/aux-common/bots';
 import { createBot } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { v4 as uuid } from 'uuid';
@@ -55,6 +57,9 @@ import {
     allowAllFeatures,
 } from '../SubscriptionConfiguration';
 import { buildSubscriptionConfig } from '../SubscriptionConfigBuilder';
+import { PackageRecordVersionKey, version } from '../packages/version';
+import { getHash } from '@casual-simulation/crypto';
+import { address } from 'faker';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -7128,6 +7133,144 @@ describe('WebsocketController', () => {
                             },
                         ]);
                     });
+                });
+            });
+        });
+
+        describe('repo/load_package', () => {
+            async function recordPackage(
+                recordName: string,
+                address: string,
+                markers: string[],
+                key: PackageRecordVersionKey,
+                aux: StoredAux
+            ) {
+                await services.packagesStore.createItem(recordName, {
+                    address: address,
+                    markers,
+                });
+
+                const json = JSON.stringify(aux);
+                const sha256 = getHash(json);
+
+                const result = await services.packageVersions.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId: userId,
+                    item: {
+                        address,
+                        key,
+                        readme: '',
+                        entitlements: [],
+                        auxFileRequest: {
+                            fileSha256Hex: sha256,
+                            fileByteLength: json.length,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                    },
+                    instances: [],
+                });
+
+                if (!result.success) {
+                    console.error(result);
+                    throw new Error('Failed to record package');
+                }
+
+                if (!result.auxFileResult.success) {
+                    console.error(result.auxFileResult);
+                    throw new Error('Failed to record file');
+                }
+
+                files.set(result.auxFileResult.uploadUrl, json);
+            }
+
+            let originalFetch: typeof fetch;
+            let fetchMock: jest.Mock;
+            let files: Map<string, string>;
+
+            beforeEach(async () => {
+                files = new Map();
+
+                originalFetch = global.fetch;
+                fetchMock = global.fetch = jest.fn(async (request) => {
+                    const url =
+                        typeof request === 'string'
+                            ? request
+                            : request instanceof URL
+                            ? request.href
+                            : request.url;
+
+                    const text = files.get(url);
+                    return {
+                        status: text ? 200 : 404,
+                        text: async () => text,
+                    } as Response;
+                });
+
+                await recordPackage(
+                    recordName,
+                    'public',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+            });
+
+            afterEach(() => {
+                global.fetch = originalFetch;
+            });
+
+            it('should load the package into the default branch of the inst', async () => {
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken: connectionToken,
+                });
+
+                await server.loadPackage(serverConnectionId, {
+                    type: 'repo/load_package',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(messenger.getEvents(serverConnectionId)).toEqual([
+                    {
+                        type: 'repo/load_package/response',
+                        success: true,
+                    },
+                ]);
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
                 });
             });
         });

@@ -14,6 +14,15 @@ import {
     buildSubscriptionConfig,
     SubscriptionConfigBuilder,
 } from './SubscriptionConfigBuilder';
+import {
+    MemoryPackageRecordsStore,
+    PackageRecordsController,
+} from './packages';
+import {
+    MemoryPackageVersionRecordsStore,
+    PackageVersionRecordsController,
+} from './packages/version';
+import { FileRecordsController } from './FileRecordsController';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -81,6 +90,30 @@ export function createTestControllers(
         messenger: store,
     });
     const policies = new PolicyController(auth, records, store);
+    const files = new FileRecordsController({
+        config: store,
+        metrics: store,
+        store: store,
+        policies,
+    });
+    const packagesStore = new MemoryPackageRecordsStore(store);
+    const packages = new PackageRecordsController({
+        config: store,
+        policies,
+        store: packagesStore,
+    });
+    const packageVersionStore = new MemoryPackageVersionRecordsStore(
+        store,
+        packagesStore
+    );
+    const packageVersions = new PackageVersionRecordsController({
+        config: store,
+        policies,
+        files,
+        systemNotifications: store,
+        recordItemStore: packagesStore,
+        store: packageVersionStore,
+    });
 
     return {
         store,
@@ -92,6 +125,11 @@ export function createTestControllers(
         policyStore: store,
         policies,
         configStore: store,
+        files,
+        packagesStore,
+        packages,
+        packageVersionStore,
+        packageVersions,
     };
 }
 

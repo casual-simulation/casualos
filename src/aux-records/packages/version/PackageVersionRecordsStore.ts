@@ -201,6 +201,27 @@ export interface ListedPackageVersion {
     createdAtMs: number;
 }
 
+/**
+ * Creates a new package version.
+ * @param major The major version of the package.
+ * @param minor The minor version of the package.
+ * @param patch The patch version of the package.
+ * @param tag The tag.
+ */
+export function version(
+    major: number,
+    minor: number = 0,
+    patch: number = 0,
+    tag: string = ''
+): PackageVersion {
+    return {
+        major,
+        minor,
+        patch,
+        tag,
+    };
+}
+
 export interface PackageVersion {
     /**
      * The major version of the package.
