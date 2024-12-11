@@ -131,6 +131,7 @@ import {
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
+    LoadedPackage,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
@@ -212,6 +213,8 @@ export class MemoryStore
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
+
+    private _loadedPackages: Map<string, LoadedPackage> = new Map();
 
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
@@ -2956,6 +2959,27 @@ export class MemoryStore
                     : 'studio',
             },
         };
+    }
+
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        this._loadedPackages.set(loadedPackage.id, { ...loadedPackage });
+    }
+
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        let loadedPackages: LoadedPackage[] = [];
+        for (let [id, loadedPackage] of this._loadedPackages) {
+            if (
+                loadedPackage.recordName === recordName &&
+                loadedPackage.inst === inst
+            ) {
+                loadedPackages.push(loadedPackage);
+            }
+        }
+
+        return loadedPackages;
     }
 
     async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {

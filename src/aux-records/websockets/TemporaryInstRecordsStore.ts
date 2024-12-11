@@ -2,6 +2,7 @@ import {
     BranchRecord,
     BranchRecordWithInst,
     CurrentUpdates,
+    LoadedPackage,
 } from './InstRecordsStore';
 import { LockStore } from '../LockStore';
 
@@ -229,6 +230,22 @@ export interface TemporaryInstRecordsStore extends LockStore {
      * @param string The generation that should be removed.
      */
     clearDirtyBranches(generation: string): Promise<void>;
+
+    /**
+     * Saves the given loaded package.
+     * @param loadedPackage The package that should be saved.
+     */
+    saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void>;
+
+    /**
+     * Gets the list of loaded packages for the given record and inst.
+     * @param recordName The name of the record.
+     * @param inst The inst.
+     */
+    listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]>;
 }
 
 export interface BranchUpdates extends CurrentUpdates {

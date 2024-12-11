@@ -9,6 +9,7 @@ import {
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
+    LoadedPackage,
     ReplaceUpdatesResult,
     SaveBranchFailure,
     SaveBranchResult,
@@ -38,6 +39,25 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     ) {
         this._temp = temporary;
         this._permanent = permanent;
+    }
+
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        if (loadedPackage.recordName) {
+            await this._permanent.saveLoadedPackage(loadedPackage);
+        } else {
+            await this._temp.saveLoadedPackage(loadedPackage);
+        }
+    }
+
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        if (recordName) {
+            return await this._permanent.listLoadedPackages(recordName, inst);
+        } else {
+            return await this._temp.listLoadedPackages(recordName, inst);
+        }
     }
 
     async getInstByName(

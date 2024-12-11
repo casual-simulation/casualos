@@ -1,4 +1,5 @@
 import { ServerError } from '@casual-simulation/aux-common';
+import { PackageRecordVersionKey } from '../packages/version';
 
 /**
  * Defines an interface for services which are able to store inst update data.
@@ -148,6 +149,60 @@ export interface InstRecordsStore {
      * @param inst The name of the inst.
      */
     deleteInst(recordName: string | null, inst: string): Promise<void>;
+
+    /**
+     * Saves the given loaded package.
+     * @param loadedPackage The package that should be saved.
+     */
+    saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void>;
+
+    /**
+     * Gets the list of loaded packages for the given record and inst.
+     * @param recordName The name of the record.
+     * @param inst The inst.
+     */
+    listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]>;
+}
+
+export interface LoadedPackage {
+    /**
+     * The ID of the loaded package.
+     */
+    id: string;
+
+    /**
+     * The name of the record that the inst is stored in.
+     * If null, then the inst is a temporary inst.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the package was loaded into.
+     */
+    inst: string;
+
+    /**
+     * The ID of the user that loaded the package.
+     */
+    userId: string | null;
+
+    /**
+     * The record that the package is stored in.
+     */
+    packageRecordName: string;
+
+    /**
+     * The address of the package.
+     */
+    packageAddress: string;
+
+    /**
+     * The key of the package version.
+     */
+    packageVersionKey: PackageRecordVersionKey;
 }
 
 export interface StoredUpdates {

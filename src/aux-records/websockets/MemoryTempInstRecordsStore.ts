@@ -1,4 +1,8 @@
-import { CurrentUpdates, StoredUpdates } from './InstRecordsStore';
+import {
+    CurrentUpdates,
+    LoadedPackage,
+    StoredUpdates,
+} from './InstRecordsStore';
 import {
     BranchName,
     BranchUpdates,
@@ -15,6 +19,7 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _sizes: Map<string, number> = new Map();
     private _counts: Map<string, number> = new Map();
     private _generations: Map<string, BranchName[]> = new Map();
+    private _loadedPackages: LoadedPackage[] = [];
     private _currentGeneration: string = '0';
     private _locks: Map<string, number> = new Map();
 
@@ -276,5 +281,26 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
         branch: string
     ): Promise<void> {
         this._sizes.delete(this.getBranchKey(recordName, inst, branch));
+    }
+
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        const index = this._loadedPackages.findIndex(
+            (p) => p.id === loadedPackage.id
+        );
+
+        if (index >= 0) {
+            this._loadedPackages[index] = loadedPackage;
+        } else {
+            this._loadedPackages.push(loadedPackage);
+        }
+    }
+
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        return this._loadedPackages.filter(
+            (p) => p.recordName === recordName && p.inst === inst
+        );
     }
 }
