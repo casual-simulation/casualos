@@ -84,6 +84,8 @@ model User {
     sentNotifications SentPushNotification[]
 
     packageReviews PackageRecordVersionReview[]
+    grantedPackageEntitlements GrantedPackageEntitlement[]
+    loadedPackages LoadedPackage[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -344,6 +346,8 @@ model Record {
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
 
+    grantedEntitlements GrantedPackageEntitlement[]
+
     userInstReports UserInstReport[]
 
     createdAt DateTime @default(now())
@@ -554,6 +558,34 @@ model MarkerPermissionAssignment {
     @@index([recordName, marker, action, subjectType, subjectId])
 }
 
+model GrantedPackageEntitlement {
+    id String @db.Uuid @id
+
+    // The ID of the user that granted the entitlement
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GrantedPackageEntitlement_userId_fkey1")
+
+    // The name of the record that the package is stored in
+    packageRecordName String @db.String(128)
+    record Record @relation(fields: [packageRecordName], references: [name], onDelete: Cascade, map: "GrantedPackageEntitlement_packageRecordName_fkey1")
+
+    // The name of the address that the package is stored in
+    packageAddress String @db.String(128)
+    package PackageRecord @relation(fields: [packageRecordName, packageAddress], references: [recordName, address], onDelete: Cascade, map: "GrantedPackageEntitlement_packageAddress_fkey1")
+
+    // The feature that the entitlement covers
+    feature String @db.String(32)
+
+    // The scope of the entitlement
+    scope String @db.String(32)
+
+    // The records that were designated by the entitlement
+    designatedRecords String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 // Example query:
 // SELECT * FROM "ResourcePermissionAssignment"
 // WHERE "recordName" = recordName AND "marker" = marker AND "action" = action
@@ -673,6 +705,7 @@ model InstRecord {
     updates BranchUpdate[]
     userInstReports UserInstReport[]
     webhookRecords WebhookRecord[]
+    loadedPackages LoadedPackage[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -715,6 +748,33 @@ model BranchUpdate {
     updated DateTime @updatedAt
 
     @@index([recordName, instName, branchName, id])
+}
+
+// A package that has been loaded into an inst
+model LoadedPackage {
+    id String @id @db.Uuid
+
+    // The ID of the user that loaded the package
+    // Null if the user was deleted or if the package was loaded by the system
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "LoadedPackage_user_fkey1")
+
+    // The name of the record that the package is stored in
+    packageRecordName String @db.String(128)
+    packageAddress String @db.String(128)
+    packageMajor Int
+    packageMinor Int
+    packagePatch Int
+    packageTag String @db.String(16)
+    packageVersion PackageRecordVersion @relation(fields: [packageRecordName, packageAddress, packageMajor, packageMinor, packagePatch, packageTag], references: [recordName, address, major, minor, patch, tag], onDelete: Cascade, map: "LoadedPackage_packageVersion_fkey1")
+
+    // The inst that the package was loaded into
+    instRecordName String @db.String(128)
+    instName String @db.String(128)
+    inst InstRecord @relation(fields: [instRecordName, instName], references: [recordName, name], onDelete: Cascade, map: "LoadedPackage_inst_fkey1")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model WebhookRecord {
@@ -911,6 +971,7 @@ model PackageRecord {
 
     versions PackageRecordVersion[]
     reviews PackageRecordVersionReview[]
+    grantedEntitlements GrantedPackageEntitlement[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -938,7 +999,7 @@ model PackageRecordVersion {
     tag String @db.String(16)
 
     // The SHA256 hash of the package
-    sha256 String @db.String(64)
+    sha256 String @db.String(64) @unique
 
     // The aux data of the package
     aux Json
@@ -950,7 +1011,7 @@ model PackageRecordVersion {
     scriptSha256 String @db.String(64)
 
     // The list of entitlements that this package version requires
-    entitlements String[]
+    entitlements Json
 
     // The README of the package
     readme String
@@ -960,6 +1021,7 @@ model PackageRecordVersion {
 
     // The list of reviews for the package version
     reviews PackageRecordVersionReview[]
+    loadedPackages LoadedPackage[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
