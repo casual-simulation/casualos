@@ -27,7 +27,7 @@ services:
         volumes:
             - './services/data/s3:/tmp/s3-data'
     livekit:
-        image: livekit/livekit-server:latest
+        image: livekit/livekit-server:v1.4.0
         command: --config /etc/livekit.yaml
         restart: always
         depends_on:

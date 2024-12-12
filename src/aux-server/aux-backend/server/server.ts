@@ -640,6 +640,10 @@ export class Server {
             }
         }
 
+        if (options.livekit) {
+            builder.useLivekit();
+        }
+
         const { server, filesController, mongoDatabase } =
             await builder.buildAsync();
         const filesCollection =
