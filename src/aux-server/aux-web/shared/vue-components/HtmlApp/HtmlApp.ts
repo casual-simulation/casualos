@@ -25,6 +25,8 @@ import {
 } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 import { eventNames } from './Util';
 import { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import { getMediaForCasualOSUrl } from '../../MediaUtils';
+import { parseCasualOSUrl } from '../../UrlUtils';
 
 const DISALLOWED_NODE_NAMES = new Set(['SCRIPT']);
 const DISALLOWED_EVENTS = new Set([
@@ -58,6 +60,9 @@ const EVENT_OPTIONS = {
     capture: true,
     passive: true,
 };
+
+const MEDIA_COUNTER_SYMBOL = Symbol('mediaObservable');
+const MEDIA_SUBSCRIPTION_SYMBOL = Symbol('mediaSubscription');
 
 // Mostly taken from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/dom.js#L224
 @Component({
@@ -418,6 +423,48 @@ export default class HtmlApp extends Vue {
             (attributeName === 'value' || attributeName === 'checked')
         ) {
             (<any>node)[attributeName] = value;
+        } else if (
+            node instanceof HTMLVideoElement &&
+            attributeName === 'src' &&
+            typeof value === 'string'
+        ) {
+            const anyNode: any = node;
+            const previousSub: Subscription =
+                anyNode[MEDIA_SUBSCRIPTION_SYMBOL];
+            if (previousSub) {
+                previousSub.unsubscribe();
+            }
+            const casualOsUrl = parseCasualOSUrl(value);
+            if (casualOsUrl) {
+                // Quick and dirty way to cancel previous media streams
+                const gen: number = (anyNode[MEDIA_COUNTER_SYMBOL] || 0) + 1;
+                anyNode[MEDIA_COUNTER_SYMBOL] = gen;
+                getMediaForCasualOSUrl(casualOsUrl).then((media) => {
+                    if (anyNode[MEDIA_COUNTER_SYMBOL] !== gen) {
+                        return;
+                    }
+                    if (media) {
+                        node.srcObject = media;
+                        const previousSub: Subscription =
+                            anyNode[MEDIA_SUBSCRIPTION_SYMBOL];
+                        previousSub?.unsubscribe();
+                        anyNode[MEDIA_SUBSCRIPTION_SYMBOL] = new Subscription(
+                            () => {
+                                if (media instanceof MediaStream) {
+                                    console.log('unsub');
+                                    for (let track of media.getTracks()) {
+                                        track.stop();
+                                    }
+                                }
+                            }
+                        );
+                    } else {
+                        node.setAttribute(attributeName, value);
+                    }
+                });
+            } else {
+                node.setAttribute(attributeName, value);
+            }
         } else {
             node.setAttribute(attributeName, value);
         }
