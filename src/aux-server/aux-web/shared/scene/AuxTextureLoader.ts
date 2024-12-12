@@ -6,8 +6,9 @@ import {
     Loader,
     VideoTexture,
 } from '@casual-simulation/three';
-import { parseCasualOSUrl, addCorsQueryParam } from './SceneUtils';
+import { addCorsQueryParam } from './SceneUtils';
 import { appManager } from '../AppManager';
+import { parseCasualOSUrl } from '../UrlUtils';
 
 // TODO: Put a max size on the cache.
 const cache = new Map<string, Promise<Texture>>();
