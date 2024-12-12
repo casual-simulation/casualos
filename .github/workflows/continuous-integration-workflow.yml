@@ -24,6 +24,12 @@ jobs:
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
+            # For Node-Gyp
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  # Semantic version range syntax or exact version of a Python version
+                  python-version: '3.11'
             - name: Use Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v1
               with:
@@ -50,6 +56,12 @@ jobs:
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
+            # For Node-Gyp
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  # Semantic version range syntax or exact version of a Python version
+                  python-version: '3.11'
             - name: Use Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v1
               with:
@@ -76,6 +88,12 @@ jobs:
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
+            # For Node-Gyp
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  # Semantic version range syntax or exact version of a Python version
+                  python-version: '3.11'
             - name: Use Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v1
               with:
