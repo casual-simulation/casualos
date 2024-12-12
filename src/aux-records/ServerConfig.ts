@@ -607,7 +607,8 @@ const aiSchema = z.object({
                 .describe(
                     'Custom token modifier ratio per model. The key is the model name and the value is the cost multiplier.'
                 )
-                .optional(),
+                .optional()
+                .default({}),
         })
         .describe('Options for Chat AI. If omitted, then chat AI is disabled.')
         .optional(),

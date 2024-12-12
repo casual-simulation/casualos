@@ -945,6 +945,8 @@ export default class PlayerApp extends Vue {
                                     stream: e.stream,
                                     compileFullAudioBuffer: !e.stream,
                                     sampleRate: e.sampleRate,
+                                    bufferRateMiliseconds:
+                                        e.bufferRateMilliseconds,
                                 });
 
                             if (e.stream) {
