@@ -6,6 +6,10 @@
 
 ### :rocket: Features
 
+-   Added the ability to use CasualOS URLs in `<video>` HTML custom app elements.
+    -   This makes it possible to use LiveKit tracks in a custom app.
+    -   Tip: Utilize the `autoplay` attribute to automatically play video from a track.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue in `LivekitManager` where media permissions for the camera and microphone were not requested before joining a room. Resulting in silent fails for Google Chrome users. The `joinRoom` method now includes a preliminary step to check and request these permissions, ensuring a smoother user experience.
