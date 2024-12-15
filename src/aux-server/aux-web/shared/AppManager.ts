@@ -904,6 +904,16 @@ export class AppManager {
         return insts.map((i) => i.origin.inst);
     }
 
+    async deleteStaticInst(inst: string) {
+        if (!this._db) {
+            console.error(
+                '[AppManager] Could not connect db to delete inst',
+                inst
+            );
+        }
+        await deleteItem(this._db, STATIC_INSTS_STORE, inst);
+    }
+
     private async _getComIdConfig(): Promise<GetPlayerConfigSuccess> {
         try {
             const config = await this._auth.primary.getComIdWebConfig(
