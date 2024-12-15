@@ -72,6 +72,8 @@ export default class HtmlApp extends Vue {
     @Prop() simulationId: string;
     @Prop() appId: string;
     @Prop() taskId: string | number;
+    @Prop() _isDestroyed: boolean;
+    @Prop() _isBeingDestroyed: boolean;
 
     private _simulation: BrowserSimulation;
     private _nodes: Map<string, Node>;
@@ -315,6 +317,10 @@ export default class HtmlApp extends Vue {
     }
 
     private _applyMutation(mutation: any) {
+        if (this._isDestroyed || this._isBeingDestroyed) {
+            return;
+        }
+
         if (mutation.type === 'childList') {
             this._applyChildList(mutation);
         } else if (mutation.type === 'attributes') {
