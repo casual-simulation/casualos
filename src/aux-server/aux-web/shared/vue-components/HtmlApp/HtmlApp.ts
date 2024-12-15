@@ -72,8 +72,6 @@ export default class HtmlApp extends Vue {
     @Prop() simulationId: string;
     @Prop() appId: string;
     @Prop() taskId: string | number;
-    @Prop() _isDestroyed: boolean;
-    @Prop() _isBeingDestroyed: boolean;
 
     private _simulation: BrowserSimulation;
     private _nodes: Map<string, Node>;
@@ -82,6 +80,8 @@ export default class HtmlApp extends Vue {
     private _currentTouch: any;
     private _sub: Subscription;
     private _listeners: Map<string, number> = new Map();
+    private _isDestroyed: boolean; // Set by Vue
+    private _isBeingDestroyed: boolean; // Set by Vue
 
     constructor() {
         super();
