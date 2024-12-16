@@ -62,8 +62,8 @@ describe('constructInitializationUpdate()', () => {
         });
     });
 
-    it('should construct the same update when given the same bots', async () => {
-        const action = createInitializationUpdate([
+    it('should support two different initialization updates', async () => {
+        const action1 = createInitializationUpdate([
             createBot('test1', {
                 abc: 'def',
             }),
@@ -72,9 +72,39 @@ describe('constructInitializationUpdate()', () => {
             }),
         ]);
 
-        const update = constructInitializationUpdate(action);
+        const update1 = constructInitializationUpdate(action1);
 
-        expect(update.update).toMatchSnapshot();
+        const action2 = createInitializationUpdate([
+            createBot('test3', {
+                val: true,
+            }),
+            createBot('test4', {
+                str: 'hello',
+            }),
+        ]);
+
+        const update2 = constructInitializationUpdate(action2);
+
+        const validationPartition = new YjsPartitionImpl({
+            type: 'yjs',
+        });
+        applyUpdate(validationPartition.doc, toByteArray(update1.update));
+        applyUpdate(validationPartition.doc, toByteArray(update2.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
+                abc: 'def',
+            }),
+            test2: createBot('test2', {
+                num: 123,
+            }),
+            test3: createBot('test3', {
+                val: true,
+            }),
+            test4: createBot('test4', {
+                str: 'hello',
+            }),
+        });
     });
 });
 
