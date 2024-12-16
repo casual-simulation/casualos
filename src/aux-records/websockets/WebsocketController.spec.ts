@@ -7242,6 +7242,7 @@ describe('WebsocketController', () => {
             });
 
             it('should load the package into the default branch of the inst', async () => {
+                uuidMock.mockReturnValueOnce('packageId');
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken: connectionToken,
@@ -7290,19 +7291,205 @@ describe('WebsocketController', () => {
                     }),
                 });
 
-                // should be an initialization update
-                const expectedUpdate = constructInitializationUpdate(
-                    createInitializationUpdate([
-                        createBot('test', {
-                            abc: 'def',
-                        }),
-                    ])
-                ).update;
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageRecordName: recordName,
+                        packageAddress: 'public',
+                        packageVersionKey: version(1),
+                        userId: userId,
+                    },
+                ]);
+            });
 
-                expect(updates.updates).toEqual([expectedUpdate]);
+            it('should do nothing if the package is already loaded', async () => {
+                uuidMock.mockReturnValueOnce('packageId');
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken: connectionToken,
+                });
+
+                await server.loadPackage(serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 1,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/load_package/response',
+                        success: true,
+                        requestId: 1,
+                    },
+                ]);
+
+                await server.addUpdates(serverConnectionId, {
+                    type: 'repo/add_updates',
+                    recordName,
+                    inst,
+                    updates: ['abc'],
+                    branch: DEFAULT_BRANCH_NAME,
+                });
+
+                await server.loadPackage(serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 1,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(updates.updates).toEqual([expect.any(String), 'abc']);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageRecordName: recordName,
+                        packageAddress: 'public',
+                        packageVersionKey: version(1),
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should be able to load multiple packages', async () => {
+                await recordPackage(
+                    recordName,
+                    'public2',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test2: createBot('test2', {
+                                value: 123,
+                            }),
+                        },
+                    }
+                );
+
+                uuidMock
+                    .mockReturnValueOnce('packageId')
+                    .mockReturnValueOnce('packageId2');
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken: connectionToken,
+                });
+
+                await server.loadPackage(serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 1,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                await server.loadPackage(serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 2,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public2',
+                        key: version(1),
+                    },
+                });
+
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/load_package/response',
+                        success: true,
+                        requestId: 1,
+                    },
+                    {
+                        type: 'repo/load_package/response',
+                        success: true,
+                        requestId: 2,
+                    },
+                ]);
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        value: 123,
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageRecordName: recordName,
+                        packageAddress: 'public',
+                        packageVersionKey: version(1),
+                        userId: userId,
+                    },
+                    {
+                        id: 'packageId2',
+                        recordName,
+                        inst,
+                        packageRecordName: recordName,
+                        packageAddress: 'public2',
+                        packageVersionKey: version(1),
+                        userId: userId,
+                    },
+                ]);
             });
 
             it('should support version 2 states', async () => {
+                uuidMock.mockReturnValueOnce('packageId');
                 const updates = [
                     constructInitializationUpdate(
                         createInitializationUpdate([
@@ -7374,9 +7561,24 @@ describe('WebsocketController', () => {
                 expect(instUpdates.updates).toEqual(
                     updates.map((u) => u.update)
                 );
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageRecordName: recordName,
+                        packageAddress: 'public2',
+                        packageVersionKey: version(1),
+                        userId: userId,
+                    },
+                ]);
             });
 
             it('should load the package as the current user', async () => {
+                uuidMock.mockReturnValueOnce('packageId');
                 await recordPackage(
                     recordName,
                     'private',
@@ -7439,6 +7641,20 @@ describe('WebsocketController', () => {
                         abc: 'def',
                     }),
                 });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageRecordName: recordName,
+                        packageAddress: 'private',
+                        packageVersionKey: version(1),
+                        userId: userId,
+                    },
+                ]);
             });
 
             it('should return not_authorized if the user is not authorized to read the package', async () => {
@@ -7457,7 +7673,7 @@ describe('WebsocketController', () => {
                     }
                 );
                 await connectionStore.saveConnection(device1Info);
-                
+
                 await server.login(device1Info.serverConnectionId, 1, {
                     type: 'login',
                     connectionToken: device1Info.token,
@@ -7505,6 +7721,10 @@ describe('WebsocketController', () => {
                     DEFAULT_BRANCH_NAME
                 );
                 expect(instUpdates?.updates ?? []).toEqual([]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([]);
             });
         });
 

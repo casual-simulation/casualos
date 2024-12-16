@@ -53,6 +53,7 @@ import {
     InstRecord,
     InstRecordsStore,
     InstWithSubscriptionInfo,
+    LoadedPackage,
     SaveInstFailure,
     StoredUpdates,
 } from './InstRecordsStore';
@@ -2033,7 +2034,7 @@ export class WebsocketController {
             return;
         }
         console.log(
-            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}, ${connectionId}] Load Package`
+            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}, ${connectionId}, package: ${event.package.recordName}/${event.package.address}@v${event.package.key.major}.${event.package.key.minor}.${event.package.key.patch}${event.package.key.tag}] Load Package`
         );
 
         const connection = await this._connectionStore.getConnection(
@@ -2053,8 +2054,7 @@ export class WebsocketController {
                 success: false,
                 requestId: event.requestId,
                 errorCode: 'invalid_connection_state',
-                errorMessage:
-                    'A server error occurred. (connectionId: ${connectionId})',
+                errorMessage: `A server error occurred. (connectionId: ${connectionId})`,
             });
             await this.messenger.disconnect(connectionId);
             return;
@@ -2090,14 +2090,42 @@ export class WebsocketController {
             return;
         }
 
+        const loadedPackageStore = this._instStore;
+        const loadedPackages: LoadedPackage[] =
+            await loadedPackageStore.listLoadedPackages(
+                event.recordName,
+                event.inst
+            );
+
+        if (
+            loadedPackages.some(
+                (l) =>
+                    l.packageRecordName === event.package.recordName &&
+                    l.packageAddress === p.item.address
+            )
+        ) {
+            // Already loaded
+            console.log(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Package already loaded.`
+            );
+            await this._messenger.sendMessage([connectionId], {
+                type: 'repo/load_package/response',
+                success: true,
+                requestId: event.requestId,
+            });
+            return;
+        }
+
         const fileResponse = await fetch(p.auxFile.requestUrl, {
             method: p.auxFile.requestMethod,
-            headers: new Headers(),
+            headers: new Headers(p.auxFile.requestHeaders),
         });
 
         if (fileResponse.status >= 300) {
-            console.error('[CausalRepoServer] Unable to load package file.');
-            // await this.sendError(connectionId, )
+            console.error(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to load package file.`
+            );
+
             // Failed
             return;
         }
@@ -2168,6 +2196,16 @@ export class WebsocketController {
             branch,
             updates: updates,
             timestamps: timestamps,
+        });
+
+        await loadedPackageStore.saveLoadedPackage({
+            id: uuid(),
+            recordName: event.recordName,
+            inst: event.inst,
+            packageRecordName: event.package.recordName,
+            packageAddress: p.item.address,
+            packageVersionKey: p.item.key,
+            userId: connection.userId,
         });
 
         await this._messenger.sendMessage([connectionId], {
