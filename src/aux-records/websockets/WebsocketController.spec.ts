@@ -43,6 +43,7 @@ import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
 import {
     ACCOUNT_MARKER,
+    ADMIN_ROLE_NAME,
     ConnectionInfo,
     DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
@@ -62,6 +63,7 @@ import { buildSubscriptionConfig } from '../SubscriptionConfigBuilder';
 import { PackageRecordVersionKey, version } from '../packages/version';
 import { getHash } from '@casual-simulation/crypto';
 import { address } from 'faker';
+import { formatInstId } from './Utils';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -7594,6 +7596,12 @@ describe('WebsocketController', () => {
                     }
                 );
 
+                store.roles[recordName] = {
+                    [formatInstId(recordName, inst)]: new Set([
+                        ADMIN_ROLE_NAME,
+                    ]),
+                };
+
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken: connectionToken,
@@ -7710,6 +7718,76 @@ describe('WebsocketController', () => {
                             resourceId: 'private',
                             subjectType: 'user',
                             subjectId: device1Info.userId,
+                            action: 'read',
+                        },
+                    },
+                ]);
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(instUpdates?.updates ?? []).toEqual([]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([]);
+            });
+
+            it('should return not_authorized if the inst is not authorized to read the package', async () => {
+                await recordPackage(
+                    device1Info.userId,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+                await connectionStore.saveConnection(device1Info);
+
+                await server.login(device1Info.serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken: device1Info.token,
+                });
+
+                await server.loadPackage(device1Info.serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 1,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName: device1Info.userId,
+                        address: 'private',
+                        key: version(1),
+                    },
+                });
+
+                expect(
+                    messenger
+                        .getMessages(device1Info.serverConnectionId)
+                        .slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/load_package/response',
+                        success: false,
+                        requestId: 1,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName: device1Info.userId,
+                            resourceKind: 'package.version',
+                            resourceId: 'private',
+                            subjectType: 'inst',
+                            subjectId: formatInstId(recordName, inst),
                             action: 'read',
                         },
                     },

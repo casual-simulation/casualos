@@ -96,6 +96,7 @@ import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
 import { PackageVersionRecordsController } from '../packages/version';
 import { STORED_AUX_SCHEMA } from '../webhooks';
 import { tryParseJson } from '../Utils';
+import { formatInstId } from './Utils';
 
 const TRACE_NAME = 'WebsocketController';
 
@@ -2065,7 +2066,7 @@ export class WebsocketController {
             address: event.package.address,
             key: event.package.key,
             userId: connection.userId,
-            instances: [],
+            instances: [formatInstId(event.recordName, event.inst)],
         });
 
         if (p.success === false) {
