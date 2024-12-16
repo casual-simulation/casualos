@@ -30,7 +30,7 @@ import {
     SUBJECT_TYPE_VALIDATION,
     SubjectType,
 } from '../common';
-import { KnownErrorCodes } from 'rpc';
+import { KnownErrorCodes } from '../rpc/ErrorCodes';
 
 /**
  * Defines a websocket event.
@@ -216,7 +216,8 @@ export type WebsocketResponseMessage =
     | RateLimitExceededMessage
     | WebsocketHttpResponseMessage
     | WebsocketHttpPartialResponseMessage
-    | RequestMissingPermissionResponseMessage;
+    | RequestMissingPermissionResponseMessage
+    | LoadPackageResponseMessage;
 
 export type WebsocketRequestMessage =
     | LoginMessage
@@ -1097,8 +1098,35 @@ type ZodConnectionCountMessageAssertion = HasType<
     ConnectionCountMessage
 >;
 
+export interface WebsocketPackage {
+    /**
+     * The name of the record that the package should be loaded from.
+     */
+    recordName: string;
+
+    /**
+     * The address of the package to load.
+     */
+    address: string;
+
+    /**
+     * The version to load.
+     */
+    key: {
+        major: number;
+        minor: number;
+        patch: number;
+        tag: string | null;
+    };
+}
+
 export interface LoadPackageRequestMessage {
     type: 'repo/load_package';
+
+    /**
+     * The ID of the request.
+     */
+    requestId: string | number;
 
     /**
      * The name of the record that the package should be loaded into.
@@ -1119,27 +1147,7 @@ export interface LoadPackageRequestMessage {
     /**
      * The package that should be loaded.
      */
-    package: {
-        /**
-         * The name of the record that the package should be loaded from.
-         */
-        recordName: string;
-
-        /**
-         * The address of the package to load.
-         */
-        address: string;
-
-        /**
-         * The version to load.
-         */
-        key: {
-            major: number;
-            minor: number;
-            patch: number;
-            tag: string;
-        };
-    };
+    package: WebsocketPackage;
 }
 export const loadPackageRequestMessageSchema = z.object({
     type: z.literal('repo/load_package'),
@@ -1153,7 +1161,7 @@ export const loadPackageRequestMessageSchema = z.object({
             major: z.number(),
             minor: z.number(),
             patch: z.number(),
-            tag: z.string(),
+            tag: z.string().nullable(),
         }),
     }),
 });
@@ -1164,6 +1172,46 @@ type ZodLoadPackageRequestMessageAssertion = HasType<
     ZodLoadPackageRequestMessage,
     LoadPackageRequestMessage
 >;
+
+export type LoadPackageResponseMessage =
+    | LoadPackageResponseSuccessMessage
+    | LoadPackageResponseFailureMessage;
+
+export interface LoadPackageResponseSuccessMessage {
+    type: 'repo/load_package/response';
+    success: true;
+
+    /**
+     * The ID of the request.
+     */
+    requestId: string | number;
+}
+
+export interface LoadPackageResponseFailureMessage {
+    type: 'repo/load_package/response';
+
+    success: false;
+
+    /**
+     * The ID of the request.
+     */
+    requestId: string | number;
+
+    /**
+     * The error code that occurred.
+     */
+    errorCode: WebsocketErrorCode;
+
+    /**
+     * The error message that occurred.
+     */
+    errorMessage: string;
+
+    /**
+     * The list of parsing issues that occurred.
+     */
+    issues?: ZodIssue[];
+}
 
 /**
  * Defines an event which attempts to perform a time sync.

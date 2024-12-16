@@ -92,9 +92,9 @@ import { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
-import { PackageVersionRecordsController } from 'packages/version';
-import { STORED_AUX_SCHEMA } from 'webhooks';
-import { tryParseJson } from 'Utils';
+import { PackageVersionRecordsController } from '../packages/version';
+import { STORED_AUX_SCHEMA } from '../webhooks';
+import { tryParseJson } from '../Utils';
 
 const TRACE_NAME = 'WebsocketController';
 
@@ -2023,8 +2023,10 @@ export class WebsocketController {
     @traced(TRACE_NAME)
     async loadPackage(connectionId: string, event: LoadPackageRequestMessage) {
         if (!this._packageVersions) {
-            await this.sendError(connectionId, -1, {
+            await this._messenger.sendMessage([connectionId], {
+                type: 'repo/load_package/response',
                 success: false,
+                requestId: event.requestId,
                 errorCode: 'not_supported',
                 errorMessage: 'Package loading is not supported.',
             });
@@ -2041,10 +2043,18 @@ export class WebsocketController {
             console.error(
                 `[CausalRepoServer] [connectionId: ${connectionId}] Unable to load package. Connection not found!`
             );
-            await this.sendError(connectionId, -1, {
+            // await this.sendError(connectionId, -1, {
+            //     success: false,
+            //     errorCode: 'invalid_connection_state',
+            //     errorMessage: `A server error occurred. (connectionId: ${connectionId})`,
+            // });
+            await this._messenger.sendMessage([connectionId], {
+                type: 'repo/load_package/response',
                 success: false,
+                requestId: event.requestId,
                 errorCode: 'invalid_connection_state',
-                errorMessage: `A server error occurred. (connectionId: ${connectionId})`,
+                errorMessage:
+                    'A server error occurred. (connectionId: ${connectionId})',
             });
             await this.messenger.disconnect(connectionId);
             return;
@@ -2063,7 +2073,12 @@ export class WebsocketController {
                 `[CausalRepoServer] [connectionId: ${connectionId}] Unable to load package.`,
                 p
             );
-            await this.sendError(connectionId, -1, p);
+            await this._messenger.sendMessage([connectionId], {
+                type: 'repo/load_package/response',
+                success: false,
+                requestId: event.requestId,
+                ...p,
+            });
             return;
         }
         if (p.auxFile.success === false) {
@@ -2081,6 +2096,8 @@ export class WebsocketController {
         });
 
         if (fileResponse.status >= 300) {
+            console.error('[CausalRepoServer] Unable to load package file.');
+            // await this.sendError(connectionId, )
             // Failed
             return;
         }
@@ -2094,22 +2111,32 @@ export class WebsocketController {
                 `[CausalRepoServer] [connectionId: ${connectionId}] Unable to parse package file.`,
                 packageData
             );
-            await this.sendError(connectionId, -1, {
+            // await this.sendError(connectionId, -1, {
+            //     success: false,
+            //     errorCode: 'invalid_request',
+            //     errorMessage: 'The package file could not be parsed.',
+            // });
+            await this._messenger.sendMessage([connectionId], {
+                type: 'repo/load_package/response',
                 success: false,
+                requestId: event.requestId,
                 errorCode: 'invalid_request',
-                errorMessage: 'The package file could not be parsed.',
+                errorMessage:
+                    'The package file could not be parsed. It must be valid JSON.',
             });
             return;
         }
 
-        const parsed = STORED_AUX_SCHEMA.safeParse(packageData);
+        const parsed = STORED_AUX_SCHEMA.safeParse(packageData.value);
         if (parsed.success === false) {
             console.error(
                 `[CausalRepoServer] [connectionId: ${connectionId}] Unable to parse package file.`,
                 packageData
             );
-            await this.sendError(connectionId, -1, {
+            await this._messenger.sendMessage([connectionId], {
+                type: 'repo/load_package/response',
                 success: false,
+                requestId: event.requestId,
                 errorCode: 'invalid_request',
                 errorMessage: 'The package file could not be parsed.',
                 issues: parsed.error.issues,
@@ -2141,6 +2168,12 @@ export class WebsocketController {
             branch,
             updates: updates,
             timestamps: timestamps,
+        });
+
+        await this._messenger.sendMessage([connectionId], {
+            type: 'repo/load_package/response',
+            success: true,
+            requestId: event.requestId,
         });
     }
 

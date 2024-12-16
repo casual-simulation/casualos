@@ -61,6 +61,21 @@ describe('constructInitializationUpdate()', () => {
             }),
         });
     });
+
+    it('should construct the same update when given the same bots', async () => {
+        const action = createInitializationUpdate([
+            createBot('test1', {
+                abc: 'def',
+            }),
+            createBot('test2', {
+                num: 123,
+            }),
+        ]);
+
+        const update = constructInitializationUpdate(action);
+
+        expect(update.update).toMatchSnapshot();
+    });
 });
 
 describe('getStateFromUpdates()', () => {

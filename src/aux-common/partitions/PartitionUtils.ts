@@ -33,6 +33,7 @@ export function constructInitializationUpdate(
     const partition = new YjsPartitionImpl({
         type: 'yjs',
     });
+    partition.doc.clientID = 0;
 
     let instUpdate: InstUpdate;
     partition.doc.on('update', (update: Uint8Array) => {

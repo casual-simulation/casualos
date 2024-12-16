@@ -14,6 +14,7 @@ import {
     botRemoved,
     StoredAux,
     getInstStateFromUpdates,
+    createInitializationUpdate,
 } from '@casual-simulation/aux-common/bots';
 import { createBot } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { v4 as uuid } from 'uuid';
@@ -47,6 +48,7 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
+    constructInitializationUpdate,
     merge,
 } from '@casual-simulation/aux-common';
 import { getStateFromUpdates } from '@casual-simulation/aux-common';
@@ -142,7 +144,8 @@ describe('WebsocketController', () => {
                 services.policies,
                 services.configStore,
                 services.store,
-                services.store
+                services.store,
+                services.packageVersions
             );
 
             uuidMock.mockReturnValueOnce('userId');
@@ -7137,7 +7140,7 @@ describe('WebsocketController', () => {
             });
         });
 
-        describe('repo/load_package', () => {
+        describe.only('repo/load_package', () => {
             async function recordPackage(
                 recordName: string,
                 address: string,
@@ -7145,6 +7148,16 @@ describe('WebsocketController', () => {
                 key: PackageRecordVersionKey,
                 aux: StoredAux
             ) {
+                const r = await services.recordsStore.getRecordByName(
+                    recordName
+                );
+                if (!r) {
+                    await services.records.createRecord({
+                        recordName,
+                        userId,
+                        ownerId: userId,
+                    });
+                }
                 await services.packagesStore.createItem(recordName, {
                     address: address,
                     markers,
@@ -7236,6 +7249,7 @@ describe('WebsocketController', () => {
 
                 await server.loadPackage(serverConnectionId, {
                     type: 'repo/load_package',
+                    requestId: 1,
                     recordName,
                     inst,
                     package: {
@@ -7245,10 +7259,13 @@ describe('WebsocketController', () => {
                     },
                 });
 
-                expect(messenger.getEvents(serverConnectionId)).toEqual([
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(1)
+                ).toEqual([
                     {
                         type: 'repo/load_package/response',
                         success: true,
+                        requestId: 1,
                     },
                 ]);
 
@@ -7272,6 +7289,222 @@ describe('WebsocketController', () => {
                         abc: 'def',
                     }),
                 });
+
+                // should be an initialization update
+                const expectedUpdate = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('test', {
+                            abc: 'def',
+                        }),
+                    ])
+                ).update;
+
+                expect(updates.updates).toEqual([expectedUpdate]);
+            });
+
+            it('should support version 2 states', async () => {
+                const updates = [
+                    constructInitializationUpdate(
+                        createInitializationUpdate([
+                            createBot('test', {
+                                abc: 'test123',
+                            }),
+                        ])
+                    ),
+                ];
+                await recordPackage(
+                    recordName,
+                    'public2',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 2,
+                        updates,
+                    }
+                );
+
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken: connectionToken,
+                });
+
+                await server.loadPackage(serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 1,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public2',
+                        key: version(1),
+                    },
+                });
+
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/load_package/response',
+                        success: true,
+                        requestId: 1,
+                    },
+                ]);
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        instUpdates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'test123',
+                    }),
+                });
+
+                expect(instUpdates.updates).toEqual(
+                    updates.map((u) => u.update)
+                );
+            });
+
+            it('should load the package as the current user', async () => {
+                await recordPackage(
+                    recordName,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+
+                await server.login(serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken: connectionToken,
+                });
+
+                await server.loadPackage(serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 1,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'private',
+                        key: version(1),
+                    },
+                });
+
+                expect(
+                    messenger.getMessages(serverConnectionId).slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/load_package/response',
+                        success: true,
+                        requestId: 1,
+                    },
+                ]);
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        instUpdates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+            });
+
+            it('should return not_authorized if the user is not authorized to read the package', async () => {
+                await recordPackage(
+                    recordName,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+                await connectionStore.saveConnection(device1Info);
+                
+                await server.login(device1Info.serverConnectionId, 1, {
+                    type: 'login',
+                    connectionToken: device1Info.token,
+                });
+
+                await server.loadPackage(device1Info.serverConnectionId, {
+                    type: 'repo/load_package',
+                    requestId: 1,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'private',
+                        key: version(1),
+                    },
+                });
+
+                expect(
+                    messenger
+                        .getMessages(device1Info.serverConnectionId)
+                        .slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/load_package/response',
+                        success: false,
+                        requestId: 1,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'package.version',
+                            resourceId: 'private',
+                            subjectType: 'user',
+                            subjectId: device1Info.userId,
+                            action: 'read',
+                        },
+                    },
+                ]);
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(instUpdates?.updates ?? []).toEqual([]);
             });
         });
 

@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`constructInitializationUpdate() should construct the same update when given the same bots 1`] = `"AQUAACcBBGJvdHMFdGVzdDEBJwAAAANhYmMCBAAAAQNkZWYnAQRib3RzBXRlc3QyASgAAAUDbnVtAX27AQA="`;
