@@ -89,7 +89,7 @@ export function createTestControllers(
         metrics: store,
         messenger: store,
     });
-    const policies = new PolicyController(auth, records, store);
+    const policies = new PolicyController(auth, records, store, store);
     const files = new FileRecordsController({
         config: store,
         metrics: store,

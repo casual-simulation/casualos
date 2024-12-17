@@ -99,6 +99,7 @@ import {
     SubjectType,
     PrivacyFeatures,
     ACCOUNT_MARKER,
+    Entitlement,
 } from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
@@ -126,6 +127,7 @@ import {
     BranchRecord,
     BranchRecordWithInst,
     CurrentUpdates,
+    GrantedPackageEntitlement,
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
@@ -211,6 +213,7 @@ export class MemoryStore
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+    private _grantedPackageEntitlements: GrantedPackageEntitlement[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
@@ -1162,6 +1165,43 @@ export class MemoryStore
             resourceAssignments,
             markerAssignments,
         };
+    }
+
+    async saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void> {
+        const existingIndex = this._grantedPackageEntitlements.findIndex(
+            (e) => e.id === grantedEntitlement.id
+        );
+
+        if (existingIndex >= 0) {
+            this._grantedPackageEntitlements[existingIndex] = {
+                ...grantedEntitlement,
+            };
+        } else {
+            this._grantedPackageEntitlements.push({
+                ...grantedEntitlement,
+            });
+        }
+    }
+
+    async listGrantedEntitlementsByFeatureAndUserId(
+        recordName: string | null,
+        inst: string,
+        feature: Entitlement['feature'],
+        userId: string
+    ): Promise<GrantedPackageEntitlement[]> {
+        const loadedPackages = await this.listLoadedPackages(recordName, inst);
+        const grantedEntitlements = loadedPackages.flatMap((p) =>
+            this._grantedPackageEntitlements.filter(
+                (e) =>
+                    e.userId === userId &&
+                    e.feature === feature &&
+                    e.packageRecordName === p.packageRecordName &&
+                    e.packageAddress === p.packageAddress
+            )
+        );
+        return grantedEntitlements;
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {

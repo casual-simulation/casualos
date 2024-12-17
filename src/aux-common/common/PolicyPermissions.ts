@@ -426,7 +426,8 @@ export interface Entitlement {
         | 'notification'
         | 'package'
         | 'permissions'
-        | 'webhooks';
+        | 'webhook'
+        | 'ai';
 
     /**
      * The scope of the entitlement.
@@ -458,6 +459,7 @@ export const ENTITLEMENT_VALIDATION = z.object({
         'package',
         'permissions',
         'webhooks',
+        'ai',
     ]),
     scope: z.enum(['personal', 'owned', 'studio', 'shared', 'designated']),
     designatedRecords: z.array(z.string()).optional(),

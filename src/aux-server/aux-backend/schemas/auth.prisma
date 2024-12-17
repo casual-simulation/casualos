@@ -579,6 +579,9 @@ model GrantedPackageEntitlement {
     // The scope of the entitlement
     scope String @db.String(32)
 
+    // The time that the entitlement grant expires
+    expireTime DateTime
+
     // The records that were designated by the entitlement
     designatedRecords String[]
 
@@ -769,9 +772,9 @@ model LoadedPackage {
     packageVersion PackageRecordVersion @relation(fields: [packageRecordName, packageAddress, packageMajor, packageMinor, packagePatch, packageTag], references: [recordName, address, major, minor, patch, tag], onDelete: Cascade, map: "LoadedPackage_packageVersion_fkey1")
 
     // The inst that the package was loaded into
-    instRecordName String @db.String(128)
+    instRecordName String? @db.String(128)
     instName String @db.String(128)
-    inst InstRecord @relation(fields: [instRecordName, instName], references: [recordName, name], onDelete: Cascade, map: "LoadedPackage_inst_fkey1")
+    inst InstRecord? @relation(fields: [instRecordName, instName], references: [recordName, name], onDelete: Cascade, map: "LoadedPackage_inst_fkey1")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

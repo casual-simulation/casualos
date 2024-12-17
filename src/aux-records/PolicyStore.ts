@@ -7,6 +7,7 @@ import {
     ResourceKinds,
     SubjectType,
     PrivacyFeatures,
+    Entitlement,
 } from '@casual-simulation/aux-common';
 import { UserRole } from './AuthStore';
 
