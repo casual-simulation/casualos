@@ -319,6 +319,64 @@ export interface GenericTimeKeys {
     updatedAtMs: DateMS;
 }
 
+/** Provides an extensible interface for commonly used Date markers used by the database (prisma) */
+export interface GenericTimeKeysDB {
+    /** The date at which the entity was created */
+    createdAt: Date;
+    /** The date at which the entity was last updated */
+    updatedAt: Date;
+}
+
+/**
+ * A Generic utility type which switches the time keys of a type M to either GenericTimeKeys or GenericTimeKeysDB
+ */
+export type UseTimeKeys<
+    M,
+    Expects = GenericTimeKeys | GenericTimeKeysDB
+> = Expects extends GenericTimeKeysDB
+    ? Omit<M, keyof GenericTimeKeys> & GenericTimeKeysDB
+    : Omit<M, keyof GenericTimeKeysDB> & GenericTimeKeys;
+
+/**
+ * A Generic utility type which effectively coerces type T to its primitive counterpart
+ */
+export type RootType<T> = T extends string
+    ? string
+    : T extends number
+    ? number
+    : T extends boolean
+    ? boolean
+    : T extends bigint
+    ? bigint
+    : T extends symbol
+    ? symbol
+    : T extends null
+    ? null
+    : T extends undefined
+    ? undefined
+    : T extends object
+    ? T extends Array<infer U>
+        ? RootType<U>[]
+        : T
+    : never;
+
+/**
+ * A Generic utility type which expands the functionality of RootType to unions
+ */
+export type ReduceUnion<T> = T extends any ? RootType<T> : never;
+
+/**
+ * A Generic utility type which reduces the keys of a type T to their primitive types
+ * * This is useful for converting complex types to their primitive counterparts
+ * @template T The type to reduce the keys of
+ * @example
+ * type X = { a: { x: 'literal0' | 'literal1'; y: 0 | 5, z: true | false }; b: { x: string; y: number, z: boolean } };
+ * type Y = ReduceKeysToPrimitives<X>; // { a: { x: string; y: number, z: boolean }; b: { x: string; y: number, z: boolean } }
+ */
+export type ReduceKeysToPrimitives<T> = {
+    [K in keyof T]: ReduceUnion<T[K]>;
+};
+
 /**
  * A Generic utility type which extracts id's as a union of their keys from a given type T
  * @template T The type to extract id's from

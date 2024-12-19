@@ -1,36 +1,20 @@
-import {
+import type {
     AuthUser,
-    XpAccount,
-    XpAccountEntry,
     XpContract,
     XpInvoice,
     XpStore,
     XpUser,
+    SuccessResult,
+    UseTimeKeys,
+    GenericTimeKeysDB,
 } from '@casual-simulation/aux-records';
-import { SuccessResult } from '@casual-simulation/aux-records/TypeUtils';
 import {
     PrismaClient,
     DataRecord as PrismaDataRecord,
     Prisma,
 } from './generated';
-
-/**
- * A helper function that runs the given function and returns null if an error occurs.
- * @param fn The function to run.
- * * Useful for database operations that may fail due to invalid input.
- * * Still be wary of cases where invalid input could be malicious as this could be used to hide errors.
- */
-async function noThrowNull<Fn extends (...args: any[]) => any>(
-    fn: Fn,
-    ...args: Parameters<Fn>
-): Promise<ReturnType<Fn> | null> {
-    try {
-        return await fn(...args);
-    } catch (error) {
-        console.warn(error);
-        return null;
-    }
-}
+import { noThrowNull } from './Utils';
+import type { Account } from 'tigerbeetle-node';
 
 export class PrismaXpStore implements XpStore {
     private _client: PrismaClient;
@@ -39,15 +23,8 @@ export class PrismaXpStore implements XpStore {
         this._client = client;
     }
 
-    getXpAccount: (accountId: XpAccount['id']) => Promise<XpAccount>;
-    getXpAccountEntry: (
-        entryId: XpAccountEntry['id']
-    ) => Promise<XpAccountEntry>;
-    getXpContract: (contractId: XpContract['id']) => Promise<XpContract>;
-    getXpInvoice: (invoiceId: XpInvoice['id']) => Promise<XpInvoice>;
-
     async getXpUserById(id: XpUser['id']) {
-        const pUser = await noThrowNull(this._client.xpUser.findUnique, {
+        const pUser = await noThrowNull(this._client.xpUser.findUnique, null, {
             where: { id },
         });
         return !pUser
@@ -63,7 +40,7 @@ export class PrismaXpStore implements XpStore {
     }
 
     async getXpUserByAuthId(id: AuthUser['id']) {
-        const pUser = await noThrowNull(this._client.xpUser.findUnique, {
+        const pUser = await noThrowNull(this._client.xpUser.findUnique, null, {
             where: { userId: id },
         });
         return !pUser
@@ -78,31 +55,47 @@ export class PrismaXpStore implements XpStore {
               };
     }
 
-    saveXpAccount<T extends 'user' | 'contract' = 'user'>(
-        associationId: T extends 'user' ? XpUser['id'] : XpContract['id'],
-        account: XpAccount
-    ): Promise<SuccessResult> {
-        throw new Error('Method not implemented.');
+    async getXpContract(id: XpContract['id']) {
+        const contract = await noThrowNull(
+            this._client.xpContract.findUnique,
+            null,
+            {
+                where: { id },
+            }
+        );
+        if (!contract) return null;
+        const { createdAt, updatedAt, ...rest } = contract;
+        return {
+            ...rest,
+            createdAtMs: createdAt.getTime(),
+            updatedAtMs: updatedAt.getTime(),
+        };
     }
 
-    async saveXpContract(contract: XpContract, account: XpAccount | null) {
+    async getXpInvoice(id: XpInvoice['id']) {
+        const invoice = await noThrowNull(
+            this._client.xpInvoice.findUnique,
+            null,
+            {
+                where: { id },
+            }
+        );
+        if (!invoice) return null;
+        const { createdAt, updatedAt, ...rest } = invoice;
+        return {
+            ...rest,
+            createdAtMs: createdAt.getTime(),
+            updatedAtMs: updatedAt.getTime(),
+        };
+    }
+
+    async saveXpContract(contract: XpContract) {
         await this._client.xpContract.create({
             data: {
                 id: contract.id,
                 rate: contract.rate,
                 offeredWorth: contract.offeredWorth,
-                ...(account !== null
-                    ? {
-                          account: {
-                              create: {
-                                  id: account.id,
-                                  currency: account.currency,
-                                  createdAt: new Date(account.createdAtMs),
-                                  updatedAt: new Date(account.updatedAtMs),
-                              },
-                          },
-                      }
-                    : {}),
+                accountId: contract.accountId,
                 issuer: {
                     connect: {
                         id: contract.issuerUserId,
@@ -124,32 +117,68 @@ export class PrismaXpStore implements XpStore {
         });
     }
 
-    async saveXpUserWithAccount(user: XpUser, account: XpAccount) {
-        await this._client.xpUser.create({
+    async updateXpContract(
+        id: XpContract['id'],
+        config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
+    ): ReturnType<XpStore['updateXpContract']> {
+        /**
+         * directConf is the configuration object without properties which need
+         * additional processing before being passed to the update function.
+         */
+        const { holdingUserId, issuerUserId, updatedAtMs, ...directConf } =
+            config;
+        const contract = await this._client.xpContract.update({
+            where: { id },
             data: {
-                id: user.id,
-                account: {
-                    create: {
-                        id: account.id,
-                        currency: account.currency,
-                        createdAt: new Date(account.createdAtMs),
-                        updatedAt: new Date(account.updatedAtMs),
-                    },
-                },
-                user: {
+                ...directConf,
+                ...(config.holdingUserId !== null
+                    ? {
+                          holdingUser: {
+                              connect: {
+                                  id: config.holdingUserId,
+                              },
+                          },
+                      }
+                    : {}),
+                ...(config.issuerUserId !== null
+                    ? { issuer: { connect: { id: config.issuerUserId } } }
+                    : {}),
+                updatedAt: new Date(config.updatedAtMs),
+            },
+        });
+        const { createdAt, updatedAt, ...rest } = contract;
+        return {
+            success: true,
+            contract: {
+                ...rest,
+                createdAtMs: createdAt.getTime(),
+                updatedAtMs: updatedAt.getTime(),
+            },
+        };
+    }
+
+    async saveXpInvoice(invoice: XpInvoice) {
+        await this._client.xpInvoice.create({
+            data: {
+                id: invoice.id,
+                amount: invoice.amount,
+                contract: {
                     connect: {
-                        id: user.userId,
+                        id: invoice.contractId,
                     },
                 },
-                requestedRate: user.requestedRate,
-                createdAt: new Date(user.createdAtMs),
-                updatedAt: new Date(user.updatedAtMs),
+                note: invoice.note,
+                status: invoice.status,
+                transactionId: invoice.transactionId,
+                voidReason: invoice.voidReason,
+                createdAt: new Date(invoice.createdAtMs),
+                updatedAt: new Date(invoice.updatedAtMs),
             },
         });
     }
 
     async saveXpUser(id: XpUser['id'], user: XpUser) {
-        const upsert = await this._client.xpUser.upsert({
+        await this._client.xpUser.upsert({
             where: { id },
             create: {
                 id,
@@ -165,6 +194,5 @@ export class PrismaXpStore implements XpStore {
                 updatedAt: new Date(user.updatedAtMs),
             },
         });
-        return { success: upsert ? true : false };
     }
 }

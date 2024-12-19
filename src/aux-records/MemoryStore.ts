@@ -149,14 +149,7 @@ import {
 } from './SystemNotificationMessenger';
 import { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
-import {
-    XpAccount,
-    XpAccountEntry,
-    XpContract,
-    XpInvoice,
-    XpStore,
-    XpUser,
-} from './XpStore';
+import { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
 import { SuccessResult } from './TypeUtils';
 
 export interface MemoryConfiguration {
@@ -224,11 +217,8 @@ export class MemoryStore
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
     private _xpUsers: Map<XpUser['id'], XpUser> = new Map();
-    private _xpAccounts: Map<XpAccount['id'], XpAccount> = new Map();
     private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
     private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
-    private _xpAccountEntries: Map<XpAccountEntry['id'], XpAccountEntry> =
-        new Map();
 
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
@@ -368,36 +358,34 @@ export class MemoryStore
         this.roleAssignments = {};
     }
 
-    async saveXpAccount(
-        associationId: XpUser['id'] | XpContract['id'],
-        account: XpAccount
-    ): Promise<SuccessResult> {
-        this._xpAccounts.set(associationId, account);
-        return {
-            success: true,
-        };
-    }
-
-    async saveXpUserWithAccount(user: XpUser, account: XpAccount) {
-        this._xpUsers.set(user.id, user);
-        this._xpAccounts.set(account.id, account);
-    }
-
-    async saveXpUser(id: XpUser['id'], user: XpUser): Promise<SuccessResult> {
+    async saveXpUser(id: XpUser['id'], user: XpUser): Promise<void> {
         this._xpUsers.set(id, user);
+    }
+
+    async saveXpContract(contract: XpContract): Promise<void> {
+        this._xpContracts.set(contract.id, contract);
+    }
+
+    async updateXpContract(
+        id: XpContract['id'],
+        config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
+    ): ReturnType<XpStore['updateXpContract']> {
+        const contract = this._xpContracts.get(id);
+        if (!contract)
+            throw new Error(`Contract with id ${id} not found in memory store`);
+        for (const key in config) {
+            if (config[key as keyof typeof config] !== undefined) {
+                (contract as any)[key] = config[key as keyof typeof config];
+            }
+        }
         return {
             success: true,
+            contract: cloneDeep(contract),
         };
     }
 
-    async saveXpContract(
-        contract: XpContract,
-        account: XpAccount | null
-    ): Promise<void> {
-        this._xpContracts.set(contract.id, contract);
-        if (account !== null) {
-            this._xpAccounts.set(account.id, account);
-        }
+    async saveXpInvoice(invoice: XpInvoice): Promise<void> {
+        this._xpInvoices.set(invoice.id, invoice);
     }
 
     async getXpUserByAuthId(id: AuthUser['id']): Promise<XpUser> {
@@ -409,18 +397,6 @@ export class MemoryStore
 
     async getXpUserById(id: XpUser['id']): Promise<XpUser> {
         return cloneDeep(this._xpUsers.get(id) ?? undefined);
-    }
-
-    async getXpAccount(
-        associationId: XpUser['id'] | XpContract['id']
-    ): Promise<XpAccount> {
-        return cloneDeepNull(this._xpAccounts.get(associationId) ?? undefined);
-    }
-
-    async getXpAccountEntry(
-        entryId: XpAccountEntry['id']
-    ): Promise<XpAccountEntry> {
-        return cloneDeepNull(this._xpAccountEntries.get(entryId) ?? undefined);
     }
 
     async getXpContract(contractId: XpContract['id']): Promise<XpContract> {
