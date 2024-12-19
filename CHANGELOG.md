@@ -2,7 +2,7 @@
 
 ## V3.3.15
 
-#### Date TBD
+#### Date: TBD
 
 ### :rocket: Features
 
