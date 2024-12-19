@@ -45,7 +45,7 @@ jobs:
               run: |
                   npm run build
             - name: Publish Master NPM Packages
-              if: ${{ github.ref == 'refs/heads/master' }}
+              if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/') }}
               run: |
                   npm whoami
                   echo "Publishing NPM Packages..."
@@ -63,7 +63,7 @@ jobs:
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
             - name: Publish Alpha NPM Packages
-              if: ${{ github.ref != 'refs/heads/master' }}
+              if: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/heads/release/') }}
               run: |
                   npm whoami
                   echo "Publishing NPM Packages..."
