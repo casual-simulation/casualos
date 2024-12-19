@@ -834,6 +834,44 @@ const telemetrySchema = z.object({
         .default({}),
 });
 
+const financialInterfaceSchema = z
+    .discriminatedUnion('type', [
+        z
+            .object({
+                type: z.literal('tigerbeetle'),
+                config: z.object({
+                    clusterId: z
+                        .bigint({ coerce: true })
+                        .positive('Cluster ID must be positive.')
+                        .describe('The cluster ID.'),
+                    replicaAddresses: z
+                        .array(
+                            z
+                                .string()
+                                .min(1)
+                                .describe(
+                                    'An address (or port if local) to a replica of a cluster.'
+                                )
+                        )
+                        .min(1, 'At least one replica address is required.')
+                        .describe(
+                            "The addresses of the provided cluster's replicas."
+                        ),
+                }),
+            })
+            .describe('The TigerBeetle financial interface.'),
+        z
+            .object({
+                type: z.literal('_disabled'),
+            })
+            .describe(
+                'The financial interface is explicitly marked as disabled; this is the default behavior. Serves to provide an optional placeholder for financial interface configuration.'
+            ),
+    ])
+    .describe(
+        'The financial interface that should be used. If omitted, then financial features provided by said interface will be disabled.'
+    );
+
 const rekognitionSchema = z.object({
     moderation: z.object({
         files: z.object({
@@ -1073,6 +1111,12 @@ export const serverConfigSchema = z.object({
     telemetry: telemetrySchema
         .describe(
             'Options for configuring telemetry. If omitted, then telemetry will not be enabled.'
+        )
+        .optional(),
+
+    financialFeatures: financialInterfaceSchema
+        .describe(
+            'Financial Interface configuration options. If omitted, then financial features will be disabled.'
         )
         .optional(),
 

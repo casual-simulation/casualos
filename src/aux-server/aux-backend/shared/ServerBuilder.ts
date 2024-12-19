@@ -52,6 +52,7 @@ import {
     WebPushInterface,
     XpStore,
     XpController,
+    FinancialInterface,
 } from '@casual-simulation/aux-records';
 import {
     RekognitionModerationJobProvider,
@@ -194,6 +195,8 @@ import { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
 import { PrismaXpStore } from 'aux-backend/prisma/PrismaXpStore';
+import { TigerBeetleFinancialInterface } from 'aux-backend/tigerbeetle';
+import { createClient } from 'tigerbeetle-node';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -295,6 +298,7 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _xpStore: XpStore;
     private _xpController: XpController;
+    private _financialInterface: FinancialInterface;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -1257,6 +1261,44 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useFinancialInterface(
+        //TODO: Refactor name
+        options: Pick<ServerConfig, 'financialFeatures'> = this._options
+    ): this {
+        if (!options.financialFeatures) {
+            console.warn(
+                '[ServerBuilder] Financial interface disabled. Lacking configuration.'
+            );
+            return this;
+        }
+        if (options.financialFeatures.type === '_disabled') {
+            console.log(
+                '[ServerBuilder] Financial interface explicitly disabled.'
+            );
+            return this;
+        }
+
+        /**
+         * ? Currently only TigerBeetle is supported as a financial interface.
+         * ! Implement when multiple financial interfaces are available.
+         * switch (options.financialFeatures.type) {
+         *   case 'tigerbeetle':
+         *       break;
+         * }
+         */
+
+        console.log('[ServerBuilder] Using financial interface: TigerBeetle.');
+        this._financialInterface = new TigerBeetleFinancialInterface({
+            client: createClient({
+                cluster_id: options.financialFeatures.config.clusterId,
+                replica_addresses:
+                    options.financialFeatures.config.replicaAddresses,
+            }),
+        });
+
+        return this;
+    }
+
     useAI(
         options: Pick<
             ServerConfig,
@@ -1590,8 +1632,12 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
-        if (!this._xpStore) {
-            throw new Error('An xp store must be configured!');
+        if (!this._xpStore || !this._financialInterface) {
+            console.warn(
+                `[ServerBuilder] Not using XP API. The following required are missing in configuration: ${
+                    !this._financialInterface ? 'Financial Interface, ' : ''
+                }${!this._xpStore ? 'XP Store' : ''}`
+            );
         }
 
         if (!this._rateLimitController) {
@@ -1725,11 +1771,12 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
-        if (this._xpStore) {
+        if (this._xpStore && this._financialInterface) {
             this._xpController = new XpController({
                 xpStore: this._xpStore,
                 authController: this._authController,
                 authStore: this._authStore,
+                financialInterface: this._financialInterface,
             });
         }
 

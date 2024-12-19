@@ -191,6 +191,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.usePrismaAndRedisInstRecords();
     }
 
+    if (config.financialFeatures) {
+        builder.useFinancialInterface();
+    }
+
     if (config.ai) {
         builder.useAI();
     }
