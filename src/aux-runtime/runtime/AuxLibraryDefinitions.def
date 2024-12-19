@@ -8047,6 +8047,220 @@ interface XpUser {
     updatedAtMs: number;
 }
 
+interface XpContract {
+    /** The id of the account associated with the contract */
+    accountId: XpAccount['id'];
+    /** A description of the contract, may contain useful query meta */
+    description: string | null;
+    /** The id of the user holding the contract */
+    holdingUserId: XpUser['id'];
+    /** The id of the user issuing the contract */
+    issuerUserId: XpUser['id'];
+    /** The rate at which the entirety of the contract is worth */
+    rate: number;
+    /** The quantity of gigs (6 minute intervals) in the contract */
+    gigs: number;
+    /** The status of the contract */
+    status: 'open' | 'closed';
+    /** The date at which the entity was created */
+    createdAtMs: number;
+    /** The date at which the entity was last updated */
+    updatedAtMs: number;
+}
+
+interface XpAccount {
+    /** The unique id of the model item  */
+    id: string;
+    /** The time at which (if) the account was closed */
+    closedTimeMs: number | null;
+    /** The currency of the account */
+    currency:
+        | 'AED'
+        | 'AFN'
+        | 'ALL'
+        | 'AMD'
+        | 'ANG'
+        | 'AOA'
+        | 'ARS'
+        | 'AUD'
+        | 'AWG'
+        | 'AZN'
+        | 'BAM'
+        | 'BBD'
+        | 'BDT'
+        | 'BGN'
+        | 'BHD'
+        | 'BIF'
+        | 'BMD'
+        | 'BND'
+        | 'BOB'
+        | 'BOV'
+        | 'BRL'
+        | 'BSD'
+        | 'BTN'
+        | 'BWP'
+        | 'BYN'
+        | 'BZD'
+        | 'CAD'
+        | 'CDF'
+        | 'CHE'
+        | 'CHF'
+        | 'CHW'
+        | 'CLF'
+        | 'CLP'
+        | 'CNY'
+        | 'COP'
+        | 'COU'
+        | 'CRC'
+        | 'CUC'
+        | 'CUP'
+        | 'CVE'
+        | 'CZK'
+        | 'DJF'
+        | 'DKK'
+        | 'DOP'
+        | 'DZD'
+        | 'EGP'
+        | 'ERN'
+        | 'ETB'
+        | 'EUR'
+        | 'FJD'
+        | 'FKP'
+        | 'GBP'
+        | 'GEL'
+        | 'GHS'
+        | 'GIP'
+        | 'GMD'
+        | 'GNF'
+        | 'GTQ'
+        | 'GYD'
+        | 'HKD'
+        | 'HNL'
+        | 'HTG'
+        | 'HUF'
+        | 'IDR'
+        | 'ILS'
+        | 'INR'
+        | 'IQD'
+        | 'IRR'
+        | 'ISK'
+        | 'JMD'
+        | 'JOD'
+        | 'JPY'
+        | 'KES'
+        | 'KGS'
+        | 'KHR'
+        | 'KMF'
+        | 'KPW'
+        | 'KRW'
+        | 'KWD'
+        | 'KYD'
+        | 'KZT'
+        | 'LAK'
+        | 'LBP'
+        | 'LKR'
+        | 'LRD'
+        | 'LSL'
+        | 'LYD'
+        | 'MAD'
+        | 'MDL'
+        | 'MGA'
+        | 'MKD'
+        | 'MMK'
+        | 'MNT'
+        | 'MOP'
+        | 'MRU'
+        | 'MUR'
+        | 'MVR'
+        | 'MWK'
+        | 'MXN'
+        | 'MXV'
+        | 'MYR'
+        | 'MZN'
+        | 'NAD'
+        | 'NGN'
+        | 'NIO'
+        | 'NOK'
+        | 'NPR'
+        | 'NZD'
+        | 'OMR'
+        | 'PAB'
+        | 'PEN'
+        | 'PGK'
+        | 'PHP'
+        | 'PKR'
+        | 'PLN'
+        | 'PYG'
+        | 'QAR'
+        | 'RON'
+        | 'RSD'
+        | 'RUB'
+        | 'RWF'
+        | 'SAR'
+        | 'SBD'
+        | 'SCR'
+        | 'SDG'
+        | 'SEK'
+        | 'SGD'
+        | 'SHP'
+        | 'SLE'
+        | 'SOS'
+        | 'SRD'
+        | 'SSP'
+        | 'STN'
+        | 'SVC'
+        | 'SYP'
+        | 'SZL'
+        | 'THB'
+        | 'TJS'
+        | 'TMT'
+        | 'TND'
+        | 'TOP'
+        | 'TRY'
+        | 'TTD'
+        | 'TWD'
+        | 'TZS'
+        | 'UAH'
+        | 'UGX'
+        | 'USD'
+        | 'USN'
+        | 'UYI'
+        | 'UYU'
+        | 'UYW'
+        | 'UZS'
+        | 'VED'
+        | 'VES'
+        | 'VND'
+        | 'VUV'
+        | 'WST'
+        | 'XAF'
+        | 'XAG'
+        | 'XAU'
+        | 'XBA'
+        | 'XBB'
+        | 'XBC'
+        | 'XBD'
+        | 'XCD'
+        | 'XDR'
+        | 'XOF'
+        | 'XPD'
+        | 'XPF'
+        | 'XPT'
+        | 'XSU'
+        | 'XTS'
+        | 'XUA'
+        | 'XXX'
+        | 'YER'
+        | 'ZAR'
+        | 'ZMW'
+        | 'ZWG'
+        | 'ZWL';
+    /** The date at which the entity was created */
+    createdAtMs: number;
+    /** The date at which the entity was last updated */
+    updatedAtMs: number;
+}
+
 declare global {
     /**
      * The Bot that this script is running in.
@@ -14712,6 +14926,81 @@ interface Xp {
      * @param userId The id of the auth user to get the xp meta for.
      */
     getUserMeta(userId?: string): Promise<XpUser>;
+    /**
+     * Create a contract between logged in user (yourself) and another user.
+     * @param forUser Search criteria for specifying the user to create the contract with.
+     * @param contract The meta data for the contract
+     */
+    createContract(contractMeta: {
+        /**
+         * Search criteria for specifying the user to create the contract with.
+         * If a string is provided, then it will be used as the userId.
+         */
+        forUser:
+            | {
+                  /**
+                   * The id of the auth user to get the xp meta for.
+                   * (Mutually exclusive with xpId)
+                   */
+                  userId?: string;
+                  /**
+                   * The id of the xp user to get the xp meta for.
+                   * (Mutually exclusive with userId)
+                   */
+                  xpId?: string;
+              }
+            | string;
+        /**
+         * The description of the contract.
+         */
+        description: string;
+        /**
+         * The rate at which each gig (6 minutes of work) will be paid in the smallest unit of currency.
+         * * E.G. In USD: 200 for 200¢ ($2.00 per gig ($2.00/6 minutes) -> ($20.00/hour))
+         * * rate: 200 = 2000¢/hour = $20.00/hour
+         */
+        gigRate: number;
+        /**
+         * The maximum number of gigs that the contract is invoicable for.
+         * * This value multiplied by the rate yeilds the maximum amount that can be invoiced in the account currency's smallest unit.
+         * * 1 gig = 6 minutes of work
+         * * 10 gigs = 1 hour of work
+         * * 100 gigs = 10 hours of work
+         * * 1440 gigs = 1 day (24 hours) of work
+         */
+        gigs: number;
+        /**
+         * The currency that the contract is issued and invoicable in.
+         * * Tip: Use intellisense to find available currency codes!
+         * * E.G. USD, CAD, EUR, JPY, etc.
+         */
+        accountCurrency: XpAccount['currency'];
+    }): Promise<XpContract>;
+    /**
+     * Drafts a contract to be issued later.
+     * @param contract The meta data for the contract
+     */
+    draftContract(contractMeta: {
+        /**
+         * The description of the contract.
+         */
+        description: string;
+        /**
+         * The rate at which each gig (6 minutes of work) will be paid in the smallest unit of currency.
+         * * E.G. In USD: 200 for 200¢ ($2.00 per gig ($2.00/6 minutes -> $20.00/hour))
+         * * rate: 200 = 2000¢/hour = $20.00/hour
+         */
+        gigRate: number;
+        /**
+         * The maximum number of gigs that the contract is invoicable for.
+         * * This value multiplied by the rate yeilds the maximum amount that can be invoiced in the account currency's smallest unit.
+         * * 1 gig = 6 minutes of work
+         * * 10 gigs = 1 hour of work
+         * * 100 gigs = 10 hours of work
+         * * 1440 gigs = 1 day (24 hours) of work
+         */
+        gigs: number;
+    }): Promise<XpContract>;
 }
 
 interface Actions {
