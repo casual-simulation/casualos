@@ -1157,159 +1157,18 @@ model XpUser {
     userId String @unique
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
 
-    accountId String @db.Uuid @unique
-    account XpAccount @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpUser_accountId_fkey1")
+    // The id of the account that the user is associated with
+    accountId BigInt @unique
 
     // The rate at which the user is requested to be paid per gig.
     // Should have the same currency as the account.
     requestedRate Int?
 
-    issuedEvents XpSystemEvent[] @relation()
     issuedContracts XpContract[] @relation("IssuerUser")
     heldContracts XpContract[] @relation("HoldingUser")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-}
-
-// Represents an event that affects the xpExchange system
-// This can be used to track inputs into the system, which will help us track down and reconcile any issues should they arise
-// For example, when a user calls the xpCreateContract procedure, the system will record an event with the type "createContract" and the data being the input and related context.
-model XpSystemEvent {
-    id String @id @db.Uuid
-
-    // The type of the event
-    // Currently there is only one special type of event
-    // - adjustment: An XpSystemEventAdjustment
-    type String
-
-    // The ID of the XpUser that sent the event
-    // Null if the event is not associated with a user
-    xpUserId String? @db.Uuid
-    xpUser XpUser? @relation(fields: [xpUserId], references: [id], onDelete: SetNull, map: "XpEvent_xpUserId_fkey1")
-
-    // The data of the event
-    data Json
-
-    // The time that the event occurred
-    time DateTime
-
-    accountEntries XpAccountEntry[]
-
-    // The adjustment that tracks the adjusting and adjusted events for this event
-    adjustment XpSystemEventAdjustment? @relation()
-
-    // The ID of the adjustment that causes this event to be replaced
-    adjustingEventId String? @db.Uuid
-    adjustingEvent XpSystemEventAdjustment? @relation("AdjustingEvent", fields: [adjustingEventId], references: [id], onDelete: Restrict, map: "XpSystemEventAdjustment_adjustingEventId_fkey1")
-
-    // The ID of the adjustment that causes this event to replace other events
-    adjusterEventId String? @db.Uuid
-    adjusterEvent XpSystemEventAdjustment? @relation("AdjusterEvent", fields: [adjusterEventId], references: [id], onDelete: Restrict, map: "XpSystemEventAdjustment_adjusterEventId_fkey1")
-    
-    // The time the event was created in the system
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-// Represents a special event that is able to make adjustments to a set of events in the system
-// This can be used to correct mistakes in the system, or to make special adjustments to the system
-// This works by identifying a set of events that need to be replaced and a set of events as replacements for the old events
-// The system will then calculate the difference between the old events and the new events and apply the difference to the affected accounts
-model XpSystemEventAdjustment {
-    id String @id @db.Uuid
-    
-    // The event that contains the basic information for the adjustment
-    event XpSystemEvent @relation(fields: [id], references: [id], onDelete: Cascade, map: "XpSystemEventAdjustment_id_fkey1")
-
-    // The list of events that this adjustment replaces
-    oldEvents XpSystemEvent[] @relation("AdjustingEvent")
-
-    // The list of modified events
-    newEvents XpSystemEvent[] @relation("AdjusterEvent")
-
-    // The time the event was created in the system
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-// Represents an account of money that can be used to track entries and transactions
-// The current balance of the account is the sum of all entries
-model XpAccount {
-    id String @id @default(uuid()) @db.Uuid
-
-    entries XpAccountEntry[]
-
-    // The user that the account is for
-    user XpUser?
-
-    // The contract that the account is for
-    contract XpContract?
-
-    // The currency (implementations are expected to support both alphabetic and numeric representations 
-    // e.g. "USD" | "840" ) of transactions in the account (Conforms to ISO 4217)
-    currency String
-
-    // Time that the account was closed
-    // Fail-safe to help prevent making entries for accounts that are closed
-    // (i.e. accounts for closed contracts)
-    closedTime DateTime?
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-// Get current balance
-// SELECT balance FROM XpAccountEntry
-// WHERE accountId = $accountId
-// ORDER BY time DESC
-// LIMIT 1;
-
-// Represents the addition or withdrawl of money from an account
-model XpAccountEntry {
-    id String @id @db.Uuid
-
-    // The ID of the account that the entry affects
-    // Null if the entry is not associated with an account. (this can happen for example when the entry affects an account outside the system)
-    // e.g. null for system entries, or entries that are associated with an account that is outside the system (adding money to a contract for example)
-    accountId String? @db.Uuid
-    account XpAccount? @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpAccountEntry_accountId_fkey1")
-
-    // The number of cents (viable base unit) that were added to the ledger
-    // positive for incoming money (deposits)
-    // negative for outgoing money (withdrawals)
-    amount Int
-
-    // The new balance of the account after the entry was made
-    // This value can be used to quickly calculate the balance of the account
-    // without having to sum all entries.
-    // Be wary of using this value in non-transactional contexts, as in such cases it may not
-    // be in sync with the entries (causing a data state inconsistency introduced via implementation)
-    balance Int
-
-    // The time that the entry was created in the real world
-    time DateTime
-
-    // Entries with the same transaction ID are part of the same transaction
-    // makes it easy to track the flow of money between accounts
-    // IMPORTANT: The amounts of the entries in a transaction should sum up to 0
-    // This means that valid transactions require at least 2 entries (assuming non-zero amounts)
-    transactionId String @db.Uuid
-
-    // A (optional, yet advised) note for the entry
-    note String?
-
-    // The ID of the event that caused the entry to be created
-    systemEventId String @db.Uuid
-    systemEvent XpSystemEvent @relation(fields: [systemEventId], references: [id], onDelete: Restrict, map: "XpAccountEntry_systemEventId_fkey1")
-
-    // The time that the entry was created in the system
-    createdAt DateTime @default(now())
-
-    // The last time the entry was updated
-    updatedAt DateTime @updatedAt
-
-    @@index([transactionId])
 }
 
 // A contract is a promise of work at a certain rate
@@ -1344,10 +1203,8 @@ model XpContract {
     // "closed" - the contract is closed and cannot be invoiced
     status String
 
-    // The account that holds the money allocated to the contract
-    // The account will be instantiated when the contract is opened and a holdingUser is present
-    accountId String? @db.Uuid @unique
-    account XpAccount? @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "XpContract_accountId_fkey1")
+    // The id of the account which holds the money allocated to the contract
+    accountId BigInt? @unique
 
     invoices XpInvoice[]
 
