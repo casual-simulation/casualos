@@ -5318,8 +5318,7 @@ describe('PolicyController', () => {
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
                                         },
-                                        explanation:
-                                            'Inst was granted entitlement.',
+                                        explanation: 'Inst has entitlement.',
                                     });
                                 });
 

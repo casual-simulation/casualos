@@ -165,28 +165,6 @@ export interface InstRecordsStore {
         recordName: string | null,
         inst: string
     ): Promise<LoadedPackage[]>;
-
-    /**
-     * Gets the list of granted entitlements for the given inst and feature.
-     * @param recordName The name of the record that the inst is stored in.
-     * @param inst The inst that the entitlements are granted to.
-     * @param feature The feature that the entitlements are granted for.
-     * @param userId The ID of the user that the entitlements are granted to.
-     */
-    listGrantedEntitlementsByFeatureAndUserId(
-        recordName: string | null,
-        inst: string,
-        feature: Entitlement['feature'],
-        userId: string
-    ): Promise<GrantedPackageEntitlement[]>;
-
-    /**
-     * Saves the given granted entitlement.
-     * @param grantedEntitlement The entitlement that should be saved.
-     */
-    saveGrantedPackageEntitlement(
-        grantedEntitlement: GrantedPackageEntitlement
-    ): Promise<void>;
 }
 
 export interface LoadedPackage {
@@ -212,70 +190,14 @@ export interface LoadedPackage {
     userId: string | null;
 
     /**
-     * The record that the package is stored in.
+     * The ID of the pacakge that was loaded.
      */
-    packageRecordName: string;
+    packageId: string;
 
     /**
-     * The address of the package.
+     * The ID of the package version that was loaded.
      */
-    packageAddress: string;
-
-    /**
-     * The key of the package version.
-     */
-    packageVersionKey: PackageRecordVersionKey;
-}
-
-/**
- * Defines an interface that represents an entitlement that has been granted to a package.
- */
-export interface GrantedPackageEntitlement {
-    /**
-     * The ID of the entitlement.
-     */
-    id: string;
-
-    /**
-     * The ID of the user that granted the entitlement.
-     */
-    userId: string;
-
-    /**
-     * The name of the record that the package is stored in.
-     */
-    packageRecordName: string;
-
-    /**
-     * The address of the package.
-     */
-    packageAddress: string;
-
-    /**
-     * The feature that was granted.
-     */
-    feature: Entitlement['feature'];
-
-    /**
-     * The scope of the feature.
-     */
-    scope: Entitlement['scope'];
-
-    /**
-     * The records that the entitlement requires access to based on its scope.
-     * Empty if the entitlement does not require access to any records.
-     */
-    designatedRecords: string[];
-
-    /**
-     * The unix time that the entitlement expires in miliseconds.
-     */
-    expireTimeMs: number;
-
-    /**
-     * The unix time that the grant was created at in miliseconds.
-     */
-    createdAtMs: number;
+    packageVersionId: string;
 }
 
 export interface StoredUpdates {
