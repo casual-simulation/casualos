@@ -7,10 +7,12 @@ import {
     PackageVersionSubscriptionMetrics,
     PackageRecordVersionKey,
     PackageVersionReview,
+    GetPackageVersionByKeyResult,
 } from './PackageVersionRecordsStore';
 import { SubscriptionFilter } from '../../MetricsStore';
 import { CrudResult, ListSubCrudStoreSuccess } from '../../crud/sub';
-import { orderBy, sortBy } from 'lodash';
+import { isEqual, orderBy, sortBy } from 'lodash';
+import { PackageRecord } from '../PackageRecordsStore';
 
 /**
  * A Memory-based implementation of the PackageRecordsStore.
@@ -23,6 +25,26 @@ export class MemoryPackageVersionRecordsStore
     implements PackageVersionRecordsStore
 {
     private _reviews: PackageVersionReview[] = [];
+
+    async getItemByKey(
+        recordName: string,
+        address: string,
+        key: PackageRecordVersionKey
+    ): Promise<GetPackageVersionByKeyResult> {
+        const bucket = this.getItemRecord(recordName);
+        const arr = bucket?.get(address);
+        const item = arr?.find((i) => isEqual(this.getKey(i), key)) ?? null;
+        const recordItem = (await this.itemStore.getItemByAddress(
+            recordName,
+            address
+        )) as PackageRecord;
+
+        return {
+            item,
+            markers: recordItem?.markers ?? null,
+            packageId: recordItem?.id ?? null,
+        };
+    }
 
     async listReviewsForVersion(
         recordName: string,

@@ -166,19 +166,17 @@ export interface InstRecordsStore {
         inst: string
     ): Promise<LoadedPackage[]>;
 
-    // /**
-    //  * Determines whether the package with the given record name and address is loaded into the given inst.
-    //  * @param recordName The name of the record that the inst is in.
-    //  * @param inst The inst.
-    //  * @param packageRecordName The name of the package record.
-    //  * @param packageAddress The address of the package.
-    //  */
-    // isPackageLoaded(
-    //     recordName: string | null,
-    //     inst: string,
-    //     packageRecordName: string,
-    //     packageAddress: string
-    // ): Promise<boolean>;
+    /**
+     * Determines whether the package with the given ID is loaded into the given inst.
+     * @param recordName The name of the record that the inst is in.
+     * @param inst The inst.
+     * @param packageId The ID of the package.
+     */
+    isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<boolean>;
 }
 
 export interface LoadedPackage {

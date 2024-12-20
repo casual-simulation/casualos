@@ -28,6 +28,10 @@ export class MemorySubCrudRecordsStore<
         return this._store;
     }
 
+    protected get itemStore() {
+        return this._itemStore;
+    }
+
     constructor(store: MemoryStore, itemStore: CrudRecordsStore<CrudRecord>) {
         this._store = store;
         this._itemStore = itemStore;

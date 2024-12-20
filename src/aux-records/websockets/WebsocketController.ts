@@ -75,7 +75,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import {
     AuthorizationContext,
     AuthorizeSubjectFailure,
@@ -2092,30 +2092,25 @@ export class WebsocketController {
         }
 
         const loadedPackageStore = this._instStore;
-        // const loadedPackages: LoadedPackage[] =
-        //     await loadedPackageStore.listLoadedPackages(
-        //         event.recordName,
-        //         event.inst
-        //     );
 
-        // if (
-        //     loadedPackages.some(
-        //         (l) =>
-        //             l.packageRecordName === event.package.recordName &&
-        //             l.packageAddress === p.item.address
-        //     )
-        // ) {
-        //     // Already loaded
-        //     console.log(
-        //         `[CausalRepoServer] [connectionId: ${connectionId}] Package already loaded.`
-        //     );
-        //     await this._messenger.sendMessage([connectionId], {
-        //         type: 'repo/load_package/response',
-        //         success: true,
-        //         requestId: event.requestId,
-        //     });
-        //     return;
-        // }
+        if (
+            await loadedPackageStore.isPackageLoaded(
+                event.recordName,
+                event.inst,
+                p.item.packageId
+            )
+        ) {
+            // Already loaded
+            console.log(
+                `[CausalRepoServer] [connectionId: ${connectionId}] Package already loaded.`
+            );
+            await this._messenger.sendMessage([connectionId], {
+                type: 'repo/load_package/response',
+                success: true,
+                requestId: event.requestId,
+            });
+            return;
+        }
 
         const fileResponse = await fetch(p.auxFile.requestUrl, {
             method: p.auxFile.requestMethod,
@@ -2200,16 +2195,13 @@ export class WebsocketController {
         });
 
         await loadedPackageStore.saveLoadedPackage({
-            id: uuid(),
+            id: uuidv7(),
             recordName: event.recordName,
             inst: event.inst,
 
-            packageId: p.item.id,
+            packageId: p.item.packageId,
             packageVersionId: p.item.id,
 
-            // packageRecordName: event.package.recordName,
-            // packageAddress: p.item.address,
-            // packageVersionKey: p.item.key,
             userId: connection.userId,
         });
 

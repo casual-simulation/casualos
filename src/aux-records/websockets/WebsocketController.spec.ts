@@ -17,7 +17,7 @@ import {
     createInitializationUpdate,
 } from '@casual-simulation/aux-common/bots';
 import { createBot } from '@casual-simulation/aux-common/bots/BotCalculations';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import {
     createYjsPartition,
     YjsPartitionImpl,
@@ -66,6 +66,7 @@ import { address } from 'faker';
 import { formatInstId } from './Utils';
 
 const uuidMock: jest.Mock = <any>uuid;
+const uuidv7Mock: jest.Mock = <any>uuidv7;
 jest.mock('uuid');
 
 console.log = jest.fn();
@@ -101,6 +102,11 @@ const device4Info: DeviceConnection = {
 };
 
 describe('WebsocketController', () => {
+    beforeEach(() => {
+        uuidMock.mockReset();
+        uuidv7Mock.mockReset();
+    });
+
     const subCases: [string, SubscriptionConfiguration | null | undefined][] = [
         ['subscription config', undefined],
         ['no subscription config', null],
@@ -7142,7 +7148,7 @@ describe('WebsocketController', () => {
             });
         });
 
-        describe('repo/load_package', () => {
+        describe.only('repo/load_package', () => {
             async function recordPackage(
                 recordName: string,
                 address: string,
@@ -7161,6 +7167,7 @@ describe('WebsocketController', () => {
                     });
                 }
                 await services.packagesStore.createItem(recordName, {
+                    id: address,
                     address: address,
                     markers,
                 });
@@ -7168,6 +7175,9 @@ describe('WebsocketController', () => {
                 const json = JSON.stringify(aux);
                 const sha256 = getHash(json);
 
+                uuidv7Mock.mockReturnValueOnce(
+                    `${address}@${key.major}.${key.minor}.${key.patch}`
+                );
                 const result = await services.packageVersions.recordItem({
                     recordKeyOrRecordName: recordName,
                     userId: userId,
@@ -7186,6 +7196,7 @@ describe('WebsocketController', () => {
                     },
                     instances: [],
                 });
+                uuidv7Mock.mockReset();
 
                 if (!result.success) {
                     console.error(result);
@@ -7244,7 +7255,7 @@ describe('WebsocketController', () => {
             });
 
             it('should load the package into the default branch of the inst', async () => {
-                uuidMock.mockReturnValueOnce('packageId');
+                uuidv7Mock.mockReturnValueOnce('packageId');
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken: connectionToken,
@@ -7300,16 +7311,15 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
-                        packageRecordName: recordName,
-                        packageAddress: 'public',
-                        packageVersionKey: version(1),
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
                         userId: userId,
                     },
                 ]);
             });
 
             it('should do nothing if the package is already loaded', async () => {
-                uuidMock.mockReturnValueOnce('packageId');
+                uuidv7Mock.mockReturnValueOnce('packageId');
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken: connectionToken,
@@ -7371,9 +7381,8 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
-                        packageRecordName: recordName,
-                        packageAddress: 'public',
-                        packageVersionKey: version(1),
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
                         userId: userId,
                     },
                 ]);
@@ -7395,7 +7404,7 @@ describe('WebsocketController', () => {
                     }
                 );
 
-                uuidMock
+                uuidv7Mock
                     .mockReturnValueOnce('packageId')
                     .mockReturnValueOnce('packageId2');
                 await server.login(serverConnectionId, 1, {
@@ -7473,25 +7482,22 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
-                        packageRecordName: recordName,
-                        packageAddress: 'public',
-                        packageVersionKey: version(1),
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
                         userId: userId,
                     },
                     {
                         id: 'packageId2',
                         recordName,
                         inst,
-                        packageRecordName: recordName,
-                        packageAddress: 'public2',
-                        packageVersionKey: version(1),
+                        packageId: 'public2',
+                        packageVersionId: 'public2@1.0.0',
                         userId: userId,
                     },
                 ]);
             });
 
             it('should support version 2 states', async () => {
-                uuidMock.mockReturnValueOnce('packageId');
                 const updates = [
                     constructInitializationUpdate(
                         createInitializationUpdate([
@@ -7512,6 +7518,7 @@ describe('WebsocketController', () => {
                     }
                 );
 
+                uuidv7Mock.mockReturnValueOnce('packageId');
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken: connectionToken,
@@ -7571,16 +7578,14 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
-                        packageRecordName: recordName,
-                        packageAddress: 'public2',
-                        packageVersionKey: version(1),
+                        packageId: 'public2',
+                        packageVersionId: 'public2@1.0.0',
                         userId: userId,
                     },
                 ]);
             });
 
             it('should load the package as the current user', async () => {
-                uuidMock.mockReturnValueOnce('packageId');
                 await recordPackage(
                     recordName,
                     'private',
@@ -7602,6 +7607,7 @@ describe('WebsocketController', () => {
                     ]),
                 };
 
+                uuidv7Mock.mockReturnValueOnce('packageId');
                 await server.login(serverConnectionId, 1, {
                     type: 'login',
                     connectionToken: connectionToken,
@@ -7657,9 +7663,8 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
-                        packageRecordName: recordName,
-                        packageAddress: 'private',
-                        packageVersionKey: version(1),
+                        packageId: 'private',
+                        packageVersionId: 'private@1.0.0',
                         userId: userId,
                     },
                 ]);

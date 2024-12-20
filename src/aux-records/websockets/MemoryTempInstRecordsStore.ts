@@ -303,4 +303,13 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
             (p) => p.recordName === recordName && p.inst === inst
         );
     }
+
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<boolean> {
+        const loaded = await this.listLoadedPackages(recordName, inst);
+        return loaded.some((l) => l.packageId === packageId);
+    }
 }

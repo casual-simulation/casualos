@@ -3023,6 +3023,15 @@ export class MemoryStore
         return loadedPackages;
     }
 
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<boolean> {
+        const loaded = await this.listLoadedPackages(recordName, inst);
+        return loaded.some((p) => p.packageId === packageId);
+    }
+
     async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
         const r = await this._getInstRecord(inst.recordName);
 

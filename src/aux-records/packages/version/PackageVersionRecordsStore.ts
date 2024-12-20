@@ -13,6 +13,7 @@ import {
 import { SubscriptionFilter } from '../../MetricsStore';
 import {
     CrudResult,
+    GetSubCrudItemResult,
     SubCrudRecord,
     SubCrudRecordsStore,
 } from '../../crud/sub/SubCrudRecordsStore';
@@ -23,6 +24,18 @@ import { parseVersionNumber } from '../../Utils';
  */
 export interface PackageVersionRecordsStore
     extends SubCrudRecordsStore<PackageRecordVersionKey, PackageRecordVersion> {
+    /**
+     * Reads the item with the given address. Always returns an object with the item and any markers that are related to the item.
+     * @param recordName The name of the record that the item lives in.
+     * @param address The address of the record item.
+     * @param key The key of the item to read.
+     */
+    getItemByKey(
+        recordName: string,
+        address: string,
+        key: PackageRecordVersionKey
+    ): Promise<GetPackageVersionByKeyResult>;
+
     /**
      * Gets the item metrics for the subscription of the given user or studio.
      * @param filter The filter to use.
@@ -143,6 +156,11 @@ export interface PackageRecordVersion
 }
 
 export interface PackageRecordVersionWithMetadata extends PackageRecordVersion {
+    /**
+     * The ID of the package that the version is stored under.
+     */
+    packageId: string;
+
     /**
      * Whether the package version has been approved.
      * If true, then the package either has been manually approved or does not require approval.
@@ -329,6 +347,14 @@ export interface PackageVersionReview {
      * The unix time in miliseconds that the review was updated.
      */
     updatedAtMs: number;
+}
+
+export interface GetPackageVersionByKeyResult
+    extends GetSubCrudItemResult<PackageRecordVersion> {
+    /**
+     * The ID of the package that the version is stored under.
+     */
+    packageId: string;
 }
 
 export function getPackageVersionKey(

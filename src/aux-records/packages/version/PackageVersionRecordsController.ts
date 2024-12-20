@@ -425,6 +425,7 @@ export class PackageVersionRecordsController {
 
             const item: PackageRecordVersionWithMetadata = {
                 ...result.item,
+                packageId: result.packageId,
                 approved: true,
                 approvalType: 'normal',
             };

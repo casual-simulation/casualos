@@ -437,14 +437,8 @@ describe('SplitInstRecordsStore', () => {
                 id: 'package',
                 recordName: null,
                 inst: 'test',
-                packageRecordName: 'packageRecord',
-                packageAddress: 'address',
-                packageVersionKey: {
-                    major: 1,
-                    minor: 0,
-                    patch: 0,
-                    tag: '',
-                },
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
                 userId: 'user',
             });
 
@@ -453,14 +447,8 @@ describe('SplitInstRecordsStore', () => {
                     id: 'package',
                     recordName: null,
                     inst: 'test',
-                    packageRecordName: 'packageRecord',
-                    packageAddress: 'address',
-                    packageVersionKey: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
                     userId: 'user',
                 },
             ]);
@@ -469,14 +457,8 @@ describe('SplitInstRecordsStore', () => {
                     id: 'package',
                     recordName: null,
                     inst: 'test',
-                    packageRecordName: 'packageRecord',
-                    packageAddress: 'address',
-                    packageVersionKey: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
                     userId: 'user',
                 },
             ]);
@@ -488,14 +470,8 @@ describe('SplitInstRecordsStore', () => {
                 id: 'package',
                 recordName: 'record',
                 inst: 'test',
-                packageRecordName: 'packageRecord',
-                packageAddress: 'address',
-                packageVersionKey: {
-                    major: 1,
-                    minor: 0,
-                    patch: 0,
-                    tag: '',
-                },
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
                 userId: 'user',
             });
 
@@ -504,14 +480,8 @@ describe('SplitInstRecordsStore', () => {
                     id: 'package',
                     recordName: 'record',
                     inst: 'test',
-                    packageRecordName: 'packageRecord',
-                    packageAddress: 'address',
-                    packageVersionKey: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
                     userId: 'user',
                 },
             ]);
@@ -520,14 +490,8 @@ describe('SplitInstRecordsStore', () => {
                     id: 'package',
                     recordName: 'record',
                     inst: 'test',
-                    packageRecordName: 'packageRecord',
-                    packageAddress: 'address',
-                    packageVersionKey: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
                     userId: 'user',
                 },
             ]);

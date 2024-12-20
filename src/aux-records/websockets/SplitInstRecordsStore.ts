@@ -90,6 +90,26 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         }
     }
 
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<boolean> {
+        if (recordName) {
+            return await this._permanent.isPackageLoaded(
+                recordName,
+                inst,
+                packageId
+            );
+        } else {
+            return await this._temp.isPackageLoaded(
+                recordName,
+                inst,
+                packageId
+            );
+        }
+    }
+
     async getInstByName(
         recordName: string | null,
         inst: string
