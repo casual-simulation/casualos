@@ -1186,23 +1186,16 @@ export class MemoryStore
     }
 
     async listGrantedEntitlementsByFeatureAndUserId(
-        recordName: string | null,
-        inst: string,
+        packageIds: string[],
         feature: Entitlement['feature'],
         userId: string
     ): Promise<GrantedPackageEntitlement[]> {
-        // const loadedPackages = await this.listLoadedPackages(recordName, inst);
-        // const grantedEntitlements = loadedPackages.flatMap((p) =>
-        //     this._grantedPackageEntitlements.filter(
-        //         (e) =>
-        //             e.userId === userId &&
-        //             e.feature === feature &&
-        //             e.packageRecordName === p.packageRecordName &&
-        //             e.packageAddress === p.packageAddress
-        //     )
-        // );
-        // return grantedEntitlements;
-        return [];
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.feature === feature &&
+                packageIds.includes(e.packageId)
+        );
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {

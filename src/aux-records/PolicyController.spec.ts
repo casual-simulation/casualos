@@ -5198,6 +5198,7 @@ describe('PolicyController', () => {
                 });
 
                 await services.packagesStore.createItem(packageRecordName, {
+                    id: 'packageId',
                     address: packageAddress,
                     markers: [PRIVATE_MARKER],
                 });
@@ -5207,9 +5208,8 @@ describe('PolicyController', () => {
                     userId: userId,
                     recordName: instRecordName,
                     inst,
-                    packageRecordName,
-                    packageAddress,
-                    packageVersionKey: packageKey,
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
                 });
             });
 
@@ -5224,6 +5224,7 @@ describe('PolicyController', () => {
                         await services.packageVersionStore.createItem(
                             packageRecordName,
                             {
+                                id: 'packageVersionId',
                                 address: packageAddress,
                                 key: packageKey,
                                 auxFileName: 'auxFileName',
@@ -5262,9 +5263,7 @@ describe('PolicyController', () => {
 
                                         userId: userId,
 
-                                        packageRecordName,
-                                        packageAddress,
-
+                                        packageId: 'packageId',
                                         feature: feature,
                                         scope: 'personal',
                                         designatedRecords: [],
@@ -5288,11 +5287,11 @@ describe('PolicyController', () => {
 
                                     expect(result).toEqual({
                                         success: true,
-                                        recordName: recordName,
+                                        recordName: userId,
                                         permission: {
                                             id: null,
-                                            recordName,
-                                            userId: null,
+                                            recordName: userId,
+                                            userId: userId,
 
                                             // The role that record owners recieve
                                             subjectType: 'inst',
@@ -5301,6 +5300,7 @@ describe('PolicyController', () => {
                                             // resourceKind and action are null because this permission
                                             // applies to all resources and actions.
                                             resourceKind: resourceKind,
+                                            resourceId: 'resourceId',
                                             action: 'read',
 
                                             options: {},
@@ -5309,14 +5309,27 @@ describe('PolicyController', () => {
                                         entitlementGrant: {
                                             id: 'entitlementId',
                                             userId: userId,
-                                            packageRecordName,
-                                            packageAddress,
-                                            instRecordName: instRecordName,
-                                            inst,
+                                            packageId: 'packageId',
+                                            // packageRecordName,
+                                            // packageAddress,
+                                            // instRecordName: instRecordName,
+                                            // inst,
                                             feature: feature,
                                             scope: 'personal',
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
+
+                                            designatedRecords: [],
+
+                                            loadedPackage: {
+                                                id: 'loadedPackageId',
+                                                recordName: instRecordName,
+                                                inst,
+                                                packageId: 'packageId',
+                                                packageVersionId:
+                                                    'packageVersionId',
+                                                userId: 'userId',
+                                            },
                                         },
                                         explanation: 'Inst has entitlement.',
                                     });

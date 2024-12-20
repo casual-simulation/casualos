@@ -31,6 +31,7 @@ import {
     AssignPermissionToSubjectAndMarkerFailure,
     getExpireTime,
     getPublicMarkersPermission,
+    GrantedPackageEntitlement,
     MarkerPermissionAssignment,
     PolicyStore,
     ResourcePermissionAssignment,
@@ -40,7 +41,12 @@ import {
 } from './PolicyStore';
 import { get, sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
-import { InstRecordsStore, normalizeInstId, parseInstId } from './websockets';
+import {
+    InstRecordsStore,
+    LoadedPackage,
+    normalizeInstId,
+    parseInstId,
+} from './websockets';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { UserRole } from './AuthStore';
@@ -1137,187 +1143,193 @@ export class PolicyController {
                     };
                 }
 
-                // const entitlementFeature = getEntitlementFeatureForAction(
-                //     request.resourceKind,
-                //     request.action
-                // );
-                // let hasPackages = false;
-                // if (entitlementFeature) {
-                //     const [grantedEntitlements, loadedPackages] =
-                //         await Promise.all([
-                //             this._insts?.listGrantedEntitlementsByFeatureAndUserId(
-                //                 instId.recordName,
-                //                 instId.inst,
-                //                 entitlementFeature,
-                //                 context.userId
-                //             ),
-                //             this._insts?.listLoadedPackages(
-                //                 instId.recordName,
-                //                 instId.inst
-                //             ),
-                //         ]);
+                const entitlementFeature = getEntitlementFeatureForAction(
+                    request.resourceKind,
+                    request.action
+                );
+                let hasPackages = false;
+                if (entitlementFeature) {
+                    const loadedPackages =
+                        (await this._insts?.listLoadedPackages(
+                            instId.recordName,
+                            instId.inst
+                        )) ?? [];
 
-                //     if (
-                //         loadedPackages?.length > 0 ||
-                //         grantedEntitlements?.length > 0
-                //     ) {
-                //         hasPackages = true;
-                //     }
+                    const grantedEntitlements =
+                        await this._policies.listGrantedEntitlementsByFeatureAndUserId(
+                            loadedPackages.map((p) => p.packageId),
+                            entitlementFeature,
+                            context.userId
+                        );
 
-                //     if (grantedEntitlements && grantedEntitlements.length > 0) {
-                //         // check scope
-                //         const entitlement = grantedEntitlements.find(
-                //             (entitlement) => {
-                //                 if (
-                //                     entitlement.scope === 'personal' &&
-                //                     entitlement.userId === context.recordName
-                //                 ) {
-                //                     // Entitlement is for the personal record
-                //                     return true;
-                //                 } else if (
-                //                     entitlement.scope === 'owned' &&
-                //                     entitlement.userId === context.recordOwnerId
-                //                 ) {
-                //                     // Entitlement is for any user-owned records
-                //                     return true;
-                //                 } else if (
-                //                     entitlement.scope === 'studio' &&
-                //                     context.recordStudioMembers?.some(
-                //                         (m) => m.userId === entitlement.userId
-                //                     )
-                //                 ) {
-                //                     // Entitlement is for any studio records that the user has access to
-                //                     return true;
-                //                 } else if (entitlement.scope === 'shared') {
-                //                     // Entitlement is for any record that the user has access to
-                //                     // TODO:
-                //                     return false;
-                //                 } else {
-                //                     return false;
-                //                 }
-                //             }
-                //         );
+                    if (
+                        loadedPackages?.length > 0 ||
+                        grantedEntitlements?.length > 0
+                    ) {
+                        hasPackages = true;
+                    }
 
-                //         if (entitlement) {
-                //             return {
-                //                 success: true,
-                //                 recordName,
-                //                 permission: {
-                //                     id: null,
-                //                     recordName: recordName,
+                    if (grantedEntitlements && grantedEntitlements.length > 0) {
+                        // check scope
+                        const entitlement = grantedEntitlements.find(
+                            (entitlement) => {
+                                if (
+                                    entitlement.scope === 'personal' &&
+                                    entitlement.userId === context.recordName
+                                ) {
+                                    // Entitlement is for the personal record
+                                    return true;
+                                } else if (
+                                    entitlement.scope === 'owned' &&
+                                    entitlement.userId === context.recordOwnerId
+                                ) {
+                                    // Entitlement is for any user-owned records
+                                    return true;
+                                } else if (
+                                    entitlement.scope === 'studio' &&
+                                    context.recordStudioMembers?.some(
+                                        (m) => m.userId === entitlement.userId
+                                    )
+                                ) {
+                                    // Entitlement is for any studio records that the user has access to
+                                    return true;
+                                } else if (entitlement.scope === 'shared') {
+                                    // Entitlement is for any record that the user has access to
+                                    // TODO:
+                                    return false;
+                                } else {
+                                    return false;
+                                }
+                            }
+                        );
 
-                //                     userId: context.userId,
+                        if (entitlement) {
+                            const loadedPackage = loadedPackages.find(
+                                (lp) => lp.packageId === entitlement.packageId
+                            );
+                            return {
+                                success: true,
+                                recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
 
-                //                     subjectType: 'inst',
-                //                     subjectId: subjectId,
+                                    userId: context.userId,
 
-                //                     // Not all actions or resources are granted though
-                //                     resourceKind: request.resourceKind,
-                //                     resourceId: request.resourceId,
+                                    subjectType: 'inst',
+                                    subjectId: subjectId,
 
-                //                     action: request.action,
+                                    // Not all actions or resources are granted though
+                                    resourceKind: request.resourceKind,
+                                    resourceId: request.resourceId,
 
-                //                     options: {},
-                //                     expireTimeMs: entitlement.expireTimeMs,
-                //                 },
-                //                 explanation: `Inst has entitlement`,
-                //             };
-                //         }
-                //     }
-                // }
+                                    action: request.action,
 
-                // // Automatic permissions don't apply to insts with packages
-                // // TODO: Maybe add a flag for insts to choose whether they want automatic permissions or if they have to explicitly grant them or use packages
-                // if (!hasPackages) {
-                //     if (instId.recordName) {
-                //         if (instId.recordName === recordName) {
-                //             return {
-                //                 success: true,
-                //                 recordName: recordName,
-                //                 permission: {
-                //                     id: null,
-                //                     recordName: recordName,
+                                    options: {},
+                                    expireTimeMs: entitlement.expireTimeMs,
+                                },
+                                entitlementGrant: {
+                                    ...entitlement,
+                                    loadedPackage,
+                                },
+                                explanation: `Inst has entitlement.`,
+                            };
+                        }
+                    }
+                }
 
-                //                     userId: null,
-                //                     subjectType: 'inst',
-                //                     subjectId: subjectId,
+                // Automatic permissions don't apply to insts with packages
+                // TODO: Maybe add a flag for insts to choose whether they want automatic permissions or if they have to explicitly grant them or use packages
+                if (!hasPackages) {
+                    if (instId.recordName) {
+                        if (instId.recordName === recordName) {
+                            return {
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
 
-                //                     // resourceKind and action are specified
-                //                     // because insts don't necessarily have all permissions in the record
-                //                     resourceKind: request.resourceKind,
-                //                     action: request.action,
+                                    userId: null,
+                                    subjectType: 'inst',
+                                    subjectId: subjectId,
 
-                //                     marker: markers[0],
-                //                     options: {},
-                //                     expireTimeMs: null,
-                //                 },
-                //                 explanation: `Inst is owned by the record.`,
-                //             };
-                //         }
+                                    // resourceKind and action are specified
+                                    // because insts don't necessarily have all permissions in the record
+                                    resourceKind: request.resourceKind,
+                                    action: request.action,
 
-                //         const instRecord =
-                //             await this._records.validateRecordName(
-                //                 instId.recordName,
-                //                 context.userId
-                //             );
+                                    marker: markers[0],
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: `Inst is owned by the record.`,
+                            };
+                        }
 
-                //         if (instRecord.success === false) {
-                //             return instRecord;
-                //         } else if (
-                //             instRecord.ownerId &&
-                //             instRecord.ownerId === context.recordOwnerId
-                //         ) {
-                //             return {
-                //                 success: true,
-                //                 recordName: recordName,
-                //                 permission: {
-                //                     id: null,
-                //                     recordName: recordName,
+                        const instRecord =
+                            await this._records.validateRecordName(
+                                instId.recordName,
+                                context.userId
+                            );
 
-                //                     userId: null,
-                //                     subjectType: 'inst',
-                //                     subjectId: subjectId,
+                        if (instRecord.success === false) {
+                            return instRecord;
+                        } else if (
+                            instRecord.ownerId &&
+                            instRecord.ownerId === context.recordOwnerId
+                        ) {
+                            return {
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
 
-                //                     // resourceKind and action are specified
-                //                     // because insts don't necessarily have all permissions in the record
-                //                     resourceKind: request.resourceKind,
-                //                     action: request.action,
+                                    userId: null,
+                                    subjectType: 'inst',
+                                    subjectId: subjectId,
 
-                //                     marker: markers[0],
-                //                     options: {},
-                //                     expireTimeMs: null,
-                //                 },
-                //                 explanation: `Inst is owned by the record's (${recordName}) owner (${context.recordOwnerId}).`,
-                //             };
-                //         } else if (
-                //             instRecord.studioId &&
-                //             instRecord.studioId === context.recordStudioId
-                //         ) {
-                //             return {
-                //                 success: true,
-                //                 recordName: recordName,
-                //                 permission: {
-                //                     id: null,
-                //                     recordName: recordName,
+                                    // resourceKind and action are specified
+                                    // because insts don't necessarily have all permissions in the record
+                                    resourceKind: request.resourceKind,
+                                    action: request.action,
 
-                //                     userId: null,
-                //                     subjectType: 'inst',
-                //                     subjectId: subjectId,
+                                    marker: markers[0],
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: `Inst is owned by the record's (${recordName}) owner (${context.recordOwnerId}).`,
+                            };
+                        } else if (
+                            instRecord.studioId &&
+                            instRecord.studioId === context.recordStudioId
+                        ) {
+                            return {
+                                success: true,
+                                recordName: recordName,
+                                permission: {
+                                    id: null,
+                                    recordName: recordName,
 
-                //                     // resourceKind and action are specified
-                //                     // because insts don't necessarily have all permissions in the record
-                //                     resourceKind: request.resourceKind,
-                //                     action: request.action,
+                                    userId: null,
+                                    subjectType: 'inst',
+                                    subjectId: subjectId,
 
-                //                     marker: markers[0],
-                //                     options: {},
-                //                     expireTimeMs: null,
-                //                 },
-                //                 explanation: `Inst is owned by the record's (${recordName}) studio (${context.recordStudioId}).`,
-                //             };
-                //         }
-                //     }
-                // }
+                                    // resourceKind and action are specified
+                                    // because insts don't necessarily have all permissions in the record
+                                    resourceKind: request.resourceKind,
+                                    action: request.action,
+
+                                    marker: markers[0],
+                                    options: {},
+                                    expireTimeMs: null,
+                                },
+                                explanation: `Inst is owned by the record's (${recordName}) studio (${context.recordStudioId}).`,
+                            };
+                        }
+                    }
+                }
             }
 
             if (subjectId) {
@@ -3495,6 +3507,18 @@ export interface AuthorizeSubjectSuccess {
      * The explaination for the authorization.
      */
     explanation: string;
+
+    /**
+     * The entitlement that was able to grant access to the resource.
+     */
+    entitlementGrant?: EntitlementGrant;
+}
+
+export interface EntitlementGrant extends GrantedPackageEntitlement {
+    /**
+     * The package that the entitlement is granted through.
+     */
+    loadedPackage: LoadedPackage;
 }
 
 export interface AuthorizedSubject extends AuthorizeSubjectSuccess {
