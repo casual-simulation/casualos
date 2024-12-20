@@ -7148,7 +7148,7 @@ describe('WebsocketController', () => {
             });
         });
 
-        describe.only('repo/load_package', () => {
+        describe('repo/load_package', () => {
             async function recordPackage(
                 recordName: string,
                 address: string,
