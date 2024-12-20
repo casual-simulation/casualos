@@ -458,7 +458,7 @@ export const ENTITLEMENT_VALIDATION = z.object({
         'notification',
         'package',
         'permissions',
-        'webhooks',
+        'webhook',
         'ai',
     ]),
     scope: z.enum(['personal', 'owned', 'studio', 'shared', 'designated']),
