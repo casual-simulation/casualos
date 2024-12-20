@@ -91,6 +91,11 @@ export interface PackageRecordVersionKey extends PackageVersion {}
 export interface PackageRecordVersion
     extends SubCrudRecord<PackageRecordVersionKey> {
     /**
+     * The ID of the package version.
+     */
+    id: string;
+
+    /**
      * The name of the aux file that is stored for this version.
      */
     auxFileName: string;

@@ -3,7 +3,10 @@ import {
     TestControllers,
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
-import { PackageRecordsController } from './PackageRecordsController';
+import {
+    PackageRecordInput,
+    PackageRecordsController,
+} from './PackageRecordsController';
 import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
@@ -16,7 +19,7 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { v5 as uuidv5 } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import { PackageRecord, PackageRecordsStore } from './PackageRecordsStore';
 import { MemoryPackageRecordsStore } from './MemoryPackageRecordsStore';
 
@@ -25,7 +28,7 @@ console.error = jest.fn();
 
 describe('PackageRecordsController', () => {
     testCrudRecordsController<
-        PackageRecord,
+        PackageRecordInput,
         PackageRecordsStore,
         PackageRecordsController
     >(
@@ -39,6 +42,7 @@ describe('PackageRecordsController', () => {
         (item) => ({
             address: item.address,
             markers: item.markers,
+            id: item.address,
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -75,7 +79,7 @@ describe('PackageRecordsController', () => {
         dateNowMock.mockReturnValue(999);
 
         const context = await setupTestContext<
-            PackageRecord,
+            PackageRecordInput,
             PackageRecordsStore,
             PackageRecordsController
         >(
@@ -196,6 +200,7 @@ describe('PackageRecordsController', () => {
                 });
 
                 await itemsStore.createItem(recordName, {
+                    id: 'id',
                     address: 'item1',
                     markers: [PUBLIC_READ_MARKER],
                 });

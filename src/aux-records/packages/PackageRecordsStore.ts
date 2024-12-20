@@ -27,10 +27,10 @@ export interface PackageRecordsStore extends CrudRecordsStore<PackageRecord> {
  * @docName PackageRecord
  */
 export interface PackageRecord extends CrudRecord {
-    // /**
-    //  * The description of the package.
-    //  */
-    // description: string | null;
+    /**
+     * The ID of the package.
+     */
+    id: string;
 }
 
 export interface PackageSubscriptionMetrics extends CrudSubscriptionMetrics {

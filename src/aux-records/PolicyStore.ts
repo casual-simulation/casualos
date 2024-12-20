@@ -321,25 +321,25 @@ export interface PolicyStore {
         role: string
     ): Promise<UpdateUserRolesResult>;
 
-    /**
-     * Gets the list of granted entitlements for the given package IDs, feature, and userId.
-     * @param packageIds The IDs of the packages to list the entitlements for.
-     * @param feature The feature that the entitlements are granted for.
-     * @param userId The ID of the user that the entitlements are granted to.
-     */
-    listGrantedEntitlementsByFeatureAndUserId(
-        packageIds: string[],
-        feature: Entitlement['feature'],
-        userId: string
-    ): Promise<GrantedPackageEntitlement[]>;
+    // /**
+    //  * Gets the list of granted entitlements for the given package IDs, feature, and userId.
+    //  * @param packageIds The IDs of the packages to list the entitlements for.
+    //  * @param feature The feature that the entitlements are granted for.
+    //  * @param userId The ID of the user that the entitlements are granted to.
+    //  */
+    // listGrantedEntitlementsByFeatureAndUserId(
+    //     packageIds: string[],
+    //     feature: Entitlement['feature'],
+    //     userId: string
+    // ): Promise<GrantedPackageEntitlement[]>;
 
-    /**
-     * Saves the given granted entitlement.
-     * @param grantedEntitlement The entitlement that should be saved.
-     */
-    saveGrantedPackageEntitlement(
-        grantedEntitlement: GrantedPackageEntitlement
-    ): Promise<void>;
+    // /**
+    //  * Saves the given granted entitlement.
+    //  * @param grantedEntitlement The entitlement that should be saved.
+    //  */
+    // saveGrantedPackageEntitlement(
+    //     grantedEntitlement: GrantedPackageEntitlement
+    // ): Promise<void>;
 }
 
 /**

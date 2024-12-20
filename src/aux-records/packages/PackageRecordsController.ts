@@ -29,6 +29,7 @@ import {
     PackageFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
+import { v7 as uuid } from 'uuid';
 
 const TRACE_NAME = 'PackageRecordsController';
 
@@ -41,11 +42,13 @@ export interface PackageRecordsConfiguration
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {}
 
+export type PackageRecordInput = Omit<PackageRecord, 'id'>;
+
 /**
  * Defines a controller that can be used to interact with NotificationRecords.
  */
 export class PackageRecordsController extends CrudRecordsController<
-    PackageRecord,
+    PackageRecordInput,
     PackageRecordsStore
 > {
     constructor(config: PackageRecordsConfiguration) {
@@ -96,6 +99,8 @@ export class PackageRecordsController extends CrudRecordsController<
                         'The maximum number of package items has been reached for your subscription.',
                 };
             }
+
+            item.id = uuid();
         }
 
         return {

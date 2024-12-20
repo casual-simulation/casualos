@@ -2092,30 +2092,30 @@ export class WebsocketController {
         }
 
         const loadedPackageStore = this._instStore;
-        const loadedPackages: LoadedPackage[] =
-            await loadedPackageStore.listLoadedPackages(
-                event.recordName,
-                event.inst
-            );
+        // const loadedPackages: LoadedPackage[] =
+        //     await loadedPackageStore.listLoadedPackages(
+        //         event.recordName,
+        //         event.inst
+        //     );
 
-        if (
-            loadedPackages.some(
-                (l) =>
-                    l.packageRecordName === event.package.recordName &&
-                    l.packageAddress === p.item.address
-            )
-        ) {
-            // Already loaded
-            console.log(
-                `[CausalRepoServer] [connectionId: ${connectionId}] Package already loaded.`
-            );
-            await this._messenger.sendMessage([connectionId], {
-                type: 'repo/load_package/response',
-                success: true,
-                requestId: event.requestId,
-            });
-            return;
-        }
+        // if (
+        //     loadedPackages.some(
+        //         (l) =>
+        //             l.packageRecordName === event.package.recordName &&
+        //             l.packageAddress === p.item.address
+        //     )
+        // ) {
+        //     // Already loaded
+        //     console.log(
+        //         `[CausalRepoServer] [connectionId: ${connectionId}] Package already loaded.`
+        //     );
+        //     await this._messenger.sendMessage([connectionId], {
+        //         type: 'repo/load_package/response',
+        //         success: true,
+        //         requestId: event.requestId,
+        //     });
+        //     return;
+        // }
 
         const fileResponse = await fetch(p.auxFile.requestUrl, {
             method: p.auxFile.requestMethod,
@@ -2203,9 +2203,13 @@ export class WebsocketController {
             id: uuid(),
             recordName: event.recordName,
             inst: event.inst,
-            packageRecordName: event.package.recordName,
-            packageAddress: p.item.address,
-            packageVersionKey: p.item.key,
+
+            packageId: p.item.id,
+            packageVersionId: p.item.id,
+
+            // packageRecordName: event.package.recordName,
+            // packageAddress: p.item.address,
+            // packageVersionKey: p.item.key,
             userId: connection.userId,
         });
 

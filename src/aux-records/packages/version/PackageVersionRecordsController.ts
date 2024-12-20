@@ -70,7 +70,7 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
 import { UserRole } from '../../AuthStore';
 import { isPackageReviewerRole, isSuperUserRole } from '../../AuthUtils';
-import { v4 as uuid } from 'uuid';
+import { v7 as uuid } from 'uuid';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 
@@ -314,6 +314,7 @@ export class PackageVersionRecordsController {
                     sizeInBytes: sizeInBytes,
                 });
                 item = {
+                    id: uuid(),
                     address: address,
                     entitlements: request.item.entitlements,
                     key: request.item.key,
@@ -801,6 +802,7 @@ export type PackageRecordVersionInput = Omit<
     | 'auxSha256'
     | 'createdFile'
     | 'requiresReview'
+    | 'id'
 > & {
     auxFileRequest: Omit<
         RecordFileRequest,

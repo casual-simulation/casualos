@@ -37,7 +37,7 @@ import { PackageRecordsStore } from '../PackageRecordsStore';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { getHash } from '@casual-simulation/crypto/HashHelpers';
 import { FileRecordsController } from '../../FileRecordsController';
-import { v4 as uuid } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import { UserRole } from '../../AuthStore';
 
 console.log = jest.fn();
@@ -75,6 +75,7 @@ describe('PackageVersionRecordsController', () => {
             tag: '',
         }),
         (item) => ({
+            id: `${item.address}@${item.key.major}.${item.key.minor}.${item.key.patch}.${item.key.tag}`,
             key: item.key,
             address: item.address,
             auxFileName: 'aux.json',
@@ -260,6 +261,7 @@ describe('PackageVersionRecordsController', () => {
         describe('create', () => {
             beforeEach(async () => {
                 await recordItemsStore.createItem(recordName, {
+                    id: 'address',
                     address: 'address',
                     markers: [PUBLIC_READ_MARKER],
                 });
@@ -334,6 +336,7 @@ describe('PackageVersionRecordsController', () => {
                     approved,
                     approvalType,
                     requiresReview,
+                    id,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -419,6 +422,7 @@ describe('PackageVersionRecordsController', () => {
                     approved,
                     approvalType,
                     requiresReview,
+                    id,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -507,6 +511,7 @@ describe('PackageVersionRecordsController', () => {
                     approved,
                     approvalType,
                     requiresReview,
+                    id,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -601,6 +606,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType,
                     approved,
                     requiresReview,
+                    id,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -917,6 +923,7 @@ describe('PackageVersionRecordsController', () => {
                 });
 
                 await itemsStore.createItem(recordName, {
+                    id: 'address@1.0.0',
                     address: 'address',
                     key: {
                         major: 1,
@@ -1041,6 +1048,7 @@ describe('PackageVersionRecordsController', () => {
                     approved,
                     approvalType,
                     requiresReview,
+                    id,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -1058,6 +1066,7 @@ describe('PackageVersionRecordsController', () => {
                         resourceId: 'address',
                         timeMs: 123,
                         package: {
+                            id: expect.any(String),
                             address: 'address',
                             key: {
                                 major: 1,
@@ -1083,10 +1092,12 @@ describe('PackageVersionRecordsController', () => {
         describe('update()', () => {
             beforeEach(async () => {
                 await recordItemsStore.createItem(recordName, {
+                    id: 'address',
                     address: 'address',
                     markers: [PUBLIC_READ_MARKER],
                 });
                 await itemsStore.createItem(recordName, {
+                    id: 'address@1.0.0',
                     address: 'address',
                     key: {
                         major: 1,
@@ -1108,6 +1119,7 @@ describe('PackageVersionRecordsController', () => {
 
             it('should return a successful result with another upload result if the file has not been uploaded and if the aux file matches the saved file', async () => {
                 await recordItemsStore.createItem(recordName, {
+                    id: 'address2',
                     address: 'address2',
                     markers: [PUBLIC_READ_MARKER],
                 });
@@ -1242,6 +1254,7 @@ describe('PackageVersionRecordsController', () => {
     describe('getItem()', () => {
         beforeEach(async () => {
             await recordItemsStore.createItem(recordName, {
+                id: 'address',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -1256,6 +1269,7 @@ describe('PackageVersionRecordsController', () => {
             );
             await store.setFileRecordAsUploaded(recordName, 'aux.json');
             await itemsStore.createItem(recordName, {
+                id: 'address@1.0.0',
                 address: 'address',
                 key: {
                     major: 1,
@@ -1287,6 +1301,7 @@ describe('PackageVersionRecordsController', () => {
             );
             await store.setFileRecordAsUploaded(recordName, 'aux2.json');
             await itemsStore.createItem(recordName, {
+                id: 'address@1.0.0',
                 address: 'address',
                 key: {
                     major: 1,
@@ -1321,6 +1336,7 @@ describe('PackageVersionRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 item: {
+                    id: 'address@1.0.0',
                     address: 'address',
                     key: {
                         major: 1,
@@ -1369,6 +1385,7 @@ describe('PackageVersionRecordsController', () => {
             );
             await store.setFileRecordAsUploaded(recordName, 'aux2.json');
             await itemsStore.createItem(recordName, {
+                id: 'address@1.0.0',
                 address: 'address',
                 key: {
                     major: 1,
@@ -1403,6 +1420,7 @@ describe('PackageVersionRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 item: {
+                    id: 'address@1.0.0',
                     address: 'address',
                     key: {
                         major: 1,
@@ -1450,6 +1468,7 @@ describe('PackageVersionRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 item: {
+                    id: 'address@1.0.0',
                     address: 'address',
                     key: {
                         major: 1,
@@ -1520,6 +1539,7 @@ describe('PackageVersionRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 item: {
+                    id: 'address@1.0.0',
                     address: 'address',
                     key: {
                         major: 1,
@@ -1614,6 +1634,7 @@ describe('PackageVersionRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 item: {
+                    id: 'address@1.0.0',
                     address: 'address',
                     key: {
                         major: 1,
@@ -1944,7 +1965,7 @@ describe('entitlementRequiresApproval()', () => {
         ['notification'],
         ['package'],
         ['permissions'],
-        ['webhooks'],
+        ['webhook'],
     ];
 
     describe.each(features)('%s', (feature) => {

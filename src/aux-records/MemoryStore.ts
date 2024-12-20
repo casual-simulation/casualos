@@ -78,6 +78,7 @@ import {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
+    GrantedPackageEntitlement,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -127,7 +128,6 @@ import {
     BranchRecord,
     BranchRecordWithInst,
     CurrentUpdates,
-    GrantedPackageEntitlement,
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
@@ -1191,17 +1191,18 @@ export class MemoryStore
         feature: Entitlement['feature'],
         userId: string
     ): Promise<GrantedPackageEntitlement[]> {
-        const loadedPackages = await this.listLoadedPackages(recordName, inst);
-        const grantedEntitlements = loadedPackages.flatMap((p) =>
-            this._grantedPackageEntitlements.filter(
-                (e) =>
-                    e.userId === userId &&
-                    e.feature === feature &&
-                    e.packageRecordName === p.packageRecordName &&
-                    e.packageAddress === p.packageAddress
-            )
-        );
-        return grantedEntitlements;
+        // const loadedPackages = await this.listLoadedPackages(recordName, inst);
+        // const grantedEntitlements = loadedPackages.flatMap((p) =>
+        //     this._grantedPackageEntitlements.filter(
+        //         (e) =>
+        //             e.userId === userId &&
+        //             e.feature === feature &&
+        //             e.packageRecordName === p.packageRecordName &&
+        //             e.packageAddress === p.packageAddress
+        //     )
+        // );
+        // return grantedEntitlements;
+        return [];
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {
