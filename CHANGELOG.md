@@ -8,8 +8,6 @@
 
 ### :bug: Bug Fixes
 
-### :bug: Bug Fixes
-
 -   Improved error handling for `ai.generateImage` requests with unacceptable parameters.
     -   The server now returns an `invalid_request` error code when the parameters provided are not accepted by the selected model (e.g., OpenAI, Google).
     -   This ensures that users receive clear and actionable feedback when their requests fail due to invalid parameters.
