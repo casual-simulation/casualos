@@ -113,7 +113,7 @@ export class OpenAIImageInterface implements AIImageInterface {
                     );
                     return {
                         success: false,
-                        errorCode: 'server_error',
+                        errorCode: 'invalid_request',
                         errorMessage: err.response.data.error.message,
                     };
                 }

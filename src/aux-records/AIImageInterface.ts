@@ -108,6 +108,7 @@ export interface AIGenerateImageInterfaceFailure {
         | NotSupportedError
         | SubscriptionLimitReached
         | NotAuthorizedError
+        | 'invalid_request'
         | 'invalid_model';
     errorMessage: string;
 }
