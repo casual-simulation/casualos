@@ -127,7 +127,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
                     span?.setStatus({ code: SpanStatusCode.ERROR });
 
                     console.error(
-                        `[OpenAIChatInterface] [${request.userId}] [generateImage]: Bad request: ${err.response.data.error.message}`
+                        `[StabilityAIChatIngerface] [${request.userId}] [generateImage]: Bad request: ${err.response.data.error.message}`
                     );
                     return {
                         success: false,
