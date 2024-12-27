@@ -17,6 +17,12 @@ export interface PackageRecordsStore extends CrudRecordsStore<PackageRecord> {
     getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<PackageSubscriptionMetrics>;
+
+    /**
+     * Gets the package record with the given ID.
+     * @param id The ID of the package.
+     */
+    getItemById(id: string): Promise<GetPackageByIdResult>;
 }
 
 /**
@@ -38,4 +44,9 @@ export interface PackageSubscriptionMetrics extends CrudSubscriptionMetrics {
      * The total number of packages stored in the subscription.
      */
     totalItems: number;
+}
+
+export interface GetPackageByIdResult {
+    item: PackageRecord;
+    recordName: string;
 }
