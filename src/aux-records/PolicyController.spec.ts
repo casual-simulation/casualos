@@ -5377,6 +5377,450 @@ describe('PolicyController', () => {
                                         },
                                     });
                                 });
+
+                                it('should deny actions for the personal record if the entitlement grant has expired', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName: userId,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    await store.saveGrantedPackageEntitlement({
+                                        id: 'entitlementId',
+
+                                        userId: userId,
+
+                                        packageId: 'packageId',
+                                        feature: feature,
+                                        scope: 'personal',
+                                        designatedRecords: [],
+                                        expireTimeMs: 0,
+
+                                        createdAtMs: 123,
+                                    });
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: userId,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                        recommendedEntitlement: {
+                                            feature: feature,
+                                            scope: 'personal',
+                                        },
+                                    });
+                                });
+                            });
+
+                            describe('owned scope', () => {
+                                it('should allow actions for the owned record if the entitlement has been granted for it', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName:
+                                                    recordName,
+                                                userId: ownerId,
+                                            }
+                                        );
+
+                                    await store.saveGrantedPackageEntitlement({
+                                        id: 'entitlementId',
+
+                                        userId: ownerId,
+
+                                        packageId: 'packageId',
+                                        feature: feature,
+                                        scope: 'owned',
+                                        designatedRecords: [],
+                                        expireTimeMs: 999,
+
+                                        createdAtMs: 123,
+                                    });
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: true,
+                                        recordName: recordName,
+                                        permission: {
+                                            id: null,
+                                            recordName: recordName,
+                                            userId: ownerId,
+
+                                            // The role that record owners recieve
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+
+                                            // resourceKind and action are null because this permission
+                                            // applies to all resources and actions.
+                                            resourceKind: resourceKind,
+                                            resourceId: 'resourceId',
+                                            action: 'read',
+
+                                            options: {},
+                                            expireTimeMs: 999,
+                                        },
+                                        entitlementGrant: {
+                                            id: 'entitlementId',
+                                            userId: ownerId,
+                                            packageId: 'packageId',
+                                            // packageRecordName,
+                                            // packageAddress,
+                                            // instRecordName: instRecordName,
+                                            // inst,
+                                            feature: feature,
+                                            scope: 'owned',
+                                            expireTimeMs: 999,
+                                            createdAtMs: 123,
+
+                                            designatedRecords: [],
+
+                                            loadedPackage: {
+                                                id: 'loadedPackageId',
+                                                recordName: instRecordName,
+                                                inst,
+                                                packageId: 'packageId',
+                                                packageVersionId:
+                                                    'packageVersionId',
+                                                userId: 'userId',
+                                            },
+                                        },
+                                        explanation: 'Inst has entitlement.',
+                                    });
+                                });
+
+                                it('should deny actions for the owned record if no entitlement has been granted for it', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName:
+                                                    recordName,
+                                                userId: ownerId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: recordName,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                        recommendedEntitlement: {
+                                            feature: feature,
+                                            scope: 'owned',
+                                        },
+                                    });
+                                });
+
+                                it('should deny actions for the owned record if the entitlement grant has expired', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName:
+                                                    recordName,
+                                                userId: ownerId,
+                                            }
+                                        );
+
+                                    await store.saveGrantedPackageEntitlement({
+                                        id: 'entitlementId',
+
+                                        userId: ownerId,
+
+                                        packageId: 'packageId',
+                                        feature: feature,
+                                        scope: 'owned',
+                                        designatedRecords: [],
+                                        expireTimeMs: 0,
+
+                                        createdAtMs: 123,
+                                    });
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: recordName,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                        recommendedEntitlement: {
+                                            feature: feature,
+                                            scope: 'owned',
+                                        },
+                                    });
+                                });
+                            });
+
+                            describe('studio scope', () => {
+                                const studioId = 'studioId';
+
+                                beforeEach(async () => {
+                                    await services.recordsStore.createStudioForUser(
+                                        {
+                                            id: studioId,
+                                            displayName: 'Studio',
+                                        },
+                                        userId
+                                    );
+                                });
+
+                                it('should allow actions for the studio record if the entitlement has been granted for it', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName: studioId,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    await store.saveGrantedPackageEntitlement({
+                                        id: 'entitlementId',
+
+                                        userId: userId,
+
+                                        packageId: 'packageId',
+                                        feature: feature,
+                                        scope: 'studio',
+                                        designatedRecords: [],
+                                        expireTimeMs: 999,
+
+                                        createdAtMs: 123,
+                                    });
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: true,
+                                        recordName: studioId,
+                                        permission: {
+                                            id: null,
+                                            recordName: studioId,
+                                            userId: userId,
+
+                                            // The role that record owners recieve
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+
+                                            // resourceKind and action are null because this permission
+                                            // applies to all resources and actions.
+                                            resourceKind: resourceKind,
+                                            resourceId: 'resourceId',
+                                            action: 'read',
+
+                                            options: {},
+                                            expireTimeMs: 999,
+                                        },
+                                        entitlementGrant: {
+                                            id: 'entitlementId',
+                                            userId: userId,
+                                            packageId: 'packageId',
+                                            feature: feature,
+                                            scope: 'studio',
+                                            expireTimeMs: 999,
+                                            createdAtMs: 123,
+
+                                            designatedRecords: [],
+
+                                            loadedPackage: {
+                                                id: 'loadedPackageId',
+                                                recordName: instRecordName,
+                                                inst,
+                                                packageId: 'packageId',
+                                                packageVersionId:
+                                                    'packageVersionId',
+                                                userId: 'userId',
+                                            },
+                                        },
+                                        explanation: 'Inst has entitlement.',
+                                    });
+                                });
+
+                                it('should deny actions for the owned record if no entitlement has been granted for it', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName: studioId,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: studioId,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                        recommendedEntitlement: {
+                                            feature: feature,
+                                            scope: 'studio',
+                                        },
+                                    });
+                                });
+
+                                it('should deny actions for the owned record if the entitlement grant has expired', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName: studioId,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    await store.saveGrantedPackageEntitlement({
+                                        id: 'entitlementId',
+
+                                        userId: userId,
+
+                                        packageId: 'packageId',
+                                        feature: feature,
+                                        scope: 'studio',
+                                        designatedRecords: [],
+                                        expireTimeMs: 0,
+
+                                        createdAtMs: 123,
+                                    });
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: studioId,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                        recommendedEntitlement: {
+                                            feature: feature,
+                                            scope: 'studio',
+                                        },
+                                    });
+                                });
                             });
                         }
                     );

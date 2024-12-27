@@ -1188,12 +1188,14 @@ export class MemoryStore
     async listGrantedEntitlementsByFeatureAndUserId(
         packageIds: string[],
         feature: Entitlement['feature'],
-        userId: string
+        userId: string,
+        nowMs: number
     ): Promise<GrantedPackageEntitlement[]> {
         return this._grantedPackageEntitlements.filter(
             (e) =>
                 e.userId === userId &&
                 e.feature === feature &&
+                e.expireTimeMs > nowMs &&
                 packageIds.includes(e.packageId)
         );
     }

@@ -755,6 +755,7 @@ export class PolicyController {
     ): Promise<AuthorizeSubjectResult> {
         try {
             const markers = getRootMarkersOrDefault(request.markers);
+            let recommendedEntitlement: Entitlement | undefined = undefined;
             if (request.action === 'list' && markers.length > 1) {
                 return {
                     success: false,
@@ -763,6 +764,7 @@ export class PolicyController {
                     reason: {
                         type: 'too_many_markers',
                     },
+                    recommendedEntitlement,
                 };
             }
 
@@ -782,6 +784,7 @@ export class PolicyController {
                         resourceId: request.resourceId,
                         privacyFeature: 'publishData',
                     },
+                    recommendedEntitlement,
                 };
             }
 
@@ -897,6 +900,7 @@ export class PolicyController {
                             resourceId: request.resourceId,
                             privacyFeature: 'allowPublicData',
                         },
+                        recommendedEntitlement,
                     };
                 }
 
@@ -920,6 +924,7 @@ export class PolicyController {
                             resourceId: request.resourceId,
                             privacyFeature: 'allowPublicInsts',
                         },
+                        recommendedEntitlement,
                     };
                 }
             }
@@ -941,6 +946,7 @@ export class PolicyController {
                             resourceId: request.resourceId,
                             privacyFeature: 'allowPublicData',
                         },
+                        recommendedEntitlement,
                     };
                 }
 
@@ -1159,7 +1165,8 @@ export class PolicyController {
                         await this._policies.listGrantedEntitlementsByFeatureAndUserId(
                             loadedPackages.map((p) => p.packageId),
                             entitlementFeature,
-                            context.userId
+                            context.userId,
+                            Date.now()
                         );
 
                     if (
@@ -1235,6 +1242,26 @@ export class PolicyController {
                                 explanation: `Inst has entitlement.`,
                             };
                         }
+                    }
+
+                    let entitlementScope: Entitlement['scope'];
+                    if (context.recordName === context.userId) {
+                        entitlementScope = 'personal';
+                    } else if (context.recordOwnerId === context.userId) {
+                        entitlementScope = 'owned';
+                    } else if (
+                        context.recordStudioMembers?.some(
+                            (m) => m.userId === context.userId
+                        )
+                    ) {
+                        entitlementScope = 'studio';
+                    }
+
+                    if (entitlementScope) {
+                        recommendedEntitlement = {
+                            feature: entitlementFeature,
+                            scope: entitlementScope,
+                        };
                     }
                 }
 
@@ -1461,6 +1488,7 @@ export class PolicyController {
                     resourceId: request.resourceId,
                     action: request.action,
                 },
+                recommendedEntitlement,
             };
         } catch (err) {
             console.error(

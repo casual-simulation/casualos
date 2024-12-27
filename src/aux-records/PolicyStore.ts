@@ -326,11 +326,13 @@ export interface PolicyStore {
      * @param packageIds The IDs of the packages to list the entitlements for.
      * @param feature The feature that the entitlements are granted for.
      * @param userId The ID of the user that the entitlements are granted to.
+     * @param nowMs The current unix time in milliseconds.
      */
     listGrantedEntitlementsByFeatureAndUserId(
         packageIds: string[],
         feature: Entitlement['feature'],
-        userId: string
+        userId: string,
+        nowMs: number
     ): Promise<GrantedPackageEntitlement[]>;
 
     /**
