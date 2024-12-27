@@ -5258,21 +5258,19 @@ describe('PolicyController', () => {
                                             }
                                         );
 
-                                    await services.packageVersionStore.saveGrantedPackageEntitlement(
-                                        {
-                                            id: 'entitlementId',
+                                    await store.saveGrantedPackageEntitlement({
+                                        id: 'entitlementId',
 
-                                            userId: userId,
+                                        userId: userId,
 
-                                            packageId: 'packageId',
-                                            feature: feature,
-                                            scope: 'personal',
-                                            designatedRecords: [],
-                                            expireTimeMs: 999,
+                                        packageId: 'packageId',
+                                        feature: feature,
+                                        scope: 'personal',
+                                        designatedRecords: [],
+                                        expireTimeMs: 999,
 
-                                            createdAtMs: 123,
-                                        }
-                                    );
+                                        createdAtMs: 123,
+                                    });
 
                                     const result =
                                         await controller.authorizeSubject(
@@ -5374,14 +5372,8 @@ describe('PolicyController', () => {
                                             resourceId: 'resourceId',
                                         },
                                         recommendedEntitlement: {
-                                            id: null,
-                                            packageId: 'packageId',
                                             feature: feature,
                                             scope: 'personal',
-                                            granted: false,
-                                            grantingUserId: null,
-                                            createdAtMs: null,
-                                            expireTimeMs: null,
                                         },
                                     });
                                 });

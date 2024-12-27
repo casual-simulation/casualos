@@ -78,6 +78,7 @@ import {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
+    GrantedPackageEntitlement,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -212,6 +213,7 @@ export class MemoryStore
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+    private _grantedPackageEntitlements: GrantedPackageEntitlement[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
@@ -1163,6 +1165,37 @@ export class MemoryStore
             resourceAssignments,
             markerAssignments,
         };
+    }
+
+    async saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void> {
+        const existingIndex = this._grantedPackageEntitlements.findIndex(
+            (e) => e.id === grantedEntitlement.id
+        );
+
+        if (existingIndex >= 0) {
+            this._grantedPackageEntitlements[existingIndex] = {
+                ...grantedEntitlement,
+            };
+        } else {
+            this._grantedPackageEntitlements.push({
+                ...grantedEntitlement,
+            });
+        }
+    }
+
+    async listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.feature === feature &&
+                packageIds.includes(e.packageId)
+        );
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {
@@ -3030,7 +3063,7 @@ export class MemoryStore
                         updates: [],
                         timestamps: [],
                     },
-                } as BranchWithUpdates;
+                };
             });
         } else if (!update.branches) {
             update.branches = [];

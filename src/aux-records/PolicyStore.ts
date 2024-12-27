@@ -320,6 +320,72 @@ export interface PolicyStore {
         type: 'user' | 'inst',
         role: string
     ): Promise<UpdateUserRolesResult>;
+
+    /**
+     * Gets the list of granted entitlements for the given package IDs, feature, and userId.
+     * @param packageIds The IDs of the packages to list the entitlements for.
+     * @param feature The feature that the entitlements are granted for.
+     * @param userId The ID of the user that the entitlements are granted to.
+     */
+    listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string
+    ): Promise<GrantedPackageEntitlement[]>;
+
+    /**
+     * Saves the given granted entitlement.
+     * @param grantedEntitlement The entitlement that should be saved.
+     */
+    saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void>;
+}
+
+/**
+ * Defines an interface that represents an entitlement that has been granted to a package.
+ */
+export interface GrantedPackageEntitlement {
+    /**
+     * The ID of the entitlement.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that granted the entitlement.
+     */
+    userId: string;
+
+    /**
+     * The ID of the package that the entitlement is granted for.
+     */
+    packageId: string;
+
+    /**
+     * The feature that was granted.
+     */
+    feature: Entitlement['feature'];
+
+    /**
+     * The scope of the feature.
+     */
+    scope: Entitlement['scope'];
+
+    /**
+     * The records that the entitlement requires access to based on its scope.
+     * Empty if the entitlement does not require access to any records.
+     */
+    designatedRecords: string[];
+
+    /**
+     * The unix time that the entitlement expires in miliseconds.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The unix time that the grant was created at in miliseconds.
+     */
+    createdAtMs: number;
 }
 
 // /**

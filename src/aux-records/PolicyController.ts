@@ -31,6 +31,7 @@ import {
     AssignPermissionToSubjectAndMarkerFailure,
     getExpireTime,
     getPublicMarkersPermission,
+    GrantedPackageEntitlement,
     MarkerPermissionAssignment,
     PolicyStore,
     ResourcePermissionAssignment,
@@ -49,10 +50,7 @@ import {
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { UserRole } from './AuthStore';
-import {
-    ListedPackageEntitlement,
-    PackageVersionRecordsStore,
-} from './packages/version/PackageVersionRecordsStore';
+import { load } from 'esri/geometry/coordinateFormatter';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -229,20 +227,17 @@ export class PolicyController {
     private _records: RecordsController;
     private _policies: PolicyStore;
     private _insts: InstRecordsStore;
-    private _packages: PackageVersionRecordsStore;
 
     constructor(
         auth: AuthController,
         records: RecordsController,
         policies: PolicyStore,
-        insts: InstRecordsStore = null,
-        packages: PackageVersionRecordsStore = null
+        insts: InstRecordsStore = null
     ) {
         this._auth = auth;
         this._records = records;
         this._policies = policies;
         this._insts = insts;
-        this._packages = packages;
     }
 
     /**
@@ -760,8 +755,6 @@ export class PolicyController {
     ): Promise<AuthorizeSubjectResult> {
         try {
             const markers = getRootMarkersOrDefault(request.markers);
-            let recommendedEntitlement: ListedPackageEntitlement | undefined =
-                undefined;
             if (request.action === 'list' && markers.length > 1) {
                 return {
                     success: false,
@@ -789,7 +782,6 @@ export class PolicyController {
                         resourceId: request.resourceId,
                         privacyFeature: 'publishData',
                     },
-                    recommendedEntitlement,
                 };
             }
 
@@ -905,7 +897,6 @@ export class PolicyController {
                             resourceId: request.resourceId,
                             privacyFeature: 'allowPublicData',
                         },
-                        recommendedEntitlement,
                     };
                 }
 
@@ -929,7 +920,6 @@ export class PolicyController {
                             resourceId: request.resourceId,
                             privacyFeature: 'allowPublicInsts',
                         },
-                        recommendedEntitlement,
                     };
                 }
             }
@@ -951,7 +941,6 @@ export class PolicyController {
                             resourceId: request.resourceId,
                             privacyFeature: 'allowPublicData',
                         },
-                        recommendedEntitlement,
                     };
                 }
 
@@ -1167,7 +1156,7 @@ export class PolicyController {
                         )) ?? [];
 
                     const grantedEntitlements =
-                        await this._packages?.listEntitlementsByFeatureAndUserId(
+                        await this._policies.listGrantedEntitlementsByFeatureAndUserId(
                             loadedPackages.map((p) => p.packageId),
                             entitlementFeature,
                             context.userId
@@ -1184,30 +1173,22 @@ export class PolicyController {
                         // check scope
                         const entitlement = grantedEntitlements.find(
                             (entitlement) => {
-                                if (!entitlement.granted) {
-                                    return false;
-                                }
-
                                 if (
                                     entitlement.scope === 'personal' &&
-                                    entitlement.grantingUserId ===
-                                        context.recordName
+                                    entitlement.userId === context.recordName
                                 ) {
                                     // Entitlement is for the personal record
                                     return true;
                                 } else if (
                                     entitlement.scope === 'owned' &&
-                                    entitlement.grantingUserId ===
-                                        context.recordOwnerId
+                                    entitlement.userId === context.recordOwnerId
                                 ) {
                                     // Entitlement is for any user-owned records
                                     return true;
                                 } else if (
                                     entitlement.scope === 'studio' &&
                                     context.recordStudioMembers?.some(
-                                        (m) =>
-                                            m.userId ===
-                                            entitlement.grantingUserId
+                                        (m) => m.userId === entitlement.userId
                                     )
                                 ) {
                                     // Entitlement is for any studio records that the user has access to
@@ -1253,32 +1234,6 @@ export class PolicyController {
                                 },
                                 explanation: `Inst has entitlement.`,
                             };
-                        } else {
-                            // No entitlement was granted. Find the recommended entitlement.
-                            recommendedEntitlement = grantedEntitlements.find(
-                                (entitlement) => {
-                                    if (
-                                        entitlement.scope === 'personal' &&
-                                        context.recordName === context.userId
-                                    ) {
-                                        return true;
-                                    } else if (
-                                        entitlement.scope === 'owned' &&
-                                        context.recordOwnerId === context.userId
-                                    ) {
-                                        return true;
-                                    } else if (
-                                        entitlement.scope === 'studio' &&
-                                        context.recordStudioMembers?.some(
-                                            (m) => m.userId === context.userId
-                                        )
-                                    ) {
-                                        return true;
-                                    } else {
-                                        return false;
-                                    }
-                                }
-                            );
                         }
                     }
                 }
@@ -1506,7 +1461,6 @@ export class PolicyController {
                     resourceId: request.resourceId,
                     action: request.action,
                 },
-                recommendedEntitlement,
             };
         } catch (err) {
             console.error(
@@ -3560,7 +3514,7 @@ export interface AuthorizeSubjectSuccess {
     entitlementGrant?: EntitlementGrant;
 }
 
-export interface EntitlementGrant extends ListedPackageEntitlement {
+export interface EntitlementGrant extends GrantedPackageEntitlement {
     /**
      * The package that the entitlement is granted through.
      */
@@ -3608,7 +3562,7 @@ export interface AuthorizeSubjectFailure {
      * If the error was rejected because the inst has not been granted an entitlement,
      * this will contain the entitlement that is recommended to be granted.
      */
-    recommendedEntitlement?: ListedPackageEntitlement;
+    recommendedEntitlement?: Entitlement;
 }
 
 export type ListPermissionsResult =

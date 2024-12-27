@@ -8,14 +8,11 @@ import {
     PackageRecordVersionKey,
     PackageVersionReview,
     GetPackageVersionByKeyResult,
-    GrantedPackageEntitlement,
-    ListedPackageEntitlement,
 } from './PackageVersionRecordsStore';
 import { SubscriptionFilter } from '../../MetricsStore';
 import { CrudResult, ListSubCrudStoreSuccess } from '../../crud/sub';
 import { isEqual, orderBy, sortBy } from 'lodash';
-import { PackageRecord, PackageRecordsStore } from '../PackageRecordsStore';
-import { Entitlement } from '@casual-simulation/aux-common';
+import { PackageRecord } from '../PackageRecordsStore';
 
 /**
  * A Memory-based implementation of the PackageRecordsStore.
@@ -28,11 +25,6 @@ export class MemoryPackageVersionRecordsStore
     implements PackageVersionRecordsStore
 {
     private _reviews: PackageVersionReview[] = [];
-    private _grantedPackageEntitlements: GrantedPackageEntitlement[] = [];
-
-    get itemStore(): PackageRecordsStore {
-        return super.itemStore as PackageRecordsStore;
-    }
 
     async getItemByKey(
         recordName: string,
@@ -52,31 +44,6 @@ export class MemoryPackageVersionRecordsStore
             markers: recordItem?.markers ?? null,
             packageId: recordItem?.id ?? null,
         };
-    }
-
-    async getItemById(id: string): Promise<GetPackageVersionByKeyResult> {
-        const buckets = this.getItemRecords();
-        for (let [recordName, record] of buckets) {
-            for (let [address, versions] of record) {
-                for (let item of versions) {
-                    if (item.id === id) {
-                        const recordItem =
-                            (await this.itemStore.getItemByAddress(
-                                recordName,
-                                address
-                            )) as PackageRecord;
-
-                        return {
-                            item,
-                            markers: recordItem?.markers ?? null,
-                            packageId: recordItem?.id ?? null,
-                        };
-                    }
-                }
-            }
-        }
-
-        return null;
     }
 
     async listReviewsForVersion(
@@ -198,80 +165,5 @@ export class MemoryPackageVersionRecordsStore
             ),
             totalCount: items.totalCount,
         };
-    }
-
-    async saveGrantedPackageEntitlement(
-        grantedEntitlement: GrantedPackageEntitlement
-    ): Promise<void> {
-        const existingIndex = this._grantedPackageEntitlements.findIndex(
-            (e) => e.id === grantedEntitlement.id
-        );
-
-        if (existingIndex >= 0) {
-            this._grantedPackageEntitlements[existingIndex] = {
-                ...grantedEntitlement,
-            };
-        } else {
-            this._grantedPackageEntitlements.push({
-                ...grantedEntitlement,
-            });
-        }
-    }
-
-    async listEntitlementsByFeatureAndUserId(
-        packageIds: string[],
-        feature: Entitlement['feature'],
-        userId: string
-    ): Promise<ListedPackageEntitlement[]> {
-        let listedPackageEntitlements: ListedPackageEntitlement[] = [];
-
-        for (let id of packageIds) {
-            const granted = this._grantedPackageEntitlements.find(
-                (e) =>
-                    e.userId === userId &&
-                    e.feature === feature &&
-                    e.packageId === id
-            );
-
-            if (granted) {
-                listedPackageEntitlements.push({
-                    id: granted.id,
-                    granted: true,
-                    grantingUserId: granted.userId,
-                    packageId: granted.packageId,
-                    feature: granted.feature,
-                    designatedRecords: granted.designatedRecords,
-                    scope: granted.scope,
-                    expireTimeMs: granted.expireTimeMs,
-                    createdAtMs: granted.createdAtMs,
-                });
-            } else {
-                const pkg = await this.itemStore.getItemById(id);
-                if (pkg) {
-                    const record = this.getItemRecord(pkg.recordName);
-                    const versions = record.get(pkg.item.address) ?? [];
-                    for (let version of versions) {
-                        for (let entitlement of version.entitlements) {
-                            if (entitlement.feature === feature) {
-                                listedPackageEntitlements.push({
-                                    id: null,
-                                    granted: false,
-                                    grantingUserId: null,
-                                    packageId: id,
-                                    feature: feature,
-                                    designatedRecords:
-                                        entitlement.designatedRecords,
-                                    scope: entitlement.scope,
-                                    expireTimeMs: null,
-                                    createdAtMs: null,
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return listedPackageEntitlements;
     }
 }

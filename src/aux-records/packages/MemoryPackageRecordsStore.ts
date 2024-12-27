@@ -3,7 +3,6 @@ import {
     PackageRecordsStore,
     PackageRecord,
     PackageSubscriptionMetrics,
-    GetPackageByIdResult,
 } from './PackageRecordsStore';
 import { SubscriptionFilter } from '../MetricsStore';
 
@@ -32,21 +31,5 @@ export class MemoryPackageRecordsStore
             ...info,
             totalItems,
         };
-    }
-
-    async getItemById(id: string): Promise<GetPackageByIdResult> {
-        const buckets = this.getItemRecords();
-        for (let [recordName, record] of buckets) {
-            for (let item of record.values()) {
-                if (item.id === id) {
-                    return {
-                        item,
-                        recordName: recordName,
-                    };
-                }
-            }
-        }
-
-        return null;
     }
 }
