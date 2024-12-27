@@ -1200,10 +1200,15 @@ export class PolicyController {
                                 ) {
                                     // Entitlement is for any studio records that the user has access to
                                     return true;
+                                } else if (entitlement.scope === 'designated') {
+                                    // Entitlement is for a specific record
+                                    return entitlement.designatedRecords.includes(
+                                        context.recordName
+                                    );
                                 } else if (entitlement.scope === 'shared') {
                                     // Entitlement is for any record that the user has access to
                                     // TODO:
-                                    return false;
+                                    return true;
                                 } else {
                                     return false;
                                 }
@@ -1245,6 +1250,7 @@ export class PolicyController {
                     }
 
                     let entitlementScope: Entitlement['scope'];
+                    let designatedRecords: string[] | undefined = undefined;
                     if (context.recordName === context.userId) {
                         entitlementScope = 'personal';
                     } else if (context.recordOwnerId === context.userId) {
@@ -1255,12 +1261,16 @@ export class PolicyController {
                         )
                     ) {
                         entitlementScope = 'studio';
+                    } else {
+                        entitlementScope = 'designated';
+                        designatedRecords = [context.recordName];
                     }
 
                     if (entitlementScope) {
                         recommendedEntitlement = {
                             feature: entitlementFeature,
                             scope: entitlementScope,
+                            designatedRecords,
                         };
                     }
                 }
@@ -3589,6 +3599,10 @@ export interface AuthorizeSubjectFailure {
     /**
      * If the error was rejected because the inst has not been granted an entitlement,
      * this will contain the entitlement that is recommended to be granted.
+     *
+     * Note that this recommended entitlement may not actually be able to be granted to one of the loaded packages in an inst.
+     * Instead, it is just a suggestion for what entitlement would be best to grant if possible.
+     * It should be used by the client to help determine what entitlement to grant, but should not be used on its own.
      */
     recommendedEntitlement?: Entitlement;
 }
