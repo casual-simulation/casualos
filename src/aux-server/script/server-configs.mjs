@@ -91,7 +91,7 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
-                external: ['deno-vm'],
+                external: ['deno-vm', 'tigerbeetle-node'],
                 minify: !dev,
                 plugins: [replaceThreePlugin(), ImportGlobPlugin()],
             },
