@@ -834,40 +834,31 @@ const telemetrySchema = z.object({
         .default({}),
 });
 
-const financialInterfaceSchema = z
-    .discriminatedUnion('type', [
-        z
-            .object({
-                type: z.literal('tigerbeetle'),
-                config: z.object({
-                    clusterId: z
-                        .bigint({ coerce: true })
-                        .positive('Cluster ID must be positive.')
-                        .describe('The cluster ID.'),
-                    replicaAddresses: z
-                        .array(
-                            z
-                                .string()
-                                .min(1)
-                                .describe(
-                                    'An address (or port if local) to a replica of a cluster.'
-                                )
-                        )
-                        .min(1, 'At least one replica address is required.')
-                        .describe(
-                            "The addresses of the provided cluster's replicas."
-                        ),
-                }),
-            })
-            .describe('The TigerBeetle financial interface.'),
-        z
-            .object({
-                type: z.literal('_disabled'),
-            })
+const tigerBeetleSchema = z
+    .object({
+        _enabled: z
+            .boolean()
+            .optional()
+            .default(false)
             .describe(
-                'The financial interface is explicitly marked as disabled; this is the default behavior. Serves to provide an optional placeholder for financial interface configuration.'
+                'Whether TigerBeetle is enabled, this allows for pre-defining and shipping default configuration.'
             ),
-    ])
+        clusterId: z
+            .bigint({ coerce: true })
+            .min(0n, 'The cluster ID must be a non-negative integer.')
+            .describe('The cluster ID.'),
+        replicaAddresses: z
+            .array(
+                z
+                    .string()
+                    .min(1)
+                    .describe(
+                        'An address (or port if local) to a replica of a cluster.'
+                    )
+            )
+            .min(1, 'At least one replica address is required.')
+            .describe("The addresses of the provided cluster's replicas."),
+    })
     .describe(
         'The financial interface that should be used. If omitted, then financial features provided by said interface will be disabled.'
     );
@@ -1114,9 +1105,9 @@ export const serverConfigSchema = z.object({
         )
         .optional(),
 
-    financialFeatures: financialInterfaceSchema
+    tigerBeetle: tigerBeetleSchema
         .describe(
-            'Financial Interface configuration options. If omitted, then financial features will be disabled.'
+            'Financial Interface configuration options for tigerbeetle. If omitted, then tigerbeetle will be disabled.'
         )
         .optional(),
 

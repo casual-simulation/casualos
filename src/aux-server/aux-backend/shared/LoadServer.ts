@@ -191,8 +191,8 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.usePrismaAndRedisInstRecords();
     }
 
-    if (config.financialFeatures) {
-        builder.useFinancialInterface();
+    if (config.tigerBeetle) {
+        builder.useTigerBeetle();
     }
 
     if (config.ai) {

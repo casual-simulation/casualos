@@ -1261,40 +1261,45 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useFinancialInterface(
-        //TODO: Refactor name
-        options: Pick<ServerConfig, 'financialFeatures'> = this._options
+    useTigerBeetle(
+        options: Pick<ServerConfig, 'tigerBeetle'> = this._options
     ): this {
-        if (!options.financialFeatures) {
+        if (!options.tigerBeetle || !options.tigerBeetle._enabled) {
             console.warn(
-                '[ServerBuilder] Financial interface disabled. Lacking configuration.'
-            );
-            return this;
-        }
-        if (options.financialFeatures.type === '_disabled') {
-            console.log(
-                '[ServerBuilder] Financial interface explicitly disabled.'
+                '[ServerBuilder] TigerBeetle is explicitly disabled or lacks necessary config.'
             );
             return this;
         }
 
-        /**
-         * ? Currently only TigerBeetle is supported as a financial interface.
-         * ! Implement when multiple financial interfaces are available.
-         * switch (options.financialFeatures.type) {
-         *   case 'tigerbeetle':
-         *       break;
-         * }
-         */
-
-        console.log('[ServerBuilder] Using financial interface: TigerBeetle.');
-        this._financialInterface = new TigerBeetleFinancialInterface({
-            client: createClient({
-                cluster_id: options.financialFeatures.config.clusterId,
-                replica_addresses:
-                    options.financialFeatures.config.replicaAddresses,
-            }),
+        console.log('[ServerBuilder] Using TigerBeetle Financial Interface.');
+        const client = createClient({
+            cluster_id: options.tigerBeetle.clusterId,
+            replica_addresses: options.tigerBeetle.replicaAddresses,
         });
+
+        (async () => {
+            console.log('[ServerBuilder] Connecting to TigerBeetle client.');
+            let connected = false;
+            setTimeout(() => {
+                if (!connected) {
+                    console.error(
+                        '[ServerBuilder] Failed to connect to TigerBeetle client.'
+                    );
+                    client.destroy();
+                    throw new Error('Failed to connect to TigerBeetle client.');
+                }
+            }, 3000);
+            /**
+             * TigerBeetle does not provide a way to check if it is connected.
+             * A workaround is to call a method that requires a connection and race it with a reasonable timeout.
+             */
+            await client.lookupAccounts([0n]);
+            connected = true;
+            console.log('[ServerBuilder] Connected to TigerBeetle client.');
+            this._financialInterface = new TigerBeetleFinancialInterface({
+                client,
+            });
+        })();
 
         return this;
     }
