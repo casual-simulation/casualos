@@ -50,7 +50,7 @@ jobs:
                   git merge -X theirs --no-ff ${{ github.event.inputs.source }}
             - name: Update package versions
               run: |
-                  if [ "${{ github.event.inputs.branch }}" == "master" ]; then
+                  if [ "${{ github.event.inputs.branch }}" == "master" ] || [[ "${{ github.event.inputs.branch }}" =~ ^release/.* ]]; then
                     VERSION=$("./script/next_version.sh")
                   else
                     VERSION=$("./script/next_version.sh" "${GITHUB_RUN_ID}")
