@@ -1261,6 +1261,10 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    /**
+     * Configures the server to use tiger beetle for financial transactions.
+     * @param options The options to use.
+     */
     useTigerBeetle(
         options: Pick<ServerConfig, 'tigerBeetle'> = this._options
     ): this {
@@ -1272,34 +1276,62 @@ export class ServerBuilder implements SubscriptionLike {
         }
 
         console.log('[ServerBuilder] Using TigerBeetle Financial Interface.');
-        const client = createClient({
-            cluster_id: options.tigerBeetle.clusterId,
-            replica_addresses: options.tigerBeetle.replicaAddresses,
-        });
 
-        (async () => {
-            console.log('[ServerBuilder] Connecting to TigerBeetle client.');
-            let connected = false;
-            setTimeout(() => {
-                if (!connected) {
-                    console.error(
-                        '[ServerBuilder] Failed to connect to TigerBeetle client.'
+        /**
+         * !!! TigerBeetle does not provide a way to check the status of server connections:
+         * * Because of this, misconfiguration can lead to an everlasting retry loop, which can be problematic and use resources unnecessarily.
+         * * To mitigate this, a timeout is set to race a method invocation which proves an established connection during server build.
+         * * If the connection is not proven established within the duration the timeout permits, the server will throw an error (and exit).
+         * * Disconnects (or any network errors) after the server is built will not be detected / handled by this mechanism;
+         *   it serves only to deter building the server with invalid connection parameters.
+         */
+        this._actions.push({
+            priority: 0,
+            action: async () => {
+                const client = createClient({
+                    cluster_id: options.tigerBeetle.clusterId,
+                    replica_addresses: options.tigerBeetle.replicaAddresses,
+                });
+                console.log(
+                    '[ServerBuilder] Connecting to TigerBeetle server.'
+                );
+                /**
+                 * TigerBeetle does not provide a way to check if it is connected.
+                 * A workaround is to call a method that requires a connection and race it with a reasonable timeout.
+                 */
+                try {
+                    await Promise.race([
+                        client.lookupAccounts([0n]),
+                        new Promise((_, rej) => {
+                            setTimeout(() => {
+                                /**
+                                 * ! This currently will panic in this invocation context as it is racing with a lookupAccounts call.
+                                 * TODO: Implement a way to cancel the lookupAccounts call or wrap in another process to prevent panic from crashing the server.
+                                 */
+                                client.destroy();
+                                rej(
+                                    new Error(
+                                        'Failed to connect to tigerbeetle server in time.'
+                                    )
+                                );
+                            }, 3000);
+                        }),
+                    ]);
+                    console.log(
+                        '[ServerBuilder] Connected to tigerbeetle server.'
                     );
-                    client.destroy();
-                    throw new Error('Failed to connect to TigerBeetle client.');
+                    this._financialInterface =
+                        new TigerBeetleFinancialInterface({
+                            client,
+                        });
+                } catch (e) {
+                    this._financialInterface = null;
+                    console.error(
+                        '[ServerBuilder] Failed to connect to TigerBeetle client during server build, disabling financial interface.'
+                    );
                 }
-            }, 3000);
-            /**
-             * TigerBeetle does not provide a way to check if it is connected.
-             * A workaround is to call a method that requires a connection and race it with a reasonable timeout.
-             */
-            await client.lookupAccounts([0n]);
-            connected = true;
-            console.log('[ServerBuilder] Connected to TigerBeetle client.');
-            this._financialInterface = new TigerBeetleFinancialInterface({
-                client,
-            });
-        })();
+            },
+        });
 
         return this;
     }
