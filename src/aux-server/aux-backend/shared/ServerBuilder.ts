@@ -1262,7 +1262,7 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     /**
-     * Configures the server to use tiger beetle for financial transactions.
+     * Configures the server to use tigerbeetle for financial transactions.
      * @param options The options to use.
      */
     useTigerBeetle(
@@ -1293,12 +1293,8 @@ export class ServerBuilder implements SubscriptionLike {
                     replica_addresses: options.tigerBeetle.replicaAddresses,
                 });
                 console.log(
-                    '[ServerBuilder] Connecting to TigerBeetle server.'
+                    '[ServerBuilder] Connecting to tigerbeetle server.'
                 );
-                /**
-                 * TigerBeetle does not provide a way to check if it is connected.
-                 * A workaround is to call a method that requires a connection and race it with a reasonable timeout.
-                 */
                 try {
                     await Promise.race([
                         client.lookupAccounts([0n]),
@@ -1327,7 +1323,7 @@ export class ServerBuilder implements SubscriptionLike {
                 } catch (e) {
                     this._financialInterface = null;
                     console.error(
-                        '[ServerBuilder] Failed to connect to TigerBeetle client during server build, disabling financial interface.'
+                        '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
                     );
                 }
             },
