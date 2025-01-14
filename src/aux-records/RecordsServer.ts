@@ -386,22 +386,6 @@ const GetXpUserById = z
         (contractedUser) => {
             if (!contractedUser) return true;
             if (
-                contractedUser.userId ??
-                (undefined === undefined && contractedUser.xpId) ??
-                undefined === undefined
-            )
-                return false;
-            return true;
-        },
-        {
-            message: 'One of properties "userId", "xpId" are required',
-            path: ['userId', 'xpId'],
-        }
-    )
-    .refine(
-        (contractedUser) => {
-            if (!contractedUser) return true;
-            if (
                 typeof contractedUser.userId === 'string' &&
                 typeof contractedUser.xpId === 'string'
             )
