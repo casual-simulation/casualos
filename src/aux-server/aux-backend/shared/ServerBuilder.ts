@@ -1300,11 +1300,6 @@ export class ServerBuilder implements SubscriptionLike {
                         client.lookupAccounts([0n]),
                         new Promise((_, rej) => {
                             setTimeout(() => {
-                                /**
-                                 * ! This currently will panic in this invocation context as it is racing with a lookupAccounts call.
-                                 * TODO: Implement a way to cancel the lookupAccounts call or wrap in another process to prevent panic from crashing the server.
-                                 */
-                                client.destroy();
                                 rej(
                                     new Error(
                                         'Failed to connect to tigerbeetle server in time.'
@@ -1322,6 +1317,7 @@ export class ServerBuilder implements SubscriptionLike {
                         });
                 } catch (e) {
                     this._financialInterface = null;
+                    client.destroy();
                     console.error(
                         '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
                     );
