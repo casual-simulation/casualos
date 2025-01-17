@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 import {
     ISO4217_Map,
     ReduceKeysToPrimitives,
+    SafeJSONSerializable,
     SuccessResult,
     UnionOfTValues,
 } from './TypeUtils';
@@ -37,8 +38,6 @@ interface GenAccountConfig {
 }
 
 const TRACE_NAME = 'XpController';
-/** Until we target ES2020, we can't use BigInt literals, the alias is an effective alternative */
-const _b = BigInt;
 
 /**
  * Defines a class that controls an auth users relationship with the XP "system".
@@ -68,24 +67,23 @@ export class XpController {
                 const id = this._fInterface.generateId();
                 _accounts.push({
                     id,
-                    debits_pending: _b(0),
-                    debits_posted: _b(0),
-                    credits_pending: _b(0),
-                    credits_posted: _b(0),
-                    user_data_128: _b(0),
-                    user_data_64: _b(0),
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: 1,
                     code: account.accountCode,
                     flags: 0,
-                    timestamp: _b(0),
+                    timestamp: 0n,
                 });
                 subIdArray.push(id);
             }
             return subIdArray;
         });
-        this._fInterface.createAccounts(_accounts);
         return idArray;
     }
 
@@ -137,13 +135,15 @@ export class XpController {
                 const user: XpUser = {
                     id: uuid(),
                     userId: authUserId,
-                    accountId: this._generateUserAccount(),
+                    accountId: String(this._generateUserAccount()),
                     requestedRate: null,
                     createdAtMs: Date.now(),
                     updatedAtMs: Date.now(),
                 };
-                await this._xpStore.saveXpUser(user.id, user);
-                return { success: true, user };
+                return {
+                    success: true,
+                    user: await this._xpStore.saveXpUser(user.id, user),
+                };
             },
             {
                 scope: [TRACE_NAME, this._createXpUser.name],
@@ -166,9 +166,9 @@ export class XpController {
         return await tryScope(
             async () => {
                 let user =
-                    (await this._xpStore[
-                        `getXpUserBy${id.userId ? 'Auth' : ''}Id`
-                    ](id.userId ?? id.xpId)) ?? null;
+                    (await (id.userId
+                        ? this._xpStore.getXpUserByAuthId(id.userId)
+                        : this._xpStore.getXpUserById(id.xpId))) ?? null;
                 if (id.userId !== undefined && id.xpId !== undefined)
                     return {
                         success: false,
@@ -303,7 +303,7 @@ export class XpController {
                 const contract: XpContract = {
                     id: uuid(),
                     description: config.description ?? null,
-                    accountId,
+                    accountId: String(accountId),
                     issuerUserId: issuer.user.id,
                     holdingUserId: holder ? holder.user.id : null,
                     rate: config.rate,
@@ -385,25 +385,11 @@ export class XpController {
                             'The issuing and holding (receiving) party cannot be the same user.',
                     };
 
-                const updated = await this._xpStore.updateXpContract(
-                    contract.id,
-                    {
-                        status: 'open',
-                        accountId: this._generateContractAccount(),
-                        holdingUserId: receivingUser.user.id,
-                    }
-                );
-
-                if (!updated.success)
-                    //? Possibly implement error code mapping, not necessary for now
-                    return {
-                        success: false,
-                        errorCode: 'server_error',
-                        errorMessage:
-                            'An error occurred while issuing the draft contract.',
-                    };
-
-                return updated;
+                return await this._xpStore.updateXpContract(contract.id, {
+                    status: 'open',
+                    accountId: String(this._generateContractAccount()),
+                    holdingUserId: receivingUser.user.id,
+                });
             },
             {
                 scope: [TRACE_NAME, this.issueDraftContract.name],
@@ -452,7 +438,9 @@ export class XpController {
                     };
 
                 const account = (
-                    await this._fInterface.lookupAccounts([contract.accountId])
+                    await this._fInterface.lookupAccounts([
+                        BigInt(contract.accountId),
+                    ])
                 )[0];
                 if (!account)
                     return {

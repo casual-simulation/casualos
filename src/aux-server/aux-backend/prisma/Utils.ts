@@ -16,7 +16,11 @@ export function convertMarkers(markers: string[]): string[] | null {
     return markers && markers.length > 0 ? markers : null;
 }
 
-export function convertModelDateToMillis<
+/**
+ * Converts a model with createdAt and updatedAt fields to a model with createdAtMs and updatedAtMs fields.
+ * @param model The model to convert. (Object with createdAt and updatedAt fields)
+ */
+export function convertDateToDateMS<
     M extends { createdAt: Date; updatedAt: Date }
 >(
     model: M

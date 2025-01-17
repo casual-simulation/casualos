@@ -4,17 +4,9 @@ import type {
     XpInvoice,
     XpStore,
     XpUser,
-    SuccessResult,
-    UseTimeKeys,
-    GenericTimeKeysDB,
 } from '@casual-simulation/aux-records';
-import {
-    PrismaClient,
-    DataRecord as PrismaDataRecord,
-    Prisma,
-} from './generated';
-import { noThrowNull } from './Utils';
-import type { Account } from 'tigerbeetle-node';
+import { PrismaClient } from './generated';
+import { convertDateToDateMS, noThrowNull } from './Utils';
 
 export class PrismaXpStore implements XpStore {
     private _client: PrismaClient;
@@ -27,32 +19,14 @@ export class PrismaXpStore implements XpStore {
         const pUser = await noThrowNull(this._client.xpUser.findUnique, null, {
             where: { id },
         });
-        return !pUser
-            ? null
-            : {
-                  id: pUser.id,
-                  accountId: pUser.accountId,
-                  userId: pUser.userId,
-                  requestedRate: pUser.requestedRate,
-                  createdAtMs: pUser.createdAt.getTime(),
-                  updatedAtMs: pUser.updatedAt.getTime(),
-              };
+        return !pUser ? null : convertDateToDateMS(pUser);
     }
 
     async getXpUserByAuthId(id: AuthUser['id']) {
         const pUser = await noThrowNull(this._client.xpUser.findUnique, null, {
             where: { userId: id },
         });
-        return !pUser
-            ? null
-            : {
-                  id: pUser.id,
-                  accountId: pUser.accountId,
-                  userId: pUser.userId,
-                  requestedRate: pUser.requestedRate,
-                  createdAtMs: pUser.createdAt.getTime(),
-                  updatedAtMs: pUser.updatedAt.getTime(),
-              };
+        return !pUser ? null : convertDateToDateMS(pUser);
     }
 
     async getXpContract(id: XpContract['id']) {
@@ -64,12 +38,7 @@ export class PrismaXpStore implements XpStore {
             }
         );
         if (!contract) return null;
-        const { createdAt, updatedAt, ...rest } = contract;
-        return {
-            ...rest,
-            createdAtMs: createdAt.getTime(),
-            updatedAtMs: updatedAt.getTime(),
-        };
+        return convertDateToDateMS(contract);
     }
 
     async getXpInvoice(id: XpInvoice['id']) {
@@ -81,40 +50,37 @@ export class PrismaXpStore implements XpStore {
             }
         );
         if (!invoice) return null;
-        const { createdAt, updatedAt, ...rest } = invoice;
-        return {
-            ...rest,
-            createdAtMs: createdAt.getTime(),
-            updatedAtMs: updatedAt.getTime(),
-        };
+        return convertDateToDateMS(invoice);
     }
 
     async saveXpContract(contract: XpContract) {
-        await this._client.xpContract.create({
-            data: {
-                id: contract.id,
-                rate: contract.rate,
-                offeredWorth: contract.offeredWorth,
-                accountId: contract.accountId,
-                issuer: {
-                    connect: {
-                        id: contract.issuerUserId,
+        return convertDateToDateMS(
+            await this._client.xpContract.create({
+                data: {
+                    id: contract.id,
+                    rate: contract.rate,
+                    offeredWorth: contract.offeredWorth,
+                    accountId: String(contract.accountId),
+                    issuer: {
+                        connect: {
+                            id: contract.issuerUserId,
+                        },
                     },
-                },
-                ...(contract.holdingUserId !== null
-                    ? {
-                          holdingUser: {
-                              connect: {
-                                  id: contract.holdingUserId,
+                    ...(contract.holdingUserId !== null
+                        ? {
+                              holdingUser: {
+                                  connect: {
+                                      id: contract.holdingUserId,
+                                  },
                               },
-                          },
-                      }
-                    : {}),
-                status: contract.status,
-                createdAt: new Date(contract.createdAtMs),
-                updatedAt: new Date(contract.updatedAtMs),
-            },
-        });
+                          }
+                        : {}),
+                    status: contract.status,
+                    createdAt: new Date(contract.createdAtMs),
+                    updatedAt: new Date(contract.updatedAtMs),
+                },
+            })
+        );
     }
 
     async updateXpContract(
@@ -125,74 +91,80 @@ export class PrismaXpStore implements XpStore {
          * directConf is the configuration object without properties which need
          * additional processing before being passed to the update function.
          */
-        const { holdingUserId, issuerUserId, updatedAtMs, ...directConf } =
-            config;
-        const contract = await this._client.xpContract.update({
-            where: { id },
-            data: {
-                ...directConf,
-                ...(config.holdingUserId !== null
-                    ? {
-                          holdingUser: {
-                              connect: {
-                                  id: config.holdingUserId,
+        const {
+            accountId,
+            holdingUserId,
+            issuerUserId,
+            updatedAtMs,
+            ...directConf
+        } = config;
+        return convertDateToDateMS(
+            await this._client.xpContract.update({
+                where: { id },
+                data: {
+                    ...directConf,
+                    accountId: String(accountId),
+                    ...(config.holdingUserId !== null
+                        ? {
+                              holdingUser: {
+                                  connect: {
+                                      id: config.holdingUserId,
+                                  },
                               },
-                          },
-                      }
-                    : {}),
-                ...(config.issuerUserId !== null
-                    ? { issuer: { connect: { id: config.issuerUserId } } }
-                    : {}),
-                updatedAt: new Date(config.updatedAtMs),
-            },
-        });
-        const { createdAt, updatedAt, ...rest } = contract;
-        return {
-            success: true,
-            contract: {
-                ...rest,
-                createdAtMs: createdAt.getTime(),
-                updatedAtMs: updatedAt.getTime(),
-            },
-        };
+                          }
+                        : {}),
+                    ...(config.issuerUserId !== null
+                        ? { issuer: { connect: { id: config.issuerUserId } } }
+                        : {}),
+                    updatedAt: new Date(config.updatedAtMs),
+                },
+            })
+        );
     }
 
     async saveXpInvoice(invoice: XpInvoice) {
-        await this._client.xpInvoice.create({
-            data: {
-                id: invoice.id,
-                amount: invoice.amount,
-                contract: {
-                    connect: {
-                        id: invoice.contractId,
+        return convertDateToDateMS(
+            await this._client.xpInvoice.create({
+                data: {
+                    id: invoice.id,
+                    amount: invoice.amount,
+                    contract: {
+                        connect: {
+                            id: invoice.contractId,
+                        },
                     },
+                    note: invoice.note,
+                    status: invoice.status,
+                    transactionId: invoice.transactionId,
+                    voidReason: invoice.voidReason,
+                    createdAt: new Date(invoice.createdAtMs),
+                    updatedAt: new Date(invoice.updatedAtMs),
                 },
-                note: invoice.note,
-                status: invoice.status,
-                transactionId: invoice.transactionId,
-                voidReason: invoice.voidReason,
-                createdAt: new Date(invoice.createdAtMs),
-                updatedAt: new Date(invoice.updatedAtMs),
-            },
-        });
+            })
+        );
     }
 
-    async saveXpUser(id: XpUser['id'], user: XpUser) {
-        await this._client.xpUser.upsert({
-            where: { id },
-            create: {
-                id,
-                accountId: user.accountId,
-                userId: user.userId,
-                requestedRate: user.requestedRate,
-                createdAt: new Date(user.createdAtMs),
-                updatedAt: new Date(user.updatedAtMs),
-            },
-            update: {
-                accountId: user.accountId,
-                requestedRate: user.requestedRate,
-                updatedAt: new Date(user.updatedAtMs),
-            },
-        });
+    async saveXpUser(
+        id: XpUser['id'],
+        user: XpUser
+    ): ReturnType<XpStore['saveXpUser']> {
+        return convertDateToDateMS(
+            await this._client.xpUser.upsert({
+                where: { id },
+                create: {
+                    id,
+                    accountId: String(user.accountId),
+                    userId: user.userId,
+                    requestedRate: user.requestedRate,
+                    createdAt: new Date(user.createdAtMs),
+                    updatedAt: new Date(user.updatedAtMs),
+                },
+                update: {
+                    accountId: String(user.accountId),
+                    requestedRate: user.requestedRate,
+                    updatedAt: new Date(user.updatedAtMs),
+                },
+            })
+        );
     }
 }

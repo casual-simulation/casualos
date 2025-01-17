@@ -15,47 +15,45 @@ export type XpStore = {
      */
     getXpContract: (
         contractId: XpContract['id']
-    ) => Promise<ReduceKeysToPrimitives<XpContract>>;
+    ) => Promise<DataBaseM<XpContract>>;
 
     /**
      * Get an xp invoice by its id
      * @param invoiceId The id of the invoice to get
      */
-    getXpInvoice: (
-        invoiceId: XpInvoice['id']
-    ) => Promise<ReduceKeysToPrimitives<XpInvoice>>;
+    getXpInvoice: (invoiceId: XpInvoice['id']) => Promise<DataBaseM<XpInvoice>>;
 
     /**
      * Get an xp user by their auth id
      * @param id The auth user id of the user to get
      */
-    getXpUserByAuthId: (id: AuthUser['id']) => Promise<XpUser>;
+    getXpUserByAuthId: (id: AuthUser['id']) => Promise<DataBaseM<XpUser>>;
 
     /**
      * Get an xp user by their xp id
      * @param id The xp user id of the xp user to get
      */
-    getXpUserById: (id: XpUser['id']) => Promise<XpUser>;
+    getXpUserById: (id: XpUser['id']) => Promise<DataBaseM<XpUser>>;
 
     /**
      * Save an xp contract with an associated account
      * @param contract The contract to save
      * @param account The account to save
      */
-    saveXpContract: (contract: XpContract) => Promise<void>;
+    saveXpContract: (contract: XpContract) => Promise<DataBaseM<XpContract>>;
 
     /**
      * Save an xp invoice
      * @param invoice The invoice to save
      */
-    saveXpInvoice: (invoice: XpInvoice) => Promise<void>;
+    saveXpInvoice: (invoice: XpInvoice) => Promise<DataBaseM<XpInvoice>>;
 
     /**
      * Save an xp user associated with the given auth user
      * @param id The id of the xp user to create an account for (uuid) not the auth user id
      * @param user The meta data to associate with the user
      */
-    saveXpUser: (id: XpUser['id'], user: XpUser) => Promise<void>;
+    saveXpUser: (id: XpUser['id'], user: XpUser) => Promise<DataBaseM<XpUser>>;
 
     /**
      * Updates an Xp contract
@@ -66,7 +64,7 @@ export type XpStore = {
     updateXpContract: (
         id: XpContract['id'],
         config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
-    ) => Promise<SuccessResult<true, { contract: DataBaseM<XpContract> }>>;
+    ) => Promise<DataBaseM<XpContract>>;
 };
 
 type DataBaseM<M> = ReduceKeysToPrimitives<M>;
@@ -84,7 +82,7 @@ export interface ModelBase extends GenericTimeKeys {
  */
 export interface XpUser extends ModelBase {
     /** The id of the associated account */
-    accountId: Account['id'];
+    accountId: string;
     /** The rate at which the user is requesting payment (null if not yet specified) */
     requestedRate: CurrencySFU | null;
     /** The users unique id from the Auth system */
@@ -96,7 +94,7 @@ export interface XpUser extends ModelBase {
  */
 export interface XpContract extends ModelBase {
     /** The id of the account associated with the contract */
-    accountId: Account['id'] | null;
+    accountId: string | null;
     /** A description of the contract, may contain useful query meta */
     description: string | null;
     /** The id of the user holding the contract */

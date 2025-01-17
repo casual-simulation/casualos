@@ -150,7 +150,6 @@ import {
 import { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
 import { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
-import { SuccessResult } from './TypeUtils';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -358,12 +357,16 @@ export class MemoryStore
         this.roleAssignments = {};
     }
 
-    async saveXpUser(id: XpUser['id'], user: XpUser): Promise<void> {
-        this._xpUsers.set(id, user);
+    async saveXpUser(id: XpUser['id'], user: XpUser) {
+        const u = cloneDeep(user);
+        this._xpUsers.set(id, u);
+        return u;
     }
 
-    async saveXpContract(contract: XpContract): Promise<void> {
-        this._xpContracts.set(contract.id, contract);
+    async saveXpContract(contract: XpContract) {
+        const c = cloneDeep(contract);
+        this._xpContracts.set(contract.id, c);
+        return c;
     }
 
     async updateXpContract(
@@ -378,14 +381,13 @@ export class MemoryStore
                 (contract as any)[key] = config[key as keyof typeof config];
             }
         }
-        return {
-            success: true,
-            contract: cloneDeep(contract),
-        };
+        return cloneDeep(contract);
     }
 
-    async saveXpInvoice(invoice: XpInvoice): Promise<void> {
-        this._xpInvoices.set(invoice.id, invoice);
+    async saveXpInvoice(invoice: XpInvoice) {
+        const i = cloneDeep(invoice);
+        this._xpInvoices.set(invoice.id, i);
+        return i;
     }
 
     async getXpUserByAuthId(id: AuthUser['id']): Promise<XpUser> {

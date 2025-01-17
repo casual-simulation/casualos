@@ -1158,7 +1158,7 @@ model XpUser {
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
 
     // The id of the account that the user is associated with
-    accountId BigInt @unique
+    accountId String @unique
 
     // The rate at which the user is requested to be paid per gig.
     // Should have the same currency as the account.
@@ -1204,7 +1204,7 @@ model XpContract {
     status String
 
     // The id of the account which holds the money allocated to the contract
-    accountId BigInt? @unique
+    accountId String? @unique
 
     invoices XpInvoice[]
 

@@ -513,6 +513,24 @@ export type SuccessResult<
 > = ActionResult_T<S, T>;
 
 /**
+ * A Generic utility type which represents data in a manner which is safe for JSON serialization
+ */
+export type SafeJSONSerializable<T, K extends keyof T = keyof T> = {
+    [Key in K]: T[Key] extends object
+        ? SafeJSONSerializable<T[Key]>
+        : T[Key] extends Date | bigint
+        ? string
+        : T[Key] extends
+              | Function
+              | symbol
+              | undefined
+              | Map<any, any>
+              | Set<any>
+        ? never
+        : T[Key];
+};
+
+/**
  * A Generic Promise utility type which extracts the type of a promise's resolved value
  * @template T The type of the promise to extract the resolved value from
  */
