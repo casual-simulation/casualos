@@ -25,6 +25,10 @@ patchedDependencies:
 importers:
 
   .:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.35.0
+        version: 0.35.0
     devDependencies:
       '@babel/core':
         specifier: ^7.14.3
@@ -661,8 +665,8 @@ importers:
   src/aux-records:
     dependencies:
       '@anthropic-ai/sdk':
-        specifier: 0.24.3
-        version: 0.24.3
+        specifier: 0.33.1
+        version: 0.33.1
       '@casual-simulation/aux-common':
         specifier: ^3.3.14
         version: link:../aux-common
@@ -1984,8 +1988,8 @@ packages:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.20
 
-  /@anthropic-ai/sdk@0.24.3:
-    resolution: {integrity: sha512-916wJXO6T6k8R6BAAcLhLPv/pnLGy7YSEBZXZ1XTFbLcTZE8oTy3oDW9WJf9KKZwMvVcePIfoTSvzXHRcGxkQQ==}
+  /@anthropic-ai/sdk@0.33.1:
+    resolution: {integrity: sha512-VrlbxiAdVRGuKP2UQlCnsShDHJKWepzvfRCkZMpU+oaUdKLpOfmylLMRojGrAgebV+kDtPjewCVP0laHXg+vsA==}
     dependencies:
       '@types/node': 18.19.3
       '@types/node-fetch': 2.6.9
@@ -1994,7 +1998,20 @@ packages:
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
       node-fetch: 2.7.0
-      web-streams-polyfill: 3.3.3
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
+  /@anthropic-ai/sdk@0.35.0:
+    resolution: {integrity: sha512-JxVuNIRLjcXZbDW/rJa3vSIoYB5c0wgIQUPsjueeqli9OJyCJpInj0UlvKSSk6R2oCYyg0y2M0H8n8Wyt0l1IA==}
+    dependencies:
+      '@types/node': 18.19.3
+      '@types/node-fetch': 2.6.9
+      abort-controller: 3.0.0
+      agentkeepalive: 4.5.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0
     transitivePeerDependencies:
       - encoding
     dev: false
