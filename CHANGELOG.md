@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.3.16
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added support for prompt caching in `AnthropicAIChatInterface`.
+    -   Introduced `cachePrompt` property in `AIChatInterfaceRequest` to specify if a message can be cached.
+    -   Implemented caching mechanism using `NodeCache` with a 5-minute TTL to improve performance and reduce costs.
+    -   Cached responses are returned when available, saving 90% of the cost compared to non-cached prompts.
+
+### :bug: Bug Fixes
+
 ## V3.3.15
 
 #### Date: 12/19/2024
