@@ -175,6 +175,7 @@
     "dependencies": {
         "@anthropic-ai/sdk": "^0.35.0",
         "@opentelemetry/api": "^1.9.0",
+        "@types/node-cache": "^4.2.5",
         "node-cache": "^5.1.2",
         "zod": "^3.24.1"
     }
