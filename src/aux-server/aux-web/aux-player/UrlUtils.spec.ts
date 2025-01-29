@@ -96,6 +96,32 @@ describe('getInstParameters()', () => {
             isStatic: true,
         });
     });
+
+    it('should not support deleting insts (with inst=)', () => {
+        const params = getInstParameters({
+            bios: 'delete inst',
+            inst: 'test',
+        });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: null,
+            owner: null,
+            isStatic: false,
+        });
+    });
+
+    it('should not support deleting insts (with staticInst=)', () => {
+        const params = getInstParameters({
+            bios: 'delete inst',
+            staticInst: 'test',
+        });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: null,
+            owner: null,
+            isStatic: true,
+        });
+    });
 });
 
 describe('getPermalink()', () => {
