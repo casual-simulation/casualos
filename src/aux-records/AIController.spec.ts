@@ -2765,6 +2765,7 @@ describe('AIController', () => {
         it('should return the result from the generateImage interface', async () => {
             generateImageInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -2860,6 +2861,7 @@ describe('AIController', () => {
 
             otherInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -2979,6 +2981,7 @@ describe('AIController', () => {
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
             generateImageInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -3090,6 +3093,7 @@ describe('AIController', () => {
 
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',
@@ -3120,6 +3124,7 @@ describe('AIController', () => {
             it('should reject the request if it would exceed the subscription request limits', async () => {
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',
@@ -3150,6 +3155,7 @@ describe('AIController', () => {
             it('should reject the request if it would exceed the subscription period limits', async () => {
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',

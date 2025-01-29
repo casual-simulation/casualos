@@ -13,7 +13,12 @@ import {
 } from './AIImageInterface';
 import { handleAxiosErrors } from './Utils';
 import { traced } from './tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import {
+    SpanKind,
+    SpanOptions,
+    SpanStatusCode,
+    trace,
+} from '@opentelemetry/api';
 
 const TRACE_NAME = 'OpenAIImageInterface';
 const SPAN_OPTIONS: SpanOptions = {
@@ -93,9 +98,26 @@ export class OpenAIImageInterface implements AIImageInterface {
             );
 
             return {
+                success: true,
                 images,
             };
         } catch (err) {
+            if (axios.isAxiosError(err)) {
+                if (err.response.status === 400) {
+                    const span = trace.getActiveSpan();
+                    span?.recordException(err);
+                    span?.setStatus({ code: SpanStatusCode.ERROR });
+
+                    console.error(
+                        `[OpenAIChatInterface] [${request.userId}] [generateImage]: Bad request: ${err.response.data.error.message}`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: err.response.data.error.message,
+                    };
+                }
+            }
             handleAxiosErrors(err);
         }
     }

@@ -62,9 +62,7 @@ import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
-    parseCasualOSUrl,
     WORLD_UP,
-    ParsedCasualOSUrl,
     TweenCameraPosition,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
@@ -86,6 +84,8 @@ import { update as updateMeshUI } from 'three-mesh-ui';
 import { EXRLoader } from '@casual-simulation/three/examples/jsm/loaders/EXRLoader';
 import Bowser from 'bowser';
 import { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
+import { getMediaForCasualOSUrl } from '../MediaUtils';
+import { parseCasualOSUrl } from '../UrlUtils';
 
 export const PREFERRED_XR_REFERENCE_SPACE = 'local-floor';
 
@@ -797,59 +797,21 @@ export abstract class Game {
             }
 
             this.gameView.gameBackground.prepend(this._backgroundVideoElement);
-            const media = await this._getMediaForCasualOSUrl(casualOSUrl);
+            const media = await getMediaForCasualOSUrl(casualOSUrl);
             if (media) {
+                this._backgroundVideoSubscription = new Subscription(() => {
+                    if (media instanceof MediaStream) {
+                        for (let track of media.getTracks()) {
+                            track.stop();
+                        }
+                    }
+                });
                 this._backgroundVideoElement.srcObject = media;
             } else {
                 this._backgroundVideoElement.src = address;
             }
             this._backgroundVideoElement.play();
         }
-    }
-
-    private async _getMediaForCasualOSUrl(
-        url: ParsedCasualOSUrl
-    ): Promise<MediaProvider> {
-        if (url && url.type === 'camera-feed') {
-            try {
-                const media = await window.navigator.mediaDevices.getUserMedia({
-                    audio: false,
-                    video: {
-                        // Use the user specified one if specified.
-                        // Otherwise default to environment.
-                        facingMode: hasValue(url.camera)
-                            ? {
-                                  exact:
-                                      url.camera === 'front'
-                                          ? 'user'
-                                          : 'environment',
-                              }
-                            : { ideal: 'environment' },
-                    },
-                });
-                this._backgroundVideoSubscription = new Subscription(() => {
-                    for (let track of media.getTracks()) {
-                        track.stop();
-                    }
-                });
-
-                return media;
-            } catch (err) {
-                console.warn(
-                    '[Game] Unable to get camera feed for background.',
-                    err
-                );
-                return;
-            }
-        } else if (url && url.type === 'video-element') {
-            for (let sim of appManager.simulationManager.simulations.values()) {
-                let stream = sim.livekit.getMediaByAddress(url.address);
-                if (stream) {
-                    return stream;
-                }
-            }
-        }
-        return null;
     }
 
     protected _resizeBackgroundVideoElement() {

@@ -17115,6 +17115,7 @@ describe('RecordsServer', () => {
             });
 
             imageInterface.generateImage.mockResolvedValueOnce({
+                success: true,
                 images: [
                     {
                         base64: 'base64',

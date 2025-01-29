@@ -1,10 +1,27 @@
 # CasualOS Changelog
 
-## V3.3.15
+## V3.3.16
 
-#### Date TBD
+#### Date: TBD
 
 ### :rocket: Features
+
+### :bug: Bug Fixes
+
+-   Improved error handling for `ai.generateImage()` requests with unacceptable parameters.
+    -   The server now returns an `invalid_request` error code when the parameters provided are not accepted by the selected model (e.g., OpenAI, Google).
+    -   This ensures that users receive clear and actionable feedback when their requests fail due to invalid parameters.
+-   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
+
+## V3.3.15
+
+#### Date: 12/19/2024
+
+### :rocket: Features
+
+-   Added the ability to use CasualOS URLs in `<video>` HTML custom app elements.
+    -   This makes it possible to use LiveKit tracks in a custom app.
+    -   Tip: Utilize the `autoplay` attribute to automatically play video from a track.
 
 ### :bug: Bug Fixes
 

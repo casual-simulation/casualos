@@ -12,7 +12,6 @@ import {
     AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
     AIChatMessage,
-    AIChatStreamMessage,
 } from './AIChatInterface';
 import {
     AIGenerateSkyboxInterface,
@@ -1074,7 +1073,7 @@ export class AIController {
             }
 
             const result = await provider.generateImage({
-                model,
+                model: model,
                 prompt: request.prompt,
                 negativePrompt: request.negativePrompt,
                 width: width,
@@ -1091,6 +1090,10 @@ export class AIController {
                 stylePreset: request.stylePreset,
                 userId: request.userId,
             });
+
+            if (!result.success) {
+                return result;
+            }
 
             await this._metrics.recordImageMetrics({
                 userId: request.userId,
@@ -1702,6 +1705,7 @@ export interface AIGenerateImageFailure {
         | NotSupportedError
         | SubscriptionLimitReached
         | NotAuthorizedError
+        | 'invalid_request'
         | 'invalid_model';
     errorMessage: string;
 

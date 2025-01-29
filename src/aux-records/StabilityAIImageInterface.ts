@@ -9,6 +9,7 @@ import axios from 'axios';
 import { handleAxiosErrors } from './Utils';
 import { traced } from './tracing/TracingDecorators';
 import { z } from 'zod';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'StabilityAIImageInterface';
 
@@ -115,9 +116,26 @@ export class StabilityAIImageInterface implements AIImageInterface {
             );
 
             return {
+                success: true,
                 images,
             };
         } catch (err) {
+            if (axios.isAxiosError(err)) {
+                if (err.response.status === 400) {
+                    const span = trace.getActiveSpan();
+                    span?.recordException(err);
+                    span?.setStatus({ code: SpanStatusCode.ERROR });
+
+                    console.error(
+                        `[StabilityAIChatIngerface] [${request.userId}] [generateImage]: Bad request: ${err.response.data.error.message}`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: err.response.data.error.message,
+                    };
+                }
+            }
             handleAxiosErrors(err);
         }
     }
@@ -157,6 +175,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
         const data = schema.parse(result.data);
 
         return {
+            success: true,
             images: [
                 {
                     base64: data.image,
@@ -203,6 +222,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
         const data = schema.parse(result.data);
 
         return {
+            success: true,
             images: [
                 {
                     base64: data.image,
@@ -252,6 +272,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
         const data = schema.parse(result.data);
 
         return {
+            success: true,
             images: [
                 {
                     base64: data.image,
