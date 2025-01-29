@@ -3368,6 +3368,7 @@ Object {
                     "sign in",
                     "sign up",
                     "sign out",
+                    "delete inst",
                   ],
                 },
                 "type": "array",
@@ -3396,6 +3397,7 @@ Object {
                   "sign in",
                   "sign up",
                   "sign out",
+                  "delete inst",
                 ],
               },
               "defaultBiosOption": Object {
@@ -3417,6 +3419,7 @@ Object {
                   "sign in",
                   "sign up",
                   "sign out",
+                  "delete inst",
                 ],
               },
               "jitsiAppName": Object {
@@ -7212,6 +7215,7 @@ Object {
                     "sign in",
                     "sign up",
                     "sign out",
+                    "delete inst",
                   ],
                 },
                 "type": "array",
@@ -7240,6 +7244,7 @@ Object {
                   "sign in",
                   "sign up",
                   "sign out",
+                  "delete inst",
                 ],
               },
               "defaultBiosOption": Object {
@@ -7261,6 +7266,7 @@ Object {
                   "sign in",
                   "sign up",
                   "sign out",
+                  "delete inst",
                 ],
               },
               "jitsiAppName": Object {
