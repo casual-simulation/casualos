@@ -8,9 +8,10 @@
 
 ### :bug: Bug Fixes
 
--   Improved error handling for `ai.generateImage` requests with unacceptable parameters.
+-   Improved error handling for `ai.generateImage()` requests with unacceptable parameters.
     -   The server now returns an `invalid_request` error code when the parameters provided are not accepted by the selected model (e.g., OpenAI, Google).
     -   This ensures that users receive clear and actionable feedback when their requests fail due to invalid parameters.
+-   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
 
 ## V3.3.15
 
