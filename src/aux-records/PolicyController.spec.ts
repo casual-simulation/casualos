@@ -771,6 +771,11 @@ describe('PolicyController', () => {
                     subjectId: '/inst',
                     subjectType: 'inst',
                 },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
+                },
             });
 
             const permissions = await store.listPermissionsForMarker(
@@ -928,6 +933,11 @@ describe('PolicyController', () => {
                     action: 'revokePermission',
                     subjectType: 'inst',
                     subjectId: '/inst',
+                },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
                 },
             });
 
@@ -1206,6 +1216,11 @@ describe('PolicyController', () => {
                     subjectId: '/inst',
                     subjectType: 'inst',
                 },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
+                },
             });
 
             const permissions = await store.listPermissionsForResource(
@@ -1365,6 +1380,11 @@ describe('PolicyController', () => {
                     action: 'revokePermission',
                     subjectType: 'inst',
                     subjectId: '/inst',
+                },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
                 },
             });
 
@@ -1548,6 +1568,11 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
+                },
             });
 
             const markerPermission =
@@ -1620,6 +1645,11 @@ describe('PolicyController', () => {
                     action: 'revokePermission',
                     subjectType: 'inst',
                     subjectId: '/inst',
+                },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
                 },
             });
 
@@ -1764,6 +1794,11 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
+                },
             });
         });
     });
@@ -1872,6 +1907,11 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
+                },
             });
         });
     });
@@ -1968,6 +2008,11 @@ describe('PolicyController', () => {
                     action: 'list',
                     subjectType: 'inst',
                     subjectId: '/inst',
+                },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
                 },
             });
         });
@@ -2194,6 +2239,11 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
+                },
             });
         });
     });
@@ -2344,6 +2394,11 @@ describe('PolicyController', () => {
                     action: 'grant',
                     subjectType: 'inst',
                     subjectId: '/inst',
+                },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
                 },
             });
 
@@ -2504,6 +2559,11 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'designated',
+                    designatedRecords: [recordName],
+                },
             });
 
             const roles = await store.listRolesForUser(recordName, 'testId');
@@ -2521,7 +2581,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe.only('authorizeSubject()', () => {
+    describe('authorizeSubject()', () => {
         const adminOrGrantedActionCases: [ActionKinds, string | null][] = [
             ['create', 'resourceId'],
             ['update', 'resourceId'],
@@ -5154,7 +5214,7 @@ describe('PolicyController', () => {
             });
         });
 
-        describe.only('entitlements', () => {
+        describe('entitlements', () => {
             const entitlementResourceKinds: [
                 Entitlement['feature'],
                 ResourceKinds[]
@@ -6689,6 +6749,10 @@ describe('PolicyController', () => {
                     resourceKind: 'marker',
                     action: 'assign',
                     resourceId: marker,
+                },
+                recommendedEntitlement: {
+                    feature: 'permissions',
+                    scope: 'owned',
                 },
             });
         });
