@@ -24,6 +24,7 @@ import {
     PUBLIC_WRITE_MARKER,
     PRIVATE_MARKER,
     Entitlement,
+    KnownErrorCodes,
 } from '@casual-simulation/aux-common';
 import { ListedStudioAssignment, PublicRecordKeyPolicy } from './RecordsStore';
 import {
@@ -2688,6 +2689,29 @@ export class PolicyController {
             };
         }
     }
+
+    /**
+     * Attempts to grant an entitlement to a package.
+     * @param request
+     */
+    @traced(TRACE_NAME)
+    async grantEntitlement(
+        request: GrantEntitlementRequest
+    ): Promise<GrantEntitlementResult> {
+        try {
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 /**
@@ -3756,4 +3780,56 @@ function getEntitlementFeatureForAction(
     }
 
     return null;
+}
+
+export interface GrantEntitlementRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string;
+
+    /**
+     * The ID of the package that the entitlement grant is for.
+     */
+    packageId: string;
+
+    /**
+     * The feature that is being granted.
+     */
+    feature: Entitlement['feature'];
+
+    /**
+     * The scope that is being granted.
+     */
+    scope: Entitlement['scope'];
+
+    /**
+     * The records that the entitlement grant is for.
+     * If omitted, then scope cannot be "designated".
+     */
+    designatedRecords?: string[];
+
+    /**
+     * The unix time in miliseconds that the entitlement grant will expire.
+     */
+    expireTimeMs: number;
+}
+
+export type GrantEntitlementResult =
+    | GrantEntitlementSuccess
+    | GrantEntitlementFailure;
+
+export interface GrantEntitlementSuccess {
+    success: true;
+
+    /**
+     * The ID of the entitlement grant.
+     */
+    grantId: string;
+}
+
+export interface GrantEntitlementFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
 }

@@ -2581,6 +2581,160 @@ describe('PolicyController', () => {
         });
     });
 
+    describe('grantEntitlement()', () => {
+        const packageRecordName = 'packageRecord';
+        const packageAddress = 'packageAddress';
+        const packageKey = version(1);
+
+        const originalDateNow = Date.now;
+        let dateNowMock: jest.Mock<number>;
+
+        beforeEach(async () => {
+            dateNowMock = Date.now = jest.fn(() => 500);
+
+            await services.records.createRecord({
+                recordName: packageRecordName,
+                userId: ownerId,
+                ownerId: ownerId,
+            });
+
+            await services.packagesStore.createItem(packageRecordName, {
+                id: 'packageId',
+                address: packageAddress,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await services.packageVersionStore.createItem(packageRecordName, {
+                id: 'packageVersionId',
+                address: packageAddress,
+                key: packageKey,
+                auxFileName: 'auxFileName',
+                auxSha256: 'sha256',
+                createdAtMs: 123,
+                createdFile: true,
+                readme: '',
+                sha256: 'sha256',
+                sizeInBytes: 123,
+                requiresReview: false,
+                entitlements: [
+                    {
+                        feature: 'data',
+                        scope: 'personal',
+                    },
+                ],
+            });
+        });
+
+        afterEach(() => {
+            Date.now = originalDateNow;
+        });
+
+        it('should grant an entitlement to the given package for the given user', async () => {
+            const result = await controller.grantEntitlement({
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'personal',
+                expireTimeMs: 999,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                entitlementId: expect.any(String),
+            });
+
+            const entitlement = store.grantedPackageEntitlements[0];
+            expect(entitlement).toEqual({
+                id: result.entitlementId,
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'personal',
+                expireTimeMs: 999,
+                createdAtMs: 500,
+                designatedRecords: [],
+            });
+        });
+
+        it('should update the entitlement expire time', async () => {
+            await store.saveGrantedPackageEntitlement({
+                id: 'entitlementId',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'personal',
+                designatedRecords: [],
+                expireTimeMs: 999,
+                createdAtMs: 500,
+            });
+
+            const result = await controller.grantEntitlement({
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'personal',
+                expireTimeMs: 1000,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                entitlementId: 'entitlementId',
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'entitlementId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'personal',
+                    expireTimeMs: 1000,
+                    createdAtMs: 500,
+                    designatedRecords: [],
+                },
+            ]);
+        });
+
+        it('should update the entitlement scope', async () => {
+            await store.saveGrantedPackageEntitlement({
+                id: 'entitlementId',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'personal',
+                designatedRecords: [],
+                expireTimeMs: 999,
+                createdAtMs: 500,
+            });
+
+            const result = await controller.grantEntitlement({
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'owned',
+                expireTimeMs: 999,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                entitlementId: 'entitlementId',
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'entitlementId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'owned',
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    designatedRecords: [],
+                },
+            ]);
+        });
+    });
+
     describe('authorizeSubject()', () => {
         const adminOrGrantedActionCases: [ActionKinds, string | null][] = [
             ['create', 'resourceId'],

@@ -348,6 +348,10 @@ export class MemoryStore
         return this._comIdRequests;
     }
 
+    get grantedPackageEntitlements() {
+        return this._grantedPackageEntitlements;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
