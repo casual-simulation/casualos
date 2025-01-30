@@ -342,6 +342,20 @@ export interface PolicyStore {
     saveGrantedPackageEntitlement(
         grantedEntitlement: GrantedPackageEntitlement
     ): Promise<void>;
+
+    /**
+     * Attempts to find the granted entitlement for the given user, package, feature, and scope.
+     * @param userId The ID of the user that granted the entitlement.
+     * @param packageId The ID of the package that the entitlement is granted for.
+     * @param feature The feature that was granted.
+     * @param scope The scope that was granted.
+     */
+    findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: Entitlement['feature'],
+        scope: Entitlement['scope']
+    ): Promise<GrantedPackageEntitlement | null>;
 }
 
 /**

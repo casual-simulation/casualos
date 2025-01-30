@@ -1204,6 +1204,23 @@ export class MemoryStore
         );
     }
 
+    async findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: Entitlement['feature'],
+        scope: Entitlement['scope']
+    ): Promise<GrantedPackageEntitlement | null> {
+        return (
+            this._grantedPackageEntitlements.find(
+                (e) =>
+                    e.userId === userId &&
+                    e.packageId === packageId &&
+                    e.feature === feature &&
+                    e.scope === scope
+            ) ?? null
+        );
+    }
+
     async countRecords(filter: CountRecordsFilter): Promise<number> {
         let count = 0;
         for (let record of this._records) {

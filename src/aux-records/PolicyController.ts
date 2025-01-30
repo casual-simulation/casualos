@@ -40,7 +40,7 @@ import {
     UpdateUserRolesFailure,
     UserPrivacyFeatures,
 } from './PolicyStore';
-import { get, sortBy, without } from 'lodash';
+import { get, sortBy, union, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import {
     InstRecordsStore,
@@ -51,7 +51,7 @@ import {
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { UserRole } from './AuthStore';
-import { load } from 'esri/geometry/coordinateFormatter';
+import { v7 as uuidv7 } from 'uuid';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -2699,6 +2699,40 @@ export class PolicyController {
         request: GrantEntitlementRequest
     ): Promise<GrantEntitlementResult> {
         try {
+            const grant =
+                await this._policies.findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+                    request.userId,
+                    request.packageId,
+                    request.feature,
+                    request.scope
+                );
+
+            const grantId = grant?.id ?? uuidv7();
+            const designatedRecords = grant?.designatedRecords
+                ? union(
+                      grant.designatedRecords,
+                      request.designatedRecords ?? []
+                  )
+                : request.designatedRecords ?? [];
+
+            await this._policies.saveGrantedPackageEntitlement({
+                id: grantId,
+                createdAtMs: grant?.createdAtMs ?? Date.now(),
+                expireTimeMs: Math.max(
+                    request.expireTimeMs,
+                    grant?.expireTimeMs ?? 0
+                ),
+                scope: grant?.scope ?? request.scope,
+                packageId: grant?.packageId ?? request.packageId,
+                userId: grant?.userId ?? request.userId,
+                feature: grant?.feature ?? request.feature,
+                designatedRecords,
+            });
+
+            return {
+                success: true,
+                grantId,
+            };
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);

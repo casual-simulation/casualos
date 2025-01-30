@@ -1,6 +1,7 @@
 import { Record, RecordKey } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
 import {
+    GrantEntitlementSuccess,
     PolicyController,
     explainationForPermissionAssignment,
     getMarkerResourcesForCreation,
@@ -2630,22 +2631,22 @@ describe('PolicyController', () => {
         });
 
         it('should grant an entitlement to the given package for the given user', async () => {
-            const result = await controller.grantEntitlement({
+            const result = (await controller.grantEntitlement({
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
                 scope: 'personal',
                 expireTimeMs: 999,
-            });
+            })) as GrantEntitlementSuccess;
 
             expect(result).toEqual({
                 success: true,
-                entitlementId: expect.any(String),
+                grantId: expect.any(String),
             });
 
             const entitlement = store.grantedPackageEntitlements[0];
             expect(entitlement).toEqual({
-                id: result.entitlementId,
+                id: result.grantId,
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
@@ -2678,7 +2679,7 @@ describe('PolicyController', () => {
 
             expect(result).toEqual({
                 success: true,
-                entitlementId: 'entitlementId',
+                grantId: 'entitlementId',
             });
 
             expect(store.grantedPackageEntitlements).toEqual([
@@ -2695,7 +2696,7 @@ describe('PolicyController', () => {
             ]);
         });
 
-        it('should update the entitlement scope', async () => {
+        it('should not update the entitlement scope', async () => {
             await store.saveGrantedPackageEntitlement({
                 id: 'entitlementId',
                 userId: userId,
@@ -2707,22 +2708,32 @@ describe('PolicyController', () => {
                 createdAtMs: 500,
             });
 
-            const result = await controller.grantEntitlement({
+            const result = (await controller.grantEntitlement({
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
                 scope: 'owned',
                 expireTimeMs: 999,
-            });
+            })) as GrantEntitlementSuccess;
 
             expect(result).toEqual({
                 success: true,
-                entitlementId: 'entitlementId',
+                grantId: expect.any(String),
             });
 
             expect(store.grantedPackageEntitlements).toEqual([
                 {
                     id: 'entitlementId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'personal',
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    designatedRecords: [],
+                },
+                {
+                    id: result.grantId,
                     userId: userId,
                     packageId: 'packageId',
                     feature: 'data',
