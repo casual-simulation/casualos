@@ -432,10 +432,9 @@ export type EntitlementScope =
  * This ultimately means that while a package can have the ability to request access to a bunch of different records,
  * they can only be granted access to a single record at once (for now).
  *
- * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to access the user's personal record.
  * - "designated" - The entitlement is for specific records. This would allow the package to access specific records.
  */
-export type GrantedEntitlementScope = 'personal' | 'designated';
+export type GrantedEntitlementScope = 'designated';
 
 /**
  * The feature categories that entitlements support.

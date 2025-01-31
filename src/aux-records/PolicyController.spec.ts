@@ -2575,7 +2575,8 @@ describe('PolicyController', () => {
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
-                scope: 'personal',
+                scope: 'designated',
+                recordName: userId,
                 expireTimeMs: 999,
             })) as GrantEntitlementSuccess;
 
@@ -2590,10 +2591,10 @@ describe('PolicyController', () => {
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
-                scope: 'personal',
+                scope: 'designated',
+                recordName: userId,
                 expireTimeMs: 999,
                 createdAtMs: 500,
-                recordName: null,
             });
         });
 
@@ -2603,7 +2604,8 @@ describe('PolicyController', () => {
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
-                scope: 'personal',
+                scope: 'designated',
+                recordName: userId,
                 expireTimeMs: 999,
                 createdAtMs: 500,
             });
@@ -2612,7 +2614,8 @@ describe('PolicyController', () => {
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
-                scope: 'personal',
+                scope: 'designated',
+                recordName: userId,
                 expireTimeMs: 1000,
             });
 
@@ -2627,21 +2630,22 @@ describe('PolicyController', () => {
                     userId: userId,
                     packageId: 'packageId',
                     feature: 'data',
-                    scope: 'personal',
+                    scope: 'designated',
+                    recordName: userId,
                     expireTimeMs: 1000,
                     createdAtMs: 500,
-                    recordName: null,
                 },
             ]);
         });
 
-        it('should not update the entitlement scope', async () => {
+        it('should add the grant if the record name is different from others', async () => {
             await store.saveGrantedPackageEntitlement({
                 id: 'entitlementId',
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
-                scope: 'personal',
+                scope: 'designated',
+                recordName: userId,
                 expireTimeMs: 999,
                 createdAtMs: 500,
             });
@@ -2666,7 +2670,8 @@ describe('PolicyController', () => {
                     userId: userId,
                     packageId: 'packageId',
                     feature: 'data',
-                    scope: 'personal',
+                    scope: 'designated',
+                    recordName: userId,
                     expireTimeMs: 999,
                     createdAtMs: 500,
                 },
@@ -5428,7 +5433,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'personal',
+                                        scope: 'designated',
+                                        recordName: userId,
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
@@ -5477,7 +5483,8 @@ describe('PolicyController', () => {
                                             // instRecordName: instRecordName,
                                             // inst,
                                             feature: feature,
-                                            scope: 'personal',
+                                            scope: 'designated',
+                                            recordName: userId,
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
 
@@ -5533,7 +5540,8 @@ describe('PolicyController', () => {
                                         },
                                         recommendedEntitlement: {
                                             feature: feature,
-                                            scope: 'personal',
+                                            scope: 'designated',
+                                            recordName: userId,
                                             packageId: 'packageId',
                                         },
                                     });
@@ -5555,7 +5563,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'personal',
+                                        scope: 'designated',
+                                        recordName: userId,
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
@@ -5590,7 +5599,8 @@ describe('PolicyController', () => {
                                         },
                                         recommendedEntitlement: {
                                             feature: feature,
-                                            scope: 'personal',
+                                            scope: 'designated',
+                                            recordName: userId,
                                             packageId: 'packageId',
                                         },
                                     });

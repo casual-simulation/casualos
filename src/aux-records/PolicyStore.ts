@@ -329,12 +329,14 @@ export interface PolicyStore {
      * @param packageIds The IDs of the packages to list the entitlements for.
      * @param feature The feature that the entitlements are granted for.
      * @param userId The ID of the user that the entitlements are granted to.
+     * @param recordName The name of the record that the entitlements are granted for.
      * @param nowMs The current unix time in milliseconds.
      */
     listGrantedEntitlementsByFeatureAndUserId(
         packageIds: string[],
         feature: Entitlement['feature'],
         userId: string,
+        recordName: string,
         nowMs: number
     ): Promise<GrantedPackageEntitlement[]>;
 
@@ -394,9 +396,8 @@ export interface GrantedPackageEntitlement {
 
     /**
      * The record that the entitlement was granted for.
-     * Null/undefined if the scope is not "designated".
      */
-    recordName?: string | null;
+    recordName: string | null;
 
     /**
      * The unix time that the entitlement expires in miliseconds.

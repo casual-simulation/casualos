@@ -1171,6 +1171,7 @@ export class PolicyController {
                             loadedPackages.map((p) => p.packageId),
                             entitlementFeature,
                             context.userId,
+                            context.recordName,
                             Date.now()
                         );
 
@@ -1186,12 +1187,6 @@ export class PolicyController {
                         const entitlement = grantedEntitlements.find(
                             (entitlement) => {
                                 if (
-                                    entitlement.scope === 'personal' &&
-                                    entitlement.userId === context.recordName
-                                ) {
-                                    // Entitlement is for the personal record
-                                    return true;
-                                } else if (
                                     entitlement.scope === 'designated' &&
                                     entitlement.recordName ===
                                         context.recordName
@@ -1238,20 +1233,11 @@ export class PolicyController {
                         }
                     }
 
-                    let entitlementScope: GrantedEntitlementScope;
-                    let entitlementRecordName: string | undefined;
-                    if (context.recordName === context.userId) {
-                        entitlementScope = 'personal';
-                    } else {
-                        entitlementScope = 'designated';
-                        entitlementRecordName = context.recordName;
-                    }
-
-                    if (entitlementScope && hasPackages) {
+                    if (hasPackages) {
                         recommendedEntitlement = {
                             feature: entitlementFeature,
-                            scope: entitlementScope,
-                            recordName: entitlementRecordName,
+                            scope: 'designated',
+                            recordName: context.recordName,
                             packageId: loadedPackages[0].packageId,
                         };
                     }
@@ -3815,9 +3801,8 @@ export interface GrantEntitlementRequest {
 
     /**
      * The record that the entitlement grant is for.
-     * If omitted, then scope cannot be "designated".
      */
-    recordName?: string;
+    recordName: string;
 
     /**
      * The unix time in miliseconds that the entitlement grant will expire.

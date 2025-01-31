@@ -1194,12 +1194,14 @@ export class MemoryStore
         packageIds: string[],
         feature: Entitlement['feature'],
         userId: string,
+        recordName: string,
         nowMs: number
     ): Promise<GrantedPackageEntitlement[]> {
         return this._grantedPackageEntitlements.filter(
             (e) =>
                 e.userId === userId &&
                 e.feature === feature &&
+                e.recordName === recordName &&
                 e.expireTimeMs > nowMs &&
                 packageIds.includes(e.packageId)
         );
