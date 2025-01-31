@@ -408,6 +408,51 @@ export const ACTION_KINDS_VALIDATION = z.enum([
 ]);
 
 /**
+ * The scopes that can be used for requested entitlements.
+ * This can be used to limit the entitlement to requesting a category of resources.
+ * For example, the "personal" scope would limit the entitlement to requesting access to the user's personal resources.
+ *
+ * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in the user's player record. Once granted, the package would have access to the user's personal record.
+ * - "owned" - The entitlement is for user (user-owned) records. This would allow the package to request access to resources in a record that the user owns. Once granted, the package would have access to the user's owned records.
+ * - "studio" - The entitlement is for studio records. This would allow the package to request access to resources in studios in which the user is an admin or member of.
+ * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
+ * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
+ */
+export type EntitlementScope =
+    | 'personal'
+    | 'owned'
+    | 'studio'
+    | 'shared'
+    | 'designated';
+
+/**
+ * The scopes that can be granted for entitlements.
+ * Compared to the requested entitlement scopes, the granted entitlement scopes are more restrictive.
+ *
+ * This ultimately means that while a package can have the ability to request access to a bunch of different records,
+ * they can only be granted access to a single record at once (for now).
+ *
+ * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to access the user's personal record.
+ * - "designated" - The entitlement is for specific records. This would allow the package to access specific records.
+ */
+export type GrantedEntitlementScope = 'personal' | 'designated';
+
+/**
+ * The feature categories that entitlements support.
+ * Generally, features align with resource kinds, but don't have to.
+ */
+export type EntitlementFeature =
+    | 'data'
+    | 'file'
+    | 'event'
+    | 'inst'
+    | 'notification'
+    | 'package'
+    | 'permissions'
+    | 'webhook'
+    | 'ai';
+
+/**
  * Defines an interface that represents an entitlement.
  * That is, a feature that can be granted to a package but still requires user approval.
  *
@@ -418,16 +463,7 @@ export interface Entitlement {
      * The feature category that the entitlement is for.
      * Generally, features align with resource kinds, but don't have to.
      */
-    feature:
-        | 'data'
-        | 'file'
-        | 'event'
-        | 'inst'
-        | 'notification'
-        | 'package'
-        | 'permissions'
-        | 'webhook'
-        | 'ai';
+    feature: EntitlementFeature;
 
     /**
      * The scope of the entitlement.
@@ -441,7 +477,7 @@ export interface Entitlement {
      * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
      * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
      */
-    scope: 'personal' | 'owned' | 'studio' | 'shared' | 'designated';
+    scope: EntitlementScope;
 
     /**
      * The list of records that the entitlement is for.

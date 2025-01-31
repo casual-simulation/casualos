@@ -101,6 +101,7 @@ import {
     PrivacyFeatures,
     ACCOUNT_MARKER,
     Entitlement,
+    GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';
 import {
     AIChatMetrics,
@@ -1208,7 +1209,8 @@ export class MemoryStore
         userId: string,
         packageId: string,
         feature: Entitlement['feature'],
-        scope: Entitlement['scope']
+        scope: GrantedEntitlementScope,
+        recordName: string | null
     ): Promise<GrantedPackageEntitlement | null> {
         return (
             this._grantedPackageEntitlements.find(
@@ -1216,7 +1218,9 @@ export class MemoryStore
                     e.userId === userId &&
                     e.packageId === packageId &&
                     e.feature === feature &&
-                    e.scope === scope
+                    e.scope === scope &&
+                    (e.recordName === recordName ||
+                        (!e.recordName && !recordName))
             ) ?? null
         );
     }

@@ -8,6 +8,9 @@ import {
     SubjectType,
     PrivacyFeatures,
     Entitlement,
+    EntitlementScope,
+    EntitlementFeature,
+    GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';
 import { UserRole } from './AuthStore';
 
@@ -349,12 +352,14 @@ export interface PolicyStore {
      * @param packageId The ID of the package that the entitlement is granted for.
      * @param feature The feature that was granted.
      * @param scope The scope that was granted.
+     * @param recordName The name of the record that the entitlement was granted for.
      */
     findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
         userId: string,
         packageId: string,
-        feature: Entitlement['feature'],
-        scope: Entitlement['scope']
+        feature: EntitlementFeature,
+        scope: GrantedEntitlementScope,
+        recordName: string | null
     ): Promise<GrantedPackageEntitlement | null>;
 }
 
@@ -380,18 +385,18 @@ export interface GrantedPackageEntitlement {
     /**
      * The feature that was granted.
      */
-    feature: Entitlement['feature'];
+    feature: EntitlementFeature;
 
     /**
-     * The scope of the feature.
+     * The scope of the granted entitlement.
      */
-    scope: Entitlement['scope'];
+    scope: GrantedEntitlementScope;
 
     /**
-     * The records that the entitlement requires access to based on its scope.
-     * Empty if the entitlement does not require access to any records.
+     * The record that the entitlement was granted for.
+     * Null/undefined if the scope is not "designated".
      */
-    designatedRecords: string[];
+    recordName?: string | null;
 
     /**
      * The unix time that the entitlement expires in miliseconds.

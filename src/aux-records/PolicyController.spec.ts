@@ -772,11 +772,6 @@ describe('PolicyController', () => {
                     subjectId: '/inst',
                     subjectType: 'inst',
                 },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
-                },
             });
 
             const permissions = await store.listPermissionsForMarker(
@@ -934,11 +929,6 @@ describe('PolicyController', () => {
                     action: 'revokePermission',
                     subjectType: 'inst',
                     subjectId: '/inst',
-                },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
                 },
             });
 
@@ -1217,11 +1207,6 @@ describe('PolicyController', () => {
                     subjectId: '/inst',
                     subjectType: 'inst',
                 },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
-                },
             });
 
             const permissions = await store.listPermissionsForResource(
@@ -1381,11 +1366,6 @@ describe('PolicyController', () => {
                     action: 'revokePermission',
                     subjectType: 'inst',
                     subjectId: '/inst',
-                },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
                 },
             });
 
@@ -1569,11 +1549,6 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
-                },
             });
 
             const markerPermission =
@@ -1646,11 +1621,6 @@ describe('PolicyController', () => {
                     action: 'revokePermission',
                     subjectType: 'inst',
                     subjectId: '/inst',
-                },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
                 },
             });
 
@@ -1795,11 +1765,6 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
-                },
             });
         });
     });
@@ -1908,11 +1873,6 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
-                },
             });
         });
     });
@@ -2009,11 +1969,6 @@ describe('PolicyController', () => {
                     action: 'list',
                     subjectType: 'inst',
                     subjectId: '/inst',
-                },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
                 },
             });
         });
@@ -2240,11 +2195,6 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
-                },
             });
         });
     });
@@ -2395,11 +2345,6 @@ describe('PolicyController', () => {
                     action: 'grant',
                     subjectType: 'inst',
                     subjectId: '/inst',
-                },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
                 },
             });
 
@@ -2560,11 +2505,6 @@ describe('PolicyController', () => {
                     subjectType: 'inst',
                     subjectId: '/inst',
                 },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'designated',
-                    designatedRecords: [recordName],
-                },
             });
 
             const roles = await store.listRolesForUser(recordName, 'testId');
@@ -2653,7 +2593,7 @@ describe('PolicyController', () => {
                 scope: 'personal',
                 expireTimeMs: 999,
                 createdAtMs: 500,
-                designatedRecords: [],
+                recordName: null,
             });
         });
 
@@ -2664,7 +2604,6 @@ describe('PolicyController', () => {
                 packageId: 'packageId',
                 feature: 'data',
                 scope: 'personal',
-                designatedRecords: [],
                 expireTimeMs: 999,
                 createdAtMs: 500,
             });
@@ -2691,7 +2630,7 @@ describe('PolicyController', () => {
                     scope: 'personal',
                     expireTimeMs: 1000,
                     createdAtMs: 500,
-                    designatedRecords: [],
+                    recordName: null,
                 },
             ]);
         });
@@ -2703,7 +2642,6 @@ describe('PolicyController', () => {
                 packageId: 'packageId',
                 feature: 'data',
                 scope: 'personal',
-                designatedRecords: [],
                 expireTimeMs: 999,
                 createdAtMs: 500,
             });
@@ -2712,7 +2650,8 @@ describe('PolicyController', () => {
                 userId: userId,
                 packageId: 'packageId',
                 feature: 'data',
-                scope: 'owned',
+                scope: 'designated',
+                recordName,
                 expireTimeMs: 999,
             })) as GrantEntitlementSuccess;
 
@@ -2730,17 +2669,16 @@ describe('PolicyController', () => {
                     scope: 'personal',
                     expireTimeMs: 999,
                     createdAtMs: 500,
-                    designatedRecords: [],
                 },
                 {
                     id: result.grantId,
                     userId: userId,
                     packageId: 'packageId',
                     feature: 'data',
-                    scope: 'owned',
+                    scope: 'designated',
+                    recordName,
                     expireTimeMs: 999,
                     createdAtMs: 500,
-                    designatedRecords: [],
                 },
             ]);
         });
@@ -5491,7 +5429,6 @@ describe('PolicyController', () => {
                                         packageId: 'packageId',
                                         feature: feature,
                                         scope: 'personal',
-                                        designatedRecords: [],
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
@@ -5543,8 +5480,6 @@ describe('PolicyController', () => {
                                             scope: 'personal',
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
-
-                                            designatedRecords: [],
 
                                             loadedPackage: {
                                                 id: 'loadedPackageId',
@@ -5599,6 +5534,7 @@ describe('PolicyController', () => {
                                         recommendedEntitlement: {
                                             feature: feature,
                                             scope: 'personal',
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -5620,7 +5556,6 @@ describe('PolicyController', () => {
                                         packageId: 'packageId',
                                         feature: feature,
                                         scope: 'personal',
-                                        designatedRecords: [],
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
@@ -5656,6 +5591,7 @@ describe('PolicyController', () => {
                                         recommendedEntitlement: {
                                             feature: feature,
                                             scope: 'personal',
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -5679,8 +5615,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'owned',
-                                        designatedRecords: [],
+                                        scope: 'designated',
+                                        recordName,
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
@@ -5729,11 +5665,10 @@ describe('PolicyController', () => {
                                             // instRecordName: instRecordName,
                                             // inst,
                                             feature: feature,
-                                            scope: 'owned',
+                                            scope: 'designated',
+                                            recordName,
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
-
-                                            designatedRecords: [],
 
                                             loadedPackage: {
                                                 id: 'loadedPackageId',
@@ -5788,7 +5723,9 @@ describe('PolicyController', () => {
                                         },
                                         recommendedEntitlement: {
                                             feature: feature,
-                                            scope: 'owned',
+                                            scope: 'designated',
+                                            recordName,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -5810,8 +5747,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'owned',
-                                        designatedRecords: [],
+                                        scope: 'designated',
+                                        recordName: recordName,
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
@@ -5846,7 +5783,9 @@ describe('PolicyController', () => {
                                         },
                                         recommendedEntitlement: {
                                             feature: feature,
-                                            scope: 'owned',
+                                            scope: 'designated',
+                                            recordName,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -5881,8 +5820,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'studio',
-                                        designatedRecords: [],
+                                        scope: 'designated',
+                                        recordName: studioId,
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
@@ -5927,11 +5866,10 @@ describe('PolicyController', () => {
                                             userId: userId,
                                             packageId: 'packageId',
                                             feature: feature,
-                                            scope: 'studio',
+                                            scope: 'designated',
+                                            recordName: studioId,
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
-
-                                            designatedRecords: [],
 
                                             loadedPackage: {
                                                 id: 'loadedPackageId',
@@ -5985,7 +5923,9 @@ describe('PolicyController', () => {
                                         },
                                         recommendedEntitlement: {
                                             feature: feature,
-                                            scope: 'studio',
+                                            scope: 'designated',
+                                            recordName: studioId,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -6006,8 +5946,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'studio',
-                                        designatedRecords: [],
+                                        scope: 'designated',
+                                        recordName: studioId,
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
@@ -6042,7 +5982,9 @@ describe('PolicyController', () => {
                                         },
                                         recommendedEntitlement: {
                                             feature: feature,
-                                            scope: 'studio',
+                                            scope: 'designated',
+                                            recordName: studioId,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -6067,7 +6009,7 @@ describe('PolicyController', () => {
                                         packageId: 'packageId',
                                         feature: feature,
                                         scope: 'designated',
-                                        designatedRecords: [recordName],
+                                        recordName: recordName,
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
@@ -6113,10 +6055,9 @@ describe('PolicyController', () => {
                                             packageId: 'packageId',
                                             feature: feature,
                                             scope: 'designated',
+                                            recordName,
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
-
-                                            designatedRecords: [recordName],
 
                                             loadedPackage: {
                                                 id: 'loadedPackageId',
@@ -6172,7 +6113,8 @@ describe('PolicyController', () => {
                                         recommendedEntitlement: {
                                             feature: feature,
                                             scope: 'designated',
-                                            designatedRecords: [recordName],
+                                            recordName,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -6195,7 +6137,7 @@ describe('PolicyController', () => {
                                         packageId: 'packageId',
                                         feature: feature,
                                         scope: 'designated',
-                                        designatedRecords: ['otherRecord'],
+                                        recordName: 'otherRecord',
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
@@ -6231,7 +6173,8 @@ describe('PolicyController', () => {
                                         recommendedEntitlement: {
                                             feature: feature,
                                             scope: 'designated',
-                                            designatedRecords: [recordName],
+                                            recordName,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -6254,7 +6197,7 @@ describe('PolicyController', () => {
                                         packageId: 'packageId',
                                         feature: feature,
                                         scope: 'designated',
-                                        designatedRecords: [],
+                                        recordName: recordName,
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
@@ -6290,14 +6233,15 @@ describe('PolicyController', () => {
                                         recommendedEntitlement: {
                                             feature: feature,
                                             scope: 'designated',
-                                            designatedRecords: [recordName],
+                                            recordName,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
                             });
 
                             describe('shared scope', () => {
-                                it('should allow actions for all records if the entitlement has been granted for it', async () => {
+                                it('should allow actions for the record if the entitlement has been granted for it', async () => {
                                     const context =
                                         await controller.constructAuthorizationContext(
                                             {
@@ -6314,8 +6258,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'shared',
-                                        designatedRecords: [],
+                                        scope: 'designated',
+                                        recordName: recordName,
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
@@ -6364,11 +6308,10 @@ describe('PolicyController', () => {
                                             // instRecordName: instRecordName,
                                             // inst,
                                             feature: feature,
-                                            scope: 'shared',
+                                            scope: 'designated',
+                                            recordName,
                                             expireTimeMs: 999,
                                             createdAtMs: 123,
-
-                                            designatedRecords: [],
 
                                             loadedPackage: {
                                                 id: 'loadedPackageId',
@@ -6426,7 +6369,8 @@ describe('PolicyController', () => {
                                         recommendedEntitlement: {
                                             feature: feature,
                                             scope: 'designated',
-                                            designatedRecords: [recordName],
+                                            packageId: 'packageId',
+                                            recordName,
                                         },
                                     });
                                 });
@@ -6448,8 +6392,8 @@ describe('PolicyController', () => {
 
                                         packageId: 'packageId',
                                         feature: feature,
-                                        scope: 'shared',
-                                        designatedRecords: [],
+                                        scope: 'designated',
+                                        recordName,
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
@@ -6487,7 +6431,8 @@ describe('PolicyController', () => {
                                         recommendedEntitlement: {
                                             feature: feature,
                                             scope: 'designated',
-                                            designatedRecords: [recordName],
+                                            recordName,
+                                            packageId: 'packageId',
                                         },
                                     });
                                 });
@@ -6914,10 +6859,6 @@ describe('PolicyController', () => {
                     resourceKind: 'marker',
                     action: 'assign',
                     resourceId: marker,
-                },
-                recommendedEntitlement: {
-                    feature: 'permissions',
-                    scope: 'owned',
                 },
             });
         });

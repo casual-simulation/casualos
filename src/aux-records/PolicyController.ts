@@ -25,6 +25,8 @@ import {
     PRIVATE_MARKER,
     Entitlement,
     KnownErrorCodes,
+    GrantedEntitlementScope,
+    EntitlementFeature,
 } from '@casual-simulation/aux-common';
 import { ListedStudioAssignment, PublicRecordKeyPolicy } from './RecordsStore';
 import {
@@ -756,7 +758,9 @@ export class PolicyController {
     ): Promise<AuthorizeSubjectResult> {
         try {
             const markers = getRootMarkersOrDefault(request.markers);
-            let recommendedEntitlement: Entitlement | undefined = undefined;
+            let recommendedEntitlement:
+                | RecommendedPackageEntitlement
+                | undefined = undefined;
             if (request.action === 'list' && markers.length > 1) {
                 return {
                     success: false,
@@ -1188,27 +1192,11 @@ export class PolicyController {
                                     // Entitlement is for the personal record
                                     return true;
                                 } else if (
-                                    entitlement.scope === 'owned' &&
-                                    entitlement.userId === context.recordOwnerId
-                                ) {
-                                    // Entitlement is for any user-owned records
-                                    return true;
-                                } else if (
-                                    entitlement.scope === 'studio' &&
-                                    context.recordStudioMembers?.some(
-                                        (m) => m.userId === entitlement.userId
-                                    )
-                                ) {
-                                    // Entitlement is for any studio records that the user has access to
-                                    return true;
-                                } else if (entitlement.scope === 'designated') {
-                                    // Entitlement is for a specific record
-                                    return entitlement.designatedRecords.includes(
+                                    entitlement.scope === 'designated' &&
+                                    entitlement.recordName ===
                                         context.recordName
-                                    );
-                                } else if (entitlement.scope === 'shared') {
-                                    // Entitlement is for any record that the user has access to
-                                    // TODO:
+                                ) {
+                                    // Entitlement is for the current record
                                     return true;
                                 } else {
                                     return false;
@@ -1225,7 +1213,7 @@ export class PolicyController {
                                 recordName,
                                 permission: {
                                     id: null,
-                                    recordName: recordName,
+                                    recordName,
 
                                     userId: context.userId,
 
@@ -1250,28 +1238,21 @@ export class PolicyController {
                         }
                     }
 
-                    let entitlementScope: Entitlement['scope'];
-                    let designatedRecords: string[] | undefined = undefined;
+                    let entitlementScope: GrantedEntitlementScope;
+                    let entitlementRecordName: string | undefined;
                     if (context.recordName === context.userId) {
                         entitlementScope = 'personal';
-                    } else if (context.recordOwnerId === context.userId) {
-                        entitlementScope = 'owned';
-                    } else if (
-                        context.recordStudioMembers?.some(
-                            (m) => m.userId === context.userId
-                        )
-                    ) {
-                        entitlementScope = 'studio';
                     } else {
                         entitlementScope = 'designated';
-                        designatedRecords = [context.recordName];
+                        entitlementRecordName = context.recordName;
                     }
 
-                    if (entitlementScope) {
+                    if (entitlementScope && hasPackages) {
                         recommendedEntitlement = {
                             feature: entitlementFeature,
                             scope: entitlementScope,
-                            designatedRecords,
+                            recordName: entitlementRecordName,
+                            packageId: loadedPackages[0].packageId,
                         };
                     }
                 }
@@ -2704,16 +2685,11 @@ export class PolicyController {
                     request.userId,
                     request.packageId,
                     request.feature,
-                    request.scope
+                    request.scope,
+                    request.recordName ?? null
                 );
 
             const grantId = grant?.id ?? uuidv7();
-            const designatedRecords = grant?.designatedRecords
-                ? union(
-                      grant.designatedRecords,
-                      request.designatedRecords ?? []
-                  )
-                : request.designatedRecords ?? [];
 
             await this._policies.saveGrantedPackageEntitlement({
                 id: grantId,
@@ -2726,7 +2702,7 @@ export class PolicyController {
                 packageId: grant?.packageId ?? request.packageId,
                 userId: grant?.userId ?? request.userId,
                 feature: grant?.feature ?? request.feature,
-                designatedRecords,
+                recordName: grant?.recordName ?? request.recordName ?? null,
             });
 
             return {
@@ -3662,7 +3638,7 @@ export interface AuthorizeSubjectFailure {
      * Instead, it is just a suggestion for what entitlement would be best to grant if possible.
      * It should be used by the client to help determine what entitlement to grant, but should not be used on its own.
      */
-    recommendedEntitlement?: Entitlement;
+    recommendedEntitlement?: RecommendedPackageEntitlement;
 }
 
 export type ListPermissionsResult =
@@ -3830,18 +3806,18 @@ export interface GrantEntitlementRequest {
     /**
      * The feature that is being granted.
      */
-    feature: Entitlement['feature'];
+    feature: EntitlementFeature;
 
     /**
      * The scope that is being granted.
      */
-    scope: Entitlement['scope'];
+    scope: GrantedEntitlementScope;
 
     /**
-     * The records that the entitlement grant is for.
+     * The record that the entitlement grant is for.
      * If omitted, then scope cannot be "designated".
      */
-    designatedRecords?: string[];
+    recordName?: string;
 
     /**
      * The unix time in miliseconds that the entitlement grant will expire.
@@ -3866,4 +3842,11 @@ export interface GrantEntitlementFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
+}
+
+export interface RecommendedPackageEntitlement {
+    packageId: string;
+    feature: EntitlementFeature;
+    scope: GrantedEntitlementScope;
+    recordName?: string;
 }
