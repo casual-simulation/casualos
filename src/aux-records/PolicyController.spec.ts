@@ -5417,6 +5417,31 @@ describe('PolicyController', () => {
                         'resource %s',
                         (resourceKind) => {
                             describe('personal scope', () => {
+                                beforeEach(async () => {
+                                    await services.packageVersionStore.updateItem(
+                                        packageRecordName,
+                                        {
+                                            id: 'packageVersionId',
+                                            address: packageAddress,
+                                            key: packageKey,
+                                            auxFileName: 'auxFileName',
+                                            auxSha256: 'sha256',
+                                            createdAtMs: 123,
+                                            createdFile: true,
+                                            readme: '',
+                                            sha256: 'sha256',
+                                            sizeInBytes: 123,
+                                            requiresReview: false,
+                                            entitlements: [
+                                                {
+                                                    feature: feature,
+                                                    scope: 'personal',
+                                                },
+                                            ],
+                                        }
+                                    );
+                                });
+
                                 it('should allow actions for the personal record if the entitlement has been granted for it', async () => {
                                     const context =
                                         await controller.constructAuthorizationContext(
@@ -5608,6 +5633,31 @@ describe('PolicyController', () => {
                             });
 
                             describe('owned scope', () => {
+                                beforeEach(async () => {
+                                    await services.packageVersionStore.updateItem(
+                                        packageRecordName,
+                                        {
+                                            id: 'packageVersionId',
+                                            address: packageAddress,
+                                            key: packageKey,
+                                            auxFileName: 'auxFileName',
+                                            auxSha256: 'sha256',
+                                            createdAtMs: 123,
+                                            createdFile: true,
+                                            readme: '',
+                                            sha256: 'sha256',
+                                            sizeInBytes: 123,
+                                            requiresReview: false,
+                                            entitlements: [
+                                                {
+                                                    feature: feature,
+                                                    scope: 'owned',
+                                                },
+                                            ],
+                                        }
+                                    );
+                                });
+
                                 it('should allow actions for the owned record if the entitlement has been granted for it', async () => {
                                     const context =
                                         await controller.constructAuthorizationContext(
@@ -5799,6 +5849,45 @@ describe('PolicyController', () => {
                                         },
                                     });
                                 });
+
+                                it('should not recommend a entitlement if the user is not the owner of the record', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName: ownerId,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: ownerId,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                    });
+                                });
                             });
 
                             describe('studio scope', () => {
@@ -5811,6 +5900,28 @@ describe('PolicyController', () => {
                                             displayName: 'Studio',
                                         },
                                         userId
+                                    );
+                                    await services.packageVersionStore.updateItem(
+                                        packageRecordName,
+                                        {
+                                            id: 'packageVersionId',
+                                            address: packageAddress,
+                                            key: packageKey,
+                                            auxFileName: 'auxFileName',
+                                            auxSha256: 'sha256',
+                                            createdAtMs: 123,
+                                            createdFile: true,
+                                            readme: '',
+                                            sha256: 'sha256',
+                                            sizeInBytes: 123,
+                                            requiresReview: false,
+                                            entitlements: [
+                                                {
+                                                    feature: feature,
+                                                    scope: 'studio',
+                                                },
+                                            ],
+                                        }
                                     );
                                 });
 
@@ -5998,9 +6109,85 @@ describe('PolicyController', () => {
                                         },
                                     });
                                 });
+
+                                it('should not recommend a entitlement if the user is not a member of the studio', async () => {
+                                    await services.recordsStore.createStudioForUser(
+                                        {
+                                            id: 'otherStudioId',
+                                            displayName: 'Other Studio',
+                                        },
+                                        ownerId
+                                    );
+
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName:
+                                                    'otherStudioId',
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: 'otherStudioId',
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                    });
+                                });
                             });
 
                             describe('designated scope', () => {
+                                beforeEach(async () => {
+                                    await services.packageVersionStore.updateItem(
+                                        packageRecordName,
+                                        {
+                                            id: 'packageVersionId',
+                                            address: packageAddress,
+                                            key: packageKey,
+                                            auxFileName: 'auxFileName',
+                                            auxSha256: 'sha256',
+                                            createdAtMs: 123,
+                                            createdFile: true,
+                                            readme: '',
+                                            sha256: 'sha256',
+                                            sizeInBytes: 123,
+                                            requiresReview: false,
+                                            entitlements: [
+                                                {
+                                                    feature: feature,
+                                                    scope: 'designated',
+                                                    designatedRecords: [
+                                                        recordName,
+                                                    ],
+                                                },
+                                            ],
+                                        }
+                                    );
+                                });
+
                                 it('should allow the action if the entitlement has been granted for it', async () => {
                                     const context =
                                         await controller.constructAuthorizationContext(
@@ -6248,9 +6435,73 @@ describe('PolicyController', () => {
                                         },
                                     });
                                 });
+
+                                it('should not recommend a designated entitlement if the record is not in the list of designated records', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName: userId,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: userId,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                    });
+                                });
                             });
 
                             describe('shared scope', () => {
+                                beforeEach(async () => {
+                                    await services.packageVersionStore.updateItem(
+                                        packageRecordName,
+                                        {
+                                            id: 'packageVersionId',
+                                            address: packageAddress,
+                                            key: packageKey,
+                                            auxFileName: 'auxFileName',
+                                            auxSha256: 'sha256',
+                                            createdAtMs: 123,
+                                            createdFile: true,
+                                            readme: '',
+                                            sha256: 'sha256',
+                                            sizeInBytes: 123,
+                                            requiresReview: false,
+                                            entitlements: [
+                                                {
+                                                    feature: feature,
+                                                    scope: 'shared',
+                                                },
+                                            ],
+                                        }
+                                    );
+                                });
+
                                 it('should allow actions for the record if the entitlement has been granted for it', async () => {
                                     const context =
                                         await controller.constructAuthorizationContext(

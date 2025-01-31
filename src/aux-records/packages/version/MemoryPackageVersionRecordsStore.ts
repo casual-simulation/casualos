@@ -46,6 +46,33 @@ export class MemoryPackageVersionRecordsStore
         };
     }
 
+    async getItemById(id: string): Promise<GetPackageVersionByKeyResult> {
+        for (let [recordName, r] of this.getItemRecords()) {
+            for (let i of r.values()) {
+                for (let v of i) {
+                    if (v.id === id) {
+                        const recordItem =
+                            (await this.itemStore.getItemByAddress(
+                                recordName,
+                                v.address
+                            )) as PackageRecord;
+                        return {
+                            item: v,
+                            markers: recordItem?.markers ?? null,
+                            packageId: recordItem?.id ?? null,
+                        };
+                    }
+                }
+            }
+        }
+
+        return {
+            item: null,
+            markers: null,
+            packageId: null,
+        };
+    }
+
     async listReviewsForVersion(
         recordName: string,
         address: string,

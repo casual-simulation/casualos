@@ -89,23 +89,30 @@ export function createTestControllers(
         metrics: store,
         messenger: store,
     });
-    const policies = new PolicyController(auth, records, store, store);
+    const packagesStore = new MemoryPackageRecordsStore(store);
+    const packageVersionStore = new MemoryPackageVersionRecordsStore(
+        store,
+        packagesStore
+    );
+    const policies = new PolicyController(
+        auth,
+        records,
+        store,
+        store,
+        packageVersionStore
+    );
     const files = new FileRecordsController({
         config: store,
         metrics: store,
         store: store,
         policies,
     });
-    const packagesStore = new MemoryPackageRecordsStore(store);
+
     const packages = new PackageRecordsController({
         config: store,
         policies,
         store: packagesStore,
     });
-    const packageVersionStore = new MemoryPackageVersionRecordsStore(
-        store,
-        packagesStore
-    );
     const packageVersions = new PackageVersionRecordsController({
         config: store,
         policies,

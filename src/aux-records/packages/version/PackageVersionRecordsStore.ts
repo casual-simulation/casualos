@@ -37,6 +37,12 @@ export interface PackageVersionRecordsStore
     ): Promise<GetPackageVersionByKeyResult>;
 
     /**
+     * Reads the item with the given ID.
+     * @param id The ID of the item.
+     */
+    getItemById(id: string): Promise<GetPackageVersionByKeyResult>;
+
+    /**
      * Gets the item metrics for the subscription of the given user or studio.
      * @param filter The filter to use.
      */

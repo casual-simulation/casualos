@@ -54,6 +54,7 @@ import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { UserRole } from './AuthStore';
 import { v7 as uuidv7 } from 'uuid';
+import { PackageVersionRecordsStore } from './packages/version/PackageVersionRecordsStore';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -230,17 +231,20 @@ export class PolicyController {
     private _records: RecordsController;
     private _policies: PolicyStore;
     private _insts: InstRecordsStore;
+    private _packageVersions: PackageVersionRecordsStore;
 
     constructor(
         auth: AuthController,
         records: RecordsController,
         policies: PolicyStore,
-        insts: InstRecordsStore = null
+        insts: InstRecordsStore = null,
+        packageVersions: PackageVersionRecordsStore = null
     ) {
         this._auth = auth;
         this._records = records;
         this._policies = policies;
         this._insts = insts;
+        this._packageVersions = packageVersions;
     }
 
     /**
@@ -1234,12 +1238,55 @@ export class PolicyController {
                     }
 
                     if (hasPackages) {
-                        recommendedEntitlement = {
-                            feature: entitlementFeature,
-                            scope: 'designated',
-                            recordName: context.recordName,
-                            packageId: loadedPackages[0].packageId,
-                        };
+                        const firstPackage = loadedPackages[0];
+                        firstPackage.packageVersionId;
+                        const pkg = await this._packageVersions?.getItemById(
+                            firstPackage.packageVersionId
+                        );
+
+                        if (pkg?.item) {
+                            const canRecommendEntitlement =
+                                pkg.item.entitlements.some((e) => {
+                                    if (
+                                        e.scope === 'personal' &&
+                                        context.userId === context.recordName
+                                    ) {
+                                        return true;
+                                    } else if (
+                                        e.scope === 'owned' &&
+                                        context.recordOwnerId === context.userId
+                                    ) {
+                                        return true;
+                                    } else if (
+                                        e.scope === 'studio' &&
+                                        context.recordStudioMembers?.some(
+                                            (m) => m.userId === context.userId
+                                        )
+                                    ) {
+                                        return true;
+                                    } else if (
+                                        e.scope === 'designated' &&
+                                        e.designatedRecords?.includes(
+                                            context.recordName
+                                        )
+                                    ) {
+                                        return true;
+                                    } else if (e.scope === 'shared') {
+                                        return true;
+                                    }
+
+                                    return false;
+                                });
+
+                            if (canRecommendEntitlement) {
+                                recommendedEntitlement = {
+                                    feature: entitlementFeature,
+                                    scope: 'designated',
+                                    recordName: context.recordName,
+                                    packageId: loadedPackages[0].packageId,
+                                };
+                            }
+                        }
                     }
                 }
 
