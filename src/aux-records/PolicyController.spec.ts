@@ -5630,6 +5630,46 @@ describe('PolicyController', () => {
                                         },
                                     });
                                 });
+
+                                it('should not recommend a entitlement if the record is not the users personal record', async () => {
+                                    const context =
+                                        await controller.constructAuthorizationContext(
+                                            {
+                                                recordKeyOrRecordName:
+                                                    recordName,
+                                                userId: userId,
+                                            }
+                                        );
+
+                                    const result =
+                                        await controller.authorizeSubject(
+                                            context,
+                                            {
+                                                subjectId: instId,
+                                                subjectType: 'inst',
+                                                resourceKind: resourceKind,
+                                                action: 'read',
+                                                resourceId: 'resourceId',
+                                                markers: [marker],
+                                            }
+                                        );
+
+                                    expect(result).toEqual({
+                                        success: false,
+                                        errorCode: 'not_authorized',
+                                        errorMessage:
+                                            'You are not authorized to perform this action.',
+                                        reason: {
+                                            type: 'missing_permission',
+                                            recordName: recordName,
+                                            subjectType: 'inst',
+                                            subjectId: instId,
+                                            resourceKind: resourceKind,
+                                            action: 'read',
+                                            resourceId: 'resourceId',
+                                        },
+                                    });
+                                });
                             });
 
                             describe('owned scope', () => {
@@ -5851,10 +5891,19 @@ describe('PolicyController', () => {
                                 });
 
                                 it('should not recommend a entitlement if the user is not the owner of the record', async () => {
+                                    await store.addRecord({
+                                        name: 'otherRecord',
+                                        ownerId: ownerId,
+                                        secretHashes: [],
+                                        secretSalt: '',
+                                        studioId: null,
+                                    });
+
                                     const context =
                                         await controller.constructAuthorizationContext(
                                             {
-                                                recordKeyOrRecordName: ownerId,
+                                                recordKeyOrRecordName:
+                                                    'otherRecord',
                                                 userId: userId,
                                             }
                                         );
@@ -5879,7 +5928,7 @@ describe('PolicyController', () => {
                                             'You are not authorized to perform this action.',
                                         reason: {
                                             type: 'missing_permission',
-                                            recordName: ownerId,
+                                            recordName: 'otherRecord',
                                             subjectType: 'inst',
                                             subjectId: instId,
                                             resourceKind: resourceKind,
