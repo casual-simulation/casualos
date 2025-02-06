@@ -2696,7 +2696,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe('grantEntitlement()', () => {
+    describe('revokeEntitlement()', () => {
         const packageRecordName = 'packageRecord';
         const packageAddress = 'packageAddress';
         const packageKey = version(1);
