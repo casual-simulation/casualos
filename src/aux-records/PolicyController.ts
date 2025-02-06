@@ -1191,6 +1191,7 @@ export class PolicyController {
                         const entitlement = grantedEntitlements.find(
                             (entitlement) => {
                                 if (
+                                    entitlement.revokeTimeMs === null &&
                                     entitlement.scope === 'designated' &&
                                     entitlement.recordName ===
                                         context.recordName
@@ -2731,6 +2732,7 @@ export class PolicyController {
                     request.expireTimeMs,
                     grant?.expireTimeMs ?? 0
                 ),
+                revokeTimeMs: null,
                 scope: grant?.scope ?? request.scope,
                 packageId: grant?.packageId ?? request.packageId,
                 userId: grant?.userId ?? request.userId,
@@ -2741,6 +2743,62 @@ export class PolicyController {
             return {
                 success: true,
                 grantId,
+            };
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    @traced(TRACE_NAME)
+    async revokeEntitlement(
+        request: RevokeEntitlementRequest
+    ): Promise<RevokeEntitlementResult> {
+        try {
+            const grant =
+                await this._policies.findGrantedPackageEntitlementById(
+                    request.grantId
+                );
+
+            if (!grant) {
+                return {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The entitlement grant could not be found.',
+                };
+            }
+
+            if (grant.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                };
+            }
+
+            if (grant.revokeTimeMs !== null) {
+                // Already revoked
+                return {
+                    success: true,
+                };
+            }
+
+            await this._policies.saveGrantedPackageEntitlement({
+                ...grant,
+                revokeTimeMs: Date.now(),
+            });
+
+            return {
+                success: true,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -3881,4 +3939,30 @@ export interface RecommendedPackageEntitlement {
     feature: EntitlementFeature;
     scope: GrantedEntitlementScope;
     recordName?: string;
+}
+
+export interface RevokeEntitlementRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the entitlement grant that should be revoked.
+     */
+    grantId: string;
+}
+
+export type RevokeEntitlementResult =
+    | RevokeEntitlementSuccess
+    | RevokeEntitlementFailure;
+
+export interface RevokeEntitlementSuccess {
+    success: true;
+}
+
+export interface RevokeEntitlementFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
 }

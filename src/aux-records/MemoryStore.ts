@@ -1203,6 +1203,7 @@ export class MemoryStore
                 e.feature === feature &&
                 e.recordName === recordName &&
                 e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null &&
                 packageIds.includes(e.packageId)
         );
     }
@@ -1221,10 +1222,17 @@ export class MemoryStore
                     e.packageId === packageId &&
                     e.feature === feature &&
                     e.scope === scope &&
+                    e.revokeTimeMs === null &&
                     (e.recordName === recordName ||
                         (!e.recordName && !recordName))
             ) ?? null
         );
+    }
+
+    async findGrantedPackageEntitlementById(
+        id: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        return this._grantedPackageEntitlements.find((e) => e.id === id);
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {

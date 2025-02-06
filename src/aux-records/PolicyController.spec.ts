@@ -3,6 +3,7 @@ import { MemoryStore } from './MemoryStore';
 import {
     GrantEntitlementSuccess,
     PolicyController,
+    RevokeEntitlementSuccess,
     explainationForPermissionAssignment,
     getMarkerResourcesForCreation,
     willMarkersBeRemaining,
@@ -2595,6 +2596,7 @@ describe('PolicyController', () => {
                 recordName: userId,
                 expireTimeMs: 999,
                 createdAtMs: 500,
+                revokeTimeMs: null,
             });
         });
 
@@ -2608,6 +2610,7 @@ describe('PolicyController', () => {
                 recordName: userId,
                 expireTimeMs: 999,
                 createdAtMs: 500,
+                revokeTimeMs: null,
             });
 
             const result = await controller.grantEntitlement({
@@ -2634,6 +2637,7 @@ describe('PolicyController', () => {
                     recordName: userId,
                     expireTimeMs: 1000,
                     createdAtMs: 500,
+                    revokeTimeMs: null,
                 },
             ]);
         });
@@ -2648,6 +2652,7 @@ describe('PolicyController', () => {
                 recordName: userId,
                 expireTimeMs: 999,
                 createdAtMs: 500,
+                revokeTimeMs: null,
             });
 
             const result = (await controller.grantEntitlement({
@@ -2674,6 +2679,7 @@ describe('PolicyController', () => {
                     recordName: userId,
                     expireTimeMs: 999,
                     createdAtMs: 500,
+                    revokeTimeMs: null,
                 },
                 {
                     id: result.grantId,
@@ -2684,6 +2690,183 @@ describe('PolicyController', () => {
                     recordName,
                     expireTimeMs: 999,
                     createdAtMs: 500,
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+    });
+
+    describe('grantEntitlement()', () => {
+        const packageRecordName = 'packageRecord';
+        const packageAddress = 'packageAddress';
+        const packageKey = version(1);
+
+        const originalDateNow = Date.now;
+        let dateNowMock: jest.Mock<number>;
+
+        beforeEach(async () => {
+            dateNowMock = Date.now = jest.fn(() => 750);
+
+            await services.records.createRecord({
+                recordName: packageRecordName,
+                userId: ownerId,
+                ownerId: ownerId,
+            });
+
+            await services.packagesStore.createItem(packageRecordName, {
+                id: 'packageId',
+                address: packageAddress,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await services.packageVersionStore.createItem(packageRecordName, {
+                id: 'packageVersionId',
+                address: packageAddress,
+                key: packageKey,
+                auxFileName: 'auxFileName',
+                auxSha256: 'sha256',
+                createdAtMs: 123,
+                createdFile: true,
+                readme: '',
+                sha256: 'sha256',
+                sizeInBytes: 123,
+                requiresReview: false,
+                entitlements: [
+                    {
+                        feature: 'data',
+                        scope: 'personal',
+                    },
+                ],
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+                createdAtMs: 500,
+                revokeTimeMs: null,
+            });
+        });
+
+        afterEach(() => {
+            Date.now = originalDateNow;
+        });
+
+        it('should revoke the given entitlement', async () => {
+            const result = (await controller.revokeEntitlement({
+                userId: userId,
+                grantId: 'grantId',
+            })) as RevokeEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const entitlement = store.grantedPackageEntitlements[0];
+            expect(entitlement).toEqual({
+                id: 'grantId',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+                createdAtMs: 500,
+                revokeTimeMs: 750,
+            });
+        });
+
+        it('should do nothing if the entitlement cant be found', async () => {
+            const result = await controller.revokeEntitlement({
+                userId: userId,
+                grantId: 'missing',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_found',
+                errorMessage: 'The entitlement grant could not be found.',
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    recordName: userId,
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should reject the request if the user ID is different', async () => {
+            const result = await controller.revokeEntitlement({
+                userId: 'WRONG',
+                grantId: 'grantId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    recordName: userId,
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should do nothing if the grant is already revoked', async () => {
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+                createdAtMs: 500,
+                revokeTimeMs: 501,
+            });
+
+            const result = await controller.revokeEntitlement({
+                userId: userId,
+                grantId: 'grantId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    recordName: userId,
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    revokeTimeMs: 501,
                 },
             ]);
         });
@@ -5463,6 +5646,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -5511,6 +5695,7 @@ describe('PolicyController', () => {
                                             scope: 'designated',
                                             recordName: userId,
                                             expireTimeMs: 999,
+                                            revokeTimeMs: null,
                                             createdAtMs: 123,
 
                                             loadedPackage: {
@@ -5593,6 +5778,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -5720,6 +5906,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -5768,6 +5955,7 @@ describe('PolicyController', () => {
                                             scope: 'designated',
                                             recordName,
                                             expireTimeMs: 999,
+                                            revokeTimeMs: null,
                                             createdAtMs: 123,
 
                                             loadedPackage: {
@@ -5852,6 +6040,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -5995,6 +6184,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -6039,6 +6229,7 @@ describe('PolicyController', () => {
                                             scope: 'designated',
                                             recordName: studioId,
                                             expireTimeMs: 999,
+                                            revokeTimeMs: null,
                                             createdAtMs: 123,
 
                                             loadedPackage: {
@@ -6121,6 +6312,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -6259,6 +6451,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -6303,6 +6496,7 @@ describe('PolicyController', () => {
                                             scope: 'designated',
                                             recordName,
                                             expireTimeMs: 999,
+                                            revokeTimeMs: null,
                                             createdAtMs: 123,
 
                                             loadedPackage: {
@@ -6387,6 +6581,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -6447,6 +6642,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -6573,6 +6769,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 999,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =
@@ -6621,6 +6818,7 @@ describe('PolicyController', () => {
                                             scope: 'designated',
                                             recordName,
                                             expireTimeMs: 999,
+                                            revokeTimeMs: null,
                                             createdAtMs: 123,
 
                                             loadedPackage: {
@@ -6707,6 +6905,7 @@ describe('PolicyController', () => {
                                         expireTimeMs: 0,
 
                                         createdAtMs: 123,
+                                        revokeTimeMs: null,
                                     });
 
                                     const result =

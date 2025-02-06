@@ -325,7 +325,7 @@ export interface PolicyStore {
     ): Promise<UpdateUserRolesResult>;
 
     /**
-     * Gets the list of granted entitlements for the given package IDs, feature, and userId.
+     * Gets the list of non-revoked granted entitlements for the given package IDs, feature, and userId.
      * @param packageIds The IDs of the packages to list the entitlements for.
      * @param feature The feature that the entitlements are granted for.
      * @param userId The ID of the user that the entitlements are granted to.
@@ -349,7 +349,7 @@ export interface PolicyStore {
     ): Promise<void>;
 
     /**
-     * Attempts to find the granted entitlement for the given user, package, feature, and scope.
+     * Attempts to find the non-revoked granted entitlement for the given user, package, feature, and scope.
      * @param userId The ID of the user that granted the entitlement.
      * @param packageId The ID of the package that the entitlement is granted for.
      * @param feature The feature that was granted.
@@ -362,6 +362,14 @@ export interface PolicyStore {
         feature: EntitlementFeature,
         scope: GrantedEntitlementScope,
         recordName: string | null
+    ): Promise<GrantedPackageEntitlement | null>;
+
+    /**
+     * Attempts to find the granted entitlement for the given ID.
+     * @param id The ID of the entitlement.
+     */
+    findGrantedPackageEntitlementById(
+        id: string
     ): Promise<GrantedPackageEntitlement | null>;
 }
 
@@ -403,6 +411,12 @@ export interface GrantedPackageEntitlement {
      * The unix time that the entitlement expires in miliseconds.
      */
     expireTimeMs: number;
+
+    /**
+     * The unix time that the entitlement was revoked at in miliseconds.
+     * If null, then the entitlement has not been revoked.
+     */
+    revokeTimeMs: number | null;
 
     /**
      * The unix time that the grant was created at in miliseconds.
