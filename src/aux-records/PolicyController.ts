@@ -44,12 +44,11 @@ import {
 } from './PolicyStore';
 import { get, sortBy, union, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
-import {
+import { normalizeInstId, parseInstId } from './websockets/Utils';
+import type {
     InstRecordsStore,
     LoadedPackage,
-    normalizeInstId,
-    parseInstId,
-} from './websockets';
+} from './websockets/InstRecordsStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { UserRole } from './AuthStore';

@@ -550,10 +550,26 @@ describe('RecordsServer', () => {
             messenger: store,
         });
 
+        websocketConnectionStore = new MemoryWebsocketConnectionStore();
+        websocketMessenger = new MemoryWebsocketMessenger();
+        instStore = new SplitInstRecordsStore(
+            new MemoryTempInstRecordsStore(),
+            store
+        );
+        tempInstStore = new MemoryTempInstRecordsStore();
+
+        packageStore = new MemoryPackageRecordsStore(store);
+        packageVersionsStore = new MemoryPackageVersionRecordsStore(
+            store,
+            packageStore
+        );
+
         policyController = new PolicyController(
             authController,
             recordsController,
-            store
+            store,
+            instStore,
+            packageVersionsStore
         );
 
         eventsController = new EventRecordsController({
@@ -590,13 +606,6 @@ describe('RecordsServer', () => {
             windowMs: 1000,
         });
 
-        websocketConnectionStore = new MemoryWebsocketConnectionStore();
-        websocketMessenger = new MemoryWebsocketMessenger();
-        instStore = new SplitInstRecordsStore(
-            new MemoryTempInstRecordsStore(),
-            store
-        );
-        tempInstStore = new MemoryTempInstRecordsStore();
         websocketController = new WebsocketController(
             websocketConnectionStore,
             websocketMessenger,
@@ -636,17 +645,12 @@ describe('RecordsServer', () => {
             pushInterface: webPushInterface,
         });
 
-        packageStore = new MemoryPackageRecordsStore(store);
         packageController = new PackageRecordsController({
             config: store,
             policies: policyController,
             store: packageStore,
         });
 
-        packageVersionsStore = new MemoryPackageVersionRecordsStore(
-            store,
-            packageStore
-        );
         packageVersionController = new PackageVersionRecordsController({
             config: store,
             policies: policyController,
@@ -12553,6 +12557,7 @@ describe('RecordsServer', () => {
     describe('GET /api/v2/records/package', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -12571,36 +12576,7 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                     item: {
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    },
-                },
-                headers: apiCorsHeaders,
-            });
-        });
-    });
-
-    describe('GET /api/v2/records/package', () => {
-        beforeEach(async () => {
-            await packageStore.createItem(recordName, {
-                address: 'address',
-                markers: [PUBLIC_READ_MARKER],
-            });
-        });
-
-        it('should return the given package', async () => {
-            const result = await server.handleHttpRequest(
-                httpGet(
-                    `/api/v2/records/package?recordName=${recordName}&address=${'address'}`,
-                    apiHeaders
-                )
-            );
-
-            await expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    item: {
+                        id: 'packageId',
                         address: 'address',
                         markers: [PUBLIC_READ_MARKER],
                     },
@@ -12711,6 +12687,7 @@ describe('RecordsServer', () => {
     describe('DELETE /api/v2/records/package', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -12760,21 +12737,25 @@ describe('RecordsServer', () => {
     describe('GET /api/v2/records/package/list', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
 
             await packageStore.createItem(recordName, {
+                id: 'packageId2',
                 address: 'address2',
                 markers: [PUBLIC_READ_MARKER],
             });
 
             await packageStore.createItem(recordName, {
+                id: 'packageId3',
                 address: 'address3',
                 markers: [PUBLIC_READ_MARKER],
             });
 
             await packageStore.createItem(recordName, {
+                id: 'packageId4',
                 address: 'address4',
                 markers: [PRIVATE_MARKER],
             });
@@ -12796,14 +12777,17 @@ describe('RecordsServer', () => {
                     totalCount: 3,
                     items: [
                         {
+                            id: 'packageId',
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
+                            id: 'packageId2',
                             address: 'address2',
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
+                            id: 'packageId3',
                             address: 'address3',
                             markers: [PUBLIC_READ_MARKER],
                         },
@@ -12826,6 +12810,7 @@ describe('RecordsServer', () => {
     describe('GET /api/v2/records/package/version', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -12842,6 +12827,7 @@ describe('RecordsServer', () => {
             await store.setFileRecordAsUploaded(recordName, 'test.aux');
 
             await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId',
                 address: 'address',
                 key: {
                     major: 1,
@@ -12874,6 +12860,8 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                     item: {
+                        id: 'packageVersionId',
+                        packageId: 'packageId',
                         address: 'address',
                         key: {
                             major: 1,
@@ -12917,6 +12905,8 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                     item: {
+                        id: 'packageVersionId',
+                        packageId: 'packageId',
                         address: 'address',
                         key: {
                             major: 1,
@@ -12960,6 +12950,7 @@ describe('RecordsServer', () => {
     describe('POST /api/v2/records/package/version', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -13052,12 +13043,14 @@ describe('RecordsServer', () => {
     describe('GET /api/v2/records/package/version/list', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
 
             for (let i = 1; i <= 3; i++) {
                 await packageVersionsStore.createItem(recordName, {
+                    id: `packageVersionId${i}`,
                     address: 'address',
                     key: {
                         major: i,
@@ -13094,6 +13087,7 @@ describe('RecordsServer', () => {
                     totalCount: 3,
                     items: [
                         {
+                            id: 'packageVersionId3',
                             address: 'address',
                             key: {
                                 major: 3,
@@ -13112,6 +13106,7 @@ describe('RecordsServer', () => {
                             sha256: 'sha256',
                         },
                         {
+                            id: 'packageVersionId2',
                             address: 'address',
                             key: {
                                 major: 2,
@@ -13130,6 +13125,7 @@ describe('RecordsServer', () => {
                             sha256: 'sha256',
                         },
                         {
+                            id: 'packageVersionId1',
                             address: 'address',
                             key: {
                                 major: 1,
@@ -13166,12 +13162,14 @@ describe('RecordsServer', () => {
     describe('DELETE /api/v2/records/package/version', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
 
             for (let i = 1; i <= 3; i++) {
                 await packageVersionsStore.createItem(recordName, {
+                    id: `packageVersionId${i}`,
                     address: 'address',
                     key: {
                         major: i,
@@ -13232,6 +13230,7 @@ describe('RecordsServer', () => {
             ).toEqual({
                 item: null,
                 markers: [PUBLIC_READ_MARKER],
+                packageId: 'packageId',
             });
         });
 
@@ -13256,11 +13255,13 @@ describe('RecordsServer', () => {
     describe('POST /api/v2/records/package/version/review', () => {
         beforeEach(async () => {
             await packageStore.createItem(recordName, {
+                id: 'packageId',
                 address: 'address',
                 markers: [PUBLIC_READ_MARKER],
             });
 
             await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId',
                 address: 'address',
                 key: {
                     major: 1,

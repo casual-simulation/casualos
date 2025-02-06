@@ -2192,7 +2192,8 @@ Object {
                         "notification",
                         "package",
                         "permissions",
-                        "webhooks",
+                        "webhook",
+                        "ai",
                       ],
                     },
                     "scope": Object {
@@ -6570,7 +6571,8 @@ Object {
                         "notification",
                         "package",
                         "permissions",
-                        "webhooks",
+                        "webhook",
+                        "ai",
                       ],
                     },
                     "scope": Object {
