@@ -15968,6 +15968,201 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/entitlement/grants/list', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                id: `packageVersionId`,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'sha256',
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId2',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'file',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId3',
+                userId: userId,
+                recordName,
+                packageId: 'packageId2',
+                feature: 'file',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+        });
+
+        it('should return the list of grants for a package and user', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    grants: [
+                        {
+                            id: 'grantId',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'data',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                        {
+                            id: 'grantId2',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'file',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the list of grants for the user', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/records/entitlement/grants/list`, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    grants: [
+                        {
+                            id: 'grantId',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'data',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                        {
+                            id: 'grantId2',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'file',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                        {
+                            id: 'grantId3',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId2',
+                            feature: 'file',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 401 not_logged_in if the user is not logged in', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                apiHeaders
+            )
+        );
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                apiHeaders
+            )
+        );
+    });
+
     describe('GET /api/v2/records/insts/list', () => {
         const inst1 = 'myInst';
         const inst2 = 'myInst2';

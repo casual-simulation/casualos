@@ -2985,6 +2985,36 @@ export class RecordsServer {
                     }
                 ),
 
+            listGrantedEntitlements: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/entitlement/grants/list')
+                .inputs(
+                    z.object({
+                        packageId: z.string().min(1).optional().nullable(),
+                    })
+                )
+                .handler(async ({ packageId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._policyController.listGrantedEntitlements({
+                            userId: sessionKeyValidation.userId,
+                            packageId: packageId,
+                        });
+
+                    return result;
+                }),
+
             aiChat: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/ai/chat')

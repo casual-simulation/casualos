@@ -3290,6 +3290,24 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/entitlement/grants/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "packageId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listGrantedEntitlements",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "POST",
         "path": "/api/v2/ai/chat",
       },
@@ -7665,6 +7683,24 @@ Object {
         "type": "object",
       },
       "name": "revokeRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/entitlement/grants/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "packageId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listGrantedEntitlements",
       "origins": "api",
     },
     Object {
