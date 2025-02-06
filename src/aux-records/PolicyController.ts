@@ -2813,6 +2813,49 @@ export class PolicyController {
             };
         }
     }
+
+    @traced(TRACE_NAME)
+    async listGrantedEntitlements(
+        request: ListGrantedEntitlementsRequest
+    ): Promise<ListGrantedEntitlementsResult> {
+        try {
+            if (!request.packageId) {
+                const grants =
+                    await this._policies.listGrantedEntitlementsForUser(
+                        request.userId,
+                        Date.now()
+                    );
+
+                return {
+                    success: true,
+                    grants,
+                };
+            } else {
+                const grants =
+                    await this._policies.listGrantedEntitlementsForUserAndPackage(
+                        request.userId,
+                        request.packageId,
+                        Date.now()
+                    );
+
+                return {
+                    success: true,
+                    grants,
+                };
+            }
+        } catch (err) {
+            const span = trace.getActiveSpan();
+            span?.recordException(err);
+            span?.setStatus({ code: SpanStatusCode.ERROR });
+
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 /**
@@ -3962,6 +4005,34 @@ export interface RevokeEntitlementSuccess {
 }
 
 export interface RevokeEntitlementFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export interface ListGrantedEntitlementsRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the package that the entitlements should be listed for.
+     * If omitted, then all granted entitlements will be listed for the user.
+     */
+    packageId?: string | null;
+}
+
+export type ListGrantedEntitlementsResult =
+    | ListGrantedEntitlementsSuccess
+    | ListGrantedEntitlementsFailure;
+
+export interface ListGrantedEntitlementsSuccess {
+    success: true;
+    grants: GrantedPackageEntitlement[];
+}
+
+export interface ListGrantedEntitlementsFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;

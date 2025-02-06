@@ -371,6 +371,28 @@ export interface PolicyStore {
     findGrantedPackageEntitlementById(
         id: string
     ): Promise<GrantedPackageEntitlement | null>;
+
+    /**
+     * Lists all the active entitlements that the user has granted.
+     * @param userId The ID of the user.
+     * @param nowMs The current unix time in milliseconds.
+     */
+    listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]>;
+
+    /**
+     * Lists all the active entitlements that the user has granted for the given package.
+     * @param userId The ID of the user.
+     * @param packageId The ID of the package.
+     * @param nowMs The current unix time in milliseconds.
+     */
+    listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]>;
 }
 
 /**

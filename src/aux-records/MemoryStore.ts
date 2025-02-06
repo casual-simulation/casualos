@@ -1235,6 +1235,32 @@ export class MemoryStore
         return this._grantedPackageEntitlements.find((e) => e.id === id);
     }
 
+    async listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null
+        );
+    }
+
+    async listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.packageId === packageId &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null
+        );
+    }
+
     async countRecords(filter: CountRecordsFilter): Promise<number> {
         let count = 0;
         for (let record of this._records) {

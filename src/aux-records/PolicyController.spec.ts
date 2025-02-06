@@ -2872,6 +2872,383 @@ describe('PolicyController', () => {
         });
     });
 
+    describe('listGrantedEntitlements()', () => {
+        const packageRecordName = 'packageRecord';
+        const packageAddress = 'packageAddress';
+        const packageKey = version(1);
+
+        const originalDateNow = Date.now;
+        let dateNowMock: jest.Mock<number>;
+
+        beforeEach(async () => {
+            dateNowMock = Date.now = jest.fn(() => 750);
+
+            await services.records.createRecord({
+                recordName: packageRecordName,
+                userId: ownerId,
+                ownerId: ownerId,
+            });
+
+            await services.packagesStore.createItem(packageRecordName, {
+                id: 'packageId',
+                address: packageAddress,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await services.packageVersionStore.createItem(packageRecordName, {
+                id: 'packageVersionId',
+                address: packageAddress,
+                key: packageKey,
+                auxFileName: 'auxFileName',
+                auxSha256: 'sha256',
+                createdAtMs: 123,
+                createdFile: true,
+                readme: '',
+                sha256: 'sha256',
+                sizeInBytes: 123,
+                requiresReview: false,
+                entitlements: [
+                    {
+                        feature: 'data',
+                        scope: 'personal',
+                    },
+                ],
+            });
+
+            await services.packagesStore.createItem(packageRecordName, {
+                id: 'packageId2',
+                address: 'otherPackage',
+                markers: [PRIVATE_MARKER],
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+                createdAtMs: 500,
+                revokeTimeMs: null,
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId2',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'file',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+                createdAtMs: 500,
+                revokeTimeMs: null,
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId3',
+                userId: userId,
+                packageId: 'packageId2',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 1234,
+                createdAtMs: 512,
+                revokeTimeMs: null,
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId4',
+                userId: userId,
+                packageId: 'packageId2',
+                feature: 'file',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 1234,
+                createdAtMs: 512,
+                revokeTimeMs: null,
+            });
+        });
+
+        afterEach(() => {
+            Date.now = originalDateNow;
+        });
+
+        it('should list the granted entitlements for the given package', async () => {
+            const result = (await controller.listGrantedEntitlements({
+                userId: userId,
+                packageId: 'packageId',
+            })) as RevokeEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                grants: [
+                    {
+                        id: 'grantId',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'data',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                    {
+                        id: 'grantId2',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'file',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should omit revoked entitlements', async () => {
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId5',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'permissions',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 1234,
+                createdAtMs: 512,
+                revokeTimeMs: 999,
+            });
+
+            const result = (await controller.listGrantedEntitlements({
+                userId: userId,
+                packageId: 'packageId',
+            })) as RevokeEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                grants: [
+                    {
+                        id: 'grantId',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'data',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                    {
+                        id: 'grantId2',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'file',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should omit expired entitlements', async () => {
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId6',
+                userId: userId,
+                packageId: 'packageId',
+                feature: 'ai',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 300,
+                createdAtMs: 100,
+                revokeTimeMs: null,
+            });
+
+            const result = (await controller.listGrantedEntitlements({
+                userId: userId,
+                packageId: 'packageId',
+            })) as RevokeEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                grants: [
+                    {
+                        id: 'grantId',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'data',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                    {
+                        id: 'grantId2',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'file',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should list the granted entitlements for the user', async () => {
+            const result = (await controller.listGrantedEntitlements({
+                userId: userId,
+            })) as RevokeEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                grants: [
+                    {
+                        id: 'grantId',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'data',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                    {
+                        id: 'grantId2',
+                        userId: userId,
+                        packageId: 'packageId',
+                        feature: 'file',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 999,
+                        createdAtMs: 500,
+                        revokeTimeMs: null,
+                    },
+                    {
+                        id: 'grantId3',
+                        userId: userId,
+                        packageId: 'packageId2',
+                        feature: 'data',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 1234,
+                        createdAtMs: 512,
+                        revokeTimeMs: null,
+                    },
+                    {
+                        id: 'grantId4',
+                        userId: userId,
+                        packageId: 'packageId2',
+                        feature: 'file',
+                        scope: 'designated',
+                        recordName: userId,
+                        expireTimeMs: 1234,
+                        createdAtMs: 512,
+                        revokeTimeMs: null,
+                    },
+                ],
+            });
+        });
+        //     const result = await controller.revokeEntitlement({
+        //         userId: userId,
+        //         grantId: 'missing',
+        //     });
+
+        //     expect(result).toEqual({
+        //         success: false,
+        //         errorCode: 'not_found',
+        //         errorMessage: 'The entitlement grant could not be found.',
+        //     });
+
+        //     expect(store.grantedPackageEntitlements).toEqual([
+        //         {
+        //             id: 'grantId',
+        //             userId: userId,
+        //             packageId: 'packageId',
+        //             feature: 'data',
+        //             scope: 'designated',
+        //             recordName: userId,
+        //             expireTimeMs: 999,
+        //             createdAtMs: 500,
+        //             revokeTimeMs: null,
+        //         },
+        //     ]);
+        // });
+
+        // it('should reject the request if the user ID is different', async () => {
+        //     const result = await controller.revokeEntitlement({
+        //         userId: 'WRONG',
+        //         grantId: 'grantId',
+        //     });
+
+        //     expect(result).toEqual({
+        //         success: false,
+        //         errorCode: 'not_authorized',
+        //         errorMessage: 'You are not authorized to perform this action.',
+        //     });
+
+        //     expect(store.grantedPackageEntitlements).toEqual([
+        //         {
+        //             id: 'grantId',
+        //             userId: userId,
+        //             packageId: 'packageId',
+        //             feature: 'data',
+        //             scope: 'designated',
+        //             recordName: userId,
+        //             expireTimeMs: 999,
+        //             createdAtMs: 500,
+        //             revokeTimeMs: null,
+        //         },
+        //     ]);
+        // });
+
+        // it('should do nothing if the grant is already revoked', async () => {
+        //     await store.saveGrantedPackageEntitlement({
+        //         id: 'grantId',
+        //         userId: userId,
+        //         packageId: 'packageId',
+        //         feature: 'data',
+        //         scope: 'designated',
+        //         recordName: userId,
+        //         expireTimeMs: 999,
+        //         createdAtMs: 500,
+        //         revokeTimeMs: 501,
+        //     });
+
+        //     const result = await controller.revokeEntitlement({
+        //         userId: userId,
+        //         grantId: 'grantId',
+        //     });
+
+        //     expect(result).toEqual({
+        //         success: true,
+        //     });
+
+        //     expect(store.grantedPackageEntitlements).toEqual([
+        //         {
+        //             id: 'grantId',
+        //             userId: userId,
+        //             packageId: 'packageId',
+        //             feature: 'data',
+        //             scope: 'designated',
+        //             recordName: userId,
+        //             expireTimeMs: 999,
+        //             createdAtMs: 500,
+        //             revokeTimeMs: 501,
+        //         },
+        //     ]);
+        // });
+    });
+
     describe('authorizeSubject()', () => {
         const adminOrGrantedActionCases: [ActionKinds, string | null][] = [
             ['create', 'resourceId'],
