@@ -2574,6 +2574,7 @@ describe('PolicyController', () => {
         it('should grant an entitlement to the given package for the given user', async () => {
             const result = (await controller.grantEntitlement({
                 userId: userId,
+                grantingUserId: userId,
                 packageId: 'packageId',
                 feature: 'data',
                 scope: 'designated',
@@ -2615,6 +2616,7 @@ describe('PolicyController', () => {
 
             const result = await controller.grantEntitlement({
                 userId: userId,
+                grantingUserId: userId,
                 packageId: 'packageId',
                 feature: 'data',
                 scope: 'designated',
@@ -2657,6 +2659,7 @@ describe('PolicyController', () => {
 
             const result = (await controller.grantEntitlement({
                 userId: userId,
+                grantingUserId: userId,
                 packageId: 'packageId',
                 feature: 'data',
                 scope: 'designated',
@@ -2688,6 +2691,90 @@ describe('PolicyController', () => {
                     feature: 'data',
                     scope: 'designated',
                     recordName,
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should reject the request if the granting user doesnt match the current user', async () => {
+            const result = (await controller.grantEntitlement({
+                userId: userId,
+                grantingUserId: 'different',
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+            })) as GrantEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([]);
+        });
+
+        it('should allow the request if the current user is a super user', async () => {
+            const result = (await controller.grantEntitlement({
+                userId: userId,
+                userRole: 'superUser',
+                grantingUserId: 'different',
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+            })) as GrantEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                grantId: expect.any(String),
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: result.grantId,
+                    userId: 'different',
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    recordName: userId,
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should allow the request if the current user is the system', async () => {
+            const result = (await controller.grantEntitlement({
+                userId: null,
+                userRole: 'system',
+                grantingUserId: 'different',
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                recordName: userId,
+                expireTimeMs: 999,
+            })) as GrantEntitlementSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                grantId: expect.any(String),
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: result.grantId,
+                    userId: 'different',
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    recordName: userId,
                     expireTimeMs: 999,
                     createdAtMs: 500,
                     revokeTimeMs: null,
@@ -2830,6 +2917,58 @@ describe('PolicyController', () => {
                     expireTimeMs: 999,
                     createdAtMs: 500,
                     revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should allow the request if the user is a super user', async () => {
+            const result = await controller.revokeEntitlement({
+                userId: 'WRONG',
+                userRole: 'superUser',
+                grantId: 'grantId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    recordName: userId,
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    revokeTimeMs: 750,
+                },
+            ]);
+        });
+
+        it('should allow the request if the user is the system', async () => {
+            const result = await controller.revokeEntitlement({
+                userId: null,
+                userRole: 'system',
+                grantId: 'grantId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    recordName: userId,
+                    expireTimeMs: 999,
+                    createdAtMs: 500,
+                    revokeTimeMs: 750,
                 },
             ]);
         });

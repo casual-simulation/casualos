@@ -54,6 +54,7 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { UserRole } from './AuthStore';
 import { v7 as uuidv7 } from 'uuid';
 import { PackageVersionRecordsStore } from './packages/version/PackageVersionRecordsStore';
+import { isSuperUserRole } from './AuthUtils';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -2713,9 +2714,20 @@ export class PolicyController {
         request: GrantEntitlementRequest
     ): Promise<GrantEntitlementResult> {
         try {
+            if (!isSuperUserRole(request.userRole)) {
+                if (request.userId !== request.grantingUserId) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    };
+                }
+            }
+
             const grant =
                 await this._policies.findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
-                    request.userId,
+                    request.grantingUserId,
                     request.packageId,
                     request.feature,
                     request.scope,
@@ -2734,7 +2746,7 @@ export class PolicyController {
                 revokeTimeMs: null,
                 scope: grant?.scope ?? request.scope,
                 packageId: grant?.packageId ?? request.packageId,
-                userId: grant?.userId ?? request.userId,
+                userId: grant?.userId ?? request.grantingUserId,
                 feature: grant?.feature ?? request.feature,
                 recordName: grant?.recordName ?? request.recordName ?? null,
             });
@@ -2776,12 +2788,14 @@ export class PolicyController {
             }
 
             if (grant.userId !== request.userId) {
-                return {
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
-                };
+                if (!isSuperUserRole(request.userRole)) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    };
+                }
             }
 
             if (grant.revokeTimeMs !== null) {
@@ -3929,7 +3943,18 @@ export interface GrantEntitlementRequest {
     /**
      * The ID of the currently logged in user.
      */
-    userId: string;
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     * If omitted, then the user will be treated as a normal user.
+     */
+    userRole?: UserRole;
+
+    /**
+     * The ID of the user that is granting the entitlement.
+     */
+    grantingUserId: string;
 
     /**
      * The ID of the package that the entitlement grant is for.
@@ -3987,7 +4012,12 @@ export interface RevokeEntitlementRequest {
     /**
      * The ID of the user that is currently logged in.
      */
-    userId: string;
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole;
 
     /**
      * The ID of the entitlement grant that should be revoked.
