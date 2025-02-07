@@ -484,18 +484,20 @@ export interface Entitlement {
     designatedRecords?: string[];
 }
 
+export const ENTITLEMENT_FEATURE_VALIDATION = z.enum([
+    'data',
+    'file',
+    'event',
+    'inst',
+    'notification',
+    'package',
+    'permissions',
+    'webhook',
+    'ai',
+]);
+
 export const ENTITLEMENT_VALIDATION = z.object({
-    feature: z.enum([
-        'data',
-        'file',
-        'event',
-        'inst',
-        'notification',
-        'package',
-        'permissions',
-        'webhook',
-        'ai',
-    ]),
+    feature: ENTITLEMENT_FEATURE_VALIDATION,
     scope: z.enum(['personal', 'owned', 'studio', 'shared', 'designated']),
     designatedRecords: z.array(z.string()).optional(),
 });

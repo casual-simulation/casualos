@@ -35,6 +35,7 @@ import { RateLimitController } from './RateLimitController';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
     DenialReason,
+    ENTITLEMENT_FEATURE_VALIDATION,
     ENTITLEMENT_VALIDATION,
     Entitlement,
     PRIVATE_MARKER,
@@ -86,6 +87,7 @@ import {
     SpanKind,
     Tracer,
     ValueType,
+    context,
     metrics,
     trace,
 } from '@opentelemetry/api';
@@ -2985,12 +2987,84 @@ export class RecordsServer {
                     }
                 ),
 
+            grantEntitlement: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/entitlement/grants')
+                .inputs(
+                    z.object({
+                        packageId: z.string().min(1).max(32),
+                        userId: z.string().optional().nullable(),
+                        recordName: RECORD_NAME_VALIDATION,
+                        feature: ENTITLEMENT_FEATURE_VALIDATION,
+                        scope: z.literal('designated'),
+                        expireTimeMs: z.number().min(1),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            packageId,
+                            userId,
+                            recordName,
+                            feature,
+                            scope,
+                            expireTimeMs,
+                        },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        if (!userId) {
+                            userId = sessionKeyValidation.userId;
+                        }
+
+                        if (
+                            userId !== sessionKeyValidation.userId &&
+                            sessionKeyValidation.role !== 'superUser'
+                        ) {
+                            return {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                            };
+                        }
+
+                        const result =
+                            await this._policyController.grantEntitlement({
+                                packageId,
+                                userId,
+                                recordName,
+                                feature,
+                                scope,
+                                expireTimeMs,
+                            });
+
+                        return result;
+                    }
+                ),
+
             listGrantedEntitlements: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/entitlement/grants/list')
                 .inputs(
                     z.object({
-                        packageId: z.string().min(1).optional().nullable(),
+                        packageId: z
+                            .string()
+                            .min(1)
+                            .max(32)
+                            .optional()
+                            .nullable(),
                     })
                 )
                 .handler(async ({ packageId }, context) => {

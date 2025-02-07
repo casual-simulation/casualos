@@ -16163,6 +16163,172 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/entitlement/grants', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                id: `packageVersionId`,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'sha256',
+            });
+        });
+
+        it('should save the given entitlement grant', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/grants`,
+                    JSON.stringify({
+                        packageId: 'packageId',
+                        recordName,
+                        feature: 'data',
+                        scope: 'designated',
+                        expireTimeMs: Date.now() + 1000 * 60,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { grantId } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    grantId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: grantId,
+                    packageId: 'packageId',
+                    userId,
+                    recordName,
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should save the entitlement grant for the given user if the current user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/grants`,
+                    JSON.stringify({
+                        packageId: 'packageId',
+                        userId,
+                        recordName,
+                        feature: 'data',
+                        scope: 'designated',
+                        expireTimeMs: Date.now() + 1000 * 60,
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            const { grantId } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    grantId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: grantId,
+                    packageId: 'packageId',
+                    userId,
+                    recordName,
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user isnt a super user and trying to grant an entitlement for someone else', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/grants`,
+                    JSON.stringify({
+                        packageId: 'packageId',
+                        userId,
+                        recordName,
+                        feature: 'data',
+                        scope: 'designated',
+                        expireTimeMs: Date.now() + 1000 * 60,
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([]);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/entitlement/grants',
+            () =>
+                JSON.stringify({
+                    packageId: 'packageId',
+                    userId,
+                    recordName,
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: Date.now() + 1000 * 60,
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('GET /api/v2/records/insts/list', () => {
         const inst1 = 'myInst';
         const inst2 = 'myInst2';
