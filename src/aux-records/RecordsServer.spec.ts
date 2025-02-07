@@ -16329,6 +16329,220 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/entitlement/revoke', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                id: `packageVersionId`,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'sha256',
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId2',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'file',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+        });
+
+        it('should revoke the given entitlement grant', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/revoke`,
+                    JSON.stringify({
+                        grantId: 'grantId',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                },
+                {
+                    id: 'grantId2',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'file',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        it('should revoke the grant for other users if the current user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/revoke`,
+                    JSON.stringify({
+                        grantId: 'grantId',
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                },
+                {
+                    id: 'grantId2',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'file',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user is trying to revoke a grant for someone else', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/revoke`,
+                    JSON.stringify({
+                        grantId: 'grantId',
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+                {
+                    id: 'grantId2',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'file',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/entitlement/revoke',
+            () =>
+                JSON.stringify({
+                    grantId: 'grantId',
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('GET /api/v2/records/insts/list', () => {
         const inst1 = 'myInst';
         const inst2 = 'myInst2';

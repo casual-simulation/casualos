@@ -3290,6 +3290,67 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/grants",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "type": "number",
+          },
+          "feature": Object {
+            "type": "enum",
+            "values": Array [
+              "data",
+              "file",
+              "event",
+              "inst",
+              "notification",
+              "package",
+              "permissions",
+              "webhook",
+              "ai",
+            ],
+          },
+          "packageId": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "scope": Object {
+            "type": "literal",
+            "value": "designated",
+          },
+          "userId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantEntitlement",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "grantId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeEntitlement",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/entitlement/grants/list",
       },
@@ -7683,6 +7744,67 @@ Object {
         "type": "object",
       },
       "name": "revokeRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/grants",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "type": "number",
+          },
+          "feature": Object {
+            "type": "enum",
+            "values": Array [
+              "data",
+              "file",
+              "event",
+              "inst",
+              "notification",
+              "package",
+              "permissions",
+              "webhook",
+              "ai",
+            ],
+          },
+          "packageId": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "scope": Object {
+            "type": "literal",
+            "value": "designated",
+          },
+          "userId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantEntitlement",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "grantId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeEntitlement",
       "origins": "api",
     },
     Object {

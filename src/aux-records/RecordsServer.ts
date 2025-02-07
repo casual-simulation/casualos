@@ -3024,26 +3024,13 @@ export class RecordsServer {
                             return sessionKeyValidation;
                         }
 
-                        if (!userId) {
-                            userId = sessionKeyValidation.userId;
-                        }
-
-                        if (
-                            userId !== sessionKeyValidation.userId &&
-                            sessionKeyValidation.role !== 'superUser'
-                        ) {
-                            return {
-                                success: false,
-                                errorCode: 'not_authorized',
-                                errorMessage:
-                                    'You are not authorized to perform this action.',
-                            };
-                        }
-
                         const result =
                             await this._policyController.grantEntitlement({
                                 packageId,
-                                userId,
+                                userId: sessionKeyValidation.userId,
+                                userRole: sessionKeyValidation.role,
+                                grantingUserId:
+                                    userId ?? sessionKeyValidation.userId,
                                 recordName,
                                 feature,
                                 scope,
@@ -3053,6 +3040,37 @@ export class RecordsServer {
                         return result;
                     }
                 ),
+
+            revokeEntitlement: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/entitlement/revoke')
+                .inputs(
+                    z.object({
+                        grantId: z.string(),
+                    })
+                )
+                .handler(async ({ grantId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._policyController.revokeEntitlement({
+                            userId: sessionKeyValidation.userId,
+                            userRole: sessionKeyValidation.role,
+                            grantId,
+                        });
+
+                    return result;
+                }),
 
             listGrantedEntitlements: procedure()
                 .origins('api')
