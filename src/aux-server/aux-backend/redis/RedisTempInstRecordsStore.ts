@@ -1,6 +1,7 @@
 import {
     BranchName,
     BranchUpdates,
+    LoadedPackage,
     TempBranchInfo,
     TemporaryInstRecordsStore,
 } from '@casual-simulation/aux-records';
@@ -54,6 +55,54 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         this._instDataExpirationSeconds = dataExpirationSeconds;
         this._instDataExpirationMode = dataExpirationMode;
         this._onlyExpireRecordlessUpdates = onlyExpireRecordlessUpdates;
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        const idsKey = this._getLoadedPackageIdsKey(
+            loadedPackage.recordName,
+            loadedPackage.inst
+        );
+        const key = this._getLoadedPackagesKey(
+            loadedPackage.recordName,
+            loadedPackage.inst
+        );
+
+        if (await this._redis.sIsMember(idsKey, loadedPackage.id)) {
+            return;
+        }
+
+        const multi = this._redis.multi();
+
+        multi.sAdd(idsKey, loadedPackage.id);
+        multi.lPush(key, JSON.stringify(loadedPackage));
+
+        this._expireMulti(multi, idsKey, this._instDataExpirationMode);
+        this._expireMulti(multi, key, this._instDataExpirationMode);
+
+        await multi.exec();
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        const key = this._getLoadedPackagesKey(recordName, inst);
+        const packages = await this._redis.lRange(key, 0, -1);
+        return packages.map((p) => JSON.parse(p));
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<boolean> {
+        return await this._redis.sIsMember(
+            this._getLoadedPackageIdsKey(recordName, inst),
+            packageId
+        );
     }
 
     acquireLock(id: string, timeout: number): Promise<() => Promise<boolean>> {
@@ -119,6 +168,18 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         return `${this._globalNamespace}/updates/${
             recordName ?? ''
         }/${inst}/${branch}`;
+    }
+
+    private _getLoadedPackageIdsKey(recordName: string, inst: string): string {
+        return `${this._globalNamespace}/loadedPackageIds/${
+            recordName ?? ''
+        }/${inst}`;
+    }
+
+    private _getLoadedPackagesKey(recordName: string, inst: string): string {
+        return `${this._globalNamespace}/loadedPackages/${
+            recordName ?? ''
+        }/${inst}`;
     }
 
     private _getInstSizeKey(recordName: string, inst: string): string {
@@ -215,9 +276,22 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             multi.del([updatesKey, branchSizeKey, branchInfoKey]);
         }
         const instSizeKey = this._getInstSizeKey(recordName, inst);
+        const loadedPackageIdsKey = this._getLoadedPackageIdsKey(
+            recordName,
+            inst
+        );
+        const loadedPackagesKey = this._getLoadedPackagesKey(recordName, inst);
         console.log('[RedisTempInstRecordsStore] Deleting key:', key);
         console.log('[RedisTempInstRecordsStore] Deleting key:', instSizeKey);
-        multi.del([key, instSizeKey]);
+        console.log(
+            '[RedisTempInstRecordsStore] Deleting key:',
+            loadedPackageIdsKey
+        );
+        console.log(
+            '[RedisTempInstRecordsStore] Deleting key:',
+            loadedPackagesKey
+        );
+        multi.del([key, instSizeKey, loadedPackageIdsKey, loadedPackagesKey]);
         await multi.exec();
     }
 
@@ -269,6 +343,11 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         const key = this._getUpdatesKey(recordName, inst, branch);
         const branchesKey = this._getInstBranchesKey(recordName, inst);
         const branchInfoKey = this._getBranchInfoKey(recordName, inst, branch);
+        const loadedPackageIdsKey = this._getLoadedPackageIdsKey(
+            recordName,
+            inst
+        );
+        const loadedPackagesKey = this._getLoadedPackagesKey(recordName, inst);
         const finalUpdates = updates.map((u) => `${u}:${Date.now()}`);
 
         const span = trace.getActiveSpan();
@@ -310,6 +389,10 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
             // and branches
             this._expire(branchInfoKey, expireMode),
             this._expire(branchesKey, null),
+
+            // Update expirations for loaded packages
+            this._expire(loadedPackageIdsKey, expireMode),
+            this._expire(loadedPackagesKey, expireMode),
         ]);
     }
 
