@@ -32,7 +32,26 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
 
     @traced(TRACE_NAME)
     async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._prisma.loadedPackage.upsert({
+            where: {
+                id: loadedPackage.id,
+            },
+            create: {
+                id: loadedPackage.id,
+                instRecordName: loadedPackage.recordName,
+                instName: loadedPackage.inst,
+                packageId: loadedPackage.packageId,
+                packageVersionId: loadedPackage.packageVersionId,
+                userId: loadedPackage.userId,
+            },
+            update: {
+                instRecordName: loadedPackage.recordName,
+                instName: loadedPackage.inst,
+                packageId: loadedPackage.packageId,
+                packageVersionId: loadedPackage.packageVersionId,
+                userId: loadedPackage.userId,
+            },
+        });
     }
 
     @traced(TRACE_NAME)
@@ -40,7 +59,21 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         recordName: string | null,
         inst: string
     ): Promise<LoadedPackage[]> {
-        throw new Error('Method not implemented.');
+        const loadedPackages = await this._prisma.loadedPackage.findMany({
+            where: {
+                instRecordName: recordName,
+                instName: inst,
+            },
+        });
+
+        return loadedPackages.map((p) => ({
+            id: p.id,
+            recordName: p.instRecordName,
+            inst: p.instName,
+            packageId: p.packageId,
+            packageVersionId: p.packageVersionId,
+            userId: p.userId,
+        }));
     }
 
     @traced(TRACE_NAME)
@@ -49,7 +82,9 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         inst: string,
         packageId: string
     ): Promise<boolean> {
-        throw new Error('Method not implemented.');
+        const loaded: any = await this._prisma
+            .$queryRaw`SELECT (COUNT(*) > 0) AS "hasPackage" FROM public."LoadedPackage" WHERE "instRecordName" = ${recordName} AND "instName" = ${inst} AND "packageId" = ${packageId}`;
+        return loaded.hasPackage;
     }
 
     @traced(TRACE_NAME)
