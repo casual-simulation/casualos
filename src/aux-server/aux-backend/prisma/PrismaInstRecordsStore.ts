@@ -31,6 +31,28 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
     }
 
     @traced(TRACE_NAME)
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    @traced(TRACE_NAME)
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    @traced(TRACE_NAME)
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<boolean> {
+        throw new Error('Method not implemented.');
+    }
+
+    @traced(TRACE_NAME)
     async listInstsByRecord(
         recordName: string,
         startingInst?: string
