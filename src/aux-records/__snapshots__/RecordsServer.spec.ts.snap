@@ -2323,27 +2323,7 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
-          "address": Object {
-            "type": "string",
-          },
-          "key": Object {
-            "schema": Object {
-              "major": Object {
-                "type": "number",
-              },
-              "minor": Object {
-                "type": "number",
-              },
-              "patch": Object {
-                "type": "number",
-              },
-              "tag": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
-          },
-          "recordName": Object {
+          "packageVersionId": Object {
             "type": "string",
           },
           "review": Object {
@@ -6781,27 +6761,7 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
-          "address": Object {
-            "type": "string",
-          },
-          "key": Object {
-            "schema": Object {
-              "major": Object {
-                "type": "number",
-              },
-              "minor": Object {
-                "type": "number",
-              },
-              "patch": Object {
-                "type": "number",
-              },
-              "tag": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
-          },
-          "recordName": Object {
+          "packageVersionId": Object {
             "type": "string",
           },
           "review": Object {

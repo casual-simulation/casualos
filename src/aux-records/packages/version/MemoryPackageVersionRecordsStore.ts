@@ -41,6 +41,7 @@ export class MemoryPackageVersionRecordsStore
 
         return {
             item,
+            recordName: recordName,
             markers: recordItem?.markers ?? null,
             packageId: recordItem?.id ?? null,
         };
@@ -58,6 +59,7 @@ export class MemoryPackageVersionRecordsStore
                             )) as PackageRecord;
                         return {
                             item: v,
+                            recordName: recordName,
                             markers: recordItem?.markers ?? null,
                             packageId: recordItem?.id ?? null,
                         };
@@ -68,24 +70,17 @@ export class MemoryPackageVersionRecordsStore
 
         return {
             item: null,
+            recordName: null,
             markers: null,
             packageId: null,
         };
     }
 
     async listReviewsForVersion(
-        recordName: string,
-        address: string,
-        version: PackageRecordVersionKey
+        packageVersionId: string
     ): Promise<PackageVersionReview[]> {
         const reviews = this._reviews.filter(
-            (r) =>
-                r.recordName === recordName &&
-                r.address === address &&
-                r.key.major === version.major &&
-                r.key.minor === version.minor &&
-                r.key.patch === version.patch &&
-                r.key.tag === version.tag
+            (r) => r.packageVersionId === packageVersionId
         );
         return orderBy(reviews, (r) => r.createdAtMs, 'desc');
     }
@@ -128,15 +123,9 @@ export class MemoryPackageVersionRecordsStore
     }
 
     async getMostRecentPackageVersionReview(
-        recordName: string,
-        address: string,
-        version: PackageRecordVersionKey
+        packageVersionId: string
     ): Promise<PackageVersionReview | null> {
-        const reviews = await this.listReviewsForVersion(
-            recordName,
-            address,
-            version
-        );
+        const reviews = await this.listReviewsForVersion(packageVersionId);
         if (reviews.length === 0) {
             return null;
         }

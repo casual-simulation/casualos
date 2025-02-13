@@ -8,6 +8,7 @@ import {
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
+    LoadedPackage,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,

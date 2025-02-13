@@ -50,18 +50,16 @@ export interface PackageVersionRecordsStore
         filter: SubscriptionFilter
     ): Promise<PackageVersionSubscriptionMetrics>;
 
-    /**
-     * Gets the list of reviews for the given package version.
-     *
-     * @param recordName The name of the record.
-     * @param address The address of the package.
-     * @param version The version.
-     */
-    listReviewsForVersion(
-        recordName: string,
-        address: string,
-        version: PackageRecordVersionKey
-    ): Promise<PackageVersionReview[]>;
+    // /**
+    //  * Gets the list of reviews for the given package version.
+    //  *
+    //  * @param recordName The name of the record.
+    //  * @param address The address of the package.
+    //  * @param version The version.
+    //  */
+    // listReviewsForVersion(
+    //     packageVersionId: string,
+    // ): Promise<PackageVersionReview[]>;
 
     /**
      * Creates or updates a review for a package version.
@@ -94,14 +92,10 @@ export interface PackageVersionRecordsStore
      * Gets the most recent review for the given package version.
      * Returns null if there are no reviews for the package version.
      *
-     * @param recordName The name of the record.
-     * @param address The address of the package.
-     * @param version The version of the package.
+     * @param packageVersionId The ID of the package version.
      */
     getMostRecentPackageVersionReview(
-        recordName: string,
-        address: string,
-        version: PackageRecordVersionKey
+        packageVersionId: string
     ): Promise<PackageVersionReview | null>;
 }
 
@@ -297,19 +291,9 @@ export interface PackageVersionReview {
     id: string;
 
     /**
-     * The name of the record.
+     * The ID of the package version that was reviewed.
      */
-    recordName: string;
-
-    /**
-     * The address of the package.
-     */
-    address: string;
-
-    /**
-     * The key of the package version.
-     */
-    key: PackageRecordVersionKey;
+    packageVersionId: string;
 
     /**
      * Whether the package version has been approved.
@@ -357,6 +341,11 @@ export interface PackageVersionReview {
 
 export interface GetPackageVersionByKeyResult
     extends GetSubCrudItemResult<PackageRecordVersion> {
+    /**
+     * The name of the record that the package version is stored in.
+     */
+    recordName: string;
+
     /**
      * The ID of the package that the version is stored under.
      */

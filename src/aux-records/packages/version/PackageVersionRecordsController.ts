@@ -432,9 +432,7 @@ export class PackageVersionRecordsController {
 
             if (item.requiresReview) {
                 let review = await this.store.getMostRecentPackageVersionReview(
-                    context.context.recordName,
-                    item.address,
-                    item.key
+                    item.id
                 );
 
                 item.approved = review?.approved ?? false;
@@ -641,8 +639,20 @@ export class PackageVersionRecordsController {
         request: ReviewPackageVersionRequest
     ): Promise<ReviewPackageVersionResult> {
         try {
+            const packageVersion = await this.store.getItemById(
+                request.packageVersionId
+            );
+
+            if (!packageVersion?.item) {
+                return {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The package version was not found.',
+                };
+            }
+
             const baseRequest: ConstructAuthorizationContextRequest = {
-                recordKeyOrRecordName: request.recordName,
+                recordKeyOrRecordName: packageVersion.recordName,
                 userId: request.userId,
                 userRole: request.userRole,
                 sendNotLoggedIn: true,
@@ -668,9 +678,7 @@ export class PackageVersionRecordsController {
             const reviewId = request.review.id ?? uuid();
             const result = await this.store.putReviewForVersion({
                 id: reviewId,
-                recordName: context.context.recordName,
-                address: request.address,
-                key: request.key,
+                packageVersionId: request.packageVersionId,
                 approved: request.review.approved,
                 approvalType: request.review.approvalType,
                 reviewComments: request.review.reviewComments,
@@ -851,10 +859,8 @@ export interface GetPackageVersionSuccess
 export type PackageVersionReviewInput = Omit<
     PackageVersionReview,
     | 'id'
+    | 'packageVersionId'
     | 'reviewingUserId'
-    | 'recordName'
-    | 'address'
-    | 'key'
     | 'createdAtMs'
     | 'updatedAtMs'
 > & {
@@ -867,19 +873,9 @@ export type PackageVersionReviewInput = Omit<
 
 export interface ReviewPackageVersionRequest {
     /**
-     * The name of the record.
+     * The ID of the package version that the review is for.
      */
-    recordName: string;
-
-    /**
-     * The address of the package.
-     */
-    address: string;
-
-    /**
-     * The version of the package.
-     */
-    key: PackageRecordVersionKey;
+    packageVersionId: string;
 
     /**
      * The review that should be stored for the package version.

@@ -1605,14 +1605,7 @@ describe('PackageVersionRecordsController', () => {
 
             await itemsStore.putReviewForVersion({
                 id: 'reviewId',
-                recordName,
-                address: 'address',
-                key: {
-                    major: 1,
-                    minor: 0,
-                    patch: 0,
-                    tag: '',
-                },
+                packageVersionId: 'address@1.0.0',
                 approved: true,
                 approvalType: 'normal',
                 reviewComments: '',
@@ -1677,6 +1670,28 @@ describe('PackageVersionRecordsController', () => {
     });
 
     describe('reviewItem()', () => {
+        beforeEach(async () => {
+            await itemsStore.createItem(recordName, {
+                id: 'address@1.0.0',
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'aux.json',
+                auxSha256: '',
+                createdAtMs: 0,
+                entitlements: [],
+                readme: '',
+                sha256: '',
+                sizeInBytes: 123,
+                createdFile: true,
+                requiresReview: true,
+            });
+        });
+
         describe('create', () => {
             const roleCases: [UserRole][] = [
                 ['moderator'],
@@ -1694,14 +1709,7 @@ describe('PackageVersionRecordsController', () => {
                     });
 
                     const result = await manager.reviewItem({
-                        recordName,
-                        address: 'address',
-                        key: {
-                            major: 1,
-                            minor: 0,
-                            patch: 0,
-                            tag: '',
-                        },
+                        packageVersionId: 'address@1.0.0',
                         review: {
                             approved: true,
                             approvalType: 'normal',
@@ -1718,25 +1726,11 @@ describe('PackageVersionRecordsController', () => {
 
                     expect(
                         await itemsStore.getMostRecentPackageVersionReview(
-                            recordName,
-                            'address',
-                            {
-                                major: 1,
-                                minor: 0,
-                                patch: 0,
-                                tag: '',
-                            }
+                            'address@1.0.0'
                         )
                     ).toEqual({
                         id: expect.any(String),
-                        recordName,
-                        address: 'address',
-                        key: {
-                            major: 1,
-                            minor: 0,
-                            patch: 0,
-                            tag: '',
-                        },
+                        packageVersionId: 'address@1.0.0',
                         approved: true,
                         approvalType: 'normal',
                         reviewComments: 'good',
@@ -1756,14 +1750,7 @@ describe('PackageVersionRecordsController', () => {
                 });
 
                 const result = await manager.reviewItem({
-                    recordName,
-                    address: 'address',
-                    key: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageVersionId: 'address@1.0.0',
                     review: {
                         approved: true,
                         approvalType: 'normal',
@@ -1781,14 +1768,7 @@ describe('PackageVersionRecordsController', () => {
 
                 expect(
                     await itemsStore.getMostRecentPackageVersionReview(
-                        recordName,
-                        'address',
-                        {
-                            major: 1,
-                            minor: 0,
-                            patch: 0,
-                            tag: '',
-                        }
+                        'address@1.0.0'
                     )
                 ).toEqual(null);
             });
@@ -1798,14 +1778,7 @@ describe('PackageVersionRecordsController', () => {
             beforeEach(async () => {
                 await itemsStore.putReviewForVersion({
                     id: 'reviewId',
-                    recordName,
-                    address: 'address',
-                    key: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageVersionId: 'address@1.0.0',
                     approved: false,
                     approvalType: 'normal',
                     reviewStatus: 'pending',
@@ -1832,14 +1805,7 @@ describe('PackageVersionRecordsController', () => {
                     });
 
                     const result = await manager.reviewItem({
-                        recordName,
-                        address: 'address',
-                        key: {
-                            major: 1,
-                            minor: 0,
-                            patch: 0,
-                            tag: '',
-                        },
+                        packageVersionId: 'address@1.0.0',
                         review: {
                             id: 'reviewId',
                             approved: true,
@@ -1857,25 +1823,11 @@ describe('PackageVersionRecordsController', () => {
 
                     expect(
                         await itemsStore.getMostRecentPackageVersionReview(
-                            recordName,
-                            'address',
-                            {
-                                major: 1,
-                                minor: 0,
-                                patch: 0,
-                                tag: '',
-                            }
+                            'address@1.0.0'
                         )
                     ).toEqual({
                         id: 'reviewId',
-                        recordName,
-                        address: 'address',
-                        key: {
-                            major: 1,
-                            minor: 0,
-                            patch: 0,
-                            tag: '',
-                        },
+                        packageVersionId: 'address@1.0.0',
                         approved: true,
                         approvalType: 'normal',
                         reviewComments: 'good',
@@ -1895,14 +1847,7 @@ describe('PackageVersionRecordsController', () => {
                 });
 
                 const result = await manager.reviewItem({
-                    recordName,
-                    address: 'address',
-                    key: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageVersionId: 'address@1.0.0',
                     review: {
                         id: 'reviewId',
                         approved: true,
@@ -1921,25 +1866,11 @@ describe('PackageVersionRecordsController', () => {
 
                 expect(
                     await itemsStore.getMostRecentPackageVersionReview(
-                        recordName,
-                        'address',
-                        {
-                            major: 1,
-                            minor: 0,
-                            patch: 0,
-                            tag: '',
-                        }
+                        'address@1.0.0'
                     )
                 ).toEqual({
                     id: 'reviewId',
-                    recordName,
-                    address: 'address',
-                    key: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageVersionId: 'address@1.0.0',
                     approved: false,
                     approvalType: 'normal',
                     reviewStatus: 'pending',

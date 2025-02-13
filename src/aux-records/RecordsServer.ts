@@ -2401,14 +2401,7 @@ export class RecordsServer {
                 .http('POST', '/api/v2/records/package/version/review')
                 .inputs(
                     z.object({
-                        recordName: RECORD_NAME_VALIDATION,
-                        address: ADDRESS_VALIDATION,
-                        key: z.object({
-                            major: z.number().int(),
-                            minor: z.number().int(),
-                            patch: z.number().int(),
-                            tag: z.string().max(16),
-                        }),
+                        packageVersionId: z.string().min(1).max(32),
                         review: z.object({
                             id: z.string().min(1).max(32).optional(),
                             approved: z.boolean(),
@@ -2424,38 +2417,34 @@ export class RecordsServer {
                         }),
                     })
                 )
-                .handler(
-                    async ({ recordName, address, key, review }, context) => {
-                        if (!this._packageVersionController) {
-                            return {
-                                success: false,
-                                errorCode: 'not_supported',
-                                errorMessage: 'This feature is not supported.',
-                            };
-                        }
-
-                        const validation = await this._validateSessionKey(
-                            context.sessionKey
-                        );
-                        if (validation.success === false) {
-                            if (validation.errorCode === 'no_session_key') {
-                                return NOT_LOGGED_IN_RESULT;
-                            }
-                            return validation;
-                        }
-
-                        const result =
-                            await this._packageVersionController.reviewItem({
-                                recordName,
-                                address,
-                                key: key as PackageRecordVersionKey,
-                                userId: validation.userId,
-                                review: review as PackageVersionReviewInput,
-                            });
-
-                        return result;
+                .handler(async ({ packageVersionId, review }, context) => {
+                    if (!this._packageVersionController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
                     }
-                ),
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._packageVersionController.reviewItem({
+                            packageVersionId,
+                            userId: validation.userId,
+                            review: review as PackageVersionReviewInput,
+                        });
+
+                    return result;
+                }),
 
             listRecords: procedure()
                 .origins('api')

@@ -13229,6 +13229,7 @@ describe('RecordsServer', () => {
                 })
             ).toEqual({
                 item: null,
+                recordName,
                 markers: [PUBLIC_READ_MARKER],
                 packageId: 'packageId',
             });
@@ -13300,14 +13301,7 @@ describe('RecordsServer', () => {
                     httpPost(
                         '/api/v2/records/package/version/review',
                         JSON.stringify({
-                            recordName,
-                            address: 'address',
-                            key: {
-                                major: 1,
-                                minor: 0,
-                                patch: 0,
-                                tag: '',
-                            },
+                            packageVersionId: 'packageVersionId',
                             review: {
                                 approved: true,
                                 approvalType: 'normal',
@@ -13341,14 +13335,7 @@ describe('RecordsServer', () => {
                 httpPost(
                     '/api/v2/records/package/version/review',
                     JSON.stringify({
-                        recordName,
-                        address: 'address',
-                        key: {
-                            major: 1,
-                            minor: 0,
-                            patch: 0,
-                            tag: '',
-                        },
+                        packageVersionId: 'packageVersionId',
                         review: {
                             approved: true,
                             approvalType: 'normal',
@@ -13377,14 +13364,7 @@ describe('RecordsServer', () => {
             '/api/v2/records/package/version/review',
             () =>
                 JSON.stringify({
-                    recordName,
-                    address: 'address',
-                    key: {
-                        major: 1,
-                        minor: 0,
-                        patch: 0,
-                        tag: '',
-                    },
+                    packageVersionId: 'packageVersionId',
                     review: {
                         approved: true,
                         approvalType: 'normal',
