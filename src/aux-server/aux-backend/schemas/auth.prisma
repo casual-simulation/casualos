@@ -1022,6 +1022,9 @@ model PackageRecordVersion {
     // The size of the package version in bytes
     sizeInBytes Int
 
+    // Whether the file was created by this version being uploaded
+    createdFile Boolean
+
     // The list of reviews for the package version
     reviews PackageRecordVersionReview[]
     loadedPackages LoadedPackage[]
