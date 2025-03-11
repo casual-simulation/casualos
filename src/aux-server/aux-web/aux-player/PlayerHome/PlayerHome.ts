@@ -432,6 +432,15 @@ export default class PlayerHome extends Vue {
         return isJoinCode(option);
     }
 
+    private async _deleteInst(inst: string) {
+        if (window.confirm(`Are you sure you want to delete ${inst}?`)) {
+            await appManager.deleteStaticInst(inst);
+            this.instSelection = 'new-inst';
+            this.instOptions = await appManager.listStaticInsts();
+        }
+        this.showBios = true;
+    }
+
     async executeBiosOption(
         option: BiosOption,
         recordName: string,
@@ -463,6 +472,8 @@ export default class PlayerHome extends Vue {
             this._loadPublicInst();
         } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
+        } else if (option === 'delete inst') {
+            this._deleteInst(inst);
         } else {
             this.showBios = true;
         }

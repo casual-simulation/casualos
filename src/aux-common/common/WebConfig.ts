@@ -29,7 +29,8 @@ export type BiosOption =
     | 'studio'
     | 'sign in'
     | 'sign up'
-    | 'sign out';
+    | 'sign out'
+    | 'delete inst';
 
 export const BIOS_OPTION_SCHEMA = z.enum([
     'enter join code',
@@ -46,6 +47,7 @@ export const BIOS_OPTION_SCHEMA = z.enum([
     'sign in',
     'sign up',
     'sign out',
+    'delete inst',
 ]);
 
 /**
