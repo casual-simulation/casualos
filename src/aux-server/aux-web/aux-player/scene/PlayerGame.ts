@@ -536,6 +536,15 @@ export class PlayerGame extends Game {
         return MINI_PORTAL_DEFAULT_HEIGHT_PADDING;
     }
 
+    getGridPortalVisible(): boolean {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'hasDimension',
+            false,
+            (hasDimension) => hasDimension === true
+        );
+    }
+
     getMapPortalVisible(): boolean {
         return this._getSimulationValue(
             this.mapSimulations,
@@ -1903,6 +1912,8 @@ export class PlayerGame extends Game {
             this.setupDelay = false;
         }
 
+        this._updateVisibility();
+        this._updateMapPortalVisibility();
         this._updateDefaultZoomAndRotation();
         this._updateMiniPortalVisibility();
         this._updateMiniPortalControls();
@@ -1913,6 +1924,22 @@ export class PlayerGame extends Game {
         this._updateConfigBotValues();
 
         this._updateMapPortals();
+    }
+
+    private _updateVisibility() {
+        const visible =
+            this.getGridPortalVisible() ||
+            this.getMiniPortalVisible() ||
+            this.getMapPortalVisible();
+
+        if (visible && this.gameView.container.style.display !== 'block') {
+            this.gameView.container.style.display = 'block';
+        } else if (
+            !visible &&
+            this.gameView.container.style.display !== 'none'
+        ) {
+            this.gameView.container.style.display = 'none';
+        }
     }
 
     private _updateMapPortals() {

@@ -174,7 +174,9 @@ export default class AuxVMImpl implements AuxVM {
         });
         this._iframe = document.createElement('iframe');
         this._iframe.src = iframeUrl;
-        this._iframe.style.display = 'none';
+        this._iframe.style.position = 'absolute';
+        this._iframe.style.height = '100%';
+        this._iframe.style.width = '100%';
         this._iframe.setAttribute('allow', DEFAULT_IFRAME_ALLOW_ATTRIBUTE);
         this._iframe.setAttribute('sandbox', DEFAULT_IFRAME_SANDBOX_ATTRIBUTE);
 

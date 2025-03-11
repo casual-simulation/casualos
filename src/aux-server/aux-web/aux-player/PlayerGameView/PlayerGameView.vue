@@ -1,5 +1,5 @@
 <template>
-    <div ref="container" class="game-container">
+    <div ref="container" class="app-game-container game-container">
         <div :id="mapViewId" class="map-canvas" ref="mapView"></div>
         <div class="map-viewport" :style="miniMapViewportStyle">
             <div ref="miniMapView" :id="miniMapViewId"></div>
