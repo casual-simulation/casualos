@@ -309,6 +309,7 @@ export class AppManager {
             playerMode: this._config.playerMode,
             requirePrivoLogin: this._config.requirePrivoLogin,
             comId: this._comId,
+            enableDom: this._config.enableDom,
         };
     }
 

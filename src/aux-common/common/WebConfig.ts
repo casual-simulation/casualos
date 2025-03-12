@@ -167,6 +167,14 @@ export interface WebConfig {
      * If specified, then the BIOS will automatically execute this option.
      */
     automaticBiosOption?: BiosOption;
+
+    /**
+     * Whether full support for the DOM should be enabled.
+     * This will run the VM without the web worker so that scripts have direct access to the iframe.
+     * May not be supported in all environments.
+     * Defaults to false.
+     */
+    enableDom?: boolean;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({

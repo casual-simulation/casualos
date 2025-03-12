@@ -220,3 +220,11 @@
     max-width: 80vw;
     max-height: 80vh;
 }
+
+.vm-iframe-container iframe:first-child {
+    display: block;
+}
+
+.vm-iframe-container iframe {
+    display: none;
+}

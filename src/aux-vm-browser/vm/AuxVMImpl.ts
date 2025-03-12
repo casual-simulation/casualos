@@ -159,7 +159,12 @@ export default class AuxVMImpl implements AuxVM {
             origin = baseOrigin;
         }
         console.log('origin', origin);
-        const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
+        const iframeUrl = new URL(
+            this._config.config.enableDom
+                ? '/aux-vm-iframe-dom.html'
+                : '/aux-vm-iframe.html',
+            origin
+        ).href;
 
         this._connectionStateChanged.next({
             type: 'progress',
@@ -174,6 +179,9 @@ export default class AuxVMImpl implements AuxVM {
         });
         this._iframe = document.createElement('iframe');
         this._iframe.src = iframeUrl;
+        if (!this._config.config.enableDom) {
+            this._iframe.style.display = 'none';
+        }
         this._iframe.style.position = 'absolute';
         this._iframe.style.height = '100%';
         this._iframe.style.width = '100%';

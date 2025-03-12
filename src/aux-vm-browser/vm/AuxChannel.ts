@@ -18,6 +18,8 @@ import { BrowserAuxChannel } from './BrowserAuxChannel';
 //     };
 // }
 
+console.log('[AuxChannel] Starting with DOM...');
+
 listenForChannel().then((port) => {
     console.log('[AuxChannel.worker] Got port, exposing API');
     expose(BrowserAuxChannel, port);

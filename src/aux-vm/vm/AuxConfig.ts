@@ -117,6 +117,14 @@ export interface AuxConfigParameters {
      * The comId that was specified when this config was created.
      */
     comId?: string;
+
+    /**
+     * Whether full support for the DOM should be enabled.
+     * This will run the VM without the web worker so that scripts have direct access to the iframe.
+     * May not be supported in all environments.
+     * Defaults to false.
+     */
+    enableDom?: boolean;
 }
 
 export interface AuxTimeSyncConfiguration {

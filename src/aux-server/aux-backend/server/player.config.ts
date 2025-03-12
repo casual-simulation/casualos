@@ -47,6 +47,7 @@ const config: ClientConfig = {
             null) as BiosOption,
         automaticBiosOption: (process.env.AUTOMATIC_BIOS_OPTION ||
             null) as BiosOption,
+        enableDom: process.env.ENABLE_DOM === 'true',
     },
 };
 
