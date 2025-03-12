@@ -310,6 +310,7 @@ export class AppManager {
             requirePrivoLogin: this._config.requirePrivoLogin,
             comId: this._comId,
             enableDom: this._config.enableDom,
+            debug: this._config.debug,
         };
     }
 

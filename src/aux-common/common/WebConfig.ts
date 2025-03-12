@@ -172,9 +172,15 @@ export interface WebConfig {
      * Whether full support for the DOM should be enabled.
      * This will run the VM without the web worker so that scripts have direct access to the iframe.
      * May not be supported in all environments.
+     * Requires a separate VM origin for security purposes.
      * Defaults to false.
      */
     enableDom?: boolean;
+
+    /**
+     * Whether to enable debug mode for the VM.
+     */
+    debug?: boolean;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({

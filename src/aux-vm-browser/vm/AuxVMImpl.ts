@@ -153,6 +153,23 @@ export default class AuxVMImpl implements AuxVM {
             location.origin,
             this._id
         );
+
+        let enableDom = this._config.config.enableDom;
+        if (
+            enableDom &&
+            location.origin === origin &&
+            !this._config.config.debug
+        ) {
+            console.error(
+                '[AuxVMImpl] Cannot use DOM when origin is the same as the VM origin.'
+            );
+            console.error('[AuxVMImpl] Using WebWorker isolated VM.');
+            console.error(
+                '[AuxVMImpl] To use DOM, enable debug mode or use a separate VM origin.'
+            );
+            enableDom = false;
+        }
+
         if (this._relaxOrigin) {
             const baseOrigin = getBaseOrigin(origin);
             console.log('[AuxVMImpl] Relaxing origin to:', baseOrigin);
@@ -160,9 +177,7 @@ export default class AuxVMImpl implements AuxVM {
         }
         console.log('origin', origin);
         const iframeUrl = new URL(
-            this._config.config.enableDom
-                ? '/aux-vm-iframe-dom.html'
-                : '/aux-vm-iframe.html',
+            enableDom ? '/aux-vm-iframe-dom.html' : '/aux-vm-iframe.html',
             origin
         ).href;
 
@@ -179,7 +194,7 @@ export default class AuxVMImpl implements AuxVM {
         });
         this._iframe = document.createElement('iframe');
         this._iframe.src = iframeUrl;
-        if (!this._config.config.enableDom) {
+        if (!enableDom) {
             this._iframe.style.display = 'none';
         }
         this._iframe.style.position = 'absolute';

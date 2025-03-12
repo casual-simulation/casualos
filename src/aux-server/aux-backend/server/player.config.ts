@@ -48,6 +48,7 @@ const config: ClientConfig = {
         automaticBiosOption: (process.env.AUTOMATIC_BIOS_OPTION ||
             null) as BiosOption,
         enableDom: process.env.ENABLE_DOM === 'true',
+        debug: process.env.NODE_ENV === 'development',
     },
 };
 
