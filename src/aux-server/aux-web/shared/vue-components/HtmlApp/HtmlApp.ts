@@ -80,6 +80,8 @@ export default class HtmlApp extends Vue {
     private _currentTouch: any;
     private _sub: Subscription;
     private _listeners: Map<string, number> = new Map();
+    private _isDestroyed: boolean; // Set by Vue
+    private _isBeingDestroyed: boolean; // Set by Vue
 
     constructor() {
         super();
@@ -315,6 +317,10 @@ export default class HtmlApp extends Vue {
     }
 
     private _applyMutation(mutation: any) {
+        if (this._isDestroyed || this._isBeingDestroyed) {
+            return;
+        }
+
         if (mutation.type === 'childList') {
             this._applyChildList(mutation);
         } else if (mutation.type === 'attributes') {
