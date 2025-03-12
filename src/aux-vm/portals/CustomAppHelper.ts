@@ -69,12 +69,7 @@ export class CustomAppHelper {
                 }
             } else if (event.type === 'custom_app_container_available') {
                 if (!this.portals.has(ROOT_APP_ID)) {
-                    const documentDescriptor = Object.getOwnPropertyDescriptor(
-                        globalThis,
-                        'document'
-                    );
-
-                    if (!documentDescriptor || documentDescriptor.writable) {
+                    if (!isBrowserDocument()) {
                         // document is not defined so we should make a root custom app
                         console.log(
                             '[CustomAppHelper] Creating root custom app'

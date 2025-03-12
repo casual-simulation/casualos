@@ -194,16 +194,23 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     private _renderContent(content: any) {
+        // TODO: Remove all custom document filler when we have a proper document
+        // implementation
+        const isBrowser = isBrowserDocument();
         let prevDocument = globalThis.document;
         try {
-            globalThis.document = this._document;
+            if (!isBrowser) {
+                globalThis.document = this._document;
+            }
             if (this._document) {
                 render(content, this._document.body);
             }
         } catch (err) {
             console.error(err);
         } finally {
-            globalThis.document = prevDocument;
+            if (!isBrowser) {
+                globalThis.document = prevDocument;
+            }
         }
     }
 
@@ -226,9 +233,10 @@ export class HtmlAppBackend implements AppBackend {
 
     private _setupApp(result: HtmlPortalSetupResult) {
         try {
-            let doc = (this._document = undom({
-                builtinEvents: result?.builtinEvents,
-            }));
+            let doc = (this._document = globalThis.document);
+            //     undom({
+            //     builtinEvents: result?.builtinEvents,
+            // }));
 
             this._registerMethodHandlers(doc);
 
@@ -237,6 +245,11 @@ export class HtmlAppBackend implements AppBackend {
             );
             this._mutationObserver.observe(doc, {
                 subtree: true,
+                attributes: true,
+                attributeOldValue: true,
+                characterData: true,
+                characterDataOldValue: true,
+                childList: true,
             });
 
             this._helper.transaction(
@@ -379,15 +392,30 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     private _processMutations(mutations: MutationRecord[]) {
+        let processedMutations = [];
         for (let mutation of mutations) {
+            let processedMutation = {
+                addedNodes: mutation.addedNodes,
+                attributeName: mutation.attributeName,
+                attributeNamespace: mutation.attributeNamespace,
+                nextSibling: mutation.nextSibling,
+                oldValue: mutation.oldValue,
+                previousSibling: mutation.previousSibling,
+                removedNodes: mutation.removedNodes,
+                target: mutation.target,
+                type: mutation.type,
+            };
             for (let prop of this._propReferenceList) {
-                (<any>mutation)[prop] = this._makeReference(
+                (<any>processedMutation)[prop] = this._makeReference(
                     (<any>mutation)[prop]
                 );
             }
+            processedMutations.push(processedMutation);
         }
 
-        this._helper.transaction(updateHtmlApp(this.appId, mutations as any[]));
+        this._helper.transaction(
+            updateHtmlApp(this.appId, processedMutations as any[])
+        );
     }
 
     private _getNodeId(obj: RootNode) {
@@ -446,4 +474,17 @@ export class HtmlAppBackend implements AppBackend {
 
         return result;
     }
+}
+
+/**
+ * Determines whether the global document is owned by the browser.
+ * Returns true if either the document property exists and it is not writable.
+ */
+export function isBrowserDocument() {
+    const documentDescriptor = Object.getOwnPropertyDescriptor(
+        globalThis,
+        'document'
+    );
+
+    return documentDescriptor && !documentDescriptor.writable;
 }
