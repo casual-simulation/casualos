@@ -18,6 +18,7 @@
                                 ></bot-chat>
                             </div>
                         </md-toolbar>
+                        <div class="vm-iframe-container"></div>
                         <bot-sheet></bot-sheet>
                         <ide-portal></ide-portal>
                         <system-portal></system-portal>
