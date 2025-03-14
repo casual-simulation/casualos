@@ -1,11 +1,11 @@
-import {
-    LocalActions,
+import type {
     StateUpdatedEvent,
     BotAction,
     StoredAux,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import {
+import { LocalActions } from '@casual-simulation/aux-common';
+import type {
     AuxChannel,
     AuxChannelErrorType,
     AuxConfig,
@@ -14,14 +14,13 @@ import {
     AuxVM,
     ChannelActionResult,
 } from '@casual-simulation/aux-vm/vm';
-import {
-    DeviceAction,
-    remapProgressPercent,
-    StatusUpdate,
-} from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { proxy, Remote, createEndpoint } from 'comlink';
-import {
+import type { DeviceAction, StatusUpdate } from '@casual-simulation/aux-common';
+import { remapProgressPercent } from '@casual-simulation/aux-common';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Remote } from 'comlink';
+import { proxy, createEndpoint } from 'comlink';
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
