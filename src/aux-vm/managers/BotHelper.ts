@@ -32,10 +32,10 @@ import {
     createBotLink,
 } from '@casual-simulation/aux-common';
 import { BaseHelper } from './BaseHelper';
-import { AuxVM } from '../vm/AuxVM';
-import { ChannelActionResult } from '../vm';
-import { AuxDevice } from '@casual-simulation/aux-runtime';
-import { SimulationOrigin } from './Simulation';
+import type { AuxVM } from '../vm/AuxVM';
+import type { ChannelActionResult } from '../vm';
+import type { AuxDevice } from '@casual-simulation/aux-runtime';
+import type { SimulationOrigin } from './Simulation';
 
 /**
  * Defines an class that contains a simple set of functions

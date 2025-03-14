@@ -9,8 +9,8 @@ import {
     unregisterHtmlApp,
     htmlAppMethod,
 } from '@casual-simulation/aux-common';
-import { AuxHelper } from '../vm';
-import { AppBackend } from './AppBackend';
+import type { AuxHelper } from '../vm';
+import type { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
 import type { RootNode } from '@casual-simulation/undom';
 import undom, {
@@ -21,7 +21,7 @@ import undom, {
     supressMutations,
 } from '@casual-simulation/undom';
 import { render } from 'preact';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { first, map } from 'rxjs/operators';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 import {
@@ -35,6 +35,54 @@ import {
 
 export interface HtmlPortalSetupResult {
     builtinEvents: string[];
+}
+
+let addedEventListeners = new Subject<{
+    target: Element;
+    type: string;
+    listener: EventListenerOrEventListenerObject;
+    options?: boolean | AddEventListenerOptions;
+}>();
+
+let removedEventListeners = new Subject<{
+    target: Element;
+    type: string;
+    listener: EventListenerOrEventListenerObject;
+    options?: boolean | AddEventListenerOptions;
+}>();
+
+if (typeof Element !== 'undefined') {
+    Element.prototype.addEventListener = function (
+        this: Element,
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ) {
+        addedEventListeners.next({
+            target: this,
+            type,
+            listener,
+            options,
+        });
+        return EventTarget.prototype.addEventListener.call(this, ...arguments);
+    };
+    Element.prototype.removeEventListener = function (
+        this: Element,
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ) {
+        removedEventListeners.next({
+            target: this,
+            type,
+            listener,
+            options,
+        });
+        return EventTarget.prototype.removeEventListener.call(
+            this,
+            ...arguments
+        );
+    };
 }
 
 /**
@@ -51,7 +99,10 @@ export class HtmlAppBackend implements AppBackend {
     private _instanceId: string;
     private _document: Document;
     private _mutationObserver: MutationObserver;
-    private _nodes: Map<string, RootNode> = new Map<string, RootNode>();
+    private _nodes: Map<string, RootNode | Node> = new Map<
+        string,
+        RootNode | Node
+    >();
     private _initialContent: any;
     private _setupObservable: BehaviorSubject<boolean>;
     private _methodCallTasks: Map<number | string, (result: any) => void> =
@@ -214,7 +265,7 @@ export class HtmlAppBackend implements AppBackend {
         }
     }
 
-    private _getNode(node: any): RootNode {
+    private _getNode(node: any): RootNode | Node {
         let id: string;
         if (node && typeof node === 'object') {
             id = node.__id;
@@ -250,6 +301,34 @@ export class HtmlAppBackend implements AppBackend {
                 characterData: true,
                 characterDataOldValue: true,
                 childList: true,
+            });
+            this._sub.add(() => {
+                addedEventListeners.subscribe((e) => {
+                    if ('__id' in e.target) {
+                        this._processMutations([
+                            {
+                                type: 'event_listener',
+                                target: e.target,
+                                listenerName: e.type,
+                                listenerDelta: 1,
+                            } as any,
+                        ]);
+                    }
+                });
+            });
+            this._sub.add(() => {
+                removedEventListeners.subscribe((e) => {
+                    if ('__id' in e.target) {
+                        this._processMutations([
+                            {
+                                type: 'event_listener',
+                                target: e.target,
+                                listenerName: e.type,
+                                listenerDelta: -1,
+                            } as any,
+                        ]);
+                    }
+                });
             });
 
             this._helper.transaction(
@@ -428,13 +507,15 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     // Mostly copied from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/worker.js#L81
-    private _makeReference(obj: RootNode | RootNode[]): any {
+    private _makeReference(obj: Node | RootNode | RootNode[] | NodeList): any {
         if (!obj || typeof obj !== 'object') {
             return obj;
         }
 
         if (Array.isArray(obj)) {
             return obj.map(this._makeReference, this);
+        } else if (isNodeList(obj)) {
+            return Array.from(obj).map(this._makeReference, this);
         }
 
         const anyObj = obj as any;
@@ -449,17 +530,23 @@ export class HtmlAppBackend implements AppBackend {
             nodeType: obj.nodeType,
         } as any;
 
-        if (obj.nodeType === 3) {
+        if (obj.nodeType === TEXT_NODE) {
             for (let prop of TEXT_REFERENCE_PROPERTIES) {
                 result[prop] = anyObj[prop];
             }
-        } else if (obj.nodeType === 1) {
+        } else if (obj.nodeType === ELEMENT_NODE) {
             for (let prop of NODE_REFERENCE_PROPERTIES) {
                 if (!prop.startsWith('_') || prop === '__id') {
                     const value = anyObj[prop];
                     if (hasValue(value)) {
                         if (this._propCopyList.has(prop)) {
                             result[prop] = { ...value };
+                        } else if (isNamedNodeMap(value)) {
+                            let attributes: Attr[] = [];
+                            for (let i = 0; i < value.length; i++) {
+                                attributes.push({ ...value[i] });
+                            }
+                            result[prop] = attributes;
                         } else {
                             result[prop] = value;
                         }
@@ -487,4 +574,12 @@ export function isBrowserDocument() {
     );
 
     return documentDescriptor && !documentDescriptor.writable;
+}
+
+export function isNodeList(obj: any): obj is NodeList {
+    return typeof NodeList !== 'undefined' && obj instanceof NodeList;
+}
+
+export function isNamedNodeMap(obj: any): obj is NamedNodeMap {
+    return typeof NamedNodeMap !== 'undefined' && obj instanceof NamedNodeMap;
 }

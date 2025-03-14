@@ -19,8 +19,6 @@ import type {
     AuxVM,
     ChannelActionResult,
     SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
@@ -31,7 +29,7 @@ import {
     remapProgressPercent,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
+import type { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
 import type {
     AuxDevice,

@@ -9,7 +9,7 @@ import type {
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
-import {
+import type {
     AuxVM,
     AuxChannel,
     AuxChannelErrorType,

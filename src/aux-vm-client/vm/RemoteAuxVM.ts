@@ -25,7 +25,7 @@ import type {
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
-import { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a VM that is able to wrap a remote aux channel.

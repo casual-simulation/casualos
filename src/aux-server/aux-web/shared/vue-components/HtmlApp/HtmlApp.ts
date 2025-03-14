@@ -22,10 +22,9 @@ import { Subscription, SubscriptionLike } from 'rxjs';
 import type { BrowserSimulation } from '../../../../../aux-vm-browser';
 import type { HtmlPortalSetupResult } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 import {
-    ELEMENT_SPECIFIC_PROPERTIES,
-    HtmlPortalSetupResult,
     TARGET_INPUT_PROPERTIES,
-} from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
+    ELEMENT_SPECIFIC_PROPERTIES,
+} from '@casual-simulation/aux-vm/portals/HtmlAppConsts';
 import { eventNames } from './Util';
 import type { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
 import { getMediaForCasualOSUrl } from '../../MediaUtils';
