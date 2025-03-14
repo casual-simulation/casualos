@@ -47,4 +47,10 @@ export default [
             '@typescript-eslint/no-this-alias': 'off',
         },
     },
+    {
+        files: ['src/aux-components/**/*.{js,ts,vue}'],
+        rules: {
+            'vue/multi-word-component-names': 'off',
+        },
+    },
 ];
