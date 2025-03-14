@@ -1,11 +1,11 @@
-import { BotsState } from '.';
+import type { BotsState } from '.';
 import { createBot } from './BotCalculations';
-import {
-    getUploadState,
+import type {
     InstUpdate,
     StoredAuxVersion1,
     StoredAuxVersion2,
 } from './StoredAux';
+import { getUploadState } from './StoredAux';
 
 describe('getUploadState()', () => {
     it('should support aux files that are just bot state', () => {

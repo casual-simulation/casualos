@@ -1,5 +1,5 @@
-import { Bot } from './Bot';
-import { BotObjectsContext } from './BotObjectsContext';
+import type { Bot } from './Bot';
+import type { BotObjectsContext } from './BotObjectsContext';
 import { calculateBotValue } from './BotCalculations';
 import { zip, sortBy } from 'lodash';
 

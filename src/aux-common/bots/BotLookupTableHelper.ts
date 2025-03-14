@@ -1,10 +1,7 @@
-import {
-    BotLookupTable,
-    valuesToKey,
-    buildLookupTable,
-} from './BotLookupTable';
-import { Bot } from './Bot';
-import { BotObjectsContext } from './BotObjectsContext';
+import type { BotLookupTable } from './BotLookupTable';
+import { valuesToKey, buildLookupTable } from './BotLookupTable';
+import type { Bot } from './Bot';
+import type { BotObjectsContext } from './BotObjectsContext';
 import { zip, sortBy } from 'lodash';
 
 /**

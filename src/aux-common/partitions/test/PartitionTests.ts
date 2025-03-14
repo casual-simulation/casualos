@@ -1,12 +1,11 @@
-import { AuxPartition, getPartitionState } from '../AuxPartition';
+import type { AuxPartition } from '../AuxPartition';
+import { getPartitionState } from '../AuxPartition';
+import type { Bot, UpdatedBot, StateUpdatedEvent } from '../../bots';
 import {
     botAdded,
     createBot,
-    Bot,
-    UpdatedBot,
     botRemoved,
     botUpdated,
-    StateUpdatedEvent,
     stateUpdatedEvent,
     hasValue,
     BotSpace,
@@ -21,6 +20,7 @@ import {
     bufferCount,
     skip,
 } from 'rxjs/operators';
+import type { TagEdit } from '../../bots';
 import {
     applyEdit,
     del,
@@ -29,7 +29,6 @@ import {
     insert,
     preserve,
     TAG_EDIT_NAME,
-    TagEdit,
     isTagEdit,
 } from '../../bots';
 import faker from 'faker';
@@ -39,7 +38,7 @@ import {
 } from '../../test/FuzzingHelpers';
 import '../../BlobPolyfill';
 import '../../../../jest/jest-matchers';
-import { CurrentVersion, StatusUpdate } from '../../common';
+import type { CurrentVersion, StatusUpdate } from '../../common';
 
 expect.extend({
     toBeEditMatching: (received: TagEdit, expected: TagEdit) => {

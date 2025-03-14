@@ -1,5 +1,5 @@
 import { remapProgressPercent } from './StatusUpdateUtils';
-import { StatusUpdate } from './StatusUpdate';
+import type { StatusUpdate } from './StatusUpdate';
 
 describe('SharedUtils', () => {
     describe('remapProgressPercent', () => {

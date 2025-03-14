@@ -1,5 +1,8 @@
-import { TimeSample, TimeSyncConnection } from '@casual-simulation/timesync';
-import { InstRecordsClient } from './InstRecordsClient';
+import type {
+    TimeSample,
+    TimeSyncConnection,
+} from '@casual-simulation/timesync';
+import type { InstRecordsClient } from './InstRecordsClient';
 
 /**
  * Defines a class that implements TimeSyncConnection when given a InstRecordsClient.

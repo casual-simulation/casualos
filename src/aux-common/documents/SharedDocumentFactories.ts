@@ -1,6 +1,6 @@
-import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
-import { SharedDocument } from './SharedDocument';
-import { RemoteSharedDocumentConfig } from './SharedDocumentConfig';
+import type { PartitionAuthSource } from '../partitions/PartitionAuthSource';
+import type { SharedDocument } from './SharedDocument';
+import type { RemoteSharedDocumentConfig } from './SharedDocumentConfig';
 
 export interface SharedDocumentServices {
     /**

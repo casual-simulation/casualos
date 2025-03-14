@@ -1,45 +1,49 @@
+import type {
+    TagEditOp,
+    TagEdit,
+    GetRemoteCountAction,
+    AsyncAction,
+    ShoutAction,
+} from '../bots';
 import {
     isTagEdit,
-    TagEditOp,
     preserve,
     del,
     insert,
     edit,
-    TagEdit,
-    GetRemoteCountAction,
-    AsyncAction,
     ON_REMOTE_WHISPER_ACTION_NAME,
     ON_REMOTE_DATA_ACTION_NAME,
-    ShoutAction,
 } from '../bots';
-import {
-    Observable,
-    Subscription,
-    Subject,
-    BehaviorSubject,
-    firstValueFrom,
-} from 'rxjs';
-import {
-    CausalRepoPartition,
+import type { Observable } from 'rxjs';
+import { Subscription, Subject, BehaviorSubject, firstValueFrom } from 'rxjs';
+import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
-    MemoryPartition,
 } from './AuxPartition';
-import {
+import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
+import type {
     BotAction,
     Bot,
     UpdatedBot,
-    getActiveObjects,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    breakIntoIndividualEvents,
     StateUpdatedEvent,
-    stateUpdatedEvent,
     BotsState,
+    BotTags,
+    ListInstUpdatesAction,
+    GetInstStateFromUpdatesAction,
+    CreateInitializationUpdateAction,
+    InstUpdate,
+    ApplyUpdatesToInstAction,
+    GetCurrentInstUpdateAction,
+} from '../bots';
+import {
+    getActiveObjects,
+    breakIntoIndividualEvents,
+    stateUpdatedEvent,
     PartialBotsState,
     botAdded,
-    BotTags,
     createBot,
     botRemoved,
     hasValue,
@@ -48,32 +52,23 @@ import {
     asyncResult,
     asyncError,
     convertToString,
-    ListInstUpdatesAction,
-    GetInstStateFromUpdatesAction,
-    CreateInitializationUpdateAction,
-    InstUpdate,
-    ApplyUpdatesToInstAction,
     ON_SPACE_MAX_SIZE_REACHED,
     ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
-    GetCurrentInstUpdateAction,
 } from '../bots';
-import {
+import type {
     PartitionConfig,
     YjsClientPartitionConfig,
     RemoteYjsPartitionConfig,
     PartitionRemoteEvents,
 } from './AuxPartitionConfig';
+import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
-    Doc,
     Text,
     Map,
     applyUpdate,
-    Transaction,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
-    AbstractType,
-    YEvent,
     encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
@@ -85,19 +80,15 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { YjsPartitionImpl } from './YjsPartition';
 import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
-import {
-    RemoteActions,
-    CurrentVersion,
-    VersionVector,
-    device,
-} from '../common';
-import {
+import type { RemoteActions, CurrentVersion, VersionVector } from '../common';
+import { device } from '../common';
+import type {
     ClientEvent,
     InstRecordsClient,
     MaxInstSizeReachedClientError,
     RateLimitExceededMessage,
 } from '../websockets';
-import { PartitionAuthSource } from './PartitionAuthSource';
+import type { PartitionAuthSource } from './PartitionAuthSource';
 import { RemoteYjsSharedDocument } from '../documents/RemoteYjsSharedDocument';
 
 /**

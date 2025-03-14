@@ -278,8 +278,7 @@ describe('getSchemaMetadata()', () => {
     it.each(cases)(
         'should support descriptions for %s',
         (name, schema, expected) => {
-            if (schema instanceof z.ZodEffects) {
-            } else {
+            if (!(schema instanceof z.ZodEffects)) {
                 expect(
                     getSchemaMetadata(schema.describe('this is a description'))
                 ).toEqual({

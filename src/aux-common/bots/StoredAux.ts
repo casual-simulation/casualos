@@ -1,5 +1,5 @@
 import { getStateFromUpdates } from '../partitions/PartitionUtils';
-import { BotsState } from './Bot';
+import type { BotsState } from './Bot';
 import { getInstStateFromUpdates } from './BotEvents';
 
 export type StoredAux = StoredAuxVersion1 | StoredAuxVersion2;

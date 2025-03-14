@@ -1,5 +1,6 @@
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, Doc, Map as YMap } from 'yjs';
+import type { Map as YMap } from 'yjs';
+import { applyUpdate, Doc } from 'yjs';
 
 export function getUpdates(
     func: (doc: Doc, bots: YMap<YMap<any>>) => void,

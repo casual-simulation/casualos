@@ -7,16 +7,15 @@ import {
     Subject,
     Subscription,
 } from 'rxjs';
+import type { YEvent, RelativePosition } from 'yjs';
 import {
     AbstractType as YType,
     Map as YMap,
     Array as YArray,
     Text as YText,
-    YEvent,
     YMapEvent,
     YArrayEvent,
     YTextEvent,
-    RelativePosition,
     createRelativePositionFromTypeIndex,
     createAbsolutePositionFromRelativePosition,
     Doc,
@@ -24,7 +23,7 @@ import {
     applyUpdate,
     encodeStateAsUpdate,
 } from 'yjs';
-import {
+import type {
     SharedTypeChanges,
     SharedMap,
     SharedArray,
@@ -38,11 +37,11 @@ import {
     SharedTextChanges,
 } from './SharedDocument';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { InstUpdate } from '../bots';
-import { CurrentVersion, Action, StatusUpdate } from '../common';
-import { ClientError, InstRecordsClient } from '../websockets';
+import type { InstUpdate } from '../bots';
+import type { CurrentVersion, Action, StatusUpdate } from '../common';
+import type { ClientError, InstRecordsClient } from '../websockets';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
-import { SharedDocumentConfig } from './SharedDocumentConfig';
+import type { SharedDocumentConfig } from './SharedDocumentConfig';
 
 export const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN =
     '__apply_updates_to_inst';

@@ -1,4 +1,5 @@
-import { BotIndex, BotIndexEvent } from './BotIndex';
+import type { BotIndexEvent } from './BotIndex';
+import { BotIndex } from './BotIndex';
 import { createBot, createPrecalculatedBot } from './BotCalculations';
 import { merge } from '../utils';
 import { skip } from 'rxjs/operators';

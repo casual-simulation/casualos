@@ -2,21 +2,18 @@ import { Subject, Subscription } from 'rxjs';
 import { Map as YMap } from 'yjs';
 import { waitAsync } from '../test/TestHelpers';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
-import {
+import type {
     AddUpdatesMessage,
-    InstRecordsClient,
-    MemoryConnectionClient,
     ReceiveDeviceActionMessage,
     UpdatesReceivedMessage,
     WatchBranchResultMessage,
 } from '../websockets';
-import { Action, CurrentVersion, StatusUpdate } from '../common';
-import {
-    PartitionAuthRequest,
-    PartitionAuthSource,
-} from '../partitions/PartitionAuthSource';
+import { InstRecordsClient, MemoryConnectionClient } from '../websockets';
+import type { Action, CurrentVersion, StatusUpdate } from '../common';
+import type { PartitionAuthRequest } from '../partitions/PartitionAuthSource';
+import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { RemoteYjsSharedDocument } from './RemoteYjsSharedDocument';
-import { SharedDocumentConfig } from './SharedDocumentConfig';
+import type { SharedDocumentConfig } from './SharedDocumentConfig';
 import { testDocumentImplementation } from './test/DocumentTests';
 
 console.log = jest.fn();
