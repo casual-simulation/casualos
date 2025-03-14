@@ -4,7 +4,12 @@
 
 #### Date: TBD
 
-### :rocket: Features
+### :boom: Breaking Changes
+
+-   Added full access to the [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model).
+    -   This is a breaking change because previously
+    -   Requires the `ENABLE_DOM` environment variable to be set to `true` either during build or when running the server.
+    -   Additionally requires that the `VM_ORIGIN` environment variable is set to something other than where the CasualOS frontend is served from (should serve the same files, but be a different origin for security purposes).
 
 ### :bug: Bug Fixes
 
