@@ -1,44 +1,46 @@
 import { Subject, Subscription } from 'rxjs';
-import {
-    AuthCoordinator,
+import type {
     MissingPermissionEvent,
     NotAuthorizedEvent,
     ShowAccountInfoEvent,
 } from './AuthCoordinator';
+import { AuthCoordinator } from './AuthCoordinator';
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
+import type { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
 import {
-    AuthHelperInterface,
     SimulationManager,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
+import type {
+    AuthData,
+    PartitionAuthResponse,
+} from '@casual-simulation/aux-common';
 import {
     AsyncErrorAction,
     AsyncResultAction,
-    AuthData,
     ConnectionInfo,
     PartitionAuthMessage,
-    PartitionAuthResponse,
     asyncResult,
     botAdded,
     createBot,
     showAccountInfo,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { AuxConfigParameters } from '@casual-simulation/aux-vm/vm';
+import type { AuxConfigParameters } from '@casual-simulation/aux-vm/vm';
 import { AuthHelper } from './AuthHelper';
 import { randomBytes } from 'crypto';
 import { fromByteArray } from 'base64-js';
+import type { GrantResourcePermissionResult } from '@casual-simulation/aux-records';
 import {
     GrantMarkerPermissionResult,
-    GrantResourcePermissionResult,
     SESSION_SECRET_BYTE_LENGTH,
 } from '@casual-simulation/aux-records';
 import {
     formatV1ConnectionKey,
     generateV1ConnectionToken,
 } from '@casual-simulation/aux-records/AuthUtils';
-import { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
 
 console.log = jest.fn();
 

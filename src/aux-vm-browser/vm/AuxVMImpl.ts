@@ -1,16 +1,20 @@
-import {
-    LocalActions,
+import type {
     BotAction,
     StateUpdatedEvent,
-    ProxyBridgePartitionImpl,
     StoredAux,
-    AsyncResultAction,
-    ConnectionIndicator,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
+    LocalActions,
+    ProxyBridgePartitionImpl,
+    AsyncResultAction,
+    ConnectionIndicator,
+} from '@casual-simulation/aux-common';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Remote } from 'comlink';
+import { wrap, proxy, expose, transfer, createEndpoint } from 'comlink';
+import type {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
@@ -22,15 +26,14 @@ import {
     AuxChannelErrorType,
 } from '@casual-simulation/aux-vm';
 import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import {
-    StatusUpdate,
     remapProgressPercent,
-    DeviceAction,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import {
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,

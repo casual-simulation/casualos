@@ -1,10 +1,10 @@
-import {
+import type {
     BotAction,
     PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
@@ -17,10 +17,12 @@ import {
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/aux-common';
-import { proxy, releaseProxy, Remote, wrap } from 'comlink';
-import { Observable, Subject, Subscription } from 'rxjs';
+import type { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
+import type { DeviceAction, StatusUpdate } from '@casual-simulation/aux-common';
+import type { Remote } from 'comlink';
+import { proxy, releaseProxy, wrap } from 'comlink';
+import type { Observable } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 
 /**
  * Gets an AUX VM that is able to communicate with a proxied aux channel.

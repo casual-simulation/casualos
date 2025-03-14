@@ -16,11 +16,8 @@ import {
     ChannelActionResult,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
-import {
-    AuxChannel,
-    AuxStatic,
-    AuxChannelErrorType,
-} from '@casual-simulation/aux-vm';
+import type { AuxStatic } from '@casual-simulation/aux-vm';
+import { AuxChannel, AuxChannelErrorType } from '@casual-simulation/aux-vm';
 import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
     StatusUpdate,

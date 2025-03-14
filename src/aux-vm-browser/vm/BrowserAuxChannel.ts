@@ -1,13 +1,15 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
-import {
-    BotAction,
-    createAuxPartition,
+import type {
     PartitionConfig,
     AuxPartition,
-    ConnectionIndicator,
     AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
+    BotAction,
+    createAuxPartition,
+    ConnectionIndicator,
+} from '@casual-simulation/aux-common';
+import type {
     AuxConfig,
     AuxSubChannel,
     BaseAuxChannel,
@@ -15,7 +17,7 @@ import {
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 import { proxy } from 'comlink';
-import { AuxRuntime } from '@casual-simulation/aux-runtime';
+import type { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
     static defaultHost: string;
