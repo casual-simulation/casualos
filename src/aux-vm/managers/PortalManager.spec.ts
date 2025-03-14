@@ -1,10 +1,10 @@
+import type { LocalActions } from '@casual-simulation/aux-common';
 import {
     asyncResult,
     BotIndex,
     BotsState,
     createPrecalculatedBot,
     DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
-    LocalActions,
     stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
@@ -12,13 +12,12 @@ import { Subject, Subscription } from 'rxjs';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
+import type { PortalBotData, ScriptPrefix } from './PortalManager';
 import {
     DEFAULT_SCRIPT_PREFIXES,
-    PortalBotData,
     PortalData,
     PortalManager,
     PortalUpdate,
-    ScriptPrefix,
 } from './PortalManager';
 
 describe('PortalManager', () => {

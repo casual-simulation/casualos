@@ -5,10 +5,10 @@ import {
     ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     action,
 } from '@casual-simulation/aux-common';
-import { AuxHelper } from '../vm';
-import { HtmlAppBackend } from './HtmlAppBackend';
-import { AppBackend } from './AppBackend';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { AuxHelper } from '../vm';
+import { HtmlAppBackend, isBrowserDocument } from './HtmlAppBackend';
+import type { AppBackend } from './AppBackend';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 const ROOT_APP_ID = '_root';
 

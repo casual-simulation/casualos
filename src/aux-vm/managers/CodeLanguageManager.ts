@@ -1,4 +1,4 @@
-import { AuxVM } from '../vm/AuxVM';
+import type { AuxVM } from '../vm/AuxVM';
 
 /**
  * Defines a class that manages language related to scripting languages.

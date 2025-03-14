@@ -1,20 +1,20 @@
-import { AuxConfig } from './AuxConfig';
-import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { Observable, SubscriptionLike } from 'rxjs';
-import {
+import type { AuxConfig } from './AuxConfig';
+import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
-import {
+import type {
     BotAction,
-    ConnectionIndicator,
     DeviceAction,
     PartitionAuthMessage,
     StateUpdatedEvent,
     StatusUpdate,
     StoredAux,
 } from '@casual-simulation/aux-common';
+import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for the static members of an AUX.

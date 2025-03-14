@@ -1,18 +1,21 @@
+import type {
+    PrecalculatedBot,
+    BotIndex,
+    StateUpdatedEvent,
+    BotTags,
+} from '@casual-simulation/aux-common';
 import {
     Bot,
-    PrecalculatedBot,
     merge,
-    BotIndex,
     BotIndexEvent,
     tagsOnBot,
-    StateUpdatedEvent,
     applyUpdates,
-    BotTags,
     hasTagOrMask,
     getTagValueForSpace,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { Subject, Observable, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject } from 'rxjs';
 import {
     mergeMap,
     filter,
@@ -25,17 +28,15 @@ import {
     mergeWith,
 } from 'rxjs/operators';
 import { values } from 'lodash';
-import { BotHelper } from './BotHelper';
+import type { BotHelper } from './BotHelper';
+import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {
     isTagEdit,
     stateUpdatedEvent,
-    TagEditOp,
 } from '@casual-simulation/aux-common/bots';
-import { VersionVector } from '@casual-simulation/aux-common';
-import {
-    RuntimeStateVersion,
-    updateRuntimeVersion,
-} from '@casual-simulation/aux-runtime/runtime/RuntimeStateVersion';
+import type { VersionVector } from '@casual-simulation/aux-common';
+import type { RuntimeStateVersion } from '@casual-simulation/aux-runtime/runtime/RuntimeStateVersion';
+import { updateRuntimeVersion } from '@casual-simulation/aux-runtime/runtime/RuntimeStateVersion';
 
 /**
  * Defines an interface that contains information about an updated bot.

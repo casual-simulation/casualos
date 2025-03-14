@@ -1,11 +1,11 @@
-import {
+import type {
     AuxPartitionConfig,
-    hasValue,
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
-import { AuxDevice } from '@casual-simulation/aux-runtime';
+import { hasValue } from '@casual-simulation/aux-common';
+import type { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines the possible configuration options for a simulation.

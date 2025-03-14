@@ -1,35 +1,34 @@
-import { AuxSubVM, AuxVM } from '../AuxVM';
-import { Observable, Subject } from 'rxjs';
-import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
+import type { AuxSubVM, AuxVM } from '../AuxVM';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
-import {
+import type {
     LocalActions,
     BotAction,
-    PrecalculatedBotsState,
     BotsState,
+    StateUpdatedEvent,
+    StoredAux,
+    PartitionAuthMessage,
+} from '@casual-simulation/aux-common';
+import {
+    PrecalculatedBotsState,
     createPrecalculatedContext,
     merge,
     getActiveObjects,
     tagsOnBot,
-    StateUpdatedEvent,
-    StoredAux,
     ConnectionIndicator,
-    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import {
-    StatusUpdate,
-    DeviceAction,
-    CurrentVersion,
-} from '@casual-simulation/aux-common';
+import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
+import { CurrentVersion } from '@casual-simulation/aux-common';
 import { union } from 'lodash';
-import { ChannelActionResult } from '../../vm';
-import {
+import type { ChannelActionResult } from '../../vm';
+import type {
     AuxDevice,
-    AuxRuntime,
     RuntimeStateVersion,
-    isPromise,
 } from '@casual-simulation/aux-runtime';
-import { SimulationOrigin } from '../../managers/Simulation';
+import { AuxRuntime, isPromise } from '@casual-simulation/aux-runtime';
+import type { SimulationOrigin } from '../../managers/Simulation';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;

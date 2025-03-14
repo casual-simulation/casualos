@@ -1,57 +1,59 @@
-import {
-    LocalActions,
+import type {
     BotsState,
-    getActiveObjects,
     BotAction,
     BotActions,
-    createBot,
     Bot,
     PartialBot,
+    BotSpace,
+    AuxPartitions,
+    AuxPartition,
+    PrecalculatedBot,
+    BotCalculationContext,
+    BotTagMasks,
+    StoredAux,
+    StoredAuxVersion1,
+} from '@casual-simulation/aux-common';
+import {
+    LocalActions,
+    getActiveObjects,
+    createBot,
     merge,
     AUX_BOT_VERSION,
     getBotConfigDimensions,
     botAdded,
     botUpdated,
     tagsOnBot,
-    BotSpace,
     getBotSpace,
     TEMPORARY_BOT_PARTITION_ID,
     hasValue,
     addState,
     calculateBotValue,
-    AuxPartitions,
-    AuxPartition,
     getPartitionState,
     createPrecalculatedContext,
-    PrecalculatedBot,
-    BotCalculationContext,
     runScript,
     AsyncActions,
     asyncError,
     botRemoved,
-    BotTagMasks,
     isBot,
-    StoredAux,
     getBotsStateFromStoredAux,
-    StoredAuxVersion1,
     ConnectionIndicator,
     getConnectionId,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     RemoteAction,
     DeviceAction,
-    RemoteActionResult,
     RemoteActions,
 } from '@casual-simulation/aux-common';
+import { RemoteActionResult } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
-import {
+import type {
     AuxRuntime,
     CompiledBot,
     RuntimeActions,
-    RanOutOfEnergyError,
 } from '@casual-simulation/aux-runtime';
+import { RanOutOfEnergyError } from '@casual-simulation/aux-runtime';
 import { concatMap, tap } from 'rxjs/operators';
 
 /**

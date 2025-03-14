@@ -12,51 +12,26 @@ import {
 import { AuxHelper } from '../vm';
 import { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
+import type { RootNode } from '@casual-simulation/undom';
 import undom, {
     BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS,
     BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS,
     BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS,
     registerMethodHandler,
-    RootNode,
     supressMutations,
 } from '@casual-simulation/undom';
 import { render } from 'preact';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { first, map } from 'rxjs/operators';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
-
-export const TARGET_INPUT_PROPERTIES = ['value', 'checked'];
-
-/**
- * Properties that should automatically be copied for specific tag types.
- * For performance, these properties are only copied if an event is sent for the element with the element as the target.
- */
-export const ELEMENT_SPECIFIC_PROPERTIES: { [nodeName: string]: string[] } = {
-    IMG: ['width', 'height', 'naturalWidth', 'naturalHeight', 'currentSrc'],
-    VIDEO: [
-        'videoWidth',
-        'videoHeight',
-        'duration',
-        'currentSrc',
-        'currentTime',
-        'ended',
-        'paused',
-        'muted',
-        'volume',
-        'playbackRate',
-    ],
-    SECTION: ['scrollTop', 'offsetHeight'],
-    CANVAS: ['height', 'width'],
-};
-
-const TEXT_REFERENCE_PROPERTIES = ['data'];
-const NODE_REFERENCE_PROPERTIES = [
-    'namespace',
-    'nodeName',
-    'style',
-    'attributes',
-    'className',
-];
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
+import {
+    ELEMENT_NODE,
+    ELEMENT_SPECIFIC_PROPERTIES,
+    NODE_REFERENCE_PROPERTIES,
+    TARGET_INPUT_PROPERTIES,
+    TEXT_NODE,
+    TEXT_REFERENCE_PROPERTIES,
+} from './HtmlAppConsts';
 
 export interface HtmlPortalSetupResult {
     builtinEvents: string[];

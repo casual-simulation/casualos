@@ -1,5 +1,5 @@
 import { setForcedOffline } from '@casual-simulation/aux-common';
-import { Observable, Subscription, SubscriptionLike } from 'rxjs';
+import type { Observable, Subscription, SubscriptionLike } from 'rxjs';
 import {
     distinctUntilChanged,
     scan,
@@ -7,7 +7,7 @@ import {
     map,
     skipWhile,
 } from 'rxjs/operators';
-import { AuxVM } from '../vm/AuxVM';
+import type { AuxVM } from '../vm/AuxVM';
 
 /**
  * Defines a class that manages the connection status to the inst.
