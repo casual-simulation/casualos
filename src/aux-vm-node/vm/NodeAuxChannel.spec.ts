@@ -1,8 +1,6 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
-import {
-    MemoryPartition,
-    createMemoryPartition,
-} from '@casual-simulation/aux-common';
+import type { MemoryPartition } from '@casual-simulation/aux-common';
+import { createMemoryPartition } from '@casual-simulation/aux-common';
 
 let logMock = (console.log = jest.fn());
 console.warn = jest.fn();

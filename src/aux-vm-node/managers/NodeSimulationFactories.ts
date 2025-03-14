@@ -3,19 +3,21 @@ import {
     RemoteSimulationImpl,
 } from '@casual-simulation/aux-vm-client';
 import { AuxVMNode } from '../vm/AuxVMNode';
-import { AuxConfig } from '@casual-simulation/aux-vm/vm';
+import type { AuxConfig } from '@casual-simulation/aux-vm/vm';
+import type {
+    AuxPartitionConfig,
+    InstRecordsClient,
+    ConnectionIndicator,
+    YjsClientPartitionConfig,
+} from '@casual-simulation/aux-common';
 import {
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     TEMPORARY_BOT_PARTITION_ID,
-    AuxPartitionConfig,
-    InstRecordsClient,
-    ConnectionIndicator,
     getConnectionId,
     DEFAULT_BRANCH_NAME,
-    YjsClientPartitionConfig,
 } from '@casual-simulation/aux-common';
-import { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
 
 export function nodeSimulationForBranch(
     id: string,

@@ -1,4 +1,4 @@
-import {
+import type {
     AuxVM,
     AuxChannelErrorType,
     ChannelActionResult,
@@ -7,20 +7,21 @@ import {
     AuxSubChannel,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
-import { Observable, Subject } from 'rxjs';
-import {
-    LocalActions,
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type {
     BotAction,
     StateUpdatedEvent,
     StoredAux,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import {
+import { LocalActions } from '@casual-simulation/aux-common';
+import type {
     LoadingProgressCallback,
     StatusUpdate,
     DeviceAction,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     RuntimeActions,
     RuntimeStateVersion,
     AuxDevice,

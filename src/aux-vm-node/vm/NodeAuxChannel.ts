@@ -1,33 +1,35 @@
-import {
+import type {
     RemoteAction,
+    AuxPartitionServices,
+} from '@casual-simulation/aux-common';
+import {
     ConnectionInfo,
     ConnectionIndicator,
     createYjsPartition,
     createRemoteClientYjsPartition,
-    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     PartitionConfig,
     AuxPartition,
+} from '@casual-simulation/aux-common';
+import {
     createAuxPartition,
     createMemoryPartition,
 } from '@casual-simulation/aux-common';
-import { AuxConfig, BaseAuxChannel } from '@casual-simulation/aux-vm';
-import { Observable, Subject } from 'rxjs';
-import { AuxRuntime } from '@casual-simulation/aux-runtime';
+import type { AuxConfig } from '@casual-simulation/aux-vm';
+import { BaseAuxChannel } from '@casual-simulation/aux-vm';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { AuxRuntime } from '@casual-simulation/aux-runtime';
 import {
     createRemoteYjsPartition,
     createRemoteYjsSharedDocument,
 } from '@casual-simulation/aux-vm-client';
-import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
-import {
-    RemoteSharedDocumentConfig,
-    SharedDocumentConfig,
-} from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
-import {
-    createSharedDocument,
-    SharedDocumentServices,
-} from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import type { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import { createSharedDocument } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 import { createYjsSharedDocument } from '@casual-simulation/aux-common/documents/YjsSharedDocument';
 
 export class NodeAuxChannel extends BaseAuxChannel {
