@@ -3,7 +3,7 @@
  * Ref: https://mathiasbynens.be/notes/globalthis
  * Used to get oculus browser running.
  */
-declare var __magic__: any;
+declare let __magic__: any;
 (function () {
     console.log('[globalThis-polyfill] load');
     if (typeof globalThis === 'object') return;

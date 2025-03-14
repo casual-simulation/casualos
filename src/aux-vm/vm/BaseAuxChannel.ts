@@ -424,7 +424,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let [key, partitionConfig] of iteratePartitions(
             this._config.partitions
         )) {
-            if (!this._config.partitions.hasOwnProperty(key)) {
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    this._config.partitions,
+                    key
+                )
+            ) {
                 continue;
             }
             const partition = await this._createPartition(
