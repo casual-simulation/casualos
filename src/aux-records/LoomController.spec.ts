@@ -1,8 +1,9 @@
-import { MemoryStore } from './MemoryStore';
-import { LoomController, LoomGetTokenSuccess } from './LoomController';
+import type { MemoryStore } from './MemoryStore';
+import type { LoomGetTokenSuccess } from './LoomController';
+import { LoomController } from './LoomController';
 import { createTestControllers } from './TestUtils';
-import { RecordsController } from './RecordsController';
-import { PolicyController } from './PolicyController';
+import type { RecordsController } from './RecordsController';
+import type { PolicyController } from './PolicyController';
 import * as jose from 'jose';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 

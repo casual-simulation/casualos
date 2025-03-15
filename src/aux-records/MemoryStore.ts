@@ -1,6 +1,6 @@
 import { cloneDeep, orderBy, sortBy } from 'lodash';
-import { RegexRule } from './Utils';
-import {
+import type { RegexRule } from './Utils';
+import type {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
@@ -19,7 +19,7 @@ import {
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
 } from './AuthStore';
-import {
+import type {
     ListStudioAssignmentFilters,
     ListedStudioAssignment,
     ListedUserAssignment,
@@ -36,7 +36,7 @@ import {
     HumeConfig,
 } from './RecordsStore';
 import { v4 as uuid } from 'uuid';
-import {
+import type {
     DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
@@ -46,15 +46,12 @@ import {
     SetDataResult,
     UserPolicy,
 } from './DataRecordsStore';
-import {
+import type {
     AddFileResult,
     EraseFileStoreResult,
-    FileRecord,
-    FileRecordsLookup,
     FileRecordsStore,
     GetFileNameFromUrlResult,
     GetFileRecordResult,
-    ListFilesLookupResult,
     ListFilesStoreResult,
     MarkFileRecordAsUploadedResult,
     PresignFileReadRequest,
@@ -64,6 +61,11 @@ import {
     UpdateFileResult,
 } from './FileRecordsStore';
 import {
+    FileRecord,
+    FileRecordsLookup,
+    ListFilesLookupResult,
+} from './FileRecordsStore';
+import type {
     AddEventCountStoreResult,
     EventRecordUpdate,
     EventRecordsStore,
@@ -71,7 +73,7 @@ import {
     ListEventsStoreResult,
     UpdateEventResult,
 } from './EventRecordsStore';
-import {
+import type {
     AssignPermissionToSubjectAndMarkerResult,
     AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
@@ -86,21 +88,22 @@ import {
     RoleAssignment,
     UpdateUserRolesResult,
     UserPrivacyFeatures,
-    getExpireTime,
-    getSubjectUserId,
 } from './PolicyStore';
-import {
-    ADMIN_ROLE_NAME,
+import { getExpireTime, getSubjectUserId } from './PolicyStore';
+import type {
     ActionKinds,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
     PermissionOptions,
     ResourceKinds,
     SubjectType,
     PrivacyFeatures,
-    ACCOUNT_MARKER,
 } from '@casual-simulation/aux-common';
 import {
+    ADMIN_ROLE_NAME,
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+    ACCOUNT_MARKER,
+} from '@casual-simulation/aux-common';
+import type {
     AIChatMetrics,
     AIImageMetrics,
     AISkyboxMetrics,
@@ -118,10 +121,10 @@ import {
     AISloydMetrics,
     AISloydSubscriptionMetrics,
 } from './MetricsStore';
-import { ConfigurationStore } from './ConfigurationStore';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { DateTime } from 'luxon';
-import {
+import type {
     AddUpdatesResult,
     BranchRecord,
     BranchRecordWithInst,
@@ -136,18 +139,18 @@ import {
     SaveInstResult,
     StoredUpdates,
 } from './websockets';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import {
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type {
     ModerationFileScanResult,
     ModerationJob,
     ModerationStore,
     UserInstReport,
 } from './ModerationStore';
-import {
+import type {
     SystemNotificationMessenger,
     RecordsNotification,
 } from './SystemNotificationMessenger';
-import { ModerationConfiguration } from './ModerationConfiguration';
+import type { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
 
 export interface MemoryConfiguration {

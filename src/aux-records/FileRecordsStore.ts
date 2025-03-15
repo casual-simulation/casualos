@@ -1,4 +1,4 @@
-import {
+import type {
     NotSupportedError,
     ServerError,
 } from '@casual-simulation/aux-common/Errors';

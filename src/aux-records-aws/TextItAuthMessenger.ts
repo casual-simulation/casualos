@@ -1,8 +1,8 @@
-import {
+import type {
     AuthMessenger,
     SendCodeResult,
 } from '@casual-simulation/aux-records/AuthMessenger';
-import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import type { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import axios from 'axios';
 

@@ -1,6 +1,13 @@
-import { GenericHttpRequest, ServerError } from '@casual-simulation/aux-common';
-import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '../crud';
-import { SubscriptionFilter } from '../MetricsStore';
+import type {
+    GenericHttpRequest,
+    ServerError,
+} from '@casual-simulation/aux-common';
+import type {
+    CrudRecord,
+    CrudRecordsStore,
+    CrudSubscriptionMetrics,
+} from '../crud';
+import type { SubscriptionFilter } from '../MetricsStore';
 import { PushSubscriptionType } from './WebPushInterface';
 
 /**

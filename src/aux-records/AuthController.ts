@@ -1,4 +1,4 @@
-import {
+import type {
     AddressType,
     AuthListedUserAuthenticator,
     AuthLoginRequest,
@@ -11,7 +11,7 @@ import {
     UserLoginMetadata,
     UserRole,
 } from './AuthStore';
-import {
+import type {
     NotAuthorizedError,
     NotLoggedInError,
     NotSupportedError,
@@ -25,13 +25,9 @@ import {
     verifyPasswordAgainstHashes,
 } from './InstrumentedHashHelpers';
 import { fromByteArray } from 'base64-js';
-import { AuthMessenger } from './AuthMessenger';
-import {
-    cleanupObject,
-    isActiveSubscription,
-    isStringValid,
-    RegexRule,
-} from './Utils';
+import type { AuthMessenger } from './AuthMessenger';
+import type { RegexRule } from './Utils';
+import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
@@ -41,22 +37,22 @@ import {
     verifyConnectionToken,
 } from './AuthUtils';
 import { randomCode } from './CryptoUtils';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { ConfigurationStore } from './ConfigurationStore';
-import {
-    parseConnectionToken,
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type {
     PrivacyFeatures,
     PublicUserInfo,
 } from '@casual-simulation/aux-common';
-import {
+import { parseConnectionToken } from '@casual-simulation/aux-common';
+import type {
     PrivoClientInterface,
     PrivoFeatureStatus,
     PrivoPermission,
     ResendConsentRequestFailure,
 } from './PrivoClient';
 import { DateTime } from 'luxon';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { ZodIssue } from 'zod';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { ZodIssue } from 'zod';
 import type {
     PublicKeyCredentialCreationOptionsJSON,
     RegistrationResponseJSON,
@@ -1029,7 +1025,7 @@ export class AuthController {
                 });
             } else if (user.privoServiceId !== serviceId) {
                 console.log(
-                    `[AuthController] [completeOpenIDLogin] User\'s service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
+                    `[AuthController] [completeOpenIDLogin] User's service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
                 );
                 return {
                     success: false,

@@ -1,4 +1,4 @@
-import {
+import type {
     FileRecordsStore,
     GetFileNameFromUrlResult,
     ListAllFilesFilter,
@@ -7,9 +7,9 @@ import {
     ListFilesStoreResult,
     PresignFileReadRequest,
     PresignFileReadResult,
-    signRequest,
 } from '@casual-simulation/aux-records';
-import {
+import { signRequest } from '@casual-simulation/aux-records';
+import type {
     PresignFileUploadRequest,
     PresignFileUploadResult,
     GetFileRecordResult,
@@ -20,11 +20,10 @@ import {
     UpdateFileResult,
 } from '@casual-simulation/aux-records';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
-import {
-    AwsCredentialIdentityProvider,
-    AwsCredentialIdentity,
-} from '@aws-sdk/types';
+import type { S3 } from '@aws-sdk/client-s3';
+import { S3ClientConfig } from '@aws-sdk/client-s3';
+import type { AwsCredentialIdentityProvider } from '@aws-sdk/types';
+import { AwsCredentialIdentity } from '@aws-sdk/types';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 

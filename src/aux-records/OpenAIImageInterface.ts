@@ -5,7 +5,7 @@ import {
     AIChatMessage,
 } from './AIChatInterface';
 import axios from 'axios';
-import {
+import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
     AIGeneratedImage,
@@ -13,12 +13,8 @@ import {
 } from './AIImageInterface';
 import { handleAxiosErrors } from './Utils';
 import { traced } from './tracing/TracingDecorators';
-import {
-    SpanKind,
-    SpanOptions,
-    SpanStatusCode,
-    trace,
-} from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'OpenAIImageInterface';
 const SPAN_OPTIONS: SpanOptions = {

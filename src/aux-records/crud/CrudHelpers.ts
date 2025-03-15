@@ -1,16 +1,14 @@
-import {
-    InputlessProcedureBuilder,
-    procedure,
-    ProcedureBuilder,
-} from '@casual-simulation/aux-common';
-import { CrudRecordsController } from './CrudRecordsController';
+import type { InputlessProcedureBuilder } from '@casual-simulation/aux-common';
+import { procedure, ProcedureBuilder } from '@casual-simulation/aux-common';
+import type { CrudRecordsController } from './CrudRecordsController';
 import { z } from 'zod';
 import {
     INSTANCES_ARRAY_VALIDATION,
     MARKER_VALIDATION,
     RECORD_NAME_VALIDATION,
 } from '../Validations';
-import { AuthController, validateSessionKey } from '../AuthController';
+import type { AuthController } from '../AuthController';
+import { validateSessionKey } from '../AuthController';
 
 /**
  * Gets a procedure that can be used to get an item from the given controller.

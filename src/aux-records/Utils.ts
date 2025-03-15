@@ -307,7 +307,7 @@ export function parseInstancesList(instances: string): string[] {
  * Clones the given object into a new object that only has non-null and not-undefined properties.
  * @param obj The object to cleanup.
  */
-export function cleanupObject<T extends Object>(obj: T): Partial<T> {
+export function cleanupObject<T extends object>(obj: T): Partial<T> {
     return omitBy(
         obj,
         (o) => typeof o === 'undefined' || o === null

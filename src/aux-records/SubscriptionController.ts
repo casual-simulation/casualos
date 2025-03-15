@@ -1,32 +1,37 @@
-import {
+import type {
     AuthController,
-    INVALID_KEY_ERROR_MESSAGE,
     ValidateSessionKeyFailure,
 } from './AuthController';
-import {
-    AuthInvoice,
-    AuthSession,
+import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
+import type {
     AuthStore,
     AuthUser,
     UpdateSubscriptionPeriodRequest,
     UserRole,
 } from './AuthStore';
-import {
-    STRIPE_EVENT_INVOICE_PAID_SCHEMA,
-    StripeCheckoutResponse,
+import { AuthInvoice, AuthSession } from './AuthStore';
+import type {
     StripeEvent,
     StripeInterface,
     StripeInvoice,
 } from './StripeInterface';
 import {
+    STRIPE_EVENT_INVOICE_PAID_SCHEMA,
+    StripeCheckoutResponse,
+} from './StripeInterface';
+import type {
     NotAuthorizedError,
     NotLoggedInError,
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
-import { ConfigurationStore } from './ConfigurationStore';
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type {
+    ListedStudioAssignment,
+    RecordsStore,
+    Studio,
+} from './RecordsStore';
+import type { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';

@@ -2,18 +2,14 @@ import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
-import { PublicRecordKeyPolicy } from './RecordsStore';
-import {
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
+import type { PublicRecordKeyPolicy } from './RecordsStore';
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { parseSessionKey } from './AuthUtils';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import {
-    buildSubscriptionConfig,
-    SubscriptionConfigBuilder,
-} from './SubscriptionConfigBuilder';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { SubscriptionConfigBuilder } from './SubscriptionConfigBuilder';
+import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 

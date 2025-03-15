@@ -2,17 +2,19 @@ import {
     fromBase64String,
     toBase64String,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     CreatePublicRecordKeyFailure,
     CreatePublicRecordKeySuccess,
+    ValidatePublicRecordKeyFailure,
+    ValidatePublicRecordKeySuccess,
+} from './RecordsController';
+import {
     DEFAULT_RECORD_KEY_POLICY,
     formatV1RecordKey,
     formatV2RecordKey,
     isRecordKey,
     parseRecordKey,
     RecordsController,
-    ValidatePublicRecordKeyFailure,
-    ValidatePublicRecordKeySuccess,
 } from './RecordsController';
 import {
     hashHighEntropyPasswordWithSalt,

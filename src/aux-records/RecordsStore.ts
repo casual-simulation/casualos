@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
+import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 
 /**
  * Defines an interface for objects that can store records.

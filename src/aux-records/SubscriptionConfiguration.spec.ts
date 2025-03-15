@@ -1,6 +1,8 @@
-import {
+import type {
     APISubscription,
     SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
+import {
     allowAllFeatures,
     getSubscriptionFeatures,
     getSubscriptionTier,
