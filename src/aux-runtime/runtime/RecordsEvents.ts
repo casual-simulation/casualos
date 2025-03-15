@@ -7,10 +7,12 @@ import type {
     PushNotificationPayload,
 } from '@casual-simulation/aux-records';
 import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
-import {
+import type {
     APPROVED_SYMBOL,
     AsyncAction,
     AvailablePermissions,
+} from '@casual-simulation/aux-common';
+import {
     ProcedureInputs,
     ProcedureQueries,
     Procedures,

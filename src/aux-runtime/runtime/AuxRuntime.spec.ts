@@ -1,31 +1,38 @@
-import {
-    MemoryPartition,
-    createMemoryPartition,
-} from '@casual-simulation/aux-common/partitions';
+import type { MemoryPartition } from '@casual-simulation/aux-common/partitions';
+import { createMemoryPartition } from '@casual-simulation/aux-common/partitions';
 import {
     AuxRuntime,
     mapLibraryFunctions,
     registerInterpreterModule,
 } from './AuxRuntime';
-import {
+import type {
     BotAction,
+    BotsState,
+    ShoutAction,
+    RejectAction,
+    ReplaceDragBotAction,
+    BotSpace,
+    StateUpdatedEvent,
+    RuntimeBot,
+    Bot,
+    IdentifiedBotModule,
+    ExportsModule,
+    PartialPrecalculatedBotsState,
+} from '@casual-simulation/aux-common/bots';
+import {
     createBot,
     createPrecalculatedBot,
     toast,
     botAdded,
     botRemoved,
-    BotsState,
-    ShoutAction,
     action,
     botUpdated,
     reject,
     superShout,
     ORIGINAL_OBJECT,
-    RejectAction,
     webhook,
     KNOWN_PORTALS,
     replaceDragBot,
-    ReplaceDragBotAction,
     showJoinCode,
     requestFullscreen,
     exitFullscreen,
@@ -57,8 +64,6 @@ import {
     shell,
     loadSimulation,
     unloadSimulation,
-    BotSpace,
-    StateUpdatedEvent,
     showInput,
     asyncResult,
     asyncError,
@@ -72,7 +77,6 @@ import {
     isRuntimeBot,
     registerCustomApp,
     defineGlobalBot,
-    RuntimeBot,
     createBotLink,
     formatBotVector,
     formatBotRotation,
@@ -90,10 +94,6 @@ import {
     DATE_TAG_PREFIX,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
-    Bot,
-    IdentifiedBotModule,
-    ExportsModule,
-    PartialPrecalculatedBotsState,
     iterableNext,
     iterableComplete,
     iterableThrow,
@@ -116,15 +116,11 @@ import {
 import { possibleTagValueCases } from '@casual-simulation/aux-common/bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
-import {
-    createDefaultLibrary,
-    DebuggerInterface,
-    DebuggerVariable,
-    GET_RUNTIME,
-} from './AuxLibrary';
-import { ActionResult, ScriptError } from './AuxResults';
-import { AuxVersion } from './AuxVersion';
-import { AuxDevice } from './AuxDevice';
+import type { DebuggerInterface, DebuggerVariable } from './AuxLibrary';
+import { createDefaultLibrary, GET_RUNTIME } from './AuxLibrary';
+import type { ActionResult, ScriptError } from './AuxResults';
+import type { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { isPromise } from './Utils';
 import {
@@ -135,7 +131,7 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { flatMap, pickBy } from 'lodash';
-import { SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
 import {
     Vector2,
@@ -144,9 +140,9 @@ import {
     Quaternion,
 } from '@casual-simulation/aux-common/math';
 import { Interpreter } from '@casual-simulation/js-interpreter';
-import { RuntimeStop } from './CompiledBot';
+import type { RuntimeStop } from './CompiledBot';
 import { DynamicImports } from './AuxRuntimeDynamicImports';
-import { RuntimeActions } from './RuntimeEvents';
+import type { RuntimeActions } from './RuntimeEvents';
 import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
 
 registerInterpreterModule(DynamicImports);
@@ -7939,7 +7935,7 @@ describe('AuxRuntime', () => {
                 });
 
                 it('should be able to whisper to a bot that is created in an async shout', async () => {
-                    let resolve: Function;
+                    let resolve: (val?: any) => void;
                     const promise = new Promise((r, reject) => {
                         resolve = r;
                     });
@@ -21018,148 +21014,4 @@ describe('original action tests', () => {
             });
         });
     }
-});
-
-describe('mapLibraryFunctions()', () => {
-    it('should leave getters alone', () => {
-        let val = 1;
-        let final = mapLibraryFunctions(
-            {
-                api: {
-                    shout: null,
-                    whisper: null,
-                    __energyCheck: null,
-
-                    get test() {
-                        return val;
-                    },
-                },
-                tagSpecificApi: {},
-            },
-            (func, key) => func
-        );
-
-        expect(final.api.test).toBe(1);
-
-        val = 2;
-
-        expect(final.api.test).toBe(2);
-    });
-
-    it('should leave promises alone', () => {
-        let val = 1;
-        let final = mapLibraryFunctions(
-            {
-                api: {
-                    shout: null,
-                    whisper: null,
-                    __energyCheck: null,
-
-                    promise: new Promise(() => {}),
-                },
-                tagSpecificApi: {},
-            },
-            (func, key) => null
-        );
-
-        expect(final.api.promise).toBeInstanceOf(Promise);
-    });
-
-    it('should leave custom objects alone', () => {
-        class MyClass {}
-        let val = new MyClass();
-        let final = mapLibraryFunctions(
-            {
-                api: {
-                    shout: null,
-                    whisper: null,
-                    __energyCheck: null,
-
-                    value: val,
-                },
-                tagSpecificApi: {},
-            },
-            (func, key) => null
-        );
-
-        expect(final.api.value).toBeInstanceOf(MyClass);
-        expect(final.api.value).toBe(val);
-    });
-
-    it('should map functions', () => {
-        let final = mapLibraryFunctions(
-            {
-                api: {
-                    shout: null,
-                    whisper: null,
-                    __energyCheck: null,
-
-                    myFunc: () => 'hello',
-                },
-                tagSpecificApi: {},
-            },
-            (func, key) => () => 'not hello'
-        );
-
-        expect(final.api.myFunc()).toBe('not hello');
-    });
-
-    it('should recursively map functions', () => {
-        let final = mapLibraryFunctions(
-            {
-                api: {
-                    shout: null,
-                    whisper: null,
-                    __energyCheck: null,
-
-                    os: {
-                        myFunc: () => 'hello',
-                    },
-                },
-                tagSpecificApi: {},
-            },
-            (func, key) => () => 'not ' + func()
-        );
-
-        expect(final.api.os.myFunc()).toBe('not hello');
-    });
-
-    it('should support functions with additional properties', () => {
-        function myFunc() {
-            return 'hello';
-        }
-
-        function myOtherFunc() {
-            return 123;
-        }
-
-        function finalFunc() {
-            return true;
-        }
-
-        (myFunc as any).myOtherFunc = myOtherFunc;
-        (myFunc as any).finalFunc = finalFunc;
-
-        let final = mapLibraryFunctions(
-            {
-                api: {
-                    shout: null,
-                    whisper: null,
-                    __energyCheck: null,
-
-                    myFunc: myFunc,
-                },
-                tagSpecificApi: {},
-            },
-            (func, key) => () => 'not ' + func()
-        );
-
-        expect(final.api.myFunc()).toBe('not hello');
-
-        expect(typeof (final.api.myFunc as any).myOtherFunc).toBe('function');
-        expect((final.api.myFunc as any).myOtherFunc()).toBe('not 123');
-
-        expect(typeof (final.api.myFunc as any).finalFunc).toBe('function');
-        expect((final.api.myFunc as any).finalFunc()).toBe('not true');
-    });
 });

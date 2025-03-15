@@ -3,23 +3,23 @@ import AcornJSX from 'acorn-jsx';
 import { generate, GENERATOR } from 'astring';
 import LRUCache from 'lru-cache';
 import { traverse, VisitorKeys } from 'estraverse';
+import type { Text } from 'yjs';
 import {
     createAbsolutePositionFromRelativePosition,
     createRelativePositionFromTypeIndex,
     getItem,
     Doc,
-    Text,
 } from 'yjs';
 import {
     createAbsolutePositionFromStateVector,
     createRelativePositionFromStateVector,
     getClock,
 } from '@casual-simulation/aux-common/yjs/YjsHelpers';
-import { VersionVector } from '@casual-simulation/aux-common';
+import type { VersionVector } from '@casual-simulation/aux-common';
+import type { CodeLocation } from './TranspilerUtils';
 import {
     calculateIndexFromLocation,
     calculateLocationFromIndex,
-    CodeLocation,
 } from './TranspilerUtils';
 import { tsPlugin } from 'acorn-typescript';
 
@@ -181,7 +181,7 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
  */
 const MACROS: TranspilerMacro[] = [
     {
-        test: /^(?:\🧬)/g,
+        test: /^(?:🧬)/g,
         replacement: (val) => '',
     },
 ];

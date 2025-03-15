@@ -1,4 +1,7 @@
-import { CurrentVersion, VersionVector } from '@casual-simulation/aux-common';
+import type {
+    CurrentVersion,
+    VersionVector,
+} from '@casual-simulation/aux-common';
 import { mergeVersions } from '@casual-simulation/aux-common/bots';
 
 /**
