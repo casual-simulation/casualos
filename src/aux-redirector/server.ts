@@ -1,5 +1,6 @@
-import { Config } from './config';
-import express, { Handler } from 'express';
+import type { Config } from './config';
+import type { Handler } from 'express';
+import express from 'express';
 import * as bodyParser from 'body-parser';
 import { Server as HttpServer, IncomingMessage } from 'http';
 
