@@ -1,3 +1,10 @@
+import type {
+    BooleanValue,
+    SourceTextModuleRecord,
+    ExecutionContextStack,
+    ECMAScriptNode,
+    Descriptor,
+} from '@casual-simulation/engine262';
 import {
     Agent,
     ManagedRealm,
@@ -10,14 +17,12 @@ import {
     CreateBuiltinFunction,
     JSStringValue,
     BigIntValue,
-    BooleanValue,
     NumberValue,
     SymbolValue,
     ObjectValue,
     SameValue,
     Get,
     ModuleEntry,
-    SourceTextModuleRecord,
     MakeBasicObject,
     Completion,
     ThrowCompletion,
@@ -26,16 +31,13 @@ import {
     Set,
     EnsureCompletion,
     Call,
-    ExecutionContextStack,
     isECMAScriptFunctionObject,
-    ECMAScriptNode,
     Expression,
     Statement,
     Realm,
     Invoke,
     CreateArrayFromList,
     DefinePropertyOrThrow,
-    Descriptor,
     ToPropertyDescriptor,
     IsCallable,
     DeletePropertyOrThrow,
@@ -47,7 +49,7 @@ import {
     wellKnownSymbols,
     EVAL_YIELD,
 } from '@casual-simulation/engine262';
-import { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
+import type { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import { copyPrototypes, proxyPrototypes } from './Marshalling';
 import StackFrame from 'stackframe';
@@ -211,28 +213,20 @@ export class Interpreter {
             ','
         )}) {\n${functionCode}\n}`;
 
-        try {
-            const module = this.createAndLinkModule(code, functionName);
-            const func = module.Environment.GetBindingValue(
-                new Value(functionName),
-                Value.true
-            );
+        const module = this.createAndLinkModule(code, functionName);
+        const func = module.Environment.GetBindingValue(
+            new Value(functionName),
+            Value.true
+        );
 
-            let constructedFunction: ConstructedFunction = {
-                module,
-                func: func as ObjectValue,
-                name: functionName,
-            };
-            (module as any)[CONSTRUCTED_FUNCTION] = constructedFunction;
+        let constructedFunction: ConstructedFunction = {
+            module,
+            func: func as ObjectValue,
+            name: functionName,
+        };
+        (module as any)[CONSTRUCTED_FUNCTION] = constructedFunction;
 
-            return constructedFunction;
-        } catch (err) {
-            // if (err instanceof SyntaxError) {
-            //     transformErrorLineNumbers(err, functionName);
-            // }
-
-            throw err;
-        }
+        return constructedFunction;
     }
 
     /**
@@ -360,7 +354,7 @@ export class Interpreter {
      * Constructs a new interpreted object that proxies all of it's properties back to the given object.
      * @param obj The object that should be proxied.
      */
-    proxyObject(obj: Object): Completion<Value> {
+    proxyObject(obj: object): Completion<Value> {
         if (typeof obj !== 'function') {
             if (typeof obj !== 'object' || obj === null) {
                 return this.copyToValue(obj);
@@ -412,6 +406,7 @@ export class Interpreter {
                 );
             }
         } else if (typeof obj === 'function') {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
             let func = obj as Function;
             target = CreateBuiltinFunction(
                 function* (
@@ -1096,7 +1091,7 @@ export class Interpreter {
                 return NormalCompletion(Value.undefined);
             case 'object':
             case 'function':
-                return this._copyToObject(value as Object);
+                return this._copyToObject(value as object);
             default:
                 throw new Error(
                     'Unable to convert value of type: ' + typeof value
@@ -1109,7 +1104,7 @@ export class Interpreter {
      * @param value The value that should be copied.
      * @param transformObject An optional function that can be used to transform objects.
      */
-    copyFromValue(value: Value, transformObject?: (obj: Object) => void): any {
+    copyFromValue(value: Value, transformObject?: (obj: object) => void): any {
         if (!(value instanceof Value)) {
             return value;
         }
@@ -1141,7 +1136,7 @@ export class Interpreter {
         }
     }
 
-    private _copyToObject(value: Object): Completion<Value> {
+    private _copyToObject(value: object): Completion<Value> {
         if (value === null) {
             return NormalCompletion(Value.null);
         }
@@ -1194,7 +1189,7 @@ export class Interpreter {
         return constructor(value, proto, this, transformObject);
     }
 
-    private _getObjectInterpretedProto(value: Object) {
+    private _getObjectInterpretedProto(value: object) {
         let proto = Object.getPrototypeOf(value);
         while (
             (typeof proto === 'object' || typeof proto === 'function') &&
@@ -1252,7 +1247,7 @@ export class Interpreter {
         return null;
     }
 
-    private _getRealProxyConstructor(prototype: Object) {
+    private _getRealProxyConstructor(prototype: object) {
         if (!prototype) {
             return null;
         }
