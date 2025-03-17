@@ -64,6 +64,7 @@ if (typeof Element !== 'undefined') {
             listener,
             options,
         });
+        // eslint-disable-next-line prefer-rest-params
         return EventTarget.prototype.addEventListener.call(this, ...arguments);
     };
     Element.prototype.removeEventListener = function (
@@ -80,6 +81,7 @@ if (typeof Element !== 'undefined') {
         });
         return EventTarget.prototype.removeEventListener.call(
             this,
+            // eslint-disable-next-line prefer-rest-params
             ...arguments
         );
     };
