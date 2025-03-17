@@ -1,7 +1,4 @@
-import {
-    RemoteAuxChannel,
-    RemoteSimulationImpl,
-} from '@casual-simulation/aux-vm-client';
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { AuxVMNode } from '../vm/AuxVMNode';
 import type { AuxConfig } from '@casual-simulation/aux-vm/vm';
 import type {
@@ -18,6 +15,7 @@ import {
     DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
 import type { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
+import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 
 export function nodeSimulationForBranch(
     id: string,

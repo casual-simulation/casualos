@@ -28,7 +28,7 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 
-import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm';
+import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     BaseSimulation,
     LoginManager,

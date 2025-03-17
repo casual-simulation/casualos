@@ -4,30 +4,27 @@ import type {
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { ConnectionIndicator } from '@casual-simulation/aux-common';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { Remote, Endpoint } from 'comlink';
 import { wrap, proxy, expose, transfer } from 'comlink';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 import type {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
     AuxSubChannel,
     AuxSubVM,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import type {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-vm/vm';
 import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import { remapProgressPercent } from '@casual-simulation/aux-common';
 import type { DenoWorkerOptions } from 'deno-vm';
 import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm';
 import type {
     AuxDevice,
     RuntimeActions,

@@ -13,8 +13,8 @@ import type {
     AuxConfig,
     AuxSubChannel,
     BaseAuxChannel,
-} from '@casual-simulation/aux-vm';
-import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
+} from '@casual-simulation/aux-vm/vm';
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 import { proxy } from 'comlink';
 import type { AuxRuntime } from '@casual-simulation/aux-runtime';

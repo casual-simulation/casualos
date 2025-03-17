@@ -17,7 +17,7 @@ import {
     createMemoryPartition,
 } from '@casual-simulation/aux-common';
 import type { AuxConfig } from '@casual-simulation/aux-vm';
-import { BaseAuxChannel } from '@casual-simulation/aux-vm';
+import { BaseAuxChannel } from '@casual-simulation/aux-vm/vm';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { AuxRuntime } from '@casual-simulation/aux-runtime';

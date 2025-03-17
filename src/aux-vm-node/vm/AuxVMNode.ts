@@ -5,8 +5,8 @@ import type {
     AuxSubVM,
     AuxChannel,
     AuxSubChannel,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-vm/vm';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type {

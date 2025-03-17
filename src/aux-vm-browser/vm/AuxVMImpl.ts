@@ -18,11 +18,11 @@ import type {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
-    SimulationOrigin,
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-vm/vm';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import {
@@ -30,7 +30,7 @@ import {
     CurrentVersion,
 } from '@casual-simulation/aux-common';
 import type { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm/RemoteAuxVM';
 import type {
     AuxDevice,
     RuntimeActions,

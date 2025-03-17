@@ -178,13 +178,11 @@ import {
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
 import { getConnectionId } from '@casual-simulation/aux-common';
-import {
-    RemoteAuxChannel,
-    RemoteSimulationImpl,
-} from '@casual-simulation/aux-vm-client';
+import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),

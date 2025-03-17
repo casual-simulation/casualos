@@ -1,38 +1,7 @@
-import {
-    LocalActions,
-    BotAction,
-    StateUpdatedEvent,
-    ProxyBridgePartitionImpl,
-    StoredAux,
-    AsyncResultAction,
-    ConnectionIndicator,
-    PartitionAuthMessage,
-} from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
-import {
-    AuxConfig,
-    AuxVM,
-    ChannelActionResult,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import type { AuxStatic } from '@casual-simulation/aux-vm';
-import { AuxChannel, AuxChannelErrorType } from '@casual-simulation/aux-vm';
-import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import {
-    StatusUpdate,
-    remapProgressPercent,
-    DeviceAction,
-    CurrentVersion,
-} from '@casual-simulation/aux-common';
-import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import {
-    AuxDevice,
-    RuntimeActions,
-    RuntimeStateVersion,
-} from '@casual-simulation/aux-runtime';
-import { getBaseOrigin, getVMOrigin } from './AuxVMUtils';
+import { wrap, proxy } from 'comlink';
+import type { AuxStatic } from '@casual-simulation/aux-vm/vm';
+import { setupChannel } from '../html/IFrameHelpers';
+import { remapProgressPercent } from '@casual-simulation/aux-common';
 // import Worker from './AuxWorker';
 import Worker from './AuxChannel.worker?worker&inline';
 import AuxVMImpl, { processPartitions } from './AuxVMImpl';

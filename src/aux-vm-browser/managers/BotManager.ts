@@ -32,7 +32,7 @@ import {
     hasValue,
     asyncResult,
 } from '@casual-simulation/aux-common';
-import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm';
+import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     BaseSimulation,
     LoginManager,
@@ -46,8 +46,6 @@ import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, tap, map } from 'rxjs/operators';
 import type { ConsoleMessages } from '@casual-simulation/aux-common';
 import type { Observable } from 'rxjs';
-import { fromEventPattern, Subscription } from 'rxjs';
-import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
@@ -60,7 +58,6 @@ import { LivekitManager } from './LivekitManager';
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
 import { WebsocketConnectionClient } from '@casual-simulation/aux-websocket';
-import { isRecordKey, RecordDataResult } from '@casual-simulation/aux-records';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager

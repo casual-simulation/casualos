@@ -1,4 +1,4 @@
-import type { AuxVM } from '@casual-simulation/aux-vm';
+import type { AuxVM } from '@casual-simulation/aux-vm/vm';
 import { BaseSimulation, LoginManager } from '@casual-simulation/aux-vm';
 import type { RemoteSimulation } from './RemoteSimulation';
 import type { SimulationOrigin } from '@casual-simulation/aux-vm/managers';

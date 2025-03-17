@@ -4,7 +4,6 @@ import type {
     StoredAux,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { LocalActions } from '@casual-simulation/aux-common';
 import type {
     AuxChannel,
     AuxChannelErrorType,

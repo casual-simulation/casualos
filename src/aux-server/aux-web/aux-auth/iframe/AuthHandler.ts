@@ -7,7 +7,6 @@ import type {
     PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
-import { LoginUIAddressStatus } from '@casual-simulation/aux-vm';
 import type {
     AuthData,
     AvailablePermissions,

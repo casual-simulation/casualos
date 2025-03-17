@@ -13,8 +13,9 @@ import {
     createRemoteClientYjsPartition,
     ConnectionIndicator,
 } from '@casual-simulation/aux-common';
-import type { AuxConfig, AuxChannelOptions } from '@casual-simulation/aux-vm';
-import { BaseAuxChannel } from '@casual-simulation/aux-vm';
+import type { AuxConfig } from '@casual-simulation/aux-vm';
+import { BaseAuxChannel } from '@casual-simulation/aux-vm/vm';
+import type { AuxChannelOptions } from '@casual-simulation/aux-vm/vm';
 import {
     createOtherPlayersRepoPartition,
     createRemoteYjsPartition,

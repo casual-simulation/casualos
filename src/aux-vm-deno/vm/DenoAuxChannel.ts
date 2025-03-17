@@ -4,17 +4,12 @@ import type {
     AuxPartition,
     AuxPartitionServices,
 } from '@casual-simulation/aux-common';
-import {
-    BotAction,
-    createAuxPartition,
-    ConnectionIndicator,
-} from '@casual-simulation/aux-common';
 import type {
     AuxConfig,
     AuxSubChannel,
     BaseAuxChannel,
-} from '@casual-simulation/aux-vm';
-import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
+} from '@casual-simulation/aux-vm/vm';
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { proxy } from 'comlink';
 import type { AuxRuntime } from '@casual-simulation/aux-runtime';
 
