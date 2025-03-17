@@ -1,6 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
-import * as awsNative from '@pulumi/aws-native';
+import type * as awsNative from '@pulumi/aws-native';
 import { attachLogsPolicy } from '../../policies';
 import { functionEnvironmentVariables, messagesBucket } from '../../helpers';
 import { websocketsExecutionRole } from '../../roles';
