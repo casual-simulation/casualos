@@ -59,7 +59,7 @@
         "build:cli": "lerna exec --no-prefix --scope casualos -- npm run build",
         "nerdctl:dev": "nerdctl compose -f ./docker/docker-compose.dev.yml up -d",
         "docker:dev": "docker compose -f ./docker/docker-compose.dev.yml up -d",
-        "lint": "eslint src",
+        "lint": "npm run clean && eslint src",
         "lint:casualos": "npm run lint:common && npm run lint:components && npm run lint:common && npm run lint:records && npm run lint:records && npm run lint:runtime && npm run lint:server && npm run lint:vm && npm run lint:websocket && npm run lint:cli && npm run lint:infra && npm run lint:crypto",
         "lint:others": "npm run lint:interpreter && npm run lint:github && npm run lint:redis && npm run lint:tunnel && npm run lint:undom && npm run lint:shortkey",
         "lint:benchmarks": "eslint src/aux-benchmarks",

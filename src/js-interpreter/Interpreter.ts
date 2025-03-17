@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-wrapper-object-types */
 import type {
     BooleanValue,
     SourceTextModuleRecord,
@@ -354,7 +355,7 @@ export class Interpreter {
      * Constructs a new interpreted object that proxies all of it's properties back to the given object.
      * @param obj The object that should be proxied.
      */
-    proxyObject(obj: object): Completion<Value> {
+    proxyObject(obj: Object): Completion<Value> {
         if (typeof obj !== 'function') {
             if (typeof obj !== 'object' || obj === null) {
                 return this.copyToValue(obj);
