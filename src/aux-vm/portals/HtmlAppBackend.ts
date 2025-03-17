@@ -190,11 +190,15 @@ export class HtmlAppBackend implements AppBackend {
                 if (event.appId === this.appId) {
                     let target = this._getNode(event.event.target);
                     if (target && target.dispatchEvent) {
-                        let finalEvent = {
-                            ...event.event,
-                            target: target,
-                            bubbles: true,
-                        };
+                        let finalEvent = Event
+                            ? new Event(event.event.type, {
+                                  bubbles: true,
+                              })
+                            : {
+                                  ...event.event,
+                                  target: target,
+                                  bubbles: true,
+                              };
 
                         try {
                             supressMutations(true);
@@ -487,6 +491,8 @@ export class HtmlAppBackend implements AppBackend {
                 removedNodes: mutation.removedNodes,
                 target: mutation.target,
                 type: mutation.type,
+                listenerName: (mutation as any).listenerName,
+                listenerDelta: (mutation as any).listenerDelta,
             };
             for (let prop of this._propReferenceList) {
                 (<any>processedMutation)[prop] = this._makeReference(
