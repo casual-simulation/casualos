@@ -304,21 +304,23 @@ export class HtmlAppBackend implements AppBackend {
                 characterDataOldValue: true,
                 childList: true,
             });
-            this._sub.add(() => {
+            this._sub.add(
                 addedEventListeners.subscribe((e) => {
-                    if ('__id' in e.target) {
-                        this._processMutations([
-                            {
-                                type: 'event_listener',
-                                target: e.target,
-                                listenerName: e.type,
-                                listenerDelta: 1,
-                            } as any,
-                        ]);
-                    }
-                });
-            });
-            this._sub.add(() => {
+                    setTimeout(() => {
+                        if ('__id' in e.target) {
+                            this._processMutations([
+                                {
+                                    type: 'event_listener',
+                                    target: e.target,
+                                    listenerName: e.type,
+                                    listenerDelta: 1,
+                                } as any,
+                            ]);
+                        }
+                    });
+                })
+            );
+            this._sub.add(
                 removedEventListeners.subscribe((e) => {
                     if ('__id' in e.target) {
                         this._processMutations([
@@ -330,8 +332,8 @@ export class HtmlAppBackend implements AppBackend {
                             } as any,
                         ]);
                     }
-                });
-            });
+                })
+            );
 
             this._helper.transaction(
                 action(ON_APP_SETUP_ACTION_NAME, [this.botId], undefined, {
