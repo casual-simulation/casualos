@@ -10,6 +10,10 @@ export default defineConfig([
         '**/dist/**',
         '**/prisma/generated/**',
         '**/typings/**',
+        'src/expect/**',
+        'src/stacktrace/**',
+        'src/multi-streams-mixer/**',
+        'src/chalk/**',
     ]),
     { files: ['**/*.{js,mjs,cjs,ts,vue}'] },
     {
