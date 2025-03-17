@@ -9,6 +9,7 @@ export default defineConfig([
         '**/node_modules/**',
         '**/dist/**',
         '**/prisma/generated/**',
+        '**/typings/**',
     ]),
     { files: ['**/*.{js,mjs,cjs,ts,vue}'] },
     {
