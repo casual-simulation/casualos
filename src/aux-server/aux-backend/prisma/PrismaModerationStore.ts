@@ -1,10 +1,10 @@
-import {
+import type {
     ModerationFileScanResult,
     ModerationJob,
     ModerationStore,
     UserInstReport,
 } from '@casual-simulation/aux-records';
-import { PrismaClient } from './generated';
+import type { PrismaClient } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { v4 as uuid } from 'uuid';

@@ -1,6 +1,4 @@
-import {
-    Record,
-    RecordsStore,
+import type {
     DataRecordsStore,
     SetDataResult,
     GetDataStoreResult,
@@ -9,7 +7,8 @@ import {
     UserPolicy,
     ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery } from 'mongodb';
+import { Record, RecordsStore } from '@casual-simulation/aux-records';
+import type { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBDataRecordsStore implements DataRecordsStore {
     private _collection: Collection<DataRecord>;

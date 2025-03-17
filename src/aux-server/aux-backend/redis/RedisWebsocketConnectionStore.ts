@@ -1,13 +1,14 @@
-import { RedisClientType } from 'redis';
+import type { RedisClientType } from 'redis';
 import { promisify } from 'util';
-import {
+import type {
     BranchConnectionMode,
     DeviceBranchConnection,
     DeviceConnection,
     WebsocketConnectionStore,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 import {
     SEMATTRS_DB_NAME,
     SEMRESATTRS_SERVICE_NAME,

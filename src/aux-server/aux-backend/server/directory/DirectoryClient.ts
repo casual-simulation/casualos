@@ -1,23 +1,14 @@
-import { DirectoryStore } from './DirectoryStore';
-import { DirectoryClientConfig } from '../config';
-import {
-    DEFAULT_PING_INTERVAL,
-    DirectoryClientSettings,
-} from './DirectoryClientSettings';
+import type { DirectoryStore } from './DirectoryStore';
+import type { DirectoryClientConfig } from '../config';
+import type { DirectoryClientSettings } from './DirectoryClientSettings';
+import { DEFAULT_PING_INTERVAL } from './DirectoryClientSettings';
 import { randomBytes } from 'crypto';
 import { hostname, networkInterfaces } from 'os';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
 import { sortBy } from 'lodash';
-import {
-    SubscriptionLike,
-    timer,
-    Observable,
-    defer,
-    throwError,
-    EMPTY,
-    NEVER,
-} from 'rxjs';
+import type { SubscriptionLike, Observable } from 'rxjs';
+import { timer, defer, throwError, EMPTY, NEVER } from 'rxjs';
 import {
     retryWhen,
     delayWhen,
@@ -26,7 +17,7 @@ import {
     repeatWhen,
     mergeMap,
 } from 'rxjs/operators';
-import { TunnelClient } from '@casual-simulation/tunnel';
+import type { TunnelClient } from '@casual-simulation/tunnel';
 
 /**
  * Defines a client for the directory.

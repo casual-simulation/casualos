@@ -2,7 +2,7 @@ import {
     GenericHttpRequest,
     GenericHttpResponse,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
     WebhookEnvironment,

@@ -10,10 +10,8 @@ import {
     RemoteAuxChannel,
     RemoteSimulationImpl,
 } from '@casual-simulation/aux-vm-client';
-import {
-    HandleHttpRequestSuccess,
-    tryParseJson,
-} from '@casual-simulation/aux-records';
+import type { HandleHttpRequestSuccess } from '@casual-simulation/aux-records';
+import { tryParseJson } from '@casual-simulation/aux-records';
 import { v4 as uuid } from 'uuid';
 
 const uuidMock: jest.Mock = <any>uuid;

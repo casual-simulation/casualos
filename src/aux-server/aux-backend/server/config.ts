@@ -1,5 +1,5 @@
-import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
-import { ServerConfig } from '@casual-simulation/aux-records';
+import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
+import type { ServerConfig } from '@casual-simulation/aux-records';
 
 export const DRIVES_URL = '/drives';
 

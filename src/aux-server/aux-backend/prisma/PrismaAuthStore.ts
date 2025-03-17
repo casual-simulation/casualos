@@ -1,5 +1,6 @@
-import { RegexRule, cleanupObject } from '@casual-simulation/aux-records';
-import {
+import type { RegexRule } from '@casual-simulation/aux-records';
+import { cleanupObject } from '@casual-simulation/aux-records';
+import type {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
@@ -19,9 +20,7 @@ import {
     UserLoginMetadata,
     UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
-import {
-    LoginRequest,
-    Prisma,
+import type {
     PrismaClient,
     User,
     UserAuthenticator,
@@ -29,6 +28,7 @@ import {
     Subscription as PrismaSubscription,
     SubscriptionPeriod,
 } from './generated';
+import { LoginRequest, Prisma } from './generated';
 // import { PrismaClientKnownRequestError } from './generated/runtime';
 import { convertToDate, convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';

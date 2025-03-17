@@ -1,13 +1,13 @@
-import {
+import type {
     AddEventCountStoreResult,
     EventRecordUpdate,
     EventRecordsStore,
     GetEventCountStoreResult,
     ListEventsStoreResult,
     UpdateEventResult,
-    cleanupObject,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery } from 'mongodb';
+import { cleanupObject } from '@casual-simulation/aux-records';
+import type { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBEventRecordsStore implements EventRecordsStore {
     private _collection: Collection<EventRecord>;

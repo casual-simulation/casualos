@@ -1,8 +1,9 @@
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import RedisRateLimitStore, {
+import type {
     RateLimiterIncrementResult,
     Options,
 } from '@casual-simulation/rate-limit-redis';
+import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import { trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'RedisRateLimitStore';

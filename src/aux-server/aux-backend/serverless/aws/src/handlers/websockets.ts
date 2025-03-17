@@ -1,12 +1,12 @@
 import 'source-map-support/register';
 import '../Instrumentation';
-import {
+import type {
     APIGatewayProxyEvent,
     APIGatewayProxyStructuredResultV2,
-    Context,
 } from 'aws-lambda';
+import { Context } from 'aws-lambda';
 import { constructServerlessAwsServerBuilder } from '../../../../shared/LoadServer';
-import { GenericHttpHeaders } from '@casual-simulation/aux-common';
+import type { GenericHttpHeaders } from '@casual-simulation/aux-common';
 
 const builder = constructServerlessAwsServerBuilder();
 

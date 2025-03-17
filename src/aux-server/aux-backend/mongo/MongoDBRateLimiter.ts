@@ -1,9 +1,10 @@
-import {
+import type {
     RateLimiter,
     RateLimiterIncrementResult,
     RateLimiterOptions,
 } from '@casual-simulation/rate-limit-redis';
-import { Collection, FilterQuery, MongoClient, Db } from 'mongodb';
+import type { Collection } from 'mongodb';
+import { FilterQuery, MongoClient, Db } from 'mongodb';
 
 export class MongoDBRateLimiter implements RateLimiter {
     private _collection: Collection<MongoDBRateLimitRecord>;

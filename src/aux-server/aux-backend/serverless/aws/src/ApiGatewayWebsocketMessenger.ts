@@ -9,21 +9,21 @@ import {
     getMessageUploadUrl,
     uploadMessage,
 } from './WebsocketUtils';
-import { S3 } from '@aws-sdk/client-s3';
-import {
+import type { S3 } from '@aws-sdk/client-s3';
+import type {
     PresignFileUploadResult,
     WebsocketConnectionStore,
     WebsocketMessenger,
-    signRequest,
 } from '@casual-simulation/aux-records';
-import {
+import { signRequest } from '@casual-simulation/aux-records';
+import type {
     UploadHttpHeaders,
     WebsocketDownloadRequestEvent,
     WebsocketEvent,
-    WebsocketEventTypes,
     WebsocketMessage,
     WebsocketMessageEvent,
 } from '@casual-simulation/aux-common';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common';
 import axios, { Method } from 'axios';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { AwsCredentialIdentityProvider } from '@aws-sdk/types';

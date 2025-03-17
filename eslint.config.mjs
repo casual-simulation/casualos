@@ -4,12 +4,12 @@ import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
-// export default defineConfig([
-
-// ]);
-
-/** @type {import('eslint').Linter.Config[]} */
-export default [
+export default defineConfig([
+    globalIgnores([
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/prisma/generated/**',
+    ]),
     { files: ['**/*.{js,mjs,cjs,ts,vue}'] },
     {
         languageOptions: {
@@ -31,7 +31,6 @@ export default [
                     prefer: 'type-imports',
                 },
             ],
-            // "@typescript-eslint/consistent-type-exports": "error",
         },
     },
     ...pluginVue.configs['flat/essential'],
@@ -45,28 +44,6 @@ export default [
             '@typescript-eslint/no-require-imports': 'off',
         },
     },
-    // {
-    //     files: ['src/aux-server/aux-web/**/*.{js,mjs,cjs,ts,vue}'],
-    //     rules: {
-    //         'no-restricted-imports': [
-    //             'error',
-    //             {
-    //                 patterns: [
-    //                     {
-    //                         group: ['@casual-simulation/aux-records'],
-    //                         importNamePattern: 'Controller$',
-    //                         message: 'Controller imports are not allowed in aux-web',
-    //                     },
-    //                     {
-    //                         group: ['@casual-simulation/aux-records'],
-    //                         importNamePattern: 'Store$',
-    //                         message: 'Store imports are not allowed in aux-web',
-    //                     }
-    //                 ]
-    //             }
-    //         ]
-    //     }
-    // },
 
     // Disabled rules
     {
@@ -95,4 +72,4 @@ export default [
             'vue/no-deprecated-v-on-native-modifier': 'off',
         },
     },
-];
+]);

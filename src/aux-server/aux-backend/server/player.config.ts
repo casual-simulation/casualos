@@ -1,12 +1,12 @@
-import { ClientConfig } from './config';
+import type { ClientConfig } from './config';
 import * as process from 'process';
-import {
+import type {
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
 } from '@casual-simulation/aux-common';
-import { BiosOption } from '@casual-simulation/aux-common/common/WebConfig';
+import type { BiosOption } from '@casual-simulation/aux-common/common/WebConfig';
 
-declare var DEVELOPMENT: boolean;
+declare let DEVELOPMENT: boolean;
 
 const config: ClientConfig = {
     index: 'player.html',

@@ -1,6 +1,6 @@
-import { DirectoryStore } from './DirectoryStore';
-import { DirectoryEntry } from './DirectoryEntry';
-import { DirectoryClientSettings } from './DirectoryClientSettings';
+import type { DirectoryStore } from './DirectoryStore';
+import type { DirectoryEntry } from './DirectoryEntry';
+import type { DirectoryClientSettings } from './DirectoryClientSettings';
 
 /**
  * Defines a directory store which stores data in memory.

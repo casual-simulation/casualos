@@ -5,15 +5,17 @@ import {
     PresignFileReadResult,
     signRequest,
 } from '@casual-simulation/aux-records';
-import {
-    PresignFileUploadRequest,
-    PresignFileUploadResult,
-    GetFileRecordResult,
+import type {
     AddFileResult,
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
 import {
+    PresignFileUploadRequest,
+    PresignFileUploadResult,
+    GetFileRecordResult,
+} from '@casual-simulation/aux-records';
+import type {
     FileRecord,
     FileRecordsLookup,
     ListAllFilesFilter,
@@ -21,7 +23,8 @@ import {
     ListFilesLookupResult,
     UpdateFileResult,
 } from '@casual-simulation/aux-records/FileRecordsStore';
-import { Prisma, PrismaClient } from './generated';
+import type { PrismaClient } from './generated';
+import { Prisma } from './generated';
 import { convertMarkers } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';

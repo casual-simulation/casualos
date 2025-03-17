@@ -1,31 +1,33 @@
-import {
+import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
-    STORED_AUX_SCHEMA,
     WebhookEnvironment,
 } from '@casual-simulation/aux-records';
+import { STORED_AUX_SCHEMA } from '@casual-simulation/aux-records';
 import { v4 as uuid } from 'uuid';
-import {
+import type {
     AuxConfig,
     AuxConfigParameters,
     AuxVM,
-    RecordsManager,
     Simulation,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
+import { RecordsManager } from '@casual-simulation/aux-vm';
+import type {
+    BotAction,
+    BotsState,
+    ConnectionIndicator,
+    StoredAux,
+} from '@casual-simulation/aux-common';
 import {
     addState,
     applyUpdatesToInst,
-    BotAction,
     botAdded,
-    BotsState,
-    ConnectionIndicator,
     COOKIE_BOT_PARTITION_ID,
     createBot,
     defineGlobalBot,
     first,
     remote,
-    StoredAux,
     TEMPORARY_BOT_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
 } from '@casual-simulation/aux-common';
@@ -33,7 +35,8 @@ import { getSimulationId } from '../../../shared/SimulationHelpers';
 import mime from 'mime';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { Observable, Subscription, tap } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subscription, tap } from 'rxjs';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 
 declare const GIT_TAG: string;

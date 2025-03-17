@@ -1,4 +1,4 @@
-import {
+import type {
     AIChatMetrics,
     AIChatSubscriptionMetrics,
     AIImageMetrics,
@@ -17,11 +17,11 @@ import {
     RecordSubscriptionMetrics,
     SubscriptionFilter,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery, Db } from 'mongodb';
-import { DataRecord } from './MongoDBDataRecordsStore';
-import { MongoFileRecord } from './MongoDBFileRecordsStore';
-import { MongoDBAuthUser, MongoDBStudio } from './MongoDBAuthStore';
-import { EventRecord } from './MongoDBEventRecordsStore';
+import type { Collection, FilterQuery, Db } from 'mongodb';
+import type { DataRecord } from './MongoDBDataRecordsStore';
+import type { MongoFileRecord } from './MongoDBFileRecordsStore';
+import type { MongoDBAuthUser, MongoDBStudio } from './MongoDBAuthStore';
+import type { EventRecord } from './MongoDBEventRecordsStore';
 import { DateTime } from 'luxon';
 
 export const CHAT_METRICS_COLLECTION = 'chatMetrics';

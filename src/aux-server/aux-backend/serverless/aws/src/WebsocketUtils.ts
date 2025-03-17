@@ -2,11 +2,11 @@ import { v4 as uuid } from 'uuid';
 import { AwsMessage } from './AwsMessages';
 import axios from 'axios';
 import { URL } from 'url';
+import type { GetObjectCommandInput } from '@aws-sdk/client-s3';
 import {
     S3,
     S3ClientConfig,
     PutObjectCommand,
-    GetObjectCommandInput,
     GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -157,17 +157,4 @@ let span: any;
 
 export function setSpan(func: any) {
     span = func;
-}
-
-export function spanify<T extends Function>(label: string, func: T): T {
-    // TODO: Fix
-    // if(span) {
-    //     return <T><any>(function(...args: any[]) {
-    //         return span(label, async () => {
-    //             return func(...args);
-    //         });
-    //     });
-    // } else {
-    return func;
-    // }
 }
