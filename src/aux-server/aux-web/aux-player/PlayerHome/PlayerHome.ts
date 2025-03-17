@@ -332,6 +332,16 @@ export default class PlayerHome extends Vue {
             }
         });
 
+        await this._executeOrShowBios();
+
+        appManager.auth.primary.getPolicyUrls().then((urls) => {
+            this.privacyPolicyUrl = urls.privacyPolicyUrl;
+            this.termsOfServiceUrl = urls.termsOfServiceUrl;
+            this.codeOfConductUrl = urls.codeOfConductUrl;
+        });
+    }
+
+    private async _executeOrShowBios() {
         if (import.meta.env.MODE === 'static') {
             this.executeBiosOption('local inst', null, null, null);
         } else if (this.query) {
@@ -398,12 +408,6 @@ export default class PlayerHome extends Vue {
                 }
             }
         }
-
-        appManager.auth.primary.getPolicyUrls().then((urls) => {
-            this.privacyPolicyUrl = urls.privacyPolicyUrl;
-            this.termsOfServiceUrl = urls.termsOfServiceUrl;
-            this.codeOfConductUrl = urls.codeOfConductUrl;
-        });
     }
 
     private async _showBiosOptions() {
@@ -458,7 +462,7 @@ export default class PlayerHome extends Vue {
             } finally {
                 this.showLoggingIn = false;
                 this.biosSelection = null;
-                this._showBiosOptions();
+                await this._executeOrShowBios();
             }
         } else if (option === 'sign out') {
             await appManager.auth.primary.logout();
