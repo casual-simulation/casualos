@@ -1,5 +1,6 @@
-import { TimeSyncConnection } from './TimeSyncConnection';
-import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
+import type { TimeSyncConnection } from './TimeSyncConnection';
+import type { SubscriptionLike, Observable } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { TimeSync } from './TimeSync';
 
 /**

@@ -3,8 +3,8 @@
 import program from 'commander';
 import { WebSocketClient, WebSocketServer } from '../src';
 import { Server } from 'http';
-import { TunnelMessage } from 'src/TunnelResponse';
-import { Observable } from 'rxjs';
+import type { TunnelMessage } from 'src/TunnelResponse';
+import type { Observable } from 'rxjs';
 
 program.version('0.0.1');
 

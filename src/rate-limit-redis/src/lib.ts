@@ -1,5 +1,5 @@
-import { Options, RedisReply, SendCommandFn } from './types';
-import {
+import type { Options, RedisReply, SendCommandFn } from './types';
+import type {
     RateLimiter,
     RateLimiterIncrementResult,
     RateLimiterOptions,

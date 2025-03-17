@@ -1,5 +1,5 @@
-import { SubscriptionLike, Observable } from 'rxjs';
-import { TunnelRequest } from './ServerTunnelRequest';
+import type { SubscriptionLike, Observable } from 'rxjs';
+import type { TunnelRequest } from './ServerTunnelRequest';
 
 export type TunnelRequestMapper = (request: TunnelRequest) => TunnelRequest;
 export type TunnelRequestFilter = (request: TunnelRequest) => boolean;

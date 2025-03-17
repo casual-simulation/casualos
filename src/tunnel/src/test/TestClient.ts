@@ -1,7 +1,8 @@
-import { TunnelClient } from '../TunnelClient';
-import { TunnelRequest } from '../ClientTunnelRequest';
-import { TunnelMessage } from '../TunnelResponse';
-import { Observable, Observer, Subject } from 'rxjs';
+import type { TunnelClient } from '../TunnelClient';
+import type { TunnelRequest } from '../ClientTunnelRequest';
+import type { TunnelMessage } from '../TunnelResponse';
+import type { Observer } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 export interface TestRequest {
     accept(): void;

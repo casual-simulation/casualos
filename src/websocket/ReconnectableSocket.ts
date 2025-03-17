@@ -1,4 +1,5 @@
-import { Observable, Subject } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 
 export type CloseReason = CloseReasonClosed | CloseReasonOther;
 
