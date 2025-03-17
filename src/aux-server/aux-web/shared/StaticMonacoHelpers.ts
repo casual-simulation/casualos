@@ -1,7 +1,8 @@
 import type * as monaco from './MonacoLibs';
-import { Bot, hasPortalScript } from '@casual-simulation/aux-common';
+import type { Bot } from '@casual-simulation/aux-common';
+import { hasPortalScript } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 export function setup() {}
 

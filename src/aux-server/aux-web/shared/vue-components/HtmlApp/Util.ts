@@ -1,10 +1,7 @@
-import {
-    asyncResult,
-    hasValue,
-    RegisterHtmlAppAction,
-} from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { HtmlPortalSetupResult } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
+import type { RegisterHtmlAppAction } from '@casual-simulation/aux-common';
+import { asyncResult, hasValue } from '@casual-simulation/aux-common';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { HtmlPortalSetupResult } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 
 export const eventNames = [] as string[];
 

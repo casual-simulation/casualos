@@ -9,18 +9,18 @@ import {
 } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
-import {
+import type {
     AuthHelperInterface,
-    LoginStatus,
     LoginUIPrivoSignUp,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
+import { LoginStatus } from '@casual-simulation/aux-vm';
 import { DateTime } from 'luxon';
+import type { FormError } from '@casual-simulation/aux-records';
 import {
     DATE_OF_BIRTH_FIELD,
     DISPLAY_NAME_FIELD,
     EMAIL_FIELD,
-    FormError,
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
     getFormErrors,

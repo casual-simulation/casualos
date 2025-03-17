@@ -1,10 +1,13 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import {
+import type {
     Bot,
-    hasValue,
     BotTags,
+    SystemPortalPane,
+} from '@casual-simulation/aux-common';
+import {
+    hasValue,
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
     ON_SHEET_BOT_CLICK,
@@ -43,21 +46,23 @@ import {
     getPortalTag,
     getTag,
     getTagValueForSpace,
-    SystemPortalPane,
     SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     BrowserSimulation,
     SystemPortalBot,
     SystemPortalItem,
     SystemPortalSelectionTag,
     TagSortMode,
-    userBotChanged,
-    getSystemArea,
     BotManager,
 } from '@casual-simulation/aux-vm-browser';
+import {
+    userBotChanged,
+    getSystemArea,
+} from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import { Subject, Subscription, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { SystemPortalConfig } from './SystemPortalConfig';
@@ -69,17 +74,17 @@ import { onMonacoLoaded } from '../../MonacoAsync';
 // import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
-import {
+import type {
     SystemPortalDiffArea,
     SystemPortalDiffBot,
     SystemPortalDiffSelectionTag,
-    SystemPortalRecentsUpdate,
     SystemPortalRecentTag,
     SystemPortalSearchBot,
     SystemPortalSearchItem,
     SystemPortalSearchMatch,
     SystemPortalSearchTag,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
+import { SystemPortalRecentsUpdate } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import SystemPortalDiffTag from '../SystemPortalDiffTag/SystemPortalDiffTag';
 import TagEditor from '../TagEditor/TagEditor';
@@ -91,7 +96,8 @@ import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
-import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import { SimulationManager } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
 

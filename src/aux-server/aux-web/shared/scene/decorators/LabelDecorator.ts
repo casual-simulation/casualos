@@ -1,7 +1,10 @@
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
-import {
+import type { AuxBot3D } from '../AuxBot3D';
+import type {
     BotCalculationContext,
+    BotLabelFontSize,
+} from '@casual-simulation/aux-common';
+import {
     calculateBotValue,
     isFormula,
     calculateFormattedBotValue,
@@ -15,22 +18,21 @@ import {
     calculateLabelFontSize,
     BotLabelAlignment,
     calculateLabelWordWrapMode,
-    BotLabelFontSize,
     getBotLabelPadding,
     getBotOrientationMode,
     isFloatingAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
+import type { Object3D } from '@casual-simulation/three';
 import {
     Color,
     Vector3,
     Vector2,
     PerspectiveCamera,
     Group,
-    Object3D,
 } from '@casual-simulation/three';
-import { WordBubbleElement } from '../WordBubbleElement';
-import { Game } from '../Game';
+import type { WordBubbleElement } from '../WordBubbleElement';
+import type { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 import { calculateScale, buildSRGBColor } from '../SceneUtils';
 import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';

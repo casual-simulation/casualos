@@ -1,4 +1,4 @@
-import { Vector2 } from '@casual-simulation/three';
+import type { Vector2 } from '@casual-simulation/three';
 
 /**
  * Defines an interface for objects that can be wrapped by a word bubble 3d.

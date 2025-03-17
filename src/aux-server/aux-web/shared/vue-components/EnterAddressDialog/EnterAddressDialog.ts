@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
-import {
+import type {
     AuthHelperInterface,
     LoginUIAddressStatus,
 } from '@casual-simulation/aux-vm';
@@ -10,13 +10,12 @@ import {
     cleanPhoneNumber,
     mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
-import {
-    ADDRESS_FIELD,
+import type {
     CompleteWebAuthnLoginResult,
     FormError,
     RequestWebAuthnLoginResult,
-    getFormErrors,
 } from '@casual-simulation/aux-records';
+import { ADDRESS_FIELD, getFormErrors } from '@casual-simulation/aux-records';
 import { Prop, Watch } from 'vue-property-decorator';
 import FieldErrors from '../FieldErrors/FieldErrors';
 import {
@@ -24,7 +23,7 @@ import {
     startAuthentication,
     WebAuthnAbortService,
 } from '@simplewebauthn/browser';
-import { AuthenticationResponseJSON } from '@simplewebauthn/types';
+import type { AuthenticationResponseJSON } from '@simplewebauthn/types';
 import Bowser from 'bowser';
 
 @Component({
@@ -199,6 +198,7 @@ export default class EnterAddressDialog extends Vue {
                 console.log('Success!');
             } else {
                 if (result.errorCode === 'aborted') {
+                    /* empty */
                 } else if (result.errorCode === 'invalid_origin') {
                     console.error(
                         '[EnterAddressDialog] Unable to use WebAuthn:',

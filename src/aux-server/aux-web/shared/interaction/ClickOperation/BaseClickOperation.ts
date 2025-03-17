@@ -1,23 +1,20 @@
-import {
-    InputType,
+import type {
     ControllerData,
     InputMethod,
     InputModality,
     MouseOrTouchInputMethod,
 } from '../../../shared/scene/Input';
-import {
-    Vector2,
-    Object3D,
-    Intersection,
-    Sphere,
-} from '@casual-simulation/three';
-import { IOperation } from '../IOperation';
-import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
+import { InputType } from '../../../shared/scene/Input';
+import type { Vector2, Object3D, Intersection } from '@casual-simulation/three';
+import { Sphere } from '@casual-simulation/three';
+import type { IOperation } from '../IOperation';
+import type { BaseInteractionManager } from '../BaseInteractionManager';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
-import { Simulation3D } from '../../scene/Simulation3D';
+import type { Simulation3D } from '../../scene/Simulation3D';
 import {
     VRDragThresholdPassed,
     DragThresholdPassed,

@@ -1,15 +1,15 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
+import type { Bot } from '@casual-simulation/aux-common';
 import {
-    Bot,
     hasValue,
     getTagValueForSpace,
     DNA_TAG_PREFIX,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
 import BotTag from '../BotTag/BotTag';
@@ -24,9 +24,9 @@ import {
     toSubscription,
     watchEditor,
 } from '../../MonacoHelpers';
-import * as monaco from '../../MonacoLibs';
+import type * as monaco from '../../MonacoLibs';
 import { filter, mergeMap, tap } from 'rxjs/operators';
-import { ScriptPrefix } from '@casual-simulation/aux-vm';
+import type { ScriptPrefix } from '@casual-simulation/aux-vm';
 
 setup();
 

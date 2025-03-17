@@ -1,89 +1,90 @@
+import type {
+    Texture,
+    AmbientLight,
+    DirectionalLight,
+} from '@casual-simulation/three';
 import {
     Scene,
     WebGLRenderer,
     Color,
-    Texture,
     Vector3,
     Vector2,
     sRGBEncoding,
     VideoTexture,
     Object3D,
-    AmbientLight,
-    DirectionalLight,
     PMREMGenerator,
     EquirectangularReflectionMapping,
 } from '@casual-simulation/three';
-import { IGameView } from '../vue-components/IGameView';
+import type { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
-import {
+import type {
     Bot,
-    DEFAULT_SCENE_BACKGROUND_COLOR,
-    hasValue,
     FocusOnBotAction,
     FocusOnOptions,
-    DEFAULT_WORKSPACE_GRID_SCALE,
     BotCursorType,
+    EnablePOVAction,
+    ARSupportedAction,
+    VRSupportedAction,
+    MediaPermissionAction,
+    EnableXROptions,
+} from '@casual-simulation/aux-common';
+import {
+    DEFAULT_SCENE_BACKGROUND_COLOR,
+    hasValue,
+    DEFAULT_WORKSPACE_GRID_SCALE,
     getPortalTag,
     asyncResult,
     asyncError,
-    EnablePOVAction,
     IMU_PORTAL,
-    ARSupportedAction,
-    VRSupportedAction,
     ON_ENTER_AR,
     ON_ENTER_VR,
     ON_EXIT_AR,
     ON_EXIT_VR,
-    MediaPermissionAction,
     getBotPosition,
-    EnableXROptions,
 } from '@casual-simulation/aux-common';
 import {
     Rotation,
     Vector3 as CasualOSVector3,
 } from '@casual-simulation/aux-common/math';
-import {
-    CameraRig,
-    CameraType,
-    resizeCameraRig,
-    createCameraRig,
-} from './CameraRigFactory';
+import type { CameraRig, CameraType } from './CameraRigFactory';
+import { resizeCameraRig, createCameraRig } from './CameraRigFactory';
 import { Time } from './Time';
-import { Input, InputType, ControllerData } from './Input';
-import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
+import type { ControllerData } from './Input';
+import { Input, InputType } from './Input';
+import type { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
-import { HtmlMixer } from './HtmlMixer';
-import { GridChecker } from './grid/GridChecker';
-import { Simulation3D } from './Simulation3D';
-import { AuxBotVisualizer } from './AuxBotVisualizer';
-import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
+import type { HtmlMixer } from './HtmlMixer';
+import type { GridChecker } from './grid/GridChecker';
+import type { Simulation3D } from './Simulation3D';
+import type { AuxBotVisualizer } from './AuxBotVisualizer';
+import type { SubscriptionLike, Observable } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
+import type { TweenCameraPosition } from './SceneUtils';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
     WORLD_UP,
-    TweenCameraPosition,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
 import { add, merge, union } from 'lodash';
 import { EventBus } from '@casual-simulation/aux-components';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { convertCasualOSPositionToThreePosition } from './grid/Grid';
 import { FocusCameraRigOnOperation } from '../interaction/FocusCameraRigOnOperation';
-import {
-    BrowserSimulation,
-    getPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { AuxTextureLoader } from './AuxTextureLoader';
 import { appManager } from '../AppManager';
-import { XRFrame, XRSession, XRRigidTransform } from './xr/WebXRTypes';
+import type { XRFrame, XRSession } from './xr/WebXRTypes';
+import { XRRigidTransform } from './xr/WebXRTypes';
 import { update as updateMeshUI } from 'three-mesh-ui';
 import { EXRLoader } from '@casual-simulation/three/examples/jsm/loaders/EXRLoader';
 import Bowser from 'bowser';
-import { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
+import type { EnableXRModalRequestParameters } from '../vue-components/EnableXRModal/EnableXRModal';
 import { getMediaForCasualOSUrl } from '../MediaUtils';
 import { parseCasualOSUrl } from '../UrlUtils';
 

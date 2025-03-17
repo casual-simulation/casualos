@@ -3,15 +3,13 @@ import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import {
+import type {
     AuthHelperInterface,
-    PrivoSignUpInfo,
     Simulation,
 } from '@casual-simulation/aux-vm';
-import {
-    AuthHelper,
-    BrowserSimulation,
-} from '@casual-simulation/aux-vm-browser';
+import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { AuthHelper } from '@casual-simulation/aux-vm-browser';
 import {
     asyncResult,
     asyncError,
@@ -21,21 +19,23 @@ import {
     cleanPhoneNumber,
     mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     RecordDataAction,
     DataRecordAction,
     GetRecordDataAction,
     EraseRecordDataAction,
     GrantInstAdminPermissionAction,
 } from '@casual-simulation/aux-runtime';
-import {
+import type {
     CreatePublicRecordKeyResult,
+    PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
+import {
     DISPLAY_NAME_FIELD,
     EMAIL_FIELD,
     FormError,
     getFormErrors,
     parseRecordKey,
-    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 
 @Component({

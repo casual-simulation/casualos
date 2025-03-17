@@ -1,22 +1,15 @@
-import {
-    InputType,
-    ControllerData,
-    InputMethod,
-    InputModality,
-} from '../../../shared/scene/Input';
-import { Vector2, Intersection } from '@casual-simulation/three';
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
+import { InputType, ControllerData } from '../../../shared/scene/Input';
+import type { Intersection } from '@casual-simulation/three';
+import { Vector2 } from '@casual-simulation/three';
 import { IOperation } from '../IOperation';
-import { BaseInteractionManager } from '../BaseInteractionManager';
-import {
-    Bot,
-    BotCalculationContext,
-    isBotMovable,
-    getBotPosition,
-} from '@casual-simulation/aux-common';
-import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
-import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
-import { Simulation3D } from '../../scene/Simulation3D';
+import type { BaseInteractionManager } from '../BaseInteractionManager';
+import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
+import { isBotMovable, getBotPosition } from '@casual-simulation/aux-common';
+import type { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
+import type { AuxBot3D } from '../../../shared/scene/AuxBot3D';
+import type { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
+import type { Simulation3D } from '../../scene/Simulation3D';
 import {
     VRDragThresholdPassed,
     DragThresholdPassed,

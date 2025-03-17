@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import VueQuagga from '../../public/VueQuagga';
 import { Prop } from 'vue-property-decorator';
-import { CameraType } from '@casual-simulation/aux-common';
+import type { CameraType } from '@casual-simulation/aux-common';
 
 const defaultReaders = [
     'code_128_reader',

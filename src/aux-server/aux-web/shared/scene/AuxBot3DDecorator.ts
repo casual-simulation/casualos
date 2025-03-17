@@ -1,5 +1,5 @@
-import { AuxBot3D } from './AuxBot3D';
-import {
+import type { AuxBot3D } from './AuxBot3D';
+import type {
     BotCalculationContext,
     LocalActions,
 } from '@casual-simulation/aux-common';

@@ -6,7 +6,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
-import { Subscription } from 'rxjs';
+import type { Subscription } from 'rxjs';
 import { debounce, sortBy } from 'lodash';
 import { tap } from 'rxjs/operators';
 import type { ListedSession } from '@casual-simulation/aux-records/AuthController';
@@ -14,9 +14,9 @@ import { DateTime } from 'luxon';
 import SessionLocation from '../SessionLocation/SessionLocation';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
+import type { AuthenticatorKind } from '@casual-simulation/aux-records/AAGUID';
 import {
     AAGUIDInfo,
-    AuthenticatorKind,
     getInfoForAAGUID,
 } from '@casual-simulation/aux-records/AAGUID';
 import Bowser from 'bowser';

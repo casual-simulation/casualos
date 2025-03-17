@@ -1,9 +1,9 @@
-import {
+import type {
     WebGLRenderer,
     PerspectiveCamera,
     OrthographicCamera,
-    Vector2,
 } from '@casual-simulation/three';
+import { Vector2 } from '@casual-simulation/three';
 import { HtmlMixer } from './HtmlMixer';
 import Bowser from 'bowser';
 
@@ -24,18 +24,18 @@ export function createHtmlMixerContext(
     //
 
     // Setup rendererCss
-    var rendererCss = mixerContext.rendererCss;
+    let rendererCss = mixerContext.rendererCss;
     // Setup rendererWebgl
-    var rendererWebgl = mixerContext.rendererWebgl;
+    let rendererWebgl = mixerContext.rendererWebgl;
 
-    var css3dElement = rendererCss.domElement;
+    let css3dElement = rendererCss.domElement;
     css3dElement.style.position = 'absolute';
     css3dElement.style.top = '0px';
     css3dElement.style.width = '100%';
     css3dElement.style.height = '100%';
     parentElement.appendChild(css3dElement);
 
-    var webglCanvas = rendererWebgl.domElement;
+    let webglCanvas = rendererWebgl.domElement;
     webglCanvas.style.position = 'absolute';
     webglCanvas.style.top = '0px';
     webglCanvas.style.width = '100%';

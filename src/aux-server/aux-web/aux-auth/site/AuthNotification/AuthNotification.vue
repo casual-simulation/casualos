@@ -34,15 +34,19 @@
             >
             </md-table-empty-state>
 
-            <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
-                <md-table-cell md-label="ID" md-sort-by="id">{{ item.id }}</md-table-cell>
-                <md-table-cell md-label="User ID" md-sort-by="userId">{{
-                    item.userId || '(null)'
-                }}</md-table-cell>
-                <md-table-cell md-label="Push Subscription ID" md-sort-by="pushSubscriptionId">{{
-                    item.pushSubscriptionId || '(null)'
-                }}</md-table-cell>
-            </md-table-row>
+            <template v-slot:md-table-row="{ item }">
+                <md-table-row md-selectable="single">
+                    <md-table-cell md-label="ID" md-sort-by="id">{{ item.id }}</md-table-cell>
+                    <md-table-cell md-label="User ID" md-sort-by="userId">{{
+                        item.userId || '(null)'
+                    }}</md-table-cell>
+                    <md-table-cell
+                        md-label="Push Subscription ID"
+                        md-sort-by="pushSubscriptionId"
+                        >{{ item.pushSubscriptionId || '(null)' }}</md-table-cell
+                    >
+                </md-table-row>
+            </template>
         </md-table>
     </div>
 </template>

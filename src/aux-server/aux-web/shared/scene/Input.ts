@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import type Vue from 'vue';
 import {
     Vector2,
     Vector3,
@@ -7,11 +7,12 @@ import {
     Matrix4,
 } from '@casual-simulation/three';
 import { find, some } from 'lodash';
-import { Viewport } from './Viewport';
-import { Game } from './Game';
-import { Subscription, Observable, Subject } from 'rxjs';
+import type { Viewport } from './Viewport';
+import type { Game } from './Game';
+import type { Observable } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { v4 as uuid } from 'uuid';
-import {
+import type {
     XRInputSource,
     XRInputSourceEvent,
     XRInputSourcesChangeEvent,
@@ -19,9 +20,9 @@ import {
     XRSession,
     XRFrame,
     XRHandJoint,
-    XRJointPose,
     XRHandedness,
 } from './xr/WebXRTypes';
+import { XRJointPose } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
@@ -377,7 +378,7 @@ export class Input {
         const browser = Bowser.getParser(navigator.userAgent);
 
         // See https://developer.oculus.com/documentation/web/browser-specs/#user-agent-string
-        const isOculusBrowser = browser.test(/OculusBrowser\/[\d\.]+/);
+        const isOculusBrowser = browser.test(/OculusBrowser\/[\d.]+/);
         const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
         const isSafariBrowser = browser.getBrowserName(true) === 'safari';
 
@@ -2462,7 +2463,7 @@ export class Input {
         event.stopPropagation();
     }
 
-    private _bind(func: Function): any {
+    private _bind(func: (event: Event) => any): (event: any) => any {
         return (event: any) => {
             if (this.events.has(event) || event.__ignoreForInput) {
                 return;

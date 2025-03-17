@@ -6,7 +6,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
-import { Subscription } from 'rxjs';
+import type { Subscription } from 'rxjs';
 import { debounce, sortBy } from 'lodash';
 import { tap } from 'rxjs/operators';
 import type { ListedSession } from '@casual-simulation/aux-records/AuthController';

@@ -2,7 +2,7 @@ import Vue from 'vue';
 import { appManager } from '../../AppManager';
 import Component from 'vue-class-component';
 import { Loading } from '@casual-simulation/aux-components';
-import { ProgressMessage } from '@casual-simulation/aux-common';
+import type { ProgressMessage } from '@casual-simulation/aux-common';
 import { switchMap, tap } from 'rxjs/operators';
 
 /**

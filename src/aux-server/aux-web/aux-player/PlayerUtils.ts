@@ -1,6 +1,5 @@
+import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    Bot,
-    BotCalculationContext,
     calculateBotValue,
     getBotConfigDimensions,
 } from '@casual-simulation/aux-common';

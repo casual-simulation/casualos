@@ -10,13 +10,12 @@ import {
     calculateCubeSphereIntersection,
     addCorsQueryParam,
 } from './SceneUtils';
+import type { Camera, Mesh } from '@casual-simulation/three';
 import {
     Box3,
     PerspectiveCamera,
     OrthographicCamera,
     Sphere,
-    Camera,
-    Mesh,
     Vector2,
     Vector3,
     Group,

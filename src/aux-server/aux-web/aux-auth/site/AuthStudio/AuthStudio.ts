@@ -5,7 +5,7 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
-import {
+import type {
     AIHumeFeaturesConfiguration,
     AllowedStudioCreators,
     FormError,
@@ -14,10 +14,10 @@ import {
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
     UpdateStudioRequest,
-    getFormErrors,
 } from '@casual-simulation/aux-records';
+import { getFormErrors } from '@casual-simulation/aux-records';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
-import { BiosOption } from '@casual-simulation/aux-common';
+import type { BiosOption } from '@casual-simulation/aux-common';
 import { isEqual } from 'lodash';
 
 // TODO: Support uploading logos

@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import type { AuxBot3DDecorator } from '../AuxBot3DDecorator';
 import { hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
 import { DimensionPositionDecorator } from './DimensionPositionDecorator';
@@ -6,15 +6,15 @@ import { BotShapeDecorator } from './BotShapeDecorator';
 import { ProgressBarDecorator } from './ProgressBarDecorator';
 import { LabelDecorator } from './LabelDecorator';
 import { UserMeshDecorator } from './UserMeshDecorator';
-import { AuxBot3D } from '../AuxBot3D';
+import type { AuxBot3D } from '../AuxBot3D';
 import { LineToDecorator } from './LineToDecorator';
 import { WordBubbleDecorator } from './WordBubbleDecorator';
 import { appManager } from '../../../shared/AppManager';
 import { UserControlsDecorator } from './UserControlsDecorator';
 import { TextureDecorator } from './TextureDecorator';
 import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
-import { Simulation3D } from '../Simulation3D';
-import { Game } from '../Game';
+import type { Simulation3D } from '../Simulation3D';
+import type { Game } from '../Game';
 import { BotLODDecorator } from './BotLODDecorator';
 import { TransformerDecorator } from './TransformerDecorator';
 

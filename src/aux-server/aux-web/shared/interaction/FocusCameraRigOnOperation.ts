@@ -1,23 +1,27 @@
-import { IOperation } from './IOperation';
-import { BaseInteractionManager } from './BaseInteractionManager';
-import { Vector3, Vector2 } from '@casual-simulation/three';
-import {
-    asyncError,
-    asyncResult,
+import type { IOperation } from './IOperation';
+import type { BaseInteractionManager } from './BaseInteractionManager';
+import type { Vector3 } from '@casual-simulation/three';
+import { Vector2 } from '@casual-simulation/three';
+import type {
     BotCalculationContext,
-    hasValue,
     FocusOnOptions,
     Easing,
     EaseType,
+} from '@casual-simulation/aux-common';
+import {
+    asyncError,
+    asyncResult,
+    hasValue,
     realNumberOrDefault,
     getEasing,
 } from '@casual-simulation/aux-common';
-import { Simulation } from '@casual-simulation/aux-vm';
-import { CameraRig } from '../scene/CameraRigFactory';
-import { CameraRigControls } from './CameraRigControls';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { CameraRig } from '../scene/CameraRigFactory';
+import type { CameraRigControls } from './CameraRigControls';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
-import { Time } from '../scene/Time';
-import { objectForwardRay, TweenCameraPosition } from '../scene/SceneUtils';
+import type { Time } from '../scene/Time';
+import type { TweenCameraPosition } from '../scene/SceneUtils';
+import { objectForwardRay } from '../scene/SceneUtils';
 
 /**
  * Class that is able to tween the main camera to a given location.

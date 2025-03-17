@@ -1,4 +1,4 @@
-import { Vector2 } from '@casual-simulation/three';
+import type { Vector2 } from '@casual-simulation/three';
 
 /**
  * Defines an interface that represents the action of showing/hiding a context menu.

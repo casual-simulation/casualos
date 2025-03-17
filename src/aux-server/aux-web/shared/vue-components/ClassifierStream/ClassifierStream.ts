@@ -2,8 +2,8 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { Subscription } from 'rxjs';
-import { CameraType } from '@casual-simulation/aux-common';
-import {
+import type { CameraType } from '@casual-simulation/aux-common';
+import type {
     ImageClassifierModel,
     ModelLoadedEvent,
     ModelLoadError,

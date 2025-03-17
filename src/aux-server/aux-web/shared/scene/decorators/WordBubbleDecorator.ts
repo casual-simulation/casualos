@@ -1,7 +1,7 @@
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
+import type { AuxBot3D } from '../AuxBot3D';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     calculateBotValue,
     calculateStringTagValue,
     getBotLabelAnchor,
@@ -16,16 +16,16 @@ import {
     objectWorldDirectionRay,
     setColor,
 } from '../SceneUtils';
+import type { Vector2 } from '@casual-simulation/three';
 import {
     Scene,
     Box3,
     Vector3,
     Color,
     Box2,
-    Vector2,
     Quaternion,
 } from '@casual-simulation/three';
-import { LabelDecorator } from './LabelDecorator';
+import type { LabelDecorator } from './LabelDecorator';
 
 export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     /**

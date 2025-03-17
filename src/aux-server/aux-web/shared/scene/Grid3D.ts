@@ -1,5 +1,5 @@
 import { SnapPoint } from '@casual-simulation/aux-common';
-import { Ray, Vector3, Vector2 } from '@casual-simulation/three';
+import type { Ray, Vector3, Vector2 } from '@casual-simulation/three';
 
 /**
  * Defines an interface for a 3D grid.

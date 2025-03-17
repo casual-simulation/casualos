@@ -1,7 +1,7 @@
 import { Mesh, Object3D } from '@casual-simulation/three';
 import { HexGrid, hexesInRadius } from './HexGrid';
 import { HexMesh } from './HexMesh';
-import { Axial } from './Axial';
+import type { Axial } from './Axial';
 import { disposeMesh } from '../SceneUtils';
 
 /**

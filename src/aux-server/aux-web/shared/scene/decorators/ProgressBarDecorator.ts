@@ -1,26 +1,30 @@
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
-import {
+import type { AuxBot3D } from '../AuxBot3D';
+import type {
     BotCalculationContext,
+    BotLabelAnchor,
+} from '@casual-simulation/aux-common';
+import {
     calculateNumericalTagValue,
     calculateBotValue,
     getBotShape,
     BotShape,
-    BotLabelAnchor,
     clamp,
     hasValue,
     calculateStringTagValue,
     getBotTagAnchor,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     Mesh,
     MeshStandardMaterial,
+    MeshToonMaterial,
+} from '@casual-simulation/three';
+import {
     Color,
     Group,
     Vector3,
     Euler,
     MathUtils as ThreeMath,
-    MeshToonMaterial,
 } from '@casual-simulation/three';
 import {
     isTransparent,
@@ -29,7 +33,7 @@ import {
     calculateAnchorPosition,
     buildSRGBColor,
 } from '../SceneUtils';
-import { IMeshDecorator } from './IMeshDecorator';
+import type { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 
 export class ProgressBarDecorator

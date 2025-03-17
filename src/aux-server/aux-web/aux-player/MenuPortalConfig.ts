@@ -1,12 +1,14 @@
+import type {
+    BotCalculationContext,
+    PrecalculatedBot,
+    Bot,
+} from '@casual-simulation/aux-common';
 import {
     isDimensionLocked,
     DEFAULT_PORTAL_ZOOMABLE,
     DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
-    BotCalculationContext,
-    PrecalculatedBot,
-    Bot,
     CLICK_ACTION_NAME,
     onClickArg,
 } from '@casual-simulation/aux-common';
@@ -16,9 +18,10 @@ import {
     watchPortalConfigBot,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
-import { Simulation } from '@casual-simulation/aux-vm';
-import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
+import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -27,14 +30,14 @@ export class MenuPortalConfig implements SubscriptionLike {
     private _sub: Subscription;
     private _portalTag: string;
     private _updated: Subject<void>;
-    private _style: Object;
+    private _style: object;
     private _configBot: Bot;
     private _simulation: Simulation;
 
     /**
      * Gets the CSS style that should be applied.
      */
-    get style(): Object {
+    get style(): object {
         if (hasValue(this._style)) {
             return this._style;
         }

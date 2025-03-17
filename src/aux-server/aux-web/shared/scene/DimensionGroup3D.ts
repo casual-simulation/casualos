@@ -1,22 +1,25 @@
 import { GameObject, IGameObject } from './GameObject';
-import {
+import type {
     Bot,
     BotCalculationContext,
+    AuxDomain,
+} from '@casual-simulation/aux-common';
+import {
     TagUpdatedEvent,
     hasValue,
     calculateBotValue,
-    AuxDomain,
     getBotConfigDimensions,
 } from '@casual-simulation/aux-common';
 import { flatMap } from 'lodash';
-import { Object3D, Group } from '@casual-simulation/three';
-import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
-import { Simulation3D } from './Simulation3D';
+import type { Object3D } from '@casual-simulation/three';
+import { Group } from '@casual-simulation/three';
+import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
+import type { Simulation3D } from './Simulation3D';
 import { AuxBot3D } from './AuxBot3D';
-import { DimensionGroup } from './DimensionGroup';
-import { AuxBotVisualizer } from './AuxBotVisualizer';
+import type { DimensionGroup } from './DimensionGroup';
+import type { AuxBotVisualizer } from './AuxBotVisualizer';
 import { DimensionGroupHelper } from './DimensionGroupHelper';
-import { CoordinateTransformer } from './CoordinateSystem';
+import type { CoordinateTransformer } from './CoordinateSystem';
 
 /**
  * Defines a class that represents a visualization of a dimension for the AUX Builder.

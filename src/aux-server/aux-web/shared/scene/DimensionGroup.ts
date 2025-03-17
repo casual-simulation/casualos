@@ -1,5 +1,5 @@
-import { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
-import { AuxBotVisualizer } from './AuxBotVisualizer';
+import type { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
+import type { AuxBotVisualizer } from './AuxBotVisualizer';
 import { Grid3D } from './Grid3D';
 
 /**

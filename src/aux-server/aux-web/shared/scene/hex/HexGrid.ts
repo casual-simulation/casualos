@@ -38,12 +38,12 @@ export function realPosToGridPos(pos: Vector2, size: number): Axial {
  * @param second The second grid point.
  */
 export function gridDistance(first: Axial, second: Axial): number {
-    var x1 = first.q;
-    var z1 = first.r;
-    var y1 = -x1 - z1;
-    var x2 = second.q;
-    var z2 = second.r;
-    var y2 = -x2 - z2;
+    let x1 = first.q;
+    let z1 = first.r;
+    let y1 = -x1 - z1;
+    let x2 = second.q;
+    let z2 = second.r;
+    let y2 = -x2 - z2;
 
     return (Math.abs(x1 - x2) + Math.abs(y1 - y2) + Math.abs(z1 - z2)) / 2;
 }

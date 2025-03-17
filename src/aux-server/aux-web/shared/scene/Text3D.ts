@@ -1,11 +1,10 @@
+import type { Color, Texture } from '@casual-simulation/three';
 import {
     MathUtils as ThreeMath,
     Mesh,
     Object3D,
     DoubleSide,
-    Color,
     TextureLoader,
-    Texture,
     Vector3,
     Box3,
     RawShaderMaterial,
@@ -15,12 +14,12 @@ import {
     Quaternion,
 } from '@casual-simulation/three';
 
-import {
+import type {
     BotLabelAnchor,
     BotLabelAlignment,
     BotLabelWordWrap,
-    isFloatingAnchor,
 } from '@casual-simulation/aux-common';
+import { isFloatingAnchor } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Text as TextMesh } from 'troika-three-text';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';

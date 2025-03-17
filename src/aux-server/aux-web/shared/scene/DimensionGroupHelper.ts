@@ -1,6 +1,6 @@
-import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
+import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import { flatMap } from 'lodash';
-import { AuxBotVisualizer } from './AuxBotVisualizer';
+import type { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**
  * Defines a class that helps implement DimensionGroup.

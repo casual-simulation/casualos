@@ -1,41 +1,45 @@
 import Axios from 'axios';
 import Vue, { inject } from 'vue';
-import { BehaviorSubject, Observable, Subject, SubscriptionLike } from 'rxjs';
+import type { Observable, Subject, SubscriptionLike } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { filter, first, map, scan, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
-import {
-    AuxPartitionConfig,
+import type {
     BotsState,
     ConnectionIndicator,
     ProgressMessage,
+} from '@casual-simulation/aux-common';
+import {
+    AuxPartitionConfig,
     getUploadState,
     remapProgressPercent,
     remote,
 } from '@casual-simulation/aux-common';
+import type { StoredAux, PrivacyFeatures } from '@casual-simulation/aux-common';
 import {
     hasValue,
     KNOWN_PORTALS,
     normalizeAUXBotURL,
-    StoredAux,
     getBotsStateFromStoredAux,
     applyUpdatesToInst,
     isStoredVersion2,
-    PrivacyFeatures,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
-import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
-import {
-    SimulationManager,
+import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
+import type {
     AuxConfig,
-    parseVersionNumber,
     SimulationOrigin,
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
 import {
+    SimulationManager,
+    parseVersionNumber,
+} from '@casual-simulation/aux-vm';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
     AuthCoordinator,
     AuthHelper,
     BotManager,
-    BrowserSimulation,
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
 import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
@@ -46,12 +50,9 @@ import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
-import {
-    ComIdConfig,
-    GetPlayerConfigSuccess,
-    tryParseJson,
-} from '@casual-simulation/aux-records';
-import { AuxDevice } from '@casual-simulation/aux-runtime';
+import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';
+import { ComIdConfig, tryParseJson } from '@casual-simulation/aux-records';
+import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
 
 /**
@@ -91,9 +92,9 @@ interface StoredInst {
 declare function sa_event(
     name: string,
     metadata: any,
-    callback: Function
+    callback: () => void
 ): void;
-declare function sa_event(name: string, callback: Function): void;
+declare function sa_event(name: string, callback: () => void): void;
 
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 

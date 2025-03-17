@@ -1,22 +1,24 @@
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
-import {
-    calculateNumericalTagValue,
+import type {
     BotCalculationContext,
     Bot,
+    BotOrientationMode,
+    LocalActions,
+    BotAction,
+    LocalRotationTweenAction,
+    LocalPositionTweenAction,
+} from '@casual-simulation/aux-common';
+import {
+    calculateNumericalTagValue,
     getBotPosition,
     getBotRotation,
     cacheFunction,
     getBotOrientationMode,
-    BotOrientationMode,
     getBotIndex,
     getAnchorPointOffset,
-    LocalActions,
     hasValue,
     enqueueAsyncResult,
-    BotAction,
-    LocalRotationTweenAction,
-    LocalPositionTweenAction,
     enqueueAsyncError,
     getEasing,
     getBotTransformer,
@@ -25,17 +27,17 @@ import {
     Rotation,
     Vector3 as CasualVector3,
 } from '@casual-simulation/aux-common/math';
+import type { Object3D } from '@casual-simulation/three';
 import {
     Vector3,
     Quaternion,
     Euler,
-    Object3D,
     MathUtils as ThreeMath,
     Matrix4,
 } from '@casual-simulation/three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { calculateScale } from '../SceneUtils';
-import { Game } from '../Game';
+import type { Game } from '../Game';
 import TWEEN from '@tweenjs/tween.js';
 import { DimensionGroup3D } from '../DimensionGroup3D';
 

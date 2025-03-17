@@ -2,10 +2,10 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import { some, union, sortBy } from 'lodash';
+import type { Bot, BotTags, BotSpace } from '@casual-simulation/aux-common';
 import {
     botTags,
     isHiddenTag,
-    Bot,
     hasValue,
     isFormula,
     getShortId,
@@ -25,11 +25,9 @@ import {
     getBotSpace,
     getBotTag,
     goToDimension,
-    BotTags,
     tweenTo,
     getTagValueForSpace,
     TAG_MASK_SPACE_PRIORITIES,
-    BotSpace,
     getScriptPrefix,
     isBotLink,
     KNOWN_TAG_PREFIXES,
@@ -48,7 +46,7 @@ import BotID from '../BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../../DownloadHelpers';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import Bowser from 'bowser';
 import BotTagMini from '../BotTagMini/BotTagMini';
@@ -60,7 +58,7 @@ import { getModelUriFromId } from '../../MonacoUtils';
 // import {} from 'vue-material/dist/'
 import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 
 export interface TableBot {
@@ -487,7 +485,7 @@ export default class BotTable extends Vue {
 
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
-                var options = new AlertDialogOptions();
+                let options = new AlertDialogOptions();
                 options.title = 'Tag already exists';
                 options.body =
                     "Tag '" + this.newTag + "' already exists on this bot.";
@@ -499,7 +497,7 @@ export default class BotTable extends Vue {
             }
 
             if (!this.tagNotEmpty(this.newTag)) {
-                var options = new AlertDialogOptions();
+                let options = new AlertDialogOptions();
                 options.title = 'Tag cannot be empty';
                 options.body = 'Tag is empty or contains only whitespace......';
                 options.confirmText = 'Close';
@@ -581,7 +579,7 @@ export default class BotTable extends Vue {
 
         // Check to make sure that the tag is unique.
         if (this.tagExists(this.newTag)) {
-            var options = new AlertDialogOptions();
+            let options = new AlertDialogOptions();
             options.title = 'Tag already exists';
             options.body =
                 "Tag '" + this.newTag + "' already exists on this bot.";
@@ -593,7 +591,7 @@ export default class BotTable extends Vue {
         }
 
         if (!this.tagNotEmpty(this.newTag)) {
-            var options = new AlertDialogOptions();
+            let options = new AlertDialogOptions();
             options.title = 'Tag cannot be empty';
             options.body = 'Tag is empty or contains only whitespace.';
             options.confirmText = 'Close';
@@ -799,12 +797,6 @@ export default class BotTable extends Vue {
 
         EventBus.$on('addTag', this.openNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
-    }
-
-    mounted() {
-        const tagValueEditorWrapper = this.$refs.tagValueEditorWrapper;
-        if (tagValueEditorWrapper) {
-        }
     }
 
     get readOnlyTags() {

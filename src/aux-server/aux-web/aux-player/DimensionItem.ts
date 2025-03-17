@@ -1,4 +1,4 @@
-import { Bot } from '@casual-simulation/aux-common';
+import type { Bot } from '@casual-simulation/aux-common';
 
 export interface DimensionItem {
     bot: Bot;

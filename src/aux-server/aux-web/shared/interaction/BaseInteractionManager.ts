@@ -1,32 +1,32 @@
-import {
+import type {
     Vector2,
     Vector3,
     Intersection,
     Object3D,
-    OrthographicCamera,
     Ray,
-    Color,
     Sphere,
 } from '@casual-simulation/three';
-import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
-import {
+import { OrthographicCamera, Color } from '@casual-simulation/three';
+import type { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
+import type {
     BotCalculationContext,
     Bot,
     BotTags,
-    getBotCursor,
-    hasValue,
 } from '@casual-simulation/aux-common';
+import { getBotCursor, hasValue } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap } from 'lodash';
 import { CameraControls } from './CameraControls';
+import type {
+    ControllerData,
+    InputMethod,
+    InputModality,
+} from '../scene/Input';
 import {
     MouseButtonId,
     InputType,
     Input,
-    ControllerData,
-    InputMethod,
     MOUSE_INPUT_METHOD_IDENTIFIER,
-    InputModality,
     getFingerModality,
     getModalityKey,
     getModalityHand,
@@ -34,28 +34,28 @@ import {
     modalityForInputMethod,
 } from '../scene/Input';
 import { appManager } from '../AppManager';
-import { IOperation } from './IOperation';
+import type { IOperation } from './IOperation';
 import { AuxBot3D } from '../scene/AuxBot3D';
-import { GameObject } from '../scene/GameObject';
+import type { GameObject } from '../scene/GameObject';
+import type { CameraRig } from '../scene/CameraRigFactory';
 import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
-    CameraRig,
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
-import { Simulation } from '@casual-simulation/aux-vm';
-import { DraggableGroup } from './DraggableGroup';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { DraggableGroup } from './DraggableGroup';
 import {
     isObjectVisible,
     objectForwardRay,
     cameraForwardRay,
 } from '../scene/SceneUtils';
-import { CameraRigControls } from './CameraRigControls';
-import { Game } from '../scene/Game';
+import type { CameraRigControls } from './CameraRigControls';
+import type { Game } from '../scene/Game';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
 import { DebugObjectManager } from '../scene/debugobjectmanager/DebugObjectManager';
-import { Viewport } from '../scene/Viewport';
-import { Grid3D } from '../scene/Grid3D';
+import type { Viewport } from '../scene/Viewport';
+import type { Grid3D } from '../scene/Grid3D';
 import { BaseBotDragOperation } from './DragOperation/BaseBotDragOperation';
 import { BaseModDragOperation } from './DragOperation/BaseModDragOperation';
 import { BaseClickOperation } from './ClickOperation/BaseClickOperation';

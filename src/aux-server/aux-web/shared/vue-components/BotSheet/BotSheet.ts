@@ -1,10 +1,13 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import {
+import type {
     Bot,
-    hasValue,
     BotTags,
+    FocusOnBotAction,
+} from '@casual-simulation/aux-common';
+import {
+    hasValue,
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
     ON_SHEET_BOT_CLICK,
@@ -15,20 +18,20 @@ import {
     onClickArg,
     getPortalTag,
     createBotLink,
-    FocusOnBotAction,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     BotManager,
     BrowserSimulation,
-    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import BotTable, { TableBot } from '../BotTable/BotTable';
+import type { TableBot } from '../BotTable/BotTable';
+import BotTable from '../BotTable/BotTable';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { SheetPortalConfig } from './SheetPortalConfig';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 
 interface SheetState {

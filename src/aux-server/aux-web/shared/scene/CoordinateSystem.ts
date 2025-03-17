@@ -1,8 +1,5 @@
-import {
-    Vector3,
-    MathUtils as ThreeMath,
-    Matrix4,
-} from '@casual-simulation/three';
+import type { Matrix4 } from '@casual-simulation/three';
+import { Vector3, MathUtils as ThreeMath } from '@casual-simulation/three';
 
 /**
  * Defines the possible coordinate systems.

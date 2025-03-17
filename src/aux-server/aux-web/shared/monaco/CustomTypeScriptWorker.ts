@@ -1,13 +1,15 @@
-import {
-    BotIndexEvent,
+import type {
     PrecalculatedBotsState,
     StateUpdatedEvent,
+} from '@casual-simulation/aux-common';
+import {
+    BotIndexEvent,
     applyUpdates,
     calculateStringTagValue,
 } from '@casual-simulation/aux-common';
+import type { ts } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
 import {
     initialize,
-    ts,
     TypeScriptWorker,
     libFileMap,
 } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -88,6 +90,7 @@ export class CustomTypeScriptWorker extends TypeScriptWorker {
                             if (moduleName[i] === ':') {
                                 split.pop();
                             } else if (moduleName[i] === '.') {
+                                /* empty */
                             } else {
                                 moduleName =
                                     split.join('.') +

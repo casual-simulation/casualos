@@ -1,7 +1,7 @@
 import * as monaco from '../../MonacoLibs';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { ResizeObserverEntry } from '@juggle/resize-observer/lib/ResizeObserverEntry';
+import type { ResizeObserverEntry } from '@juggle/resize-observer/lib/ResizeObserverEntry';
 
 @Component({})
 export default class MonacoEditor extends Vue {
@@ -9,6 +9,7 @@ export default class MonacoEditor extends Vue {
     private _states: Map<string, monaco.editor.IDiffEditorViewState>;
     private _original: monaco.editor.ITextModel;
     private _modified: monaco.editor.ITextModel;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
     private _modelChangeObserver: monaco.IDisposable;
 
@@ -146,7 +147,7 @@ export default class MonacoEditor extends Vue {
 
 function debouceObserverUpdates(
     target: Element,
-    callback: Function
+    callback: () => any
 ): (entries: ResizeObserverEntry[]) => void {
     let lastHeight = NaN;
     let lastWidth = NaN;

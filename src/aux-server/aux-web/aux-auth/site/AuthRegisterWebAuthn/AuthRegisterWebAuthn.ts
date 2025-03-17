@@ -3,7 +3,8 @@ import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
-import { FormError, getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-records';
+import { getFormErrors } from '@casual-simulation/aux-records';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
 @Component({

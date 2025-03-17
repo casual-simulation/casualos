@@ -1,7 +1,7 @@
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
+import type { AuxBot3D } from '../AuxBot3D';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     isFormula,
     calculateBotValue,
     hasValue,
@@ -12,7 +12,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from '@casual-simulation/three';
-import { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
+import type { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
 import { Wall3D } from '../Wall3D';
 import { buildSRGBColor } from '../SceneUtils';
 

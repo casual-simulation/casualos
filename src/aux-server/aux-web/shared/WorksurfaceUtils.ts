@@ -1,5 +1,5 @@
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     isDimension,
     getDimensionVisualizeMode,
     getDimensionPosition,

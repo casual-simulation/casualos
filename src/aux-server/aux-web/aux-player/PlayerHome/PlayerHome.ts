@@ -1,16 +1,19 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Watch, Prop } from 'vue-property-decorator';
+import type {
+    BotTags,
+    PrecalculatedBot,
+    BotAction,
+    BiosOption,
+} from '@casual-simulation/aux-common';
 import {
     goToDimension,
     calculateBotValue,
-    BotTags,
-    PrecalculatedBot,
     hasValue,
     BotCalculationContext,
     QUERY_PORTALS,
     KNOWN_PORTALS,
-    BotAction,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     calculateStringTagValue,
     calculateStringListTagValue,
@@ -18,7 +21,6 @@ import {
     QUERY_FULL_HISTORY_TAGS,
     QUERY_PARTIAL_HISTORY_TAGS,
     getBotTheme,
-    BiosOption,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
@@ -27,23 +29,24 @@ import {
     appManager,
 } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
-import { Dictionary } from 'vue-router/types/router';
+import type { Dictionary } from 'vue-router/types/router';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    BrowserSimulation,
     userBotChanged,
     getUserBotAsync,
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
+import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 import { intersection, isEqual, sortBy } from 'lodash';
-import { Subscription } from 'rxjs';
-import { uniqueNamesGenerator, Config } from 'unique-names-generator';
+import type { Subscription } from 'rxjs';
+import type { Config } from 'unique-names-generator';
+import { uniqueNamesGenerator } from 'unique-names-generator';
 import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters, getPermalink } from '../UrlUtils';
-import { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
 import { sortInsts } from '../PlayerUtils';

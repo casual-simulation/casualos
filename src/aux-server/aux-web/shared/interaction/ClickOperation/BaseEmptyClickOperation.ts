@@ -1,19 +1,17 @@
-import {
-    Input,
+import type {
     InputMethod,
     ControllerData,
     InputModality,
     MouseOrTouchInputMethod,
 } from '../../../shared/scene/Input';
-import { Vector2, Object3D } from '@casual-simulation/three';
-import { IOperation } from '../../../shared/interaction/IOperation';
-import {
-    DEFAULT_SCENE_BACKGROUND_COLOR,
-    BotCalculationContext,
-} from '@casual-simulation/aux-common';
+import { Input } from '../../../shared/scene/Input';
+import type { Vector2, Object3D } from '@casual-simulation/three';
+import type { IOperation } from '../../../shared/interaction/IOperation';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
+import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
-import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Game } from '../../../shared/scene/Game';
+import type { BaseInteractionManager } from '../BaseInteractionManager';
+import type { Game } from '../../../shared/scene/Game';
 import {
     VRDragThresholdPassed,
     DragThresholdPassed,

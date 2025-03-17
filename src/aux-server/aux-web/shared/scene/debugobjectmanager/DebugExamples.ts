@@ -1,20 +1,20 @@
 import { Box3, Vector3, Color, Ray } from '@casual-simulation/three';
-import { Time } from '../Time';
+import type { Time } from '../Time';
 import { DebugObjectManager } from './DebugObjectManager';
 
-var _box = new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
-var _boxScalar = 1;
-var _boxScaleTweenForward = true;
-var _boxScaleTweenSpeed = 4;
+let _box = new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+let _boxScalar = 1;
+let _boxScaleTweenForward = true;
+let _boxScaleTweenSpeed = 4;
 
-var _ray = new Ray(new Vector3(4, 0, 0), new Vector3(0, 0, 3));
-var _rayTweenForward = true;
-var _rayTweenSpeed = 4;
+let _ray = new Ray(new Vector3(4, 0, 0), new Vector3(0, 0, 3));
+let _rayTweenForward = true;
+let _rayTweenSpeed = 4;
 
-var _letterOnColor = new Color('#0ff');
-var _letterOffColor = new Color('#000');
-var _letter: number = 0;
-var _letterChangeTime: number = 0;
+let _letterOnColor = new Color('#0ff');
+let _letterOffColor = new Color('#000');
+let _letter: number = 0;
+let _letterChangeTime: number = 0;
 
 export function drawExamples(time: Time): void {
     // Apply some ping-pong scale tweening to the box.

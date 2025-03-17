@@ -3,7 +3,11 @@ import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type {
+    ShowConfirmAction,
+    ShowConfirmOptions,
+} from '@casual-simulation/aux-common';
 import {
     ShowInputType,
     ShowInputSubtype,
@@ -14,8 +18,6 @@ import {
     ShowInputForTagAction,
     ShowInputAction,
     asyncResult,
-    ShowConfirmAction,
-    ShowConfirmOptions,
     hasValue,
 } from '@casual-simulation/aux-common';
 
