@@ -1,5 +1,5 @@
-import { Command } from 'commander';
-import { CliConfig } from './config';
+import type { Command } from 'commander';
+import type { CliConfig } from './config';
 import { z } from 'zod';
 import prompts from 'prompts';
 import { homedir } from 'os';
@@ -165,7 +165,7 @@ export function setupInfraCommands(program: Command, config: CliConfig) {
                 url = res.url;
             }
 
-            const regex = /\/([\w-\.\s]+)\.git$/;
+            const regex = /\/([\w-.\s]+)\.git$/;
             const match = regex.exec(url);
 
             if (!match) {
